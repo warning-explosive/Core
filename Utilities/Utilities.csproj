@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AssemblyName>SpaceEngineers.Core.Utilities</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Utilities</RootNamespace>
+    <LangVersion>Latest</LangVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.0-alpha</Version>
+    <Description>Utilities for netcore application</Description>
+    <PackageTags>SpaceEngineers Core Utilities</PackageTags>
+    <PackageProjectUrl>https://www.bitbucket.com/spaceengineers/core</PackageProjectUrl>
+    <PackageIconUrl>https://www.bitbucket.com/spaceengineers/core/icon_64x64.png</PackageIconUrl>
+    <Company>SpaceEngineers</Company>
+    <Authors>SpaceEngineers</Authors>
+    <PackageLicenseUrl>https://www.bitbucket.com/spaceengineers/core/wiki</PackageLicenseUrl>
+    <RepositoryUrl>https://www.bitbucket.com/spaceengineers/core</RepositoryUrl>
+    <RepositoryType>mercurial</RepositoryType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\SpaceEngineers.Core.Utilities.xml</DocumentationFile>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

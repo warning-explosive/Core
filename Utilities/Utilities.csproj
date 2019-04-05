@@ -20,4 +20,7 @@
     <DocumentationFile>bin\Debug\netcoreapp2.0\SpaceEngineers.Core.Utilities.xml</DocumentationFile>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
+  </ItemGroup>
 </Project>

@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.Utilities.Test
+namespace SpaceEngineers.Core.Utilities.Test.Tools
 {
     using System;
     using System.Reflection;
-    using Extensions;
-    using Tools;
+    using Services.Implementations;
+    using Utilities.Extensions;
     using Xunit;
     using Xunit.Abstractions;
 

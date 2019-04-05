@@ -1,7 +1,7 @@
-namespace SpaceEngineers.Core.Utilities.Test
+namespace SpaceEngineers.Core.Utilities.Test.Extensions
 {
     using System;
-    using Extensions;
+    using Utilities.Extensions;
     using Xunit;
     using Xunit.Abstractions;
 

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.Test
+namespace SpaceEngineers.Core.Utilities.Test.Extensions
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Linq;
     using System.Reflection;
     using System.Runtime.Serialization;
-    using Extensions;
+    using Utilities.Extensions;
     using Xunit;
     using Xunit.Abstractions;
 

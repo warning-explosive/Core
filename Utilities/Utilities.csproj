@@ -22,5 +22,23 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
+    <PackageReference Include="SimpleInjector" Version="4.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Services\Implementations\PathResolverInfo.cs">
+      <DependentUpon>PathResolverImpl.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Services\Implementations\PathResolverImpl.Filters.cs">
+      <DependentUpon>PathResolverImpl.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Services\Implementations\GenericGraphEdge.cs">
+      <DependentUpon>PathResolverImpl.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Services\Implementations\GenericGraph.cs">
+      <DependentUpon>PathResolverImpl.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Services\Implementations\ServiceRegistrationInfo.cs">
+      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

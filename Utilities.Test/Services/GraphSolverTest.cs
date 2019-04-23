@@ -1,11 +1,12 @@
-namespace SpaceEngineers.Core.Utilities.Test.Tools
+namespace SpaceEngineers.Core.Utilities.Test.Services
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using Services.Implementations;
+    using Utilities.Services.Implementations;
+    using Utilities.Services.Interfaces;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -31,7 +32,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         private const string De = "DE";
         private const string Ea = "EA";
 
-        private static readonly IDictionary<string, GenericGraphEdge<char, string>> Edges = new Dictionary<string, GenericGraphEdge<char, string>>
+        private static readonly IDictionary<string, GenericGraphEdge<char, string>> _edges = new Dictionary<string, GenericGraphEdge<char, string>>
         {
             [Ab1] = new GenericGraphEdge<char, string>(A, B, "AB1"),
             [Ab2] = new GenericGraphEdge<char, string>(A, B, "AB2"),
@@ -46,8 +47,8 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             [Ea] = new GenericGraphEdge<char, string>(E, A, "EA")
         };
 
-        private static readonly ICollection<GenericGraphEdge<char, string>> EdgesHeap = Edges.Select(pair => pair.Value)
-                                                                                             .ToList();
+        private static readonly ICollection<GenericGraphEdge<char, string>> _edgesHeap = _edges.Select(pair => pair.Value)
+                                                                                               .ToList();
 
         /// <summary>
         /// Test1 - All paths
@@ -61,7 +62,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             int WeightFunc(string edge) => 1;
             
             sw.Restart();
-            var paths = new PathResolverServiceImpl<char, string>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
+            var paths = DependencyContainer.Resolve<IPathResolver<char, string>>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
             sw.Stop();
 
             var strPaths = ShowGroupedWeightedPaths(paths, WeightFunc, sw);
@@ -118,14 +119,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             requiredKeys.Enqueue(C);
             
             var requiredEdges1 = new Queue<string>();
-            requiredEdges1.Enqueue(Edges[Ab1].EdgeInfo);
-            requiredEdges1.Enqueue(Edges[Bb2].EdgeInfo);
-            requiredEdges1.Enqueue(Edges[Bb1].EdgeInfo);
+            requiredEdges1.Enqueue(_edges[Ab1].EdgeInfo);
+            requiredEdges1.Enqueue(_edges[Bb2].EdgeInfo);
+            requiredEdges1.Enqueue(_edges[Bb1].EdgeInfo);
             
             var requiredEdges2 = new Queue<string>();
-            requiredEdges2.Enqueue(Edges[Ab1].EdgeInfo);
-            requiredEdges2.Enqueue(Edges[Bb1].EdgeInfo);
-            requiredEdges2.Enqueue(Edges[Bb2].EdgeInfo);
+            requiredEdges2.Enqueue(_edges[Ab1].EdgeInfo);
+            requiredEdges2.Enqueue(_edges[Bb1].EdgeInfo);
+            requiredEdges2.Enqueue(_edges[Bb2].EdgeInfo);
 
             var solverInfo1 = new PathResolverInfo<char, string>(A,
                                                                 E,
@@ -183,7 +184,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
                               };
 
             var requiredEdges = new Queue<string>();
-            requiredEdges.Enqueue(Edges[Cd].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Cd].EdgeInfo);
             
             var solverInfo2 = new PathResolverInfo<char, string>(A,
                                                                 E,
@@ -196,8 +197,9 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             // 1
             Exception exception = null;
 
-            new ExceptionHandlerServiceImpl().TryCatchFinally(() => GetShortestStrPath(graph, solverInfo1, sw),
-                                                              ex => exception = ex);
+            DependencyContainer.Resolve<IExceptionHandler>()
+                               .TryCatchFinally(() => GetShortestStrPath(graph, solverInfo1, sw),
+                                                ex => exception = ex);
             
             Assert.NotNull(exception);
             Assert.Equal(typeof(AmbiguousMatchException), exception.GetType());
@@ -231,10 +233,10 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             var graph = BuildGenericGraph(sw);
             
             var requiredEdges = new Queue<string>();
-            requiredEdges.Enqueue(Edges[Ab1].EdgeInfo);
-            requiredEdges.Enqueue(Edges[Bb2].EdgeInfo);
-            requiredEdges.Enqueue(Edges[Bc].EdgeInfo);
-            requiredEdges.Enqueue(Edges[Bb1].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Ab1].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Bb2].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Bc].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Bb1].EdgeInfo);
 
             var solverInfo = new PathResolverInfo<char, string>(A,
                                                                E,
@@ -244,8 +246,10 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
                              };
             
             Exception exception = null;
-            new ExceptionHandlerServiceImpl().TryCatchFinally(() => GetShortestStrPath(graph, solverInfo, sw),
-                                                              ex => exception = ex);
+
+            DependencyContainer.Resolve<IExceptionHandler>()
+                               .TryCatchFinally(() => GetShortestStrPath(graph, solverInfo, sw),
+                                                ex => exception = ex);
             
             Assert.NotNull(exception);
             Assert.Equal(typeof(Exception), exception.GetType());
@@ -265,7 +269,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
 
             var requiredEdges = new Queue<string>();
 
-            requiredEdges.Enqueue(Edges[Bb1].EdgeInfo);
+            requiredEdges.Enqueue(_edges[Bb1].EdgeInfo);
 
             var solverInfo = new PathResolverInfo<char, string>(B,
                                                                 B,
@@ -281,8 +285,10 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
             solverInfo.NotEmptyCircle = true;
             solverInfo.RequiredEdges = null;
             Exception exception = null;
-            new ExceptionHandlerServiceImpl().TryCatchFinally(() => GetShortestStrPath(graph, solverInfo, sw),
-                                                              ex => exception = ex);
+
+            DependencyContainer.Resolve<IExceptionHandler>()
+                               .TryCatchFinally(() => GetShortestStrPath(graph, solverInfo, sw),
+                                                ex => exception = ex);
             
             Assert.NotNull(exception);
             Assert.Equal(typeof(AmbiguousMatchException), exception.GetType());
@@ -336,7 +342,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
                               };
             
             sw.Restart();
-            var paths = new PathResolverServiceImpl<char, string>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
+            var paths = DependencyContainer.Resolve<IPathResolver<char, string>>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
             sw.Stop();
 
             var strPaths = ShowGroupedWeightedPaths(paths.Where(z => z.Value.Last().Key == E), WeightFunc, sw);
@@ -361,7 +367,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         private GenericGraph<char, string> BuildGenericGraph(Stopwatch sw)
         {
             sw.Restart();
-            var graph = new GenericGraph<char, string>(EdgesHeap);
+            var graph = new GenericGraph<char, string>(_edgesHeap);
             sw.Stop();
             
             Output.WriteLine($"[Graph build time] = {sw.ElapsedMilliseconds} ms");
@@ -372,8 +378,7 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         private string GetShortestStrPath(GenericGraph<char, string> graph, PathResolverInfo<char, string> solverInfo, Stopwatch sw)
         {
             sw.Restart();
-            var resolver = new PathResolverServiceImpl<char, string>();
-            var path = resolver.GetShortestPath(graph, solverInfo);
+            var path = DependencyContainer.Resolve<IPathResolver<char, string>>().GetShortestPath(graph, solverInfo);
             sw.Stop();
             
             var strPath = ShowPath(path, sw);

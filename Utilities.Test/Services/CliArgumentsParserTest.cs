@@ -1,9 +1,10 @@
-namespace SpaceEngineers.Core.Utilities.Test.Tools
+namespace SpaceEngineers.Core.Utilities.Test.Services
 {
     using System;
     using System.Reflection;
-    using Services.Implementations;
     using Utilities.Extensions;
+    using Utilities.Services.Implementations;
+    using Utilities.Services.Interfaces;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -17,15 +18,17 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test1()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-bool",
-                                                    "-nullablebool",
-                                                    "-testenum=value1",
-                                                    "-nullabletestenum=Value2"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-bool",
+                           "-nullablebool",
+                           "-testenum=value1",
+                           "-nullabletestenum=Value2"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -41,15 +44,17 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test2()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-bool=true",
-                                                    "-nullablebool=true",
-                                                    "-testenum=Value1",
-                                                    "-nullabletestenum=value2"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-bool=true",
+                           "-nullablebool=true",
+                           "-testenum=Value1",
+                           "-nullabletestenum=value2"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -65,12 +70,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test4()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
 
             Output.WriteLine(arguments.ToString());
             
@@ -86,12 +93,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test5()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string=qwerty"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string=qwerty"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
@@ -105,12 +114,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test6()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string=\"qwerty qwerty\""
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string=\"qwerty qwerty\""
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -126,12 +137,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test7()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string=\"https://www.google.com\""
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string=\"https://www.google.com\""
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -147,12 +160,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test8()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string=https://www.google.com"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string=https://www.google.com"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -168,12 +183,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test9()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-string='https://www.yandex.ru;https://www.google.com'"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-string='https://www.yandex.ru;https://www.google.com'"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -189,13 +206,15 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test10()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-TestFlagsEnum=Value1",
-                                                    "-NullableTestFlagsEnum=value2"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-TestFlagsEnum=Value1",
+                           "-NullableTestFlagsEnum=value2"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -211,13 +230,15 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test11()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-TestFlagsEnum=value1",
-                                                    "-NullableTestFlagsEnum=value2;VaLuE1"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-TestFlagsEnum=value1",
+                           "-NullableTestFlagsEnum=value2;VaLuE1"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -233,11 +254,13 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test12()
         {
-            var ex = Assert.Throws<ArgumentException>(() => new CliArgumentsParser(new[]
-                                                                                   {
-                                                                                       "-bool",
-                                                                                       "-bool"
-                                                                                   }));
+            var args = new[]
+                       {
+                           "-bool",
+                           "-bool"
+                       };
+
+            var ex = Assert.Throws<ArgumentException>(() => DependencyContainer.Resolve<ICliArgumentsParser>().Parse<TestPoco>(args));
 
             Assert.Contains("'bool' already added", ex.Message);
         }
@@ -245,28 +268,32 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test13()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-nullablebool",
-                                                    "-TestFlagsEnum=value3",
-                                                    "-bool"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>());
+            var args = new[]
+                       {
+                           "-nullablebool",
+                           "-TestFlagsEnum=value3",
+                           "-bool"
+                       };
+
+            var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
             Assert.Contains("Value 'value3' is not recognized", ex.Message);
         }
         
         [Fact]
         public void Test14()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-nullablebool",
-                                                    "-NullableTestFlagsEnum=\"value2 ; VaLuE1\"",
-                                                    "-bool"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-nullablebool",
+                           "-NullableTestFlagsEnum=\"value2 ; VaLuE1\"",
+                           "-bool"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -282,14 +309,16 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test15()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-nullablebool",
-                                                    "-NullableTestFlagsEnum=value2 ; VaLuE1",
-                                                    "-bool"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var arguments = parser.Parse<TestPoco>();
+            var args = new[]
+                       {
+                           "-nullablebool",
+                           "-NullableTestFlagsEnum=value2 ; VaLuE1",
+                           "-bool"
+                       };
+
+            var arguments = parser.Parse<TestPoco>(args);
             
             Output.WriteLine(arguments.ToString());
             
@@ -305,14 +334,16 @@ namespace SpaceEngineers.Core.Utilities.Test.Tools
         [Fact]
         public void Test16()
         {
-            var parser = new CliArgumentsParser(new[]
-                                                {
-                                                    "-nullablebool",
-                                                    "-NullableTestFlagsEnum=value2;value3",
-                                                    "-bool"
-                                                });
+            var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
-            var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>());
+            var args = new[]
+                       {
+                           "-nullablebool",
+                           "-NullableTestFlagsEnum=value2;value3",
+                           "-bool"
+                       };
+
+            var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
             Assert.Contains("Values 'value3' is not recognized", ex.Message);
         }
         

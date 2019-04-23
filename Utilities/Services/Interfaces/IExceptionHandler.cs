@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Utilities.Services.Interfaces
     /// <summary>
     /// Service for safely invoke client actions and exception handling
     /// </summary>
-    public interface IExceptionHandlerService
+    public interface IExceptionHandler : IResolvable
     {
         /// <summary>
         /// Safely invoke client action

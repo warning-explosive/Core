@@ -1,44 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
-    <AssemblyName>SpaceEngineers.Core.Utilities</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.Utilities</RootNamespace>
-    <LangVersion>Latest</LangVersion>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.0-alpha</Version>
-    <Description>Utilities for netcore application</Description>
-    <PackageTags>SpaceEngineers Core Utilities</PackageTags>
-    <PackageProjectUrl>https://www.bitbucket.com/spaceengineers/core</PackageProjectUrl>
-    <PackageIconUrl>https://www.bitbucket.com/spaceengineers/core/icon_64x64.png</PackageIconUrl>
-    <Company>SpaceEngineers</Company>
-    <Authors>SpaceEngineers</Authors>
-    <PackageLicenseUrl>https://www.bitbucket.com/spaceengineers/core/wiki</PackageLicenseUrl>
-    <RepositoryUrl>https://www.bitbucket.com/spaceengineers/core</RepositoryUrl>
-    <RepositoryType>mercurial</RepositoryType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp2.0\SpaceEngineers.Core.Utilities.xml</DocumentationFile>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
-    <PackageReference Include="SimpleInjector" Version="4.5.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Services\Implementations\PathResolverInfo.cs">
-      <DependentUpon>PathResolverImpl.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Services\Implementations\PathResolverImpl.Filters.cs">
-      <DependentUpon>PathResolverImpl.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Services\Implementations\GenericGraphEdge.cs">
-      <DependentUpon>PathResolverImpl.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Services\Implementations\GenericGraph.cs">
-      <DependentUpon>PathResolverImpl.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Services\Implementations\ServiceRegistrationInfo.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp2.2</TargetFramework>
+		<AssemblyName>SpaceEngineers.Core.Utilities</AssemblyName>
+		<RootNamespace>SpaceEngineers.Core.Utilities</RootNamespace>
+		<LangVersion>Latest</LangVersion>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Version>1.0.0-alpha</Version>
+		<Description>Utilities for netcore application</Description>
+		<PackageTags>SpaceEngineers Core Utilities</PackageTags>
+		<Company>SpaceEngineers</Company>
+		<Authors>SpaceEngineers</Authors>
+		<PackageLicenseUrl>https://github.com/warning-explosive/Core</PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp2.0\SpaceEngineers.Core.Utilities.xml</DocumentationFile>
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
+		<PackageReference Include="SimpleInjector" Version="4.5.1" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<Compile Update="Services\Implementations\PathResolverInfo.cs">
+			<DependentUpon>PathResolverImpl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="Services\Implementations\PathResolverImpl.Filters.cs">
+			<DependentUpon>PathResolverImpl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="Services\Implementations\GenericGraphEdge.cs">
+			<DependentUpon>PathResolverImpl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="Services\Implementations\GenericGraph.cs">
+			<DependentUpon>PathResolverImpl.cs</DependentUpon>
+		</Compile>
+		<Compile Update="Services\Implementations\ServiceRegistrationInfo.cs">
+			<DependentUpon>DependencyContainer.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	
 </Project>

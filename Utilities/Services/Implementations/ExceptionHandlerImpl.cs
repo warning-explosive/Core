@@ -2,12 +2,15 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
 {
     using System;
     using System.Linq;
+    using Attributes;
+    using Enumerations;
     using Interfaces;
 
     /// <inheritdoc />
-    public class ExceptionHandlerServiceImpl : IExceptionHandlerService
+    [Lifestyle(lifestyle: EnLifestyle.Singleton)]
+    class ExceptionHandlerImpl : IExceptionHandler
     {
-        private static readonly Type[] ExceptionTypesForSkip =
+        private static readonly Type[] _exceptionTypesForSkip =
         {
             typeof(StackOverflowException),
             typeof(OutOfMemoryException),
@@ -56,9 +59,6 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
             return result;
         }
 
-        private static bool CanBeCatched(Exception exception)
-        {
-            return !ExceptionTypesForSkip.Contains(exception.GetType());
-        }
+        private static bool CanBeCatched(Exception exception) => !_exceptionTypesForSkip.Contains(exception.GetType());
     }
 }

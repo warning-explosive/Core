@@ -4,11 +4,14 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Attributes;
+    using Enumerations;
     using Extensions;
     using Interfaces;
 
     /// <inheritdoc />
-    public partial class PathResolverServiceImpl<TKey, TValue> : IPathResolverService<TKey, TValue>
+    [Lifestyle(lifestyle: EnLifestyle.Singleton)]
+    public partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {
@@ -16,7 +19,7 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
 
         private static readonly string AmbiguousMatch = "Ambiguous number of paths";
 
-        private static readonly Func<PathResolverInfo<TKey, TValue>, string> AdditionalInfo =
+        private static readonly Func<PathResolverInfo<TKey, TValue>, string> _additionalInfo =
             gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
                                       nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
 
@@ -43,13 +46,13 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
 
             if (groupedPaths.Length < 1)
             {
-                throw new Exception(NotFound + "\n" + AdditionalInfo(pathResolverInfo));
+                throw new Exception(NotFound + "\n" + _additionalInfo(pathResolverInfo));
             }
             
             if (groupedPaths.Length > 1)
             {
                 var strPaths = string.Join("\n", groupedPaths.Select(grpPath => PrintSingleGroupedPath(grpPath, pathResolverInfo.WeightFunc)));
-                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPaths + "\n" + AdditionalInfo(pathResolverInfo));
+                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPaths + "\n" + _additionalInfo(pathResolverInfo));
             }
 
             var groupedPath = groupedPaths.Single();
@@ -57,7 +60,7 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
             if (groupedPath.Any(nodeGroup => nodeGroup.Value.Count > 1))
             {
                 var strPath = PrintSingleGroupedPath(groupedPath, pathResolverInfo.WeightFunc);
-                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPath + "\n" + AdditionalInfo(pathResolverInfo));
+                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPath + "\n" + _additionalInfo(pathResolverInfo));
             }
 
             var resultPath = new Queue<KeyValuePair<TKey, TValue>>();
@@ -70,28 +73,32 @@ namespace SpaceEngineers.Core.Utilities.Services.Implementations
             return resultPath;
         }
 
-        internal IEnumerable<KeyValuePair<int, Queue<KeyValuePair<TKey, ICollection<TValue>>>>> GetAllGroupedWeightedPaths(GenericGraph<TKey, TValue> genericGraph,
-                                                                                                                           TKey rootKey,
-                                                                                                                           Func<TValue, int> weightFunc)
-        {
-            return GetAllGroupedPaths(genericGraph, rootKey)
-                  .Select(groupedPath => new KeyValuePair<int, Queue<KeyValuePair<TKey, ICollection<TValue>>>>(WeightGroupedPath(groupedPath, weightFunc),
-                                                                                                               groupedPath));
-        }
-
-        private static IEnumerable<Queue<KeyValuePair<TKey, ICollection<TValue>>>> GetAllGroupedPaths(GenericGraph<TKey, TValue> genericGraph,
-                                                                                                      TKey rootKey)
+        /// <inheritdoc />
+        public IEnumerable<Queue<KeyValuePair<TKey, ICollection<TValue>>>> GetAllGroupedPaths(
+            GenericGraph<TKey, TValue> genericGraph,
+            TKey rootNodeKey)
         {
             var groupedPathsCollection = new List<Queue<KeyValuePair<TKey, ICollection<TValue>>>>();
 
             ProcessSingleNodeRecoursive(genericGraph,
-                                        rootKey,
+                                        rootNodeKey,
                                         new Queue<KeyValuePair<TKey, ICollection<TValue>>>(),
                                         new HashSet<TKey>(),
                                         groupedPathsCollection,
                                         true);
 
             return groupedPathsCollection;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<KeyValuePair<int, Queue<KeyValuePair<TKey, ICollection<TValue>>>>> GetAllGroupedWeightedPaths(
+            GenericGraph<TKey, TValue> genericGraph,
+            TKey rootKey,
+            Func<TValue, int> weightFunc)
+        {
+            return GetAllGroupedPaths(genericGraph, rootKey)
+               .Select(groupedPath => new KeyValuePair<int, Queue<KeyValuePair<TKey, ICollection<TValue>>>>(WeightGroupedPath(groupedPath, weightFunc),
+                                                                                                            groupedPath));
         }
 
         private static void ProcessSingleNodeRecoursive(GenericGraph<TKey, TValue> genericGraph,

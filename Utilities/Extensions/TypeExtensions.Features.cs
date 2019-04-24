@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.Utilities.Extensions
 {
     using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Linq;
 
     /// <summary>
@@ -10,8 +8,19 @@ namespace SpaceEngineers.Core.Utilities.Extensions
     /// </summary>
     public static partial class TypeExtensions
     {
-        private static readonly ConcurrentDictionary<Type, TypeInfo> TypeCollection = new ConcurrentDictionary<Type, TypeInfo>();
-        
+        /// <summary>
+        /// Does type derived from interface
+        /// </summary>
+        /// <param name="type">Type-implementor</param>
+        /// <param name="i">interface</param>
+        /// <returns>Result of check</returns>
+        public static bool IsDerivedFromInterface(this Type type, Type i)
+        {
+            return i.IsInterface
+                   && type.GetInterfaces()
+                          .Contains(i);
+        }
+
         /// <summary>
         /// Does type implement open-generic base type
         /// </summary>
@@ -20,11 +29,14 @@ namespace SpaceEngineers.Core.Utilities.Extensions
         /// <returns>Result of check</returns>
         public static bool IsImplementationOfOpenGeneric(this Type type, Type openGenericBaseType)
         {
-            var types = TypeCollection.GetOrAdd(type, t => new TypeInfo(t)).GenericTypeDefinitionOfBaseTypes;
+            var genericTypeDefinitions = TypeInfoStorage.Collection
+                                                        .GetOrAdd(type, t => new TypeInfoStorage.TypeInfo(t))
+                                                        .GenericTypeDefinitions;
 
-            return openGenericBaseType.IsGenericType
+            return !openGenericBaseType.IsInterface
+                   && openGenericBaseType.IsGenericType
                    && openGenericBaseType.IsGenericTypeDefinition
-                   && types.Contains(openGenericBaseType);
+                   && genericTypeDefinitions.Contains(openGenericBaseType);
         }
         
         /// <summary>
@@ -35,38 +47,34 @@ namespace SpaceEngineers.Core.Utilities.Extensions
         /// <returns>Result of check</returns>
         public static bool IsImplementationOfOpenGenericInterface(this Type type, Type openGenericInterface)
         {
-            var types = TypeCollection.GetOrAdd(type, t => new TypeInfo(t)).GenericTypeDefinitionOfInterfaces;
-
+            var genericInterfaceDefinitions = TypeInfoStorage.Collection
+                                                             .GetOrAdd(type, t => new TypeInfoStorage.TypeInfo(t))
+                                                             .GenericInterfaceDefinitions;
+            
             return openGenericInterface.IsInterface
                    && openGenericInterface.IsGenericType
                    && openGenericInterface.IsGenericTypeDefinition
-                   && types.Contains(openGenericInterface);
+                   && genericInterfaceDefinitions.Contains(openGenericInterface);
         }
-        
-        private class TypeInfo
+
+        /// <summary>
+        /// Does type contains interface declaration
+        /// </summary>
+        /// <param name="i">Interface for check</param>
+        /// <param name="type">Type-candidate for interface declaration</param>
+        /// <returns>Result of check</returns>
+        public static bool IsContainsInterfaceDeclaration(this Type i, Type type)
         {
-            public TypeInfo(Type type)
+            if (!i.IsInterface)
             {
-                var currentType = type;
-                
-                while (currentType != null)
-                {
-                    if (currentType.IsGenericType)
-                    {
-                        GenericTypeDefinitionOfBaseTypes.Add(currentType.GetGenericTypeDefinition());
-                    }
-
-                    currentType = currentType.BaseType;
-                }
-
-                GenericTypeDefinitionOfInterfaces.AddRange(type.GetInterfaces()
-                                                               .Where(i => i.IsGenericType)
-                                                               .Select(i => i.GetGenericTypeDefinition()));
+                return false;
             }
-            
-            public List<Type> GenericTypeDefinitionOfBaseTypes { get; } = new List<Type>();
-            
-            public List<Type> GenericTypeDefinitionOfInterfaces { get; } = new List<Type>();
+
+            var declaredInterfaces = TypeInfoStorage.Collection
+                                                    .GetOrAdd(type, t => new TypeInfoStorage.TypeInfo(t))
+                                                    .DeclaredInterfaces;
+
+            return declaredInterfaces.Contains(i);
         }
     }
 }

@@ -5,11 +5,8 @@
     using System.Linq;
     using Extensions;
 
-    /// <summary>
-    /// Path resolver
-    /// Filters
-    /// </summary>
-    public partial class PathResolverServiceImpl<TKey, TValue>
+    /// <inheritdoc />
+    public partial class PathResolverImpl<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {

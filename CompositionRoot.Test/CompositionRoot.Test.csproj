@@ -2,16 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <IsPackable>false</IsPackable>
-	<LangVersion>latest</LangVersion>
+	  <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.CompositionRoot.Test</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.CompositionRoot.Test</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version>1.0.0-alpha</Version>
+    <Description>Utilities for netcore application</Description>
+    <PackageTags>SpaceEngineers Core Utilities</PackageTags>
+    <Company>SpaceEngineers</Company>
+    <Authors>SpaceEngineers</Authors>
+    <PackageLicenseUrl>https://github.com/warning-explosive/Core</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

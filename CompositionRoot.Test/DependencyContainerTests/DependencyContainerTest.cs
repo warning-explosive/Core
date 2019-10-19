@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test.DependencyContainerTests
 {
-    using SpaceEngineers.Core.Utilities.Test;
     using Xunit;
     using Xunit.Abstractions;
 

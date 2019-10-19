@@ -1,17 +1,11 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
- {
-     using Xunit.Abstractions;
+{
+    using Xunit.Abstractions;
 
-     namespace SpaceEngineers.Core.Utilities.Test
-     {
-         public abstract class TestBase
-         {
-             protected ITestOutputHelper Output { get; }
+    public abstract class TestBase
+    {
+        protected TestBase(ITestOutputHelper output) { Output = output; }
 
-             protected TestBase(ITestOutputHelper output)
-             {
-                 Output = output;
-             }
-         }
-     }
- }
+        protected ITestOutputHelper Output { get; }
+    }
+}

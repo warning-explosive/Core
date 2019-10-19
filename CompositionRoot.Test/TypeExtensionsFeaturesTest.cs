@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
     using Extensions;
-    using SpaceEngineers.Core.Utilities.Test;
     using Xunit;
     using Xunit.Abstractions;
 

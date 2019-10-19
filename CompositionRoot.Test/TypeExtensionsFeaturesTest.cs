@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.Utilities.Test.Extensions
+namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
-    using System.Linq;
-    using Utilities.Extensions;
+    using Extensions;
+    using SpaceEngineers.Core.Utilities.Test;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -57,14 +57,14 @@ namespace SpaceEngineers.Core.Utilities.Test.Extensions
                 Output.WriteLine(i.Name);
             }
             
-            Assert.True(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(TestGenericTypeImplementationBase<object>)));
-            Assert.True(typeof(ITestGenericInterfaceBase<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<object>)));
+            Assert.True(typeof(TestGenericTypeImplementationBase<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<object>)));
+            Assert.True(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterfaceBase<object>)));
             
-            Assert.True(typeof(ITestInterface).IsContainsInterfaceDeclaration(typeof(ITestGenericInterfaceBase<object>)));
-            Assert.False(typeof(ITestInterface).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<object>)));
+            Assert.True(typeof(ITestGenericInterfaceBase<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
+            Assert.False(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
             
             Assert.False(typeof(ITestInterface).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
-            Assert.False(typeof(ITestInterface).IsContainsInterfaceDeclaration(typeof(TestGenericTypeImplementation)));
+            Assert.False(typeof(TestGenericTypeImplementation).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
         }
 
         private interface ITestInterface { }

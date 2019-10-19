@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.Services.Interfaces
+namespace SpaceEngineers.Core.CompositionRoot.Abstractions
 {
     /// <summary>
     /// Define resolvable service

@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SimpleInjector" Version="4.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="TypeInfo.cs">
+      <DependentUpon>TypeInfoStorage.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServiceRegistrationInfo.cs">
+      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Remove="AssemblyInfo.cs" />
+    <Compile Update="Extensions\TypeExtensionsImpl.cs">
+      <DependentUpon>TypeExtensions.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="SpaceEngineers.Core.CompositionRoot.xml" />
+  </ItemGroup>
+
+</Project>

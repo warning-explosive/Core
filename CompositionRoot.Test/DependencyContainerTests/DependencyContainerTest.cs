@@ -1,8 +1,6 @@
-namespace SpaceEngineers.Core.Utilities.Test.Services.DependencyContainerTests
+namespace SpaceEngineers.Core.CompositionRoot.Test.DependencyContainerTests
 {
-    using System;
-    using Utilities.Services.Implementations;
-    using Utilities.Services.Interfaces;
+    using SpaceEngineers.Core.Utilities.Test;
     using Xunit;
     using Xunit.Abstractions;
 

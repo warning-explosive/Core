@@ -1,10 +1,10 @@
-namespace SpaceEngineers.Core.Utilities.Attributes
+namespace SpaceEngineers.Core.CompositionRoot.Attributes
 {
     using System;
     using Enumerations;
 
     /// <summary>
-    /// Service lifestyle attribute
+    /// Component lifestyle attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class LifestyleAttribute : Attribute

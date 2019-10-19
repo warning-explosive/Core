@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.Test.Services.DependencyContainerTests
+namespace SpaceEngineers.Core.CompositionRoot.Test.DependencyContainerTests
 {
     using Attributes;
     using Enumerations;

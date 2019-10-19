@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.Enumerations
+namespace SpaceEngineers.Core.CompositionRoot.Enumerations
 {
     /// <summary>
     /// Service lifestyle

@@ -8,8 +8,8 @@
     <RootNamespace>SpaceEngineers.Core.CompositionRoot.Test</RootNamespace>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Version>1.0.0-alpha</Version>
-    <Description>Utilities for netcore application</Description>
-    <PackageTags>SpaceEngineers Core Utilities</PackageTags>
+    <Description>Composition root for netcore application</Description>
+    <PackageTags>SpaceEngineers Core CompositionRoot</PackageTags>
     <Company>SpaceEngineers</Company>
     <Authors>SpaceEngineers</Authors>
     <PackageLicenseUrl>https://github.com/warning-explosive/Core</PackageLicenseUrl>
@@ -34,6 +34,51 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DependencyContainerTests\IIndependentTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IndependentTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IOpenGenericTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\ISingletonTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IWiredTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\OpenGenericTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\SingletonTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\WiredTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeExtensionsFeaturesTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="WiredTestServiceImpl.cs">
+      <DependentUpon>IWiredTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericTestServiceImpl.cs">
+      <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonTestServiceImpl.cs">
+      <DependentUpon>ISingletonTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IndependentTestServiceImpl.cs">
+      <DependentUpon>IIndependentTestService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

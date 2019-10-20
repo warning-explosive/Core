@@ -6,11 +6,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
     using Attributes;
     using Enumerations;
 
+    /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
     internal class TypeExtensionsImpl : ITypeExtensions
     {
         private readonly ITypeInfoStorage _typeInfoStorage;
 
+        /// <summary> .ctor </summary>
+        /// <param name="typeInfoStorage">ITypeInfoStorage</param>
         public TypeExtensionsImpl(ITypeInfoStorage typeInfoStorage)
         {
             _typeInfoStorage = typeInfoStorage;
@@ -46,7 +49,29 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         /// <inheritdoc />
         public bool IsContainsInterfaceDeclaration(Type type, Type @interface)
         {
-            return _typeInfoStorage[type].DeclaredInterfaces.Contains(@interface);
+            var condition = _typeInfoStorage[type].DeclaredInterfaces.Contains(@interface);
+
+            if (condition)
+            {
+                return true;
+            }
+
+            return TryGetGenericTypeDefinition(type, out var genericTypeDefinition)
+                   && TryGetGenericTypeDefinition(@interface, out var genericInterfaceDefinition)
+                   && _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces.Select(z => z.GUID).Contains(genericInterfaceDefinition.GUID)
+                   && type.GetGenericArguments().SequenceEqual(@interface.GenericTypeArguments);
+        }
+
+        private static bool TryGetGenericTypeDefinition(Type t, out Type genericTypeDefinition)
+        {
+            if (t.IsGenericType)
+            {
+                genericTypeDefinition = t.GetGenericTypeDefinition();
+                return true;
+            }
+
+            genericTypeDefinition = t;
+            return false;
         }
     }
 }

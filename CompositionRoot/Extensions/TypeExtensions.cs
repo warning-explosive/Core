@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         }
 
         /// <summary>
-        /// Does type implement open-generic base type
+        /// Does type derived from open-generic base type
         /// </summary>
         /// <param name="type">Type for check</param>
         /// <param name="openGenericBaseType">Open generic base type</param>

@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             if (!serviceType.IsDerivedFromInterface(typeof(IResolvable)))
             {
-                throw new ArgumentException($"ServiceType must be an interface and derived from {nameof(IResolvable)}");
+                throw new ArgumentException($"{nameof(serviceType)} must be an interface and derived from {nameof(IResolvable)}");
             }
 
             return _container.GetInstance(serviceType);
@@ -87,20 +87,21 @@ namespace SpaceEngineers.Core.CompositionRoot
             }
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetValidServiceComponentPairs<T>(ITypeInfoStorage typeInfoStorage,
-                                                                                             ITypeExtensions typeExtensions)
+        private static IEnumerable<ServiceRegistrationInfo> GetValidServiceComponentPairs<TInterface>(
+            ITypeInfoStorage typeInfoStorage,
+            ITypeExtensions typeExtensions)
         {
             return typeInfoStorage
                   .OurTypes
                   .Except(new[] { typeof(TypeInfoStorage), typeof(TypeExtensionsImpl) })
                   .Where(type => !type.IsInterface
                                  && !type.IsAbstract
-                                 && typeExtensions.IsDerivedFromInterface(type, typeof(T)))
+                                 && typeExtensions.IsDerivedFromInterface(type, typeof(TInterface)))
                   .Select(componentType => new
                                            {
                                                ComponentType = componentType,
                                                ServiceTypes = componentType.GetInterfaces()
-                                                                           .Where(i => typeExtensions.IsContainsInterfaceDeclaration(i, typeof(T)))
+                                                                           .Where(i => typeExtensions.IsContainsInterfaceDeclaration(i, typeof(TInterface)))
                                                                            .ToArray(),
                                                componentType.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
                                            })

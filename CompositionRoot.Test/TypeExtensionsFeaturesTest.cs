@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
-    using System;
     using Extensions;
     using Xunit;
     using Xunit.Abstractions;
@@ -13,57 +12,56 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         [Fact]
         public void IsImplementationOfOpenGenericTest()
         {
-            Assert.True(typeof(bool?).IsImplementationOfOpenGeneric(typeof(Nullable<>)));
-            Assert.True(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
+            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
+            Assert.True(typeof(TestGenericTypeImplementation<object>).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
+            Assert.True(typeof(TestGenericTypeImplementation<object>).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementation<>)));
             
-            Assert.False(typeof(bool?).IsImplementationOfOpenGeneric(typeof(bool?)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<object>)));
-            
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<>)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<object>)));
         }
 
         [Fact]
         public void IsImplementationOfOpenGenericInterfaceTest()
         {
-            Assert.True(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<>)));
-            Assert.True(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<>)));
+            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<>)));
             
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<object>)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<object>)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestInterface)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestInterface)));
             
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<>)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<>)));
+            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<object>)));
         }
 
         [Fact]
         public void IsDerivedFromInterfaceTest()
         {
-            Assert.True(typeof(TestGenericTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
-            Assert.True(typeof(TestGenericTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterfaceBase<object>)));
-            Assert.True(typeof(TestGenericTypeImplementation).IsDerivedFromInterface(typeof(ITestInterface)));
+            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
+            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterfaceBase<object>)));
+            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestInterface)));
             
-            Assert.False(typeof(TestGenericTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<>)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsDerivedFromInterface(typeof(TestGenericTypeImplementationBase<>)));
+            Assert.True(typeof(TestGenericTypeImplementation<object>).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
+            
+            Assert.False(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<>)));
+            Assert.False(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(TestGenericTypeImplementationBase<>)));
         }
 
         [Fact]
         public void IsContainsInterfaceDeclarationTest()
         {
-            foreach (var i in typeof(TestGenericTypeImplementationBase<object>).GetInterfaces())
-            {
-                Output.WriteLine(i.Name);
-            }
-            
-            Assert.True(typeof(TestGenericTypeImplementationBase<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<object>)));
-            Assert.True(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterfaceBase<object>)));
-            
             Assert.True(typeof(ITestGenericInterfaceBase<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
             Assert.False(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
             
             Assert.False(typeof(ITestInterface).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
-            Assert.False(typeof(TestGenericTypeImplementation).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
+            Assert.False(typeof(TestTypeImplementation).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
+            
+            Assert.False(typeof(TestGenericTypeImplementationBase<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<string>)));
+            Assert.False(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterfaceBase<string>)));
+            
+            Assert.True(typeof(TestGenericTypeImplementationBase<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterface<object>)));
+            Assert.True(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestGenericInterfaceBase<object>)));
         }
 
         private interface ITestInterface { }
@@ -74,6 +72,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
         private abstract class TestGenericTypeImplementationBase<T> : ITestGenericInterface<T> { }
         
-        private class TestGenericTypeImplementation : TestGenericTypeImplementationBase<object> { }
+        private class TestTypeImplementation : TestGenericTypeImplementationBase<object> { }
+        
+        private class TestGenericTypeImplementation<T> : TestGenericTypeImplementationBase<T> { }
     }
 }

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Test.DependencyContainerTests
+namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using Abstractions;
 

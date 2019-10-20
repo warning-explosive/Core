@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
         bool IsDerivedFromInterface(Type type, Type @interface);
 
         /// <summary>
-        /// Does type implement open-generic base type
+        /// Does type derived from open-generic base type
         /// </summary>
         /// <param name="type">Type for check</param>
         /// <param name="openGenericBaseType">Open generic base type</param>

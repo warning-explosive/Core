@@ -7,6 +7,8 @@ namespace SpaceEngineers.Core.CompositionRoot
 
     internal class TypeInfo
     {
+        internal Type OriginalType { get; }
+
         internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
 
         internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
@@ -15,6 +17,8 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         internal TypeInfo(Type type)
         {
+            OriginalType = type;
+            
             ExtractDeclaredInterfaces(type);
             ExtractBaseOpenGenericTypes(type);
             ExtractOpenGenericInterfaces(type);

@@ -1,15 +1,15 @@
-namespace SpaceEngineers.Core.Utilities.Test.Extensions
+namespace SpaceEngineers.Core.CompositionRoot.Test
 {
+    using System;
     using System.Linq;
     using System.Reflection;
-    using Utilities.Extensions;
+    using Extensions;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class TypeExtensionsMethodsTest : TestBase
+    public class MethodExtensionsTest : TestBase
     {
-        public TypeExtensionsMethodsTest(ITestOutputHelper output)
-            : base(output) { }
+        public MethodExtensionsTest(ITestOutputHelper output) : base(output) { }
         
         [Fact]
         public void CallStaticMethodTest()
@@ -25,6 +25,12 @@ namespace SpaceEngineers.Core.Utilities.Test.Extensions
 
             Assert.Throws<TargetParameterCountException>(() => typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), true, true, true));
             Assert.Throws<TargetParameterCountException>(() => typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", true, true, true));
+        }
+        
+        [Fact]
+        public void CallStaticGenericMethodTest()
+        {
+            Assert.True((bool)typeof(TestType).CallStaticGenericMethod("PrivateStaticGenericMethod", new[] { typeof(bool) }, true));
         }
         
         private class TestType
@@ -44,6 +50,8 @@ namespace SpaceEngineers.Core.Utilities.Test.Extensions
             public static bool PublicStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
 
             private static bool PrivateStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
+            
+            private static T PrivateStaticGenericMethod<T>(T flag) => flag;
         }
     }
 }

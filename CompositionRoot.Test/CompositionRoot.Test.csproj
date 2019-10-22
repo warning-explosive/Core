@@ -64,7 +64,7 @@
     <Compile Update="DependencyContainerTest.cs">
       <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="TypeExtensionsFeaturesTest.cs">
+    <Compile Update="TypeExtensionsTest.cs">
       <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="WiredTestServiceImpl.cs">
@@ -78,6 +78,12 @@
     </Compile>
     <Compile Update="IndependentTestServiceImpl.cs">
       <DependentUpon>IIndependentTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="MethodExtensionsTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 

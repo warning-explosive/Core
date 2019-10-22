@@ -30,4 +30,25 @@
     <PackageReference Include="SimpleInjector" Version="4.7.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Extensions\TypeExtensionsImpl.cs">
+      <DependentUpon>TypeExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Extensions\MethodExtensionsImpl.cs">
+      <DependentUpon>MethodExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Extensions\ExceptionHandlerImpl.cs">
+      <DependentUpon>ExceptionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeInfo.cs">
+      <DependentUpon>TypeInfoStorage.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServiceRegistrationInfo.cs">
+      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Extensions\ReferenceEqualityComparer.cs">
+      <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Xunit;
     using Xunit.Abstractions;
 
-    public class TypeExtensionsFeaturesTest : TestBase
+    public class TypeExtensionsTest : TestBase
     {
-        public TypeExtensionsFeaturesTest(ITestOutputHelper output)
+        public TypeExtensionsTest(ITestOutputHelper output)
             : base(output) { }
 
         [Fact]

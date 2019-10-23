@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp2.2</TargetFramework>
+		<TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
 		<AssemblyName>SpaceEngineers.Core.Utilities</AssemblyName>
 		<RootNamespace>SpaceEngineers.Core.Utilities</RootNamespace>
-		<LangVersion>Latest</LangVersion>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Version>1.0.0-alpha</Version>
 		<Description>Utilities for netcore application</Description>
 		<PackageTags>SpaceEngineers Core Utilities</PackageTags>
@@ -16,32 +17,19 @@
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DocumentationFile>bin\Debug\netcoreapp2.0\SpaceEngineers.Core.Utilities.xml</DocumentationFile>
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-	</PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2019.1.1" />
-		<PackageReference Include="SimpleInjector" Version="4.5.1" />
+	  <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>
-		<Compile Update="Services\Implementations\PathResolverInfo.cs">
-			<DependentUpon>PathResolverImpl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="Services\Implementations\PathResolverImpl.Filters.cs">
-			<DependentUpon>PathResolverImpl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="Services\Implementations\GenericGraphEdge.cs">
-			<DependentUpon>PathResolverImpl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="Services\Implementations\GenericGraph.cs">
-			<DependentUpon>PathResolverImpl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="Services\Implementations\ServiceRegistrationInfo.cs">
-			<DependentUpon>DependencyContainer.cs</DependentUpon>
-		</Compile>
+	  <Compile Update="PathResolver\PathResolverImpl.Filters.cs">
+	    <DependentUpon>PathResolverImpl.cs</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 	
 </Project>

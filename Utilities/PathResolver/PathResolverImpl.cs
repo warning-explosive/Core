@@ -1,17 +1,18 @@
-namespace SpaceEngineers.Core.Utilities.Services.Implementations
+namespace SpaceEngineers.Core.Utilities.PathResolver
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Attributes;
-    using Enumerations;
-    using Extensions;
-    using Interfaces;
+    using Abstractions;
+    using CompositionRoot;
+    using CompositionRoot.Attributes;
+    using CompositionRoot.Enumerations;
+    using CompositionRoot.Extensions;
 
     /// <inheritdoc />
     [Lifestyle(lifestyle: EnLifestyle.Singleton)]
-    public partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
+    internal partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {

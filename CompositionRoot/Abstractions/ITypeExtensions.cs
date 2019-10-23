@@ -5,6 +5,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
     internal interface ITypeExtensions : IResolvable
     {
         /// <summary>
+        ///  Does type implement Nullable
+        /// </summary>
+        /// <param name="type">Type for check</param>
+        /// <returns>Result of check</returns>
+        bool IsNullable(Type type);
+        
+        /// <summary>
         /// Does type derived from interface
         /// </summary>
         /// <param name="type">Type-implementor</param>

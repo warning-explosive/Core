@@ -21,10 +21,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.True((bool)typeof(TestType).CallStaticMethod("PrivateStaticMethodWithArgs", true));
             
             Assert.True((bool)typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true));
+            Assert.True((bool)typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true, true));
             Assert.True((bool)typeof(TestType).CallStaticMethod("PrivateStaticMethodWithSeveralArgs", true, true));
 
-            Assert.Throws<TargetParameterCountException>(() => typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), true, true, true));
-            Assert.Throws<TargetParameterCountException>(() => typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", true, true, true));
+            Assert.Throws<InvalidOperationException>(() => typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), new object[] { true, true, true }));
+            Assert.Throws<InvalidOperationException>(() => typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", new object[] { true, true, true }));
+            
+            Assert.True((bool)typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), new object[] { new object[] { true, true, true } }));
+            Assert.True((bool)typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", new object[] { new object[] { true, true, true } }));
         }
         
         [Fact]
@@ -44,6 +48,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             private static bool PrivateStaticMethodWithArgs(bool flag) => flag;
 
             public static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2) => flag1 && flag2;
+            
+            public static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2, bool flag3) => flag1 && flag2 && flag3;
 
             private static bool PrivateStaticMethodWithSeveralArgs(bool flag1, bool flag2) => flag1 && flag2;
 

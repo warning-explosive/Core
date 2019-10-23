@@ -11,13 +11,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         private static readonly IMethodExtensions _methodExtensions = DependencyContainer.Resolve<IMethodExtensions>();
         
         /// <summary>
+        /// Call method
+        /// </summary>
+        /// <param name="target">Target invocation instance</param>
+        /// <param name="methodName">Method name</param>
+        /// <param name="args">Method args</param>
+        /// <returns></returns>
+        public static object CallMethod(this object target, string methodName, params object?[] args)
+        {
+            return _methodExtensions.CallMethod(target, methodName, args);
+        }
+        
+        /// <summary>
         /// Call static method
         /// </summary>
         /// <param name="type">Contained type</param>
         /// <param name="methodName">Method name</param>
         /// <param name="args">Method args</param>
         /// <returns></returns>
-        public static object CallStaticMethod(this Type type, string methodName, params object[] args)
+        public static object CallStaticMethod(this Type type, string methodName, params object?[] args)
         {
             return _methodExtensions.CallStaticMethod(type, methodName, args);
         }
@@ -30,7 +42,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         /// <param name="genericArguments">Method generic arguments</param>
         /// <param name="args">Method args</param>
         /// <returns></returns>
-        public static object CallStaticGenericMethod(this Type type, string methodName,Type[] genericArguments, params object[] args)
+        public static object CallStaticGenericMethod(this Type type, string methodName,Type[] genericArguments, params object?[] args)
         {
             return _methodExtensions.CallStaticGenericMethod(type, methodName, genericArguments, args);
         }

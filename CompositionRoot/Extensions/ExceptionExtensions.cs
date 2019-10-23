@@ -11,6 +11,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         private static readonly IExceptionHandler _exceptionHandler = DependencyContainer.Resolve<IExceptionHandler>();
 
         /// <summary>
+        /// Throw if input class is null
+        /// </summary>
+        /// <param name="input">input</param>
+        /// <param name="message">Exception message</param>
+        /// <typeparam name="T">input type-argument</typeparam>
+        /// <returns>input</returns>
+        /// <exception cref="ArgumentNullException">Throws if input is null</exception>
+        public static T ThrowIfNull<T>(this T? input, string? message = null)
+            where T : class
+        {
+            if (input == null)
+            {
+                throw new ArgumentNullException(message ?? nameof(input));
+            }
+
+            return input;
+        }
+
+        /// <summary>
         /// Safely invoke client action
         /// </summary>
         /// <param name="action">Client action</param>

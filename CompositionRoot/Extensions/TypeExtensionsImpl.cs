@@ -20,6 +20,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         }
 
         /// <inheritdoc />
+        public bool IsNullable(Type type)
+        {
+            return type.IsGenericType
+                   && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        /// <inheritdoc />
         public bool IsDerivedFromInterface(Type type, Type @interface)
         {
             return @interface.IsInterface

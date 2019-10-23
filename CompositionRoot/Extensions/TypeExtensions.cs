@@ -11,6 +11,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         private static readonly ITypeExtensions _typeExtensions = DependencyContainer.Resolve<ITypeExtensions>();
 
         /// <summary>
+        ///  Does type implement Nullable
+        /// </summary>
+        /// <param name="type">Type for check</param>
+        /// <returns>Result of check</returns>
+        public static bool IsNullable(this Type type)
+        {
+            return _typeExtensions.IsNullable(type);
+        }
+        
+        /// <summary>
         /// Does type derived from interface
         /// </summary>
         /// <param name="type">Type-implementor</param>

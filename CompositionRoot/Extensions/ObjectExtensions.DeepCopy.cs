@@ -21,8 +21,9 @@
         /// <typeparam name="T">Object type</typeparam>
         /// <returns>Shallow copy of original object</returns>
         public static T ShallowCopy<T>(this T original)
+            where T : class
         {
-            return (T)ShallowCopy(ThrowIfNull(original));
+            return (T)ShallowCopy(((object)original).ThrowIfNull());
         }
         
         /// <summary>
@@ -35,7 +36,7 @@
         public static T DeepCopy<T>(this T original)
             where T : class
         {
-            return (T)DeepCopy(ThrowIfNull(original));
+            return (T)DeepCopy(((object)original).ThrowIfNull());
         }
         
         /// <summary>
@@ -46,9 +47,10 @@
         /// <typeparam name="T">Object type</typeparam>
         /// <returns>Deep copy of original object</returns>
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
-        public static T DeepCopyBySerialization<T>(this T original) where T : new()
+        public static T DeepCopyBySerialization<T>(this T original)
+            where T : class, new()
         {
-            return (T)DeepCopyBySerialization(ThrowIfNull(original));
+            return (T)DeepCopyBySerialization(((object)original).ThrowIfNull());
         }
         
         /// <summary>
@@ -59,7 +61,7 @@
         /// <returns>Shallow copy of original object</returns>
         public static object ShallowCopy(this object original)
         {
-            return _shallowCopyMethod.Invoke(ThrowIfNull(original), null);
+            return _shallowCopyMethod.Invoke(original.ThrowIfNull(), null);
         }
 
         /// <summary>
@@ -70,7 +72,7 @@
         /// <returns>Deep copy of original object</returns>
         public static object DeepCopy(this object original)
         {
-            return ThrowIfNull(original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer())));
+            return ExceptionExtensions.ThrowIfNull(original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer())));
         }
 
         /// <summary>
@@ -82,7 +84,9 @@
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
         public static object DeepCopyBySerialization(this object original)
         {
-            ThrowIfNull(original.GetType().GetCustomAttribute<SerializableAttribute>());
+            original.GetType()
+                    .GetCustomAttribute<SerializableAttribute>()
+                    .ThrowIfNull();
             
             using (var stream = new MemoryStream())
             {
@@ -186,16 +190,6 @@
                    .CopyFields(typeToReflect.BaseType, clone, visited)
                    .CopyBaseTypeFields(typeToReflect.BaseType, clone, visited);
             }
-        }
-
-        private static object ThrowIfNull(object? obj)
-        {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(nameof(obj));
-            }
-
-            return obj;
         }
     }
 }

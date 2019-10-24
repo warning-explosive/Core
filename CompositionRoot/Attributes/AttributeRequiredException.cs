@@ -7,7 +7,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Attributes
     {
         /// <summary> .ctor </summary>
         /// <param name="attributeType">Type of required attribute</param>
-        public AttributeRequiredException(Type attributeType) : base(attributeType.FullName)
+        /// <param name="notMarkedType">Type that not marked by attribute</param>
+        public AttributeRequiredException(Type attributeType, Type notMarkedType) : base($"{attributeType.FullName}|{notMarkedType.FullName}")
         {
         }
     }

@@ -111,10 +111,10 @@ namespace SpaceEngineers.Core.CompositionRoot
                               {
                                   throw new AmbiguousMatchException($"Component '{pair.ComponentType.Name}' contains ambigous definition of IResolvable services '{string.Join(", ", pair.ServiceTypes.Select(i => i.Name))}'");
                               }
-
+                              
                               if (!pair.Lifestyle.HasValue)
                               {
-                                  throw new AttributeRequiredException(typeof(LifestyleAttribute));
+                                  throw new AttributeRequiredException(typeof(LifestyleAttribute), pair.ComponentType);
                               }
 
                               return new ServiceRegistrationInfo(pair.ServiceTypes.Single(),

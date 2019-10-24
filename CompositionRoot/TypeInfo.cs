@@ -2,9 +2,11 @@ namespace SpaceEngineers.Core.CompositionRoot
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Extensions;
 
+    [DebuggerDisplay("{OriginalType}")]
     internal class TypeInfo
     {
         internal Type OriginalType { get; }

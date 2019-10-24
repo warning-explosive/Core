@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.Abstractions
+namespace SpaceEngineers.Core.Utilities.CliArgumentsParser
 {
     using CompositionRoot.Abstractions;
 

@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Utilities.CliArgumentsParser
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
-    using Abstractions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
     using CompositionRoot.Extensions;

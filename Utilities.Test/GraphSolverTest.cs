@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
     using CompositionRoot;
     using CompositionRoot.Extensions;
     using CompositionRoot.Test;

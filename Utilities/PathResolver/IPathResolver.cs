@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.Utilities.Abstractions
+namespace SpaceEngineers.Core.Utilities.PathResolver
 {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
     using CompositionRoot.Abstractions;
-    using PathResolver;
 
     /// <summary>
     /// Service for resolve shortest path on the graph between two nodes

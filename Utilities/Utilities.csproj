@@ -30,6 +30,16 @@
 	  <Compile Update="PathResolver\PathResolverImpl.Filters.cs">
 	    <DependentUpon>PathResolverImpl.cs</DependentUpon>
 	  </Compile>
+	  <Compile Update="SettingsManager\YamlFormatter.cs">
+	    <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+	  </Compile>
+	  <Compile Update="SettingsManager\SettingsMangerImpl.cs">
+	    <DependentUpon>ISettingsManger.cs</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="YamlDotNet" Version="8.0.0" />
 	</ItemGroup>
 	
 </Project>

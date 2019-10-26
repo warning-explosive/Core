@@ -1,0 +1,90 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+	  <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot.Test</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot.Test</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version>1.0.0-alpha</Version>
+    <Description>Composition root for netcore application</Description>
+    <PackageTags>SpaceEngineers Core CompositionRoot</PackageTags>
+    <Company>SpaceEngineers</Company>
+    <Authors>SpaceEngineers</Authors>
+    <PackageLicenseUrl>https://github.com/warning-explosive/Core</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DependencyContainerTests\IIndependentTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IndependentTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IOpenGenericTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\ISingletonTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\IWiredTestService.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\OpenGenericTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\SingletonTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTests\WiredTestServiceImpl.cs">
+      <DependentUpon>DependencyContainerTest.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeExtensionsTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="WiredTestServiceImpl.cs">
+      <DependentUpon>IWiredTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericTestServiceImpl.cs">
+      <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonTestServiceImpl.cs">
+      <DependentUpon>ISingletonTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IndependentTestServiceImpl.cs">
+      <DependentUpon>IIndependentTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="MethodExtensionsTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
+      <DependentUpon>TestBase.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

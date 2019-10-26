@@ -85,6 +85,15 @@
     <Compile Update="ObjectExtensionsDeepCopyTest.cs">
       <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

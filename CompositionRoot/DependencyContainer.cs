@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using Abstractions;
     using Attributes;
     using Enumerations;
+    using Exceptions;
     using Extensions;
     using SimpleInjector;
 
@@ -44,6 +45,38 @@ namespace SpaceEngineers.Core.CompositionRoot
             return _container.GetInstance(serviceType);
         }
         
+        /// <summary>
+        /// Resolve service implementations collection
+        /// </summary>
+        /// <typeparam name="T">IResolvable</typeparam>
+        /// <returns>Service implementation</returns>
+        public static IEnumerable<T> ResolveCollection<T>()
+            where T : class, ICollectionResolvable
+        {
+            var typeInfoStorage = Resolve<ITypeInfoStorage>();
+            
+            return _container.GetAllInstances<T>()
+                             .OrderBy(cmp => typeInfoStorage[cmp.GetType()].Order ?? uint.MaxValue);
+        }
+
+        /// <summary>
+        /// Resolve untyped service implementations collection
+        /// </summary>
+        /// <param name="serviceType">IResolvable</param>
+        /// <returns>Untyped service implementation</returns>
+        public static IEnumerable<object> ResolveCollection(Type serviceType)
+        {
+            if (!serviceType.IsDerivedFromInterface(typeof(ICollectionResolvable)))
+            {
+                throw new ArgumentException($"{nameof(serviceType)} must be an interface and derived from {nameof(ICollectionResolvable)}");
+            }
+            
+            var typeInfoStorage = Resolve<ITypeInfoStorage>();
+
+            return _container.GetAllInstances(serviceType)
+                             .OrderBy(cmp => typeInfoStorage[cmp.GetType()].Order ?? uint.MaxValue);
+        }
+        
         private static Container InitContainer()
         {
             var container = new Container
@@ -79,11 +112,16 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             foreach (var iResolvable in GetValidServiceComponentPairs<IResolvable>(typeInfoStorage, typeExtensions))
             {
-                var lifestyle = MapLifestyle(iResolvable.EnLifestyle);
-
-                container.Register(iResolvable.ServiceType.IsGenericType ? iResolvable.ServiceType.GetGenericTypeDefinition() : iResolvable.ServiceType,
+                container.Register(iResolvable.ServiceType,
                                    iResolvable.ComponentType,
-                                   lifestyle);
+                                   iResolvable.Lifestyle);
+            }
+            
+            foreach (var iCollectionResolvable in GetValidServiceComponentPairs<ICollectionResolvable>(typeInfoStorage, typeExtensions))
+            {
+                container.Collection.Append(iCollectionResolvable.ServiceType,
+                                            iCollectionResolvable.ComponentType,
+                                            iCollectionResolvable.Lifestyle);
             }
         }
 
@@ -121,17 +159,6 @@ namespace SpaceEngineers.Core.CompositionRoot
                                                                  pair.ComponentType,
                                                                  pair.Lifestyle.Value);
                           });
-        }
-
-        private static Lifestyle MapLifestyle(EnLifestyle enLifestyle)
-        {
-            switch (enLifestyle)
-            {
-                case EnLifestyle.Transient: return Lifestyle.Transient;
-                case EnLifestyle.Singleton: return Lifestyle.Singleton;
-                case EnLifestyle.Scoped:    return Lifestyle.Scoped;
-                default:                    return Lifestyle.Transient;
-            }
         }
     }
 }

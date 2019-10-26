@@ -1,5 +1,8 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
+    using System;
+    using System.Linq;
+    using Abstractions;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -40,6 +43,38 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             Output.WriteLine(DependencyContainer.Resolve<IWiredTestService>().Do());
             Assert.Equal(nameof(WiredTestServiceImpl) + " => " + nameof(IndependentTestServiceImpl), DependencyContainer.Resolve<IWiredTestService>().Do());
+        }
+
+        [Fact]
+        public void OrderedCollectionResolvableTest()
+        {
+            var resolvedTypes = DependencyContainer.ResolveCollection<ICollectionResolvableTestService>()
+                                                   .Select(z => z.GetType());
+
+            var types = new[]
+            {
+                typeof(CollectionResolvableTestServiceImpl3),
+                typeof(CollectionResolvableTestServiceImpl2),
+                typeof(CollectionResolvableTestServiceImpl1),
+            };
+            
+            Assert.True(resolvedTypes.SequenceEqual(types));
+        }
+
+        [Fact]
+        public void UntypedOrderedCollectionResolvableTest()
+        {
+            var resolvedTypes = DependencyContainer.ResolveCollection(typeof(ICollectionResolvableTestService))
+                                                   .Select(z => z.GetType());
+
+            var types = new[]
+            {
+                typeof(CollectionResolvableTestServiceImpl3),
+                typeof(CollectionResolvableTestServiceImpl2),
+                typeof(CollectionResolvableTestServiceImpl1),
+            };
+            
+            Assert.True(resolvedTypes.SequenceEqual(types));
         }
     }
 }

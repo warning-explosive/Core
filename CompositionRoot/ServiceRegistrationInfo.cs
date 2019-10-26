@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System;
     using System.Diagnostics;
     using Enumerations;
+    using SimpleInjector;
 
     /// <summary>
     /// ServiceRegistrationInfo
@@ -14,13 +15,15 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <param name="serviceType">Service type</param>
         /// <param name="componentType">Component type</param>
         /// <param name="enLifestyle">EnLifestyle</param>
-        public ServiceRegistrationInfo(Type serviceType,
-                                       Type componentType,
-                                       EnLifestyle enLifestyle)
+        internal ServiceRegistrationInfo(Type serviceType,
+                                         Type componentType,
+                                         EnLifestyle enLifestyle)
         {
-            ServiceType = serviceType;
+            ServiceType = serviceType.IsGenericType
+                              ? serviceType.GetGenericTypeDefinition()
+                              : serviceType;
             ComponentType = componentType;
-            EnLifestyle = enLifestyle;
+            Lifestyle = MapLifestyle(enLifestyle);
         }
 
         /// <summary>
@@ -34,8 +37,19 @@ namespace SpaceEngineers.Core.CompositionRoot
         internal Type ServiceType { get; }
 
         /// <summary>
-        /// EnLifestyle
+        /// Lifestyle
         /// </summary>
-        internal EnLifestyle EnLifestyle { get; }
+        internal Lifestyle Lifestyle { get; }
+        
+        private static Lifestyle MapLifestyle(EnLifestyle enLifestyle)
+        {
+            switch (enLifestyle)
+            {
+                case EnLifestyle.Transient: return Lifestyle.Transient;
+                case EnLifestyle.Singleton: return Lifestyle.Singleton;
+                case EnLifestyle.Scoped:    return Lifestyle.Scoped;
+                default:                    return Lifestyle.Transient;
+            }
+        }
     }
 }

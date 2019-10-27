@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
      {
          public IOpenGenericDecorableService<T> Decoratee { get; }
 
-         internal OpenGenericDecorableServiceDecorator1(IOpenGenericDecorableService<T> decorateee)
+         public OpenGenericDecorableServiceDecorator1(IOpenGenericDecorableService<T> decorateee)
          {
              Decoratee = decorateee;
          }

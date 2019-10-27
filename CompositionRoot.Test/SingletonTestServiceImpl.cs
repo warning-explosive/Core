@@ -6,6 +6,5 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     [Lifestyle(EnLifestyle.Singleton)]
     internal class SingletonTestServiceImpl : ISingletonTestService
     {
-        public string Do() => nameof(SingletonTestServiceImpl);
     }
 }

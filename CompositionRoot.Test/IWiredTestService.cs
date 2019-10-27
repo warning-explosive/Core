@@ -4,6 +4,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
     internal interface IWiredTestService : IResolvable
     {
-        string Do();
+        IIndependentTestService IndependentTestService { get; }
     }
 }

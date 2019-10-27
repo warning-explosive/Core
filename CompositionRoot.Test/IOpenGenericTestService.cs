@@ -4,6 +4,5 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
     public interface IOpenGenericTestService<T> : IResolvable
     {
-        T Do(T param);
     }
 }

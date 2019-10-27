@@ -3,8 +3,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Attributes;
     using Enumerations;
 
+    [TestConditionAttribute1]
     [Lifestyle(EnLifestyle.Transient)]
-    internal class OpenGenericTestServiceImpl<T> : IOpenGenericTestService<T>
+    internal class ConditionalDecorableServiceImpl : IConditionalDecorableService
     {
     }
 }

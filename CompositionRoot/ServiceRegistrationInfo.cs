@@ -2,13 +2,15 @@ namespace SpaceEngineers.Core.CompositionRoot
 {
     using System;
     using System.Diagnostics;
+    using Attributes;
     using Enumerations;
+    using Exceptions;
     using SimpleInjector;
 
     /// <summary>
     /// ServiceRegistrationInfo
     /// </summary>
-    [DebuggerDisplay("{ComponentType.FullName} - {ServiceType.FullName} - {EnLifestyle}")]
+    [DebuggerDisplay("{ComponentType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]
     internal class ServiceRegistrationInfo
     {
         /// <summary> .ctor </summary>
@@ -17,13 +19,19 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <param name="enLifestyle">EnLifestyle</param>
         internal ServiceRegistrationInfo(Type serviceType,
                                          Type componentType,
-                                         EnLifestyle enLifestyle)
+                                         EnLifestyle? enLifestyle)
         {
             ServiceType = serviceType.IsGenericType
                               ? serviceType.GetGenericTypeDefinition()
                               : serviceType;
             ComponentType = componentType;
-            Lifestyle = MapLifestyle(enLifestyle);
+            
+            if (enLifestyle == null)
+            {
+                throw new AttributeRequiredException(typeof(LifestyleAttribute), componentType);
+            }
+            
+            Lifestyle = MapLifestyle(enLifestyle.Value);
         }
 
         /// <summary>
@@ -40,7 +48,12 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Lifestyle
         /// </summary>
         internal Lifestyle Lifestyle { get; }
-        
+
+        /// <summary>
+        /// Conditional attribute
+        /// </summary>
+        internal Type? Attribute { get; set; }
+
         private static Lifestyle MapLifestyle(EnLifestyle enLifestyle)
         {
             switch (enLifestyle)

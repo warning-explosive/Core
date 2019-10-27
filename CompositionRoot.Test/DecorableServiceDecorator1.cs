@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     {
         public IDecorableService Decoratee { get; }
 
-        internal DecorableServiceDecorator1(IDecorableService decoratorType)
+        public DecorableServiceDecorator1(IDecorableService decoratorType)
         {
             Decoratee = decoratorType;
         }

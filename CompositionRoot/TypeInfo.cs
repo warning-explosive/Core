@@ -4,6 +4,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
+    using Attributes;
     using Extensions;
 
     [DebuggerDisplay("{OriginalType}")]
@@ -11,6 +13,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         internal Type OriginalType { get; }
 
+        internal uint? Order { get; }
+        
         internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
 
         internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
@@ -20,6 +24,8 @@ namespace SpaceEngineers.Core.CompositionRoot
         internal TypeInfo(Type type)
         {
             OriginalType = type;
+
+            Order = type.GetCustomAttribute<OrderAttribute>()?.Order;
             
             ExtractDeclaredInterfaces(type);
             ExtractBaseOpenGenericTypes(type);

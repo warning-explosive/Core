@@ -4,6 +4,5 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
     internal interface IIndependentTestService : IResolvable
     {
-        string Do();
     }
 }

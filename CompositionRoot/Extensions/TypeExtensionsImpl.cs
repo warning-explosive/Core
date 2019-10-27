@@ -63,6 +63,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 return true;
             }
 
+            // closed-generic
             return TryGetGenericTypeDefinition(type, out var genericTypeDefinition)
                    && TryGetGenericTypeDefinition(@interface, out var genericInterfaceDefinition)
                    && _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces.Select(z => z.GUID).Contains(genericInterfaceDefinition.GUID)

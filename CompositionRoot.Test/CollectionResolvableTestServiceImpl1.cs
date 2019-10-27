@@ -4,7 +4,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class OpenGenericTestServiceImpl<T> : IOpenGenericTestService<T>
+    [Order(3)]
+    internal class CollectionResolvableTestServiceImpl1 : ICollectionResolvableTestService
     {
     }
 }

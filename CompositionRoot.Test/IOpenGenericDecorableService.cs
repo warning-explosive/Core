@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using Abstractions;
 
-    public interface ISingletonTestService : IResolvable
+    internal interface IOpenGenericDecorableService<T> : IResolvable
     {
     }
 }

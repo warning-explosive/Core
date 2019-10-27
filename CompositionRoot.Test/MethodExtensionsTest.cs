@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
     using System.Linq;
-    using System.Reflection;
     using Extensions;
     using Xunit;
     using Xunit.Abstractions;
@@ -12,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         public MethodExtensionsTest(ITestOutputHelper output) : base(output) { }
         
         [Fact]
-        public void CallStaticMethodTest()
+        internal void CallStaticMethodTest()
         {
             Assert.True((bool)typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethod)));
             Assert.True((bool)typeof(TestType).CallStaticMethod("PrivateStaticMethod"));
@@ -32,28 +31,28 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
         
         [Fact]
-        public void CallStaticGenericMethodTest()
+        internal void CallStaticGenericMethodTest()
         {
             Assert.True((bool)typeof(TestType).CallStaticGenericMethod("PrivateStaticGenericMethod", new[] { typeof(bool) }, true));
         }
         
         private class TestType
         {
-            public static bool PublicStaticMethod() => true;
+            internal static bool PublicStaticMethod() => true;
 
             private static bool PrivateStaticMethod() => true;
 
-            public static bool PublicStaticMethodWithArgs(bool flag) => flag;
+            internal static bool PublicStaticMethodWithArgs(bool flag) => flag;
 
             private static bool PrivateStaticMethodWithArgs(bool flag) => flag;
 
-            public static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2) => flag1 && flag2;
+            internal static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2) => flag1 && flag2;
             
-            public static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2, bool flag3) => flag1 && flag2 && flag3;
+            internal static bool PublicStaticMethodWithSeveralArgs(bool flag1, bool flag2, bool flag3) => flag1 && flag2 && flag3;
 
             private static bool PrivateStaticMethodWithSeveralArgs(bool flag1, bool flag2) => flag1 && flag2;
 
-            public static bool PublicStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
+            internal static bool PublicStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
 
             private static bool PrivateStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
             

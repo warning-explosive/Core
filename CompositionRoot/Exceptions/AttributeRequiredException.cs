@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Attributes
+namespace SpaceEngineers.Core.CompositionRoot.Exceptions
 {
     using System;
 

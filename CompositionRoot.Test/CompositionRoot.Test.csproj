@@ -85,6 +85,96 @@
     <Compile Update="ObjectExtensionsDeepCopyTest.cs">
       <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator1.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator2.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceImpl.cs">
+      <DependentUpon>IDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator3.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IDecorableServiceDecorator.cs">
+      <DependentUpon>IDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceImpl.cs">
+      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IOpenGenericDecorableServiceDecorator.cs">
+      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator1.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator2.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator3.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ConditionalDecorableServiceImpl.cs">
+      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IConditionalDecorableServiceDecorator.cs">
+      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TestConditionAttribute1.cs">
+      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ConditionalDecorableServiceDecorator1.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TestConditionAttribute2.cs">
+      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ConditionalDecorableServiceDecorator2.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ConditionalDecorableServiceDecorator3.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ICollectionResolvableConditionDecorableServiceDecorator.cs">
+      <DependentUpon>ICollectionResolvableDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceDecorator1.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceImpl1.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceImpl2.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceImpl3.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceDecorator2.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CollectionResolvableConditionDecorableServiceDecorator3.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

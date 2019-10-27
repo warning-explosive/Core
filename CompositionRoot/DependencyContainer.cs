@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Reflection;
     using Abstractions;
     using Attributes;
-    using Enumerations;
     using Exceptions;
     using Extensions;
     using SimpleInjector;
@@ -53,10 +52,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         public static IEnumerable<T> ResolveCollection<T>()
             where T : class, ICollectionResolvable
         {
-            var typeInfoStorage = Resolve<ITypeInfoStorage>();
-            
-            return _container.GetAllInstances<T>()
-                             .OrderBy(cmp => typeInfoStorage[cmp.GetType()].Order ?? uint.MaxValue);
+            return _container.GetAllInstances<T>();
         }
 
         /// <summary>
@@ -71,10 +67,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 throw new ArgumentException($"{nameof(serviceType)} must be an interface and derived from {nameof(ICollectionResolvable)}");
             }
             
-            var typeInfoStorage = Resolve<ITypeInfoStorage>();
-
-            return _container.GetAllInstances(serviceType)
-                             .OrderBy(cmp => typeInfoStorage[cmp.GetType()].Order ?? uint.MaxValue);
+            return _container.GetAllInstances(serviceType);
         }
         
         private static Container InitContainer()
@@ -98,8 +91,10 @@ namespace SpaceEngineers.Core.CompositionRoot
             
             container.RegisterInstance<ITypeInfoStorage>(typeInfoStorage);
             container.RegisterInstance<ITypeExtensions>(typeExtensions);
+
+            var registredByHand = new[] { typeof(TypeInfoStorage), typeof(TypeExtensionsImpl) };
             
-            RegisterServices(container, typeInfoStorage, typeExtensions);
+            RegisterServices(container, typeInfoStorage, typeExtensions, registredByHand);
 
             container.Verify(VerificationOption.VerifyAndDiagnose);
 
@@ -108,57 +103,87 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private static void RegisterServices(Container container,
                                              ITypeInfoStorage typeInfoStorage,
-                                             ITypeExtensions typeExtensions)
+                                             ITypeExtensions typeExtensions,
+                                             Type[] registredByHand)
         {
-            foreach (var iResolvable in GetValidServiceComponentPairs<IResolvable>(typeInfoStorage, typeExtensions))
+            var iResolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container,
+                                                                                       typeInfoStorage,
+                                                                                       typeExtensions,
+                                                                                       registredByHand);
+           
+            foreach (var iResolvable in iResolvableRegistrationInfos)
             {
-                container.Register(iResolvable.ServiceType,
-                                   iResolvable.ComponentType,
-                                   iResolvable.Lifestyle);
+                container.Register(iResolvable.ServiceType, iResolvable.ComponentType, iResolvable.Lifestyle);
             }
-            
-            foreach (var iCollectionResolvable in GetValidServiceComponentPairs<ICollectionResolvable>(typeInfoStorage, typeExtensions))
+
+            var iCollectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container,
+                                                                                                           typeInfoStorage,
+                                                                                                           typeExtensions,
+                                                                                                           registredByHand);
+
+            RegisterLifestyle(container, iCollectionResolvableRegistrationInfos);
+
+            foreach (var iCollectionResolvable in iCollectionResolvableRegistrationInfos
+                                                 .OrderBy(cmp => typeInfoStorage[cmp.ComponentType].Order ?? uint.MaxValue)
+                                                 .ToDictionary(k => k.ServiceType, v => v.ComponentType))
             {
-                container.Collection.Append(iCollectionResolvable.ServiceType,
-                                            iCollectionResolvable.ComponentType,
-                                            iCollectionResolvable.Lifestyle);
+                container.Collection.Register(iCollectionResolvable.Key, iCollectionResolvable.Value);
             }
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetValidServiceComponentPairs<TInterface>(
+        private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(
+            Container container,
             ITypeInfoStorage typeInfoStorage,
-            ITypeExtensions typeExtensions)
+            ITypeExtensions typeExtensions,
+            Type[] registredByHand)
         {
             return typeInfoStorage
                   .OurTypes
-                  .Except(new[] { typeof(TypeInfoStorage), typeof(TypeExtensionsImpl) })
-                  .Where(type => !type.IsInterface
-                                 && !type.IsAbstract
-                                 && typeExtensions.IsDerivedFromInterface(type, typeof(TInterface)))
-                  .Select(componentType => new
-                                           {
-                                               ComponentType = componentType,
-                                               ServiceTypes = componentType.GetInterfaces()
-                                                                           .Where(i => typeExtensions.IsContainsInterfaceDeclaration(i, typeof(TInterface)))
-                                                                           .ToArray(),
-                                               componentType.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                                           })
-                  .Select(pair =>
-                          {
-                              if (pair.ServiceTypes.Length > 1)
-                              {
-                                  throw new AmbiguousMatchException($"Component '{pair.ComponentType.Name}' contains ambigous definition of IResolvable services '{string.Join(", ", pair.ServiceTypes.Select(i => i.Name))}'");
-                              }
-                              
-                              if (!pair.Lifestyle.HasValue)
-                              {
-                                  throw new AttributeRequiredException(typeof(LifestyleAttribute), pair.ComponentType);
-                              }
+                  .Where(t => t.IsInterface
+                              && typeExtensions.IsContainsInterfaceDeclaration(t, typeof(TInterface)))
+                  .Select(i => new
+                               {
+                                   ServiceType = i,
+                                   Components = container
+                                               .GetTypesToRegister(i,
+                                                                   typeInfoStorage.OurAssemblies,
+                                                                   new TypesToRegisterOptions
+                                                                   {
+                                                                       IncludeComposites = true,
+                                                                       IncludeDecorators = true,
+                                                                       IncludeGenericTypeDefinitions = true 
+                                                                   })
+                                               .Except(registredByHand)
+                                               .Select(cmp => new
+                                                              {
+                                                                  Component = cmp,
+                                                                  cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                                                              })
+                               })
+                  .SelectMany(info => info.Components
+                                          .Select(cmp =>
+                                                  {
+                                                      if (cmp.Lifestyle == null)
+                                                      {
+                                                          throw new AttributeRequiredException(typeof(LifestyleAttribute), cmp.Component);
+                                                      }
 
-                              return new ServiceRegistrationInfo(pair.ServiceTypes.Single(),
-                                                                 pair.ComponentType,
-                                                                 pair.Lifestyle.Value);
-                          });
+                                                      return new ServiceRegistrationInfo(info.ServiceType,
+                                                                                         cmp.Component,
+                                                                                         cmp.Lifestyle.Value);
+                                                  }))
+                  .ToArray();
+        }
+
+        private static void RegisterLifestyle(Container container,
+                                              IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
+        {
+            foreach (var info in serviceRegistrationInfos)
+            {
+                container.Register(info.ComponentType,
+                                   info.ComponentType,
+                                   info.Lifestyle);
+            }
         }
     }
 }

@@ -94,6 +94,15 @@
     <Compile Update="CollectionResolvableTestServiceImpl3.cs">
       <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
     </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

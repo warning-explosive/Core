@@ -76,5 +76,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             
             Assert.True(resolvedTypes.SequenceEqual(types));
         }
+        
+        [Fact]
+        public void SingletonOpenGenericCollectionResolvableTest()
+        {
+            var resolvedTypes = DependencyContainer.ResolveCollection<ISingletonGenericCollectionResolvableTestService<object>>()
+                                                   .Select(z => z.GetType());
+
+            var types = new[]
+                        {
+                            typeof(SingletonGenericCollectionResolvableTestServiceImpl3<object>),
+                            typeof(SingletonGenericCollectionResolvableTestServiceImpl2<object>),
+                            typeof(SingletonGenericCollectionResolvableTestServiceImpl1<object>),
+                        };
+            
+            Assert.True(resolvedTypes.SequenceEqual(types));
+
+            Assert.True(DependencyContainer
+                       .ResolveCollection<ISingletonGenericCollectionResolvableTestService<object>>()
+                       .SequenceEqual(DependencyContainer.ResolveCollection<ISingletonGenericCollectionResolvableTestService<object>>()));
+        }
     }
 }

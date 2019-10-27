@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using Abstractions;
 
-    public interface ISingletonGenericCollectionResolvableTestService<T> : ICollectionResolvable
+    internal interface ISingletonGenericCollectionResolvableTestService<T> : ICollectionResolvable
     {
     }
 }

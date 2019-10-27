@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
     [Lifestyle(EnLifestyle.Singleton)]
     [Order(1)]
-    public class SingletonGenericCollectionResolvableTestServiceImpl3<T> : ISingletonGenericCollectionResolvableTestService<T>
+    internal class SingletonGenericCollectionResolvableTestServiceImpl3<T> : ISingletonGenericCollectionResolvableTestService<T>
     {
     }
 }

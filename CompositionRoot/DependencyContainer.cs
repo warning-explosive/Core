@@ -125,9 +125,16 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             foreach (var iCollectionResolvable in iCollectionResolvableRegistrationInfos
                                                  .OrderBy(cmp => typeInfoStorage[cmp.ComponentType].Order ?? uint.MaxValue)
-                                                 .ToDictionary(k => k.ServiceType, v => v.ComponentType))
+                                                 .GroupBy(k => k.ServiceType, v => v.ComponentType))
             {
-                container.Collection.Register(iCollectionResolvable.Key, iCollectionResolvable.Value);
+                container.Collection.Register(iCollectionResolvable.Key, iCollectionResolvable);
+            }
+
+            var decoratorRegistrationInfos = GetDecoratorRegistrationInfo(typeInfoStorage, typeExtensions);
+
+            foreach (var decorated in decoratorRegistrationInfos.OrderBy(cmp => typeInfoStorage[cmp.ComponentType].Order ?? uint.MaxValue))
+            {
+                container.RegisterDecorator(decorated.ServiceType, decorated.ComponentType, decorated.Lifestyle);
             }
         }
 
@@ -149,14 +156,14 @@ namespace SpaceEngineers.Core.CompositionRoot
                                                                    typeInfoStorage.OurAssemblies,
                                                                    new TypesToRegisterOptions
                                                                    {
-                                                                       IncludeComposites = true,
-                                                                       IncludeDecorators = true,
-                                                                       IncludeGenericTypeDefinitions = true 
+                                                                       IncludeComposites = false,
+                                                                       IncludeDecorators = false,
+                                                                       IncludeGenericTypeDefinitions = true
                                                                    })
                                                .Except(registredByHand)
                                                .Select(cmp => new
                                                               {
-                                                                  Component = cmp,
+                                                                  ComponentType = cmp,
                                                                   cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
                                                               })
                                })
@@ -165,11 +172,11 @@ namespace SpaceEngineers.Core.CompositionRoot
                                                   {
                                                       if (cmp.Lifestyle == null)
                                                       {
-                                                          throw new AttributeRequiredException(typeof(LifestyleAttribute), cmp.Component);
+                                                          throw new AttributeRequiredException(typeof(LifestyleAttribute), cmp.ComponentType);
                                                       }
 
                                                       return new ServiceRegistrationInfo(info.ServiceType,
-                                                                                         cmp.Component,
+                                                                                         cmp.ComponentType,
                                                                                          cmp.Lifestyle.Value);
                                                   }))
                   .ToArray();
@@ -184,6 +191,35 @@ namespace SpaceEngineers.Core.CompositionRoot
                                    info.ComponentType,
                                    info.Lifestyle);
             }
+        }
+
+        private static ServiceRegistrationInfo[] GetDecoratorRegistrationInfo(ITypeInfoStorage typeInfoStorage,
+                                                                              ITypeExtensions typeExtensions)
+        {
+            return typeInfoStorage
+                  .OurTypes
+                  .Where(t => typeExtensions.IsImplementationOfOpenGenericInterface(t, typeof(IDecorator<>)))
+                  .Select(t => new
+                               {
+                                   ComponentType = t,
+                                   DecoratedService = t.GetInterfaces()
+                                                       .Where(i => i.IsGenericType)
+                                                       .Single(i => i.GetGenericTypeDefinition() == typeof(IDecorator<>))
+                                                       .GetGenericArguments()[0],
+                                   t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                               })
+                  .Select(info =>
+                          {
+                              if (info.Lifestyle == null)
+                              {
+                                  throw new AttributeRequiredException(typeof(LifestyleAttribute), info.ComponentType);
+                              }
+
+                              return new ServiceRegistrationInfo(info.DecoratedService,
+                                                                 info.ComponentType,
+                                                                 info.Lifestyle.Value);
+                          })
+                  .ToArray();
         }
     }
 }

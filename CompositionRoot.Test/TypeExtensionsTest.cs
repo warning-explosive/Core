@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             : base(output) { }
 
         [Fact]
-        public void IsImplementationOfOpenGenericTest()
+        internal void IsImplementationOfOpenGenericTest()
         {
             Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
             Assert.True(typeof(TestGenericTypeImplementation<object>).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
 
         [Fact]
-        public void IsImplementationOfOpenGenericInterfaceTest()
+        internal void IsImplementationOfOpenGenericInterfaceTest()
         {
             Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<>)));
             Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<>)));
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
 
         [Fact]
-        public void IsDerivedFromInterfaceTest()
+        internal void IsDerivedFromInterfaceTest()
         {
             Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
             Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterfaceBase<object>)));
@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
 
         [Fact]
-        public void IsContainsInterfaceDeclarationTest()
+        internal void IsContainsInterfaceDeclarationTest()
         {
             Assert.True(typeof(ITestGenericInterfaceBase<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));
             Assert.False(typeof(ITestGenericInterface<object>).IsContainsInterfaceDeclaration(typeof(ITestInterface)));

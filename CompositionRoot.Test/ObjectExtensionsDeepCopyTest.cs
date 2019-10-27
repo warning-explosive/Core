@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             : base(output) { }
 
         [Fact]
-        public void DeepCopyPerfomanceTest()
+        internal void DeepCopyPerfomanceTest()
         {
             var original = InitInstanceOfTestReferenceTypeWithOutTypes();
 
@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
 
         [Fact]
-        public void DeepCopyObjectTest()
+        internal void DeepCopyObjectTest()
         {
             var original = new object();
             var clone = original.DeepCopy();
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
 
         [Fact]
-        public void DeepCopyTest()
+        internal void DeepCopyTest()
         {
             var original = InitInstanceOfTestReferenceTypeWithTypes();
             var clone = original.DeepCopy();
@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
         
         [Fact]
-        public void DeepCopyBySerializationThrowsTest()
+        internal void DeepCopyBySerializationThrowsTest()
         {
             var original = InitInstanceOfTestReferenceTypeWithTypes();
             
@@ -92,7 +92,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         }
         
         [Fact]
-        public void DeepCopyBySerializationTest()
+        internal void DeepCopyBySerializationTest()
         {
             var original = InitInstanceOfTestReferenceTypeWithOutTypes();
             var clone = original.DeepCopyBySerialization();
@@ -298,11 +298,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             #region System.Type
             
-            public Type? Type { get; set; }
+            internal Type? Type { get; set; }
             
-            public Array? TypeArray { get; set; }
+            internal Array? TypeArray { get; set; }
             
-            public ICollection<Type>? TypeCollection { get; set; }
+            internal ICollection<Type>? TypeCollection { get; set; }
 
             #endregion
         }
@@ -312,43 +312,43 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             #region String
             
-            public string? String { get; set; }
+            internal string? String { get; set; }
             
             #endregion
             
             #region ValueType
             
-            public int Int { get; set; }
+            internal int Int { get; set; }
 
-            public TestEnum TestEnum { get; set; }
+            internal TestEnum TestEnum { get; set; }
 
-            public Array? ValueTypeArray { get; set; }
+            internal Array? ValueTypeArray { get; set; }
 
-            public ICollection<int>? ValueTypeCollection { get; set; }
+            internal ICollection<int>? ValueTypeCollection { get; set; }
 
             #endregion
 
             #region ReferenceType
 
-            public Array? ReferenceTypeArray { get; set; }
+            internal Array? ReferenceTypeArray { get; set; }
 
-            public ICollection<object>? ReferenceTypeCollection { get; set; }
+            internal ICollection<object>? ReferenceTypeCollection { get; set; }
 
-            public TestReferenceTypeWithOutTypes? CyclicReference { get; set; }
+            internal TestReferenceTypeWithOutTypes? CyclicReference { get; set; }
 
-            public static TestReferenceTypeWithOutTypes? StaticCyclicReference { get; set; }
+            internal static TestReferenceTypeWithOutTypes? StaticCyclicReference { get; set; }
 
             #endregion
 
             #region Nullable
 
-            public int? NullableInt { get; } = null;
+            internal int? NullableInt { get; } = null;
             
-            public TestReferenceTypeWithOutTypes? NullableReference { get; } = null;
+            internal TestReferenceTypeWithOutTypes? NullableReference { get; } = null;
             
-            public Array? ArrayOfNulls { get; set; }
+            internal Array? ArrayOfNulls { get; set; }
 
-            public ICollection<object?>? CollectionOfNulls { get; set; }
+            internal ICollection<object?>? CollectionOfNulls { get; set; }
             
             #endregion
         }

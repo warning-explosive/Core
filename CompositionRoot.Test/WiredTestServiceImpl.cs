@@ -6,12 +6,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     [Lifestyle(EnLifestyle.Transient)]
     internal class WiredTestServiceImpl : IWiredTestService
     {
-        public WiredTestServiceImpl(IIndependentTestService independentTestService)
+        internal WiredTestServiceImpl(IIndependentTestService independentTestService)
         {
             IndependentTestService = independentTestService;
         }
 
-        public IIndependentTestService IndependentTestService { get; }
+        internal IIndependentTestService IndependentTestService { get; }
 
         public string Do() => nameof(WiredTestServiceImpl) + " => " + IndependentTestService.Do();
     }

@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    public class SingletonTestServiceImpl : ISingletonTestService
+    internal class SingletonTestServiceImpl : ISingletonTestService
     {
         public string Do() => nameof(SingletonTestServiceImpl);
     }

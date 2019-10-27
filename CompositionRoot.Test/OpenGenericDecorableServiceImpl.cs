@@ -4,8 +4,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class OpenGenericTestServiceImpl<T> : IOpenGenericTestService<T>
+    internal class OpenGenericDecorableServiceImpl<T> : IOpenGenericDecorableService<T>
     {
-        public T Do(T param) => param;
     }
 }

@@ -95,13 +95,43 @@
       <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
     </Compile>
     <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl1.cs">
-      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
     </Compile>
     <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl2.cs">
-      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
     </Compile>
     <Compile Update="SingletonGenericCollectionResolvableTestServiceImpl3.cs">
-      <DependentUpon>IGenericCollectionResolvableTestService.cs</DependentUpon>
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator1.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator2.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceImpl.cs">
+      <DependentUpon>IDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DecorableServiceDecorator3.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IDecorableServiceDecorator.cs">
+      <DependentUpon>IDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceImpl.cs">
+      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IOpenGenericDecorableServiceDecorator.cs">
+      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator1.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator2.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="OpenGenericDecorableServiceDecorator3.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 

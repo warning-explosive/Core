@@ -18,6 +18,43 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         {
             _typeInfoStorage = typeInfoStorage;
         }
+        
+        /// <inheritdoc />
+        public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
+        {
+            var type = typeof(TInterface);
+
+            if (!type.IsInterface)
+            {
+                throw new ArgumentException(nameof(TInterface));
+            }
+
+            return _typeInfoStorage
+                  .OurTypes
+                  .Where(t => t.IsInterface
+                              && IsContainsInterfaceDeclaration(t, typeof(TInterface)))
+                  .ToArray();
+        }
+
+        /// <inheritdoc />
+        public Type[] AllLoadedTypes()
+        {
+            return _typeInfoStorage.AllLoadedTypes;
+        }
+
+        /// <inheritdoc />
+        public Type[] OurTypes()
+        {
+            return _typeInfoStorage.OurTypes;
+        }
+        
+        /// <inheritdoc />
+        public bool IsOurType(Type type)
+        {
+            return _typeInfoStorage.ContainsKey(type)
+                   || (type.IsGenericType
+                       && _typeInfoStorage.ContainsKey(type.GetGenericTypeDefinition()));
+        }
 
         /// <inheritdoc />
         public bool IsNullable(Type type)
@@ -63,7 +100,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 return true;
             }
 
-            // closed-generic
+            // generic
             return TryGetGenericTypeDefinition(type, out var genericTypeDefinition)
                    && TryGetGenericTypeDefinition(@interface, out var genericInterfaceDefinition)
                    && _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces.Select(z => z.GUID).Contains(genericInterfaceDefinition.GUID)

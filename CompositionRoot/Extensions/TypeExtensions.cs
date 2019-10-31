@@ -11,6 +11,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         private static readonly ITypeExtensions _typeExtensions = DependencyContainer.Resolve<ITypeExtensions>();
 
         /// <summary>
+        /// Does type located in our assembly
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Result of check</returns>
+        public static bool IsOurType(this Type type)
+        {
+            return _typeExtensions.IsOurType(type);
+        }
+        
+        /// <summary>
         ///  Does type implement Nullable
         /// </summary>
         /// <param name="type">Type for check</param>

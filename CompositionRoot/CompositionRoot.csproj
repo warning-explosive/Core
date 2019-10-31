@@ -49,6 +49,9 @@
     <Compile Update="Extensions\ReferenceEqualityComparer.cs">
       <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
     </Compile>
+    <Compile Update="LifeStyleMapper.cs">
+      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

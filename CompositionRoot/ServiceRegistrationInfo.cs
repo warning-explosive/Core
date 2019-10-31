@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 throw new AttributeRequiredException(typeof(LifestyleAttribute), componentType);
             }
             
-            Lifestyle = MapLifestyle(enLifestyle.Value);
+            Lifestyle = LifeStyleMapper.MapLifestyle(enLifestyle.Value);
         }
 
         /// <summary>
@@ -53,16 +53,5 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Conditional attribute
         /// </summary>
         internal Type? Attribute { get; set; }
-
-        private static Lifestyle MapLifestyle(EnLifestyle enLifestyle)
-        {
-            switch (enLifestyle)
-            {
-                case EnLifestyle.Transient: return Lifestyle.Transient;
-                case EnLifestyle.Singleton: return Lifestyle.Singleton;
-                case EnLifestyle.Scoped:    return Lifestyle.Scoped;
-                default:                    return Lifestyle.Transient;
-            }
-        }
     }
 }

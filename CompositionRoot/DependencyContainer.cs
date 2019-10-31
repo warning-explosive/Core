@@ -157,10 +157,8 @@ namespace SpaceEngineers.Core.CompositionRoot
             ITypeExtensions typeExtensions,
             Type[] registredByHand)
         {
-            return typeInfoStorage
-                  .OurTypes
-                  .Where(t => t.IsInterface
-                              && typeExtensions.IsContainsInterfaceDeclaration(t, typeof(TInterface)))
+            return typeExtensions
+                  .AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
                   .Select(i => new
                                {
                                    ServiceType = i,

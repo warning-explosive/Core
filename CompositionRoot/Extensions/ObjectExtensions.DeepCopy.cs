@@ -72,7 +72,7 @@
         /// <returns>Deep copy of original object</returns>
         public static object DeepCopy(this object original)
         {
-            return ExceptionExtensions.ThrowIfNull(original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer())));
+            return ExceptionExtensions.ThrowIfNull(original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>())));
         }
 
         /// <summary>

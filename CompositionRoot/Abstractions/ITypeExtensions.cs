@@ -2,10 +2,36 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
 {
     using System;
 
-    internal interface ITypeExtensions : IResolvable
+    public interface ITypeExtensions : IResolvable
     {
         /// <summary>
-        ///  Does type implement Nullable
+        /// Get all services (interfaces) that contains TInterface declaration
+        /// </summary>
+        /// <typeparam name="T">Type-argument</typeparam>
+        /// <returns>Result of check</returns>
+        Type[] AllOurServicesThatContainsDeclarationOfInterface<T>();
+
+        /// <summary>
+        /// Get all types loaded in AppDomain
+        /// </summary>
+        /// <returns>All types loaded in AppDomain</returns>
+        Type[] AllLoadedTypes();
+        
+        /// <summary>
+        /// Get all types located in our assemblies
+        /// </summary>
+        /// <returns>All types located in our assemblies</returns>
+        Type[] OurTypes();
+        
+        /// <summary>
+        /// Does type located in our assembly
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Result of check</returns>
+        bool IsOurType(Type type);
+        
+        /// <summary>
+        /// Does type implement Nullable
         /// </summary>
         /// <param name="type">Type for check</param>
         /// <returns>Result of check</returns>

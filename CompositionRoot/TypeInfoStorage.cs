@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -13,7 +12,16 @@ namespace SpaceEngineers.Core.CompositionRoot
     [Lifestyle(EnLifestyle.Singleton)]
     internal class TypeInfoStorage : ITypeInfoStorage
     {
-        private readonly IDictionary<Guid, TypeInfo> _collection = new ConcurrentDictionary<Guid, TypeInfo>();
+        private static readonly string[] _excluded =
+        {
+            "<>f",
+            "<>c",
+            "<PrivateImplementationDetails>",
+            nameof(Microsoft),
+            nameof(System),
+        };
+        
+        private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
         public TypeInfoStorage()
         {
@@ -22,7 +30,6 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             OurAssemblies = AppDomain.CurrentDomain
                                      .GetAssemblies()
-                                     .AsParallel()
                                      .Where(z => z.GetReferencedAssemblies().Select(x => x.FullName).Contains(rootAssemblyFullName))
                                      .ToArray()
                                      .Concat(new[] { rootAssembly })
@@ -30,19 +37,31 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
                                                                     .Where(z => z.FullName != null
-                                                                                && !z.FullName.Contains("+<>c")))
+                                                                                && _excluded.All(mask => !z.FullName.Contains(mask))))
                                     .ToArray();
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));
+
+            AllLoadedTypes = AppDomain.CurrentDomain
+                                      .GetAssemblies()
+                                      .SelectMany(z => z.GetTypes())
+                                      .ToArray();
         }
 
         public TypeInfo this[Type type]
-            => _collection.TryGetValue(type.GUID, out var typeInfo)
-                   ? typeInfo
-                   : throw new KeyNotFoundException(type.FullName);
+            => _collection.ContainsKey(type.GUID)
+                   ? _collection[type.GUID]
+                   : new TypeInfo(type);
+
+        public bool ContainsKey(Type type)
+        {
+            return _collection.ContainsKey(type.GUID);
+        }
 
         public Assembly[] OurAssemblies { get; }
 
         public Type[] OurTypes { get; }
+
+        public Type[] AllLoadedTypes { get; }
     }
 }

@@ -115,13 +115,7 @@
     <Compile Update="DecorableServiceDecorator3.cs">
       <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="IDecorableServiceDecorator.cs">
-      <DependentUpon>IDecorableService.cs</DependentUpon>
-    </Compile>
     <Compile Update="OpenGenericDecorableServiceImpl.cs">
-      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="IOpenGenericDecorableServiceDecorator.cs">
       <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="OpenGenericDecorableServiceDecorator1.cs">
@@ -134,9 +128,6 @@
       <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
     <Compile Update="ConditionalDecorableServiceImpl.cs">
-      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="IConditionalDecorableServiceDecorator.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="TestConditionAttribute1.cs">
@@ -153,9 +144,6 @@
     </Compile>
     <Compile Update="ConditionalDecorableServiceDecorator3.cs">
       <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ICollectionResolvableConditionDecorableServiceDecorator.cs">
-      <DependentUpon>ICollectionResolvableDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="CollectionResolvableConditionDecorableServiceDecorator1.cs">
       <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>

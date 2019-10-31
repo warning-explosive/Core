@@ -36,6 +36,15 @@
 	  <Compile Update="SettingsManager\SettingsMangerImpl.cs">
 	    <DependentUpon>ISettingsManger.cs</DependentUpon>
 	  </Compile>
+	  <Compile Update="CompositionInfoExtractor\CompositionInfoVisualizerImpl.cs">
+	    <DependentUpon>ICompositionInfoVisualizer.cs</DependentUpon>
+	  </Compile>
+	  <Compile Update="CompositionInfoExtractor\CompositionInfoExtractorImpl.cs">
+	    <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>
+	  </Compile>
+	  <Compile Update="CompositionInfoExtractor\GenericArgumentsInfererImpl.cs">
+	    <DependentUpon>IGenericArgumentsInferer.cs</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 	
 	<ItemGroup>

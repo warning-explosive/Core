@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.CompositionRoot.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
+    using Abstractions;
 
     /// <summary>
     /// Service for safely invoke client actions and exception handling

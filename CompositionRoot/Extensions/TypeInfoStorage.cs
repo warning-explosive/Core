@@ -1,13 +1,11 @@
-namespace SpaceEngineers.Core.CompositionRoot
+namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
     using Attributes;
     using Enumerations;
-    using Extensions;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class TypeInfoStorage : ITypeInfoStorage

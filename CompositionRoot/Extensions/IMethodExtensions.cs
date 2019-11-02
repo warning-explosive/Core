@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.CompositionRoot.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
+    using Abstractions;
 
     internal interface IMethodExtensions : IResolvable
     {

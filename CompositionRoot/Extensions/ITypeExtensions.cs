@@ -1,8 +1,9 @@
-namespace SpaceEngineers.Core.CompositionRoot.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
+    using Abstractions;
 
-    public interface ITypeExtensions : IResolvable
+    internal interface ITypeExtensions : IResolvable
     {
         /// <summary>
         /// Get all services (interfaces) that contains TInterface declaration

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
 
     /// <summary>
@@ -17,6 +18,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
             foreach (var item in source)
             {
                 action(item);
+            }
+        }
+        
+        /// <summary> Select collection from IEnumerator </summary>
+        /// <param name="numerator">IEnumerator</param>
+        public static IEnumerable<object> ToObjectEnumerable(this IEnumerator numerator)
+        {
+            for (; numerator.MoveNext();)
+            {
+                yield return numerator.Current;
             }
         }
     }

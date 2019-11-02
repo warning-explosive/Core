@@ -13,14 +13,6 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
     [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericArgumentsInfererImpl : IGenericArgumentsInferer
     {
-        private readonly ITypeExtensions _typeExtensions;
-
-        /// <inheritdoc />
-        public GenericArgumentsInfererImpl(ITypeExtensions typeExtensions)
-        {
-            _typeExtensions = typeExtensions;
-        }
-
         public Type CloseByConstraints(Type type)
         {
             if (TryCloseByConstraints(type, out var closedOrSameType))
@@ -71,10 +63,10 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
 
             bool CheckTypeArgument(Type type) => CheckTypeArgumentInternal(type, constraints, filters);
 
-            return _typeExtensions.OurTypes()
-                                  .FirstOrDefault(CheckTypeArgument)
-                   ?? _typeExtensions.AllLoadedTypes()
-                                     .First(CheckTypeArgument);
+            return TypeExtensions.OurTypes()
+                                 .FirstOrDefault(CheckTypeArgument)
+                   ?? TypeExtensions.AllLoadedTypes()
+                                    .First(CheckTypeArgument);
         }
 
         private static bool CheckTypeArgumentInternal(Type typeArgument,

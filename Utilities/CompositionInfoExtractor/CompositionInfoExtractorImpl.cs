@@ -15,19 +15,15 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
     internal class CompositionInfoExtractorImpl : ICompositionInfoExtractor
     {
         private readonly Container _container;
-        private readonly ITypeExtensions _typeExtensions;
         private readonly IGenericArgumentsInferer _genericArgumentsInferer;
 
         /// <summary> .ctor </summary>
         /// <param name="container">Container</param>
-        /// <param name="typeExtensions">ITypeExtensions</param>
         /// <param name="genericArgumentsInferer"></param>
         public CompositionInfoExtractorImpl(Container container,
-                                            ITypeExtensions typeExtensions,
                                             IGenericArgumentsInferer genericArgumentsInferer)
         {
             _container = container;
-            _typeExtensions = typeExtensions;
             _genericArgumentsInferer = genericArgumentsInferer;
         }
 
@@ -48,7 +44,7 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
 
         private IEnumerable<Type> GetClosedServices()
         {
-            return _typeExtensions
+            return TypeExtensions
                   .AllOurServicesThatContainsDeclarationOfInterface<IResolvable>()
                   .Select(t =>
                           {
@@ -58,7 +54,7 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
 
                               return closedOrSame;
                           })
-                  .Concat(_typeExtensions
+                  .Concat(TypeExtensions
                          .AllOurServicesThatContainsDeclarationOfInterface<ICollectionResolvable>()
                          .Select(t =>
                                  {

@@ -58,10 +58,11 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
 
             const string format = "[{0}]";
 
-            var genericArguments = type.GetGenericArguments();
+            var genericArguments = type.GetGenericTypeDefinition()
+                                       .GetGenericArguments();
 
             return string.Format(format,
-                                 genericArguments.Length == 1 ? "T" : string.Join(", ", genericArguments.Select((t, i) => $"T{i}")));
+                                 genericArguments.Length == 1 ? "T" : string.Join(", ", genericArguments.Select((t, i) => t.Name)));
         }
     }
 }

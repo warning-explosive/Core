@@ -15,23 +15,13 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
     {
         public Type CloseByConstraints(Type type)
         {
-            if (TryCloseByConstraints(type, out var closedOrSameType))
-            {
-                return closedOrSameType;
-            }
-
-            throw new ArgumentException($"Type {type.FullName} is not closed");
+            return AlreadyClosed(type)
+                       ? type
+                       : CloseByConstraintsInternal(type);
         }
         
-        private bool TryCloseByConstraints(Type type, out Type closedOrSameType)
+        private Type CloseByConstraintsInternal(Type type)
         {
-            closedOrSameType = type;
-            
-            if (AlreadyClosed(type))
-            {
-                return true;
-            }
-
             var args = type.GetGenericArguments()
                            .Select(arg =>
                                    {
@@ -41,14 +31,14 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
                                    })
                            .ToArray();
 
-            closedOrSameType = type.MakeGenericType(args);
+            var closed = type.MakeGenericType(args);
             
-            if (AlreadyClosed(closedOrSameType))
+            if (!AlreadyClosed(closed))
             {
-                return true;
+                throw new ArgumentException($"Type {type.FullName} is not closed");
             }
 
-            return false;
+            return closed;
         }
 
         private static bool AlreadyClosed(Type type)

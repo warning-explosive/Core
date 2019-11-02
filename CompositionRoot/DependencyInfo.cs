@@ -89,13 +89,12 @@ namespace SpaceEngineers.Core.CompositionRoot
                                           .GetPropertyValue("Collection")
                                           .GetFieldValue("producers");
 
-                var numerator = (producers as IEnumerable)?.GetEnumerator();
-
-                dependencies = numerator.ThrowIfNull()
-                                        .ToObjectEnumerable()
-                                        .Select(o => o.GetPropertyValue("Value"))
-                                        .OfType<InstanceProducer>()
-                                        .ToArray();
+                dependencies = ((IEnumerable)producers).ThrowIfNull()
+                                                       .GetEnumerator()
+                                                       .ToObjectEnumerable()
+                                                       .Select(o => o.GetPropertyValue("Value"))
+                                                       .OfType<InstanceProducer>()
+                                                       .ToArray();
             }
             else
             {

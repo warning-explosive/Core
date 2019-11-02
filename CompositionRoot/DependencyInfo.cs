@@ -5,6 +5,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
+    using Abstractions;
     using Enumerations;
     using Extensions;
     using SimpleInjector;
@@ -21,7 +23,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ServiceType = serviceType;
             ComponentType = componentType;
             EnLifestyle = enLifestyle;
-            Relationships = new List<DependencyInfo>();
+            Dependencies = new List<DependencyInfo>();
 
             Depth = depth;
             IsCollectionResolvable = isCollectionResolvable;
@@ -34,7 +36,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         public EnLifestyle EnLifestyle { get; }
 
-        public ICollection<DependencyInfo> Relationships { get; private set; }
+        public ICollection<DependencyInfo> Dependencies { get; private set; }
 
         public uint Depth { get; }
 
@@ -46,7 +48,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             action(this);
 
-            Relationships.Each(relationship => relationship.ExecuteAction(action));
+            Dependencies.Each(relationship => relationship.ExecuteAction(action));
         }
 
         public static DependencyInfo RetrieveDependencyGraph(InstanceProducer dependency,
@@ -79,12 +81,32 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             visited.Add(dependency, newNodeInfo);
 
-            newNodeInfo.Relationships = (isCollectionResolvable
-                                             ? dependency.Registration.GetRelationships()
-                                             : dependency.GetRelationships())
-                                       .Select(relationship => RetrieveDependencyGraph(relationship.Dependency,
-                                                                                       visited,
-                                                                                       depth + 1))
+            InstanceProducer[] dependencies;
+            
+            if (isCollectionResolvable)
+            {
+                var producers = dependency.Registration
+                                          .GetPropertyValue("Collection")
+                                          .GetFieldValue("producers");
+
+                dependencies = ((IEnumerable)producers).ThrowIfNull()
+                                                       .GetEnumerator()
+                                                       .ToObjectEnumerable()
+                                                       .Select(o => o.GetPropertyValue("Value"))
+                                                       .OfType<InstanceProducer>()
+                                                       .ToArray();
+            }
+            else
+            {
+                dependencies = dependency.GetRelationships()
+                                         .Select(z => z.Dependency)
+                                         .ToArray();
+            }
+
+            newNodeInfo.Dependencies = dependencies
+                                       .Select(d => RetrieveDependencyGraph(d,
+                                                                            visited,
+                                                                            depth + 1))
                                        .ToList();
 
             return newNodeInfo;

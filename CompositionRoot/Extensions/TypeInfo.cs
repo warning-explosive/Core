@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot
+namespace SpaceEngineers.Core.CompositionRoot.Extensions
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Linq;
     using System.Reflection;
     using Attributes;
-    using Extensions;
 
     [DebuggerDisplay("{OriginalType}")]
     internal class TypeInfo

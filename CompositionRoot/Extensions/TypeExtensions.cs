@@ -11,6 +11,34 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         private static readonly ITypeExtensions _typeExtensions = DependencyContainer.Resolve<ITypeExtensions>();
 
         /// <summary>
+        /// Get all services (interfaces) that contains TInterface declaration
+        /// </summary>
+        /// <typeparam name="T">Type-argument</typeparam>
+        /// <returns>Result of check</returns>
+        public static Type[] AllOurServicesThatContainsDeclarationOfInterface<T>()
+        {
+            return _typeExtensions.AllOurServicesThatContainsDeclarationOfInterface<T>();
+        }
+
+        /// <summary>
+        /// Get all types loaded in AppDomain
+        /// </summary>
+        /// <returns>All types loaded in AppDomain</returns>
+        public static Type[] AllLoadedTypes()
+        {
+            return _typeExtensions.AllLoadedTypes();
+        }
+
+        /// <summary>
+        /// Get all types located in our assemblies
+        /// </summary>
+        /// <returns>All types located in our assemblies</returns>
+        public static Type[] OurTypes()
+        {
+            return _typeExtensions.OurTypes();
+        }
+        
+        /// <summary>
         /// Does type located in our assembly
         /// </summary>
         /// <param name="type">Type</param>

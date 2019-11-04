@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.Utilities.CompositionInfoExtractor</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Utilities.CompositionInfoExtractor</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0-alpha</Version>
+    <Description>Utilities for netcore application</Description>
+    <PackageTags>SpaceEngineers Core Utilities CompositionInfoExtractor</PackageTags>
+    <Company>SpaceEngineers</Company>
+    <Authors>SpaceEngineers</Authors>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CompositionRoot\CompositionRoot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="CompositionInfoVisualizerImpl.cs">
+      <DependentUpon>ICompositionInfoVisualizer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CompositionInfoExtractorImpl.cs">
+      <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GenericArgumentsInfererImpl.cs">
+      <DependentUpon>IGenericArgumentsInferer.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

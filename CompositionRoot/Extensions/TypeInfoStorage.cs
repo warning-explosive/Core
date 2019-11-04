@@ -18,6 +18,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
             nameof(Microsoft),
             nameof(System),
         };
+
+        private const string Utilities = "SpaceEngineers.Core.Utilities";
         
         private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
@@ -25,10 +27,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         {
             var rootAssembly = typeof(DependencyContainer).Assembly;
             var rootAssemblyFullName = rootAssembly.GetName().FullName;
-
+            
             OurAssemblies = AppDomain.CurrentDomain
                                      .GetAssemblies()
-                                     .Where(z => z.GetReferencedAssemblies().Select(x => x.FullName).Contains(rootAssemblyFullName))
+                                     .Where(z => z.GetReferencedAssemblies().Select(x => x.FullName).Contains(rootAssemblyFullName)
+                                                 && z.GetName().Name != Utilities)
                                      .ToArray()
                                      .Concat(new[] { rootAssembly })
                                      .ToArray();

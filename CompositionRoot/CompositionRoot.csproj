@@ -6,13 +6,12 @@
     <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.CompositionRoot</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.CompositionRoot</RootNamespace>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.0.0-alpha</Version>
     <Description>Composition root for netcore application</Description>
     <PackageTags>SpaceEngineers Core CompositionRoot</PackageTags>
     <Company>SpaceEngineers</Company>
     <Authors>SpaceEngineers</Authors>
-    <PackageLicenseUrl>https://github.com/warning-explosive/Core</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>

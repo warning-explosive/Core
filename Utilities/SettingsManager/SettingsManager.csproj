@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.Utilities.SettingsManager</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Utilities.SettingsManager</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0-alpha</Version>
+    <Description>Utilities for netcore application</Description>
+    <PackageTags>SpaceEngineers Core Utilities SettingsManager</PackageTags>
+    <Company>SpaceEngineers</Company>
+    <Authors>SpaceEngineers</Authors>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CompositionRoot\CompositionRoot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="YamlFormatter.cs">
+      <DependentUpon>IYamlFormatter.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SettingsMangerImpl.cs">
+      <DependentUpon>ISettingsManger.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IFileSystemSettings.cs">
+      <DependentUpon>ISettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IYamlFormatter.cs">
+      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="FileSystemFormatterBase.cs">
+      <DependentUpon>IAsyncFormatter.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

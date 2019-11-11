@@ -1,14 +1,14 @@
 Int: 2019
 Decimal: 42.42
 String: Hello world!
-Date: 2019-11-04T12:36:31.3222166+03:00
+Date: 2019-11-11T22:38:12.3985943+03:00
 Reference:
   Int: 2019
   Decimal: 42.42
   String: Hello world!
-  Date: 2019-11-04T12:36:31.3222166+03:00
+  Date: 2019-11-11T22:38:12.3985943+03:00
 Collection:
 - Int: 2019
   Decimal: 42.42
   String: Hello world!
-  Date: 2019-11-04T12:36:31.3222166+03:00
+  Date: 2019-11-11T22:38:12.3985943+03:00

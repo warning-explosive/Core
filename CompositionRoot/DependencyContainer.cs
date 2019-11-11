@@ -85,15 +85,9 @@ namespace SpaceEngineers.Core.CompositionRoot
                                 }
                             };
 
-            var typeInfoStorage = new TypeInfoStorage();
-            var typeExtensions = new TypeExtensionsImpl(typeInfoStorage);
+            var typeExtensions = TypeExtensions.SetInstance(typeof(DependencyContainer).Assembly);
             
-            container.RegisterInstance<ITypeInfoStorage>(typeInfoStorage);
-            container.RegisterInstance<ITypeExtensions>(typeExtensions);
-
-            var registredByHand = new[] { typeof(TypeInfoStorage), typeof(TypeExtensionsImpl) };
-            
-            RegisterServices(container, typeInfoStorage, typeExtensions, registredByHand);
+            RegisterServices(container, typeExtensions);
 
             container.Verify(VerificationOption.VerifyAndDiagnose);
 
@@ -101,17 +95,12 @@ namespace SpaceEngineers.Core.CompositionRoot
         }
 
         private static void RegisterServices(Container container,
-                                             ITypeInfoStorage typeInfoStorage,
-                                             ITypeExtensions typeExtensions,
-                                             Type[] registredByHand)
+                                             ITypeExtensions typeExtensions)
         {
             /*
              * [I] - Single
              */
-            var iResolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container,
-                                                                                       typeInfoStorage,
-                                                                                       typeExtensions,
-                                                                                       registredByHand);
+            var iResolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container, typeExtensions);
            
             foreach (var iResolvable in iResolvableRegistrationInfos)
             {
@@ -121,14 +110,11 @@ namespace SpaceEngineers.Core.CompositionRoot
             /*
              * [II] - Collections
              */
-            var iCollectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container,
-                                                                                                           typeInfoStorage,
-                                                                                                           typeExtensions,
-                                                                                                           registredByHand);
+            var iCollectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
             RegisterLifestyle(container, iCollectionResolvableRegistrationInfos);
 
             foreach (var iCollectionResolvable in iCollectionResolvableRegistrationInfos
-                                                 .OrderBy(info => OrderByAttribute(info, typeInfoStorage))
+                                                 .OrderBy(info => OrderByAttribute(info, typeExtensions))
                                                  .GroupBy(k => k.ServiceType, v => v.ComponentType))
             {
                 container.Collection.Register(iCollectionResolvable.Key, iCollectionResolvable);
@@ -137,25 +123,22 @@ namespace SpaceEngineers.Core.CompositionRoot
             /*
              * [III] - Decorators
              */
-            GetDecoratorInfo(typeInfoStorage, typeExtensions, typeof(IDecorator<>))
-               .Concat(GetConditionalDecoratorInfo(typeInfoStorage, typeExtensions, typeof(IConditionalDecorator<,>)))
-               .OrderBy(info => OrderByAttribute(info, typeInfoStorage))
+            GetDecoratorInfo(typeExtensions, typeof(IDecorator<>))
+               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(IConditionalDecorator<,>)))
+               .OrderBy(info => OrderByAttribute(info, typeExtensions))
                .Each(info => RegisterDecorator(container, info));
             
             /*
              * [IV] - Collection decorators
              */
-            GetDecoratorInfo(typeInfoStorage, typeExtensions, typeof(ICollectionDecorator<>))
-               .Concat(GetConditionalDecoratorInfo(typeInfoStorage, typeExtensions, typeof(ICollectionConditionalDecorator<,>)))
-               .OrderBy(info => OrderByAttribute(info, typeInfoStorage))
+            GetDecoratorInfo(typeExtensions, typeof(ICollectionDecorator<>))
+               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(ICollectionConditionalDecorator<,>)))
+               .OrderBy(info => OrderByAttribute(info, typeExtensions))
                .Each(info => RegisterDecorator(container, info));
         }
 
-        private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(
-            Container container,
-            ITypeInfoStorage typeInfoStorage,
-            ITypeExtensions typeExtensions,
-            Type[] registredByHand)
+        private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
+                                                                                        ITypeExtensions typeExtensions)
         {
             return typeExtensions
                   .AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
@@ -164,14 +147,13 @@ namespace SpaceEngineers.Core.CompositionRoot
                                    ServiceType = i,
                                    Components = container
                                                .GetTypesToRegister(i,
-                                                                   typeInfoStorage.OurAssemblies,
+                                                                   typeExtensions.OurAssemblies(),
                                                                    new TypesToRegisterOptions
                                                                    {
                                                                        IncludeComposites = false,
                                                                        IncludeDecorators = false,
                                                                        IncludeGenericTypeDefinitions = true
                                                                    })
-                                               .Except(registredByHand)
                                                .Select(cmp => new
                                                               {
                                                                   ComponentType = cmp,
@@ -196,12 +178,11 @@ namespace SpaceEngineers.Core.CompositionRoot
             }
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(ITypeInfoStorage typeInfoStorage,
-                                                                             ITypeExtensions typeExtensions,
+        private static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(ITypeExtensions typeExtensions,
                                                                              Type decoratorType)
         {
-            return typeInfoStorage
-                  .OurTypes
+            return typeExtensions
+                  .OurTypes()
                   .Where(cmp => typeExtensions.IsImplementationOfOpenGenericInterface(cmp, decoratorType))
                   .Select(cmp => new ServiceRegistrationInfo(cmp.GetInterfaces()
                                                                 .Where(i => i.IsGenericType)
@@ -211,13 +192,11 @@ namespace SpaceEngineers.Core.CompositionRoot
                                                              cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(
-            ITypeInfoStorage typeInfoStorage,
-            ITypeExtensions typeExtensions,
-            Type decoratorType)
+        private static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(ITypeExtensions typeExtensions,
+                                                                                        Type decoratorType)
         {
-            return typeInfoStorage
-                  .OurTypes
+            return typeExtensions
+                  .OurTypes()
                   .Where(t => typeExtensions.IsImplementationOfOpenGenericInterface(t,
                                                                                     decoratorType))
                   .Select(t => new
@@ -236,9 +215,9 @@ namespace SpaceEngineers.Core.CompositionRoot
                                });
         }
 
-        private static uint OrderByAttribute(ServiceRegistrationInfo info, ITypeInfoStorage typeInfoStorage)
+        private static uint OrderByAttribute(ServiceRegistrationInfo info, ITypeExtensions typeExtensions)
         {
-            return typeInfoStorage[info.ComponentType].Order ?? uint.MaxValue;
+            return typeExtensions.GetOrder(info.ComponentType) ?? uint.MaxValue;
         }
 
         private static void RegisterDecorator(Container container, ServiceRegistrationInfo info)

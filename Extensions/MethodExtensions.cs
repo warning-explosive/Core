@@ -1,18 +1,22 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
-    using Attributes;
-    using Enumerations;
 
-    /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
-    internal class MethodExtensionsImpl : IMethodExtensions
+    /// <summary>
+    /// System.Type.MethodInfo extensions
+    /// </summary>
+    public static class MethodExtensions
     {
-        /// <inheritdoc />
-        public object CallMethod(object target, string methodName, params object?[] args)
+        /// <summary>
+        /// Call method
+        /// </summary>
+        /// <param name="target">Target invocation instance</param>
+        /// <param name="methodName">Method name</param>
+        /// <param name="args">Method args</param>
+        /// <returns></returns>
+        public static object CallMethod(this object target, string methodName, params object?[] args)
         {
             var methodInfo = target.GetType()
                                    .GetMethods(BindingFlags.Instance
@@ -23,9 +27,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
 
             return methodInfo.ThrowIfNull().Invoke(target, args);
         }
-
-        /// <inheritdoc />
-        public object CallStaticMethod(Type type, string methodName, params object?[] args)
+        
+        /// <summary>
+        /// Call static method
+        /// </summary>
+        /// <param name="type">Contained type</param>
+        /// <param name="methodName">Method name</param>
+        /// <param name="args">Method args</param>
+        /// <returns></returns>
+        public static object CallStaticMethod(this Type type, string methodName, params object?[] args)
         {
             var methodInfo = type.GetMethods(BindingFlags.Static
                                              | BindingFlags.Public
@@ -35,9 +45,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
 
             return methodInfo.ThrowIfNull().Invoke(null, args);
         }
-        
-        /// <inheritdoc />
-        public object CallStaticGenericMethod(Type type, string methodName, Type[] genericArguments, params object?[] args)
+
+        /// <summary>
+        /// Call static generic method
+        /// </summary>
+        /// <param name="type">Contained type</param>
+        /// <param name="methodName">Method name</param>
+        /// <param name="genericArguments">Method generic arguments</param>
+        /// <param name="args">Method args</param>
+        /// <returns></returns>
+        public static object CallStaticGenericMethod(this Type type, string methodName,Type[] genericArguments, params object?[] args)
         {
             var methodInfo = type.GetMethods(BindingFlags.Static
                                              | BindingFlags.Public
@@ -50,8 +67,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                              .MakeGenericMethod(genericArguments)
                              .Invoke(null, args);
         }
-
-        private bool FilterMethod(MethodInfo methodInfo, string methodName, int parametersCount)
+        
+        private static bool FilterMethod(MethodInfo methodInfo, string methodName, int parametersCount)
         {
             var methodParameters = methodInfo.GetParameters();
             
@@ -60,7 +77,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                    && !methodInfo.IsDefined(typeof(ObsoleteAttribute));
         }
 
-        private bool FilterGenericMethod(MethodInfo methodInfo, int genericArgumentsCount)
+        private static bool FilterGenericMethod(MethodInfo methodInfo, int genericArgumentsCount)
         {
             return methodInfo.GetGenericArguments().Length == genericArgumentsCount;
         }

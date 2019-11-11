@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Utilities.SettingsManager
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     public abstract class FileSystemFormatterBase : IAsyncFormatter
     {

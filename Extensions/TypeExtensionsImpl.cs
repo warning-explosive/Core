@@ -1,13 +1,10 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Linq;
-    using Abstractions;
-    using Attributes;
-    using Enumerations;
+    using System.Reflection;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
     internal class TypeExtensionsImpl : ITypeExtensions
     {
         private readonly ITypeInfoStorage _typeInfoStorage;
@@ -47,13 +44,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         {
             return _typeInfoStorage.OurTypes;
         }
-        
+
+        /// <inheritdoc />
+        public Assembly[] OurAssemblies()
+        {
+            return _typeInfoStorage.OurAssemblies;
+        }
+
         /// <inheritdoc />
         public bool IsOurType(Type type)
         {
             return _typeInfoStorage.ContainsKey(type)
                    || (type.IsGenericType
                        && _typeInfoStorage.ContainsKey(type.GetGenericTypeDefinition()));
+        }
+
+        /// <inheritdoc />
+        public uint? GetOrder(Type type)
+        {
+            return _typeInfoStorage[type].Order;
         }
 
         /// <inheritdoc />

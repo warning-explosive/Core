@@ -2,11 +2,10 @@ namespace SpaceEngineers.Core.Utilities.SettingsManager
 {
     using System;
     using System.Linq;
-    using System.Threading.Tasks;
     using CompositionRoot;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]

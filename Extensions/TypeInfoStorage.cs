@@ -1,13 +1,10 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Attributes;
-    using Enumerations;
 
-    [Lifestyle(EnLifestyle.Singleton)]
     internal class TypeInfoStorage : ITypeInfoStorage
     {
         private static readonly string[] _excluded =
@@ -23,9 +20,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         
         private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
-        public TypeInfoStorage()
+        public TypeInfoStorage(Assembly rootAssembly)
         {
-            var rootAssembly = typeof(DependencyContainer).Assembly;
             var rootAssemblyFullName = rootAssembly.GetName().FullName;
             
             OurAssemblies = AppDomain.CurrentDomain

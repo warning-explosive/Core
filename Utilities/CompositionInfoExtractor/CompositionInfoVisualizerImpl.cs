@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
     using CompositionRoot;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]

@@ -4,12 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.CompositionRoot</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.CompositionRoot</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.Extensions</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Extensions</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.0.0-alpha</Version>
-    <Description>Composition root for netcore application</Description>
-    <PackageTags>SpaceEngineers Core CompositionRoot</PackageTags>
+    <Description>Extensions for netcore application</Description>
+    <PackageTags>SpaceEngineers Core Extensions</PackageTags>
     <Company>SpaceEngineers</Company>
     <Authors>SpaceEngineers</Authors>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
@@ -26,20 +26,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SimpleInjector" Version="4.7.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="ServiceRegistrationInfo.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    <Compile Update="ITypeInfoStorage.cs">
+      <DependentUpon>TypeExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="LifeStyleMapper.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    <Compile Update="TypeExtensionsImpl.cs">
+      <DependentUpon>ITypeExtensions.cs</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Extensions\Extensions.csproj" />
+    <Compile Update="ITypeExtensions.cs">
+      <DependentUpon>TypeExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeInfoStorage.cs">
+      <DependentUpon>ITypeInfoStorage.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ReferenceEqualityComparer.cs">
+      <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

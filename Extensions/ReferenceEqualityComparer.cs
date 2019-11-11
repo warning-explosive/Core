@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.CompositionRoot.Extensions
+﻿namespace SpaceEngineers.Core.Extensions
 {
     using System.Collections.Generic;
 

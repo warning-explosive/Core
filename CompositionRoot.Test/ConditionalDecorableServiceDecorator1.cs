@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Abstractions;
     using Attributes;
     using Enumerations;
+    using Extensions.Attributes;
 
     [Lifestyle(EnLifestyle.Transient)]
     [Order(3)]

@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Collections.Generic;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Extensions;
     using CompositionRoot.Test;
+    using Extensions;
     using SettingsManager;
     using Xunit;
     using Xunit.Abstractions;
@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Utilities.Test
              */
             var config = manager.Get<TestYamlConfig>();
             Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+            Output.WriteLine(config.ShowProperties());
             Output.WriteLine(string.Empty);
             
             /*
@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                                       }
                      };
             manager.Set(config);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+            Output.WriteLine(config.ShowProperties());
             Output.WriteLine(string.Empty);
             
             /*
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.Utilities.Test
              */
             config = manager.Get<TestYamlConfig>();
             Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+            Output.WriteLine(config.ShowProperties());
         }
     }
 

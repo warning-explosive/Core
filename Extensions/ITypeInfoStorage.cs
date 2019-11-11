@@ -1,12 +1,11 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Reflection;
-    using Abstractions;
 
-    internal interface ITypeInfoStorage : IResolvable
+    internal interface ITypeInfoStorage
     {
-        Extensions.TypeInfo this[Type type] { get; }
+        TypeInfo this[Type type] { get; }
 
         bool ContainsKey(Type type);
 

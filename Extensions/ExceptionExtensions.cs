@@ -1,14 +1,19 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
-    using Abstractions;
+    using System.Linq;
 
     /// <summary>
     /// Exception extension methods
     /// </summary>
     public static class ExceptionExtensions
     {
-        private static readonly IExceptionHandler _exceptionHandler = DependencyContainer.Resolve<IExceptionHandler>();
+        private static readonly Type[] _exceptionTypesForSkip =
+        {
+            typeof(StackOverflowException),
+            typeof(OutOfMemoryException),
+            typeof(OperationCanceledException),
+        };
 
         /// <summary>
         /// Throw if input class is null
@@ -39,7 +44,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                                            Action<Exception> exceptionHandler,
                                            Action? finallyAction = null)
         {
-            _exceptionHandler.TryCatchFinally(action, exceptionHandler, finallyAction);
+            try
+            {
+                action.Invoke();
+            }
+            catch (Exception ex) when(CanBeCatched(ex))
+            {
+                exceptionHandler.Invoke(ex);
+            }
+            finally
+            {
+                finallyAction?.Invoke();
+            }
         }
 
         /// <summary>
@@ -54,7 +70,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                                                         Action? finallyAction = null)
             where TResult : class
         {
-            return _exceptionHandler.TryCatchFinally(func, exceptionHandler, finallyAction);
+            TResult? result = default;
+            
+            try
+            {
+                result = func.Invoke();
+            }
+            catch (Exception ex) when(CanBeCatched(ex))
+            {
+                exceptionHandler.Invoke(ex);
+            }
+            finally
+            {
+                finallyAction?.Invoke();
+            }
+
+            return result;
         }
         
         /// <summary>
@@ -69,7 +100,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                                                         Action? finallyAction = null)
             where TResult : struct
         {
-            return _exceptionHandler.TryCatchFinally(func, exceptionHandler, finallyAction);
+            TResult? result = default;
+            
+            try
+            {
+                result = func.Invoke();
+            }
+            catch (Exception ex) when(CanBeCatched(ex))
+            {
+                exceptionHandler.Invoke(ex);
+            }
+            finally
+            {
+                finallyAction?.Invoke();
+            }
+
+            return result;
         }
+
+        private static bool CanBeCatched(Exception exception) => !_exceptionTypesForSkip.Contains(exception.GetType());
     }
 }

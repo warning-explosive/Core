@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Collections;
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         /// <param name="numerator">IEnumerator</param>
         public static IEnumerable<object> ToObjectEnumerable(this IEnumerator numerator)
         {
-            for (; numerator.MoveNext();)
+            while (numerator.MoveNext())
             {
                 yield return numerator.Current;
             }

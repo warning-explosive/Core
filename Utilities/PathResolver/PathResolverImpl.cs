@@ -4,10 +4,9 @@ namespace SpaceEngineers.Core.Utilities.PathResolver
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using CompositionRoot;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     /// <inheritdoc />
     [Lifestyle(lifestyle: EnLifestyle.Singleton)]
@@ -20,8 +19,7 @@ namespace SpaceEngineers.Core.Utilities.PathResolver
         private static readonly string AmbiguousMatch = "Ambiguous number of paths";
 
         private static readonly Func<PathResolverInfo<TKey, TValue>, string> _additionalInfo =
-            gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
-                                      nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
+            gsf => gsf.ShowProperties(nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
 
         /// <inheritdoc />
         public Queue<KeyValuePair<TKey, TValue>> GetShortestPath(GenericGraph<TKey, TValue> genericGraph,

@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 sw1.Stop();
             
                 Output.WriteLine("BySerialization");
-                Output.WriteLine(sw1.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+                Output.WriteLine(sw1.ShowProperties());
                 Output.WriteLine("=======");
             
                 sw2.Start();
@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 sw2.Stop();
             
                 Output.WriteLine("ByReflection");
-                Output.WriteLine(sw2.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+                Output.WriteLine(sw2.ShowProperties());
                 Output.WriteLine("=======");
             
                 AssertTestReferenceTypeWithOutTypes(original, cloneBySerialization, true);

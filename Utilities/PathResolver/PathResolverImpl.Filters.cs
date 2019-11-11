@@ -3,8 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using CompositionRoot;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     /// <inheritdoc />
     internal partial class PathResolverImpl<TKey, TValue>

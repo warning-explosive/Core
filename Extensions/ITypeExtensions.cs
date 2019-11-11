@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
-    using Abstractions;
+    using System.Reflection;
 
-    internal interface ITypeExtensions : IResolvable
+    public interface ITypeExtensions
     {
         /// <summary>
         /// Get all services (interfaces) that contains TInterface declaration
@@ -25,11 +25,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         Type[] OurTypes();
         
         /// <summary>
+        /// Get all our assemblies (with dependency on CompositionRoot assembly)
+        /// </summary>
+        /// <returns>All our assemblies</returns>
+        Assembly[] OurAssemblies();
+        
+        /// <summary>
         /// Does type located in our assembly
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Result of check</returns>
         bool IsOurType(Type type);
+
+        /// <summary>
+        /// Get type order from OrderAttribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Type order</returns>
+        uint? GetOrder(Type type);
         
         /// <summary>
         /// Does type implement Nullable

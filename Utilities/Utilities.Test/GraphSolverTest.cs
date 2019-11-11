@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Linq;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Extensions;
     using CompositionRoot.Test;
+    using Extensions;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;

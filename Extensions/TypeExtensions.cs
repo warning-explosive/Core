@@ -1,14 +1,27 @@
-namespace SpaceEngineers.Core.CompositionRoot.Extensions
+namespace SpaceEngineers.Core.Extensions
 {
     using System;
-    using Abstractions;
+    using System.Reflection;
 
     /// <summary>
     /// System.Type extensions methods
     /// </summary>
     public static class TypeExtensions
     {
-        private static readonly ITypeExtensions _typeExtensions = DependencyContainer.Resolve<ITypeExtensions>();
+        private static ITypeExtensions _typeExtensions =
+            new TypeExtensionsImpl(new TypeInfoStorage(typeof(TypeExtensions).Assembly));
+
+        /// <summary>
+        /// Set instance
+        /// </summary>
+        /// <param name="rootAssembly">Assembly</param>
+        /// <returns>Created instance of ITypeExtensions</returns>
+        public static ITypeExtensions SetInstance(Assembly rootAssembly)
+        {
+            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(rootAssembly));
+
+            return _typeExtensions;
+        }
 
         /// <summary>
         /// Get all services (interfaces) that contains TInterface declaration
@@ -46,6 +59,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         public static bool IsOurType(this Type type)
         {
             return _typeExtensions.IsOurType(type);
+        }
+
+        /// <summary>
+        /// Get type order from OrderAttribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Type order</returns>
+        public static uint? GetOrder(this Type type)
+        {
+            return _typeExtensions.GetOrder(type);
         }
         
         /// <summary>

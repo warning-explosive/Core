@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Reflection;
     using CliArgumentsParser;
     using CompositionRoot;
-    using CompositionRoot.Extensions;
     using CompositionRoot.Test;
+    using Extensions;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -391,10 +391,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             /// <inheritdoc />
             public override string ToString()
             {
-                return this.ShowProperties(BindingFlags.Public
-                                           | BindingFlags.Instance
-                                           | BindingFlags.GetProperty
-                                           | BindingFlags.SetProperty);
+                return this.ShowProperties();
             }
         }
     }

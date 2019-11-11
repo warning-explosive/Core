@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
     using CompositionRoot.Abstractions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using CompositionRoot.Extensions;
+    using Extensions;
     using SimpleInjector;
 
     /// <inheritdoc />

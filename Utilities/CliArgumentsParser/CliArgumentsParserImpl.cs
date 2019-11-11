@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Utilities.CliArgumentsParser
     using System.Text.RegularExpressions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using CompositionRoot.Extensions;
+    using Extensions;
 
     /// <summary>
     /// Cli arguments parser class
@@ -166,8 +166,8 @@ namespace SpaceEngineers.Core.Utilities.CliArgumentsParser
             // Nullable<enum>
             // enum flags
             var enumType = type.IsNullable()
-                ? type.GetGenericArguments()[0]
-                : type;
+                               ? type.GetGenericArguments()[0]
+                               : type;
             
             if (enumType.IsEnum)
             {

@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Utilities.Test
              */
             var config = manager.Get<TestYamlConfig>();
             Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties());
+            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
             
             /*
@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                                       }
                      };
             manager.Set(config);
-            Output.WriteLine(config.ShowProperties());
+            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
             
             /*
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.Utilities.Test
              */
             config = manager.Get<TestYamlConfig>();
             Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties());
+            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
         }
     }
 

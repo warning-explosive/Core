@@ -391,7 +391,10 @@ namespace SpaceEngineers.Core.Utilities.Test
             /// <inheritdoc />
             public override string ToString()
             {
-                return this.ShowProperties();
+                return this.ShowProperties(BindingFlags.Public
+                                           | BindingFlags.Instance
+                                           | BindingFlags.GetProperty
+                                           | BindingFlags.SetProperty);
             }
         }
     }

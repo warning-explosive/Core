@@ -19,7 +19,8 @@ namespace SpaceEngineers.Core.Utilities.PathResolver
         private static readonly string AmbiguousMatch = "Ambiguous number of paths";
 
         private static readonly Func<PathResolverInfo<TKey, TValue>, string> _additionalInfo =
-            gsf => gsf.ShowProperties(nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
+            gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
+                                      nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
 
         /// <inheritdoc />
         public Queue<KeyValuePair<TKey, TValue>> GetShortestPath(GenericGraph<TKey, TValue> genericGraph,

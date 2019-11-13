@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Extensions
 {
+    using System;
     using System.Linq;
     using System.Reflection;
 
@@ -23,5 +24,13 @@ namespace SpaceEngineers.Core.Extensions
                                 .Where(z => !blackList.Contains(z.Name))
                                 .Select(z => $"[{z.Name}] = {z.GetValue(instance)?.ToString() ?? "null"}"));
         }
+
+        /// <summary>
+        /// Show NAME/Value pair of variable
+        /// </summary>
+        /// <param name="variable">Variable value</param>
+        /// <param name="name">Variable name</param>
+        /// <returns>NAME/Value pair</returns>
+        public static string ShowVariable(this object variable, string name) { return $"[{name}] {variable}"; }
     }
 }

@@ -7,7 +7,6 @@
 		  <AssemblyName>SpaceEngineers.Core.Utilities.Test</AssemblyName>
 		  <RootNamespace>SpaceEngineers.Core.Utilities.Test</RootNamespace>
 		  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		  <Version>1.0.0-alpha</Version>
 		  <Description>Utilities for netcore application</Description>
 		  <PackageTags>SpaceEngineers Core Utilities Test</PackageTags>
 		  <Company>SpaceEngineers</Company>

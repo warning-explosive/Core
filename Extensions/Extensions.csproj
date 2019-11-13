@@ -7,7 +7,6 @@
     <AssemblyName>SpaceEngineers.Core.Extensions</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.Extensions</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0-alpha</Version>
     <Description>Extensions for netcore application</Description>
     <PackageTags>SpaceEngineers Core Extensions</PackageTags>
     <Company>SpaceEngineers</Company>
@@ -41,6 +40,12 @@
     <Compile Update="ReferenceEqualityComparer.cs">
       <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitVersionTask" Version="5.1.2">
+	  <PrivateAssets>All</PrivateAssets>
+	</PackageReference>
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,7 +7,6 @@
     <AssemblyName>SpaceEngineers.Core.Utilities.PathResolver</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.Utilities.PathResolver</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0-alpha</Version>
     <Description>Utilities for netcore application</Description>
     <PackageTags>SpaceEngineers Core Utilities PathResolver</PackageTags>
     <Company>SpaceEngineers</Company>
@@ -35,6 +34,12 @@
     <Compile Update="PathResolverInfo.cs">
       <DependentUpon>IPathResolver.cs</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitVersionTask" Version="5.1.2">
+	  <PrivateAssets>All</PrivateAssets>
+	</PackageReference>
   </ItemGroup>
 
 </Project>

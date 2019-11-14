@@ -1,11 +1,10 @@
-next-version: 1.0
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatchTag
 assembly-informational-format: '{MajorMinorPatch}+{BranchName}'
 mode: ContinuousDelivery
-increment: Inherit
+tag-prefix: ''
 continuous-delivery-fallback-tag: '{BranchName}'
-tag-prefix: 'aa'
+next-version: 1.0
 major-version-bump-message: '\+semver:\s?(breaking|major)'
 minor-version-bump-message: '\+semver:\s?(feature|minor)'
 patch-version-bump-message: '\+semver:\s?(fix|patch)'
@@ -14,85 +13,100 @@ legacy-semver-padding: 5
 build-metadata-padding: 5
 commits-since-version-source-padding: 5
 commit-message-incrementing: Enabled
-commit-date-format: 'yyyy-MM-dd'
-ignore:
-  sha: []
 branches:
   master:
-    regex: master
     mode: ContinuousDelivery
     tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
+    regex: master
+    source-branches: []
+    is-source-branch-for:
+    - develop
+    - hotfix
+    - support
     tracks-release-branches: false
     is-release-branch: false
-    source-branches: []
-    is-source-branch-for: ['develop', 'hotfix', 'support']
   develop:
-    regex: develop
     mode: ContinuousDeployment
     tag: alpha
     increment: Minor
     prevent-increment-of-merged-branch-version: false
     track-merge-target: true
+    regex: develop
+    source-branches:
+    - master
+    is-source-branch-for:
+    - feature
+    - release
     tracks-release-branches: true
     is-release-branch: false
-    is-source-branch-for: ['feature', 'release']
-    source-branches: ['master']
   release:
-    regex: release-(\d)+.(\d)+.(\d)+
     mode: ContinuousDelivery
     tag: beta
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
+    regex: release-(\d)+.(\d)+.(\d)+
+    source-branches:
+    - develop
+    is-source-branch-for: []
     tracks-release-branches: false
     is-release-branch: true
-    source-branches: ['develop']
-    is-source-branch-for: []
   feature:
-    regex: feature-(\d)+
     mode: ContinuousDelivery
     tag: alpha
     increment: Inherit
     prevent-increment-of-merged-branch-version: false
     track-merge-target: false
+    regex: feature-(\d)+
+    source-branches:
+    - develop
+    is-source-branch-for: []
     tracks-release-branches: false
     is-release-branch: false
-    source-branches: ['develop']
-    is-source-branch-for: []
   pull-request:
-    regex: pull-request
     mode: ContinuousDelivery
     tag: PullRequest
     increment: Inherit
     prevent-increment-of-merged-branch-version: false
     tag-number-pattern: '[/-](?<number>\d+)[-/]'
     track-merge-target: false
+    regex: pull-request
+    source-branches:
+    - develop
+    is-source-branch-for: []
     tracks-release-branches: false
     is-release-branch: false
-    source-branches: ['develop']
-    is-source-branch-for: []
   hotfix:
-    regex: hotfix-(\d)+.(\d)+.(\d)+
     mode: ContinuousDelivery
     tag: beta
     increment: Patch
     prevent-increment-of-merged-branch-version: false
     track-merge-target: false
+    regex: hotfix-(\d)+.(\d)+.(\d)+
+    source-branches:
+    - master
+    - support
+    is-source-branch-for: []
     tracks-release-branches: false
     is-release-branch: false
-    source-branches: ['master', 'support']
-    is-source-branch-for: []
   support:
-    regex: support-(\d)+.(\d)+.(\d)+
     mode: ContinuousDelivery
     tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
+    regex: support-(\d)+.(\d)+.(\d)+
+    source-branches:
+    - master
+    is-source-branch-for:
+    - hotfix
     tracks-release-branches: false
     is-release-branch: false
-    source-branches: ['master']
-    is-source-branch-for: ['hotfix']
+ignore:
+  sha: []
+increment: Inherit
+commit-date-format: yyyy-MM-dd
+merge-message-formats: {}

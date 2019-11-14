@@ -18,17 +18,6 @@ commit-date-format: 'yyyy-MM-dd'
 ignore:
   sha: []
 branches:
-  release:
-    regex: release
-    mode: ContinuousDelivery
-    tag: beta
-    increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    tracks-release-branches: false
-    is-release-branch: true
-    is-source-branch-for: ['hotfix', 'support']
-    source-branches: ['master']
   master:
     regex: master
     mode: ContinuousDelivery
@@ -38,10 +27,10 @@ branches:
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
-    is-source-branch-for: ['release', 'develop']
     source-branches: []
-  development:
-    regex: development
+    is-source-branch-for: ['develop', 'hotfix', 'support']
+  develop:
+    regex: develop
     mode: ContinuousDeployment
     tag: alpha
     increment: Minor
@@ -49,10 +38,21 @@ branches:
     track-merge-target: true
     tracks-release-branches: true
     is-release-branch: false
-    is-source-branch-for: ['feature']
+    is-source-branch-for: ['feature', 'release']
     source-branches: ['master']
+  release:
+    regex: release-(\d)+.(\d)+.(\d)+
+    mode: ContinuousDelivery
+    tag: beta
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: true
+    source-branches: ['develop']
+    is-source-branch-for: []
   feature:
-    regex: feature
+    regex: feature-(\d)+
     mode: ContinuousDelivery
     tag: alpha
     increment: Inherit
@@ -60,22 +60,22 @@ branches:
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
+    source-branches: ['develop']
     is-source-branch-for: []
-    source-branches: ['develop', 'support']
   pull-request:
     regex: pull-request
     mode: ContinuousDelivery
-    tag: Pull-Request
+    tag: PullRequest
     increment: Inherit
     prevent-increment-of-merged-branch-version: false
     tag-number-pattern: '[/-](?<number>\d+)[-/]'
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
+    source-branches: ['develop']
     is-source-branch-for: []
-    source-branches: ['master', 'development', 'feature', 'hotfix', 'support']
   hotfix:
-    regex: hotfix
+    regex: hotfix-(\d)+.(\d)+.(\d)+
     mode: ContinuousDelivery
     tag: beta
     increment: Patch
@@ -83,10 +83,10 @@ branches:
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
+    source-branches: ['master', 'support']
     is-source-branch-for: []
-    source-branches: ['release', 'support']
   support:
-    regex: support
+    regex: support-(\d)+.(\d)+.(\d)+
     mode: ContinuousDelivery
     tag: ''
     increment: Patch
@@ -94,5 +94,5 @@ branches:
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
-    is-source-branch-for: ['feature', 'hotfix']
-    source-branches: ['release']
+    source-branches: ['master']
+    is-source-branch-for: ['hotfix']

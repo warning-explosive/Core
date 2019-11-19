@@ -38,7 +38,7 @@ max_jobs: 1
 image: Visual Studio 2019
 
 # clone directory
-clone_folder: c:\projects\<Project>
+clone_folder: c:\projects\Core
 
 # fetch repository as zip archive
 shallow_clone: false
@@ -76,7 +76,7 @@ configuration:
 # "project" is relative to the original build directory and not influenced by directory changes in "before_build".
 build:
   parallel: true                                                                # enable MSBuild parallel builds
-  project: <Project>.sln                                                             # path to Visual Studio solution or project
+  project: Core.sln                                                             # path to Visual Studio solution or project
   publish_wap: false                                                            # package Web Application Projects (WAP) for Web Deploy
   publish_wap_xcopy: false                                                      # package Web Application Projects (WAP) for XCopy deployment
   publish_wap_beanstalk: false                                                  # Package Web Applications for AWS Elastic Beanstalk deployment
@@ -99,9 +99,9 @@ before_build:
 
 # scripts to run after build (working directory and environment changes are persisted from the previous steps)
 after_build:
-  - cmd: ECHO nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
-  - cmd: nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
-  - cmd: appveyor PushArtifact "<NuSpec>.%GitVersion_NuGetVersion%.nupkg"
+#  - cmd: ECHO nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
+#  - cmd: nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
+#  - cmd: appveyor PushArtifact "<NuSpec>.%GitVersion_NuGetVersion%.nupkg"
 
 #---------------------------------#
 #       tests configuration       #

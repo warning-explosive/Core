@@ -5,10 +5,10 @@ mode: ContinuousDelivery
 tag-prefix: ''
 continuous-delivery-fallback-tag: '{BranchName}'
 next-version: 1.0
-major-version-bump-message: '\+semver:\s?(breaking|major)'
-minor-version-bump-message: '\+semver:\s?(feature|minor)'
-patch-version-bump-message: '\+semver:\s?(fix|patch)'
-no-bump-message: '\+semver:\s?(none|skip)'
+major-version-bump-message: '\[semver:\s?(breaking|major)\]'
+minor-version-bump-message: '\[semver:\s?(feature|minor)\]'
+patch-version-bump-message: '\[semver:\s?(fix|patch)\]'
+no-bump-message: '\[semver:\s?(none|skip)\]'
 legacy-semver-padding: 5
 build-metadata-padding: 5
 commits-since-version-source-padding: 5
@@ -73,7 +73,7 @@ branches:
     prevent-increment-of-merged-branch-version: false
     tag-number-pattern: '[/-](?<number>\d+)[-/]'
     track-merge-target: false
-    regex: pull-request
+    regex: pull-request-(\d)+
     source-branches:
     - develop
     is-source-branch-for: []

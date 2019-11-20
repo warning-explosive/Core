@@ -2,7 +2,10 @@ namespace SpaceEngineers.Core.Extensions
 {
     using System;
     using System.Reflection;
-
+    
+    /// <summary>
+    /// Extensions for operations with System.Type class
+    /// </summary>
     public interface ITypeExtensions
     {
         /// <summary>

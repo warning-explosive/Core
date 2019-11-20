@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.PathResolver
+namespace SpaceEngineers.Core.PathResolver
 {
     using System;
 

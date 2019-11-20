@@ -1,1 +1,1 @@
-[![Build status][appveyor-badge]][appveyor]
+https://ci.appveyor.com/api/projects/status/github/warning-explosive/Core?retina=true&svg=true

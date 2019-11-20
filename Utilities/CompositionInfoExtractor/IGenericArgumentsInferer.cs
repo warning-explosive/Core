@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
+namespace SpaceEngineers.Core.CompositionInfoExtractor
 {
     using System;
     using CompositionRoot.Abstractions;

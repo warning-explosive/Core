@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager
 {
     using System;
     using System.Linq;

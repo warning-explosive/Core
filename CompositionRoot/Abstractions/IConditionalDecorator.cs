@@ -9,6 +9,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
         where TResolvable : IResolvable
         where TAttribute : Attribute
     {
+        /// <summary>
+        /// Decoratee
+        /// </summary>
         TResolvable Decoratee { get; }
     }
 }

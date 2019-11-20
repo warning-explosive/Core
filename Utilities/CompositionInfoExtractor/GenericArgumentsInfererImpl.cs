@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.Utilities.CompositionInfoExtractor
+namespace SpaceEngineers.Core.CompositionInfoExtractor
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using CompositionRoot.Abstractions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
     using Extensions;

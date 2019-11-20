@@ -45,7 +45,7 @@ shallow_clone: false                                                            
 
 # scripts that run after cloning repository
 install:
-  - choco install gitversion.portable -pre -y
+  - choco install gitversion.portable --version 5.1.2 -y
 
 # enable patching of AssemblyInfo.* files
 assembly_info:

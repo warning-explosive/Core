@@ -1,0 +1,1 @@
+[![Build status][appveyor-badge]][appveyor]

@@ -1,29 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.Extensions</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.Extensions</RootNamespace>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Extensions for netcore application</Description>
-    <PackageTags>SpaceEngineers Core Extensions</PackageTags>
     <Company>SpaceEngineers</Company>
     <Authors>SpaceEngineers</Authors>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>true</RunAnalyzers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Nullable>enable</Nullable>
+    <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Update="ITypeInfoStorage.cs">
       <DependentUpon>TypeExtensions.cs</DependentUpon>
@@ -41,11 +40,4 @@
       <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
     </Compile>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.1.2">
-	  <PrivateAssets>All</PrivateAssets>
-	</PackageReference>
-  </ItemGroup>
-
 </Project>

@@ -1,36 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.Utilities.SettingsManager</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.Utilities.SettingsManager</RootNamespace>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Utilities for netcore application</Description>
-    <PackageTags>SpaceEngineers Core Utilities SettingsManager</PackageTags>
+    <AssemblyName>SpaceEngineers.Core.SettingsManager</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.SettingsManager</RootNamespace>
     <Company>SpaceEngineers</Company>
     <Authors>SpaceEngineers</Authors>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>true</RunAnalyzers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Nullable>enable</Nullable>
+    <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="GitVersionTask" Version="5.1.2">
-	  <PrivateAssets>All</PrivateAssets>
-	</PackageReference>
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\CompositionRoot\CompositionRoot.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="YamlFormatter.cs">
       <DependentUpon>IYamlFormatter.cs</DependentUpon>
@@ -48,5 +46,4 @@
       <DependentUpon>IAsyncFormatter.cs</DependentUpon>
     </Compile>
   </ItemGroup>
-
 </Project>

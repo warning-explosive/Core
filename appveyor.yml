@@ -41,10 +41,7 @@ image: Visual Studio 2019
 clone_folder: c:\projects\Core
 
 # fetch repository as zip archive
-shallow_clone: false
-
-# set clone depth
-clone_depth: 5                                                                  # clone entire repository history if not defined
+shallow_clone: false                                                                 # clone entire repository history if not defined
 
 # scripts that run after cloning repository
 install:

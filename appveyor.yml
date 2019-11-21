@@ -115,7 +115,7 @@ after_build:
           $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
           $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
 
-          $packCmd = "msbuild $csprojRelativePath -t:pack -p:version=$FullSemVer -verbosity:minimal"
+          $packCmd = "msbuild '$csprojRelativePath' -t:pack -p:version=$FullSemVer -verbosity:minimal"
           Show $packCmd
           Invoke-Expression $packCmd
 
@@ -124,7 +124,7 @@ after_build:
               $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
               $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
 
-              $pushArtifact = "appveyor PushArtifact $nupkgRelativePath"
+              $pushArtifact = "appveyor PushArtifact '$nupkgRelativePath'"
               Show $pushArtifact
               Invoke-Expression $pushArtifact
           }

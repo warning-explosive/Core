@@ -6,6 +6,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
     public interface IDecorator<TResolvable>
         where TResolvable : IResolvable
     {
+        /// <summary>
+        /// Decoratee
+        /// </summary>
         TResolvable Decoratee { get; }
     }
 }

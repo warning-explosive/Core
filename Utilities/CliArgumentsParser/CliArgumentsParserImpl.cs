@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Utilities.CliArgumentsParser
+namespace SpaceEngineers.Core.CliArgumentsParser
 {
     using System;
     using System.Collections.Generic;

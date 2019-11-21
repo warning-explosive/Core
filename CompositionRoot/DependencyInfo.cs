@@ -11,6 +11,9 @@ namespace SpaceEngineers.Core.CompositionRoot
     using Extensions;
     using SimpleInjector;
 
+    /// <summary>
+    /// Dependency information about node in objects graph
+    /// </summary>
     [DebuggerDisplay("{ServiceType}")]
     public class DependencyInfo
     {
@@ -30,20 +33,45 @@ namespace SpaceEngineers.Core.CompositionRoot
             IsCyclic = false;
         }
 
+        /// <summary>
+        /// Service type (interface)
+        /// </summary>
         public Type ServiceType { get; }
 
+        /// <summary>
+        /// Component type (implementation)
+        /// </summary>
         public Type ComponentType { get; }
 
+        /// <summary>
+        /// Componemt lifestyle
+        /// </summary>
         public EnLifestyle EnLifestyle { get; }
 
+        /// <summary>
+        /// Component dependencies
+        /// </summary>
         public ICollection<DependencyInfo> Dependencies { get; private set; }
 
+        /// <summary>
+        /// Component depth in objects graph
+        /// </summary>
         public uint Depth { get; }
 
+        /// <summary>
+        /// IsCollectionResolvable attribute of service
+        /// </summary>
         public bool IsCollectionResolvable { get; }
 
+        /// <summary>
+        /// Cyclic dependency attribute
+        /// </summary>
         public bool IsCyclic { get; private set; }
 
+        /// <summary>
+        /// Execute action on DependencyInfo object and its dependencies
+        /// </summary>
+        /// <param name="action">Action</param>
         public void ExecuteAction(Action<DependencyInfo> action)
         {
             action(this);
@@ -51,6 +79,13 @@ namespace SpaceEngineers.Core.CompositionRoot
             Dependencies.Each(relationship => relationship.ExecuteAction(action));
         }
 
+        /// <summary>
+        /// Retrieve dependency graph from container producer
+        /// </summary>
+        /// <param name="dependency">Dependency</param>
+        /// <param name="visited">Visited nodes</param>
+        /// <param name="depth">Current dependency depth in objects graph</param>
+        /// <returns>DependencyInfo object</returns>
         public static DependencyInfo RetrieveDependencyGraph(InstanceProducer dependency,
                                                              IDictionary<InstanceProducer, DependencyInfo> visited,
                                                              uint depth)

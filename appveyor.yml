@@ -96,9 +96,39 @@ before_build:
 
 # scripts to run after build (working directory and environment changes are persisted from the previous steps)
 after_build:
-#  - cmd: ECHO nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
-#  - cmd: nuget pack <Project>\<NuSpec>.nuspec -version "%GitVersion_NuGetVersion%" -prop "target=%CONFIGURATION%"
-#  - cmd: appveyor PushArtifact "<NuSpec>.%GitVersion_NuGetVersion%.nupkg"
+  - ps: |
+      $ErrorActionPreference = "Stop";
+
+      Function Show([string]$arg)
+      {
+          Write-host $arg -ForegroundColor blue
+      }
+
+      $loc = Get-Location
+      Show $loc
+
+      $FullSemVer = gitversion /output json /showvariable FullSemVer
+      Show $FullSemVer
+
+      Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
+          $csprojFileName = [System.IO.Path]::GetFileName($_)
+          $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+          $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
+
+          $packCmd = "msbuild $csprojRelativePath -t:pack -p:version=$FullSemVer -verbosity:minimal"
+          Show $packCmd
+          Invoke-Expression $packCmd
+
+          Get-ChildItem -Path $projectRelativeDirectory -Filter *.nupkg -Recurse -File -Name| ForEach-Object {
+              $nupkgFileName = [System.IO.Path]::GetFileName($_)
+              $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+              $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
+
+              $pushArtifact = "appveyor PushArtifact $nupkgRelativePath"
+              Show $pushArtifact
+              Invoke-Expression $pushArtifact
+          }
+      }
 
 #---------------------------------#
 #       tests configuration       #

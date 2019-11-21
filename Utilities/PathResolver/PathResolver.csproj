@@ -3,22 +3,25 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.PathResolver</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.PathResolver</RootNamespace>
-    <Company>SpaceEngineers</Company>
+    <IsPackable>true</IsPackable>
+    <Title>SpaceEngineers.Core.PathResolver</Title>
     <Authors>SpaceEngineers</Authors>
-    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Company>SpaceEngineers</Company>
+    <PackageDescription>SpaceEngineers.Core.PathResolver</PackageDescription>
     <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Copyright>Copyright (c) 2019</Copyright>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <IsPackable>true</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Nullable>enable</Nullable>
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

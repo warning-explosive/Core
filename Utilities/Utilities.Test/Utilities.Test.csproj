@@ -3,22 +3,25 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.Utilities.Test</AssemblyName>
     <RootNamespace>SpaceEngineers.Core.Utilities.Test</RootNamespace>
-    <Company>SpaceEngineers</Company>
+    <IsPackable>false</IsPackable>
+    <Title>SpaceEngineers.Core.Utilities.Test</Title>
     <Authors>SpaceEngineers</Authors>
-    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Company>SpaceEngineers</Company>
+    <PackageDescription>SpaceEngineers.Core.Utilities.Test</PackageDescription>
     <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Copyright>Copyright (c) 2019</Copyright>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Nullable>enable</Nullable>
     <TieredCompilation>true</TieredCompilation>
     <Library />
   </PropertyGroup>

@@ -2,4 +2,4 @@
 
 [appveyor]:          https://ci.appveyor.com/project/warning-explosive/Core
 
-[appveyor-badge]:    https://ci.appveyor.com/api/projects/status/github/warning-explosive/Core?svg=true
+[appveyor-badge]:    https://ci.appveyor.com/api/projects/status/github/warning-explosive/Core?branch=master&svg=true

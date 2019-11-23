@@ -63,6 +63,8 @@ namespace SpaceEngineers.Core.Extensions
             var offset = 0;
             stream.Position = offset;
             
+            stream.SetLength(bytes.Length);
+            
             await stream.WriteAsync(bytes, offset, bytes.Length);
         }
     }

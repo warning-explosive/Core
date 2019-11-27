@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Test
+namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
     using System.Collections.Generic;
@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System.Linq;
     using System.Reflection;
     using System.Runtime.Serialization;
-    using Extensions;
+    using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class ObjectExtensionsDeepCopyTest : TestBase
+    public class ObjectExtensionsDeepCopyTest : BasicsTestBase
     {
         public ObjectExtensionsDeepCopyTest(ITestOutputHelper output)
             : base(output) { }

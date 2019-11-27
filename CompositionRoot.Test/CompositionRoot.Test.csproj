@@ -34,8 +34,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
-    <ProjectReference Include="..\Extensions\Extensions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="DependencyContainerTests\IIndependentTestService.cs">
@@ -62,12 +62,6 @@
     <Compile Update="DependencyContainerTests\WiredTestServiceImpl.cs">
       <DependentUpon>DependencyContainerTest.cs</DependentUpon>
     </Compile>
-    <Compile Update="DependencyContainerTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeExtensionsTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="WiredTestServiceImpl.cs">
       <DependentUpon>IWiredTestService.cs</DependentUpon>
     </Compile>
@@ -79,12 +73,6 @@
     </Compile>
     <Compile Update="IndependentTestServiceImpl.cs">
       <DependentUpon>IIndependentTestService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="MethodExtensionsTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="CollectionResolvableTestServiceImpl1.cs">
       <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
@@ -163,6 +151,9 @@
     </Compile>
     <Compile Update="CollectionResolvableConditionDecorableServiceDecorator3.cs">
       <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>CompositionRootTestBase.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

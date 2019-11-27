@@ -5,10 +5,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
-    using Abstractions;
     using Enumerations;
-    using Extensions;
+    using Basics;
     using SimpleInjector;
 
     /// <summary>

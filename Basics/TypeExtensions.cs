@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Extensions
+namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Reflection;
@@ -8,17 +8,16 @@ namespace SpaceEngineers.Core.Extensions
     /// </summary>
     public static class TypeExtensions
     {
-        private static ITypeExtensions _typeExtensions =
-            new TypeExtensionsImpl(new TypeInfoStorage(typeof(TypeExtensions).Assembly));
+        private static ITypeExtensions _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(Array.Empty<Assembly>()));
 
         /// <summary>
         /// Set instance
         /// </summary>
-        /// <param name="rootAssembly">Assembly</param>
+        /// <param name="assemblies">assemblies</param>
         /// <returns>Created instance of ITypeExtensions</returns>
-        public static ITypeExtensions SetInstance(Assembly rootAssembly)
+        public static ITypeExtensions SetInstance(Assembly[] assemblies)
         {
-            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(rootAssembly));
+            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(assemblies));
 
             return _typeExtensions;
         }

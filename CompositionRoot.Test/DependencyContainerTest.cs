@@ -3,11 +3,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Extensions;
+    using Basics;
+    using Basics.Test;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class DependencyContainerTest : TestBase
+    public class DependencyContainerTest : CompositionRootTestBase
     {
         public DependencyContainerTest(ITestOutputHelper output) : base(output) { }
 

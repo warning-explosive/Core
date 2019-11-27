@@ -1,10 +1,10 @@
-namespace SpaceEngineers.Core.CompositionRoot.Test
+namespace SpaceEngineers.Core.Basics.Test
 {
-    using Extensions;
+    using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class TypeExtensionsTest : TestBase
+    public class TypeExtensionsTest : BasicsTestBase
     {
         public TypeExtensionsTest(ITestOutputHelper output)
             : base(output) { }

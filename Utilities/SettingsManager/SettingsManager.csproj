@@ -35,7 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Update="YamlFormatter.cs">
-      <DependentUpon>IYamlFormatter.cs</DependentUpon>
+      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
     </Compile>
     <Compile Update="SettingsMangerImpl.cs">
       <DependentUpon>ISettingsManger.cs</DependentUpon>
@@ -43,11 +43,11 @@
     <Compile Update="IFileSystemSettings.cs">
       <DependentUpon>ISettings.cs</DependentUpon>
     </Compile>
-    <Compile Update="IYamlFormatter.cs">
-      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="FileSystemFormatterBase.cs">
       <DependentUpon>IAsyncFormatter.cs</DependentUpon>
+    </Compile>
+    <Compile Update="IYamlSettings.cs">
+      <DependentUpon>IFileSystemSettings.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

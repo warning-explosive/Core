@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System;
     using System.Diagnostics;
     using Attributes;
+    using Basics.Exceptions;
     using Enumerations;
-    using Exceptions;
     using SimpleInjector;
 
     /// <summary>

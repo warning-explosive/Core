@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Extensions
+namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Collections.Generic;
@@ -20,17 +20,20 @@ namespace SpaceEngineers.Core.Extensions
         
         private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
-        public TypeInfoStorage(Assembly rootAssembly)
+        public TypeInfoStorage(Assembly[] assemblies)
         {
-            var rootAssemblyFullName = rootAssembly.GetName().FullName;
+            var rootAssembly = typeof(TypeExtensions).Assembly;
             
-            OurAssemblies = AppDomain.CurrentDomain
-                                     .GetAssemblies()
-                                     .Where(z => z.GetReferencedAssemblies().Select(x => x.FullName).Contains(rootAssemblyFullName)
-                                                 && z.GetName().Name != Utilities)
-                                     .ToArray()
-                                     .Concat(new[] { rootAssembly })
-                                     .ToArray();
+            var rootAssemblyFullName = rootAssembly.GetName().FullName;
+
+            OurAssemblies = assemblies
+                           .Where(z => z.GetReferencedAssemblies()
+                                        .Select(x => x.FullName)
+                                        .Contains(rootAssemblyFullName)
+                                       && z.GetName().Name != Utilities)
+                           .ToArray()
+                           .Concat(new[] { rootAssembly })
+                           .ToArray();
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
                                                                     .Where(z => z.FullName != null
@@ -39,10 +42,8 @@ namespace SpaceEngineers.Core.Extensions
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));
 
-            AllLoadedTypes = AppDomain.CurrentDomain
-                                      .GetAssemblies()
-                                      .SelectMany(z => z.GetTypes())
-                                      .ToArray();
+            AllLoadedTypes = assemblies.SelectMany(z => z.GetTypes())
+                                       .ToArray();
         }
 
         public TypeInfo this[Type type]

@@ -3,26 +3,25 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using CompositionRoot;
+    using Basics;
     using CompositionRoot.Test;
-    using Extensions;
     using SettingsManager;
     using Xunit;
     using Xunit.Abstractions;
     
-    public class SettingsManagerTest : TestBase
+    public class SettingsManagerTest : CompositionRootTestBase
     {
         public SettingsManagerTest(ITestOutputHelper output) : base(output) { }
 
         [Fact]
         public void YamlDeserializationTest()
         {
-            var manager = DependencyContainer.Resolve<ISettingsManger>();
+            var manager = DependencyContainer.Resolve<ISettingsManger<TestYamlConfig>>();
 
             /*
              * 1 - Read
              */
-            var config = manager.Get<TestYamlConfig>();
+            var config = manager.Get();
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
@@ -64,13 +63,13 @@ namespace SpaceEngineers.Core.Utilities.Test
             /*
              * 3 - Read again
              */
-            config = manager.Get<TestYamlConfig>();
+            config = manager.Get();
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
         }
     }
 
-    public class TestYamlConfig : IFileSystemSettings<IYamlFormatter>
+    public class TestYamlConfig : IYamlSettings
     {
         public int Int { get; set; }
         

@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.Extensions
+namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Reflection;
-    
+
     /// <summary>
     /// Extensions for operations with System.Type class
     /// </summary>

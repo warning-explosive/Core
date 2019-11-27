@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.PathResolver
     using System.Reflection;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
+    using Basics;
 
     /// <inheritdoc />
     [Lifestyle(lifestyle: EnLifestyle.Singleton)]

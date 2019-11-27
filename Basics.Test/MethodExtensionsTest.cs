@@ -1,12 +1,12 @@
-namespace SpaceEngineers.Core.CompositionRoot.Test
+namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
     using System.Linq;
-    using Extensions;
+    using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class MethodExtensionsTest : TestBase
+    public class MethodExtensionsTest : BasicsTestBase
     {
         public MethodExtensionsTest(ITestOutputHelper output) : base(output) { }
         

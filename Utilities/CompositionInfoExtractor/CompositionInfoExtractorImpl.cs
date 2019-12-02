@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
     using Basics;
+    using Basics.EqualityComparers;
     using SimpleInjector;
 
     /// <inheritdoc />

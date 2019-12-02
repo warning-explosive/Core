@@ -40,8 +40,5 @@
     <Compile Update="TypeInfoStorage.cs">
       <DependentUpon>ITypeInfoStorage.cs</DependentUpon>
     </Compile>
-    <Compile Update="ReferenceEqualityComparer.cs">
-      <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
 </Project>

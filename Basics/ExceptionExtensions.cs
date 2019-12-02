@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Linq;
+    using System.Reflection;
 
     /// <summary>
     /// Exception extension methods
@@ -14,6 +15,21 @@ namespace SpaceEngineers.Core.Basics
             typeof(OutOfMemoryException),
             typeof(OperationCanceledException),
         };
+
+        /// <summary>
+        /// Unwrap TargetInvocationException
+        /// </summary>
+        /// <param name="exception">exception</param>
+        /// <returns>Real exception hidden beside TargetInvocationException</returns>
+        public static Exception RealException(this Exception exception)
+        {
+            while (exception is TargetInvocationException tex)
+            {
+                exception = tex.InnerException;
+            }
+
+            return exception;
+        }
 
         /// <summary>
         /// Throw if input class is null
@@ -48,9 +64,9 @@ namespace SpaceEngineers.Core.Basics
             {
                 action.Invoke();
             }
-            catch (Exception ex) when(CanBeCatched(ex))
+            catch (Exception ex) when (CanBeCatched(ex))
             {
-                exceptionHandler.Invoke(ex);
+                exceptionHandler.Invoke(ex.RealException());
             }
             finally
             {
@@ -76,9 +92,9 @@ namespace SpaceEngineers.Core.Basics
             {
                 result = func.Invoke();
             }
-            catch (Exception ex) when(CanBeCatched(ex))
+            catch (Exception ex) when (CanBeCatched(ex))
             {
-                exceptionHandler.Invoke(ex);
+                exceptionHandler.Invoke(ex.RealException());
             }
             finally
             {
@@ -87,7 +103,7 @@ namespace SpaceEngineers.Core.Basics
 
             return result;
         }
-        
+
         /// <summary>
         /// Safely invoke client action with struct result
         /// </summary>
@@ -106,9 +122,9 @@ namespace SpaceEngineers.Core.Basics
             {
                 result = func.Invoke();
             }
-            catch (Exception ex) when(CanBeCatched(ex))
+            catch (Exception ex) when (CanBeCatched(ex))
             {
-                exceptionHandler.Invoke(ex);
+                exceptionHandler.Invoke(ex.RealException());
             }
             finally
             {
@@ -118,6 +134,9 @@ namespace SpaceEngineers.Core.Basics
             return result;
         }
 
-        private static bool CanBeCatched(Exception exception) => !_exceptionTypesForSkip.Contains(exception.GetType());
+        private static bool CanBeCatched(Exception exception)
+        {
+            return !_exceptionTypesForSkip.Contains(exception.RealException().GetType());
+        }
     }
 }

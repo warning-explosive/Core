@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Extensions;
+    using Basics;
 
     /// <inheritdoc />
     internal partial class PathResolverImpl<TKey, TValue>

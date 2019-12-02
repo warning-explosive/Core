@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Extensions
+namespace SpaceEngineers.Core.Basics
 {
     using System.IO;
     using System.Text;

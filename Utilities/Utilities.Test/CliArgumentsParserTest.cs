@@ -3,16 +3,14 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System;
     using System.Reflection;
     using CliArgumentsParser;
-    using CompositionRoot;
     using CompositionRoot.Test;
-    using Extensions;
+    using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class CliArgumentsParserTest : TestBase
+    public class CliArgumentsParserTest : CompositionRootTestBase
     {
-        public CliArgumentsParserTest(ITestOutputHelper output)
-            : base(output) { }
+        public CliArgumentsParserTest(ITestOutputHelper output) : base(output) { }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
         

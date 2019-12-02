@@ -6,23 +6,29 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Reflection;
     using Abstractions;
     using Attributes;
-    using Extensions;
+    using Basics;
     using SimpleInjector;
 
     /// <summary>
     /// Dependency container
     /// Resolve dependencies by 'Dependency Injection' and 'Inversion Of Control' patterns
     /// </summary>
-    public static class DependencyContainer
+    public class DependencyContainer
     {
-        private static readonly Container _container = InitContainer();
+        private readonly Container _container;
+
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="assemblies">assemblies</param>
+        public DependencyContainer(Assembly[] assemblies) { _container = InitContainer(assemblies); }
         
         /// <summary>
         /// Resolve service implementation
         /// </summary>
         /// <typeparam name="T">IResolvable</typeparam>
         /// <returns>Service implementation</returns>
-        public static T Resolve<T>()
+        public T Resolve<T>()
             where T : class, IResolvable
         {
             return _container.GetInstance<T>();
@@ -33,7 +39,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         /// <param name="serviceType">IResolvable</param>
         /// <returns>Untyped service implementation</returns>
-        public static object Resolve(Type serviceType)
+        public object Resolve(Type serviceType)
         {
             if (!serviceType.IsDerivedFromInterface(typeof(IResolvable)))
             {
@@ -48,7 +54,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         /// <typeparam name="T">IResolvable</typeparam>
         /// <returns>Service implementation</returns>
-        public static IEnumerable<T> ResolveCollection<T>()
+        public IEnumerable<T> ResolveCollection<T>()
             where T : class, ICollectionResolvable
         {
             return _container.GetAllInstances<T>();
@@ -59,7 +65,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         /// <param name="serviceType">IResolvable</param>
         /// <returns>Untyped service implementation</returns>
-        public static IEnumerable<object> ResolveCollection(Type serviceType)
+        public IEnumerable<object> ResolveCollection(Type serviceType)
         {
             if (!serviceType.IsDerivedFromInterface(typeof(ICollectionResolvable)))
             {
@@ -69,8 +75,10 @@ namespace SpaceEngineers.Core.CompositionRoot
             return _container.GetAllInstances(serviceType);
         }
         
-        private static Container InitContainer()
+        private static Container InitContainer(Assembly[] assemblies)
         {
+            var typeExtensions = TypeExtensions.SetInstance(assemblies);
+            
             var container = new Container
                             {
                                 Options =
@@ -84,8 +92,6 @@ namespace SpaceEngineers.Core.CompositionRoot
                                     SuppressLifestyleMismatchVerification = false,
                                 }
                             };
-
-            var typeExtensions = TypeExtensions.SetInstance(typeof(DependencyContainer).Assembly);
             
             RegisterServices(container, typeExtensions);
 
@@ -94,8 +100,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return container;
         }
 
-        private static void RegisterServices(Container container,
-                                             ITypeExtensions typeExtensions)
+        private static void RegisterServices(Container container, ITypeExtensions typeExtensions)
         {
             /*
              * [I] - Single

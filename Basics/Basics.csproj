@@ -4,13 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.Extensions</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.Extensions</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.Basics</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Basics</RootNamespace>
     <IsPackable>true</IsPackable>
-    <Title>SpaceEngineers.Core.Extensions</Title>
+    <Title>SpaceEngineers.Core.Basics</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.Extensions</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.Basics</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -39,9 +39,6 @@
     </Compile>
     <Compile Update="TypeInfoStorage.cs">
       <DependentUpon>ITypeInfoStorage.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ReferenceEqualityComparer.cs">
-      <DependentUpon>ObjectExtensions.DeepCopy.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

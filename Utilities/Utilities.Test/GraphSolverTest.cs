@@ -5,14 +5,13 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using CompositionRoot;
     using CompositionRoot.Test;
-    using Extensions;
+    using Basics;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class GraphSolverTest : TestBase
+    public class GraphSolverTest : CompositionRootTestBase
     {
         public GraphSolverTest(ITestOutputHelper output) : base(output) { }
         

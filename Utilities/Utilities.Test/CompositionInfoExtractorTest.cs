@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.Utilities.Test
 {
     using System.Linq;
     using CompositionInfoExtractor;
-    using CompositionRoot;
     using CompositionRoot.Test;
     using Xunit;
     using Xunit.Abstractions;
 
-    public class CompositionInfoExtractorTest : TestBase
+    public class CompositionInfoExtractorTest : CompositionRootTestBase
     {
         public CompositionInfoExtractorTest(ITestOutputHelper output) : base(output) { }
 

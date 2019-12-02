@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Extensions.Attributes
+namespace SpaceEngineers.Core.Basics.Attributes
 {
     using System;
 

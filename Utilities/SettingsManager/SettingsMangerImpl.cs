@@ -1,49 +1,42 @@
 namespace SpaceEngineers.Core.SettingsManager
 {
     using System;
-    using System.Linq;
-    using CompositionRoot;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
+    using Basics;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class SettingsMangerImpl : ISettingsManger
+    internal class SettingsMangerImpl<TSettings> : ISettingsManger<TSettings>
+        where TSettings : ISettings, new()
     {
-        public TSettings Get<TSettings>()
-            where TSettings : ISettings, new()
+        private readonly IAsyncFormatter<TSettings> _formatter;
+
+        public SettingsMangerImpl(IAsyncFormatter<TSettings> formatter)
         {
-            if (typeof(TSettings).IsImplementationOfOpenGenericInterface(typeof(IFileSystemSettings<>)))
+            _formatter = formatter;
+        }
+
+        public TSettings Get()
+        {
+            if (typeof(TSettings).IsDerivedFromInterface(typeof(IFileSystemSettings)))
             {
-                return GetFormatterInstance<TSettings>().Deserialize<TSettings>().Result;
+                return _formatter.Deserialize().Result;
             }
             
             throw new NotSupportedException(typeof(TSettings).FullName);
         }
 
-        public void Set<TSettings>(TSettings value)
-            where TSettings : ISettings, new()
+        public void Set(TSettings value)
         {
-            if (typeof(TSettings).IsImplementationOfOpenGenericInterface(typeof(IFileSystemSettings<>)))
+            if (typeof(TSettings).IsDerivedFromInterface(typeof(IFileSystemSettings)))
             {
-                GetFormatterInstance<TSettings>().Serialize(value).Wait();
+                _formatter.Serialize(value).Wait();
                 
                 return;
             }
             
             throw new NotSupportedException(typeof(TSettings).FullName);
-        }
-
-        private static IAsyncFormatter GetFormatterInstance<TSettings>()
-            where TSettings : ISettings, new()
-        {
-            var formatterType = typeof(TSettings).GetInterfaces()
-                                                 .Where(i => i.IsGenericType)
-                                                 .Single(i => i.GetGenericTypeDefinition() == typeof(IFileSystemSettings<>))
-                                                 .GetGenericArguments()[0];
-
-            return (IAsyncFormatter)DependencyContainer.Resolve(formatterType);
         }
     }
 }

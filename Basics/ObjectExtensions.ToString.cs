@@ -1,6 +1,5 @@
-namespace SpaceEngineers.Core.Extensions
+namespace SpaceEngineers.Core.Basics
 {
-    using System;
     using System.Linq;
     using System.Reflection;
 

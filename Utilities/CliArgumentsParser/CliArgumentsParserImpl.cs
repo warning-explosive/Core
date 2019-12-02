@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     using System.Text.RegularExpressions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
+    using Basics;
 
     /// <summary>
     /// Cli arguments parser class

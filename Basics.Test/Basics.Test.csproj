@@ -46,5 +46,8 @@
     <Compile Update="TypeExtensionsTest.cs">
       <DependentUpon>BasicsTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="StreamExtensionsTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

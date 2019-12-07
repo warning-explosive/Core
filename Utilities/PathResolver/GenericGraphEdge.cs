@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.PathResolver
         /// InnerKey - target node key
         /// </summary>
         public TKey TargetNodeKey { get; }
-            
+
         /// <summary>
         /// Value - weight and other
         /// </summary>

@@ -5,10 +5,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
-    using Abstractions;
+    using Basics;
     using Enumerations;
-    using Extensions;
     using SimpleInjector;
 
     /// <summary>
@@ -19,13 +17,13 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         private DependencyInfo(Type serviceType,
                                Type componentType,
-                               EnLifestyle enLifestyle,
+                               EnLifestyle lifestyle,
                                uint depth,
                                bool isCollectionResolvable)
         {
             ServiceType = serviceType;
             ComponentType = componentType;
-            EnLifestyle = enLifestyle;
+            Lifestyle = lifestyle;
             Dependencies = new List<DependencyInfo>();
 
             Depth = depth;
@@ -46,7 +44,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary>
         /// Componemt lifestyle
         /// </summary>
-        public EnLifestyle EnLifestyle { get; }
+        public EnLifestyle Lifestyle { get; }
 
         /// <summary>
         /// Component dependencies
@@ -95,11 +93,11 @@ namespace SpaceEngineers.Core.CompositionRoot
                 nodeInfo.IsCyclic = true;
                 return nodeInfo;
             }
-            
+
             var isCollectionResolvable = dependency.ServiceType
                                                    .GetInterfaces()
                                                    .Contains(typeof(IEnumerable));
-            
+
             var serviceType = isCollectionResolvable
                                   ? dependency.ServiceType.GetGenericArguments()[0]
                                   : dependency.ServiceType;
@@ -117,19 +115,18 @@ namespace SpaceEngineers.Core.CompositionRoot
             visited.Add(dependency, newNodeInfo);
 
             InstanceProducer[] dependencies;
-            
+
             if (isCollectionResolvable)
             {
-                var producers = dependency.Registration
-                                          .GetPropertyValue("Collection")
-                                          .GetFieldValue("producers");
-
-                dependencies = ((IEnumerable)producers).ThrowIfNull()
-                                                       .GetEnumerator()
-                                                       .ToObjectEnumerable()
-                                                       .Select(o => o.GetPropertyValue("Value"))
-                                                       .OfType<InstanceProducer>()
-                                                       .ToArray();
+                dependencies = dependency.Registration
+                                         .GetPropertyValue("Collection")
+                                         .GetFieldValue("producers")
+                                         .ExtractNotNullableSafely<IEnumerable>()
+                                         .GetEnumerator()
+                                         .ToObjectEnumerable()
+                                         .Select(o => o.GetPropertyValue("Value"))
+                                         .OfType<InstanceProducer>()
+                                         .ToArray();
             }
             else
             {
@@ -139,10 +136,10 @@ namespace SpaceEngineers.Core.CompositionRoot
             }
 
             newNodeInfo.Dependencies = dependencies
-                                       .Select(d => RetrieveDependencyGraph(d,
-                                                                            visited,
-                                                                            depth + 1))
-                                       .ToList();
+                                      .Select(d => RetrieveDependencyGraph(d,
+                                                                           visited,
+                                                                           depth + 1))
+                                      .ToList();
 
             return newNodeInfo;
         }

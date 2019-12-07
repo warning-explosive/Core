@@ -3,11 +3,12 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Basics;
+    using Basics.EqualityComparers;
     using CompositionRoot;
     using CompositionRoot.Abstractions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
     using SimpleInjector;
 
     /// <inheritdoc />
@@ -19,7 +20,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
         /// <summary> .ctor </summary>
         /// <param name="container">Container</param>
-        /// <param name="genericArgumentsInferer"></param>
+        /// <param name="genericArgumentsInferer">IGenericArgumentsInferer</param>
         public CompositionInfoExtractorImpl(Container container,
                                             IGenericArgumentsInferer genericArgumentsInferer)
         {
@@ -35,7 +36,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                           {
                               var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
 
-                              return DependencyInfo.RetrieveDependencyGraph(_container.GetRegistration(t, true).ThrowIfNull(),
+                              return DependencyInfo.RetrieveDependencyGraph(_container.GetRegistration(t, true).ExtractNotNullableSafely<InstanceProducer>(),
                                                                             visited,
                                                                             0);
                           })

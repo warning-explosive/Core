@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System;
     using System.Diagnostics;
     using Attributes;
+    using Basics.Exceptions;
     using Enumerations;
-    using Exceptions;
     using SimpleInjector;
 
     /// <summary>
@@ -16,29 +16,29 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary> .ctor </summary>
         /// <param name="serviceType">Service type</param>
         /// <param name="componentType">Component type</param>
-        /// <param name="enLifestyle">EnLifestyle</param>
+        /// <param name="lifestyle">EnLifestyle</param>
         internal ServiceRegistrationInfo(Type serviceType,
                                          Type componentType,
-                                         EnLifestyle? enLifestyle)
+                                         EnLifestyle? lifestyle)
         {
             ServiceType = serviceType.IsGenericType
                               ? serviceType.GetGenericTypeDefinition()
                               : serviceType;
             ComponentType = componentType;
-            
-            if (enLifestyle == null)
+
+            if (lifestyle == null)
             {
                 throw new AttributeRequiredException(typeof(LifestyleAttribute), componentType);
             }
-            
-            Lifestyle = LifeStyleMapper.MapLifestyle(enLifestyle.Value);
+
+            Lifestyle = LifeStyleMapper.MapLifestyle(lifestyle.Value);
         }
 
         /// <summary>
         /// Component type
         /// </summary>
         internal Type ComponentType { get; }
-        
+
         /// <summary>
         /// Service type
         /// </summary>

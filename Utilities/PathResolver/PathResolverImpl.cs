@@ -4,9 +4,10 @@ namespace SpaceEngineers.Core.PathResolver
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Basics;
+    using Basics.Exceptions;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
 
     /// <inheritdoc />
     [Lifestyle(lifestyle: EnLifestyle.Singleton)]
@@ -14,9 +15,9 @@ namespace SpaceEngineers.Core.PathResolver
         where TKey : struct
         where TValue : IEquatable<TValue>
     {
-        private static readonly string NotFound = "Path not found";
+        private const string NotFound = "Path not found";
 
-        private static readonly string AmbiguousMatch = "Ambiguous number of paths";
+        private const string AmbiguousMatch = "Ambiguous number of paths";
 
         private static readonly Func<PathResolverInfo<TKey, TValue>, string> _additionalInfo =
             gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
@@ -28,8 +29,8 @@ namespace SpaceEngineers.Core.PathResolver
         {
             if (EqualityComparer<TKey>.Default.Equals(pathResolverInfo.RootNodeKey, pathResolverInfo.TargetNodeKey)
                 && !pathResolverInfo.NotEmptyCircle
-                && (pathResolverInfo.RequiredKeys == null || !pathResolverInfo.RequiredKeys.Any())
-                && (pathResolverInfo.RequiredEdges == null || !pathResolverInfo.RequiredEdges.Any()))
+                && !pathResolverInfo.RequiredKeys.Any()
+                && !pathResolverInfo.RequiredEdges.Any())
             {
                 return new Queue<KeyValuePair<TKey, TValue>>();
             }
@@ -45,9 +46,9 @@ namespace SpaceEngineers.Core.PathResolver
 
             if (groupedPaths.Length < 1)
             {
-                throw new Exception(NotFound + "\n" + _additionalInfo(pathResolverInfo));
+                throw new NotFoundException(NotFound + "\n" + _additionalInfo(pathResolverInfo));
             }
-            
+
             if (groupedPaths.Length > 1)
             {
                 var strPaths = string.Join("\n", groupedPaths.Select(grpPath => PrintSingleGroupedPath(grpPath, pathResolverInfo.WeightFunc)));
@@ -63,12 +64,12 @@ namespace SpaceEngineers.Core.PathResolver
             }
 
             var resultPath = new Queue<KeyValuePair<TKey, TValue>>();
-            
+
             foreach (var nodeGroup in groupedPath)
             {
                 resultPath.Enqueue(new KeyValuePair<TKey, TValue>(nodeGroup.Key, nodeGroup.Value.Single()));
             }
-            
+
             return resultPath;
         }
 
@@ -112,7 +113,7 @@ namespace SpaceEngineers.Core.PathResolver
                 // nearest nodes is not available => deadlock
                 return;
             }
-            
+
             foreach (var nearestUnvisitedNode in nearestUnvisitedNodes.Where(z => !visitedNodesKeys.Contains(z.Key)))
             {
                 var localVisited = visitedNodes.DeepCopy();
@@ -124,9 +125,9 @@ namespace SpaceEngineers.Core.PathResolver
                 {
                     localVisitedKeys.Add(currentNodeKey);
                 }
-                
+
                 weightedPathsCollection.Add(localVisited);
-                
+
                 ProcessSingleNodeRecoursive(genericGraph,
                                             nearestUnvisitedNode.Key,
                                             localVisited,

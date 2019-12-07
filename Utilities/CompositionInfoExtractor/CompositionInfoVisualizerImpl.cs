@@ -1,12 +1,13 @@
 namespace SpaceEngineers.Core.CompositionInfoExtractor
 {
     using System;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
+    using Basics;
     using CompositionRoot;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
@@ -16,18 +17,18 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         public string Visualize(DependencyInfo[] compositionInfo)
         {
             var builder = new StringBuilder();
-            
+
             compositionInfo.Each(dependencyInfo => dependencyInfo.ExecuteAction(di => VisualizeDependency(di, builder)));
 
             return builder.ToString();
         }
 
-        private void VisualizeDependency(DependencyInfo nodeInfo, StringBuilder builder)
+        private static void VisualizeDependency(DependencyInfo nodeInfo, StringBuilder builder)
         {
             builder.AppendLine(DependencyAsString(nodeInfo));
         }
 
-        private string DependencyAsString(DependencyInfo dependencyInfo)
+        private static string DependencyAsString(DependencyInfo dependencyInfo)
         {
             return Tabulation((int)dependencyInfo.Depth)
                    + (dependencyInfo.IsCollectionResolvable
@@ -37,19 +38,19 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                    + Generics(dependencyInfo.ComponentType);
         }
 
-        private string Tabulation(int count)
+        private static string Tabulation(int count)
         {
             return new string('\t', count);
         }
 
-        private string TrimGenerics(Type type)
+        private static string TrimGenerics(Type type)
         {
             return type.IsGenericType
                        ? type.Name.Substring(0, type.Name.Length - 2)
                        : type.Name;
         }
 
-        private string Generics(Type type)
+        private static string Generics(Type type)
         {
             if (!type.IsGenericType)
             {
@@ -61,7 +62,8 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
             var genericArguments = type.GetGenericTypeDefinition()
                                        .GetGenericArguments();
 
-            return string.Format(format,
+            return string.Format(CultureInfo.InvariantCulture,
+                                 format,
                                  genericArguments.Length == 1 ? "T" : string.Join(", ", genericArguments.Select((t, i) => t.Name)));
         }
     }

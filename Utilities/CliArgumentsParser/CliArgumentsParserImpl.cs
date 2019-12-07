@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
+    using Basics;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Extensions;
 
     /// <summary>
     /// Cli arguments parser class
@@ -22,13 +22,14 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     internal class CliArgumentsParserImpl : ICliArgumentsParser
     {
         private static readonly Regex _regexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        
+
         private static readonly Regex _quotesRemover = new Regex(@"[^'|""].*[^'|""]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        
+
         private static readonly Regex _finishChecker = new Regex(@"(?:-{1,2}|/|=|'|""|\s)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <inheritdoc />
-        public T Parse<T>(string[] args) where T : class, new()
+        public T Parse<T>(string[] args)
+            where T : class, new()
         {
             var argsDictionary = Init(args);
 
@@ -37,8 +38,8 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                                              | BindingFlags.Public
                                              | BindingFlags.GetProperty
                                              | BindingFlags.SetProperty),
-                     cli => cli.Key.ToLowerInvariant(),
-                     pd => pd.Name.ToLowerInvariant(),
+                     cli => cli.Key.ToUpperInvariant(),
+                     pd => pd.Name.ToUpperInvariant(),
                      (cli, pd) => new { Info = pd, CliValue = cli.Value });
 
             var instance = Activator.CreateInstance<T>();
@@ -59,7 +60,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             where T : class, new()
         {
             arguments = default;
-            
+
             try
             {
                 arguments = Parse<T>(args);
@@ -72,12 +73,12 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             return true;
         }
 
-        private Dictionary<string, string?> Init(string[] args)
+        private static Dictionary<string, string?> Init(string[] args)
         {
             var cliArguments = string.Join(" ", args);
 
             var argsDictionary = new Dictionary<string, string?>();
-            
+
             foreach (var match in _regexCliParser.Matches(cliArguments))
             {
                 var argument = match.ToString();
@@ -141,13 +142,13 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         private static bool TryGetValue(Type type, string strValue, out object? typedValue)
         {
             typedValue = default;
-            
+
             // string
             if (type == typeof(string))
             {
                 typedValue = strValue;
             }
-            
+
             // bool
             // Nullable<bool>
             if (type == typeof(bool) || type == typeof(bool?))
@@ -168,11 +169,11 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             var enumType = type.IsNullable()
                                ? type.GetGenericArguments()[0]
                                : type;
-            
+
             if (enumType.IsEnum)
             {
                 var flagsValues = strValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
-                
+
                 if (enumType.IsDefined(typeof(FlagsAttribute), false) && flagsValues.Length > 1)
                 {
                     if (TryParseEnum(enumType, string.Join(", ", flagsValues), out var result))
@@ -182,11 +183,11 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                     else
                     {
                         var perValueResult = flagsValues.Select(value => new
-                                                    {
-                                                        Success = TryParseEnum(enumType, value, out _),
-                                                        Value = value,
-                                                    });
-                        throw new ArgumentException($"Values {string.Join("", perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'"))} is not recognized");
+                                                                         {
+                                                                             Success = TryParseEnum(enumType, value, out _),
+                                                                             Value = value,
+                                                                         });
+                        throw new ArgumentException($"Values {string.Join(string.Empty, perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'"))} is not recognized");
                     }
                 }
                 else if (TryParseEnum(enumType, strValue, out var result))
@@ -206,16 +207,17 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         {
             result = typeof(CliArgumentsParserImpl).CallStaticGenericMethod(nameof(TryParseEnum),
                                                                             new[] { enumType },
-                                                                            strValue);
+                                                                            strValue)
+                                                   .ExtractNotNullableSafely<object>();
 
-            var separatedValues = strValue.ToLowerInvariant()
+            var separatedValues = strValue.ToUpperInvariant()
                                           .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                           .SelectMany(s => s)
                                           .ToArray();
 
-            var parsed = ToEnumString(result).ToLowerInvariant();
+            var parsed = ToEnumString(result).ToUpperInvariant();
 
-            return separatedValues.All(single => parsed.Contains(single));
+            return separatedValues.All(single => parsed.Contains(single, StringComparison.InvariantCulture));
         }
 
         private static TEnum TryParseEnum<TEnum>(string strValue)
@@ -228,7 +230,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static string ToEnumString(object value)
         {
-            return (string)value.CallMethod(nameof(Enum.ToString),"G");
+            return value.CallMethod(nameof(Enum.ToString), "G").ExtractNotNullableSafely<string>();
         }
     }
 }

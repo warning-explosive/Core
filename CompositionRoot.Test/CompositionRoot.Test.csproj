@@ -14,28 +14,32 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
+    <CodeAnalysisRuleSet>..\ruleset.ruleset</CodeAnalysisRuleSet>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TieredCompilation>true</TieredCompilation>
-    <Library />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
-    <ProjectReference Include="..\Extensions\Extensions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="DependencyContainerTests\IIndependentTestService.cs">
@@ -62,12 +66,6 @@
     <Compile Update="DependencyContainerTests\WiredTestServiceImpl.cs">
       <DependentUpon>DependencyContainerTest.cs</DependentUpon>
     </Compile>
-    <Compile Update="DependencyContainerTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeExtensionsTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="WiredTestServiceImpl.cs">
       <DependentUpon>IWiredTestService.cs</DependentUpon>
     </Compile>
@@ -79,12 +77,6 @@
     </Compile>
     <Compile Update="IndependentTestServiceImpl.cs">
       <DependentUpon>IIndependentTestService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="MethodExtensionsTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
-      <DependentUpon>TestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="CollectionResolvableTestServiceImpl1.cs">
       <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
@@ -131,13 +123,13 @@
     <Compile Update="ConditionalDecorableServiceImpl.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
-    <Compile Update="TestConditionAttribute1.cs">
+    <Compile Update="TestCondition1Attribute.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="ConditionalDecorableServiceDecorator1.cs">
       <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="TestConditionAttribute2.cs">
+    <Compile Update="TestCondition2Attribute.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="ConditionalDecorableServiceDecorator2.cs">
@@ -163,6 +155,9 @@
     </Compile>
     <Compile Update="CollectionResolvableConditionDecorableServiceDecorator3.cs">
       <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>CompositionRootTestBase.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

@@ -24,12 +24,12 @@ namespace SpaceEngineers.Core.PathResolver
             TargetNodeKey = targetNodeKey;
             WeightFunc = weightFunc;
         }
-            
+
         /// <summary>
         /// Root node key => Tree root node
         /// </summary>
         public TKey RootNodeKey { get; }
-            
+
         /// <summary>
         /// Target node key => Target leaf key
         /// </summary>
@@ -43,12 +43,12 @@ namespace SpaceEngineers.Core.PathResolver
         /// <summary>
         /// Required node keys (in queue order)
         /// </summary>
-        public Queue<TKey>? RequiredKeys { get; set; } = null;
-            
+        public Queue<TKey> RequiredKeys { get; } = new Queue<TKey>();
+
         /// <summary>
         /// Required edges (in queue order)
         /// </summary>
-        public Queue<TValue>? RequiredEdges { get; set; } = null;
+        public Queue<TValue> RequiredEdges { get; } = new Queue<TValue>();
 
         /// <summary>
         /// true => search paths without loops

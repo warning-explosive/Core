@@ -6,23 +6,29 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Reflection;
     using Abstractions;
     using Attributes;
-    using Extensions;
+    using Basics;
     using SimpleInjector;
 
     /// <summary>
     /// Dependency container
     /// Resolve dependencies by 'Dependency Injection' and 'Inversion Of Control' patterns
     /// </summary>
-    public static class DependencyContainer
+    public class DependencyContainer
     {
-        private static readonly Container _container = InitContainer();
-        
+        private readonly Container _container;
+
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="assemblies">assemblies</param>
+        public DependencyContainer(Assembly[] assemblies) { _container = InitContainer(assemblies); }
+
         /// <summary>
         /// Resolve service implementation
         /// </summary>
         /// <typeparam name="T">IResolvable</typeparam>
         /// <returns>Service implementation</returns>
-        public static T Resolve<T>()
+        public T Resolve<T>()
             where T : class, IResolvable
         {
             return _container.GetInstance<T>();
@@ -33,22 +39,22 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         /// <param name="serviceType">IResolvable</param>
         /// <returns>Untyped service implementation</returns>
-        public static object Resolve(Type serviceType)
+        public object Resolve(Type serviceType)
         {
             if (!serviceType.IsDerivedFromInterface(typeof(IResolvable)))
             {
-                throw new ArgumentException($"{nameof(serviceType)} must be an interface and derived from {nameof(IResolvable)}");
+                throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(IResolvable)}");
             }
 
             return _container.GetInstance(serviceType);
         }
-        
+
         /// <summary>
         /// Resolve service implementations collection
         /// </summary>
         /// <typeparam name="T">IResolvable</typeparam>
         /// <returns>Service implementation</returns>
-        public static IEnumerable<T> ResolveCollection<T>()
+        public IEnumerable<T> ResolveCollection<T>()
             where T : class, ICollectionResolvable
         {
             return _container.GetAllInstances<T>();
@@ -59,34 +65,33 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         /// <param name="serviceType">IResolvable</param>
         /// <returns>Untyped service implementation</returns>
-        public static IEnumerable<object> ResolveCollection(Type serviceType)
+        public IEnumerable<object> ResolveCollection(Type serviceType)
         {
             if (!serviceType.IsDerivedFromInterface(typeof(ICollectionResolvable)))
             {
-                throw new ArgumentException($"{nameof(serviceType)} must be an interface and derived from {nameof(ICollectionResolvable)}");
+                throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(ICollectionResolvable)}");
             }
-            
+
             return _container.GetAllInstances(serviceType);
         }
-        
-        private static Container InitContainer()
+
+        private static Container InitContainer(Assembly[] assemblies)
         {
+            var typeExtensions = TypeExtensions.SetInstance(assemblies);
+
             var container = new Container
                             {
                                 Options =
                                 {
                                     DefaultLifestyle = Lifestyle.Transient,
                                     UseFullyQualifiedTypeNames = true,
-                                    
                                     ResolveUnregisteredConcreteTypes = false,
                                     AllowOverridingRegistrations = false,
                                     EnableDynamicAssemblyCompilation = false,
                                     SuppressLifestyleMismatchVerification = false,
-                                }
+                                },
                             };
 
-            var typeExtensions = TypeExtensions.SetInstance(typeof(DependencyContainer).Assembly);
-            
             RegisterServices(container, typeExtensions);
 
             container.Verify(VerificationOption.VerifyAndDiagnose);
@@ -94,30 +99,29 @@ namespace SpaceEngineers.Core.CompositionRoot
             return container;
         }
 
-        private static void RegisterServices(Container container,
-                                             ITypeExtensions typeExtensions)
+        private static void RegisterServices(Container container, ITypeExtensions typeExtensions)
         {
             /*
              * [I] - Single
              */
-            var iResolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container, typeExtensions);
-           
-            foreach (var iResolvable in iResolvableRegistrationInfos)
+            var resolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container, typeExtensions);
+
+            foreach (var resolvable in resolvableRegistrationInfos)
             {
-                container.Register(iResolvable.ServiceType, iResolvable.ComponentType, iResolvable.Lifestyle);
+                container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
             }
-            
+
             /*
              * [II] - Collections
              */
-            var iCollectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
-            RegisterLifestyle(container, iCollectionResolvableRegistrationInfos);
+            var collectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
+            RegisterLifestyle(container, collectionResolvableRegistrationInfos);
 
-            foreach (var iCollectionResolvable in iCollectionResolvableRegistrationInfos
+            foreach (var collectionResolvable in collectionResolvableRegistrationInfos
                                                  .OrderBy(info => OrderByAttribute(info, typeExtensions))
                                                  .GroupBy(k => k.ServiceType, v => v.ComponentType))
             {
-                container.Collection.Register(iCollectionResolvable.Key, iCollectionResolvable);
+                container.Collection.Register(collectionResolvable.Key, collectionResolvable);
             }
 
             /*
@@ -127,7 +131,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(IConditionalDecorator<,>)))
                .OrderBy(info => OrderByAttribute(info, typeExtensions))
                .Each(info => RegisterDecorator(container, info));
-            
+
             /*
              * [IV] - Collection decorators
              */
@@ -143,23 +147,22 @@ namespace SpaceEngineers.Core.CompositionRoot
             return typeExtensions
                   .AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
                   .Select(i => new
-                               {
-                                   ServiceType = i,
-                                   Components = container
-                                               .GetTypesToRegister(i,
-                                                                   typeExtensions.OurAssemblies(),
-                                                                   new TypesToRegisterOptions
-                                                                   {
-                                                                       IncludeComposites = false,
-                                                                       IncludeDecorators = false,
-                                                                       IncludeGenericTypeDefinitions = true
-                                                                   })
-                                               .Select(cmp => new
-                                                              {
-                                                                  ComponentType = cmp,
-                                                                  cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                                                              })
-                               })
+                  {
+                      ServiceType = i,
+                      Components = container.GetTypesToRegister(i,
+                                                                typeExtensions.OurAssemblies(),
+                                                                new TypesToRegisterOptions
+                                                                {
+                                                                    IncludeComposites = false,
+                                                                    IncludeDecorators = false,
+                                                                    IncludeGenericTypeDefinitions = true
+                                                                })
+                                            .Select(cmp => new
+                                            {
+                                                ComponentType = cmp,
+                                                cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                                            })
+                  })
                   .SelectMany(info => info.Components
                                           .Select(cmp => new ServiceRegistrationInfo(info.ServiceType,
                                                                                      cmp.ComponentType,
@@ -200,19 +203,19 @@ namespace SpaceEngineers.Core.CompositionRoot
                   .Where(t => typeExtensions.IsImplementationOfOpenGenericInterface(t,
                                                                                     decoratorType))
                   .Select(t => new
-                               {
-                                   ComponentType = t,
-                                   Decorator = t.GetInterfaces()
+                  {
+                      ComponentType = t,
+                      Decorator = t.GetInterfaces()
                                                 .Where(i => i.IsGenericType)
                                                 .Single(i => i.GetGenericTypeDefinition() == decoratorType)
-                               })
+                  })
                   .Select(t => new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0],
                                                            t.ComponentType,
                                                            t.ComponentType.GetCustomAttribute<LifestyleAttribute>()
                                                            ?.Lifestyle)
-                               {
-                                   Attribute = t.Decorator.GetGenericArguments()[1]
-                               });
+                  {
+                      Attribute = t.Decorator.GetGenericArguments()[1]
+                  });
         }
 
         private static uint OrderByAttribute(ServiceRegistrationInfo info, ITypeExtensions typeExtensions)

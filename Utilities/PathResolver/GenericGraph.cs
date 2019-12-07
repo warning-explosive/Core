@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.PathResolver
         public GenericGraph(ICollection<GenericGraphEdge<TKey, TValue>> inputs)
         {
             Graph = new Dictionary<TKey, IDictionary<TKey, ICollection<TValue>>>();
-            
+
             foreach (var input in inputs)
             {
                 if (!Graph.TryGetValue(input.SourceNodeKey, out var nodeGroup))
@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.PathResolver
                 {
                     nodeGroup[input.TargetNodeKey] = new List<TValue>();
                 }
-                
+
                 nodeGroup[input.TargetNodeKey].Add(input.EdgeInfo);
             }
         }

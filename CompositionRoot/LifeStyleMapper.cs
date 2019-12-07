@@ -9,20 +9,20 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         private static readonly IDictionary<EnLifestyle, Lifestyle> _mapping
             = new Dictionary<EnLifestyle, Lifestyle>
-              {
-                  [EnLifestyle.Transient] = Lifestyle.Transient,
-                  [EnLifestyle.Singleton] = Lifestyle.Singleton,
-                  [EnLifestyle.Scoped] = Lifestyle.Scoped,
-              };
+            {
+                [EnLifestyle.Transient] = Lifestyle.Transient,
+                [EnLifestyle.Singleton] = Lifestyle.Singleton,
+                [EnLifestyle.Scoped] = Lifestyle.Scoped,
+            };
 
-        internal static Lifestyle MapLifestyle(EnLifestyle enLifestyle)
+        internal static Lifestyle MapLifestyle(EnLifestyle lifestyle)
         {
-            return _mapping[enLifestyle];
+            return _mapping[lifestyle];
         }
-        
-        internal static EnLifestyle MapLifestyle(Lifestyle enLifestyle)
+
+        internal static EnLifestyle MapLifestyle(Lifestyle lifestyle)
         {
-            return _mapping.Single(pair => pair.Value == enLifestyle).Key;
+            return _mapping.Single(pair => pair.Value == lifestyle).Key;
         }
     }
 }

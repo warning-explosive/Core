@@ -7,9 +7,10 @@ namespace SpaceEngineers.Core.SettingsManager
     using YamlDotNet.Serialization.TypeResolvers;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class YamlFormatter : FileSystemFormatterBase, IYamlFormatter
+    internal class YamlFormatter<TSettings> : FileSystemFormatterBase<TSettings>
+        where TSettings : IYamlSettings, new()
     {
-        private static readonly ISerializer _serializer =
+        private readonly ISerializer _serializer =
             new SerializerBuilder()
                .WithNamingConvention(PascalCaseNamingConvention.Instance)
                .WithTypeResolver(new DynamicTypeResolver())
@@ -17,21 +18,21 @@ namespace SpaceEngineers.Core.SettingsManager
                .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve)
                .DisableAliases()
                .Build();
-        
-        private static readonly IDeserializer _deserializer =
+
+        private readonly IDeserializer _deserializer =
             new DeserializerBuilder()
                .WithNamingConvention(PascalCaseNamingConvention.Instance)
                .WithTypeResolver(new DynamicTypeResolver())
                .Build();
-        
+
         protected override string Extension => "yaml";
-        
-        protected override string SerializeInternal<TSettings>(TSettings value)
+
+        protected override string SerializeInternal(TSettings value)
         {
             return _serializer.Serialize(value);
         }
 
-        protected override TSettings DeserializeInternal<TSettings>(string serialized)
+        protected override TSettings DeserializeInternal(string serialized)
         {
             return _deserializer.Deserialize<TSettings>(serialized);
         }

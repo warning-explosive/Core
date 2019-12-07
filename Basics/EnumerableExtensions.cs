@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Enumerable extensions
@@ -20,15 +21,32 @@ namespace SpaceEngineers.Core.Basics
                 action(item);
             }
         }
-        
+
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
+        /// <returns>Collection of objects</returns>
         public static IEnumerable<object> ToObjectEnumerable(this IEnumerator numerator)
         {
             while (numerator.MoveNext())
             {
                 yield return numerator.Current;
             }
+        }
+
+        /// <summary>
+        /// Enqueue ordered collection into queue instance
+        /// First the queue is cleared
+        /// </summary>
+        /// <param name="queue">Target queue</param>
+        /// <param name="source">Ordered collection</param>
+        /// <typeparam name="T">Item type-argument</typeparam>
+        /// <returns>Filled queue</returns>
+        public static Queue<T> EnqueueMany<T>(this Queue<T> queue, IReadOnlyCollection<T> source)
+        {
+            queue.Clear();
+            source.Each(queue.Enqueue);
+
+            return queue;
         }
     }
 }

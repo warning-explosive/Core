@@ -8,15 +8,16 @@ namespace SpaceEngineers.Core.Utilities.Test
     using SettingsManager;
     using Xunit;
     using Xunit.Abstractions;
-    
+
     public class SettingsManagerTest : CompositionRootTestBase
     {
-        public SettingsManagerTest(ITestOutputHelper output) : base(output) { }
+        public SettingsManagerTest(ITestOutputHelper output)
+            : base(output) { }
 
         [Fact]
         public void YamlDeserializationTest()
         {
-            var manager = DependencyContainer.Resolve<ISettingsManger<TestYamlConfig>>();
+            var manager = DependencyContainer.Resolve<ISettingsManager<TestYamlConfig>>();
 
             /*
              * 1 - Read
@@ -25,12 +26,12 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
-            
+
             /*
              * 2 - Write
              */
             var date = DateTime.Now;
-            
+
             config = new TestYamlConfig
                      {
                          Int = date.Year,
@@ -59,7 +60,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             manager.Set(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
-            
+
             /*
              * 3 - Read again
              */
@@ -67,31 +68,31 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
         }
-    }
 
-    public class TestYamlConfig : IYamlSettings
-    {
-        public int Int { get; set; }
-        
-        public decimal Decimal { get; set; }
-        
-        public string? String { get; set; }
+        private class TestYamlConfig : IYamlSettings
+        {
+            public int Int { get; set; }
 
-        public DateTime Date { get; set; }
+            public decimal Decimal { get; set; }
 
-        public InnerTestConfig? Reference { get; set; }
+            public string? String { get; set; }
 
-        public ICollection<InnerTestConfig>? Collection { get; set; }
-    }
+            public DateTime Date { get; set; }
 
-    public class InnerTestConfig
-    {
-        public int Int { get; set; }
-        
-        public decimal Decimal { get; set; }
-        
-        public string? String { get; set; }
+            public InnerTestConfig? Reference { get; set; }
 
-        public DateTime Date { get; set; }
+            public ICollection<InnerTestConfig>? Collection { get; set; }
+        }
+
+        private class InnerTestConfig
+        {
+            public int Int { get; set; }
+
+            public decimal Decimal { get; set; }
+
+            public string? String { get; set; }
+
+            public DateTime Date { get; set; }
+        }
     }
 }

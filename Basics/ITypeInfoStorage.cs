@@ -5,14 +5,14 @@ namespace SpaceEngineers.Core.Basics
 
     internal interface ITypeInfoStorage
     {
-        TypeInfo this[Type type] { get; }
-
-        bool ContainsKey(Type type);
-
         Assembly[] OurAssemblies { get; }
 
         Type[] OurTypes { get; }
 
         Type[] AllLoadedTypes { get; }
+
+        TypeInfo this[Type type] { get; }
+
+        bool ContainsKey(Type type);
     }
 }

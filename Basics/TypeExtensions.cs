@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.OurTypes();
         }
-        
+
         /// <summary>
         /// Does type located in our assembly
         /// </summary>
@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.GetOrder(type);
         }
-        
+
         /// <summary>
         ///  Does type implement Nullable
         /// </summary>
@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.IsNullable(type);
         }
-        
+
         /// <summary>
         /// Does type derived from interface
         /// </summary>
@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.IsImplementationOfOpenGeneric(type, openGenericBaseType);
         }
-        
+
         /// <summary>
         /// Does type implement open-generic interface
         /// </summary>

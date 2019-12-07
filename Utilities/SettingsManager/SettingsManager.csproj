@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -42,7 +42,7 @@
     <Compile Update="YamlFormatter.cs">
       <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="SettingsMangerImpl.cs">
+    <Compile Update="SettingsManagerImpl.cs">
       <DependentUpon>ISettingsManger.cs</DependentUpon>
     </Compile>
     <Compile Update="IFileSystemSettings.cs">

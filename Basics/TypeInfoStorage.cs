@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Basics
             nameof(Microsoft),
             "Windows",
         };
-        
+
         private static readonly string[] _excludedTypes =
         {
             "<>f",
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.Basics
             nameof(System),
             "Windows",
         };
-        
+
         private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
         public TypeInfoStorage(Assembly[] assemblies)
@@ -36,15 +36,15 @@ namespace SpaceEngineers.Core.Basics
             var loadedAssemblies = assemblies.Distinct(new AssemblyByNameEqualityComparer())
                                              .ToDictionary(a => a.GetName().FullName);
 
-            var visited = loadedAssemblies.Where(a => _excludedAssemblies.Any(ex => a.Key.StartsWith(ex)))
+            var visited = loadedAssemblies.Where(a => _excludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
                                           .ToDictionary(k => k.Key, v => false);
 
             visited[rootAssemblyFullName] = true;
-            
+
             OurAssemblies = loadedAssemblies
                            .Except(new[]
                                    {
-                                       new KeyValuePair<string, Assembly>(rootAssemblyFullName, rootAssembly)
+                                       new KeyValuePair<string, Assembly>(rootAssemblyFullName, rootAssembly),
                                    })
                            .Where(pair => IsOurReference(pair.Value, loadedAssemblies, visited))
                            .Select(pair => pair.Value)
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.Basics
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
                                                                     .Where(t => t.FullName != null
-                                                                                && _excludedTypes.All(mask => !t.FullName.Contains(mask))))
+                                                                                && _excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCultureIgnoreCase))))
                                     .ToArray();
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));
@@ -61,6 +61,12 @@ namespace SpaceEngineers.Core.Basics
             AllLoadedTypes = assemblies.SelectMany(a => a.GetTypes())
                                        .ToArray();
         }
+
+        public Assembly[] OurAssemblies { get; }
+
+        public Type[] OurTypes { get; }
+
+        public Type[] AllLoadedTypes { get; }
 
         public TypeInfo this[Type type]
             => _collection.ContainsKey(type.GUID)
@@ -72,12 +78,6 @@ namespace SpaceEngineers.Core.Basics
             return _collection.ContainsKey(type.GUID);
         }
 
-        public Assembly[] OurAssemblies { get; }
-
-        public Type[] OurTypes { get; }
-
-        public Type[] AllLoadedTypes { get; }
-
         private bool IsOurReference(Assembly assembly,
                                     IReadOnlyDictionary<string, Assembly> loadedAssemblies,
                                     IDictionary<string, bool> visited)
@@ -86,23 +86,23 @@ namespace SpaceEngineers.Core.Basics
 
             var isReferenced = exclusiveReferences.Any(a => visited.ContainsKey(a.FullName)
                                                             && visited[a.FullName]);
-            
+
             var key = assembly.GetName().FullName;
-            
+
             if (isReferenced)
             {
                 visited[key] = true;
-                
+
                 return true;
             }
 
             var result = exclusiveReferences.Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
-                                                                       && _excludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex)))
+                                                                       && _excludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
                                             .Any(unknownReference => loadedAssemblies.TryGetValue(unknownReference.FullName, out var unknownAssembly)
                                                                      && IsOurReference(unknownAssembly, loadedAssemblies, visited));
 
             visited[key] = result;
-            
+
             return result;
         }
     }

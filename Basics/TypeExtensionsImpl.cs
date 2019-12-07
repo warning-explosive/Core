@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Basics
         {
             _typeInfoStorage = typeInfoStorage;
         }
-        
+
         /// <inheritdoc />
         public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
         {
@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Basics
 
             if (!type.IsInterface)
             {
-                throw new ArgumentException(nameof(TInterface));
+                throw new ArgumentException(typeof(TInterface).FullName);
             }
 
             return _typeInfoStorage

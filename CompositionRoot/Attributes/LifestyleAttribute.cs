@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Attributes
     /// Component lifestyle attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class LifestyleAttribute : Attribute
+    public sealed class LifestyleAttribute : Attribute
     {
         /// <summary> .ctor </summary>
         /// <param name="lifestyle">Lifestyle</param>

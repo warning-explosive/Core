@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using Attributes;
-    using Enumerations;
     using Basics.Attributes;
+    using Enumerations;
 
     [Lifestyle(EnLifestyle.Singleton)]
     [Order(3)]

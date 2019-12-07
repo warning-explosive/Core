@@ -24,9 +24,9 @@
         public static T ShallowCopy<T>(this T original)
             where T : class
         {
-            return (T)ShallowCopy(((object)original).ThrowIfNull());
+            return (T)ShallowCopy((object)original);
         }
-        
+
         /// <summary>
         /// Get deep copy of object (by reflection)
         /// Copy all internal reference links except System.String, System.Type, System.ValueType
@@ -37,9 +37,9 @@
         public static T DeepCopy<T>(this T original)
             where T : class
         {
-            return (T)DeepCopy(((object)original).ThrowIfNull());
+            return (T)DeepCopy((object)original);
         }
-        
+
         /// <summary>
         /// Get deep copy of object (by serialization)
         /// Copy all internal reference links
@@ -51,9 +51,9 @@
         public static T DeepCopyBySerialization<T>(this T original)
             where T : class, new()
         {
-            return (T)DeepCopyBySerialization(((object)original).ThrowIfNull());
+            return (T)DeepCopyBySerialization((object)original);
         }
-        
+
         /// <summary>
         /// Get shallow copy of object
         /// Dont copy internal reference links
@@ -62,7 +62,7 @@
         /// <returns>Shallow copy of original object</returns>
         public static object ShallowCopy(this object original)
         {
-            return _shallowCopyMethod.Invoke(original.ThrowIfNull(), null);
+            return _shallowCopyMethod.Invoke(original, null);
         }
 
         /// <summary>
@@ -71,9 +71,11 @@
         /// </summary>
         /// <param name="original">Original object</param>
         /// <returns>Deep copy of original object</returns>
+        /// <exception cref="InvalidOperationException">InvalidOperationException if copy or original is null</exception>
         public static object DeepCopy(this object original)
         {
-            return ExceptionExtensions.ThrowIfNull(original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>())));
+            return original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
+                           .ExtractNotNullableSafely<object>();
         }
 
         /// <summary>
@@ -85,15 +87,14 @@
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
         public static object DeepCopyBySerialization(this object original)
         {
-            original.GetType()
-                    .GetCustomAttribute<SerializableAttribute>()
-                    .ThrowIfNull();
-            
+            _ = original.GetType()
+                        .GetCustomAttribute<SerializableAttribute>();
+
             using (var stream = new MemoryStream())
             {
                 var binaryFormatter = new BinaryFormatter();
                 binaryFormatter.Serialize(stream, original);
-                stream.Seek(0, SeekOrigin.Begin);
+                _ = stream.Seek(0, SeekOrigin.Begin);
                 return binaryFormatter.Deserialize(stream);
             }
         }
@@ -118,14 +119,14 @@
             }
 
             var clone = original.ShallowCopy();
-            
+
             /*
              * prevent cyclic reference on yourself
              */
             visited.Add(original, clone);
-            
+
             clone.ProcessClone(original, typeToReflect, visited);
-            
+
             return clone;
         }
 

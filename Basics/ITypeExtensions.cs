@@ -20,19 +20,19 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <returns>All types loaded in AppDomain</returns>
         Type[] AllLoadedTypes();
-        
+
         /// <summary>
         /// Get all types located in our assemblies
         /// </summary>
         /// <returns>All types located in our assemblies</returns>
         Type[] OurTypes();
-        
+
         /// <summary>
         /// Get all our assemblies (with dependency on CompositionRoot assembly)
         /// </summary>
         /// <returns>All our assemblies</returns>
         Assembly[] OurAssemblies();
-        
+
         /// <summary>
         /// Does type located in our assembly
         /// </summary>
@@ -46,21 +46,21 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="type">Type</param>
         /// <returns>Type order</returns>
         uint? GetOrder(Type type);
-        
+
         /// <summary>
         /// Does type implement Nullable
         /// </summary>
         /// <param name="type">Type for check</param>
         /// <returns>Result of check</returns>
         bool IsNullable(Type type);
-        
+
         /// <summary>
         /// Does type derived from interface
         /// </summary>
         /// <param name="type">Type-implementor</param>
-        /// <param name="interface">interface</param>
+        /// <param name="i">interface</param>
         /// <returns>Result of check</returns>
-        bool IsDerivedFromInterface(Type type, Type @interface);
+        bool IsDerivedFromInterface(Type type, Type i);
 
         /// <summary>
         /// Does type derived from open-generic base type
@@ -82,8 +82,8 @@ namespace SpaceEngineers.Core.Basics
         /// Does type contains interface declaration
         /// </summary>
         /// <param name="type">Type for check</param>
-        /// <param name="interface">Type-candidate for interface declaration</param>
+        /// <param name="i">Type-candidate for interface declaration</param>
         /// <returns>Result of check</returns>
-        bool IsContainsInterfaceDeclaration(Type type, Type @interface);
+        bool IsContainsInterfaceDeclaration(Type type, Type i);
     }
 }

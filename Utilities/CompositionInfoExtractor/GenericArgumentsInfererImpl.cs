@@ -4,21 +4,22 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Basics;
     using CompositionRoot.Attributes;
     using CompositionRoot.Enumerations;
-    using Basics;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericArgumentsInfererImpl : IGenericArgumentsInferer
     {
+        /// <inheritdoc/>
         public Type CloseByConstraints(Type type)
         {
             return AlreadyClosed(type)
                        ? type
                        : CloseByConstraintsInternal(type);
         }
-        
+
         private Type CloseByConstraintsInternal(Type type)
         {
             var args = type.GetGenericArguments()
@@ -31,7 +32,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                            .ToArray();
 
             var closed = type.MakeGenericType(args);
-            
+
             if (!AlreadyClosed(closed))
             {
                 throw new ArgumentException($"Type {type.FullName} is not closed");
@@ -45,8 +46,8 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
             return !type.IsGenericType
                    || type.IsConstructedGenericType;
         }
-        
-        private Type InferType(Type[] constraints, GenericParameterAttributes genericParameterAttributes)
+
+        private static Type InferType(Type[] constraints, GenericParameterAttributes genericParameterAttributes)
         {
             var filters = GetFiltersByTypeParameterAttributes(genericParameterAttributes);
 
@@ -73,7 +74,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)
         {
             var filters = new List<Func<Type, bool>>();
-            
+
             if ((genericParameterAttributes & GenericParameterAttributes.None) != 0)
             {
                 filters.Add(type => true);
@@ -99,9 +100,9 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                                 {
                                     return true;
                                 }
-                                
+
                                 var ctor = type.GetConstructor(Array.Empty<Type>());
-                                
+
                                 return ctor != null;
                             });
             }

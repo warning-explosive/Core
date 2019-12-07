@@ -4,13 +4,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System.Collections.Generic;
     using System.Linq;
     using Basics;
-    using Basics.Test;
     using Xunit;
     using Xunit.Abstractions;
 
     public class DependencyContainerTest : CompositionRootTestBase
     {
-        public DependencyContainerTest(ITestOutputHelper output) : base(output) { }
+        public DependencyContainerTest(ITestOutputHelper output)
+            : base(output) { }
 
         [Fact]
         internal void SingletonTest()
@@ -25,13 +25,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
                          DependencyContainer.Resolve(typeof(ISingletonTestService)));
         }
-        
+
         [Fact]
         internal void OpenGenericTest()
         {
-            DependencyContainer.Resolve<IOpenGenericTestService<string>>();
+            Assert.NotNull(DependencyContainer.Resolve<IOpenGenericTestService<string>>());
         }
-        
+
         [Fact]
         internal void AutoWiringSingletonTest()
         {
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 typeof(CollectionResolvableTestServiceImpl2),
                 typeof(CollectionResolvableTestServiceImpl1),
             };
-            
+
             Assert.True(resolvedTypes.SequenceEqual(types));
         }
 
@@ -67,10 +67,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 typeof(CollectionResolvableTestServiceImpl2),
                 typeof(CollectionResolvableTestServiceImpl1),
             };
-            
+
             Assert.True(resolvedTypes.SequenceEqual(types));
         }
-        
+
         [Fact]
         internal void SingletonOpenGenericCollectionResolvableTest()
         {
@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                             typeof(SingletonGenericCollectionResolvableTestServiceImpl2<object>),
                             typeof(SingletonGenericCollectionResolvableTestServiceImpl1<object>),
                         };
-            
+
             Assert.True(resolvedTypes.SequenceEqual(types));
 
             Assert.True(DependencyContainer
@@ -95,24 +95,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         internal void DecoratorTest()
         {
             var service = DependencyContainer.Resolve<IDecorableService>();
-            
+
             var types = new Dictionary<Type, Type>
-                        {
-                            [typeof(DecorableServiceDecorator1)] = typeof(DecorableServiceDecorator2), 
-                            [typeof(DecorableServiceDecorator2)] = typeof(DecorableServiceDecorator3),
-                            [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl),
-                        };
+            {
+                [typeof(DecorableServiceDecorator1)] = typeof(DecorableServiceDecorator2),
+                [typeof(DecorableServiceDecorator2)] = typeof(DecorableServiceDecorator3),
+                [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl),
+            };
 
             void CheckRecursive(IDecorableService resolved, Type type)
             {
                 Assert.True(resolved.GetType() == type);
                 Output.WriteLine(type.Name);
-                
+
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
                     var decorator = resolved as IDecorableServiceDecorator;
-                    
-                    CheckRecursive(decorator.ThrowIfNull().Decoratee, nextDecorateeType);
+
+                    CheckRecursive(decorator.ExtractNotNullableSafely<IDecorableServiceDecorator>().Decoratee, nextDecorateeType);
                 }
             }
 
@@ -123,24 +123,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         internal void OpenGenericDecoratorTest()
         {
             var service = DependencyContainer.Resolve<IOpenGenericDecorableService<object>>();
-            
+
             var types = new Dictionary<Type, Type>
-                        {
-                            [typeof(OpenGenericDecorableServiceDecorator1<object>)] = typeof(OpenGenericDecorableServiceDecorator2<object>), 
-                            [typeof(OpenGenericDecorableServiceDecorator2<object>)] = typeof(OpenGenericDecorableServiceDecorator3<object>),
-                            [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>),
-                        };
+            {
+                [typeof(OpenGenericDecorableServiceDecorator1<object>)] = typeof(OpenGenericDecorableServiceDecorator2<object>),
+                [typeof(OpenGenericDecorableServiceDecorator2<object>)] = typeof(OpenGenericDecorableServiceDecorator3<object>),
+                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>),
+            };
 
             void CheckRecursive(IOpenGenericDecorableService<object> resolved, Type type)
             {
                 Assert.True(resolved.GetType() == type);
                 Output.WriteLine(type.Name);
-                
+
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = resolved as IOpenGenericDecorableServiceDecorator<object>;
-                    
-                    CheckRecursive(decorator.ThrowIfNull().Decoratee, nextDecorateeType);
+                    CheckRecursive(resolved.ExtractNotNullableSafely<IOpenGenericDecorableServiceDecorator<object>>().Decoratee, nextDecorateeType);
                 }
             }
 
@@ -151,23 +149,21 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         internal void ConditionalDecoratorTest()
         {
             var service = DependencyContainer.Resolve<IConditionalDecorableService>();
-            
+
             var types = new Dictionary<Type, Type>
-                        {
-                            [typeof(ConditionalDecorableServiceDecorator1)] = typeof(ConditionalDecorableServiceDecorator3),
-                            [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl),
-                        };
+            {
+                [typeof(ConditionalDecorableServiceDecorator1)] = typeof(ConditionalDecorableServiceDecorator3),
+                [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl),
+            };
 
             void CheckRecursive(IConditionalDecorableService resolved, Type type)
             {
                 Assert.True(resolved.GetType() == type);
                 Output.WriteLine(type.Name);
-                
+
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = resolved as IConditionalDecorableServiceDecorator;
-                    
-                    CheckRecursive(decorator.ThrowIfNull().Decoratee, nextDecorateeType);
+                    CheckRecursive(resolved.ExtractNotNullableSafely<IConditionalDecorableServiceDecorator>().Decoratee, nextDecorateeType);
                 }
             }
 
@@ -202,12 +198,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             {
                 Assert.True(resolved.GetType() == type);
                 Output.WriteLine(type.Name);
-                
+
                 if (types[i].TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = resolved as ICollectionResolvableConditionDecorableServiceDecorator;
-                    
-                    CheckRecursive(decorator.ThrowIfNull().Decoratee, i, nextDecorateeType);
+                    CheckRecursive(resolved.ExtractNotNullableSafely<ICollectionResolvableConditionDecorableServiceDecorator>().Decoratee, i, nextDecorateeType);
                 }
             }
 

@@ -1,20 +1,20 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
- {
-     using Abstractions;
-     using Attributes;
-     using Enumerations;
-     using Basics.Attributes;
+{
+    using Abstractions;
+    using Attributes;
+    using Basics.Attributes;
+    using Enumerations;
 
-     [Lifestyle(EnLifestyle.Transient)]
-     [Order(3)]
-     internal class OpenGenericDecorableServiceDecorator1<T> : IOpenGenericDecorableServiceDecorator<T>,
-                                                               IDecorator<IOpenGenericDecorableService<T>>
-     {
-         public IOpenGenericDecorableService<T> Decoratee { get; }
+    [Lifestyle(EnLifestyle.Transient)]
+    [Order(3)]
+    internal class OpenGenericDecorableServiceDecorator1<T> : IOpenGenericDecorableServiceDecorator<T>,
+                                                              IDecorator<IOpenGenericDecorableService<T>>
+    {
+        public OpenGenericDecorableServiceDecorator1(IOpenGenericDecorableService<T> decorateee)
+        {
+            Decoratee = decorateee;
+        }
 
-         public OpenGenericDecorableServiceDecorator1(IOpenGenericDecorableService<T> decorateee)
-         {
-             Decoratee = decorateee;
-         }
-     }
- }
+        public IOpenGenericDecorableService<T> Decoratee { get; }
+    }
+}

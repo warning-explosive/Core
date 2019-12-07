@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Basics
                   .GetProperty(propertyName, Flags)
                   .GetValue(target);
         }
-        
+
         /// <summary>
         /// Get field value from target object
         /// </summary>

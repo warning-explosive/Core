@@ -18,15 +18,15 @@ namespace SpaceEngineers.Core.SettingsManager
                .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve)
                .DisableAliases()
                .Build();
-        
+
         private readonly IDeserializer _deserializer =
             new DeserializerBuilder()
                .WithNamingConvention(PascalCaseNamingConvention.Instance)
                .WithTypeResolver(new DynamicTypeResolver())
                .Build();
-        
+
         protected override string Extension => "yaml";
-        
+
         protected override string SerializeInternal(TSettings value)
         {
             return _serializer.Serialize(value);

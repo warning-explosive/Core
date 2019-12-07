@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Basics.EqualityComparers
 {
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -15,7 +16,7 @@ namespace SpaceEngineers.Core.Basics.EqualityComparers
         /// <inheritdoc />
         public override int GetHashCode(Assembly obj)
         {
-            return obj?.GetName().FullName.GetHashCode()
+            return obj?.GetName().FullName.GetHashCode(StringComparison.InvariantCulture)
                    ?? 0;
         }
     }

@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return encoding.GetString(await stream.ReadAllAsync());
         }
-        
+
         /// <summary>
         /// Flush stream and write string asynchronously
         /// </summary>
@@ -41,11 +41,11 @@ namespace SpaceEngineers.Core.Basics
         {
             var bytes = (int)stream.Length;
             var buffer = new byte[bytes];
-            
+
             var offset = 0;
             stream.Position = offset;
-            
-            await stream.ReadAsync(buffer, offset, bytes);
+
+            _ = await stream.ReadAsync(buffer, offset, bytes);
 
             return buffer;
         }
@@ -59,12 +59,12 @@ namespace SpaceEngineers.Core.Basics
         public static async Task OverWriteAllAsync(this Stream stream, byte[] bytes)
         {
             await stream.FlushAsync();
-            
+
             var offset = 0;
             stream.Position = offset;
-            
+
             stream.SetLength(bytes.Length);
-            
+
             await stream.WriteAsync(bytes, offset, bytes.Length);
         }
     }

@@ -1,8 +1,10 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
+    using Exceptions;
 
     /// <summary>
     /// Exception extension methods
@@ -36,18 +38,23 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="input">input</param>
         /// <param name="message">Exception message</param>
-        /// <typeparam name="T">input type-argument</typeparam>
-        /// <returns>input</returns>
+        /// <typeparam name="TExpected">input type-argument</typeparam>
+        /// <returns>Not null input or exception</returns>
         /// <exception cref="ArgumentNullException">Throws if input is null</exception>
-        public static T ThrowIfNull<T>(this T? input, string? message = null)
-            where T : class
+        /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
+        public static TExpected ExtractNotNullableSafely<TExpected>([AllowNull] this object input, string? message = null)
         {
             if (input == null)
             {
-                throw new ArgumentNullException(message ?? nameof(input));
+                throw new InvalidOperationException(message ?? $"{nameof(input)} is null");
             }
 
-            return input;
+            if (input is TExpected expected)
+            {
+                return expected;
+            }
+
+            throw new TypeMismatchException(input.GetType(), typeof(TExpected));
         }
 
         /// <summary>
@@ -81,13 +88,14 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="exceptionHandler">Exception handler action</param>
         /// <param name="finallyAction">Finally action</param>
         /// <typeparam name="TResult">Return-value type argument</typeparam>
+        /// <returns>Return value of the function or not handled exception</returns>
         public static TResult? HandleException<TResult>(this Func<TResult?> func,
                                                         Action<Exception> exceptionHandler,
                                                         Action? finallyAction = null)
             where TResult : class
         {
             TResult? result = default;
-            
+
             try
             {
                 result = func.Invoke();
@@ -111,13 +119,14 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="exceptionHandler">Exception handler action</param>
         /// <param name="finallyAction">Finally action</param>
         /// <typeparam name="TResult">Return-value type argument</typeparam>
+        /// <returns>Return value of the function or not handled exception</returns>
         public static TResult? HandleException<TResult>(this Func<TResult?> func,
                                                         Action<Exception> exceptionHandler,
                                                         Action? finallyAction = null)
             where TResult : struct
         {
             TResult? result = default;
-            
+
             try
             {
                 result = func.Invoke();

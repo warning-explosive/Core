@@ -2,19 +2,19 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using Abstractions;
     using Attributes;
-    using Enumerations;
     using Basics.Attributes;
+    using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
     [Order(1)]
     public class CollectionResolvableConditionDecorableServiceDecorator2 : ICollectionResolvableConditionDecorableServiceDecorator,
-                                                                           ICollectionConditionalDecorator<ICollectionResolvableConditionDecorableService, TestConditionAttribute2>
+                                                                           ICollectionConditionalDecorator<ICollectionResolvableConditionDecorableService, TestCondition2Attribute>
     {
-        public ICollectionResolvableConditionDecorableService Decoratee { get; }
-
         public CollectionResolvableConditionDecorableServiceDecorator2(ICollectionResolvableConditionDecorableService decoratee)
         {
             Decoratee = decoratee;
         }
+
+        public ICollectionResolvableConditionDecorableService Decoratee { get; }
     }
 }

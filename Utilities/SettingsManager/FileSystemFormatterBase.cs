@@ -6,21 +6,18 @@ namespace SpaceEngineers.Core.SettingsManager
     using System.Threading.Tasks;
     using Basics;
 
-    /// <summary>
-    /// Filesystem formatter
-    /// </summary>
-    public abstract class FileSystemFormatterBase<TSettings> : IAsyncFormatter<TSettings>
+    internal abstract class FileSystemFormatterBase<TSettings> : IAsyncFormatter<TSettings>
         where TSettings : IFileSystemSettings, new()
     {
         private readonly Encoding _encoding = new UTF8Encoding(true);
-        
+
         private readonly string _folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Settings");
-        
+
         /// <summary>
         /// Extension of file
         /// </summary>
         protected abstract string Extension { get; }
-        
+
         /// <summary>
         /// Path to all filesystem settings
         /// </summary>
@@ -43,7 +40,7 @@ namespace SpaceEngineers.Core.SettingsManager
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.None))
             {
                 var serialized = await fileStream.ReadAllAsync(_encoding);
-                
+
                 return await Task.Run(() => DeserializeInternal(serialized));
             }
         }

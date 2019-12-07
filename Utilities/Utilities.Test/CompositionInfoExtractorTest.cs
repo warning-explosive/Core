@@ -8,7 +8,8 @@ namespace SpaceEngineers.Core.Utilities.Test
 
     public class CompositionInfoExtractorTest : CompositionRootTestBase
     {
-        public CompositionInfoExtractorTest(ITestOutputHelper output) : base(output) { }
+        public CompositionInfoExtractorTest(ITestOutputHelper output)
+            : base(output) { }
 
         [Fact]
         public void SimpleTest()
@@ -16,7 +17,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             var compositionInfo = DependencyContainer.Resolve<ICompositionInfoExtractor>()
                                                      .GetCompositionInfo()
                                                      .ToArray();
-            
+
             Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
             Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoVisualizer>()

@@ -5,6 +5,7 @@
     /// <summary>
     /// Object ReferenceEqualityComparer
     /// </summary>
+    /// <typeparam name="T">Type-Argument</typeparam>
     public class ReferenceEqualityComparer<T> : EqualityComparer<T>
         where T : class
     {

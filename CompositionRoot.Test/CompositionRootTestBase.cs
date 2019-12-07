@@ -7,11 +7,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
     public class CompositionRootTestBase : BasicsTestBase
     {
-        protected readonly DependencyContainer DependencyContainer;
-
-        protected CompositionRootTestBase(ITestOutputHelper output) : base(output)
+        protected CompositionRootTestBase(ITestOutputHelper output)
+            : base(output)
         {
             DependencyContainer = new DependencyContainer(AppDomain.CurrentDomain?.GetAssemblies() ?? Array.Empty<Assembly>());
         }
+
+        protected DependencyContainer DependencyContainer { get; }
     }
 }

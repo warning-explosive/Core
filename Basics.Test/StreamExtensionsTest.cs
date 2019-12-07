@@ -15,9 +15,9 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             const string @long = "Hello world!";
             const string @short = "Hello!";
-         
+
             var encoding = new UTF8Encoding();
-            
+
             var longBytes = encoding.GetBytes(@long);
             var shortBytes = encoding.GetBytes(@short);
 
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 Assert.Equal(@long, readed);
 
                 stream.OverWriteAllAsync(shortBytes).Wait();
-                
+
                 readed = stream.ReadAllAsync(encoding).Result;
                 Assert.Equal(@short, readed);
             }

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Basics.Attributes
     /// Attribute which defines order
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class OrderAttribute : Attribute
+    public sealed class OrderAttribute : Attribute
     {
         /// <summary> .ctor </summary>
         /// <param name="order">Order</param>

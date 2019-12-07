@@ -1,12 +1,14 @@
 namespace SpaceEngineers.Core.SettingsManager
 {
+    using System.Diagnostics.CodeAnalysis;
     using CompositionRoot.Abstractions;
 
     /// <summary>
     /// Settings manager
     /// </summary>
     /// <typeparam name="TSettings">ISettings</typeparam>
-    public interface ISettingsManger<TSettings> : IResolvable
+    [SuppressMessage("Microsoft.CodeQuality.Analyzers", "CA1716", Justification = "Reviewed")]
+    public interface ISettingsManager<TSettings> : IResolvable
         where TSettings : ISettings, new()
     {
         /// <summary>

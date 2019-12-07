@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
@@ -122,13 +122,13 @@
     <Compile Update="ConditionalDecorableServiceImpl.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
-    <Compile Update="TestConditionAttribute1.cs">
+    <Compile Update="TestCondition1Attribute.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="ConditionalDecorableServiceDecorator1.cs">
       <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="TestConditionAttribute2.cs">
+    <Compile Update="TestCondition2Attribute.cs">
       <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
     </Compile>
     <Compile Update="ConditionalDecorableServiceDecorator2.cs">

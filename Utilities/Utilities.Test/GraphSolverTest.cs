@@ -5,22 +5,21 @@ namespace SpaceEngineers.Core.Utilities.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using CompositionRoot.Test;
     using Basics;
+    using Basics.Exceptions;
+    using CompositionRoot.Test;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;
 
     public class GraphSolverTest : CompositionRootTestBase
     {
-        public GraphSolverTest(ITestOutputHelper output) : base(output) { }
-        
         private const char A = 'A';
         private const char B = 'B';
         private const char C = 'C';
         private const char D = 'D';
         private const char E = 'E';
-        
+
         private const string Ab1 = "AB1";
         private const string Ab2 = "AB2";
         private const string Ac = "AC";
@@ -51,6 +50,9 @@ namespace SpaceEngineers.Core.Utilities.Test
         private static readonly ICollection<GenericGraphEdge<char, string>> _edgesHeap = _edges.Select(pair => pair.Value)
                                                                                                .ToList();
 
+        public GraphSolverTest(ITestOutputHelper output)
+            : base(output) { }
+
         /// <summary>
         /// Test1 - All paths
         /// </summary>
@@ -61,13 +63,13 @@ namespace SpaceEngineers.Core.Utilities.Test
             var graph = BuildGenericGraph(sw);
 
             int WeightFunc(string edge) => 1;
-            
+
             sw.Restart();
             var paths = DependencyContainer.Resolve<IPathResolver<char, string>>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
             sw.Stop();
 
             var strPaths = ShowGroupedWeightedPaths(paths, WeightFunc, sw);
-            
+
             var candidates = new List<string>
             {
                 "(1) => [AB1(1), AB2(1)]",
@@ -115,45 +117,48 @@ namespace SpaceEngineers.Core.Utilities.Test
         {
             var sw = new Stopwatch();
             var graph = BuildGenericGraph(sw);
-            
+
             var requiredKeys = new Queue<char>();
             requiredKeys.Enqueue(C);
-            
+
             var requiredEdges1 = new Queue<string>();
             requiredEdges1.Enqueue(_edges[Ab1].EdgeInfo);
             requiredEdges1.Enqueue(_edges[Bb2].EdgeInfo);
             requiredEdges1.Enqueue(_edges[Bb1].EdgeInfo);
-            
+
             var requiredEdges2 = new Queue<string>();
             requiredEdges2.Enqueue(_edges[Ab1].EdgeInfo);
             requiredEdges2.Enqueue(_edges[Bb1].EdgeInfo);
             requiredEdges2.Enqueue(_edges[Bb2].EdgeInfo);
 
             var solverInfo1 = new PathResolverInfo<char, string>(A,
-                                                                E,
-                                                                edge => 1)
+                                                                 E,
+                                                                 edge => 1)
                               {
-                                  RequiredKeys = requiredKeys,
-                                  RequiredEdges = requiredEdges1,
                                   WithoutLoops = false
                               };
+
+            solverInfo1.RequiredKeys.EnqueueMany(requiredKeys);
+            solverInfo1.RequiredEdges.EnqueueMany(requiredEdges1);
 
             var solverInfo2 = new PathResolverInfo<char, string>(A,
-                                                                E,
-                                                                edge => 1)
+                                                                 E,
+                                                                 edge => 1)
                               {
-                                  RequiredKeys = requiredKeys,
-                                  RequiredEdges = requiredEdges2,
                                   WithoutLoops = false
                               };
 
+            solverInfo2.RequiredKeys.EnqueueMany(requiredKeys);
+            solverInfo2.RequiredEdges.EnqueueMany(requiredEdges2);
+
             var solverInfo3 = new PathResolverInfo<char, string>(A,
-                                                                E,
-                                                                edge => 1)
+                                                                 E,
+                                                                 edge => 1)
                               {
-                                  RequiredKeys = requiredKeys,
                                   WithoutLoops = true
                               };
+
+            solverInfo3.RequiredKeys.EnqueueMany(requiredKeys);
 
             // 1
             var strPath = GetShortestStrPath(graph, solverInfo1, sw);
@@ -186,43 +191,41 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             var requiredEdges = new Queue<string>();
             requiredEdges.Enqueue(_edges[Cd].EdgeInfo);
-            
+
             var solverInfo2 = new PathResolverInfo<char, string>(A,
                                                                 E,
                                                                 edge => 1)
                               {
-                                  WithoutLoops = false,
-                                  RequiredEdges = requiredEdges
+                                  WithoutLoops = false
                               };
-            
-            // 1
-            Exception? exception = null;
+            solverInfo2.RequiredEdges.EnqueueMany(requiredEdges);
+
+            var candidates = new List<string>
+                             {
+                                 "(3) => [AB1(1), AB2(1)] => [BD(1)] => [DE(1)]",
+                                 "(3) => [AC(1)] => [CD(1)] => [DE(1)]",
+                             };
 
             Action action = () => GetShortestStrPath(graph, solverInfo1, sw);
-            action.HandleException(ex => exception = ex);
-            
-            Assert.NotNull(exception);
-            Assert.Equal(typeof(AmbiguousMatchException), exception?.GetType());
-            
-            var candidates = new List<string>
-            {
-                "(3) => [AB1(1), AB2(1)] => [BD(1)] => [DE(1)]",
-                "(3) => [AC(1)] => [CD(1)] => [DE(1)]",
-            };
+            action.HandleException(ex =>
+                                   {
+                                       Assert.NotNull(ex);
+                                       Assert.Equal(typeof(AmbiguousMatchException), ex?.GetType());
 
-            var exeptionMessagePathsList = ExceptionExtensions.ThrowIfNull(exception?.Message?.Split('\n')?.ToList());
-            foreach (var msg in exeptionMessagePathsList)
-            {
-                Output.WriteLine(msg);
-            }
+                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToList().ExtractNotNullableSafely<List<string>>();
 
-            CheckCandidates(candidates, exeptionMessagePathsList);
-            
-            var strPath = GetShortestStrPath(graph, solverInfo2, sw);
-            Assert.Equal("[AC] => [CD] => [DE]", strPath);
+                                       foreach (var msg in exeptionMessagePathsList)
+                                       {
+                                           Output.WriteLine(msg);
+                                       }
+
+                                       CheckCandidates(candidates, exeptionMessagePathsList);
+
+                                       var strPath = GetShortestStrPath(graph, solverInfo2, sw);
+                                       Assert.Equal("[AC] => [CD] => [DE]", strPath);
+                                   });
         }
 
-        
         /// <summary>
         /// Test4 - Not Found
         /// </summary>
@@ -231,7 +234,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         {
             var sw = new Stopwatch();
             var graph = BuildGenericGraph(sw);
-            
+
             var requiredEdges = new Queue<string>();
             requiredEdges.Enqueue(_edges[Ab1].EdgeInfo);
             requiredEdges.Enqueue(_edges[Bb2].EdgeInfo);
@@ -240,20 +243,17 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             var solverInfo = new PathResolverInfo<char, string>(A,
                                                                E,
-                                                               edge => 1)
-                             {
-                                 RequiredEdges = requiredEdges
-                             };
-            
-            Exception? exception = null;
+                                                               edge => 1);
+            solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
 
             Action action = () => GetShortestStrPath(graph, solverInfo, sw);
-            action.HandleException(ex => exception = ex);
-            
-            Assert.NotNull(exception);
-            Assert.Equal(typeof(Exception), exception?.GetType());
-            Output.WriteLine(exception?.Message);
-            Assert.Contains("Path not found", exception?.Message);
+            action.HandleException(ex =>
+                                   {
+                                       Assert.NotNull(ex);
+                                       Assert.Equal(typeof(NotFoundException), ex.GetType());
+                                       Output.WriteLine(ex.Message);
+                                       Assert.Contains("Path not found", ex.Message, StringComparison.InvariantCulture);
+                                   });
         }
 
         /// <summary>
@@ -276,36 +276,35 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             // 1.1
             solverInfo.NotEmptyCircle = false;
-            solverInfo.RequiredEdges = null;
+            solverInfo.RequiredEdges.Clear();
             var strPath = GetShortestStrPath(graph, solverInfo, sw);
             Assert.Equal(string.Empty, strPath);
 
             // 1.2
             solverInfo.NotEmptyCircle = true;
-            solverInfo.RequiredEdges = null;
-            Exception? exception = null;
-
-            Action action = () => GetShortestStrPath(graph, solverInfo, sw); 
-            action.HandleException(ex => exception = ex);
-            
-            Assert.NotNull(exception);
-            Assert.Equal(typeof(AmbiguousMatchException), exception?.GetType());
-            Output.WriteLine(exception?.Message);
-            Assert.Contains("(1) => [BB1(1), BB2(1)]", exception?.Message);
+            solverInfo.RequiredEdges.Clear();
+            Action action = () => GetShortestStrPath(graph, solverInfo, sw);
+            action.HandleException(ex =>
+                                   {
+                                       Assert.NotNull(ex);
+                                       Assert.Equal(typeof(AmbiguousMatchException), ex.GetType());
+                                       Output.WriteLine(ex.Message);
+                                       Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.InvariantCulture);
+                                   });
 
             // 1.3
             solverInfo.NotEmptyCircle = false;
-            solverInfo.RequiredEdges = requiredEdges;
+            solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
             strPath = GetShortestStrPath(graph, solverInfo, sw);
             Assert.Equal("[BB1]", strPath);
 
             // 1.4
             solverInfo.NotEmptyCircle = true;
-            solverInfo.RequiredEdges = requiredEdges;
+            solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
             strPath = GetShortestStrPath(graph, solverInfo, sw);
             Assert.Equal("[BB1]", strPath);
         }
-        
+
         /// <summary>
         /// Test6 - Weight test
         /// </summary>
@@ -338,13 +337,13 @@ namespace SpaceEngineers.Core.Utilities.Test
                               {
                                   WithoutLoops = false
                               };
-            
+
             sw.Restart();
             var paths = DependencyContainer.Resolve<IPathResolver<char, string>>().GetAllGroupedWeightedPaths(graph, A, WeightFunc);
             sw.Stop();
 
             var strPaths = ShowGroupedWeightedPaths(paths.Where(z => z.Value.Last().Key == E), WeightFunc, sw);
-            
+
             var candidates = new List<string>
                              {
                                  "(6) => [AC(1)] => [CD(3)] => [DE(2)]",
@@ -353,11 +352,11 @@ namespace SpaceEngineers.Core.Utilities.Test
                                  "(10) => [AC(1)] => [CB(4)] => [BD(3)] => [DE(2)]",
                                  "(11) => [AB1(2), AB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]",
                                  "(11) => [AC(1)] => [CB(4)] => [BB1(1), BB2(2)] => [BD(3)] => [DE(2)]",
-                                 "(12) => [AB1(2), AB2(2)] => [BB1(1), BB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]", 
+                                 "(12) => [AB1(2), AB2(2)] => [BB1(1), BB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]",
                              };
 
             CheckCandidates(candidates, strPaths);
-            
+
             var strPath = GetShortestStrPath(graph, solverInfo1, sw);
             Assert.Equal("[AC] => [CD] => [DE]", strPath);
         }
@@ -367,7 +366,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             sw.Restart();
             var graph = new GenericGraph<char, string>(_edgesHeap);
             sw.Stop();
-            
+
             Output.WriteLine($"[Graph build time] = {sw.ElapsedMilliseconds} ms");
 
             return graph;
@@ -378,7 +377,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             sw.Restart();
             var path = DependencyContainer.Resolve<IPathResolver<char, string>>().GetShortestPath(graph, solverInfo);
             sw.Stop();
-            
+
             var strPath = ShowPath(path, sw);
 
             return strPath;
@@ -389,12 +388,12 @@ namespace SpaceEngineers.Core.Utilities.Test
                                                       Stopwatch sw)
         {
             Output.WriteLine($"[Path Groupping time] = {sw.ElapsedMilliseconds} ms");
-            
+
             var strPaths = new List<string>();
 
             foreach (var groupedWeightedPath in groupedWeightedPaths.OrderBy(z => z.Key))
             {
-                var strPath = $"({groupedWeightedPath.Key}) => " +  string.Join(" => ", groupedWeightedPath.Value.Select(nodeGroup => "[" + string.Join(", ", nodeGroup.Value.Select(edge => edge + $"({weightFunc(edge)})")) + "]"));
+                var strPath = $"({groupedWeightedPath.Key}) => " + string.Join(" => ", groupedWeightedPath.Value.Select(nodeGroup => "[" + string.Join(", ", nodeGroup.Value.Select(edge => edge + $"({weightFunc(edge)})")) + "]"));
                 strPaths.Add(strPath);
                 Output.WriteLine(strPath);
             }
@@ -405,20 +404,20 @@ namespace SpaceEngineers.Core.Utilities.Test
         private string ShowPath(Queue<KeyValuePair<char, string>> path, Stopwatch sw)
         {
             Output.WriteLine($"[Path search time] = {sw.ElapsedMilliseconds} ms");
-            
+
             var strPath = string.Join(" => ", path.Select(node => "[" + node.Value + "]"));
-            
+
             Output.WriteLine(strPath);
             return strPath;
         }
 
         private static void CheckCandidates(List<string> candidates, List<string> strPaths)
         {
-            foreach (var c in candidates)
+            foreach (var candidate in candidates)
             {
-                var occurrence = strPaths.SingleOrDefault(z => z.Equals(c));
+                var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.ThrowIfNull($"Path not found: {c}");
+                occurrence.ExtractNotNullableSafely<string>($"Path not found: {candidate}");
             }
         }
     }

@@ -6,18 +6,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Enumerations
     public enum EnLifestyle
     {
         /// <summary>
-        /// Transient lifestyle 
+        /// Transient lifestyle
         /// </summary>
-        Transient = 1,
-        
+        Transient,
+
         /// <summary>
-        /// Singleton lifestyle 
+        /// Singleton lifestyle
         /// </summary>
-        Singleton = 2,
-        
+        Singleton,
+
         /// <summary>
-        /// Scoped lifestyle 
+        /// Scoped lifestyle
         /// </summary>
-        Scoped = 4,
+        Scoped,
     }
 }

@@ -1,19 +1,21 @@
 namespace SpaceEngineers.Core.Utilities.Test
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using Basics;
     using CliArgumentsParser;
     using CompositionRoot.Test;
-    using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
     public class CliArgumentsParserTest : CompositionRootTestBase
     {
-        public CliArgumentsParserTest(ITestOutputHelper output) : base(output) { }
+        public CliArgumentsParserTest(ITestOutputHelper output)
+            : base(output) { }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
-        
+
         [Fact]
         public void Test1()
         {
@@ -28,9 +30,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, true);
             Assert.Equal(arguments.NullableBool, true);
             Assert.Equal(arguments.TestEnum, TestEnum.Value1);
@@ -54,9 +56,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, true);
             Assert.Equal(arguments.NullableBool, true);
             Assert.Equal(arguments.TestEnum, TestEnum.Value1);
@@ -79,7 +81,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             var arguments = parser.Parse<TestPoco>(args);
 
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -100,7 +102,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -121,9 +123,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -144,9 +146,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -167,9 +169,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -178,7 +180,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.Equal(arguments.NullableTestFlagsEnum, null);
             Assert.Equal(arguments.String, "https://www.google.com");
         }
-        
+
         [Fact]
         public void Test9()
         {
@@ -190,9 +192,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -201,7 +203,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.Equal(arguments.NullableTestFlagsEnum, null);
             Assert.Equal(arguments.String, "https://www.yandex.ru;https://www.google.com");
         }
-        
+
         [Fact]
         public void Test10()
         {
@@ -214,9 +216,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -225,7 +227,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.Equal(arguments.NullableTestFlagsEnum, TestFlagsEnum.Value2);
             Assert.Equal(arguments.String, null);
         }
-        
+
         [Fact]
         public void Test11()
         {
@@ -238,9 +240,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, false);
             Assert.Equal(arguments.NullableBool, null);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -261,7 +263,7 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             var ex = Assert.Throws<ArgumentException>(() => DependencyContainer.Resolve<ICliArgumentsParser>().Parse<TestPoco>(args));
 
-            Assert.Contains("'bool' already added", ex.Message);
+            Assert.Contains("'bool' already added", ex.Message, StringComparison.InvariantCulture);
         }
 
         [Fact]
@@ -277,9 +279,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
-            Assert.Contains("Value 'value3' is not recognized", ex.Message);
+            Assert.Contains("Value 'value3' is not recognized", ex.Message, StringComparison.InvariantCulture);
         }
-        
+
         [Fact]
         public void Test14()
         {
@@ -293,9 +295,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, true);
             Assert.Equal(arguments.NullableBool, true);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -304,7 +306,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.Equal(arguments.NullableTestFlagsEnum, TestFlagsEnum.Value1 | TestFlagsEnum.Value2);
             Assert.Equal(arguments.String, null);
         }
-        
+
         [Fact]
         public void Test15()
         {
@@ -318,9 +320,9 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var arguments = parser.Parse<TestPoco>(args);
-            
+
             Output.WriteLine(arguments.ToString());
-            
+
             Assert.Equal(arguments.Bool, true);
             Assert.Equal(arguments.NullableBool, true);
             Assert.Equal(arguments.TestEnum, TestEnum.Default);
@@ -329,7 +331,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             Assert.Equal(arguments.NullableTestFlagsEnum, TestFlagsEnum.Value1 | TestFlagsEnum.Value2);
             Assert.Equal(arguments.String, null);
         }
-        
+
         [Fact]
         public void Test16()
         {
@@ -343,11 +345,12 @@ namespace SpaceEngineers.Core.Utilities.Test
                        };
 
             var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
-            Assert.Contains("Values 'value3' is not recognized", ex.Message);
+            Assert.Contains("Values 'value3' is not recognized", ex.Message, StringComparison.InvariantCulture);
         }
-        
+
         #pragma warning restore xUnit2000 // Constants and literals should be the expected argument
 
+        [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
         private enum TestEnum
         {
             Default,
@@ -370,10 +373,10 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             /// <summary> NullableBool </summary>
             public bool? NullableBool { get; set; }
-            
+
             /// <summary> TestEnum </summary>
             public TestEnum TestEnum { get; set; }
-            
+
             /// <summary> NullableTestEnum </summary>
             public TestEnum? NullableTestEnum { get; set; }
 

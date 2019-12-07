@@ -10,26 +10,26 @@ namespace SpaceEngineers.Core.Basics
     [DebuggerDisplay("{OriginalType}")]
     internal class TypeInfo
     {
-        internal Type OriginalType { get; }
-
-        internal uint? Order { get; }
-        
-        internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
-
-        internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
-
-        internal ICollection<Type> GenericInterfaceDefinitions { get; } = new List<Type>();
-
         internal TypeInfo(Type type)
         {
             OriginalType = type;
 
             Order = type.GetCustomAttribute<OrderAttribute>()?.Order;
-            
+
             ExtractDeclaredInterfaces(type);
             ExtractBaseOpenGenericTypes(type);
             ExtractOpenGenericInterfaces(type);
         }
+
+        internal Type OriginalType { get; }
+
+        internal uint? Order { get; }
+
+        internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
+
+        internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
+
+        internal ICollection<Type> GenericInterfaceDefinitions { get; } = new List<Type>();
 
         private void ExtractDeclaredInterfaces(Type type)
         {

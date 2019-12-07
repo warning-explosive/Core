@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="instance">Object instance</param>
         /// <param name="flags">BindingFlags</param>
         /// <param name="blackList">Black list of properties</param>
-        /// <returns></returns>
+        /// <returns>Property values of passed instance</returns>
         public static string ShowProperties(this object instance, BindingFlags flags, params string[] blackList)
         {
             return string.Join("\n",
@@ -30,6 +30,9 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="variable">Variable value</param>
         /// <param name="name">Variable name</param>
         /// <returns>NAME/Value pair</returns>
-        public static string ShowVariable(this object variable, string name) { return $"[{name}] {variable}"; }
+        public static string ShowVariable(this object variable, string name)
+        {
+            return $"[{name}] {variable}";
+        }
     }
 }

@@ -5,7 +5,11 @@
     using System.Linq;
     using Basics;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// PathResolver filters
+    /// </summary>
+    /// <typeparam name="TKey">Node key</typeparam>
+    /// <typeparam name="TValue">Node value</typeparam>
     internal partial class PathResolverImpl<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
@@ -24,7 +28,7 @@
             {
                 var groupedPathArray = groupedPath.ToArray();
                 var looopsExist = false;
-            
+
                 for (var i = 1; i < groupedPathArray.Length; ++i)
                 {
                     looopsExist = EqualityComparer<TKey>.Default.Equals(groupedPathArray[i].Key, groupedPathArray[i - 1].Key);
@@ -40,18 +44,18 @@
         }
 
         private static bool FilterGroupedPathByRequiredKeys(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                            Queue<TKey>? requiredKeys = null)
+                                                            Queue<TKey> requiredKeys)
         {
-            if (requiredKeys == null || !requiredKeys.Any())
+            if (!requiredKeys.Any())
             {
                 return true;
             }
 
             var localGroupedPath = groupedPath.DeepCopy();
             var localRequiredKeys = requiredKeys.DeepCopy();
-            
+
             var localRequiredkey = localRequiredKeys.Dequeue();
-                
+
             while (localGroupedPath.Any())
             {
                 var nodeGroup = localGroupedPath.Dequeue();
@@ -73,9 +77,9 @@
         }
 
         private static bool FilterGroupedPathByRequiredEdges(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                             Queue<TValue>? requiredEdges = null)
+                                                             Queue<TValue> requiredEdges)
         {
-            if (requiredEdges == null || !requiredEdges.Any())
+            if (!requiredEdges.Any())
             {
                 return true;
             }
@@ -93,12 +97,12 @@
                 {
                     nodeGroup = localGroupedPath.Dequeue();
                 }
-                
+
                 if (nodeGroup.Value.Any(edge => edge.Equals(localRequiredEdge)))
                 {
                     nodeGroup.Value.Remove(localRequiredEdge);
                     nextGroup = false;
-                    
+
                     if (localRequiredEdges.Any())
                     {
                         localRequiredEdge = localRequiredEdges.Dequeue();
@@ -118,9 +122,9 @@
         }
 
         private static Queue<KeyValuePair<TKey, ICollection<TValue>>> ExtractPathsFromGroups(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                                                             Queue<TValue>? requiredEdges = null)
+                                                                                             Queue<TValue> requiredEdges)
         {
-            if (requiredEdges == null || !requiredEdges.Any())
+            if (!requiredEdges.Any())
             {
                 return groupedPath;
             }
@@ -129,11 +133,11 @@
             var localRequiredEdges = requiredEdges.DeepCopy();
 
             var resultGroupedPath = new Queue<KeyValuePair<TKey, ICollection<TValue>>>();
-            
+
             var nodeGroup = localGroupedPath.Peek();
             var nextGroup = true;
             var forcePullRemains = false;
-            
+
             var localRequiredEdge = localRequiredEdges.Dequeue();
 
             while (localGroupedPath.Any())
@@ -142,14 +146,14 @@
                 {
                     nodeGroup = localGroupedPath.Dequeue();
                 }
-                
+
                 if (!forcePullRemains
                     && nodeGroup.Value.Any(edge => edge.Equals(localRequiredEdge)))
                 {
                     nodeGroup.Value.Remove(localRequiredEdge);
                     nextGroup = false;
-                    resultGroupedPath.Enqueue(new KeyValuePair<TKey, ICollection<TValue>>(nodeGroup.Key, new List<TValue> { localRequiredEdge } ));
-                    
+                    resultGroupedPath.Enqueue(new KeyValuePair<TKey, ICollection<TValue>>(nodeGroup.Key, new List<TValue> { localRequiredEdge }));
+
                     if (localRequiredEdges.Any())
                     {
                         localRequiredEdge = localRequiredEdges.Dequeue();
@@ -165,7 +169,7 @@
                     {
                         resultGroupedPath.Enqueue(nodeGroup);
                     }
-                    
+
                     nextGroup = true;
                 }
             }

@@ -34,14 +34,15 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Throw if input class is null
+        /// Throw if input object is null
         /// </summary>
         /// <param name="input">input</param>
         /// <param name="message">Exception message</param>
         /// <typeparam name="TExpected">input type-argument</typeparam>
         /// <returns>Not null input or exception</returns>
-        /// <exception cref="ArgumentNullException">Throws if input is null</exception>
+        /// <exception cref="InvalidOperationException">Throws if input is null</exception>
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
+        [return: NotNull]
         public static TExpected ExtractNotNullableSafely<TExpected>([AllowNull] this object input, string? message = null)
         {
             if (input == null)
@@ -55,6 +56,25 @@ namespace SpaceEngineers.Core.Basics
             }
 
             throw new TypeMismatchException(input.GetType(), typeof(TExpected));
+        }
+
+        /// <summary>
+        /// Throw if input object is null
+        /// </summary>
+        /// <param name="input">input</param>
+        /// <param name="message">Exception message</param>
+        /// <typeparam name="TExpected">input type-argument</typeparam>
+        /// <returns>Not null input or exception</returns>
+        /// <exception cref="InvalidOperationException">Throws if input is null</exception>
+        [return: NotNull]
+        public static TExpected ExtractNotNullableSafely<TExpected>([AllowNull] this TExpected input, string? message = null)
+        {
+            if (input == null)
+            {
+                throw new InvalidOperationException(message ?? $"{nameof(input)} is null");
+            }
+
+            return input;
         }
 
         /// <summary>

@@ -212,7 +212,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                                        Assert.NotNull(ex);
                                        Assert.Equal(typeof(AmbiguousMatchException), ex?.GetType());
 
-                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToList().ExtractNotNullableSafely<List<string>>();
+                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToList().ExtractNotNullableSafely();
 
                                        foreach (var msg in exeptionMessagePathsList)
                                        {
@@ -417,7 +417,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             {
                 var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.ExtractNotNullableSafely<string>($"Path not found: {candidate}");
+                occurrence.ExtractNotNullableSafely($"Path not found: {candidate}");
             }
         }
     }

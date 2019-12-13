@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                           {
                               var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
 
-                              return DependencyInfo.RetrieveDependencyGraph(_container.GetRegistration(t, true).ExtractNotNullableSafely<InstanceProducer>(),
+                              return DependencyInfo.RetrieveDependencyGraph(_container.GetRegistration(t, true).ExtractNotNullableSafely(),
                                                                             visited,
                                                                             0);
                           })

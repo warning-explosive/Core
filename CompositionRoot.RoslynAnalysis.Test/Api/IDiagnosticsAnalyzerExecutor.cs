@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Api
     /// <summary>
     /// Executes C# DiagnosticAnalyzer on source documents or strings and receives Diagnostics array
     /// </summary>
-    public interface IDiagnosticAnalyzerExtractor : IResolvable
+    public interface IDiagnosticsAnalyzerExecutor : IResolvable
     {
         /// <summary>
         /// Called to receive a Diagnostics array from C# DiagnosticAnalyzer when applied on the single inputted string as a source

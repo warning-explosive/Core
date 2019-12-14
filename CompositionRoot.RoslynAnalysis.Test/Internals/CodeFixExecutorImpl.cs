@@ -17,26 +17,26 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CodeFixVerifierImpl : ICodeFixVerifier
+    internal class CodeFixExecutorImpl : ICodeFixExecutor
     {
         private readonly IDocumentsGenerator _documentsGenerator;
 
-        private readonly IDiagnosticAnalyzerExtractor _extractor;
+        private readonly IDiagnosticsAnalyzerExecutor _executor;
 
         /// <summary> .ctor </summary>
         /// <param name="documentsGenerator">IDocumentsGenerator</param>
-        /// <param name="extractor">IAnalyzerExecutor</param>
-        public CodeFixVerifierImpl(IDocumentsGenerator documentsGenerator, IDiagnosticAnalyzerExtractor extractor)
+        /// <param name="executor">IAnalyzerExecutor</param>
+        public CodeFixExecutorImpl(IDocumentsGenerator documentsGenerator, IDiagnosticsAnalyzerExecutor executor)
         {
             _documentsGenerator = documentsGenerator;
-            _extractor = extractor;
+            _executor = executor;
         }
 
         /// <inheritdoc />
-        public void VerifyFix(DiagnosticAnalyzer analyzer, CodeFixProvider codeFix, string oldSource, string newSource, int? codeFixIndex, bool allowNewCompilerDiagnostics)
+        public string ExecuteFix(DiagnosticAnalyzer analyzer, CodeFixProvider codeFix, string oldSource, int? codeFixIndex, bool allowNewCompilerDiagnostics)
         {
             var document = _documentsGenerator.CreateDocument(oldSource);
-            var analyzerDiagnostics = _extractor.ExtractDiagnostics(oldSource, analyzer);
+            var analyzerDiagnostics = _executor.ExtractDiagnostics(oldSource, analyzer);
             var compilerDiagnostics = GetCompilerDiagnostics(document);
             var attempts = analyzerDiagnostics.Length;
 
@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
                 }
 
                 document = ApplyFix(document, actions.ElementAt(0));
-                analyzerDiagnostics = _extractor.ExtractDiagnostics(document, analyzer);
+                analyzerDiagnostics = _executor.ExtractDiagnostics(document, analyzer);
 
                 var newCompilerDiagnostics = GetNewDiagnostics(compilerDiagnostics, GetCompilerDiagnostics(document));
 
@@ -81,8 +81,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
             }
 
             // after applying all of the code fixes, compare the resulting string to the inputted one
-            var actual = GetStringFromDocument(document);
-            Assert.Equal(newSource, actual);
+            return GetStringFromDocument(document);
         }
 
         /// <summary>

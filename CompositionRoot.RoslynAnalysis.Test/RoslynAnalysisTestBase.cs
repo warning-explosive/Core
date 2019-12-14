@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test
 {
     using System;
+    using System.Linq;
     using Api;
+    using Basics;
     using CompositionRoot.Test;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,16 +15,20 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test
     /// </summary>
     public abstract class RoslynAnalysisTestBase : CompositionRootTestBase
     {
+        private readonly IDiagnosticsAnalyzerExecutor _analyzerExecutor;
         private readonly IDiagnosticAnalyzerVerifier _analyzerVerifier;
-        private readonly ICodeFixVerifier _codeFixVerifier;
+        private readonly ICodeFixExecutor _codeFixExecutor;
+        private readonly ICodeFixVerifyer _codeFixVerifyer;
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         protected RoslynAnalysisTestBase(ITestOutputHelper output)
             : base(output)
         {
+            _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();
-            _codeFixVerifier = DependencyContainer.Resolve<ICodeFixVerifier>();
+            _codeFixExecutor = DependencyContainer.Resolve<ICodeFixExecutor>();
+            _codeFixVerifyer = DependencyContainer.Resolve<ICodeFixVerifyer>();
         }
 
         /// <summary>
@@ -51,17 +57,30 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test
         /// <param name="expected">Diagnostic Results that should have appeared in the code</param>
         protected void VerifyAnalyzer(string source, params DiagnosticResult[] expected)
         {
-            _analyzerVerifier.VerifyDiagnostics(source, DiagnosticAnalyzer, expected);
+            var actualDiagnostics = _analyzerExecutor.ExtractDiagnostics(source, DiagnosticAnalyzer);
+
+            if (actualDiagnostics.Any())
+            {
+                actualDiagnostics.Each((z, i) => Output.WriteLine($"Diagnostic {i + 1}:\n\t" + source.Substring(z.Location.SourceSpan.Start, z.Location.SourceSpan.Length)));
+            }
+            else
+            {
+                Output.WriteLine("Actual diagnostics is empty");
+            }
+
+            _analyzerVerifier.VerifyDiagnostics(DiagnosticAnalyzer, actualDiagnostics, expected);
         }
 
         /// <summary>
         /// Verify CodeFixProvider related to DiagnosticAnalyzer
         /// </summary>
-        /// <param name="source">A class in the form of a string</param>
-        /// <param name="newSource">Expected class in the form of a string</param>
-        protected void VerifyFix(string source, string newSource)
+        /// <param name="inputSource">A class in the form of a string</param>
+        /// <param name="expectedSource">Expected class in the form of a string</param>
+        protected void VerifyFix(string inputSource, string expectedSource)
         {
-            _codeFixVerifier.VerifyFix(DiagnosticAnalyzer, CodeFixProvider, source, newSource);
+            var actualSource = _codeFixExecutor.ExecuteFix(DiagnosticAnalyzer, CodeFixProvider, inputSource);
+
+            _codeFixVerifyer.VerifyCodeFix(expectedSource, actualSource);
         }
     }
 }

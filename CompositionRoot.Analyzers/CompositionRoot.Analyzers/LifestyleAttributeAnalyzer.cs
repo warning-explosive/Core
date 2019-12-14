@@ -44,12 +44,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
             context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.ClassDeclaration);
         }
 
+        [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
         private void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             /*
-             * 1. Check that declaring type is derived from IResolvable, and its concrete non abstract type
+             * 1. Check that declaring type is concrete non abstract type
              */
             var isAbstract = classDeclarationSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
 
@@ -58,45 +59,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
                 return;
             }
 
+            /*
+             * 2. Check that declaring type is derived from IResolvable
+             */
             if (!IsComponent(context, classDeclarationSyntax))
             {
                 return;
             }
 
             /*
-             * 2. find LifestyleAttribute
+             * 3. Find LifestyleAttribute
              */
-            var attribute = context.Compilation.GetTypeByMetadataName(typeof(LifestyleAttribute).FullName);
-
-            ISymbol? GetAttributeSymbol(AttributeSyntax syntax)
+            if (!IsContainsAttribute(context, classDeclarationSyntax))
             {
-                return context.Compilation
-                              .GetSemanticModel(syntax.SyntaxTree)
-                              .GetSymbolInfo(syntax)
-                              .Symbol;
+                ReportDiagnostic(context, classDeclarationSyntax);
             }
-
-            var attributeList = classDeclarationSyntax.ChildNodes()
-                                                      .OfType<AttributeListSyntax>();
-
-            if (!attributeList.Any())
-            {
-                return;
-            }
-
-            var attributes = 
-                                                   .Single()
-                                                   .Attributes
-                                                   .Select(GetAttributeSymbol)
-                                                   .ToArray();
-
-            var diagnostic = Diagnostic.Create(DiagnosticDescriptor, classDeclarationSyntax.GetLocation());
-            context.ReportDiagnostic(diagnostic);
         }
 
         [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
-        private static bool IsComponent(SyntaxNodeAnalysisContext context,
-                                        ClassDeclarationSyntax classDeclarationSyntax)
+        private static bool IsComponent(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
         {
             var baseTypes = classDeclarationSyntax.ChildNodes()
                                                   .OfType<BaseListSyntax>()
@@ -109,7 +90,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
                 return false;
             }
 
-            ISymbol? GetSymbol(BaseTypeSyntax bts)
+            ISymbol? GetBaseTypeSymbol(BaseTypeSyntax bts)
             {
                 return context.Compilation
                               .GetSemanticModel(bts.SyntaxTree)
@@ -117,8 +98,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
                               .Symbol;
             }
 
-            var baseSymbols = baseTypes.Select(GetSymbol)
-                                       .ToArray();
+            var baseSymbols = baseTypes.Select(GetBaseTypeSymbol).ToArray();
 
             var service = context.Compilation.GetTypeByMetadataName(typeof(IResolvable).FullName);
 
@@ -128,8 +108,43 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
                     || symbol.AllInterfaces.Any(i => i.Equals(service));
             }
 
-            return baseSymbols.OfType<INamedTypeSymbol>()
-                              .Any(IsDerivedFromService);
+            var isComponent = baseSymbols.OfType<INamedTypeSymbol>().Any(IsDerivedFromService);
+
+            return isComponent;
+        }
+
+        [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
+        private static bool IsContainsAttribute(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
+        {
+            var attributeList = classDeclarationSyntax.ChildNodes().OfType<AttributeListSyntax>().ToArray();
+
+            if (!attributeList.Any())
+            {
+                return false;
+            }
+
+            ITypeSymbol? GetAttributeSymbol(AttributeSyntax syntax)
+            {
+                return context.Compilation
+                    .GetSemanticModel(syntax.SyntaxTree)
+                    .GetTypeInfo(syntax)
+                    .Type;
+            }
+
+            var attribute = context.Compilation.GetTypeByMetadataName(typeof(LifestyleAttribute).FullName);
+
+            var isContainsAttribute = attributeList
+                .SelectMany(z => z.Attributes)
+                .Select(GetAttributeSymbol)
+                .Any(z => z.Equals(attribute));
+
+            return isContainsAttribute;
+        }
+
+        private void ReportDiagnostic(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
+        {
+            var diagnostic = Diagnostic.Create(DiagnosticDescriptor, classDeclarationSyntax.Identifier.GetLocation());
+            context.ReportDiagnostic(diagnostic);
         }
     }
 }

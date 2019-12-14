@@ -15,28 +15,8 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
     [Lifestyle(EnLifestyle.Singleton)]
     internal class DiagnosticAnalyzerVerifierImpl : IDiagnosticAnalyzerVerifier
     {
-        private readonly IDiagnosticAnalyzerExtractor _diagnosticAnalyzerExtractor;
-
-        /// <summary> .ctor </summary>
-        /// <param name="diagnosticAnalyzerExtractor">IDiagnosticAnalyzerExtractor</param>
-        public DiagnosticAnalyzerVerifierImpl(IDiagnosticAnalyzerExtractor diagnosticAnalyzerExtractor)
-        {
-            _diagnosticAnalyzerExtractor = diagnosticAnalyzerExtractor;
-        }
-
         /// <inheritdoc />
-        public void VerifyDiagnostics(string source,
-                                      DiagnosticAnalyzer analyzer,
-                                      params DiagnosticResult[] expectedResults)
-        {
-            var diagnostics = _diagnosticAnalyzerExtractor.ExtractDiagnostics(source, analyzer);
-
-            VerifyDiagnosticsInternal(analyzer, diagnostics, expectedResults);
-        }
-
-        private static void VerifyDiagnosticsInternal(DiagnosticAnalyzer analyzer,
-                                                      Diagnostic[] actualResults,
-                                                      params DiagnosticResult[] expectedResults)
+        public void VerifyDiagnostics(DiagnosticAnalyzer analyzer, Diagnostic[] actualResults, params DiagnosticResult[] expectedResults)
         {
             var expectedCount = expectedResults.Length;
             var actualCount = actualResults.Length;
@@ -110,7 +90,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
         {
             var actualSpan = actual.GetLineSpan();
 
-            Assert.True(actualSpan.Path == expected.SourceFile || (actualSpan.Path != null && actualSpan.Path.Contains("Test0.", StringComparison.InvariantCulture) && expected.SourceFile.Contains("Test.", StringComparison.InvariantCulture)),
+            Assert.True(actualSpan.Path == expected.SourceFile || (actualSpan.Path != null && actualSpan.Path.Contains("Source0.", StringComparison.InvariantCulture) && expected.SourceFile.Contains("Source.", StringComparison.InvariantCulture)),
                         $"Expected diagnostic to be in file \"{expected.SourceFile}\" was actually in file \"{actualSpan.Path}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
 
             var actualLinePosition = actualSpan.StartLinePosition;

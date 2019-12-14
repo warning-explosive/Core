@@ -11,13 +11,13 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class DiagnosticAnalyzerExtractorImpl : IDiagnosticAnalyzerExtractor
+    internal class DiagnosticsAnalyzerExecutorImpl : IDiagnosticsAnalyzerExecutor
     {
         private readonly IDocumentsGenerator _documentsGenerator;
 
         /// <summary> .ctor </summary>
         /// <param name="documentsGenerator">IDocumentsGenerator</param>
-        public DiagnosticAnalyzerExtractorImpl(IDocumentsGenerator documentsGenerator)
+        public DiagnosticsAnalyzerExecutorImpl(IDocumentsGenerator documentsGenerator)
         {
             _documentsGenerator = documentsGenerator;
         }

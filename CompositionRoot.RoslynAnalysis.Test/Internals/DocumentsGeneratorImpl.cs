@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Api;
     using Attributes;
@@ -16,6 +17,13 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
         private const string DefaultFilePathPrefix = "Source";
         private const string CSharpDefaultFileExt = "cs";
         private const string TestProjectName = "AnalysisProject";
+
+        private readonly IEnumerable<IMetadataReferenceProvider> _providers;
+
+        public DocumentsGeneratorImpl(IEnumerable<IMetadataReferenceProvider> providers)
+        {
+            _providers = providers;
+        }
 
         /// <summary>
         /// Create a Document from a string through creating a project that contains it.
@@ -50,14 +58,15 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
         {
             var projectId = ProjectId.CreateNewId(TestProjectName);
 
+            var metadataReferences = _providers.SelectMany(z => z.ReceiveReferences())
+                                               .Distinct()
+                                               .ToArray();
+
             using (var workspace = new AdhocWorkspace())
             {
                 var solution = workspace.CurrentSolution
                                         .AddProject(projectId, TestProjectName, TestProjectName, LanguageNames.CSharp)
-                                        .AddMetadataReference(projectId, References.CorlibReference)
-                                        .AddMetadataReference(projectId, References.SystemCoreReference)
-                                        .AddMetadataReference(projectId, References.CSharpSymbolsReference)
-                                        .AddMetadataReference(projectId, References.CodeAnalysisReference);
+                                        .AddMetadataReferences(projectId, metadataReferences);
 
                 sources.Each((source, i) =>
                              {

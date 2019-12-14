@@ -26,15 +26,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
         {
             var test =
 @"
-using Attributes;
-using Enumerations;
-
-[Lifestyle(EnLifestyle.Singleton)]
-internal class SingletonTestServiceImpl : ISingletonTestService
+namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
 {
-}";
+    using SpaceEngineers.Core.CompositionRoot.Abstractions;
 
-            var expected = new DiagnosticResult("CompositionRootAnalyzers",
+    public interface ITestService : IResolvable
+    {
+    }
+
+    // [Lifestyle(EnLifestyle.Singleton)]
+    internal class TestServiceImpl : ITestService
+    {
+    }
+}
+";
+
+            var expected = new DiagnosticResult("CR1",
                                                 string.Format(CultureInfo.InvariantCulture, "Type name '{0}' contains lowercase letters", "TypeName"),
                                                 DiagnosticSeverity.Warning,
                                                 new[] { new DiagnosticResultLocation("Source0.cs", 11, 15) });

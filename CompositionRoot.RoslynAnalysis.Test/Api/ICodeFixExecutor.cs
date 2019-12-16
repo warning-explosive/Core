@@ -18,13 +18,13 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Api
         /// <param name="analyzer">The analyzer to be applied to the source code</param>
         /// <param name="codeFix">The codefix to be applied to the code wherever the relevant Diagnostic is found</param>
         /// <param name="inputSource">A class in the form of a string before the CodeFix was applied to it</param>
-        /// <param name="codeFixIndex">Index determining which codefix to apply if there are multiple</param>
         /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
+        /// <param name="codeFixIndex">Index determining which codefix to apply if there are multiple</param>
         /// <returns>Fixed source code</returns>
         string ExecuteFix(DiagnosticAnalyzer analyzer,
                           CodeFixProvider codeFix,
                           string inputSource,
-                          int? codeFixIndex = null,
-                          bool allowNewCompilerDiagnostics = false);
+                          bool allowNewCompilerDiagnostics,
+                          int? codeFixIndex = null);
     }
 }

@@ -76,9 +76,12 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test
         /// </summary>
         /// <param name="inputSource">A class in the form of a string</param>
         /// <param name="expectedSource">Expected class in the form of a string</param>
-        protected void VerifyFix(string inputSource, string expectedSource)
+        /// <param name="allowNewCompilerDiagnostics">A bool controlling whether or not the test will fail if the CodeFix introduces other warnings after being applied</param>
+        protected void VerifyFix(string inputSource,
+                                 string expectedSource,
+                                 bool allowNewCompilerDiagnostics)
         {
-            var actualSource = _codeFixExecutor.ExecuteFix(DiagnosticAnalyzer, CodeFixProvider, inputSource);
+            var actualSource = _codeFixExecutor.ExecuteFix(DiagnosticAnalyzer, CodeFixProvider, inputSource, allowNewCompilerDiagnostics);
 
             _codeFixVerifyer.VerifyCodeFix(expectedSource, actualSource);
         }

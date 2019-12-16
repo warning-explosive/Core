@@ -1,9 +1,12 @@
 namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 {
+    using System;
     using System.Collections.Immutable;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Attributes;
+    using Enumerations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
@@ -17,6 +20,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
     public class LifestyleAttributeCodeFixProvider : CodeFixProvider
     {
         private const string Title = "Mark with LifestyleAttribute";
+        private const string EnLifestyleValue = "ChooseLifestyle";
 
         /// <inheritdoc />
         public sealed override ImmutableArray<string> FixableDiagnosticIds
@@ -31,10 +35,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
         /// <inheritdoc />
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            /*
-             * 1. Find the type declaration identified by the diagnostic.
-             */
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
 
             if (root == null)
             {
@@ -43,45 +44,111 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 
             var diagnostic = context.Diagnostics.First(z => FixableDiagnosticIds.Contains(z.Id));
 
-            var typeDeclaration = root
-                                 .FindToken(diagnostic.Location.SourceSpan.Start)
-                                 .Parent
-                                 .AncestorsAndSelf()
-                                 .OfType<TypeDeclarationSyntax>()
-                                 .First();
+            var syntaxAnnotation = new SyntaxAnnotation();
 
             /*
-             * 2. Register a code action that will invoke the fix.
+             * Mark NamespaceDeclarationSyntax by SyntaxAnnotation
              */
-            context.RegisterCodeFix(CodeAction.Create(Title,
-                                                      c => InsertAttribute(root, context.Document, typeDeclaration, c),
-                                                      Title),
-                                    diagnostic);
+            root = MarkNode(root,
+                            GetSyntax<NamespaceDeclarationSyntax>(root, diagnostic),
+                            syntaxAnnotation);
+
+            /*
+             * Mark TypeDeclarationSyntax by SyntaxAnnotation
+             */
+            root = MarkNode(root,
+                            GetSyntax<TypeDeclarationSyntax>(root, diagnostic),
+                            syntaxAnnotation);
+
+            /*
+             * AddUsingDirective
+             */
+            root = AddUsingDirective(root, FindMarked<NamespaceDeclarationSyntax>(root, syntaxAnnotation));
+
+            /*
+             * InsertAttribute
+             */
+            root = InsertAttribute(root, FindMarked<TypeDeclarationSyntax>(root, syntaxAnnotation));
+
+            /*
+             * Register a code action that will invoke the fix.
+             */
+            var codeAction = CodeAction.Create(Title,
+                                               c => Task.FromResult(context.Document.WithSyntaxRoot(root).Project.Solution),
+                                               Title);
+
+            context.RegisterCodeFix(codeAction, diagnostic);
         }
 
-        private Task<Solution> InsertAttribute(SyntaxNode root, Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken token)
+        private static TSyntax GetSyntax<TSyntax>(SyntaxNode root, Diagnostic diagnostic)
+            where TSyntax : SyntaxNode
+        {
+            return root
+                  .FindToken(diagnostic.Location.SourceSpan.Start)
+                  .Parent
+                  .AncestorsAndSelf()
+                  .OfType<TSyntax>()
+                  .First();
+        }
+
+        private static TSyntax FindMarked<TSyntax>(SyntaxNode root, SyntaxAnnotation syntaxAnnotation)
+            where TSyntax : SyntaxNode
+        {
+            return root.DescendantNodes()
+                       .OfType<TSyntax>()
+                       .Single(n => n.HasAnnotation(syntaxAnnotation));
+        }
+
+        private static SyntaxNode MarkNode<TSyntax>(SyntaxNode root,
+                                                    TSyntax syntax,
+                                                    SyntaxAnnotation syntaxAnnotation)
+            where TSyntax : SyntaxNode
+        {
+            return root.ReplaceNode(syntax,
+                                    syntax.WithAdditionalAnnotations(syntaxAnnotation));
+        }
+
+        private SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
+        {
+            var trivia = namespaceDeclaration.Usings
+                                             .First()
+                                             .GetLeadingTrivia();
+
+            var usingDirective = SyntaxFactory
+                                .UsingDirective(SyntaxFactory.IdentifierName(typeof(LifestyleAttribute).Namespace))
+                                .NormalizeWhitespace()
+                                .WithLeadingTrivia(trivia)
+                                .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
+
+            return root.ReplaceNode(namespaceDeclaration,
+                                    namespaceDeclaration.AddUsings(usingDirective));
+        }
+
+        private SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
         {
             var originalAttributesList = typeDeclaration.AttributeLists;
 
-            var argument = SyntaxFactory.AttributeArgument(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                                SyntaxFactory.IdentifierName("EnLifeStyle"),
-                                                                                                SyntaxFactory.IdentifierName("ChooseLifestyle")));
+            var memberAccess = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                    SyntaxFactory.IdentifierName(nameof(EnLifestyle)),
+                                                                    SyntaxFactory.IdentifierName(EnLifestyleValue));
 
-            var argumentList = SyntaxFactory.SeparatedList<AttributeArgumentSyntax>(new[] { argument });
+            var argument = SyntaxFactory.AttributeArgument(memberAccess);
 
-            var additionalAttribute = SyntaxFactory.SingletonSeparatedList(SyntaxFactory
-                                                                          .Attribute(SyntaxFactory.IdentifierName("LifestyleAttribute"))
-                                                                          .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList)));
+            var argumentList = SyntaxFactory.SeparatedList(new[] { argument });
 
-            var extendedAttributeList = originalAttributesList.Add(SyntaxFactory.AttributeList(additionalAttribute)
-                                                                                .NormalizeWhitespace());
+            var name = nameof(LifestyleAttribute).Substring(0, nameof(LifestyleAttribute).Length - nameof(Attribute).Length);
 
-            return Task.Factory.StartNew(ReplaceNode, token, TaskCreationOptions.None, TaskScheduler.Current);
+            var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name))
+                                         .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList));
 
-            Solution ReplaceNode() => document.WithSyntaxRoot(root.ReplaceNode(typeDeclaration,
-                                                                               typeDeclaration.WithAttributeLists(extendedAttributeList)))
-                                              .Project
-                                              .Solution;
+            var additionalAttribute = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute))
+                                                   .NormalizeWhitespace()
+                                                   .WithLeadingTrivia(typeDeclaration.GetLeadingTrivia());
+
+            var extendedAttributeList = originalAttributesList.Insert(0, additionalAttribute);
+
+            return root.ReplaceNode(typeDeclaration,
+                                    typeDeclaration.WithAttributeLists(extendedAttributeList));
         }
     }
 }

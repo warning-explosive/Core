@@ -92,8 +92,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     {
     }
 
-    [Serializable]
     [Lifestyle(EnLifestyle.Singleton)]
+    [Serializable]
     internal class TestServiceImpl : ITestService
     {
     }
@@ -116,6 +116,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     {
     }
 
+    [Serializable]
     internal class TestServiceImpl : ITestService
     {
     }
@@ -124,7 +125,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
             var expected = new DiagnosticResult("CR1",
                                                 string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
                                                 DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 11, 20) });
+                                                new[] { new DiagnosticResultLocation("Source0.cs", 12, 20) });
 
             VerifyAnalyzer(test, expected);
 
@@ -140,13 +141,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     {
     }
 
-    [Lifestyle(EnLifestyle.YourLifestyle)]
+    [Lifestyle(EnLifestyle.ChooseLifestyle)]
+    [Serializable]
     internal class TestServiceImpl : ITestService
     {
     }
 }";
 
-            VerifyFix(test, fixtest);
+            VerifyFix(test, fixtest, true);
         }
     }
 }

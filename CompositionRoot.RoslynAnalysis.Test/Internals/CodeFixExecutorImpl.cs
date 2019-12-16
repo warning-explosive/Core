@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
         }
 
         /// <inheritdoc />
-        public string ExecuteFix(DiagnosticAnalyzer analyzer, CodeFixProvider codeFix, string oldSource, int? codeFixIndex, bool allowNewCompilerDiagnostics)
+        public string ExecuteFix(DiagnosticAnalyzer analyzer, CodeFixProvider codeFix, string oldSource, bool allowNewCompilerDiagnostics, int? codeFixIndex)
         {
             var document = _documentsGenerator.CreateDocument(oldSource);
             var analyzerDiagnostics = _executor.ExtractDiagnostics(oldSource, analyzer);

@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     using System;
     using SpaceEngineers.Core.CompositionRoot.Abstractions;
 
-    public interface ITestService : IResolvable
+    public interface ITestService : IResolvable, ICollectionResolvable
     {
     }
 

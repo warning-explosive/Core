@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
         /// <summary>
         /// DiagnosticDescriptor
         /// </summary>
-        public DiagnosticDescriptor DiagnosticDescriptor { get; } =
+        public static DiagnosticDescriptor DiagnosticDescriptor { get; } =
             new DiagnosticDescriptor("CR1",
                                      "Concrete component must have LifestyleAttribute",
                                      "Mark component type by LifestyleAttribute and select its lifestyle",
@@ -141,7 +141,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
             return isContainsAttribute;
         }
 
-        private void ReportDiagnostic(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
+        private static void ReportDiagnostic(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
         {
             var diagnostic = Diagnostic.Create(DiagnosticDescriptor, classDeclarationSyntax.Identifier.GetLocation());
             context.ReportDiagnostic(diagnostic);

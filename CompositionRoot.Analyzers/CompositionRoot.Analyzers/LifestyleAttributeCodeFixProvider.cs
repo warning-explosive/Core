@@ -9,19 +9,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Microsoft.CodeAnalysis.Rename;
 
     /// <summary>
-    /// CompositionRootAnalyzersCodeFixProvider
+    /// CodeFixProvider that inserts LifestyleAttribute on components (component - service implementation)
     /// </summary>
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LifestyleAttributeCodeFixProvider))]
     public class LifestyleAttributeCodeFixProvider : CodeFixProvider
     {
-        private const string Title = "Make uppercase";
+        private const string Title = "Mark with LifestyleAttribute";
 
         /// <inheritdoc />
         public sealed override ImmutableArray<string> FixableDiagnosticIds
-            => ImmutableArray.Create(new LifestyleAttributeAnalyzer().DiagnosticDescriptor.Id);
+            => ImmutableArray.Create(LifestyleAttributeAnalyzer.DiagnosticDescriptor.Id);
 
         /// <inheritdoc />
         public sealed override FixAllProvider GetFixAllProvider()
@@ -32,41 +31,57 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
         /// <inheritdoc />
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
+            /*
+             * 1. Find the type declaration identified by the diagnostic.
+             */
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
-            var diagnostic = context.Diagnostics.First();
-            var diagnosticSpan = diagnostic.Location.SourceSpan;
+            if (root == null)
+            {
+                return;
+            }
 
-            // Find the type declaration identified by the diagnostic.
-            var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+            var diagnostic = context.Diagnostics.First(z => FixableDiagnosticIds.Contains(z.Id));
 
-            // Register a code action that will invoke the fix.
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    title: Title,
-                    createChangedSolution: c => MakeUppercaseAsync(context.Document, declaration, c),
-                    equivalenceKey: Title),
-                diagnostic);
+            var typeDeclaration = root
+                                 .FindToken(diagnostic.Location.SourceSpan.Start)
+                                 .Parent
+                                 .AncestorsAndSelf()
+                                 .OfType<TypeDeclarationSyntax>()
+                                 .First();
+
+            /*
+             * 2. Register a code action that will invoke the fix.
+             */
+            context.RegisterCodeFix(CodeAction.Create(Title,
+                                                      c => InsertAttribute(root, context.Document, typeDeclaration, c),
+                                                      Title),
+                                    diagnostic);
         }
 
-        private async Task<Solution> MakeUppercaseAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
+        private Task<Solution> InsertAttribute(SyntaxNode root, Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken token)
         {
-            // Compute new uppercase name.
-            var identifierToken = typeDecl.Identifier;
-            var newName = identifierToken.Text.ToUpperInvariant();
+            var originalAttributesList = typeDeclaration.AttributeLists;
 
-            // Get the symbol representing the type to be renamed.
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDecl, cancellationToken);
+            var argument = SyntaxFactory.AttributeArgument(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                                SyntaxFactory.IdentifierName("EnLifeStyle"),
+                                                                                                SyntaxFactory.IdentifierName("ChooseLifestyle")));
 
-            // Produce a new solution that has all references to that type renamed, including the declaration.
-            var originalSolution = document.Project.Solution;
-            var optionSet = originalSolution.Workspace.Options;
-            var newSolution = await Renamer.RenameSymbolAsync(document.Project.Solution, typeSymbol, newName, optionSet, cancellationToken).ConfigureAwait(false);
+            var argumentList = SyntaxFactory.SeparatedList<AttributeArgumentSyntax>(new[] { argument });
 
-            // Return the new solution with the now-uppercase type name.
-            return newSolution;
+            var additionalAttribute = SyntaxFactory.SingletonSeparatedList(SyntaxFactory
+                                                                          .Attribute(SyntaxFactory.IdentifierName("LifestyleAttribute"))
+                                                                          .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList)));
+
+            var extendedAttributeList = originalAttributesList.Add(SyntaxFactory.AttributeList(additionalAttribute)
+                                                                                .NormalizeWhitespace());
+
+            return Task.Factory.StartNew(ReplaceNode, token, TaskCreationOptions.None, TaskScheduler.Current);
+
+            Solution ReplaceNode() => document.WithSyntaxRoot(root.ReplaceNode(typeDeclaration,
+                                                                               typeDeclaration.WithAttributeLists(extendedAttributeList)))
+                                              .Project
+                                              .Solution;
         }
     }
 }

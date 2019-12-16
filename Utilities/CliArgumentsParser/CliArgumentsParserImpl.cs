@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     /// Example2:
     ///     -param1 value1 --param2 /param3:'Test-:-work' /param4=happy -param5 '--=nice=--'
     /// </summary>
-    [Lifestyle(lifestyle: EnLifestyle.Singleton)]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal class CliArgumentsParserImpl : ICliArgumentsParser
     {
         private static readonly Regex _regexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

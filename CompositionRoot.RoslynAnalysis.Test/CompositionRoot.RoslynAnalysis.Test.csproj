@@ -4,13 +4,13 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.Basics.Test</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.Basics.Test</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</RootNamespace>
     <IsPackable>false</IsPackable>
-    <Title>SpaceEngineers.Core.Basics.Test</Title>
+    <Title>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.Basics.Test</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -23,35 +23,25 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TieredCompilation>true</TieredCompilation>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.4.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\Basics\Basics.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="MethodExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="StreamExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
+    <ProjectReference Include="..\CompositionRoot.Test\CompositionRoot.Test.csproj" />
+    <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
   </ItemGroup>
 </Project>

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.PathResolver
     using CompositionRoot.Enumerations;
 
     /// <inheritdoc />
-    [Lifestyle(lifestyle: EnLifestyle.Singleton)]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>

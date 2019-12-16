@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.Basics.Test</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.Basics.Test</RootNamespace>
-    <IsPackable>false</IsPackable>
-    <Title>SpaceEngineers.Core.Basics.Test</Title>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot.Analyzers</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot.Analyzers</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <Title>SpaceEngineers.Core.CompositionRoot.Analyzers</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.Basics.Test</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.CompositionRoot.Analyzers</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
-    <CodeAnalysisRuleSet>..\ruleset.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
@@ -23,35 +23,26 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TieredCompilation>true</TieredCompilation>
+    <Library />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.4.0" PrivateAssets="all" />
+    <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Basics\Basics.csproj" />
+    <None Update="tools\*.ps1" CopyToOutputDirectory="Always" Pack="true" PackagePath="" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="MethodExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectExtensionsDeepCopyTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="StreamExtensionsTest.cs">
-      <DependentUpon>BasicsTestBase.cs</DependentUpon>
-    </Compile>
+    <ProjectReference Include="..\..\CompositionRoot\CompositionRoot.csproj" />
   </ItemGroup>
 </Project>

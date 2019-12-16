@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
     internal static class LifeStyleMapper
     {
-        private static readonly IDictionary<EnLifestyle, Lifestyle> _mapping
+        private static readonly IDictionary<EnLifestyle, Lifestyle> Mapping
             = new Dictionary<EnLifestyle, Lifestyle>
             {
                 [EnLifestyle.Transient] = Lifestyle.Transient,
@@ -17,12 +17,12 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         internal static Lifestyle MapLifestyle(EnLifestyle lifestyle)
         {
-            return _mapping[lifestyle];
+            return Mapping[lifestyle];
         }
 
         internal static EnLifestyle MapLifestyle(Lifestyle lifestyle)
         {
-            return _mapping.Single(pair => pair.Value == lifestyle).Key;
+            return Mapping.Single(pair => pair.Value == lifestyle).Key;
         }
     }
 }

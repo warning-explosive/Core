@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class ExceptionExtensions
     {
-        private static readonly Type[] _exceptionTypesForSkip =
+        private static readonly Type[] ExceptionTypesForSkip =
         {
             typeof(StackOverflowException),
             typeof(OutOfMemoryException),
@@ -165,7 +165,7 @@ namespace SpaceEngineers.Core.Basics
 
         private static bool CanBeCatched(Exception exception)
         {
-            return !_exceptionTypesForSkip.Contains(exception.RealException().GetType());
+            return !ExceptionTypesForSkip.Contains(exception.RealException().GetType());
         }
     }
 }

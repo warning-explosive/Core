@@ -12,7 +12,7 @@
     /// </summary>
     public static partial class ObjectExtensions
     {
-        private static readonly MethodInfo _shallowCopyMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo ShallowCopyMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
         /// <summary>
         /// Get shallow copy of object
@@ -62,7 +62,7 @@
         /// <returns>Shallow copy of original object</returns>
         public static object ShallowCopy(this object original)
         {
-            return _shallowCopyMethod.Invoke(original, null);
+            return ShallowCopyMethod.Invoke(original, null);
         }
 
         /// <summary>

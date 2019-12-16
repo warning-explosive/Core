@@ -5,8 +5,13 @@ namespace SpaceEngineers.Core.Basics.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// StreamExtensions class test
+    /// </summary>
     public class StreamExtensionsTest : BasicsTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public StreamExtensionsTest(ITestOutputHelper output)
             : base(output) { }
 

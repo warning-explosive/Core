@@ -9,13 +9,18 @@ namespace SpaceEngineers.Core.Utilities.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// SettingsManager class tests
+    /// </summary>
     public class SettingsManagerTest : CompositionRootTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public SettingsManagerTest(ITestOutputHelper output)
             : base(output) { }
 
         [Fact]
-        public void YamlDeserializationTest()
+        internal void YamlDeserializationTest()
         {
             var manager = DependencyContainer.Resolve<ISettingsManager<TestYamlConfig>>();
 

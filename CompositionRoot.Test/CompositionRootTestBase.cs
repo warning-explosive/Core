@@ -1,18 +1,31 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
-    using System.Reflection;
     using Basics.Test;
     using Xunit.Abstractions;
 
-    public class CompositionRootTestBase : BasicsTestBase
+    /// <summary>
+    /// CompositionRoot base test class
+    /// </summary>
+    public abstract class CompositionRootTestBase : BasicsTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
+        /// <exception cref="InvalidOperationException">AppDomain.CurrentDomain == null</exception>
         protected CompositionRootTestBase(ITestOutputHelper output)
             : base(output)
         {
-            DependencyContainer = new DependencyContainer(AppDomain.CurrentDomain?.GetAssemblies() ?? Array.Empty<Assembly>());
+            if (AppDomain.CurrentDomain == null)
+            {
+                throw new InvalidOperationException("CurrentDomain is null");
+            }
+
+            DependencyContainer = new DependencyContainer(AppDomain.CurrentDomain.GetAssemblies());
         }
 
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
         protected DependencyContainer DependencyContainer { get; }
     }
 }

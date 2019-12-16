@@ -1,15 +1,19 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// MethodExtensions class tests
+    /// </summary>
     public class MethodExtensionsTest : BasicsTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public MethodExtensionsTest(ITestOutputHelper output)
             : base(output) { }
 

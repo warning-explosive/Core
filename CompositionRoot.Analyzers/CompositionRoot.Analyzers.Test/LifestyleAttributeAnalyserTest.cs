@@ -11,15 +11,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// LifestyleAttributeAnalyser and LifestyleAttributeCodeFixProvider tests
+    /// </summary>
     public class LifestyleAttributeAnalyserTest : RoslynAnalysisTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public LifestyleAttributeAnalyserTest(ITestOutputHelper output)
             : base(output)
         {
         }
 
+        /// <inheritdoc />
         protected override DiagnosticAnalyzer DiagnosticAnalyzer { get; } = new LifestyleAttributeAnalyzer();
 
+        /// <inheritdoc />
         protected override CodeFixProvider CodeFixProvider { get; } = new LifestyleAttributeCodeFixProvider();
 
         [Fact]

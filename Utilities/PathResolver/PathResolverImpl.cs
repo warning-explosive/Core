@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.PathResolver
 
         private const string AmbiguousMatch = "Ambiguous number of paths";
 
-        private static readonly Func<PathResolverInfo<TKey, TValue>, string> _additionalInfo =
+        private static readonly Func<PathResolverInfo<TKey, TValue>, string> AdditionalInfo =
             gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
                                       nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
 
@@ -46,13 +46,13 @@ namespace SpaceEngineers.Core.PathResolver
 
             if (groupedPaths.Length < 1)
             {
-                throw new NotFoundException(NotFound + "\n" + _additionalInfo(pathResolverInfo));
+                throw new NotFoundException(NotFound + "\n" + AdditionalInfo(pathResolverInfo));
             }
 
             if (groupedPaths.Length > 1)
             {
                 var strPaths = string.Join("\n", groupedPaths.Select(grpPath => PrintSingleGroupedPath(grpPath, pathResolverInfo.WeightFunc)));
-                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPaths + "\n" + _additionalInfo(pathResolverInfo));
+                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPaths + "\n" + AdditionalInfo(pathResolverInfo));
             }
 
             var groupedPath = groupedPaths.Single();
@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.PathResolver
             if (groupedPath.Any(nodeGroup => nodeGroup.Value.Count > 1))
             {
                 var strPath = PrintSingleGroupedPath(groupedPath, pathResolverInfo.WeightFunc);
-                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPath + "\n" + _additionalInfo(pathResolverInfo));
+                throw new AmbiguousMatchException(AmbiguousMatch + "\n" + strPath + "\n" + AdditionalInfo(pathResolverInfo));
             }
 
             var resultPath = new Queue<KeyValuePair<TKey, TValue>>();

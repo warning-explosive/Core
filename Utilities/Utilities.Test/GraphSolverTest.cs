@@ -12,6 +12,9 @@ namespace SpaceEngineers.Core.Utilities.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// GraphSolver class tests
+    /// </summary>
     public class GraphSolverTest : CompositionRootTestBase
     {
         private const char A = 'A';
@@ -32,7 +35,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         private const string De = "DE";
         private const string Ea = "EA";
 
-        private static readonly IDictionary<string, GenericGraphEdge<char, string>> _edges = new Dictionary<string, GenericGraphEdge<char, string>>
+        private static readonly IDictionary<string, GenericGraphEdge<char, string>> Edges = new Dictionary<string, GenericGraphEdge<char, string>>
         {
             [Ab1] = new GenericGraphEdge<char, string>(A, B, "AB1"),
             [Ab2] = new GenericGraphEdge<char, string>(A, B, "AB2"),
@@ -47,9 +50,11 @@ namespace SpaceEngineers.Core.Utilities.Test
             [Ea] = new GenericGraphEdge<char, string>(E, A, "EA")
         };
 
-        private static readonly ICollection<GenericGraphEdge<char, string>> _edgesHeap = _edges.Select(pair => pair.Value)
-                                                                                               .ToList();
+        private static readonly ICollection<GenericGraphEdge<char, string>> EdgesHeap = Edges.Select(pair => pair.Value)
+                                                                                             .ToList();
 
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public GraphSolverTest(ITestOutputHelper output)
             : base(output) { }
 
@@ -122,14 +127,14 @@ namespace SpaceEngineers.Core.Utilities.Test
             requiredKeys.Enqueue(C);
 
             var requiredEdges1 = new Queue<string>();
-            requiredEdges1.Enqueue(_edges[Ab1].EdgeInfo);
-            requiredEdges1.Enqueue(_edges[Bb2].EdgeInfo);
-            requiredEdges1.Enqueue(_edges[Bb1].EdgeInfo);
+            requiredEdges1.Enqueue(Edges[Ab1].EdgeInfo);
+            requiredEdges1.Enqueue(Edges[Bb2].EdgeInfo);
+            requiredEdges1.Enqueue(Edges[Bb1].EdgeInfo);
 
             var requiredEdges2 = new Queue<string>();
-            requiredEdges2.Enqueue(_edges[Ab1].EdgeInfo);
-            requiredEdges2.Enqueue(_edges[Bb1].EdgeInfo);
-            requiredEdges2.Enqueue(_edges[Bb2].EdgeInfo);
+            requiredEdges2.Enqueue(Edges[Ab1].EdgeInfo);
+            requiredEdges2.Enqueue(Edges[Bb1].EdgeInfo);
+            requiredEdges2.Enqueue(Edges[Bb2].EdgeInfo);
 
             var solverInfo1 = new PathResolverInfo<char, string>(A,
                                                                  E,
@@ -190,7 +195,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                               };
 
             var requiredEdges = new Queue<string>();
-            requiredEdges.Enqueue(_edges[Cd].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Cd].EdgeInfo);
 
             var solverInfo2 = new PathResolverInfo<char, string>(A,
                                                                 E,
@@ -236,10 +241,10 @@ namespace SpaceEngineers.Core.Utilities.Test
             var graph = BuildGenericGraph(sw);
 
             var requiredEdges = new Queue<string>();
-            requiredEdges.Enqueue(_edges[Ab1].EdgeInfo);
-            requiredEdges.Enqueue(_edges[Bb2].EdgeInfo);
-            requiredEdges.Enqueue(_edges[Bc].EdgeInfo);
-            requiredEdges.Enqueue(_edges[Bb1].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Ab1].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Bb2].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Bc].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Bb1].EdgeInfo);
 
             var solverInfo = new PathResolverInfo<char, string>(A,
                                                                E,
@@ -268,7 +273,7 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             var requiredEdges = new Queue<string>();
 
-            requiredEdges.Enqueue(_edges[Bb1].EdgeInfo);
+            requiredEdges.Enqueue(Edges[Bb1].EdgeInfo);
 
             var solverInfo = new PathResolverInfo<char, string>(B,
                                                                 B,
@@ -364,7 +369,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         private GenericGraph<char, string> BuildGenericGraph(Stopwatch sw)
         {
             sw.Restart();
-            var graph = new GenericGraph<char, string>(_edgesHeap);
+            var graph = new GenericGraph<char, string>(EdgesHeap);
             sw.Stop();
 
             Output.WriteLine($"[Graph build time] = {sw.ElapsedMilliseconds} ms");

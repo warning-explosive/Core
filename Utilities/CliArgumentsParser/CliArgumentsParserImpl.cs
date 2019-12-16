@@ -21,11 +21,11 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     [Lifestyle(EnLifestyle.Singleton)]
     internal class CliArgumentsParserImpl : ICliArgumentsParser
     {
-        private static readonly Regex _regexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RegexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly Regex _quotesRemover = new Regex(@"[^'|""].*[^'|""]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex QuotesRemover = new Regex(@"[^'|""].*[^'|""]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly Regex _finishChecker = new Regex(@"(?:-{1,2}|/|=|'|""|\s)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex FinishChecker = new Regex(@"(?:-{1,2}|/|=|'|""|\s)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <inheritdoc />
         public T Parse<T>(string[] args)
@@ -79,11 +79,11 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
             var argsDictionary = new Dictionary<string, string?>();
 
-            foreach (var match in _regexCliParser.Matches(cliArguments))
+            foreach (var match in RegexCliParser.Matches(cliArguments))
             {
                 var argument = match.ToString();
 
-                var splitedArgument = _regexCliParser
+                var splitedArgument = RegexCliParser
                                      .Split(argument)
                                      .Where(z => !string.IsNullOrEmpty(z))
                                      .ToArray();
@@ -104,7 +104,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                 else if (splitedArgument.Length == 2)
                 {
                     command = splitedArgument[0];
-                    commandValue = _quotesRemover.Match(splitedArgument[1]).Value;
+                    commandValue = QuotesRemover.Match(splitedArgument[1]).Value;
                 }
 
                 if (argsDictionary.TryGetValue(command, out _))
@@ -127,7 +127,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
             var splited = cliArguments
                          .Split(entries, StringSplitOptions.RemoveEmptyEntries)
-                         .Select(z => _finishChecker.Replace(z, string.Empty))
+                         .Select(z => FinishChecker.Replace(z, string.Empty))
                          .Where(z => !string.IsNullOrEmpty(z))
                          .ToArray();
 

@@ -9,15 +9,20 @@ namespace SpaceEngineers.Core.Utilities.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// CliArgumentsParser class tests
+    /// </summary>
     public class CliArgumentsParserTest : CompositionRootTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public CliArgumentsParserTest(ITestOutputHelper output)
             : base(output) { }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
 
         [Fact]
-        public void Test1()
+        internal void Test1()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -43,7 +48,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test2()
+        internal void Test2()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -69,7 +74,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test4()
+        internal void Test4()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -92,7 +97,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test5()
+        internal void Test5()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -113,7 +118,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test6()
+        internal void Test6()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -136,7 +141,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test7()
+        internal void Test7()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -159,7 +164,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test8()
+        internal void Test8()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -182,7 +187,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test9()
+        internal void Test9()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -205,7 +210,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test10()
+        internal void Test10()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -229,7 +234,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test11()
+        internal void Test11()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -253,7 +258,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test12()
+        internal void Test12()
         {
             var args = new[]
                        {
@@ -267,7 +272,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test13()
+        internal void Test13()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -283,7 +288,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test14()
+        internal void Test14()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -308,7 +313,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test15()
+        internal void Test15()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 
@@ -333,7 +338,7 @@ namespace SpaceEngineers.Core.Utilities.Test
         }
 
         [Fact]
-        public void Test16()
+        internal void Test16()
         {
             var parser = DependencyContainer.Resolve<ICliArgumentsParser>();
 

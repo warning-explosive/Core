@@ -5,9 +5,14 @@ namespace SpaceEngineers.Core.Basics.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// TypeExtensions class tests
+    /// </summary>
     [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
     public class TypeExtensionsTest : BasicsTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public TypeExtensionsTest(ITestOutputHelper output)
             : base(output)
         {

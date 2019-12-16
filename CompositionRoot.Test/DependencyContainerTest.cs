@@ -7,8 +7,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// DependencyContainer class tests
+    /// </summary>
     public class DependencyContainerTest : CompositionRootTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public DependencyContainerTest(ITestOutputHelper output)
             : base(output) { }
 

@@ -8,14 +8,14 @@ namespace SpaceEngineers.Core.Basics
 
     internal class TypeInfoStorage : ITypeInfoStorage
     {
-        private static readonly string[] _excludedAssemblies =
+        private static readonly string[] ExcludedAssemblies =
         {
             nameof(System),
             nameof(Microsoft),
             "Windows",
         };
 
-        private static readonly string[] _excludedTypes =
+        private static readonly string[] ExcludedTypes =
         {
             "<>f",
             "<>c",
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.Basics
             var loadedAssemblies = assemblies.Distinct(new AssemblyByNameEqualityComparer())
                                              .ToDictionary(a => a.GetName().FullName);
 
-            var visited = loadedAssemblies.Where(a => _excludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
+            var visited = loadedAssemblies.Where(a => ExcludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
                                           .ToDictionary(k => k.Key, v => false);
 
             visited[rootAssemblyFullName] = true;
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.Basics
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
                                                                     .Where(t => t.FullName != null
-                                                                                && _excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCultureIgnoreCase))))
+                                                                                && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCultureIgnoreCase))))
                                     .ToArray();
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));
@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.Basics
             }
 
             var result = exclusiveReferences.Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
-                                                                       && _excludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
+                                                                       && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
                                             .Any(unknownReference => loadedAssemblies.TryGetValue(unknownReference.FullName, out var unknownAssembly)
                                                                      && IsOurReference(unknownAssembly, loadedAssemblies, visited));
 

@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     [TestCondition2]
     [Lifestyle(EnLifestyle.Transient)]
     [Order(2)]
-    public class CollectionResolvableConditionDecorableServiceImpl2 : ICollectionResolvableConditionDecorableService
+    internal class CollectionResolvableConditionDecorableServiceImpl2 : ICollectionResolvableConditionDecorableService
     {
     }
 }

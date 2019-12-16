@@ -11,9 +11,14 @@ namespace SpaceEngineers.Core.Basics.Test
     using Xunit;
     using Xunit.Abstractions;
 
+    /// <summary>
+    /// DeepCopy test
+    /// </summary>
     [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
     public class ObjectExtensionsDeepCopyTest : BasicsTestBase
     {
+        /// <summary> .ctor </summary>
+        /// <param name="output">ITestOutputHelper</param>
         public ObjectExtensionsDeepCopyTest(ITestOutputHelper output)
             : base(output) { }
 

@@ -83,6 +83,9 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test
         {
             var actualSource = _codeFixExecutor.ExecuteFix(DiagnosticAnalyzer, CodeFixProvider, inputSource, allowNewCompilerDiagnostics);
 
+            Output.WriteLine(Environment.NewLine + nameof(actualSource) + ":");
+            Output.WriteLine(actualSource);
+
             _codeFixVerifyer.VerifyCodeFix(expectedSource, actualSource);
         }
     }

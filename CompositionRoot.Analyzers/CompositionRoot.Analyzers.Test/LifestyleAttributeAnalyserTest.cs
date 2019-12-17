@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
 {
     using System;
     using System.Globalization;
-    using Analyzers;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -110,7 +109,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
         }
 
         [Fact]
-        internal void FixTest()
+        internal void FixWithoutLeadingTriviaTest()
         {
             var test =
 @"
@@ -123,6 +122,120 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     {
     }
 
+    internal class TestServiceImpl : ITestService
+    {
+    }
+}";
+
+            var expected = new DiagnosticResult("CR1",
+                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
+                                                DiagnosticSeverity.Error,
+                                                new[] { new DiagnosticResultLocation("Source0.cs", 11, 20) });
+
+            VerifyAnalyzer(test, expected);
+
+            var expectedSource =
+@"
+namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
+{
+    using System;
+    using SpaceEngineers.Core.CompositionRoot.Abstractions;
+    using SpaceEngineers.Core.CompositionRoot.Attributes;
+    using SpaceEngineers.Core.CompositionRoot.Enumerations;
+
+    public interface ITestService : IResolvable
+    {
+    }
+
+    [Lifestyle(EnLifestyle.ChooseLifestyle)]
+    internal class TestServiceImpl : ITestService
+    {
+    }
+}";
+
+            VerifyFix(test, expectedSource, true);
+        }
+
+        [Fact]
+        internal void FixWithLeadingTriviaTest()
+        {
+            var test =
+@"
+namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
+{
+    using System;
+    using SpaceEngineers.Core.CompositionRoot.Abstractions;
+
+    /// <summary>
+    /// Summary
+    /// </summary>
+    public interface ITestService : IResolvable
+    {
+    }
+
+    /// <summary>
+    /// Summary
+    /// </summary>
+    internal class TestServiceImpl : ITestService
+    {
+    }
+}";
+
+            var expected = new DiagnosticResult("CR1",
+                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
+                                                DiagnosticSeverity.Error,
+                                                new[] { new DiagnosticResultLocation("Source0.cs", 17, 20) });
+
+            VerifyAnalyzer(test, expected);
+
+            var expectedSource =
+@"
+namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
+{
+    using System;
+    using SpaceEngineers.Core.CompositionRoot.Abstractions;
+    using SpaceEngineers.Core.CompositionRoot.Attributes;
+    using SpaceEngineers.Core.CompositionRoot.Enumerations;
+
+    /// <summary>
+    /// Summary
+    /// </summary>
+    public interface ITestService : IResolvable
+    {
+    }
+
+    /// <summary>
+    /// Summary
+    /// </summary>
+    [Lifestyle(EnLifestyle.ChooseLifestyle)]
+    internal class TestServiceImpl : ITestService
+    {
+    }
+}";
+
+            VerifyFix(test, expectedSource, true);
+        }
+
+        [Fact]
+        internal void FixWithLeadingTriviaAndAttributesTest()
+        {
+            var test =
+@"
+namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
+{
+    using System;
+    using SpaceEngineers.Core.CompositionRoot.Abstractions;
+
+    /// <summary>
+    /// Summary
+    /// </summary>
+    public interface ITestService : IResolvable
+    {
+    }
+
+    /// <summary>
+    /// Summary
+    /// </summary>
     [Serializable]
     internal class TestServiceImpl : ITestService
     {
@@ -132,30 +245,37 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
             var expected = new DiagnosticResult("CR1",
                                                 string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
                                                 DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 12, 20) });
+                                                new[] { new DiagnosticResultLocation("Source0.cs", 18, 20) });
 
             VerifyAnalyzer(test, expected);
 
-            var fixtest =
+            var expectedSource =
 @"
 namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
 {
     using System;
     using SpaceEngineers.Core.CompositionRoot.Abstractions;
     using SpaceEngineers.Core.CompositionRoot.Attributes;
+    using SpaceEngineers.Core.CompositionRoot.Enumerations;
 
+    /// <summary>
+    /// Summary
+    /// </summary>
     public interface ITestService : IResolvable
     {
     }
 
-    [Lifestyle(EnLifestyle.ChooseLifestyle)]
+    /// <summary>
+    /// Summary
+    /// </summary>
     [Serializable]
+    [Lifestyle(EnLifestyle.ChooseLifestyle)]
     internal class TestServiceImpl : ITestService
     {
     }
 }";
 
-            VerifyFix(test, fixtest, true);
+            VerifyFix(test, expectedSource, true);
         }
     }
 }

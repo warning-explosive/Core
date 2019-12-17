@@ -109,18 +109,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 
         private SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
         {
-            var trivia = namespaceDeclaration.Usings
-                                             .First()
-                                             .GetLeadingTrivia();
+            var trivia = namespaceDeclaration.Usings.First().GetLeadingTrivia();
 
-            var usingDirective = SyntaxFactory
-                                .UsingDirective(SyntaxFactory.IdentifierName(typeof(LifestyleAttribute).Namespace))
-                                .NormalizeWhitespace()
-                                .WithLeadingTrivia(trivia)
-                                .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
+            var attributeDirective = GetUsingDirective(trivia, typeof(LifestyleAttribute));
+            var enumerationDirective = GetUsingDirective(trivia, typeof(EnLifestyle));
 
             return root.ReplaceNode(namespaceDeclaration,
-                                    namespaceDeclaration.AddUsings(usingDirective));
+                                    namespaceDeclaration.AddUsings(attributeDirective, enumerationDirective));
+        }
+
+        private static UsingDirectiveSyntax GetUsingDirective(SyntaxTriviaList trivia, Type type)
+        {
+            return SyntaxFactory
+                  .UsingDirective(SyntaxFactory.IdentifierName(type.Namespace))
+                  .NormalizeWhitespace()
+                  .WithLeadingTrivia(trivia)
+                  .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
         }
 
         private SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
@@ -142,12 +146,30 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 
             var additionalAttribute = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute))
                                                    .NormalizeWhitespace()
-                                                   .WithLeadingTrivia(typeDeclaration.GetLeadingTrivia());
+                                                   .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
 
-            var extendedAttributeList = originalAttributesList.Insert(0, additionalAttribute);
+            TypeDeclarationSyntax newTypeDeclaration;
+            var leadingWhitespaces = typeDeclaration.GetLeadingTrivia()
+                                                    .First(z => z.IsKind(SyntaxKind.WhitespaceTrivia));
+
+            if (originalAttributesList.Any())
+            {
+                var leadingTrivia = leadingWhitespaces;
+
+                additionalAttribute = additionalAttribute.WithLeadingTrivia(leadingTrivia);
+
+                newTypeDeclaration = typeDeclaration;
+            }
+            else
+            {
+                additionalAttribute = additionalAttribute.WithLeadingTrivia(typeDeclaration.GetLeadingTrivia());
+                newTypeDeclaration = typeDeclaration.WithoutLeadingTrivia().WithLeadingTrivia(leadingWhitespaces);
+            }
+
+            var extendedAttributeList = originalAttributesList.Add(additionalAttribute);
 
             return root.ReplaceNode(typeDeclaration,
-                                    typeDeclaration.WithAttributeLists(extendedAttributeList));
+                                    newTypeDeclaration.WithAttributeLists(extendedAttributeList));
         }
     }
 }

@@ -31,7 +31,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CompositionRoot.Analyzers\CompositionRoot.Analyzers\CompositionRoot.Analyzers.csproj">
+    <ProjectReference Include="..\..\CompositionRoot.Analyzers\CompositionRoot.Analyzers.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Analyzer</OutputItemType>
     </ProjectReference>

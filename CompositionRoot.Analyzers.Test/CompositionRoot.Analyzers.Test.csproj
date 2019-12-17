@@ -14,7 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
-    <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>..\ruleset.ruleset</CodeAnalysisRuleSet>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
@@ -40,8 +40,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CompositionRoot.RoslynAnalysis.Test\CompositionRoot.RoslynAnalysis.Test.csproj" />
-    <ProjectReference Include="..\..\CompositionRoot.Test\CompositionRoot.Test.csproj" />
+    <ProjectReference Include="..\CompositionRoot.RoslynAnalysis.Test\CompositionRoot.RoslynAnalysis.Test.csproj" />
+    <ProjectReference Include="..\CompositionRoot.Test\CompositionRoot.Test.csproj" />
     <ProjectReference Include="..\CompositionRoot.Analyzers\CompositionRoot.Analyzers.csproj" />
   </ItemGroup>
 </Project>

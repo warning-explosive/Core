@@ -17,11 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot", "Composit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.Test", "CompositionRoot.Test\CompositionRoot.Test.csproj", "{0AEA3F81-0976-4822-A323-6A99DAFF10F2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.Analyzers", "CompositionRoot.Analyzers\CompositionRoot.Analyzers\CompositionRoot.Analyzers.csproj", "{1F6E165F-5C5A-4B1E-AFF4-5824EB0A2E29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.Analyzers", "CompositionRoot.Analyzers\CompositionRoot.Analyzers.csproj", "{1F6E165F-5C5A-4B1E-AFF4-5824EB0A2E29}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.Analyzers.Test", "CompositionRoot.Analyzers.Test\CompositionRoot.Analyzers.Test.csproj", "{305B3C13-3706-40D9-BA72-8F4DF0FE976C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.RoslynAnalysis.Test", "CompositionRoot.RoslynAnalysis.Test\CompositionRoot.RoslynAnalysis.Test.csproj", "{33D10043-5F94-4A0A-9C11-6DA21FF8310F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositionRoot.Analyzers.Test", "CompositionRoot.Analyzers\CompositionRoot.Analyzers.Test\CompositionRoot.Analyzers.Test.csproj", "{305B3C13-3706-40D9-BA72-8F4DF0FE976C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{C01667ED-90ED-4F1E-9356-18F76E16BDFE}"
 EndProject

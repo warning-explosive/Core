@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 
         /// <inheritdoc />
         public sealed override ImmutableArray<string> FixableDiagnosticIds
-            => ImmutableArray.Create(LifestyleAttributeAnalyzer.DiagnosticDescriptor.Id);
+            => ImmutableArray.Create(new LifestyleAttributeAnalyzer().Identifier);
 
         /// <inheritdoc />
         public sealed override FixAllProvider GetFixAllProvider()

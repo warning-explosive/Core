@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     using Attributes;
     using Enumerations;
     using Microsoft.CodeAnalysis;
-    using RoslynAnalysis.Test.Api;
+    using Roslyn.Test.Api;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Transient)]

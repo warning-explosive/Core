@@ -1,19 +1,15 @@
 namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
 {
     using System;
-    using System.Globalization;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CodeFixes;
-    using Microsoft.CodeAnalysis.Diagnostics;
-    using RoslynAnalysis.Test;
-    using RoslynAnalysis.Test.Api;
+    using Roslyn.Test;
+    using Roslyn.Test.Api;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
     /// LifestyleAttributeAnalyser and LifestyleAttributeCodeFixProvider tests
     /// </summary>
-    public class LifestyleAttributeAnalyserTest : RoslynAnalysisTestBase
+    public class LifestyleAttributeAnalyserTest : CodeFixProviderTestBase<LifestyleAttributeAnalyzer, LifestyleAttributeCodeFixProvider>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
@@ -21,12 +17,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
             : base(output)
         {
         }
-
-        /// <inheritdoc />
-        protected override DiagnosticAnalyzer DiagnosticAnalyzer { get; } = new LifestyleAttributeAnalyzer();
-
-        /// <inheritdoc />
-        protected override CodeFixProvider CodeFixProvider { get; } = new LifestyleAttributeCodeFixProvider();
 
         [Fact]
         internal void EmptyAttributesListTest()
@@ -47,12 +37,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     }
 }";
 
-            var expected = new DiagnosticResult("CR1",
-                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
-                                                DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 11, 20) });
-
-            VerifyAnalyzer(test, expected);
+            VerifyAnalyzer(test, Expected(11, 20));
         }
 
         [Fact]
@@ -75,12 +60,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     }
 }";
 
-            var expected = new DiagnosticResult("CR1",
-                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
-                                                DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 12, 20) });
-
-            VerifyAnalyzer(test, expected);
+            VerifyAnalyzer(test, Expected(12, 20));
         }
 
         [Fact]
@@ -127,12 +107,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     }
 }";
 
-            var expected = new DiagnosticResult("CR1",
-                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
-                                                DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 11, 20) });
-
-            VerifyAnalyzer(test, expected);
+            VerifyAnalyzer(test, Expected(11, 20));
 
             var expectedSource =
 @"
@@ -181,12 +156,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     }
 }";
 
-            var expected = new DiagnosticResult("CR1",
-                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
-                                                DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 17, 20) });
-
-            VerifyAnalyzer(test, expected);
+            VerifyAnalyzer(test, Expected(17, 20));
 
             var expectedSource =
 @"
@@ -242,12 +212,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     }
 }";
 
-            var expected = new DiagnosticResult("CR1",
-                                                string.Format(CultureInfo.InvariantCulture, "Mark component type by LifestyleAttribute and select its lifestyle"),
-                                                DiagnosticSeverity.Error,
-                                                new[] { new DiagnosticResultLocation("Source0.cs", 18, 20) });
-
-            VerifyAnalyzer(test, expected);
+            VerifyAnalyzer(test, Expected(18, 20));
 
             var expectedSource =
 @"

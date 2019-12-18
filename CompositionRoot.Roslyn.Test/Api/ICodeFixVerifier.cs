@@ -1,11 +1,11 @@
-namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Api
+namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Api
 {
     using Abstractions;
 
     /// <summary>
     /// Verifyes code fix results
     /// </summary>
-    public interface ICodeFixVerifyer : IResolvable
+    public interface ICodeFixVerifier : IResolvable
     {
         /// <summary>
         /// Verify code fix results

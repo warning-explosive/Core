@@ -1,51 +1,40 @@
 namespace SpaceEngineers.Core.CompositionRoot.Analyzers
 {
     using System;
-    using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
     using Attributes;
+    using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// DiagnosticAnalyzer that requres LifestyleAttribute existance on components (component - service implementation)
+    /// Concrete component must have LifestyleAttribute (component - service implementation)
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class LifestyleAttributeAnalyzer : DiagnosticAnalyzer
+    public class LifestyleAttributeAnalyzer : SyntaxAnalyzerBase
     {
-        /// <summary>
-        /// DiagnosticDescriptor
-        /// </summary>
-        public static DiagnosticDescriptor DiagnosticDescriptor { get; } =
-            new DiagnosticDescriptor("CR1",
-                                     "Concrete component must have LifestyleAttribute",
-                                     "Mark component type by LifestyleAttribute and select its lifestyle",
-                                     "DI Configuration",
-                                     DiagnosticSeverity.Error,
-                                     true,
-                                     string.Empty,
-                                     "https://github.com/warning-explosive/Core");
-
-        /// <summary>
-        /// SupportedDiagnostics
-        /// </summary>
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(DiagnosticDescriptor);
+        /// <inheritdoc />
+        public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override void Initialize(AnalysisContext context)
-        {
-            context.EnableConcurrentExecution();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+        public override string Title { get; } = "Concrete component must have LifestyleAttribute";
 
-            context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.ClassDeclaration);
-        }
+        /// <inheritdoc />
+        public override string Message { get; } = "Mark component type by LifestyleAttribute and select its lifestyle";
 
+        /// <inheritdoc />
+        public override string Category { get; } = "DI Configuration";
+
+        /// <inheritdoc />
+        protected override SyntaxKind SyntaxKind { get; } = SyntaxKind.ClassDeclaration;
+
+        /// <inheritdoc />
         [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
-        private void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        protected override void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
@@ -72,7 +61,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
              */
             if (!IsContainsAttribute(context, classDeclarationSyntax))
             {
-                ReportDiagnostic(context, classDeclarationSyntax);
+                ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation());
             }
         }
 
@@ -139,12 +128,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
                 .Any(z => z.Equals(attribute));
 
             return isContainsAttribute;
-        }
-
-        private static void ReportDiagnostic(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
-        {
-            var diagnostic = Diagnostic.Create(DiagnosticDescriptor, classDeclarationSyntax.Identifier.GetLocation());
-            context.ReportDiagnostic(diagnostic);
         }
     }
 }

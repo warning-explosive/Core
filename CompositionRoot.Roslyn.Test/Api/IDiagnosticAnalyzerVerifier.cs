@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Api
+namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Api
 {
     using Abstractions;
     using Microsoft.CodeAnalysis;

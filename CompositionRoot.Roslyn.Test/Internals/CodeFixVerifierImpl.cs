@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
+namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Internals
 {
     using Api;
     using Attributes;
@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CodeFixVerifyerImpl : ICodeFixVerifyer
+    internal class CodeFixVerifierImpl : ICodeFixVerifier
     {
         /// <inheritdoc />
         public void VerifyCodeFix(string expectedSource, string actualSource)

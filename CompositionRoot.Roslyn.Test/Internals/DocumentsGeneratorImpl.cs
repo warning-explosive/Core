@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test.Internals
+namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Internals
 {
     using System;
     using System.Collections.Generic;

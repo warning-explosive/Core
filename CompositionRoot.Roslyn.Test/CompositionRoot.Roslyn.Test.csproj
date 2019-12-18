@@ -4,13 +4,13 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot.Roslyn.Test</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot.Roslyn.Test</RootNamespace>
     <IsPackable>false</IsPackable>
-    <Title>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</Title>
+    <Title>SpaceEngineers.Core.CompositionRoot.Roslyn.Test</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.CompositionRoot.RoslynAnalysis.Test</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.CompositionRoot.Roslyn.Test</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -30,14 +30,13 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.4.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Basics.Roslyn\Basics.Roslyn.csproj" />
     <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\Basics\Basics.csproj" />
     <ProjectReference Include="..\CompositionRoot.Test\CompositionRoot.Test.csproj" />

@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// Do not use DependencyContainer.Resolve() / .ResolveAll() directly,
+    /// Do not use DependencyContainer.Resolve() / .ResolveCollection() directly,
     ///     because it’s hides complexity and leads to Service Locator anti-pattern.
     /// Instead use auto-wiring via constructor injection.
     /// </summary>
@@ -20,11 +20,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
         public override string Identifier { get; } = "CR3";
 
         /// <inheritdoc />
-        public override string Title { get; } = "Do not use DependencyContainer.Resolve() / .ResolveAll() directly, "
+        public override string Title { get; } = "Do not use DependencyContainer.Resolve() / .ResolveCollection() directly, "
                                               + "because it’s hides complexity and leads to Service Locator anti-pattern";
 
         /// <inheritdoc />
-        public override string Message { get; } = "Do not use DependencyContainer.Resolve() / .ResolveAll() directly, "
+        public override string Message { get; } = "Do not use DependencyContainer.Resolve() / .ResolveCollection() directly, "
                                                 + "because it’s hides complexity and leads to Service Locator anti-pattern. "
                                                 + "Instead use auto-wiring via constructor injection.";
 

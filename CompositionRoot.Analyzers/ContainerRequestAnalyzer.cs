@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers
     /// Instead use auto-wiring via constructor injection.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class RequestToContainerAnalyzer : SyntaxAnalyzerBase
+    public class ContainerRequestAnalyzer : SyntaxAnalyzerBase
     {
         /// <inheritdoc />
         public override string Identifier { get; } = "CR3";

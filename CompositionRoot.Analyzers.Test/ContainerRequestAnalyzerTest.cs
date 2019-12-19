@@ -5,13 +5,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Analyzers.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// RequestToContainerAnalyzer test
+    /// ContainerRequestAnalyzer test
     /// </summary>
-    public class RequestToContainerAnalyzerTest : DiagnosticAnalyzerTestBase<RequestToContainerAnalyzer>
+    public class ContainerRequestAnalyzerTest : DiagnosticAnalyzerTestBase<ContainerRequestAnalyzer>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public RequestToContainerAnalyzerTest(ITestOutputHelper output)
+        public ContainerRequestAnalyzerTest(ITestOutputHelper output)
             : base(output)
         {
         }

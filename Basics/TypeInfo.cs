@@ -14,7 +14,8 @@ namespace SpaceEngineers.Core.Basics
         {
             OriginalType = type;
 
-            Order = type.GetCustomAttribute<OrderAttribute>()?.Order;
+            Dependencies = type.GetCustomAttribute<DependencyAttribute>()?.Dependencies.ToArray()
+                        ?? Array.Empty<Type>();
 
             ExtractDeclaredInterfaces(type);
             ExtractBaseOpenGenericTypes(type);
@@ -23,7 +24,7 @@ namespace SpaceEngineers.Core.Basics
 
         internal Type OriginalType { get; }
 
-        internal uint? Order { get; }
+        internal Type[] Dependencies { get; }
 
         internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
 

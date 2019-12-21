@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    [Order(1)]
     internal class DecorableServiceDecorator3 : IDecorableServiceDecorator,
                                                 IDecorator<IDecorableService>
     {

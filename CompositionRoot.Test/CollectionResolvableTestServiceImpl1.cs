@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    [Order(3)]
+    [Dependency(typeof(CollectionResolvableTestServiceImpl2))]
     internal class CollectionResolvableTestServiceImpl1 : ICollectionResolvableTestService
     {
     }

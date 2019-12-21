@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    [Order(3)]
+    [Dependency(typeof(SingletonGenericCollectionResolvableTestServiceImpl2<>))]
     internal class SingletonGenericCollectionResolvableTestServiceImpl1<T> : ISingletonGenericCollectionResolvableTestService<T>
     {
     }

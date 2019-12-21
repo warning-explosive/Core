@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    [Dependency(typeof(DecorableServiceDecorator1))]
+    [Dependency(typeof(DecorableServiceDecorator3))]
     internal class DecorableServiceDecorator2 : IDecorableServiceDecorator,
                                                 IDecorator<IDecorableService>
     {

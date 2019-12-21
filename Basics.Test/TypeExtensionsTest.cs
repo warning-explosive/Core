@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -16,6 +18,50 @@ namespace SpaceEngineers.Core.Basics.Test
         public TypeExtensionsTest(ITestOutputHelper output)
             : base(output)
         {
+        }
+
+        [Fact]
+        internal void OrderByDependencyCycleDependencyTest()
+        {
+            var test = new[]
+                       {
+                           typeof(OrderByDependencyTestData.CycleDependencyTest1),
+                           typeof(OrderByDependencyTestData.CycleDependencyTest2),
+                           typeof(OrderByDependencyTestData.CycleDependencyTest3),
+                       };
+
+            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencies(z => z).ToArray());
+        }
+
+        [Fact]
+        internal void OrderByDependencyTest()
+        {
+            var test1 = new[]
+            {
+                typeof(OrderByDependencyTestData.DependencyTest1),
+                typeof(OrderByDependencyTestData.DependencyTest2),
+                typeof(OrderByDependencyTestData.DependencyTest3),
+            };
+
+            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencies(z => z)));
+
+            var test2 = new[]
+            {
+                typeof(OrderByDependencyTestData.GenericDependencyTest1<>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest2<>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest3<>),
+            };
+
+            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencies(z => z)));
+
+            var test3 = new[]
+            {
+                typeof(OrderByDependencyTestData.GenericDependencyTest1<object>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest2<string>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest3<int>),
+            };
+
+            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencies(z => z)));
         }
 
         [Fact]

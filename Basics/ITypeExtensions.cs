@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="source">Source unordered collection</param>
         /// <param name="accessor">Type accessor</param>
         /// <typeparam name="T">Source items type-argument</typeparam>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
         /// <returns>Ordered collection</returns>
         IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor);
 

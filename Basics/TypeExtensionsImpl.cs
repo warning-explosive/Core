@@ -20,7 +20,29 @@ namespace SpaceEngineers.Core.Basics
         /// <inheritdoc />
         public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
         {
-            throw new NotImplementedException();
+            int SortFunc(T item)
+            {
+                var type = accessor(item);
+                var dependencies = GetDependencies(type).AsEnumerable();
+
+                var depth = 0;
+
+                while (dependencies.Any())
+                {
+                    if (dependencies.Contains(type))
+                    {
+                        throw new InvalidOperationException($"{type} has cycle dependency");
+                    }
+
+                    ++depth;
+
+                    dependencies = dependencies.SelectMany(GetDependencies);
+                }
+
+                return depth;
+            }
+
+            return source.OrderBy(SortFunc);
         }
 
         /// <inheritdoc />

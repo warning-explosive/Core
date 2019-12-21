@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public interface ITypeExtensions
     {
-        /// <summary> Order collection by type dependencies </summary>
+        /// <summary> Order collection by type dependencies (DependencyAttribute) </summary>
         /// <param name="source">Source unordered collection</param>
         /// <param name="accessor">Type accessor</param>
         /// <typeparam name="T">Source items type-argument</typeparam>

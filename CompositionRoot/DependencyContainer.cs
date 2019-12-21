@@ -117,28 +117,27 @@ namespace SpaceEngineers.Core.CompositionRoot
             var collectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
             RegisterLifestyle(container, collectionResolvableRegistrationInfos);
 
-            foreach (var collectionResolvable in collectionResolvableRegistrationInfos
-                                                 .OrderBy(info => OrderByAttribute(info, typeExtensions))
-                                                 .GroupBy(k => k.ServiceType, v => v.ComponentType))
-            {
-                container.Collection.Register(collectionResolvable.Key, collectionResolvable);
-            }
+            typeExtensions.OrderByDependencies(collectionResolvableRegistrationInfos, z => z.ComponentType)
+                          .GroupBy(k => k.ServiceType, v => v.ComponentType)
+                          .Each(info => container.Collection.Register(info.Key, info));
 
             /*
              * [III] - Decorators
              */
-            GetDecoratorInfo(typeExtensions, typeof(IDecorator<>))
-               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(IConditionalDecorator<,>)))
-               .OrderBy(info => OrderByAttribute(info, typeExtensions))
-               .Each(info => RegisterDecorator(container, info));
+            var decoratorInfos = GetDecoratorInfo(typeExtensions, typeof(IDecorator<>))
+               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(IConditionalDecorator<,>)));
+
+            typeExtensions.OrderByDependencies(decoratorInfos, z => z.ComponentType)
+                          .Each(info => RegisterDecorator(container, info));
 
             /*
              * [IV] - Collection decorators
              */
-            GetDecoratorInfo(typeExtensions, typeof(ICollectionDecorator<>))
-               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(ICollectionConditionalDecorator<,>)))
-               .OrderBy(info => OrderByAttribute(info, typeExtensions))
-               .Each(info => RegisterDecorator(container, info));
+            var collectionDecoratorInfos = GetDecoratorInfo(typeExtensions, typeof(ICollectionDecorator<>))
+               .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(ICollectionConditionalDecorator<,>)));
+
+            typeExtensions.OrderByDependencies(collectionDecoratorInfos, z => z.ComponentType)
+                          .Each(info => RegisterDecorator(container, info));
         }
 
         private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
@@ -216,11 +215,6 @@ namespace SpaceEngineers.Core.CompositionRoot
                   {
                       Attribute = t.Decorator.GetGenericArguments()[1]
                   });
-        }
-
-        private static uint OrderByAttribute(ServiceRegistrationInfo info, ITypeExtensions typeExtensions)
-        {
-            return typeExtensions.GetOrder(info.ComponentType) ?? uint.MaxValue;
         }
 
         private static void RegisterDecorator(Container container, ServiceRegistrationInfo info)

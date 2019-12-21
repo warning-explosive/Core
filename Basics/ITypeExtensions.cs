@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -8,6 +10,13 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public interface ITypeExtensions
     {
+        /// <summary> Order collection by type dependencies </summary>
+        /// <param name="source">Source unordered collection</param>
+        /// <param name="accessor">Type accessor</param>
+        /// <typeparam name="T">Source items type-argument</typeparam>
+        /// <returns>Ordered collection</returns>
+        IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor);
+
         /// <summary>
         /// Get all services (interfaces) that contains TInterface declaration
         /// </summary>
@@ -41,11 +50,11 @@ namespace SpaceEngineers.Core.Basics
         bool IsOurType(Type type);
 
         /// <summary>
-        /// Get type order from OrderAttribute
+        /// Get type dependencies from DependencyAttribute
         /// </summary>
         /// <param name="type">Type</param>
-        /// <returns>Type order</returns>
-        uint? GetOrder(Type type);
+        /// <returns>Type dependencies</returns>
+        Type[] GetDependencies(Type type);
 
         /// <summary>
         /// Does type implement Nullable

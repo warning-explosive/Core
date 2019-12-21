@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -20,6 +22,16 @@ namespace SpaceEngineers.Core.Basics
             _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(assemblies));
 
             return _typeExtensions;
+        }
+
+        /// <summary> Order collection by type dependencies </summary>
+        /// <param name="source">Source unordered collection</param>
+        /// <param name="accessor">Type accessor</param>
+        /// <typeparam name="T">Source items type-argument</typeparam>
+        /// <returns>Ordered collection</returns>
+        public static IOrderedEnumerable<T> OrderByDependencies<T>(this IEnumerable<T> source, Func<T, Type> accessor)
+        {
+            return _typeExtensions.OrderByDependencies<T>(source, accessor);
         }
 
         /// <summary>
@@ -61,13 +73,13 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Get type order from OrderAttribute
+        /// Get type dependencies from DependencyAttribute
         /// </summary>
         /// <param name="type">Type</param>
-        /// <returns>Type order</returns>
-        public static uint? GetOrder(this Type type)
+        /// <returns>Type dependencies</returns>
+        public static ICollection<Type> GetDependencies(this Type type)
         {
-            return _typeExtensions.GetOrder(type);
+            return _typeExtensions.GetDependencies(type);
         }
 
         /// <summary>

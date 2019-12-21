@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -14,6 +15,12 @@ namespace SpaceEngineers.Core.Basics
         public TypeExtensionsImpl(ITypeInfoStorage typeInfoStorage)
         {
             _typeInfoStorage = typeInfoStorage;
+        }
+
+        /// <inheritdoc />
+        public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
@@ -60,9 +67,9 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <inheritdoc />
-        public uint? GetOrder(Type type)
+        public Type[] GetDependencies(Type type)
         {
-            return _typeInfoStorage[type].Order;
+            return _typeInfoStorage[type].Dependencies;
         }
 
         /// <inheritdoc />

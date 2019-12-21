@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    [Order(1)]
     internal class CollectionResolvableConditionDecorableServiceDecorator2 : ICollectionResolvableConditionDecorableServiceDecorator,
                                                                              ICollectionConditionalDecorator<ICollectionResolvableConditionDecorableService, TestCondition2Attribute>
     {

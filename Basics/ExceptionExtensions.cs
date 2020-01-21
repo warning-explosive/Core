@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="InvalidOperationException">Throws if input is null</exception>
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
         [return: NotNull]
-        public static TExpected ExtractNotNullableSafely<TExpected>([AllowNull] this object input, string? message = null)
+        public static TExpected ExtractNotNullable<TExpected>([AllowNull] this object input, string? message = null)
         {
             if (input == null)
             {
@@ -67,11 +67,11 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Not null input or exception</returns>
         /// <exception cref="InvalidOperationException">Throws if input is null</exception>
         [return: NotNull]
-        public static TExpected ExtractNotNullableSafely<TExpected>([AllowNull] this TExpected input, string? message = null)
+        public static TExpected ExtractNotNullable<TExpected>([AllowNull] this TExpected input, string? message = null)
         {
             if (input == null)
             {
-                throw new InvalidOperationException(message ?? $"{nameof(input)} is null");
+                throw new ArgumentNullException(message ?? $"{nameof(input)} is null");
             }
 
             return input;

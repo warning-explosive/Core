@@ -208,7 +208,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             result = typeof(CliArgumentsParserImpl).CallStaticGenericMethod(nameof(TryParseEnum),
                                                                             new[] { enumType },
                                                                             strValue)
-                                                   .ExtractNotNullableSafely<object>();
+                                                   .ExtractNotNullable<object>();
 
             var separatedValues = strValue.ToUpperInvariant()
                                           .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -230,7 +230,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static string ToEnumString(object value)
         {
-            return value.CallMethod(nameof(Enum.ToString), "G").ExtractNotNullableSafely<string>();
+            return value.CallMethod(nameof(Enum.ToString), "G").ExtractNotNullable<string>();
         }
     }
 }

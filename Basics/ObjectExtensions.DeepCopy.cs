@@ -75,7 +75,7 @@
         public static object DeepCopy(this object original)
         {
             return original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                           .ExtractNotNullableSafely<object>();
+                           .ExtractNotNullable<object>();
         }
 
         /// <summary>

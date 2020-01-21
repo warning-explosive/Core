@@ -20,28 +20,28 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void CallStaticMethodTest()
         {
-            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethod)).ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethod)).ExtractNotNullable<bool>());
 
-            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethod").ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethod").ExtractNotNullable<bool>());
 
-            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithArgs), true).ExtractNotNullableSafely<bool>());
-            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithArgs", true).ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithArgs), true).ExtractNotNullable<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithArgs", true).ExtractNotNullable<bool>());
 
-            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true).ExtractNotNullableSafely<bool>());
-            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true, true).ExtractNotNullableSafely<bool>());
-            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithSeveralArgs", true, true).ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true).ExtractNotNullable<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithSeveralArgs), true, true, true).ExtractNotNullable<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithSeveralArgs", true, true).ExtractNotNullable<bool>());
 
             _ = Assert.Throws<InvalidOperationException>(() => typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), new object[] { true, true, true }));
             _ = Assert.Throws<InvalidOperationException>(() => typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", new object[] { true, true, true }));
 
-            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), new object[] { new object[] { true, true, true } }).ExtractNotNullableSafely<bool>());
-            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", new object[] { new object[] { true, true, true } }).ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod(nameof(TestType.PublicStaticMethodWithParams), new object[] { new object[] { true, true, true } }).ExtractNotNullable<bool>());
+            Assert.True(typeof(TestType).CallStaticMethod("PrivateStaticMethodWithParams", new object[] { new object[] { true, true, true } }).ExtractNotNullable<bool>());
         }
 
         [Fact]
         internal void CallStaticGenericMethodTest()
         {
-            Assert.True(typeof(TestType).CallStaticGenericMethod("PrivateStaticGenericMethod", new[] { typeof(bool) }, true).ExtractNotNullableSafely<bool>());
+            Assert.True(typeof(TestType).CallStaticGenericMethod("PrivateStaticGenericMethod", new[] { typeof(bool) }, true).ExtractNotNullable<bool>());
         }
 
         [SuppressMessage("StyleCop.Analyzers", "SA1202", Justification = "For test reasons")]

@@ -217,7 +217,7 @@ namespace SpaceEngineers.Core.Utilities.Test
                                        Assert.NotNull(ex);
                                        Assert.Equal(typeof(AmbiguousMatchException), ex?.GetType());
 
-                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToList().ExtractNotNullableSafely();
+                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
 
                                        foreach (var msg in exeptionMessagePathsList)
                                        {
@@ -389,22 +389,24 @@ namespace SpaceEngineers.Core.Utilities.Test
             return strPath;
         }
 
-        private List<string> ShowGroupedWeightedPaths(IEnumerable<KeyValuePair<int, Queue<KeyValuePair<char, ICollection<string>>>>> groupedWeightedPaths,
-                                                      Func<string, int> weightFunc,
-                                                      Stopwatch sw)
+        private string[] ShowGroupedWeightedPaths(IEnumerable<KeyValuePair<int, Queue<KeyValuePair<char, ICollection<string>>>>> groupedWeightedPaths,
+                                                  Func<string, int> weightFunc,
+                                                  Stopwatch sw)
         {
             Output.WriteLine($"[Path Groupping time] = {sw.ElapsedMilliseconds} ms");
 
-            var strPaths = new List<string>();
+            return groupedWeightedPaths.OrderBy(z => z.Key)
+                                       .Select(groupedWeightedPath =>
+                                               {
+                                                   var x = groupedWeightedPath.Value
+                                                                              .Select(nodeGroup => "[" + string.Join(", ", nodeGroup.Value.Select(edge => edge + $"({weightFunc(edge)})")) + "]");
 
-            foreach (var groupedWeightedPath in groupedWeightedPaths.OrderBy(z => z.Key))
-            {
-                var strPath = $"({groupedWeightedPath.Key}) => " + string.Join(" => ", groupedWeightedPath.Value.Select(nodeGroup => "[" + string.Join(", ", nodeGroup.Value.Select(edge => edge + $"({weightFunc(edge)})")) + "]"));
-                strPaths.Add(strPath);
-                Output.WriteLine(strPath);
-            }
+                                                   var strPath = $"({groupedWeightedPath.Key}) => " + string.Join(" => ", x);
 
-            return strPaths;
+                                                   Output.WriteLine(strPath);
+                                                   return strPath;
+                                               })
+                                       .ToArray();
         }
 
         private string ShowPath(Queue<KeyValuePair<char, string>> path, Stopwatch sw)
@@ -417,13 +419,13 @@ namespace SpaceEngineers.Core.Utilities.Test
             return strPath;
         }
 
-        private static void CheckCandidates(List<string> candidates, List<string> strPaths)
+        private static void CheckCandidates(List<string> candidates, string[] strPaths)
         {
             foreach (var candidate in candidates)
             {
                 var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.ExtractNotNullableSafely($"Path not found: {candidate}");
+                occurrence.ExtractNotNullable($"Path not found: {candidate}");
             }
         }
     }

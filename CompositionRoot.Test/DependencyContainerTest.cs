@@ -115,9 +115,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = resolved as IDecorableServiceDecorator;
-
-                    CheckRecursive(decorator.ExtractNotNullableSafely<IDecorableServiceDecorator>().Decoratee, nextDecorateeType);
+                    var decorator = (IDecorableServiceDecorator)resolved;
+                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
                 }
             }
 
@@ -143,7 +142,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    CheckRecursive(resolved.ExtractNotNullableSafely<IOpenGenericDecorableServiceDecorator<object>>().Decoratee, nextDecorateeType);
+                    var decorator = (IOpenGenericDecorableServiceDecorator<object>)resolved;
+                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
                 }
             }
 
@@ -168,7 +168,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    CheckRecursive(resolved.ExtractNotNullableSafely<IConditionalDecorableServiceDecorator>().Decoratee, nextDecorateeType);
+                    var decorator = (IConditionalDecorableServiceDecorator)resolved;
+                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
                 }
             }
 
@@ -206,7 +207,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
                 if (types[i].TryGetValue(type, out var nextDecorateeType))
                 {
-                    CheckRecursive(resolved.ExtractNotNullableSafely<ICollectionResolvableConditionDecorableServiceDecorator>().Decoratee, i, nextDecorateeType);
+                    var decorator = (ICollectionResolvableConditionDecorableServiceDecorator)resolved;
+
+                    CheckRecursive(decorator.Decoratee, i, nextDecorateeType);
                 }
             }
 

@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Internals
                              .Single()
                              .ChangedSolution
                              .GetDocument(document.Id)
-                             .ExtractNotNullableSafely();
+                             .ExtractNotNullable();
         }
 
         /// <summary>

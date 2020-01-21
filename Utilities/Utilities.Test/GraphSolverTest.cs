@@ -305,6 +305,7 @@ namespace SpaceEngineers.Core.Utilities.Test
 
             // 1.4
             solverInfo.NotEmptyCircle = true;
+            solverInfo.RequiredEdges.Clear();
             solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
             strPath = GetShortestStrPath(graph, solverInfo, sw);
             Assert.Equal("[BB1]", strPath);

@@ -57,7 +57,6 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Filled queue</returns>
         public static Queue<T> EnqueueMany<T>(this Queue<T> queue, IReadOnlyCollection<T> source)
         {
-            queue.Clear();
             source.Each(queue.Enqueue);
 
             return queue;

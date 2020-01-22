@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -16,6 +17,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         /// <param name="output">ITestOutputHelper</param>
         public DependencyContainerTest(ITestOutputHelper output)
             : base(output) { }
+
+        [Fact]
+        internal void IsOurTypeTest()
+        {
+            var wrongOurTypes = TypeExtensions
+                               .OurTypes()
+                               .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
+                               .ToArray();
+
+            wrongOurTypes.Each(t => Output.WriteLine(t.FullName));
+            Assert.False(wrongOurTypes.Any());
+
+            Assert.False(typeof(object).IsOurType());
+            Assert.True(typeof(DependencyContainer).IsOurType());
+            Assert.True(typeof(IDecorator<>).IsOurType());
+        }
 
         [Fact]
         internal void SingletonTest()

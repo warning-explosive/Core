@@ -83,9 +83,7 @@ namespace SpaceEngineers.Core.Basics
         /// <inheritdoc />
         public bool IsOurType(Type type)
         {
-            return _typeInfoStorage.ContainsKey(type)
-                   || (type.IsGenericType
-                       && _typeInfoStorage.ContainsKey(type.GetGenericTypeDefinition()));
+            return _typeInfoStorage.ContainsKey(ExtractGenericTypeDefinition(type));
         }
 
         /// <inheritdoc />
@@ -102,59 +100,40 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <inheritdoc />
-        public bool IsDerivedFromInterface(Type type, Type @interface)
+        public bool IsSubclassOfOpenGeneric(Type type, Type openGenericAncestor)
         {
-            return @interface.IsInterface
-                   && type.GetInterfaces().Contains(@interface);
+            if (!openGenericAncestor.IsGenericTypeDefinition)
+            {
+                return false;
+            }
+
+            return _typeInfoStorage[type].GenericTypeDefinitions.Contains(openGenericAncestor)
+                || _typeInfoStorage[type].GenericInterfaceDefinitions.Contains(openGenericAncestor);
         }
 
         /// <inheritdoc />
-        public bool IsImplementationOfOpenGeneric(Type type, Type openGenericBaseType)
+        public bool IsContainsInterfaceDeclaration(Type type, Type i)
         {
-            return !type.IsInterface
-                   && !openGenericBaseType.IsInterface
-                   && openGenericBaseType.IsGenericType
-                   && openGenericBaseType.IsGenericTypeDefinition
-                   && _typeInfoStorage[type].GenericTypeDefinitions.Contains(openGenericBaseType);
-        }
-
-        /// <inheritdoc />
-        public bool IsImplementationOfOpenGenericInterface(Type type, Type openGenericInterface)
-        {
-            return !type.IsInterface
-                   && openGenericInterface.IsInterface
-                   && openGenericInterface.IsGenericType
-                   && openGenericInterface.IsGenericTypeDefinition
-                   && _typeInfoStorage[type].GenericInterfaceDefinitions.Contains(openGenericInterface);
-        }
-
-        /// <inheritdoc />
-        public bool IsContainsInterfaceDeclaration(Type type, Type @interface)
-        {
-            var condition = _typeInfoStorage[type].DeclaredInterfaces.Contains(@interface);
-
-            if (condition)
+            if (_typeInfoStorage[type].DeclaredInterfaces.Contains(i))
             {
                 return true;
             }
 
             // generic
-            return TryGetGenericTypeDefinition(type, out var genericTypeDefinition)
-                   && TryGetGenericTypeDefinition(@interface, out var genericInterfaceDefinition)
-                   && _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces.Select(z => z.GUID).Contains(genericInterfaceDefinition.GUID)
-                   && type.GetGenericArguments().SequenceEqual(@interface.GenericTypeArguments);
+            var genericTypeDefinition = ExtractGenericTypeDefinition(type);
+            var genericInterfaceDefinition = ExtractGenericTypeDefinition(i);
+
+            return _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces
+                                                          .Select(z => z.GUID)
+                                                          .Contains(genericInterfaceDefinition.GUID)
+                && type.GenericTypeArguments.SequenceEqual(i.GenericTypeArguments);
         }
 
-        private static bool TryGetGenericTypeDefinition(Type t, out Type genericTypeDefinition)
+        private static Type ExtractGenericTypeDefinition(Type type)
         {
-            if (t.IsGenericType)
-            {
-                genericTypeDefinition = t.GetGenericTypeDefinition();
-                return true;
-            }
-
-            genericTypeDefinition = t;
-            return false;
+            return type.IsGenericType
+                       ? type.GetGenericTypeDefinition()
+                       : type;
         }
     }
 }

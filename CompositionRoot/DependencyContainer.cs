@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>Untyped service implementation</returns>
         public object Resolve(Type serviceType)
         {
-            if (!serviceType.IsDerivedFromInterface(typeof(IResolvable)))
+            if (!typeof(IResolvable).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(IResolvable)}");
             }
@@ -67,7 +67,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>Untyped service implementation</returns>
         public IEnumerable<object> ResolveCollection(Type serviceType)
         {
-            if (!serviceType.IsDerivedFromInterface(typeof(ICollectionResolvable)))
+            if (!typeof(ICollectionResolvable).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(ICollectionResolvable)}");
             }
@@ -185,13 +185,15 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             return typeExtensions
                   .OurTypes()
-                  .Where(cmp => typeExtensions.IsImplementationOfOpenGenericInterface(cmp, decoratorType))
-                  .Select(cmp => new ServiceRegistrationInfo(cmp.GetInterfaces()
-                                                                .Where(i => i.IsGenericType)
-                                                                .Single(i => i.GetGenericTypeDefinition() == decoratorType)
-                                                                .GetGenericArguments()[0],
-                                                             cmp,
-                                                             cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
+                  .Where(t => !t.IsInterface
+                             && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
+                  .Select(t => new
+                          {
+                              ComponentType = t,
+                              Decrator = ExtractDecorator(decoratorType, t),
+                              t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                          })
+                  .Select(t => new ServiceRegistrationInfo(t.Decrator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle));
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(ITypeExtensions typeExtensions,
@@ -199,22 +201,25 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             return typeExtensions
                   .OurTypes()
-                  .Where(t => typeExtensions.IsImplementationOfOpenGenericInterface(t,
-                                                                                    decoratorType))
+                  .Where(t => !t.IsInterface
+                              && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
                   .Select(t => new
                   {
                       ComponentType = t,
-                      Decorator = t.GetInterfaces()
-                                                .Where(i => i.IsGenericType)
-                                                .Single(i => i.GetGenericTypeDefinition() == decoratorType)
+                      Decorator = ExtractDecorator(decoratorType, t),
+                      t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
                   })
-                  .Select(t => new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0],
-                                                           t.ComponentType,
-                                                           t.ComponentType.GetCustomAttribute<LifestyleAttribute>()
-                                                           ?.Lifestyle)
+                  .Select(t => new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle)
                   {
                       Attribute = t.Decorator.GetGenericArguments()[1]
                   });
+        }
+
+        private static Type ExtractDecorator(Type decoratorType, Type t)
+        {
+            return t.GetInterfaces()
+                    .Where(i => i.IsGenericType)
+                    .Single(i => i.GetGenericTypeDefinition() == decoratorType);
         }
 
         private static void RegisterDecorator(Container container, ServiceRegistrationInfo info)

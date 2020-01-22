@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.SettingsManager
 
         public TSettings Get()
         {
-            if (typeof(TSettings).IsDerivedFromInterface(typeof(IFileSystemSettings)))
+            if (typeof(IFileSystemSettings).IsAssignableFrom(typeof(TSettings)))
             {
                 return _formatter.Deserialize().Result;
             }
@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.SettingsManager
 
         public void Set(TSettings value)
         {
-            if (typeof(TSettings).IsDerivedFromInterface(typeof(IFileSystemSettings)))
+            if (typeof(IFileSystemSettings).IsAssignableFrom(typeof(TSettings)))
             {
                 _formatter.Serialize(value).Wait();
 

@@ -94,36 +94,14 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Does type derived from interface
-        /// </summary>
-        /// <param name="type">Type-implementor</param>
-        /// <param name="interface">interface</param>
-        /// <returns>Result of check</returns>
-        public static bool IsDerivedFromInterface(this Type type, Type @interface)
-        {
-            return _typeExtensions.IsDerivedFromInterface(type, @interface);
-        }
-
-        /// <summary>
         /// Does type derived from open-generic base type
         /// </summary>
         /// <param name="type">Type for check</param>
-        /// <param name="openGenericBaseType">Open generic base type</param>
+        /// <param name="openGenericAncestor">Open generic ancestor</param>
         /// <returns>Result of check</returns>
-        public static bool IsImplementationOfOpenGeneric(this Type type, Type openGenericBaseType)
+        public static bool IsSubclassOfOpenGeneric(this Type type, Type openGenericAncestor)
         {
-            return _typeExtensions.IsImplementationOfOpenGeneric(type, openGenericBaseType);
-        }
-
-        /// <summary>
-        /// Does type implement open-generic interface
-        /// </summary>
-        /// <param name="type">Type for check</param>
-        /// <param name="openGenericInterface">Open generic interface</param>
-        /// <returns>Result of check</returns>
-        public static bool IsImplementationOfOpenGenericInterface(this Type type, Type openGenericInterface)
-        {
-            return _typeExtensions.IsImplementationOfOpenGenericInterface(type, openGenericInterface);
+            return _typeExtensions.IsSubclassOfOpenGeneric(type, openGenericAncestor);
         }
 
         /// <summary>

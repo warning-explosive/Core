@@ -65,9 +65,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         {
             return constraints.All(c => !c.IsGenericType
                                             ? c.IsAssignableFrom(typeArgument)
-                                            : c.IsInterface
-                                                ? typeArgument.IsImplementationOfOpenGenericInterface(c.GetGenericTypeDefinition())
-                                                : typeArgument.IsImplementationOfOpenGeneric(c.GetGenericTypeDefinition()))
+                                            : typeArgument.IsSubclassOfOpenGeneric(c.GetGenericTypeDefinition()))
                    && filters.All(f => f(typeArgument));
         }
 

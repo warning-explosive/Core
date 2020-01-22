@@ -65,42 +65,26 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
-        internal void IsImplementationOfOpenGenericTest()
+        internal void IsSubclassOfOpenGenericTest()
         {
-            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
-            Assert.True(typeof(TestGenericTypeImplementation<object>).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<>)));
-            Assert.True(typeof(TestGenericTypeImplementation<object>).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementation<>)));
+            // ITestInterface
+            Assert.False(typeof(ITestGenericInterfaceBase<>).IsSubclassOfOpenGeneric(typeof(ITestInterface)));
+            Assert.False(typeof(TestTypeImplementation).IsSubclassOfOpenGeneric(typeof(ITestInterface)));
+            Assert.False(typeof(ITestGenericInterface<>).IsSubclassOfOpenGeneric(typeof(ITestInterface)));
+            Assert.False(typeof(TestGenericTypeImplementationBase<>).IsSubclassOfOpenGeneric(typeof(ITestInterface)));
 
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(TestGenericTypeImplementationBase<object>)));
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<>)));
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGeneric(typeof(ITestGenericInterface<object>)));
-        }
+            // ITestGenericInterfaceBase<T>
+            Assert.False(typeof(ITestGenericInterfaceBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(ITestGenericInterface<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(TestGenericTypeImplementationBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(TestTypeImplementation).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(TestGenericTypeImplementation<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
 
-        [Fact]
-        internal void IsImplementationOfOpenGenericInterfaceTest()
-        {
-            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<>)));
-            Assert.True(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<>)));
-
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterface<object>)));
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestGenericInterfaceBase<object>)));
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(ITestInterface)));
-
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<>)));
-            Assert.False(typeof(TestTypeImplementation).IsImplementationOfOpenGenericInterface(typeof(TestGenericTypeImplementationBase<object>)));
-        }
-
-        [Fact]
-        internal void IsDerivedFromInterfaceTest()
-        {
-            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
-            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterfaceBase<object>)));
-            Assert.True(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestInterface)));
-
-            Assert.True(typeof(TestGenericTypeImplementation<object>).IsDerivedFromInterface(typeof(ITestGenericInterface<object>)));
-
-            Assert.False(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(ITestGenericInterface<>)));
-            Assert.False(typeof(TestTypeImplementation).IsDerivedFromInterface(typeof(TestGenericTypeImplementationBase<>)));
+            // ITestGenericInterface<object>
+            Assert.False(typeof(ITestGenericInterface<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterface<object>)));
+            Assert.False(typeof(TestGenericTypeImplementationBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterface<object>)));
+            Assert.False(typeof(TestTypeImplementation).IsSubclassOfOpenGeneric(typeof(ITestGenericInterface<object>)));
+            Assert.False(typeof(TestGenericTypeImplementation<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterface<object>)));
         }
 
         [Fact]

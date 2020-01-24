@@ -56,5 +56,8 @@
     <Compile Update="OrderByDependencyTestData.cs">
       <DependentUpon>TypeExtensionsTest.cs</DependentUpon>
     </Compile>
+    <Compile Update="ExecutionExtensionsTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

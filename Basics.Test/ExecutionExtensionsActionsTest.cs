@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using SpaceEngineers.Core.Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -10,13 +9,24 @@ namespace SpaceEngineers.Core.Basics.Test
     /// <summary>
     /// ExecutionExtensions class tests
     /// </summary>
-    public class ExecutionExtensionsTest : BasicsTestBase
+    public class ExecutionExtensionsActionsTest : BasicsTestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public ExecutionExtensionsTest(ITestOutputHelper output)
+        public ExecutionExtensionsActionsTest(ITestOutputHelper output)
             : base(output)
         {
+        }
+
+        [Fact]
+        internal void SimpleTest()
+        {
+            Action action = () => { };
+
+            action.Try()
+                  .Catch<FalseException>()
+                  .Catch<TrueException>()
+                  .Invoke();
         }
 
         [Fact]
@@ -41,7 +51,7 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
-        internal void ThrowInCacthBlockTest()
+        internal void ThrowInCatchBlockTest()
         {
             Action action = () => throw FalseException();
 

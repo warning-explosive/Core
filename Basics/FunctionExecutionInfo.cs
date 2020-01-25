@@ -2,23 +2,25 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
-    /// Action execution info
+    /// Function execution info
     /// </summary>
-    public class ActionExecutionInfo
+    /// <typeparam name="TResult">Function TResult Type-argument</typeparam>
+    public class FunctionExecutionInfo<TResult>
     {
-        private readonly Action _clientAction;
+        private readonly Func<TResult> _clientFunction;
 
         private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
 
         private Action? _finallyAction;
 
         /// <summary> .ctor </summary>
-        /// <param name="clientAction">Client action</param>
-        public ActionExecutionInfo(Action clientAction)
+        /// <param name="clientFunction">Client function</param>
+        public FunctionExecutionInfo(Func<TResult> clientFunction)
         {
-            _clientAction = clientAction;
+            _clientFunction = clientFunction;
         }
 
         /// <summary>
@@ -27,8 +29,8 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="exceptionHandler">Exception handler</param>
         /// <typeparam name="TException">Real exception type-argument</typeparam>
-        /// <returns>ActionExecutionInfo</returns>
-        public ActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
+        /// <returns>FunctionExecutionInfo</returns>
+        public FunctionExecutionInfo<TResult> Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
             _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
 
@@ -39,8 +41,8 @@ namespace SpaceEngineers.Core.Basics
         /// Finally block
         /// </summary>
         /// <param name="finallyAction">Finally action</param>
-        /// <returns>ActionExecutionInfo</returns>
-        public ActionExecutionInfo Finally(Action finallyAction)
+        /// <returns>FunctionExecutionInfo</returns>
+        public FunctionExecutionInfo<TResult> Finally(Action finallyAction)
         {
             _finallyAction = finallyAction;
 
@@ -48,13 +50,16 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client action
+        /// Try invoke client function
         /// </summary>
-        public void Invoke()
+        /// <returns>TResult</returns>
+        internal TResult InvokeInternal()
         {
+            TResult result = default!;
+
             try
             {
-                _clientAction.Invoke();
+                result = _clientFunction.Invoke();
             }
             catch (Exception ex) when (ExecutionExtensions.CanBeCatched(ex.RealException()))
             {
@@ -80,6 +85,8 @@ namespace SpaceEngineers.Core.Basics
             {
                 _finallyAction?.Invoke();
             }
+
+            return result;
         }
     }
 }

@@ -1,0 +1,92 @@
+namespace SpaceEngineers.Core.Basics
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+
+    /// <summary>
+    /// Function execution info
+    /// </summary>
+    /// <typeparam name="TResult">Function TResult Type-argument</typeparam>
+    public class FunctionExecutionInfo<TResult>
+    {
+        private readonly Func<TResult> _clientFunction;
+
+        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
+
+        private Action? _finallyAction;
+
+        /// <summary> .ctor </summary>
+        /// <param name="clientFunction">Client function</param>
+        public FunctionExecutionInfo(Func<TResult> clientFunction)
+        {
+            _clientFunction = clientFunction;
+        }
+
+        /// <summary>
+        /// Catch block
+        /// Catch exception of TException type
+        /// </summary>
+        /// <param name="exceptionHandler">Exception handler</param>
+        /// <typeparam name="TException">Real exception type-argument</typeparam>
+        /// <returns>FunctionExecutionInfo</returns>
+        public FunctionExecutionInfo<TResult> Catch<TException>(Action<Exception>? exceptionHandler = null)
+        {
+            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Finally block
+        /// </summary>
+        /// <param name="finallyAction">Finally action</param>
+        /// <returns>FunctionExecutionInfo</returns>
+        public FunctionExecutionInfo<TResult> Finally(Action finallyAction)
+        {
+            _finallyAction = finallyAction;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Try invoke client function
+        /// </summary>
+        /// <returns>TResult</returns>
+        internal TResult InvokeInternal()
+        {
+            TResult result = default!;
+
+            try
+            {
+                result = _clientFunction.Invoke();
+            }
+            catch (Exception ex) when (ExecutionExtensions.CanBeCatched(ex.RealException()))
+            {
+                var realException = ex.RealException();
+                var handled = false;
+
+                foreach (var pair in _exceptionHandlers)
+                {
+                    if (pair.Key.IsInstanceOfType(realException))
+                    {
+                        pair.Value.Invoke(realException);
+                        handled = true;
+                        break;
+                    }
+                }
+
+                if (!handled)
+                {
+                    throw;
+                }
+            }
+            finally
+            {
+                _finallyAction?.Invoke();
+            }
+
+            return result;
+        }
+    }
+}

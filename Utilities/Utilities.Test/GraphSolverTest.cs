@@ -212,23 +212,22 @@ namespace SpaceEngineers.Core.Utilities.Test
                              };
 
             Action action = () => GetShortestStrPath(graph, solverInfo1, sw);
-            action.HandleException(ex =>
-                                   {
-                                       Assert.NotNull(ex);
-                                       Assert.Equal(typeof(AmbiguousMatchException), ex?.GetType());
+            action.Try()
+                  .Catch<AmbiguousMatchException>(ex =>
+                                                  {
+                                                      var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
 
-                                       var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
+                                                      foreach (var msg in exeptionMessagePathsList)
+                                                      {
+                                                          Output.WriteLine(msg);
+                                                      }
 
-                                       foreach (var msg in exeptionMessagePathsList)
-                                       {
-                                           Output.WriteLine(msg);
-                                       }
+                                                      CheckCandidates(candidates, exeptionMessagePathsList);
 
-                                       CheckCandidates(candidates, exeptionMessagePathsList);
-
-                                       var strPath = GetShortestStrPath(graph, solverInfo2, sw);
-                                       Assert.Equal("[AC] => [CD] => [DE]", strPath);
-                                   });
+                                                      var strPath = GetShortestStrPath(graph, solverInfo2, sw);
+                                                      Assert.Equal("[AC] => [CD] => [DE]", strPath);
+                                                  })
+                  .Invoke();
         }
 
         /// <summary>
@@ -252,13 +251,13 @@ namespace SpaceEngineers.Core.Utilities.Test
             solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
 
             Action action = () => GetShortestStrPath(graph, solverInfo, sw);
-            action.HandleException(ex =>
-                                   {
-                                       Assert.NotNull(ex);
-                                       Assert.Equal(typeof(NotFoundException), ex.GetType());
-                                       Output.WriteLine(ex.Message);
-                                       Assert.Contains("Path not found", ex.Message, StringComparison.InvariantCulture);
-                                   });
+            action.Try()
+                  .Catch<NotFoundException>(ex =>
+                                            {
+                                                Output.WriteLine(ex.Message);
+                                                Assert.Contains("Path not found", ex.Message, StringComparison.InvariantCulture);
+                                            })
+                  .Invoke();
         }
 
         /// <summary>
@@ -289,13 +288,13 @@ namespace SpaceEngineers.Core.Utilities.Test
             solverInfo.NotEmptyCircle = true;
             solverInfo.RequiredEdges.Clear();
             Action action = () => GetShortestStrPath(graph, solverInfo, sw);
-            action.HandleException(ex =>
-                                   {
-                                       Assert.NotNull(ex);
-                                       Assert.Equal(typeof(AmbiguousMatchException), ex.GetType());
-                                       Output.WriteLine(ex.Message);
-                                       Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.InvariantCulture);
-                                   });
+            action.Try()
+                  .Catch<AmbiguousMatchException>(ex =>
+                                                  {
+                                                      Output.WriteLine(ex.Message);
+                                                      Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.InvariantCulture);
+                                                  })
+                  .Invoke();
 
             // 1.3
             solverInfo.NotEmptyCircle = false;

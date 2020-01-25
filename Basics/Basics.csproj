@@ -43,6 +43,12 @@
     <Compile Update="TypeInfoStorage.cs">
       <DependentUpon>ITypeInfoStorage.cs</DependentUpon>
     </Compile>
+    <Compile Update="ActionExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="FunctionExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />

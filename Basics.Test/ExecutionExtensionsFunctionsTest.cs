@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void HandledExceptionTest()
         {
-            Func<object> function = () => throw FalseException();
+            Func<object> function = () => throw TestExtensions.FalseException();
 
             function.Try()
                     .Catch<FalseException>()
@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void SeveralCatchBlocksTest()
         {
-            Func<object> function = () => throw FalseException();
+            Func<object> function = () => throw TestExtensions.FalseException();
 
             function.Try()
                     .Catch<TrueException>(ex => throw ex)
@@ -76,10 +76,10 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void ThrowInCatchBlockTest()
         {
-            Func<object> function = () => throw FalseException();
+            Func<object> function = () => throw TestExtensions.FalseException();
 
             void TestFunction() => function.Try()
-                                           .Catch<FalseException>(ex => throw TrueException())
+                                           .Catch<FalseException>(ex => throw TestExtensions.TrueException())
                                            .Invoke();
 
             Assert.Throws<TrueException>(TestFunction);
@@ -88,24 +88,14 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void ThrowInFinallyBlockTest()
         {
-            Func<object> function = () => throw FalseException();
+            Func<object> function = () => throw TestExtensions.FalseException();
 
             void TestFunction() => function.Try()
                                            .Catch<FalseException>(ex => throw ex)
-                                           .Finally(() => throw TrueException())
+                                           .Finally(() => throw TestExtensions.TrueException())
                                            .Invoke();
 
             Assert.Throws<TrueException>(TestFunction);
-        }
-
-        private static FalseException FalseException()
-        {
-            return new FalseException(nameof(FalseException), null);
-        }
-
-        private static TrueException TrueException()
-        {
-            return new TrueException(nameof(TrueException), null);
         }
     }
 }

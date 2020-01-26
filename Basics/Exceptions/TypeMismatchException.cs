@@ -9,10 +9,10 @@ namespace SpaceEngineers.Core.Basics.Exceptions
     public class TypeMismatchException : Exception
     {
         /// <summary> .ctor </summary>
-        /// <param name="originalType">Type of required attribute</param>
-        /// <param name="targetType">Type that not marked by attribute</param>
-        public TypeMismatchException(Type originalType, Type targetType)
-            : base($"{originalType.FullName} is not accessable from {targetType.FullName}")
+        /// <param name="expectedType">Expected type</param>
+        /// <param name="actualType">Actual type</param>
+        public TypeMismatchException(Type expectedType, Type actualType)
+            : base($"{expectedType.FullName} is not accessable from {actualType.FullName}")
         {
         }
     }

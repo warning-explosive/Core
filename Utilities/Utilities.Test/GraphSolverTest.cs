@@ -424,7 +424,7 @@ namespace SpaceEngineers.Core.Utilities.Test
             {
                 var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.ExtractNotNullable($"Path not found: {candidate}");
+                occurrence.TryExtractNotNullable($"Path not found: {candidate}");
             }
         }
     }

@@ -121,7 +121,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 dependencies = dependency.Registration
                                          .GetPropertyValue("Collection")
                                          .GetFieldValue("producers")
-                                         .ExtractNotNullable<IEnumerable>()
+                                         .TryExtractNotNullable<IEnumerable>()
                                          .GetEnumerator()
                                          .ToObjectEnumerable()
                                          .Select(o => o.GetPropertyValue("Value"))

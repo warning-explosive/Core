@@ -78,7 +78,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
-                    throw;
+                    throw realException;
                 }
             }
             finally

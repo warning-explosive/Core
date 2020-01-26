@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
-    using System.Linq;
-    using System.Reflection;
 
     /// <summary>
     /// System.Type.MethodInfo extensions
@@ -10,75 +8,25 @@ namespace SpaceEngineers.Core.Basics
     public static class MethodExtensions
     {
         /// <summary>
-        /// Call method
+        /// Call method by reflection
         /// </summary>
-        /// <param name="target">Target invocation instance</param>
+        /// <param name="declaringType">Type that declare the method</param>
         /// <param name="methodName">Method name</param>
-        /// <param name="args">Method args</param>
-        /// <returns>Return value from called method if present or null instead</returns>
-        public static object? CallMethod(this object target, string methodName, params object?[] args)
+        /// <returns>MethodExecutionInfo</returns>
+        public static MethodExecutionInfo CallMethod(this Type declaringType, string methodName)
         {
-            var methodInfo = target.GetType()
-                                   .GetMethods(BindingFlags.Instance
-                                               | BindingFlags.Public
-                                               | BindingFlags.NonPublic
-                                               | BindingFlags.InvokeMethod)
-                                   .Single(m => FilterMethod(m, methodName, args.Length));
-
-            return methodInfo?.Invoke(target, args);
+            return new MethodExecutionInfo(declaringType, methodName);
         }
 
         /// <summary>
-        /// Call static method
+        /// Call method by reflection
         /// </summary>
-        /// <param name="type">Contained type</param>
+        /// <param name="target">Target instance of method call</param>
         /// <param name="methodName">Method name</param>
-        /// <param name="args">Method args</param>
-        /// <returns>Return value from called method if present or null instead</returns>
-        public static object? CallStaticMethod(this Type type, string methodName, params object?[] args)
+        /// <returns>MethodExecutionInfo</returns>
+        public static MethodExecutionInfo CallMethod(this object target, string methodName)
         {
-            var methodInfo = type.GetMethods(BindingFlags.Static
-                                             | BindingFlags.Public
-                                             | BindingFlags.NonPublic
-                                             | BindingFlags.InvokeMethod)
-                                 .Single(m => FilterMethod(m, methodName, args.Length));
-
-            return methodInfo?.Invoke(null, args);
-        }
-
-        /// <summary>
-        /// Call static generic method
-        /// </summary>
-        /// <param name="type">Contained type</param>
-        /// <param name="methodName">Method name</param>
-        /// <param name="genericArguments">Method generic arguments</param>
-        /// <param name="args">Method args</param>
-        /// <returns>Return value from called method if present or null instead</returns>
-        public static object? CallStaticGenericMethod(this Type type, string methodName, Type[] genericArguments, params object?[] args)
-        {
-            var methodInfo = type.GetMethods(BindingFlags.Static
-                                             | BindingFlags.Public
-                                             | BindingFlags.NonPublic
-                                             | BindingFlags.InvokeMethod)
-                                 .Single(m => FilterMethod(m, methodName, args.Length)
-                                              && FilterGenericMethod(m, genericArguments.Length));
-
-            return methodInfo?.MakeGenericMethod(genericArguments)
-                              .Invoke(null, args);
-        }
-
-        private static bool FilterMethod(MethodInfo methodInfo, string methodName, int parametersCount)
-        {
-            var methodParameters = methodInfo.GetParameters();
-
-            return methodInfo.Name == methodName
-                   && methodParameters.Length == parametersCount
-                   && !methodInfo.IsDefined(typeof(ObsoleteAttribute));
-        }
-
-        private static bool FilterGenericMethod(MethodInfo methodInfo, int genericArgumentsCount)
-        {
-            return methodInfo.GetGenericArguments().Length == genericArgumentsCount;
+            return new MethodExecutionInfo(target.GetType(), methodName).ForInstance(target);
         }
     }
 }

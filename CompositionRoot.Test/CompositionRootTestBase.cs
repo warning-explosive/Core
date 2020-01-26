@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
+    using Basics;
     using Basics.Test;
     using Xunit.Abstractions;
 
@@ -15,12 +16,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         protected CompositionRootTestBase(ITestOutputHelper output)
             : base(output)
         {
-            if (AppDomain.CurrentDomain == null)
-            {
-                throw new InvalidOperationException("CurrentDomain is null");
-            }
+            var assemblies = AppDomain.CurrentDomain
+                                      .TryExtractNotNullable(() => new InvalidOperationException("CurrentDomain is null"))
+                                      .GetAssemblies();
 
-            DependencyContainer = new DependencyContainer(AppDomain.CurrentDomain.GetAssemblies());
+            DependencyContainer = new DependencyContainer(assemblies);
         }
 
         /// <summary>

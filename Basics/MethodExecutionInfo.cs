@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Exceptions;
@@ -93,6 +94,16 @@ namespace SpaceEngineers.Core.Basics
             _typeArguments.Add(typeArgument);
 
             return this;
+        }
+
+        /// <summary>
+        /// Invoke configured method
+        /// </summary>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Return value of method</returns>
+        public TResult Invoke<TResult>()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

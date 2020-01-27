@@ -21,68 +21,73 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void CallStaticMethodTest()
         {
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethod)).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethod").Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethod)).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethod").Invoke<bool>());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithArgs)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithArgs").WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithArgs)).WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithArgs").WithArgument(true).Invoke<bool>());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke<bool>());
 
             _ = Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
             _ = Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke<bool>());
         }
 
         [Fact]
         internal void CallInstanceMethodTest()
         {
-            var target = new TestClass();
+            var target = new InstanceTestClass();
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicMethod)).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateMethod").Invoke().TryExtractNotNullable<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethod)).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateMethod").Invoke<bool>());
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicMethodWithArgs)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateMethodWithArgs").WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithArgs)).WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateMethodWithArgs").WithArgument(true).Invoke<bool>());
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod(nameof(TestClass.PublicMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke<bool>());
 
-            _ = Assert.Throws<NotFoundException>(() => target.CallMethod(nameof(TestClass.PublicMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
+            _ = Assert.Throws<NotFoundException>(() => target.CallMethod(nameof(InstanceTestClass.PublicMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
             _ = Assert.Throws<NotFoundException>(() => target.CallMethod("PrivateMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke<bool>());
         }
 
         [Fact]
         internal void CallStaticGenericMethodTest()
         {
             Assert.Throws<TrueException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().Invoke());
+            Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
             Assert.Throws<TrueException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().Invoke());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
         internal void CallInstanceGenericMethodTest()
         {
-            var target = new TestClass();
+            var target = new InstanceTestClass();
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.Throws<TrueException>(() => target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().Invoke());
+            Assert.Throws<FalseException>(() => target.CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
+            Assert.Throws<TrueException>(() => target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().Invoke());
 
-            Assert.True(target.CallMethod(nameof(TestClass.PublicGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
-            Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke().TryExtractNotNullable<bool>());
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
@@ -140,6 +145,12 @@ namespace SpaceEngineers.Core.Basics.Test
                 throw TestExtensions.TrueException();
             }
 
+            public static T1 PublicStaticGenericMethod<T1, T2>()
+                where T1 : class
+            {
+                throw TestExtensions.FalseException();
+            }
+
             private static T PrivateStaticGenericMethod<T>()
                 where T : class
             {
@@ -149,7 +160,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
         [SuppressMessage("StyleCop.Analyzers", "SA1202", Justification = "For test reasons")]
         [SuppressMessage("Microsoft.CodeAnalysis.CSharp.Features", "IDE0051", Justification = "For test reasons")]
-        private class TestClass
+        private class InstanceTestClass
         {
             internal bool PublicMethod() => true;
 
@@ -172,6 +183,24 @@ namespace SpaceEngineers.Core.Basics.Test
             public T PublicGenericMethod<T>(T flag) => flag;
 
             private T PrivateGenericMethod<T>(T flag) => flag;
+
+            public static T PublicGenericMethod<T>()
+                where T : class
+            {
+                throw TestExtensions.TrueException();
+            }
+
+            public static T1 PublicStaticGenericMethod<T1, T2>()
+                where T1 : class
+            {
+                throw TestExtensions.FalseException();
+            }
+
+            private static T PrivateGenericMethod<T>()
+                where T : class
+            {
+                throw TestExtensions.TrueException();
+            }
         }
 
         private class NullableTestClass

@@ -42,9 +42,9 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>MethodInfo</returns>
         public MethodInfo? FindMethod()
         {
-            var isGenericType = TypeArguments.Any();
+            var isGenericMethod = TypeArguments.Any();
 
-            return isGenericType
+            return isGenericMethod
                        ? DeclaringType.GetMethod(MethodName, TypeArguments.Count, BindingFlags, null, CallingConventions.Any, ArgumentTypes.ToArray(), null)
                        : DeclaringType.GetMethod(MethodName, BindingFlags, null, CallingConventions.Any, ArgumentTypes.ToArray(), null);
         }

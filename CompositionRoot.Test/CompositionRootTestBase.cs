@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             : base(output)
         {
             var assemblies = AppDomain.CurrentDomain
-                                      .TryExtractNotNullable(() => new InvalidOperationException("CurrentDomain is null"))
+                                      .TryExtractFromNullable(() => new InvalidOperationException("CurrentDomain is null"))
                                       .GetAssemblies();
 
             DependencyContainer = new DependencyContainer(assemblies);

@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Roslyn.Test.Internals
                                  solution = solution.AddDocument(documentId, newFileName, SourceText.From(source));
                              });
 
-                return solution.GetProject(projectId).TryExtractNotNullable();
+                return solution.GetProject(projectId).TryExtractFromNullable();
             }
         }
     }

@@ -209,7 +209,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                                                    .WithTypeArgument(enumType)
                                                    .WithArgument(strValue)
                                                    .Invoke()
-                                                   .TryExtractNotNullable<object>();
+                                                   .TryExtractFromNullable<object>();
 
             var separatedValues = strValue.ToUpperInvariant()
                                           .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -234,7 +234,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             return value.CallMethod(nameof(Enum.ToString))
                         .WithArgument("G")
                         .Invoke()
-                        .TryExtractNotNullable<string>();
+                        .TryExtractFromNullable<string>();
         }
     }
 }

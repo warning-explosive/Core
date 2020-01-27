@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Return value of method</returns>
         public TResult Invoke<TResult>()
         {
-            throw new NotImplementedException();
+            return Invoke().ExtractType<TResult>();
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace SpaceEngineers.Core.Basics
                                         ArgumentTypes = _argumentTypes.ToArray()
                                     };
 
-            var methodInfo = methodFindingInfo.FindMethod().TryExtractNotNullable(() => new NotFoundException($"Method not found: {methodFindingInfo}"));
+            var methodInfo = methodFindingInfo.FindMethod().TryExtractFromNullable(() => new NotFoundException($"Method not found: {methodFindingInfo}"));
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();

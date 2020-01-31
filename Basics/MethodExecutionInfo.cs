@@ -49,11 +49,12 @@ namespace SpaceEngineers.Core.Basics
         /// Execute method with argument
         /// </summary>
         /// <param name="argument">Argument</param>
+        /// <typeparam name="TArgument">Argument type</typeparam>
         /// <returns>MethodExecutionInfo</returns>
-        public MethodExecutionInfo WithArgument(object argument)
+        public MethodExecutionInfo WithArgument<TArgument>(TArgument argument)
         {
             _args.Add(argument);
-            _argumentTypes.Add(argument.GetType());
+            _argumentTypes.Add(typeof(TArgument));
 
             return this;
         }
@@ -67,7 +68,7 @@ namespace SpaceEngineers.Core.Basics
         public MethodExecutionInfo WithArgument<TArgument>(object? argument)
         {
             _args.Add(argument);
-            _argumentTypes.Add(argument?.GetType() ?? typeof(TArgument));
+            _argumentTypes.Add(typeof(TArgument));
 
             return this;
         }
@@ -75,11 +76,11 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Execute generic method with type argument
         /// </summary>
-        /// <typeparam name="TArgument">Type of Type-Argument</typeparam>
+        /// <typeparam name="TTypeArgument">Type of Type-Argument</typeparam>
         /// <returns>MethodExecutionInfo</returns>
-        public MethodExecutionInfo WithTypeArgument<TArgument>()
+        public MethodExecutionInfo WithTypeArgument<TTypeArgument>()
         {
-            _typeArguments.Add(typeof(TArgument));
+            _typeArguments.Add(typeof(TTypeArgument));
 
             return this;
         }

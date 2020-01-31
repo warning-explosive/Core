@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Exceptions;
 
     /// <summary>
     /// MethodFindingInfo
@@ -45,14 +46,54 @@ namespace SpaceEngineers.Core.Basics
             var isGenericMethod = TypeArguments.Any();
 
             return isGenericMethod
-                       ? DeclaringType.GetMethod(MethodName, TypeArguments.Count, BindingFlags, null, CallingConventions.Any, ArgumentTypes.ToArray(), null)
-                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, CallingConventions.Any, ArgumentTypes.ToArray(), null);
+                       ? GetGenericMethod()
+                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
         }
 
         /// <inheritdoc />
         public override string ToString()
         {
             return $"{DeclaringType.FullName}.{MethodName} with {TypeArguments.Count} type arguments and arguments types: {string.Join(", ", ArgumentTypes.Select(t => t.Name))}";
+        }
+
+        private MethodInfo? GetGenericMethod()
+        {
+            var methods = DeclaringType.GetMethods(BindingFlags)
+                                       .Where(m => m.Name == MethodName
+                                                && m.IsGenericMethod
+                                                && ValidateParameters(ArgumentTypes.ToArray(), m.GetParameters().Select(z => z.ParameterType).ToArray())
+                                                && ValidateParameters(TypeArguments.ToArray(), m.GetGenericArguments()))
+                                       .ToArray();
+
+            // todo: extension for single extraction
+            if (methods.Length < 1)
+            {
+                throw new NotFoundException(MethodName);
+            }
+
+            if (methods.Length > 1)
+            {
+                string Generics(MethodInfo m) => string.Join(", ", m.GetGenericArguments().Select(g => g.Name));
+                string Show(MethodInfo m) => DeclaringType.FullName + "." + m.Name + "[" + Generics(m) + "]";
+                throw new AmbiguousMatchException(string.Join(", ", methods.Select(Show)));
+            }
+
+            return methods.Single();
+        }
+
+        private static bool ValidateParameters(Type[] actual, Type[] expected)
+        {
+            if (actual.Length != expected.Length)
+            {
+                return false;
+            }
+
+            return expected.Select((exp, i) => new { Type = exp, i })
+                           .Join(actual.Select((act, i) => new { Type = act, i }),
+                                 exp => exp.i,
+                                 act => act.i,
+                                 (exp, act) => new { Exp = exp.Type, Act = act.Type })
+                           .All(pair => throw new NotImplementedException("Check type and constraints"));
         }
     }
 }

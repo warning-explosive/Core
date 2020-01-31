@@ -63,15 +63,27 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void CallStaticGenericMethodTest()
         {
+            // 1 - close on reference
             Assert.Throws<TrueException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().Invoke());
-            Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
             Assert.Throws<TrueException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().Invoke());
 
-            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
+            Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
+
+            // 2 - close on value
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
 
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
+
+            // 3 - with generic input - reference
+            Assert.NotNull(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
+            // 4 - with generic input - value
+            Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
@@ -79,15 +91,27 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             var target = new InstanceTestClass();
 
+            // 1 - close on reference
             Assert.Throws<TrueException>(() => target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().Invoke());
-            Assert.Throws<FalseException>(() => target.CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
             Assert.Throws<TrueException>(() => target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().Invoke());
 
+            Assert.Throws<FalseException>(() => target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
+            Assert.Throws<FalseException>(() => target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
+
+            // 2 - close on value
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
 
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
+
+            // 3 - with generic input - reference
+            Assert.NotNull(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
+            // 4 - with generic input - value
+            Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
@@ -135,27 +159,21 @@ namespace SpaceEngineers.Core.Basics.Test
 
             private static bool PrivateStaticMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
 
+            public static T PublicStaticGenericMethod<T>() => throw TestExtensions.TrueException();
+
+            private static T PrivateStaticGenericMethod<T>() => throw TestExtensions.TrueException();
+
+            public static T1 PublicStaticGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
+
+            private static T1 PrivateStaticGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
+
+            public static bool PublicStaticGenericMethod<T>(bool flag) => flag;
+
+            private static bool PrivateStaticGenericMethod<T>(bool flag) => flag;
+
             public static T PublicStaticGenericMethod<T>(T flag) => flag;
 
             private static T PrivateStaticGenericMethod<T>(T flag) => flag;
-
-            public static T PublicStaticGenericMethod<T>()
-                where T : class
-            {
-                throw TestExtensions.TrueException();
-            }
-
-            public static T1 PublicStaticGenericMethod<T1, T2>()
-                where T1 : class
-            {
-                throw TestExtensions.FalseException();
-            }
-
-            private static T PrivateStaticGenericMethod<T>()
-                where T : class
-            {
-                throw TestExtensions.TrueException();
-            }
         }
 
         [SuppressMessage("StyleCop.Analyzers", "SA1202", Justification = "For test reasons")]
@@ -180,27 +198,21 @@ namespace SpaceEngineers.Core.Basics.Test
 
             private bool PrivateMethodWithParams(params object[] flags) => flags.OfType<bool>().All(z => z);
 
-            public T PublicGenericMethod<T>(T flag) => flag;
+            public T PublicGenericMethod<T>() => throw TestExtensions.TrueException();
 
-            private T PrivateGenericMethod<T>(T flag) => flag;
+            private T PrivateGenericMethod<T>() => throw TestExtensions.TrueException();
 
-            public static T PublicGenericMethod<T>()
-                where T : class
-            {
-                throw TestExtensions.TrueException();
-            }
+            public T1 PublicGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
 
-            public static T1 PublicStaticGenericMethod<T1, T2>()
-                where T1 : class
-            {
-                throw TestExtensions.FalseException();
-            }
+            private T1 PrivateGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
 
-            private static T PrivateGenericMethod<T>()
-                where T : class
-            {
-                throw TestExtensions.TrueException();
-            }
+            public bool PublicGenericMethod<T>(bool flag) => flag;
+
+            private bool PrivateGenericMethod<T>(bool flag) => flag;
+
+            public T PublicGenericMethod<T>(T input) => input;
+
+            private T PrivateGenericMethod<T>(T input) => input;
         }
 
         private class NullableTestClass

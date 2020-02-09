@@ -7,17 +7,17 @@ namespace SpaceEngineers.Core.Basics
     using Exceptions;
 
     /// <summary>
-    /// MethodFindingInfo
+    /// Method finder
     /// </summary>
-    public class MethodFindingInfo
+    internal class MethodFinder
     {
         /// <summary> .ctor </summary>
         /// <param name="declaringType">Type that declare method</param>
         /// <param name="methodName">Method name</param>
         /// <param name="bindingFlags">BindingFlags</param>
-        public MethodFindingInfo(Type declaringType,
-                                 string methodName,
-                                 BindingFlags bindingFlags)
+        public MethodFinder(Type declaringType,
+                            string methodName,
+                            BindingFlags bindingFlags)
         {
             DeclaringType = declaringType;
             MethodName = methodName;
@@ -25,30 +25,19 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary> Type that declare method </summary>
-        public Type DeclaringType { get; }
+        internal Type DeclaringType { get; }
 
         /// <summary> Method name </summary>
-        public string MethodName { get; }
+        internal string MethodName { get; }
 
         /// <summary> BindingFlags </summary>
-        public BindingFlags BindingFlags { get; }
+        internal BindingFlags BindingFlags { get; }
 
         /// <summary> TypeArguments </summary>
-        public IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
+        internal IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
 
         /// <summary> ArgumentTypes </summary>
-        public IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
-
-        /// <summary> Find method </summary>
-        /// <returns>MethodInfo</returns>
-        public MethodInfo? FindMethod()
-        {
-            var isGenericMethod = TypeArguments.Any();
-
-            return isGenericMethod
-                       ? GetGenericMethod()
-                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
-        }
+        internal IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
 
         /// <inheritdoc />
         public override string ToString()
@@ -56,7 +45,18 @@ namespace SpaceEngineers.Core.Basics
             return $"{DeclaringType.FullName}.{MethodName} with {TypeArguments.Count} type arguments and arguments types: {string.Join(", ", ArgumentTypes.Select(t => t.Name))}";
         }
 
-        private MethodInfo? GetGenericMethod()
+        /// <summary> Find method </summary>
+        /// <returns>MethodInfo</returns>
+        internal MethodInfo? FindMethod()
+        {
+            var isGenericMethod = TypeArguments.Any();
+
+            return isGenericMethod
+                       ? FindGenericMethod()
+                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
+        }
+
+        private MethodInfo? FindGenericMethod()
         {
             var methods = DeclaringType.GetMethods(BindingFlags)
                                        .Where(m => m.Name == MethodName
@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.Basics
                                  exp => exp.i,
                                  act => act.i,
                                  (exp, act) => new { Exp = exp.Type, Act = act.Type })
-                           .All(pair => throw new NotImplementedException("Check type and constraints"));
+                           .All(pair => pair.Act.FitsForTypeArgument(pair.Exp));
         }
     }
 }

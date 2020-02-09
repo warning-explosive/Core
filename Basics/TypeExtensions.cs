@@ -114,5 +114,16 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.IsContainsInterfaceDeclaration(type, @interface);
         }
+
+        /// <summary>
+        /// Does type fits for type argument
+        /// </summary>
+        /// <param name="typeForCheck">Actual type for check</param>
+        /// <param name="typeArgument">Type argument</param>
+        /// <returns>True - fits / False doesn't fits</returns>
+        public static bool FitsForTypeArgument(this Type typeForCheck, Type typeArgument)
+        {
+            return _typeExtensions.FitsForTypeArgument(typeForCheck, typeArgument);
+        }
     }
 }

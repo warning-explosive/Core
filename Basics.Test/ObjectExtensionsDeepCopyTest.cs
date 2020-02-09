@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             var original = InitInstanceOfTestReferenceTypeWithTypes();
 
-            _ = Assert.Throws<SerializationException>(() => original.DeepCopyBySerialization());
+            Assert.Throws<SerializationException>(() => original.DeepCopyBySerialization());
         }
 
         [Fact]
@@ -292,7 +292,7 @@ namespace SpaceEngineers.Core.Basics.Test
                                TypeCollection = new List<Type> { typeof(TestReferenceTypeWithOutTypes), typeof(string), typeof(int) },
                            };
 
-            _ = InitInstanceOfTestReferenceTypeWithOutTypes(instance);
+            InitInstanceOfTestReferenceTypeWithOutTypes(instance);
 
             return instance;
         }

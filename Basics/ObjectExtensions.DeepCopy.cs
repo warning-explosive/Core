@@ -87,14 +87,13 @@
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
         public static object DeepCopyBySerialization(this object original)
         {
-            _ = original.GetType()
-                        .GetCustomAttribute<SerializableAttribute>();
+            original.GetType().GetCustomAttribute<SerializableAttribute>();
 
             using (var stream = new MemoryStream())
             {
                 var binaryFormatter = new BinaryFormatter();
                 binaryFormatter.Serialize(stream, original);
-                _ = stream.Seek(0, SeekOrigin.Begin);
+                stream.Seek(0, SeekOrigin.Begin);
                 return binaryFormatter.Deserialize(stream);
             }
         }

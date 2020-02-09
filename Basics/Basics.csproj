@@ -52,7 +52,7 @@
     <Compile Update="MethodExecutionInfo.cs">
       <DependentUpon>MethodExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="MethodFindingInfo.cs">
+    <Compile Update="MethodFinder.cs">
       <DependentUpon>MethodExtensions.cs</DependentUpon>
     </Compile>
   </ItemGroup>

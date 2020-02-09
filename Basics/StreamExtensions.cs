@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.Basics
             var offset = 0;
             stream.Position = offset;
 
-            _ = await stream.ReadAsync(buffer, offset, bytes);
+            await stream.ReadAsync(buffer, offset, bytes);
 
             return buffer;
         }

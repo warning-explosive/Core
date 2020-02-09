@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Exceptions;
@@ -123,15 +122,16 @@ namespace SpaceEngineers.Core.Basics
             }
 
             // 2 - find
-            var methodFindingInfo = new MethodFindingInfo(isInstanceMethod ? _target.GetType() : _declaringType,
-                                                          _methodName,
-                                                          GetBindings(isInstanceMethod))
-                                    {
-                                        TypeArguments = _typeArguments.ToArray(),
-                                        ArgumentTypes = _argumentTypes.ToArray()
-                                    };
+            var methodFinder = new MethodFinder(isInstanceMethod ? _target.GetType() : _declaringType,
+                                                _methodName,
+                                                GetBindings(isInstanceMethod))
+                               {
+                                   TypeArguments = _typeArguments.ToArray(),
+                                   ArgumentTypes = _argumentTypes.ToArray()
+                               };
 
-            var methodInfo = methodFindingInfo.FindMethod().TryExtractFromNullable(() => new NotFoundException($"Method not found: {methodFindingInfo}"));
+            var methodInfo = methodFinder.FindMethod()
+                                         .TryExtractFromNullable(() => new NotFoundException($"Method not found: {methodFinder}"));
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();

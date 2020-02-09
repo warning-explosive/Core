@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics.Test
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using Basics;
     using Exceptions;
     using Xunit;
@@ -31,8 +32,8 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke<bool>());
 
-            _ = Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
-            _ = Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
+            Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
+            Assert.Throws<NotFoundException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
 
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke<bool>());
@@ -53,8 +54,8 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithSeveralArgs)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateMethodWithSeveralArgs").WithArgument(true).WithArgument(true).Invoke<bool>());
 
-            _ = Assert.Throws<NotFoundException>(() => target.CallMethod(nameof(InstanceTestClass.PublicMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
-            _ = Assert.Throws<NotFoundException>(() => target.CallMethod("PrivateMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
+            Assert.Throws<NotFoundException>(() => target.CallMethod(nameof(InstanceTestClass.PublicMethodWithParams)).WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
+            Assert.Throws<NotFoundException>(() => target.CallMethod("PrivateMethodWithParams").WithArgument(true).WithArgument(true).WithArgument(true).Invoke());
 
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicMethodWithParams)).WithArgument(new object[] { true, true, true }).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateMethodWithParams").WithArgument(new object[] { true, true, true }).Invoke<bool>());
@@ -70,6 +71,12 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
             Assert.Throws<FalseException>(() => typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
 
+            Assert.NotNull(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
+            Assert.NotNull(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.AmbiguousPublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(typeof(StaticTestClass).CallMethod("AmbiguousPrivateStaticGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
             // 2 - close on value
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
@@ -77,13 +84,11 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
 
-            // 3 - with generic input - reference
-            Assert.NotNull(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
-            Assert.NotNull(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
-
-            // 4 - with generic input - value
             Assert.True(typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.PublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
             Assert.True(typeof(StaticTestClass).CallMethod("PrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+
+            Assert.Throws<AmbiguousMatchException>(() => typeof(StaticTestClass).CallMethod(nameof(StaticTestClass.AmbiguousPublicStaticGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.Throws<AmbiguousMatchException>(() => typeof(StaticTestClass).CallMethod("AmbiguousPrivateStaticGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
@@ -98,6 +103,12 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.Throws<FalseException>(() => target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
             Assert.Throws<FalseException>(() => target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().WithTypeArgument<object>().Invoke());
 
+            Assert.NotNull(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
+            Assert.NotNull(target.CallMethod(nameof(InstanceTestClass.AmbiguousPublicGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+            Assert.NotNull(target.CallMethod("AmbiguousPrivateGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
+
             // 2 - close on value
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
@@ -105,13 +116,11 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument(typeof(bool)).WithArgument(true).Invoke<bool>());
 
-            // 3 - with generic input - reference
-            Assert.NotNull(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
-            Assert.NotNull(target.CallMethod("PrivateGenericMethod").WithTypeArgument<object>().WithArgument(new object()).Invoke<object>());
-
-            // 4 - with generic input - value
             Assert.True(target.CallMethod(nameof(InstanceTestClass.PublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
             Assert.True(target.CallMethod("PrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+
+            Assert.Throws<AmbiguousMatchException>(() => target.CallMethod(nameof(InstanceTestClass.AmbiguousPublicGenericMethod)).WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
+            Assert.Throws<AmbiguousMatchException>(() => target.CallMethod("AmbiguousPrivateGenericMethod").WithTypeArgument<bool>().WithArgument(true).Invoke<bool>());
         }
 
         [Fact]
@@ -167,9 +176,13 @@ namespace SpaceEngineers.Core.Basics.Test
 
             private static T1 PrivateStaticGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
 
-            public static bool PublicStaticGenericMethod<T>(bool flag) => flag;
+            public static bool AmbiguousPublicStaticGenericMethod<T>(bool flag) => flag;
 
-            private static bool PrivateStaticGenericMethod<T>(bool flag) => flag;
+            private static bool AmbiguousPrivateStaticGenericMethod<T>(bool flag) => flag;
+
+            public static T AmbiguousPublicStaticGenericMethod<T>(T flag) => flag;
+
+            private static T AmbiguousPrivateStaticGenericMethod<T>(T flag) => flag;
 
             public static T PublicStaticGenericMethod<T>(T flag) => flag;
 
@@ -206,9 +219,13 @@ namespace SpaceEngineers.Core.Basics.Test
 
             private T1 PrivateGenericMethod<T1, T2>() => throw TestExtensions.FalseException();
 
-            public bool PublicGenericMethod<T>(bool flag) => flag;
+            public bool AmbiguousPublicGenericMethod<T>(bool flag) => flag;
 
-            private bool PrivateGenericMethod<T>(bool flag) => flag;
+            private bool AmbiguousPrivateGenericMethod<T>(bool flag) => flag;
+
+            public T AmbiguousPublicGenericMethod<T>(T input) => input;
+
+            private T AmbiguousPrivateGenericMethod<T>(T input) => input;
 
             public T PublicGenericMethod<T>(T input) => input;
 

@@ -40,8 +40,8 @@
     <Compile Update="CompositionInfoExtractorImpl.cs">
       <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>
     </Compile>
-    <Compile Update="GenericArgumentsInfererImpl.cs">
-      <DependentUpon>IGenericArgumentsInferer.cs</DependentUpon>
+    <Compile Update="GenericArgumentsReceiverImpl.cs">
+      <DependentUpon>IGenericArgumentsReceiver.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

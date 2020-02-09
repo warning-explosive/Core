@@ -16,16 +16,16 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     internal class CompositionInfoExtractorImpl : ICompositionInfoExtractor
     {
         private readonly Container _container;
-        private readonly IGenericArgumentsInferer _genericArgumentsInferer;
+        private readonly IGenericArgumentsReceiver _receiver;
 
         /// <summary> .ctor </summary>
         /// <param name="container">Container</param>
-        /// <param name="genericArgumentsInferer">IGenericArgumentsInferer</param>
+        /// <param name="receiver">IGenericArgumentsReceiver</param>
         public CompositionInfoExtractorImpl(Container container,
-                                            IGenericArgumentsInferer genericArgumentsInferer)
+                                            IGenericArgumentsReceiver receiver)
         {
             _container = container;
-            _genericArgumentsInferer = genericArgumentsInferer;
+            _receiver = receiver;
         }
 
         /// <inheritdoc />
@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                   .AllOurServicesThatContainsDeclarationOfInterface<IResolvable>()
                   .Select(t =>
                           {
-                              var closedOrSame = _genericArgumentsInferer.CloseByConstraints(t);
+                              var closedOrSame = _receiver.CloseByConstraints(t);
 
                               _container.GetInstance(closedOrSame);
 
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                          .AllOurServicesThatContainsDeclarationOfInterface<ICollectionResolvable>()
                          .Select(t =>
                                  {
-                                     var closedOrSame = _genericArgumentsInferer.CloseByConstraints(t);
+                                     var closedOrSame = _receiver.CloseByConstraints(t);
 
                                      _container.GetAllInstances(closedOrSame);
 

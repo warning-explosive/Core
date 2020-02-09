@@ -79,5 +79,13 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="i">Type-candidate for interface declaration</param>
         /// <returns>Result of check</returns>
         bool IsContainsInterfaceDeclaration(Type type, Type i);
+
+        /// <summary>
+        /// Does type fits for type argument
+        /// </summary>
+        /// <param name="typeForCheck">Actual type for check</param>
+        /// <param name="typeArgument">Type argument</param>
+        /// <returns>True - fits / False doesn't fits</returns>
+        bool FitsForTypeArgument(Type typeForCheck, Type typeArgument);
     }
 }

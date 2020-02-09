@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     /// <summary>
     /// Close open or partially-closed generic types
     /// </summary>
-    internal interface IGenericArgumentsInferer : IResolvable
+    internal interface IGenericArgumentsReceiver : IResolvable
     {
         /// <summary>
         /// Close open or partially-closed generic type by type constraints

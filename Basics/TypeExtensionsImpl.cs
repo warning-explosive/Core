@@ -129,6 +129,67 @@ namespace SpaceEngineers.Core.Basics
                 && type.GenericTypeArguments.SequenceEqual(i.GenericTypeArguments);
         }
 
+        /// <inheritdoc />
+        public bool FitsForTypeArgument(Type typeForCheck, Type typeArgument)
+        {
+            if (!typeArgument.IsGenericParameter)
+            {
+                return typeArgument.IsAssignableFrom(typeForCheck);
+            }
+
+            bool CheckConstraint(Type constraint) =>
+                constraint.IsGenericType
+                    ? typeForCheck.IsSubclassOfOpenGeneric(constraint.GetGenericTypeDefinition())
+                    : constraint.IsAssignableFrom(typeForCheck);
+
+            var byConstraints = typeArgument.GetGenericParameterConstraints()
+                                            .All(CheckConstraint);
+
+            var filters = GetFiltersByTypeParameterAttributes(typeArgument.GenericParameterAttributes);
+            var byFilters = filters.All(filter => filter(typeForCheck));
+
+            return byConstraints && byFilters;
+        }
+
+        private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)
+        {
+            var filters = new List<Func<Type, bool>>();
+
+            if ((genericParameterAttributes & GenericParameterAttributes.None) != 0)
+            {
+                filters.Add(type => true);
+
+                return filters;
+            }
+
+            if ((genericParameterAttributes & GenericParameterAttributes.ReferenceTypeConstraint) != 0)
+            {
+                filters.Add(type => type.IsClass);
+            }
+
+            if ((genericParameterAttributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0)
+            {
+                filters.Add(type => type.IsValueType);
+            }
+
+            if ((genericParameterAttributes & GenericParameterAttributes.DefaultConstructorConstraint) != 0)
+            {
+                filters.Add(type =>
+                            {
+                                if (type.IsEnum)
+                                {
+                                    return true;
+                                }
+
+                                var ctor = type.GetConstructor(Array.Empty<Type>());
+
+                                return ctor != null;
+                            });
+            }
+
+            return filters;
+        }
+
         private static Type ExtractGenericTypeDefinition(Type type)
         {
             return type.IsGenericType

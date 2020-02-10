@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Type dependencies</returns>
-        Type[] GetDependencies(Type type);
+        Type[] GetDependenciesByAttribute(Type type);
 
         /// <summary>
         /// Does type implement Nullable

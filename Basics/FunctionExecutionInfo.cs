@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Function execution info

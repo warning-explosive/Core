@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using SpaceEngineers.Core.Basics;
+    using Basics;
     using Xunit;
     using Xunit.Abstractions;
     using Xunit.Sdk;

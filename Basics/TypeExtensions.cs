@@ -78,9 +78,9 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Type dependencies</returns>
-        public static ICollection<Type> GetDependencies(this Type type)
+        public static ICollection<Type> GetDependenciesByAttribute(this Type type)
         {
-            return _typeExtensions.GetDependencies(type);
+            return _typeExtensions.GetDependenciesByAttribute(type);
         }
 
         /// <summary>

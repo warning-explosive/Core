@@ -134,7 +134,9 @@
             return type.IsPrimitive
                    || type.IsEnum
                    || type == typeof(Type)
-                   || type == typeof(Type).GetType()
+
+                   // ReSharper disable once PossibleMistakenCallToGetType.2
+                   || type == typeof(Type).GetType() // reviewed
                    || type == typeof(string);
         }
 

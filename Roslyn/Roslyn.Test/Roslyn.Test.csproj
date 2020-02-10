@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.Roslyn.Test</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Roslyn.Test</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Title>SpaceEngineers.Core.Roslyn.Test</Title>
+    <Authors>SpaceEngineers</Authors>
+    <Company>SpaceEngineers</Company>
+    <PackageDescription>SpaceEngineers.Core.Roslyn.Test</PackageDescription>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Copyright>Copyright (c) 2019</Copyright>
+    <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>true</RunAnalyzers>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TieredCompilation>true</TieredCompilation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Basics.Roslyn\Basics.Roslyn.csproj" />
+    <ProjectReference Include="..\..\Basics.Test\Basics.Test.csproj" />
+    <ProjectReference Include="..\..\Basics\Basics.csproj" />
+    <ProjectReference Include="..\..\Modules\AutoRegistration\AutoRegistration.csproj" />
+    <ProjectReference Include="..\..\Modules\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\AutoWiringApi.Analyzers\AutoWiringApi.Analyzers.csproj" />
+  </ItemGroup>
+</Project>

@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Basics
             int SortFunc(T item)
             {
                 var type = accessor(item);
-                var dependencies = GetDependencies(type).AsEnumerable();
+                var dependencies = GetDependenciesByAttribute(type).AsEnumerable();
 
                 var depth = 0;
 
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.Basics
 
                     ++depth;
 
-                    dependencies = dependencies.SelectMany(GetDependencies);
+                    dependencies = dependencies.SelectMany(GetDependenciesByAttribute);
                 }
 
                 return depth;
@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <inheritdoc />
-        public Type[] GetDependencies(Type type)
+        public Type[] GetDependenciesByAttribute(Type type)
         {
             return _typeInfoStorage[type].Dependencies;
         }
@@ -155,24 +155,24 @@ namespace SpaceEngineers.Core.Basics
         {
             var filters = new List<Func<Type, bool>>();
 
-            if ((genericParameterAttributes & GenericParameterAttributes.None) != 0)
+            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.None))
             {
                 filters.Add(type => true);
 
                 return filters;
             }
 
-            if ((genericParameterAttributes & GenericParameterAttributes.ReferenceTypeConstraint) != 0)
+            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
             {
                 filters.Add(type => type.IsClass);
             }
 
-            if ((genericParameterAttributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0)
+            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
             {
                 filters.Add(type => type.IsValueType);
             }
 
-            if ((genericParameterAttributes & GenericParameterAttributes.DefaultConstructorConstraint) != 0)
+            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
             {
                 filters.Add(type =>
                             {

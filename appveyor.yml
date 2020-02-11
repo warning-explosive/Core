@@ -1,4 +1,4 @@
-#---------------------------------#
+﻿#---------------------------------#
 #      general configuration      #
 #---------------------------------#
 
@@ -21,8 +21,9 @@ skip_tags: false
 skip_non_tags: false
 
 # Skipping commits with particular message
+# Regex for matching commit message
 skip_commits:
-  message: /\[DoNotBuild\]/                                                     # Regex for matching commit message
+  message: /\[DoNotBuild\]/
 
 # Do not build feature branch with open Pull Requests
 skip_branch_with_pr: false
@@ -37,11 +38,15 @@ max_jobs: 1
 # Build worker image (VM template)
 image: Visual Studio 2019
 
+# scripts that are called at very beginning, before repo cloning
+init:
+  - git config --global core.autocrlf true
+
 # clone directory
 clone_folder: c:\projects\Core
 
-# fetch repository as zip archive
-shallow_clone: false                                                                 # clone entire repository history if not defined
+# clone entire repository history if not defined
+shallow_clone: false
 
 # scripts that run after cloning repository
 install:
@@ -55,7 +60,8 @@ assembly_info:
 nuget:
   account_feed: true
   project_feed: true
-  disable_publish_on_pr: true                                                   # disable publishing of .nupkg artifacts to account/project feeds for pull request builds
+  # disable publishing of .nupkg artifacts to account/project feeds for pull request builds
+  disable_publish_on_pr: true
 
 #---------------------------------#
 #       build configuration       #
@@ -69,11 +75,40 @@ configuration:
   - Debug
   - Release
 
+matrix:
+  fast_finish: true
+
+for:
+# release job filter
+-
+  matrix:
+    only:
+      - configuration: Release
+
+  branches:
+    only:
+      - master
+      - /release-(\d)+.(\d)+.(\d)+/
+      - /hotfix-(\d)+.(\d)+.(\d)+/
+      - /support-(\d)+.(\d)+.(\d)+/
+
+# debug job filter
+-
+  matrix:
+    only:
+      - configuration: Debug
+
+  branches:
+    only:
+      - develop
+      - /feature-(\d)+/
+      - /pull-request-(\d)+/
+
 # Build settings, not to be confused with "before_build" and "after_build".
 # "project" is relative to the original build directory and not influenced by directory changes in "before_build".
 build:
   parallel: true                                                                # enable MSBuild parallel builds
-  project: Core.sln                                                             # path to Visual Studio solution or project
+  project: Core.sln                                      # path to Visual Studio solution or project
   publish_wap: false                                                            # package Web Application Projects (WAP) for Web Deploy
   publish_wap_xcopy: false                                                      # package Web Application Projects (WAP) for XCopy deployment
   publish_wap_beanstalk: false                                                  # Package Web Applications for AWS Elastic Beanstalk deployment

@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.Modules.Test</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Modules.Test</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Title>SpaceEngineers.Core.Modules.Test</Title>
+    <Authors>SpaceEngineers</Authors>
+    <Company>SpaceEngineers</Company>
+    <PackageDescription>SpaceEngineers.Core.Modules.Test</PackageDescription>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Copyright>Copyright (c) 2019</Copyright>
+    <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>true</RunAnalyzers>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TieredCompilation>true</TieredCompilation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Basics.Test\Basics.Test.csproj" />
+    <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
+    <ProjectReference Include="..\CompositionInfoExtractor\CompositionInfoExtractor.csproj" />
+    <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
+    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="CompositionInfoExtractorTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GraphSolverTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SettingsManagerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CliArgumentsParserTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceDecorator1.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceDecorator2.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceDecorator3.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceImpl1.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceImpl2.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceImpl3.cs">
+      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\CollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ConditionalDecorableServiceDecorator1.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ConditionalDecorableServiceDecorator2.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ConditionalDecorableServiceDecorator3.cs">
+      <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ConditionalDecorableServiceImpl.cs">
+      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DecorableServiceDecorator1.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DecorableServiceDecorator2.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DecorableServiceDecorator3.cs">
+      <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DecorableServiceImpl.cs">
+      <DependentUpon>IDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\IndependentTestServiceImpl.cs">
+      <DependentUpon>IIndependentTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\WiredTestServiceImpl.cs">
+      <DependentUpon>IWiredTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\SingletonTestServiceImpl.cs">
+      <DependentUpon>ISingletonTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\SingletonGenericCollectionResolvableTestServiceImpl1.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\SingletonGenericCollectionResolvableTestServiceImpl2.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\SingletonGenericCollectionResolvableTestServiceImpl3.cs">
+      <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\OpenGenericDecorableServiceDecorator1.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\OpenGenericDecorableServiceDecorator2.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\OpenGenericDecorableServiceDecorator3.cs">
+      <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\OpenGenericDecorableServiceImpl.cs">
+      <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\OpenGenericTestServiceImpl.cs">
+      <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

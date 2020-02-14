@@ -16,8 +16,7 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TExpected">input type-argument</typeparam>
         /// <returns>Not null input or exception</returns>
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
-        [return: MaybeNull]
-        public static TExpected ExtractType<TExpected>([AllowNull] this object input)
+        public static TExpected ExtractType<TExpected>(this object input)
         {
             return input is TExpected expected
                        ? expected
@@ -33,8 +32,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Not null input or exception</returns>
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
         /// <exception cref="InvalidOperationException">Throws if input is null</exception>
-        [return: NotNull]
-        public static TExpected TryExtractFromNullable<TExpected>([AllowNull] this object input, string? message = null)
+        public static TExpected TryExtractFromNullable<TExpected>(this object? input, string? message = null)
         {
             return TryExtractFromNullable<TExpected>(input, () => new InvalidOperationException(message ?? $"{nameof(input)} is null"));
         }
@@ -48,8 +46,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Not null input or exception</returns>
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
         /// <exception cref="Exception">Throws if input is null</exception>
-        [return: NotNull]
-        public static TExpected TryExtractFromNullable<TExpected>([AllowNull] this object input, Func<Exception> exceptionFactory)
+        public static TExpected TryExtractFromNullable<TExpected>(this object? input, Func<Exception> exceptionFactory)
         {
             if (input == null)
             {
@@ -72,8 +69,8 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TExpected">input type-argument</typeparam>
         /// <returns>Not null input or exception</returns>
         /// <exception cref="ArgumentNullException">Throws if input is null</exception>
-        [return: NotNull]
-        public static TExpected TryExtractFromNullable<TExpected>([AllowNull] this TExpected input, string? message = null)
+        public static TExpected TryExtractFromNullable<TExpected>(this TExpected? input, string? message = null)
+            where TExpected : class
         {
             return TryExtractFromNullable(input, () => new ArgumentNullException(message ?? $"{nameof(input)} is null"));
         }
@@ -86,8 +83,8 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TExpected">input type-argument</typeparam>
         /// <returns>Not null input or exception</returns>
         /// <exception cref="Exception">Throws if input is null</exception>
-        [return: NotNull]
-        public static TExpected TryExtractFromNullable<TExpected>([AllowNull] this TExpected input, Func<Exception> exceptionFactory)
+        public static TExpected TryExtractFromNullable<TExpected>(this TExpected? input, Func<Exception> exceptionFactory)
+            where TExpected : class
         {
             if (input == null)
             {

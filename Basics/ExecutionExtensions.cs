@@ -43,7 +43,6 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="info">FunctionExecutionInfo</param>
         /// <typeparam name="TResult">Function TResult type-argument</typeparam>
         /// <returns>TResult</returns>
-        [return: MaybeNull]
         public static TResult Invoke<TResult>(this FunctionExecutionInfo<TResult> info)
         {
             return info.InvokeInternal();

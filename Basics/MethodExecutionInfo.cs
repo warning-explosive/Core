@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Return value of method</returns>
         public TResult Invoke<TResult>()
         {
-            return Invoke().ExtractType<TResult>();
+            return Invoke().TryExtractFromNullable().ExtractType<TResult>();
         }
 
         /// <summary>

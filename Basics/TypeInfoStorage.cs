@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.Basics
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
                                                                     .Where(t => t.FullName != null
-                                                                                && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCultureIgnoreCase))))
+                                                                                && ExcludedTypes.All(mask => !t.FullName.Contains(mask))))
                                     .ToArray();
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));

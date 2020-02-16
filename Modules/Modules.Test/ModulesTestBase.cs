@@ -17,11 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            var assemblies = AppDomain.CurrentDomain
-                                      .TryExtractFromNullable(() => new InvalidOperationException("CurrentDomain is null"))
-                                      .GetAssemblies();
-
-            DependencyContainer = new DependencyContainer(assemblies);
+            DependencyContainer = DependencyContainer.Default();
         }
 
         /// <summary>

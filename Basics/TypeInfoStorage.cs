@@ -28,27 +28,24 @@ namespace SpaceEngineers.Core.Basics
 
         private readonly IDictionary<Guid, TypeInfo> _collection = new Dictionary<Guid, TypeInfo>();
 
-        public TypeInfoStorage(Assembly[] assemblies)
+        public TypeInfoStorage(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            var rootAssembly = typeof(TypeExtensions).Assembly;
-            var rootAssemblyFullName = rootAssembly.GetName().FullName;
-
             var loadedAssemblies = assemblies.Distinct(new AssemblyByNameEqualityComparer())
                                              .ToDictionary(a => a.GetName().FullName);
 
             var visited = loadedAssemblies.Where(a => ExcludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
                                           .ToDictionary(k => k.Key, v => false);
 
-            visited[rootAssemblyFullName] = true;
+            foreach (var root in rootAssemblies)
+            {
+                visited[root.GetName().FullName] = true;
+            }
 
             OurAssemblies = loadedAssemblies
-                           .Except(new[]
-                                   {
-                                       new KeyValuePair<string, Assembly>(rootAssemblyFullName, rootAssembly),
-                                   })
+                           .Except(rootAssemblies.ToDictionary(a => a.GetName().FullName, a => a).ToArray())
                            .Where(pair => IsOurReference(pair.Value, loadedAssemblies, visited))
                            .Select(pair => pair.Value)
-                           .Concat(new[] { rootAssembly })
+                           .Concat(rootAssemblies)
                            .ToArray();
 
             OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()

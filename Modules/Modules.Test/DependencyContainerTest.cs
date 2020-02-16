@@ -238,5 +238,17 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(string.Empty);
             CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
         }
+
+        [Fact]
+        internal void ImplementationResolvableTest()
+        {
+            Assert.NotNull(DependencyContainer.ResolveImplementation<ConcreteImplementationService>());
+
+            var withDependency = DependencyContainer.ResolveImplementation<ConcreteImplementationWithDependencyService>();
+            Assert.NotNull(withDependency);
+            Assert.NotNull(withDependency.Dependency);
+
+            Assert.NotNull(DependencyContainer.ResolveImplementation<ConcreteImplementationGenericService<object>>());
+        }
     }
 }

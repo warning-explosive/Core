@@ -10,16 +10,18 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
-        private static ITypeExtensions _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(Array.Empty<Assembly>()));
+        private static ITypeExtensions _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(Array.Empty<Assembly>(), Array.Empty<Assembly>()));
 
         /// <summary>
-        /// Set instance
+        /// Configure type info storage
+        /// Must be call only once
         /// </summary>
-        /// <param name="assemblies">assemblies</param>
+        /// <param name="assemblies">All loaded assemblies</param>
+        /// <param name="rootAssemblies">Root assemblies</param>
         /// <returns>Created instance of ITypeExtensions</returns>
-        public static ITypeExtensions SetInstance(Assembly[] assemblies)
+        public static ITypeExtensions Configure(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(assemblies));
+            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(assemblies, rootAssemblies));
 
             return _typeExtensions;
         }

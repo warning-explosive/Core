@@ -20,8 +20,23 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// ctor
         /// </summary>
-        /// <param name="assemblies">assemblies</param>
-        public DependencyContainer(Assembly[] assemblies) { _container = InitContainer(assemblies); }
+        /// <param name="assemblies">All loaded assemblies</param>
+        /// <param name="rootAssemblies">Root assemblies</param>
+        public DependencyContainer(Assembly[] assemblies, Assembly[] rootAssemblies)
+        {
+            _container = InitContainer(assemblies, rootAssemblies);
+        }
+
+        /// <summary>
+        /// Default configured container
+        /// Assemblies loaded in CurrentDomain and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
+        /// </summary>
+        /// <returns>DependencyContainer</returns>
+        public static DependencyContainer Default()
+        {
+            return new DependencyContainer(AssembliesExtensions.AllFromCurrentDomain(),
+                                           new[] { typeof(LifestyleAttribute).Assembly });
+        }
 
         /// <summary>
         /// Resolve service implementation
@@ -50,6 +65,32 @@ namespace SpaceEngineers.Core.AutoRegistration
         }
 
         /// <summary>
+        /// Resolve concrete implementation
+        /// </summary>
+        /// <typeparam name="T">IResolvable</typeparam>
+        /// <returns>Service implementation</returns>
+        public T ResolveImplementation<T>()
+            where T : class, IResolvableImplementation
+        {
+            return _container.GetInstance<T>();
+        }
+
+        /// <summary>
+        /// Resolve untyped concrete implementation
+        /// </summary>
+        /// <param name="concreteImplementationType">IResolvableImplementation</param>
+        /// <returns>Untyped concrete implementation</returns>
+        public object ResolveImplementation(Type concreteImplementationType)
+        {
+            if (!typeof(IResolvableImplementation).IsAssignableFrom(concreteImplementationType))
+            {
+                throw new ArgumentException($"{concreteImplementationType.FullName} must be an concrete type and derived from {nameof(IResolvableImplementation)}");
+            }
+
+            return _container.GetInstance(concreteImplementationType);
+        }
+
+        /// <summary>
         /// Resolve service implementations collection
         /// </summary>
         /// <typeparam name="T">IResolvable</typeparam>
@@ -75,9 +116,9 @@ namespace SpaceEngineers.Core.AutoRegistration
             return _container.GetAllInstances(serviceType);
         }
 
-        private static Container InitContainer(Assembly[] assemblies)
+        private static Container InitContainer(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            var typeExtensions = TypeExtensions.SetInstance(assemblies);
+            var typeExtensions = TypeExtensions.Configure(assemblies, rootAssemblies);
 
             var container = new Container
                             {
@@ -102,7 +143,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static void RegisterServices(Container container, ITypeExtensions typeExtensions)
         {
             /*
-             * [I] - Single
+             * [I] - Single implementation service
              */
             var resolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container, typeExtensions);
 
@@ -112,10 +153,12 @@ namespace SpaceEngineers.Core.AutoRegistration
             }
 
             /*
-             * [II] - Collections
+             * [II] - Collection resolvable service
              */
             var collectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
-            RegisterLifestyle(container, collectionResolvableRegistrationInfos);
+
+            // register each element of collection as implementation to provide lifestyle to container
+            RegisterImplementations(container, collectionResolvableRegistrationInfos);
 
             typeExtensions.OrderByDependencies(collectionResolvableRegistrationInfos, z => z.ComponentType)
                           .GroupBy(k => k.ServiceType, v => v.ComponentType)
@@ -138,6 +181,21 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             typeExtensions.OrderByDependencies(collectionDecoratorInfos, z => z.ComponentType)
                           .Each(info => RegisterDecorator(container, info));
+
+            /*
+             * [V] - Concrete Implementations
+             */
+            var resolvableImplementations = GetImplementationRegistrationInfo(container, typeExtensions);
+            RegisterImplementations(container, resolvableImplementations);
+        }
+
+        private static void RegisterImplementations(Container container,
+                                                    IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
+        {
+            foreach (var info in serviceRegistrationInfos)
+            {
+                container.Register(info.ComponentType, info.ComponentType, info.Lifestyle);
+            }
         }
 
         private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
@@ -169,15 +227,28 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .ToArray();
         }
 
-        private static void RegisterLifestyle(Container container,
-                                              IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
+        private static ServiceRegistrationInfo[] GetImplementationRegistrationInfo(Container container,
+                                                                                   ITypeExtensions typeExtensions)
         {
-            foreach (var info in serviceRegistrationInfos)
-            {
-                container.Register(info.ComponentType,
-                                   info.ComponentType,
-                                   info.Lifestyle);
-            }
+            var implementationType = typeof(IResolvableImplementation);
+
+            return container.GetTypesToRegister(implementationType,
+                                                typeExtensions.OurAssemblies(),
+                                                new TypesToRegisterOptions
+                                                {
+                                                    IncludeComposites = false,
+                                                    IncludeDecorators = false,
+                                                    IncludeGenericTypeDefinitions = true
+                                                })
+                            .Select(cmp => new
+                                           {
+                                               ComponentType = cmp,
+                                               cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                                           })
+                            .Select(cmp => new ServiceRegistrationInfo(cmp.ComponentType,
+                                                  cmp.ComponentType,
+                                                  cmp.Lifestyle))
+                            .ToArray();
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(ITypeExtensions typeExtensions,

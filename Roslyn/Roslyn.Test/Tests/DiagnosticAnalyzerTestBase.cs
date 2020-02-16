@@ -29,11 +29,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            var assemblies = AppDomain.CurrentDomain
-                                      .TryExtractFromNullable(() => new InvalidOperationException("CurrentDomain is null"))
-                                      .GetAssemblies();
-
-            DependencyContainer = new DependencyContainer(assemblies);
+            DependencyContainer = DependencyContainer.Default();
 
             _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();

@@ -31,11 +31,16 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Default configured container
         /// Assemblies loaded in CurrentDomain and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
         /// </summary>
+        /// <param name="entryPointAssembly">Entry point assembly, should contains all references - application root</param>
         /// <returns>DependencyContainer</returns>
-        public static DependencyContainer Default()
+        public static DependencyContainer Default(Assembly entryPointAssembly)
         {
+            AssembliesExtensions.WarmUpAppDomain(entryPointAssembly);
+
+            var autoWiringApi = typeof(LifestyleAttribute).Assembly;
+
             return new DependencyContainer(AssembliesExtensions.AllFromCurrentDomain(),
-                                           new[] { typeof(LifestyleAttribute).Assembly });
+                                           new[] { autoWiringApi });
         }
 
         /// <summary>

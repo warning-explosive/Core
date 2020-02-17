@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.AutoWiringApi.Attributes
 {
     using System;
-    using Basics.Attributes;
     using Enumerations;
 
     /// <summary>
     /// Component lifestyle attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class LifestyleAttribute : BaseAttribute
+    public sealed class LifestyleAttribute : Attribute
     {
         /// <summary> .ctor </summary>
         /// <param name="lifestyle">Lifestyle</param>

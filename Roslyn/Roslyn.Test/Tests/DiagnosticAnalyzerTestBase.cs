@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            DependencyContainer = DependencyContainer.Default();
+            DependencyContainer = DependencyContainer.Default(typeof(DiagnosticAnalyzerTestBase<>).Assembly);
 
             _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();

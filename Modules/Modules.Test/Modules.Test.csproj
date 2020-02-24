@@ -146,5 +146,8 @@
     <Compile Update="DependencyContainerTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoWiringTest\WithInjectedDependencyContainerImpl.cs">
+      <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

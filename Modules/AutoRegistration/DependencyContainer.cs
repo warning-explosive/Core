@@ -6,25 +6,26 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Enumerations;
     using Basics;
     using SimpleInjector;
 
     /// <summary>
     /// Dependency container
-    /// Resolve dependencies by 'Dependency Injection' and 'Inversion Of Control' patterns
+    /// Resolve dependencies by 'Dependency Injection' patterns
+    /// Don't use it like ServiceLocator!
     /// </summary>
-    public class DependencyContainer
+    [ManualRegistration]
+    public class DependencyContainer : IResolvableImplementation
     {
         private readonly Container _container;
 
-        /// <summary>
-        /// ctor
-        /// </summary>
+        /// <summary> .ctor </summary>
         /// <param name="assemblies">All loaded assemblies</param>
         /// <param name="rootAssemblies">Root assemblies</param>
         public DependencyContainer(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            _container = InitContainer(assemblies, rootAssemblies);
+            _container = InitContainer(assemblies, rootAssemblies, this);
         }
 
         /// <summary>
@@ -121,7 +122,9 @@ namespace SpaceEngineers.Core.AutoRegistration
             return _container.GetAllInstances(serviceType);
         }
 
-        private static Container InitContainer(Assembly[] assemblies, Assembly[] rootAssemblies)
+        private static Container InitContainer(Assembly[] assemblies,
+                                               Assembly[] rootAssemblies,
+                                               DependencyContainer dependencyContainer)
         {
             var typeExtensions = TypeExtensions.Configure(assemblies, rootAssemblies);
 
@@ -138,11 +141,18 @@ namespace SpaceEngineers.Core.AutoRegistration
                                 },
                             };
 
+            RegisterDependencyContainer(container, dependencyContainer);
+
             RegisterServices(container, typeExtensions);
 
             container.Verify(VerificationOption.VerifyAndDiagnose);
 
             return container;
+        }
+
+        private static void RegisterDependencyContainer(Container container, DependencyContainer dependencyContainer)
+        {
+            container.RegisterSingleton(() => dependencyContainer);
         }
 
         private static void RegisterServices(Container container, ITypeExtensions typeExtensions)
@@ -219,6 +229,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                                     IncludeDecorators = false,
                                                                     IncludeGenericTypeDefinitions = true
                                                                 })
+                                            .Where(ForAutoRegistration)
                                             .Select(cmp => new
                                             {
                                                 ComponentType = cmp,
@@ -245,6 +256,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                     IncludeDecorators = false,
                                                     IncludeGenericTypeDefinitions = true
                                                 })
+                            .Where(ForAutoRegistration)
                             .Select(cmp => new
                                            {
                                                ComponentType = cmp,
@@ -263,6 +275,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .OurTypes()
                   .Where(t => !t.IsInterface
                              && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
+                  .Where(ForAutoRegistration)
                   .Select(t => new
                           {
                               ComponentType = t,
@@ -279,6 +292,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .OurTypes()
                   .Where(t => !t.IsInterface
                               && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
+                  .Where(ForAutoRegistration)
                   .Select(t => new
                   {
                       ComponentType = t,
@@ -313,6 +327,11 @@ namespace SpaceEngineers.Core.AutoRegistration
                                             info.Lifestyle,
                                             c => c.ImplementationType.GetCustomAttribute(info.Attribute) != null);
             }
+        }
+
+        private static bool ForAutoRegistration(Type type)
+        {
+            return type.GetCustomAttribute<ManualRegistrationAttribute>() == null;
         }
     }
 }

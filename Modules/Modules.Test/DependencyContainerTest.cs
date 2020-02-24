@@ -37,6 +37,20 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
+        internal void DependencyContainerSelfResolveTest()
+        {
+            var container = DependencyContainer.ResolveImplementation<DependencyContainer>();
+
+            Assert.True(ReferenceEquals(container, DependencyContainer));
+            Assert.True(container.Equals(DependencyContainer));
+
+            container = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().InjectedDependencyContainer;
+
+            Assert.True(ReferenceEquals(container, DependencyContainer));
+            Assert.True(container.Equals(DependencyContainer));
+        }
+
+        [Fact]
         internal void SingletonTest()
         {
             Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),

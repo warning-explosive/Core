@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.Basics
         /// <inheritdoc />
         public bool IsOurType(Type type)
         {
-            return _typeInfoStorage.ContainsKey(ExtractGenericTypeDefinition(type));
+            return _typeInfoStorage.ContainsKey(type);
         }
 
         /// <inheritdoc />

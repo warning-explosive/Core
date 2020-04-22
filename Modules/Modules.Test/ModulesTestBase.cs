@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using AutoRegistration;
-    using Basics;
     using Basics.Test;
     using Xunit.Abstractions;
 

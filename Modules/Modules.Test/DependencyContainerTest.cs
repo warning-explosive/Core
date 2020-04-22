@@ -264,5 +264,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Assert.NotNull(DependencyContainer.ResolveImplementation<ConcreteImplementationGenericService<object>>());
         }
+
+        [Fact]
+        internal void ExternalResolvableTest()
+        {
+            Assert.Equal(typeof(ExternalResolvable), DependencyContainer.ResolveExternal<IComparable<ExternalResolvable>>().GetType());
+        }
     }
 }

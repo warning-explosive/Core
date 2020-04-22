@@ -21,9 +21,10 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Get all services (interfaces) that contains TInterface declaration
         /// </summary>
-        /// <typeparam name="T">Type-argument</typeparam>
+        /// <typeparam name="TInterface">Interface type-argument</typeparam>
         /// <returns>Result of check</returns>
-        Type[] AllOurServicesThatContainsDeclarationOfInterface<T>();
+        Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
+            where TInterface : class;
 
         /// <summary>
         /// Get all types loaded in AppDomain
@@ -87,5 +88,17 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="typeArgument">Type argument</param>
         /// <returns>True - fits / False doesn't fits</returns>
         bool FitsForTypeArgument(Type typeForCheck, Type typeArgument);
+
+        /// <summary>
+        /// Extract type-arguments from derived class of open-generic type at specified index
+        /// Distinct, might be several implementations with different type-arguments
+        /// </summary>
+        /// <param name="derived">Derived from open-generic</param>
+        /// <param name="openGeneric">Open-generic which derived</param>
+        /// <param name="typeArgumentAt">Index of type-argument</param>
+        /// <returns>Collection of type arguments at specified index.</returns>
+        IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived,
+                                                             Type openGeneric,
+                                                             int typeArgumentAt = 0);
     }
 }

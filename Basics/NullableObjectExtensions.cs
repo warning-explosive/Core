@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using Exceptions;
 
     /// <summary>
@@ -18,9 +17,7 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="TypeMismatchException">Throws if TExpected type mismatched</exception>
         public static TExpected ExtractType<TExpected>(this object input)
         {
-            return input is TExpected expected
-                       ? expected
-                       : default;
+            return (TExpected)input;
         }
 
         /// <summary>

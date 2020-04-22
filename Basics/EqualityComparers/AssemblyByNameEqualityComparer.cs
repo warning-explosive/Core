@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.Basics.EqualityComparers
 {
-    using System;
     using System.Collections.Generic;
     using System.Reflection;
 

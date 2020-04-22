@@ -139,7 +139,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             return argsDictionary;
         }
 
-        private static bool TryGetValue(Type type, string strValue, out object? typedValue)
+        private static bool TryGetValue(Type type, string? strValue, out object? typedValue)
         {
             typedValue = default;
 

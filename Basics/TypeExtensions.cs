@@ -43,6 +43,7 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="T">Type-argument</typeparam>
         /// <returns>Result of check</returns>
         public static Type[] AllOurServicesThatContainsDeclarationOfInterface<T>()
+            where T : class
         {
             return _typeExtensions.AllOurServicesThatContainsDeclarationOfInterface<T>();
         }
@@ -126,6 +127,21 @@ namespace SpaceEngineers.Core.Basics
         public static bool FitsForTypeArgument(this Type typeForCheck, Type typeArgument)
         {
             return _typeExtensions.FitsForTypeArgument(typeForCheck, typeArgument);
+        }
+
+        /// <summary>
+        /// Extract type-arguments from derived class of open-generic type at specified index
+        /// Distinct, might be several implementations with different type-arguments
+        /// </summary>
+        /// <param name="derived">Derived from open-generic</param>
+        /// <param name="openGeneric">Open-generic which derived</param>
+        /// <param name="typeArgumentAt">Index of type-argument</param>
+        /// <returns>Collection of type arguments at specified index.</returns>
+        public static IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(this Type derived,
+                                                                           Type openGeneric,
+                                                                           int typeArgumentAt = 0)
+        {
+            return _typeExtensions.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
         }
     }
 }

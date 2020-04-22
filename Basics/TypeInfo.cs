@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.Basics
                         ?? Array.Empty<Type>();
 
             ExtractDeclaredInterfaces(type);
-            ExtractBaseOpenGenericTypes(type);
+            ExtractBaseTypes(type);
             ExtractOpenGenericInterfaces(type);
         }
 
@@ -27,6 +27,8 @@ namespace SpaceEngineers.Core.Basics
         internal Type[] Dependencies { get; }
 
         internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
+
+        internal ICollection<Type> BaseTypes { get; } = new List<Type>();
 
         internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
 
@@ -50,10 +52,12 @@ namespace SpaceEngineers.Core.Basics
             declaredInterfaces.Each(i => DeclaredInterfaces.Add(i));
         }
 
-        private void ExtractBaseOpenGenericTypes(Type currentType)
+        private void ExtractBaseTypes(Type currentType)
         {
             while (currentType.BaseType != null)
             {
+                BaseTypes.Add(currentType.BaseType);
+
                 if (currentType.IsGenericType)
                 {
                     GenericTypeDefinitions.Add(currentType.GetGenericTypeDefinition());

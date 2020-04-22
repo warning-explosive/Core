@@ -47,6 +47,7 @@ namespace SpaceEngineers.Core.Basics
 
         /// <inheritdoc />
         public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
+            where TInterface : class
         {
             var type = typeof(TInterface);
 
@@ -126,7 +127,7 @@ namespace SpaceEngineers.Core.Basics
             return _typeInfoStorage[genericTypeDefinition].DeclaredInterfaces
                                                           .Select(z => z.GUID)
                                                           .Contains(genericInterfaceDefinition.GUID)
-                && type.GenericTypeArguments.SequenceEqual(i.GenericTypeArguments);
+                && type.GetGenericArguments().SequenceEqual(i.GetGenericArguments());
         }
 
         /// <inheritdoc />
@@ -139,7 +140,7 @@ namespace SpaceEngineers.Core.Basics
 
             bool CheckConstraint(Type constraint) =>
                 constraint.IsGenericType
-                    ? typeForCheck.IsSubclassOfOpenGeneric(constraint.GetGenericTypeDefinition())
+                    ? IsSubclassOfOpenGeneric(typeForCheck, constraint.GetGenericTypeDefinition())
                     : constraint.IsAssignableFrom(typeForCheck);
 
             var byConstraints = typeArgument.GetGenericParameterConstraints()
@@ -149,6 +150,29 @@ namespace SpaceEngineers.Core.Basics
             var byFilters = filters.All(filter => filter(typeForCheck));
 
             return byConstraints && byFilters;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived,
+                                                                    Type openGeneric,
+                                                                    int typeArgumentAt = 0)
+        {
+            if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
+            {
+                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
+            }
+
+            if (!openGeneric.IsGenericTypeDefinition)
+            {
+                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+            }
+
+            return IsSubclassOfOpenGeneric(derived, openGeneric)
+                       ? _typeInfoStorage[derived].BaseTypes
+                                                  .Concat(derived.GetInterfaces())
+                                                  .Where(type => ExtractGenericTypeDefinition(type) == openGeneric)
+                                                  .Select(i => i.GetGenericArguments()[typeArgumentAt])
+                       : Enumerable.Empty<Type>();
         }
 
         private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)

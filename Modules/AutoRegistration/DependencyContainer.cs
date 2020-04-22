@@ -62,7 +62,8 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>Untyped service implementation</returns>
         public object Resolve(Type serviceType)
         {
-            if (!typeof(IResolvable).IsAssignableFrom(serviceType))
+            if (!serviceType.IsInterface
+                || !typeof(IResolvable).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(IResolvable)}");
             }
@@ -88,7 +89,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>Untyped concrete implementation</returns>
         public object ResolveImplementation(Type concreteImplementationType)
         {
-            if (!typeof(IResolvableImplementation).IsAssignableFrom(concreteImplementationType))
+            if (!concreteImplementationType.IsClass
+                || concreteImplementationType.IsAbstract
+                || !typeof(IResolvableImplementation).IsAssignableFrom(concreteImplementationType))
             {
                 throw new ArgumentException($"{concreteImplementationType.FullName} must be an concrete type and derived from {nameof(IResolvableImplementation)}");
             }
@@ -114,12 +117,39 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>Untyped service implementation</returns>
         public IEnumerable<object> ResolveCollection(Type serviceType)
         {
-            if (!typeof(ICollectionResolvable).IsAssignableFrom(serviceType))
+            if (!serviceType.IsInterface
+                || !typeof(ICollectionResolvable).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(ICollectionResolvable)}");
             }
 
             return _container.GetAllInstances(serviceType);
+        }
+
+        /// <summary>
+        /// Resolve external service implementation
+        /// </summary>
+        /// <typeparam name="TExternalService">External service abstraction</typeparam>
+        /// <returns>Our implementation of external service</returns>
+        public TExternalService ResolveExternal<TExternalService>()
+            where TExternalService : class
+        {
+            return _container.GetInstance<TExternalService>();
+        }
+
+        /// <summary>
+        /// Resolve external service implementation
+        /// </summary>
+        /// <param name="externalServiceType">External service abstraction</param>
+        /// <returns>Our implementation of external service</returns>
+        public object ResolveExternal(Type externalServiceType)
+        {
+            if (!externalServiceType.IsInterface)
+            {
+                throw new ArgumentException($"{externalServiceType.FullName} must be an interface");
+            }
+
+            return _container.GetInstance(externalServiceType);
         }
 
         private static Container InitContainer(Assembly[] assemblies,
@@ -168,11 +198,21 @@ namespace SpaceEngineers.Core.AutoRegistration
             }
 
             /*
-             * [II] - Collection resolvable service
+             * [II] - External service single implementation
+             */
+            var externalServicesRegistrationInfos = GetExternalServiceRegistrationInfo(container, typeExtensions);
+
+            foreach (var resolvable in externalServicesRegistrationInfos)
+            {
+                container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
+            }
+
+            /*
+             * [III] - Collection resolvable service
              */
             var collectionResolvableRegistrationInfos = GetServiceRegistrationInfo<ICollectionResolvable>(container, typeExtensions);
 
-            // register each element of collection as implementation to provide lifestyle to container
+            // register each element of collection as implementation to provide lifestyle for container
             RegisterImplementations(container, collectionResolvableRegistrationInfos);
 
             typeExtensions.OrderByDependencies(collectionResolvableRegistrationInfos, z => z.ComponentType)
@@ -180,7 +220,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                           .Each(info => container.Collection.Register(info.Key, info));
 
             /*
-             * [III] - Decorators
+             * [IV] - Decorators
              */
             var decoratorInfos = GetDecoratorInfo(typeExtensions, typeof(IDecorator<>))
                .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(IConditionalDecorator<,>)));
@@ -189,7 +229,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                           .Each(info => RegisterDecorator(container, info));
 
             /*
-             * [IV] - Collection decorators
+             * [V] - Collection decorators
              */
             var collectionDecoratorInfos = GetDecoratorInfo(typeExtensions, typeof(ICollectionDecorator<>))
                .Concat(GetConditionalDecoratorInfo(typeExtensions, typeof(ICollectionConditionalDecorator<,>)));
@@ -198,7 +238,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                           .Each(info => RegisterDecorator(container, info));
 
             /*
-             * [V] - Concrete Implementations
+             * [VI] - Concrete Implementations
              */
             var resolvableImplementations = GetImplementationRegistrationInfo(container, typeExtensions);
             RegisterImplementations(container, resolvableImplementations);
@@ -213,42 +253,11 @@ namespace SpaceEngineers.Core.AutoRegistration
             }
         }
 
-        private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
-                                                                                        ITypeExtensions typeExtensions)
+        private static IEnumerable<ServiceRegistrationInfo> GetComponents(Container container,
+                                                                          ITypeExtensions typeExtensions,
+                                                                          Type serviceType)
         {
-            return typeExtensions
-                  .AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
-                  .Select(i => new
-                  {
-                      ServiceType = i,
-                      Components = container.GetTypesToRegister(i,
-                                                                typeExtensions.OurAssemblies(),
-                                                                new TypesToRegisterOptions
-                                                                {
-                                                                    IncludeComposites = false,
-                                                                    IncludeDecorators = false,
-                                                                    IncludeGenericTypeDefinitions = true
-                                                                })
-                                            .Where(ForAutoRegistration)
-                                            .Select(cmp => new
-                                            {
-                                                ComponentType = cmp,
-                                                cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                                            })
-                  })
-                  .SelectMany(info => info.Components
-                                          .Select(cmp => new ServiceRegistrationInfo(info.ServiceType,
-                                                                                     cmp.ComponentType,
-                                                                                     cmp.Lifestyle)))
-                  .ToArray();
-        }
-
-        private static ServiceRegistrationInfo[] GetImplementationRegistrationInfo(Container container,
-                                                                                   ITypeExtensions typeExtensions)
-        {
-            var implementationType = typeof(IResolvableImplementation);
-
-            return container.GetTypesToRegister(implementationType,
+            return container.GetTypesToRegister(serviceType,
                                                 typeExtensions.OurAssemblies(),
                                                 new TypesToRegisterOptions
                                                 {
@@ -257,52 +266,72 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                     IncludeGenericTypeDefinitions = true
                                                 })
                             .Where(ForAutoRegistration)
-                            .Select(cmp => new
-                                           {
-                                               ComponentType = cmp,
-                                               cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                                           })
-                            .Select(cmp => new ServiceRegistrationInfo(cmp.ComponentType,
-                                                  cmp.ComponentType,
-                                                  cmp.Lifestyle))
-                            .ToArray();
+                            .Select(cmp => new ServiceRegistrationInfo(serviceType, cmp, cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
+        }
+
+        private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
+                                                                                        ITypeExtensions typeExtensions)
+            where TInterface : class
+        {
+            return typeExtensions
+                  .AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
+                  .SelectMany(i => GetComponents(container, typeExtensions, i))
+                  .ToArray();
+        }
+
+        private static ServiceRegistrationInfo[] GetExternalServiceRegistrationInfo(Container container,
+                                                                                    ITypeExtensions typeExtensions)
+        {
+            return typeExtensions
+                  .AllLoadedTypes()
+                  .Where(type => type.IsClass
+                                 && !type.IsAbstract
+                                 && typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
+                  .SelectMany(type => typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
+                  .SelectMany(i => GetComponents(container, typeExtensions, i))
+                  .ToArray();
+        }
+
+        private static ServiceRegistrationInfo[] GetImplementationRegistrationInfo(Container container,
+                                                                                   ITypeExtensions typeExtensions)
+        {
+            var implementationType = typeof(IResolvableImplementation);
+
+            return GetComponents(container, typeExtensions, implementationType).ToArray();
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(ITypeExtensions typeExtensions,
                                                                              Type decoratorType)
         {
-            return typeExtensions
-                  .OurTypes()
-                  .Where(t => !t.IsInterface
-                             && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
-                  .Where(ForAutoRegistration)
-                  .Select(t => new
-                          {
-                              ComponentType = t,
-                              Decrator = ExtractDecorator(decoratorType, t),
-                              t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                          })
-                  .Select(t => new ServiceRegistrationInfo(t.Decrator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle));
+            return GetGenericDecoratorInfo(typeExtensions, decoratorType).Select(pair => pair.Info);
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(ITypeExtensions typeExtensions,
                                                                                         Type decoratorType)
         {
+            return GetGenericDecoratorInfo(typeExtensions, decoratorType)
+                  .Select(pair =>
+                          {
+                              pair.Info.Attribute = pair.Decorator.GetGenericArguments()[1];
+                              return pair.Info;
+                          });
+        }
+
+        private static IEnumerable<(Type Decorator, ServiceRegistrationInfo Info)> GetGenericDecoratorInfo(ITypeExtensions typeExtensions,
+                                                                                                           Type decoratorType)
+        {
             return typeExtensions
                   .OurTypes()
                   .Where(t => !t.IsInterface
-                              && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
+                           && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType))
                   .Where(ForAutoRegistration)
                   .Select(t => new
-                  {
-                      ComponentType = t,
-                      Decorator = ExtractDecorator(decoratorType, t),
-                      t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
-                  })
-                  .Select(t => new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle)
-                  {
-                      Attribute = t.Decorator.GetGenericArguments()[1]
-                  });
+                               {
+                                   ComponentType = t,
+                                   Decorator = ExtractDecorator(decoratorType, t),
+                                   t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                               })
+                  .Select(t => (Decrator: t.Decorator, new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle)));
         }
 
         private static Type ExtractDecorator(Type decoratorType, Type t)

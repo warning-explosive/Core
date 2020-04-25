@@ -43,6 +43,9 @@
     <Compile Update="LifeStyleMapper.cs">
       <DependentUpon>DependencyContainer.cs</DependentUpon>
     </Compile>
+    <Compile Update="DependencyContainer.cs">
+      <DependentUpon>IDependencyContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />

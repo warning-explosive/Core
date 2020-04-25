@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            DependencyContainer = DependencyContainer.Default(typeof(DiagnosticAnalyzerTestBase<>).Assembly);
+            DependencyContainer = AutoRegistration.DependencyContainer.Default(typeof(DiagnosticAnalyzerTestBase<>).Assembly);
 
             _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         /// <summary>
         /// DependencyContainer
         /// </summary>
-        protected DependencyContainer DependencyContainer { get; }
+        protected IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// Default test with empty source

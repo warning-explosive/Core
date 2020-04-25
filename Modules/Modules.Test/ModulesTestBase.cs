@@ -16,12 +16,12 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            DependencyContainer = DependencyContainer.Default(typeof(ModulesTestBase).Assembly);
+            DependencyContainer = AutoRegistration.DependencyContainer.Default(typeof(ModulesTestBase).Assembly);
         }
 
         /// <summary>
         /// DependencyContainer
         /// </summary>
-        protected DependencyContainer DependencyContainer { get; }
+        protected IDependencyContainer DependencyContainer { get; }
     }
 }

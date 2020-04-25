@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
     using Basics;
     using SimpleInjector;
 
@@ -16,7 +15,8 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// Don't use it like ServiceLocator!
     /// </summary>
     [ManualRegistration]
-    public class DependencyContainer : IResolvableImplementation
+    public class DependencyContainer : IDependencyContainer,
+                                       IResolvableImplementation
     {
         private readonly Container _container;
 
@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// </summary>
         /// <param name="entryPointAssembly">Entry point assembly, should contains all references - application root</param>
         /// <returns>DependencyContainer</returns>
-        public static DependencyContainer Default(Assembly entryPointAssembly)
+        public static IDependencyContainer Default(Assembly entryPointAssembly)
         {
             AssembliesExtensions.WarmUpAppDomain(entryPointAssembly);
 
@@ -44,109 +44,81 @@ namespace SpaceEngineers.Core.AutoRegistration
                                            new[] { autoWiringApi });
         }
 
-        /// <summary>
-        /// Resolve service implementation
-        /// </summary>
-        /// <typeparam name="T">IResolvable</typeparam>
-        /// <returns>Service implementation</returns>
+        /// <inheritdoc />
         public T Resolve<T>()
             where T : class, IResolvable
         {
             return _container.GetInstance<T>();
         }
 
-        /// <summary>
-        /// Resolve untyped service implementation
-        /// </summary>
-        /// <param name="serviceType">IResolvable</param>
-        /// <returns>Untyped service implementation</returns>
+        /// <inheritdoc />
         public object Resolve(Type serviceType)
         {
             if (!serviceType.IsInterface
+                || serviceType.IsGenericTypeDefinition
                 || !typeof(IResolvable).IsAssignableFrom(serviceType))
             {
-                throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(IResolvable)}");
+                throw new ArgumentException($"{serviceType.FullName} must be an closed-generic or non-generic interface and derived from {nameof(IResolvable)}");
             }
 
             return _container.GetInstance(serviceType);
         }
 
-        /// <summary>
-        /// Resolve concrete implementation
-        /// </summary>
-        /// <typeparam name="T">IResolvable</typeparam>
-        /// <returns>Service implementation</returns>
+        /// <inheritdoc />
         public T ResolveImplementation<T>()
             where T : class, IResolvableImplementation
         {
             return _container.GetInstance<T>();
         }
 
-        /// <summary>
-        /// Resolve untyped concrete implementation
-        /// </summary>
-        /// <param name="concreteImplementationType">IResolvableImplementation</param>
-        /// <returns>Untyped concrete implementation</returns>
+        /// <inheritdoc />
         public object ResolveImplementation(Type concreteImplementationType)
         {
             if (!concreteImplementationType.IsClass
                 || concreteImplementationType.IsAbstract
+                || concreteImplementationType.IsGenericTypeDefinition
                 || !typeof(IResolvableImplementation).IsAssignableFrom(concreteImplementationType))
             {
-                throw new ArgumentException($"{concreteImplementationType.FullName} must be an concrete type and derived from {nameof(IResolvableImplementation)}");
+                throw new ArgumentException($"{concreteImplementationType.FullName} must be an closed-generic or non-generic concrete (non-abstract) type and derived from {nameof(IResolvableImplementation)}");
             }
 
             return _container.GetInstance(concreteImplementationType);
         }
 
-        /// <summary>
-        /// Resolve service implementations collection
-        /// </summary>
-        /// <typeparam name="T">IResolvable</typeparam>
-        /// <returns>Service implementation</returns>
+        /// <inheritdoc />
         public IEnumerable<T> ResolveCollection<T>()
             where T : class, ICollectionResolvable
         {
             return _container.GetAllInstances<T>();
         }
 
-        /// <summary>
-        /// Resolve untyped service implementations collection
-        /// </summary>
-        /// <param name="serviceType">IResolvable</param>
-        /// <returns>Untyped service implementation</returns>
+        /// <inheritdoc />
         public IEnumerable<object> ResolveCollection(Type serviceType)
         {
             if (!serviceType.IsInterface
+                || serviceType.IsGenericTypeDefinition
                 || !typeof(ICollectionResolvable).IsAssignableFrom(serviceType))
             {
-                throw new ArgumentException($"{serviceType.FullName} must be an interface and derived from {nameof(ICollectionResolvable)}");
+                throw new ArgumentException($"{serviceType.FullName} must be an closed-generic or non-generic interface and derived from {nameof(ICollectionResolvable)}");
             }
 
             return _container.GetAllInstances(serviceType);
         }
 
-        /// <summary>
-        /// Resolve external service implementation
-        /// </summary>
-        /// <typeparam name="TExternalService">External service abstraction</typeparam>
-        /// <returns>Our implementation of external service</returns>
+        /// <inheritdoc />
         public TExternalService ResolveExternal<TExternalService>()
             where TExternalService : class
         {
             return _container.GetInstance<TExternalService>();
         }
 
-        /// <summary>
-        /// Resolve external service implementation
-        /// </summary>
-        /// <param name="externalServiceType">External service abstraction</param>
-        /// <returns>Our implementation of external service</returns>
+        /// <inheritdoc />
         public object ResolveExternal(Type externalServiceType)
         {
-            if (!externalServiceType.IsInterface)
+            if (!externalServiceType.IsInterface
+                || externalServiceType.IsGenericTypeDefinition)
             {
-                throw new ArgumentException($"{externalServiceType.FullName} must be an interface");
+                throw new ArgumentException($"{externalServiceType.FullName} must be an closed-generic or non-generic interface");
             }
 
             return _container.GetInstance(externalServiceType);

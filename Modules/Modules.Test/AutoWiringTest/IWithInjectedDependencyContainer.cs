@@ -5,6 +5,6 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 
     internal interface IWithInjectedDependencyContainer : IResolvable
     {
-        DependencyContainer InjectedDependencyContainer { get; }
+        IDependencyContainer InjectedDependencyContainer { get; }
     }
 }

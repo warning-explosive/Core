@@ -7,11 +7,11 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     [Lifestyle(EnLifestyle.Transient)]
     internal class WithInjectedDependencyContainerImpl : IWithInjectedDependencyContainer
     {
-        public WithInjectedDependencyContainerImpl(DependencyContainer dependencyContainer)
+        public WithInjectedDependencyContainerImpl(IDependencyContainer dependencyContainer)
         {
             InjectedDependencyContainer = dependencyContainer;
         }
 
-        public DependencyContainer InjectedDependencyContainer { get; }
+        public IDependencyContainer InjectedDependencyContainer { get; }
     }
 }

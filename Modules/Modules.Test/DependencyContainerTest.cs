@@ -32,14 +32,14 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.False(wrongOurTypes.Any());
 
             Assert.False(typeof(object).IsOurType());
-            Assert.True(typeof(DependencyContainer).IsOurType());
+            Assert.True(typeof(IDependencyContainer).IsOurType());
             Assert.True(typeof(IDecorator<>).IsOurType());
         }
 
         [Fact]
         internal void DependencyContainerSelfResolveTest()
         {
-            var container = DependencyContainer.ResolveImplementation<DependencyContainer>();
+            var container = DependencyContainer.Resolve<IDependencyContainer>();
 
             Assert.True(ReferenceEquals(container, DependencyContainer));
             Assert.True(container.Equals(DependencyContainer));

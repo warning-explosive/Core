@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.Roslyn.Test
         {
             return new[]
                    {
-                       typeof(DependencyContainer).Assembly.CreateReference(),
+                       typeof(IDependencyContainer).Assembly.CreateReference(),
                        typeof(LifestyleAttribute).Assembly.CreateReference()
                    };
         }

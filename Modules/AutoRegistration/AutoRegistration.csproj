@@ -38,12 +38,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Update="ServiceRegistrationInfo.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
+      <DependentUpon>DependencyContainerImpl.cs</DependentUpon>
     </Compile>
     <Compile Update="LifeStyleMapper.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
+      <DependentUpon>DependencyContainerImpl.cs</DependentUpon>
     </Compile>
-    <Compile Update="DependencyContainer.cs">
+    <Compile Update="DependencyContainerImpl.cs">
       <DependentUpon>IDependencyContainer.cs</DependentUpon>
     </Compile>
   </ItemGroup>

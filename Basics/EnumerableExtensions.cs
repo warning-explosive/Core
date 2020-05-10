@@ -10,6 +10,30 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class EnumerableExtensions
     {
+        /// <summary> Produce cartesian product of source columns </summary>
+        /// <param name="sourceColumns">Source columns</param>
+        /// <typeparam name="T">Item type-argument</typeparam>
+        /// <returns>Cartesian product of source columns</returns>
+        public static IEnumerable<ICollection<T>> ColumnsCartesianProduct<T>(this IEnumerable<IEnumerable<T>> sourceColumns)
+        {
+            if (!sourceColumns.Any())
+            {
+                return Enumerable.Empty<ICollection<T>>();
+            }
+
+            IEnumerable<ICollection<T>> seed = sourceColumns.Take(1)
+                                                            .Single()
+                                                            .Select(item => new List<T> { item });
+
+            return sourceColumns.Skip(1)
+                                .Aggregate(seed,
+                                           (accumulator, next) =>
+                                               accumulator.Join(next,
+                                                                _ => true,
+                                                                _ => true,
+                                                                (left, right) => new List<T>(left) { right }));
+        }
+
         /// <summary> Execute action on each element </summary>
         /// <param name="source">A sequence of values to invoke an action on</param>
         /// <param name="action">An action to apply to each source element</param>

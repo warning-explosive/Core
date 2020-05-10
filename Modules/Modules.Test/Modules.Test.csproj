@@ -149,5 +149,8 @@
     <Compile Update="AutoWiringTest\WithInjectedDependencyContainerImpl.cs">
       <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoWiringTest\ClosedGenericImplementationOfOpenGenericService.cs">
+      <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// Resolve dependencies by 'Dependency Injection' patterns
     /// Don't use it like ServiceLocator!
     /// </summary>
-    [ManualRegistration]
+    [Unregistered]
     internal class DependencyContainerImpl : IDependencyContainer
     {
         private readonly Container _container;
@@ -149,7 +149,20 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             foreach (var resolvable in resolvableRegistrationInfos)
             {
-                container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
+                var fallBackFor = resolvable.ComponentType.GetCustomAttribute<OpenGenericFallBackAttribute>()?.ServiceType;
+
+                if (fallBackFor != null
+                    && fallBackFor == resolvable.ServiceType)
+                {
+                    container.RegisterConditional(resolvable.ServiceType,
+                                                  resolvable.ComponentType,
+                                                  resolvable.Lifestyle,
+                                                  ctx => !ctx.Handled);
+                }
+                else
+                {
+                    container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
+                }
             }
 
             /*
@@ -221,7 +234,8 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                     IncludeGenericTypeDefinitions = true
                                                 })
                             .Where(ForAutoRegistration)
-                            .Select(cmp => new ServiceRegistrationInfo(serviceType, cmp, cmp.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
+                            .SelectMany(cmp => GetClosedGenericImplForOpenGenericService(serviceType, cmp, typeExtensions))
+                            .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ComponentType, pair.ComponentType.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
         }
 
         private static ServiceRegistrationInfo[] GetServiceRegistrationInfo<TInterface>(Container container,
@@ -315,7 +329,37 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private static bool ForAutoRegistration(Type type)
         {
-            return type.GetCustomAttribute<ManualRegistrationAttribute>() == null;
+            return type.GetCustomAttribute<UnregisteredAttribute>() == null;
+        }
+
+        private static IEnumerable<(Type ComponentType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(
+            Type serviceType,
+            Type componentType,
+            ITypeExtensions typeExtensions)
+        {
+            if (serviceType.IsGenericType
+                && serviceType.IsGenericTypeDefinition
+                && !componentType.IsGenericType)
+            {
+                var length = serviceType.GetGenericArguments().Length;
+
+                var argsColumnStore = new Dictionary<int, ICollection<Type>>(length);
+
+                for (var i = 0; i < length; ++i)
+                {
+                    argsColumnStore[i] = typeExtensions.GetGenericArgumentsOfOpenGenericAt(componentType, serviceType, i).ToList();
+                }
+
+                foreach (var typeArguments in argsColumnStore.Values.ColumnsCartesianProduct())
+                {
+                    var closedService = serviceType.MakeGenericType(typeArguments.ToArray());
+                    yield return (componentType, closedService);
+                }
+            }
+            else
+            {
+                yield return (componentType, serviceType);
+            }
         }
     }
 }

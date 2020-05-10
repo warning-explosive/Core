@@ -3,10 +3,11 @@ namespace SpaceEngineers.Core.AutoWiringApi.Attributes
     using System;
 
     /// <summary>
-    /// ManualRegistration attribute
+    /// Unregistered attribute
+    /// For components that shouldn't be registered
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class ManualRegistrationAttribute : Attribute
+    public sealed class UnregisteredAttribute : Attribute
     {
     }
 }

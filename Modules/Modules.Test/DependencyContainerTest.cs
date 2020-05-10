@@ -67,7 +67,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void OpenGenericTest()
         {
-            Assert.NotNull(DependencyContainer.Resolve<IOpenGenericTestService<string>>());
+            Assert.Equal(typeof(OpenGenericTestServiceImpl<string>), DependencyContainer.Resolve<IOpenGenericTestService<string>>().GetType());
+            Assert.Equal(typeof(ClosedGenericImplementationOfOpenGenericService), DependencyContainer.Resolve<IOpenGenericTestService<ExternalResolvableImpl>>().GetType());
         }
 
         [Fact]
@@ -268,7 +269,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ExternalResolvableTest()
         {
-            Assert.Equal(typeof(ExternalResolvable), DependencyContainer.ResolveExternal<IComparable<ExternalResolvable>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.ResolveExternal<IComparable<ExternalResolvableImpl>>().GetType());
         }
     }
 }

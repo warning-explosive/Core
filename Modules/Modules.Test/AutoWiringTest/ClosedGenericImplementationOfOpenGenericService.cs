@@ -4,8 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    [OpenGenericFallBack(typeof(IOpenGenericTestService<>))]
-    internal class OpenGenericTestServiceImpl<T> : IOpenGenericTestService<T>
+    internal class ClosedGenericImplementationOfOpenGenericService : IOpenGenericTestService<ExternalResolvableImpl>
     {
     }
 }

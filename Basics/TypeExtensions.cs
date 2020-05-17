@@ -143,5 +143,15 @@ namespace SpaceEngineers.Core.Basics
         {
             return _typeExtensions.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
         }
+
+        /// <summary>
+        /// Extract GenericTypeDefinition or return argument type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>GenericTypeDefinition or argument type</returns>
+        public static Type ExtractGenericTypeDefinition(Type type)
+        {
+            return _typeExtensions.ExtractGenericTypeDefinition(type);
+        }
     }
 }

@@ -175,6 +175,14 @@ namespace SpaceEngineers.Core.Basics
                        : Enumerable.Empty<Type>();
         }
 
+        /// <inheritdoc />
+        public Type ExtractGenericTypeDefinition(Type type)
+        {
+            return type.IsGenericType
+                       ? type.GetGenericTypeDefinition()
+                       : type;
+        }
+
         private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)
         {
             var filters = new List<Func<Type, bool>>();
@@ -212,13 +220,6 @@ namespace SpaceEngineers.Core.Basics
             }
 
             return filters;
-        }
-
-        private static Type ExtractGenericTypeDefinition(Type type)
-        {
-            return type.IsGenericType
-                       ? type.GetGenericTypeDefinition()
-                       : type;
         }
     }
 }

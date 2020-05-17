@@ -12,9 +12,14 @@ namespace SpaceEngineers.Core.AutoWiringApi.Attributes
         /// <param name="serviceType">serviceType</param>
         public OpenGenericFallBackAttribute(Type serviceType)
         {
-            if (!serviceType.IsInterface)
+            var serviceTypeIsValid = serviceType.IsInterface
+                                  && serviceType.IsGenericType
+                                  && serviceType.IsGenericTypeDefinition;
+
+            if (!serviceTypeIsValid)
             {
-                throw new ArgumentException($"Argument of {nameof(OpenGenericFallBackAttribute)} must be an interface", nameof(serviceType));
+                throw new ArgumentException($"Argument of {nameof(OpenGenericFallBackAttribute)} must be an open-generic interface",
+                                            nameof(serviceType));
             }
 
             ServiceType = serviceType;

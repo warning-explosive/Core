@@ -100,5 +100,12 @@ namespace SpaceEngineers.Core.Basics
         IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived,
                                                              Type openGeneric,
                                                              int typeArgumentAt = 0);
+
+        /// <summary>
+        /// Extract GenericTypeDefinition or return argument type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>GenericTypeDefinition or argument type</returns>
+        Type ExtractGenericTypeDefinition(Type type);
     }
 }

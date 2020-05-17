@@ -146,34 +146,13 @@ namespace SpaceEngineers.Core.AutoRegistration
              * [I] - Single implementation service
              */
             var resolvableRegistrationInfos = GetServiceRegistrationInfo<IResolvable>(container, typeExtensions);
-
-            foreach (var resolvable in resolvableRegistrationInfos)
-            {
-                var fallBackFor = resolvable.ComponentType.GetCustomAttribute<OpenGenericFallBackAttribute>()?.ServiceType;
-
-                if (fallBackFor != null
-                    && fallBackFor == resolvable.ServiceType)
-                {
-                    container.RegisterConditional(resolvable.ServiceType,
-                                                  resolvable.ComponentType,
-                                                  resolvable.Lifestyle,
-                                                  ctx => !ctx.Handled);
-                }
-                else
-                {
-                    container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
-                }
-            }
+            RegisterWithOpenGenericFallBack(container, resolvableRegistrationInfos);
 
             /*
              * [II] - External service single implementation
              */
             var externalServicesRegistrationInfos = GetExternalServiceRegistrationInfo(container, typeExtensions);
-
-            foreach (var resolvable in externalServicesRegistrationInfos)
-            {
-                container.Register(resolvable.ServiceType, resolvable.ComponentType, resolvable.Lifestyle);
-            }
+            RegisterWithOpenGenericFallBack(container, externalServicesRegistrationInfos);
 
             /*
              * [III] - Collection resolvable service
@@ -257,6 +236,8 @@ namespace SpaceEngineers.Core.AutoRegistration
                                  && !type.IsAbstract
                                  && typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
                   .SelectMany(type => typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
+                  .Select(typeExtensions.ExtractGenericTypeDefinition)
+                  .Distinct()
                   .SelectMany(i => GetComponents(container, typeExtensions, i))
                   .ToArray();
         }
@@ -360,6 +341,34 @@ namespace SpaceEngineers.Core.AutoRegistration
             {
                 yield return (componentType, serviceType);
             }
+        }
+
+        private static void RegisterWithOpenGenericFallBack(Container container,
+                                                            IEnumerable<ServiceRegistrationInfo> infos)
+        {
+            infos.Select(info => new
+                                 {
+                                     Info = info,
+                                     FallBackFor = info.ComponentType.GetCustomAttribute<OpenGenericFallBackAttribute>()
+                                 })
+                 .OrderBy(pair => pair.FallBackFor != null) // fallback must be registered after all exact registrations
+                 .Each(pair =>
+                       {
+                           if (pair.FallBackFor != null)
+                           {
+                               if (pair.FallBackFor.ServiceType == pair.Info.ServiceType)
+                               {
+                                   container.RegisterConditional(pair.Info.ServiceType,
+                                                                 pair.Info.ComponentType,
+                                                                 pair.Info.Lifestyle,
+                                                                 ctx => !ctx.Handled);
+                               }
+                           }
+                           else
+                           {
+                               container.Register(pair.Info.ServiceType, pair.Info.ComponentType, pair.Info.Lifestyle);
+                           }
+                       });
         }
     }
 }

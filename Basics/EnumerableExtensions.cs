@@ -60,6 +60,14 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
+        /// <summary> Select collection from untyped IEnumerable </summary>
+        /// <param name="enumerable">IEnumerable</param>
+        /// <returns>Collection of objects</returns>
+        public static IEnumerable<object> ToObjectEnumerable(this IEnumerable enumerable)
+        {
+            return enumerable.GetEnumerator().ToObjectEnumerable();
+        }
+
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
         /// <returns>Collection of objects</returns>

@@ -310,7 +310,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private static bool ForAutoRegistration(Type type)
         {
-            return type.GetCustomAttribute<UnregisteredAttribute>() == null;
+            return type.GetCustomAttribute<UnregisteredAttribute>(true) == null;
         }
 
         private static IEnumerable<(Type ComponentType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(

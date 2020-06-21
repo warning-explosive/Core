@@ -152,5 +152,17 @@
     <Compile Update="AutoWiringTest\ClosedGenericImplementationOfOpenGenericService.cs">
       <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoWiringTest\BaseUnregisteredServiceImpl.cs">
+      <DependentUpon>IUnregisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DerivedUnregisteredServiceImpl.cs">
+      <DependentUpon>IUnregisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\BaseUnregisteredExternalServiceImpl.cs">
+      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DerivedUnregisteredExternalServiceImpl.cs">
+      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

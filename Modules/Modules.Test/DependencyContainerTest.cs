@@ -3,12 +3,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using AutoRegistration;
     using AutoWiringApi.Abstractions;
+    using AutoWiringApi.Attributes;
     using AutoWiringTest;
     using Basics;
+    using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
+    using TypeExtensions = Basics.TypeExtensions;
 
     /// <summary>
     /// DependencyContainer class tests
@@ -271,6 +275,38 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.ResolveExternal<IComparable<ExternalResolvableImpl>>().GetType());
             Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.ResolveExternal<IComparable<object>>().GetType());
+        }
+
+        [Fact]
+        internal void UnregisteredServiceResolveTest()
+        {
+            Assert.NotNull(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.Null(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+
+            Assert.Null(typeof(DerivedUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.NotNull(typeof(DerivedUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+
+            Assert.True(typeof(DerivedUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
+            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedUnregisteredServiceImpl)));
+            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(BaseUnregisteredServiceImpl)));
+
+            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IUnregisteredService>());
+        }
+
+        [Fact]
+        internal void UnregisteredExternalServiceResolveTest()
+        {
+            Assert.NotNull(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.Null(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+
+            Assert.Null(typeof(DerivedUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.NotNull(typeof(DerivedUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+
+            Assert.True(typeof(DerivedUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
+            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedUnregisteredExternalServiceImpl)));
+            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
+
+            Assert.Throws<ActivationException>(() => DependencyContainer.ResolveExternal<IUnregisteredExternalService>());
         }
     }
 }

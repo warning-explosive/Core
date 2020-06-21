@@ -101,9 +101,10 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <typeparam name="TResult">TResult type-argument</typeparam>
         /// <returns>Return value of method</returns>
+        /// <exception cref="TypeMismatchException">Throws if TResult type is mismatched</exception>
         public TResult Invoke<TResult>()
         {
-            return Invoke().TryExtractFromNullable<object>().ExtractType<TResult>();
+            return Invoke().ExtractType<TResult>();
         }
 
         /// <summary>

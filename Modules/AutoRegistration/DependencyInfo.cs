@@ -126,7 +126,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                 dependencies = dependency.Registration
                                          .GetPropertyValue("Collection")
                                          .GetFieldValue("producers")
-                                         .TryExtractFromNullable<IEnumerable>()
+                                         .ExtractType<IEnumerable>()
                                          .GetEnumerator()
                                          .ToObjectEnumerable()
                                          .Select(o => o.GetPropertyValue("Value"))

@@ -75,7 +75,7 @@
         public static object DeepCopy(this object original)
         {
             return original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                           .TryExtractFromNullable<object>();
+                           .TryExtractFromNullable<object>("Not nullable input must be copied into not nullable output");
         }
 
         /// <summary>

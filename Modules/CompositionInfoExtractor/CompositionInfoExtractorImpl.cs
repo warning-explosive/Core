@@ -36,9 +36,13 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                           {
                               var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
 
-                              return DependencyInfo.RetrieveDependencyGraph(_container.GetRegistration(t, true).TryExtractFromNullable(),
-                                                                            visited,
-                                                                            0);
+                              Func<InstanceProducer?> getRegistration = () => _container.GetRegistration(t, true);
+
+                              var producer = getRegistration.Try().Catch<ActivationException>().Invoke();
+
+                              return producer == null
+                                         ? DependencyInfo.UnregisteredDependencyInfo(t)
+                                         : DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
                           })
                   .ToArray();
         }
@@ -51,7 +55,10 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                           {
                               var closedOrSame = _receiver.CloseByConstraints(t);
 
-                              _container.GetInstance(closedOrSame);
+                              Func<object> getInstance = () => _container.GetInstance(closedOrSame);
+
+                              // build graph by invocation
+                              getInstance.Try().Catch<ActivationException>().Invoke();
 
                               return closedOrSame;
                           })

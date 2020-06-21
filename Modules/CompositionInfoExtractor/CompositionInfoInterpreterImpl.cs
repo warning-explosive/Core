@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CompositionInfoVisualizerImpl : ICompositionInfoVisualizer
+    internal class CompositionInfoInterpreterImpl : ICompositionInfoInterpreter<string>
     {
         /// <inheritdoc />
         public string Visualize(DependencyInfo[] compositionInfo)
@@ -30,12 +30,18 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
         private static string DependencyAsString(DependencyInfo dependencyInfo)
         {
-            return Tabulation((int)dependencyInfo.Depth)
-                   + (dependencyInfo.IsCollectionResolvable
-                          ? "COLLECTION:"
-                          : string.Empty)
-                   + TrimGenerics(dependencyInfo.ComponentType)
-                   + Generics(dependencyInfo.ComponentType);
+            return Unregistered(dependencyInfo.IsUnregistered)
+                 + Tabulation((int)dependencyInfo.Depth)
+                 + (dependencyInfo.IsCollectionResolvable
+                        ? "COLLECTION:"
+                        : string.Empty)
+                 + TrimGenerics(dependencyInfo.ComponentType)
+                 + Generics(dependencyInfo.ComponentType);
+        }
+
+        private static string Unregistered(bool isUnregistered)
+        {
+            return isUnregistered ? "[UNREGISTERED]" : string.Empty;
         }
 
         private static string Tabulation(int count)

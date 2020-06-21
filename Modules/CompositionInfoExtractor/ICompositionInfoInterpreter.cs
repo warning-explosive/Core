@@ -4,15 +4,16 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     using AutoWiringApi.Abstractions;
 
     /// <summary>
-    /// Visualization of composition info
+    /// Interpretation of composition info
     /// </summary>
-    public interface ICompositionInfoVisualizer : IResolvable
+    /// <typeparam name="TOutput">TOutput type-argument</typeparam>
+    public interface ICompositionInfoInterpreter<TOutput> : IResolvable
     {
         /// <summary>
         /// Visualize composition info
         /// </summary>
         /// <param name="compositionInfo">Composition info</param>
         /// <returns>Visualization string</returns>
-        string Visualize(DependencyInfo[] compositionInfo);
+        TOutput Visualize(DependencyInfo[] compositionInfo);
     }
 }

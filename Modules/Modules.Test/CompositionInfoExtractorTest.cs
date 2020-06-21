@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
-            Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoVisualizer>()
+            Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
                                                 .Visualize(compositionInfo));
         }
     }

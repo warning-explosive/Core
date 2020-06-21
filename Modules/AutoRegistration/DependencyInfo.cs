@@ -67,6 +67,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         public bool IsCyclic { get; private set; }
 
         /// <summary>
+        /// IsUnregistered attribute
+        /// </summary>
+        public bool IsUnregistered { get; private set; }
+
+        /// <summary>
         /// Execute action on DependencyInfo object and its dependencies
         /// </summary>
         /// <param name="action">Action</param>
@@ -136,12 +141,23 @@ namespace SpaceEngineers.Core.AutoRegistration
             }
 
             newNodeInfo.Dependencies = dependencies
-                                      .Select(d => RetrieveDependencyGraph(d,
-                                                                           visited,
-                                                                           depth + 1))
+                                      .Select(d => RetrieveDependencyGraph(d, visited, depth + 1))
                                       .ToList();
 
             return newNodeInfo;
+        }
+
+        /// <summary>
+        /// Retrieve unregistered dependency info
+        /// </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <returns>DependencyInfo object</returns>
+        public static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
+        {
+            return new DependencyInfo(serviceType, serviceType, EnLifestyle.Transient, 0, false)
+                   {
+                       IsUnregistered = true
+                   };
         }
     }
 }

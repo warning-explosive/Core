@@ -50,7 +50,8 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Invoke client action
         /// </summary>
-        public void Invoke()
+        /// <param name="exceptionHandler">Exception handler</param>
+        public void Invoke(Action<Exception>? exceptionHandler = null)
         {
             try
             {
@@ -75,6 +76,8 @@ namespace SpaceEngineers.Core.Basics
                 {
                     throw realException;
                 }
+
+                exceptionHandler?.Invoke(realException);
             }
             finally
             {

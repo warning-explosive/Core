@@ -51,8 +51,9 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Try invoke client function
         /// </summary>
+        /// <param name="exceptionHandler">Exception handler</param>
         /// <returns>TResult</returns>
-        internal TResult InvokeInternal()
+        internal TResult InvokeInternal(Func<Exception, TResult>? exceptionHandler = null)
         {
             TResult result = default!;
 
@@ -78,6 +79,11 @@ namespace SpaceEngineers.Core.Basics
                 if (!handled)
                 {
                     throw realException;
+                }
+
+                if (exceptionHandler != null)
+                {
+                    return exceptionHandler.Invoke(realException);
                 }
             }
             finally

@@ -20,6 +20,33 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
+        internal void HandleCaughtExceptionsTest()
+        {
+            Func<bool> func = () => throw TestExtensions.TrueException();
+
+            var emptyHandlerBlockResult = func.Try()
+                                              .Catch<TrueException>()
+                                              .Invoke();
+            Assert.False(emptyHandlerBlockResult);
+
+            emptyHandlerBlockResult = func.Try()
+                                          .Catch<TrueException>(ex => { })
+                                          .Invoke();
+            Assert.False(emptyHandlerBlockResult);
+
+            var result = func.Try()
+                             .Catch<TrueException>()
+                             .Invoke(ex => true);
+            Assert.True(result);
+
+            void HandleNotCaught() => func.Try()
+                                          .Catch<FalseException>()
+                                          .Invoke(ex => true);
+
+            Assert.Throws<TrueException>(HandleNotCaught);
+        }
+
+        [Fact]
         internal void WrongNullableInferenceTest()
         {
             // TODO: Compiler Issue
@@ -81,6 +108,18 @@ namespace SpaceEngineers.Core.Basics.Test
             void TestFunction() => function.Try()
                                            .Catch<FalseException>(ex => throw TestExtensions.TrueException())
                                            .Invoke();
+
+            Assert.Throws<TrueException>(TestFunction);
+        }
+
+        [Fact]
+        internal void ThrowInInvokeBlockTest()
+        {
+            Func<object> function = () => throw TestExtensions.FalseException();
+
+            void TestFunction() => function.Try()
+                                           .Catch<FalseException>()
+                                           .Invoke(ex => throw TestExtensions.TrueException());
 
             Assert.Throws<TrueException>(TestFunction);
         }

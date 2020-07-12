@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     using System.Collections.Generic;
     using System.Linq;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
@@ -17,61 +18,78 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     {
         private readonly Container _container;
         private readonly IGenericArgumentsReceiver _receiver;
+        private readonly IAutoWiringServicesProvider _autoWiringServiceProvider;
 
         /// <summary> .ctor </summary>
         /// <param name="container">Container</param>
         /// <param name="receiver">IGenericArgumentsReceiver</param>
+        /// <param name="autoWiringServiceProvider">IServiceProvider</param>
         public CompositionInfoExtractorImpl(Container container,
-                                            IGenericArgumentsReceiver receiver)
+                                            IGenericArgumentsReceiver receiver,
+                                            IAutoWiringServicesProvider autoWiringServiceProvider)
         {
             _container = container;
             _receiver = receiver;
+            _autoWiringServiceProvider = autoWiringServiceProvider;
         }
 
         /// <inheritdoc />
-        public DependencyInfo[] GetCompositionInfo()
+        public DependencyInfo[] GetCompositionInfo(bool activeMode)
         {
-            return GetClosedServices()
-                  .Select(t =>
-                          {
-                              var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
+            if (activeMode)
+            {
+                return GetClosedServices()
+                      .Select(t =>
+                              {
+                                  var producer = _container.GetRegistration(t, false);
 
-                              Func<InstanceProducer?> getRegistration = () => _container.GetRegistration(t, true);
+                                  if (producer == null)
+                                  {
+                                      return DependencyInfo.UnregisteredDependencyInfo(t);
+                                  }
 
-                              var producer = getRegistration.Try().Catch<ActivationException>().Invoke();
+                                  var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
+                                  return DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
+                              })
+                      .ToArray();
+            }
 
-                              return producer == null
-                                         ? DependencyInfo.UnregisteredDependencyInfo(t)
-                                         : DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
-                          })
-                  .ToArray();
+            return _container.GetCurrentRegistrations()
+                             .Select(producer =>
+                                     {
+                                         var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
+                                         return DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
+                                     })
+                             .ToArray();
         }
 
         private IEnumerable<Type> GetClosedServices()
         {
-            return TypeExtensions
-                  .AllOurServicesThatContainsDeclarationOfInterface<IResolvable>()
-                  .Select(t =>
-                          {
-                              var closedOrSame = _receiver.CloseByConstraints(t);
+            return _autoWiringServiceProvider.Resolvable().Select(CloseOpenGeneric)
+                                             .Concat(_autoWiringServiceProvider.Implementations().Select(CloseOpenGeneric))
+                                             .Concat(_autoWiringServiceProvider.External().Select(CloseOpenGeneric))
+                                             .Concat(_autoWiringServiceProvider.Collections().Select(CloseOpenGenericCollection));
+        }
 
-                              Func<object> getInstance = () => _container.GetInstance(closedOrSame);
+        private Type CloseOpenGeneric(Type type)
+        {
+            var closedOrSame = _receiver.CloseByConstraints(type);
 
-                              // build graph by invocation
-                              getInstance.Try().Catch<ActivationException>().Invoke();
+            // build graph by invocation
+            Func<object> getInstance = () => _container.GetInstance(closedOrSame);
+            getInstance.Try().Catch<ActivationException>().Invoke();
 
-                              return closedOrSame;
-                          })
-                  .Concat(TypeExtensions
-                         .AllOurServicesThatContainsDeclarationOfInterface<ICollectionResolvable>()
-                         .Select(t =>
-                                 {
-                                     var closedOrSame = _receiver.CloseByConstraints(t);
+            return closedOrSame;
+        }
 
-                                     _container.GetAllInstances(closedOrSame);
+        private Type CloseOpenGenericCollection(Type type)
+        {
+            var closedOrSame = _receiver.CloseByConstraints(type);
 
-                                     return typeof(IEnumerable<>).MakeGenericType(closedOrSame);
-                                 }));
+            // build graph by invocation
+            _container.GetAllInstances(closedOrSame);
+
+            return typeof(IEnumerable<>).MakeGenericType(closedOrSame);
         }
     }
 }

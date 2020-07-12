@@ -11,7 +11,8 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         /// <summary>
         /// Extract project objects composition info
         /// </summary>
+        /// <param name="activeMode">Get composition info in ACTIVE(TRUE) or PASSIVE(FALSE) mode (ACTIVE - try build all dependencies from AutoWiring.API; PASSIVE - Get current built components)</param>
         /// <returns>DependencyInfos</returns>
-        DependencyInfo[] GetCompositionInfo();
+        DependencyInfo[] GetCompositionInfo(bool activeMode);
     }
 }

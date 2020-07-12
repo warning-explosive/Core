@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringTest;
@@ -12,6 +13,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
+    using Xunit.Sdk;
     using TypeExtensions = Basics.TypeExtensions;
 
     /// <summary>
@@ -261,20 +263,20 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ImplementationResolvableTest()
         {
-            Assert.NotNull(DependencyContainer.ResolveImplementation<ConcreteImplementationService>());
+            Assert.NotNull(DependencyContainer.Resolve<ConcreteImplementationService>());
 
-            var withDependency = DependencyContainer.ResolveImplementation<ConcreteImplementationWithDependencyService>();
+            var withDependency = DependencyContainer.Resolve<ConcreteImplementationWithDependencyService>();
             Assert.NotNull(withDependency);
             Assert.NotNull(withDependency.Dependency);
 
-            Assert.NotNull(DependencyContainer.ResolveImplementation<ConcreteImplementationGenericService<object>>());
+            Assert.NotNull(DependencyContainer.Resolve<ConcreteImplementationGenericService<object>>());
         }
 
         [Fact]
         internal void ExternalResolvableTest()
         {
-            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.ResolveExternal<IComparable<ExternalResolvableImpl>>().GetType());
-            Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.ResolveExternal<IComparable<object>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.Resolve<IComparable<ExternalResolvableImpl>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.Resolve<IComparable<object>>().GetType());
         }
 
         [Fact]
@@ -306,7 +308,34 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
 
-            Assert.Throws<ActivationException>(() => DependencyContainer.ResolveExternal<IUnregisteredExternalService>());
+            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IUnregisteredExternalService>());
+        }
+
+        [Fact]
+        internal async void AsyncScopeTest()
+        {
+            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
+
+            using (DependencyContainer.OpenScope())
+            {
+                var service = DependencyContainer.Resolve<IScopedLifestyleService>();
+                await service.DoSmth().ConfigureAwait(false);
+
+                var anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                await anotherService.DoSmth().ConfigureAwait(false);
+                Assert.True(ReferenceEquals(service, anotherService));
+
+                using (DependencyContainer.OpenScope())
+                {
+                    anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                    await anotherService.DoSmth().ConfigureAwait(false);
+                    Assert.False(ReferenceEquals(service, anotherService));
+                }
+
+                anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                await anotherService.DoSmth().ConfigureAwait(false);
+                Assert.True(ReferenceEquals(service, anotherService));
+            }
         }
     }
 }

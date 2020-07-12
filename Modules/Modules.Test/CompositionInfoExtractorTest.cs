@@ -15,17 +15,22 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output)
             : base(output) { }
 
-        [Fact]
-        internal void SimpleTest()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        internal void CompositionInfoTest(bool mode)
         {
-            var compositionInfo = DependencyContainer.Resolve<ICompositionInfoExtractor>()
-                                                     .GetCompositionInfo()
-                                                     .ToArray();
+            using (DependencyContainer.OpenScope())
+            {
+                var compositionInfo = DependencyContainer.Resolve<ICompositionInfoExtractor>()
+                                                         .GetCompositionInfo(mode)
+                                                         .ToArray();
 
-            Output.WriteLine($"Total: {compositionInfo.Length}\n");
+                Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
-            Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
-                                                .Visualize(compositionInfo));
+                Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
+                                                    .Visualize(compositionInfo));
+            }
         }
     }
 }

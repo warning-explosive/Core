@@ -104,7 +104,7 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="TypeMismatchException">Throws if TResult type is mismatched</exception>
         public TResult Invoke<TResult>()
         {
-            return Invoke().ExtractType<TResult>();
+            return Invoke().EnsureType<TResult>();
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace SpaceEngineers.Core.Basics
                                };
 
             var methodInfo = methodFinder.FindMethod()
-                                         .TryExtractFromNullable(() => new NotFoundException($"Method not found: {methodFinder}"));
+                                         .EnsureNotNull(() => new NotFoundException($"Method not found: {methodFinder}"));
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();

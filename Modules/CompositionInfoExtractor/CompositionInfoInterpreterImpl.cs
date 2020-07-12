@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.CompositionInfoExtractor
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.Tracing;
     using System.Globalization;
     using System.Linq;
     using System.Text;
@@ -30,23 +32,49 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
         private static string DependencyAsString(DependencyInfo dependencyInfo)
         {
-            return Unregistered(dependencyInfo.IsUnregistered)
-                 + Tabulation((int)dependencyInfo.Depth)
-                 + (dependencyInfo.IsCollectionResolvable
-                        ? "COLLECTION:"
-                        : string.Empty)
+            return Tabulation((int)dependencyInfo.Depth)
+                 + Tags(dependencyInfo)
                  + TrimGenerics(dependencyInfo.ComponentType)
                  + Generics(dependencyInfo.ComponentType);
-        }
-
-        private static string Unregistered(bool isUnregistered)
-        {
-            return isUnregistered ? "[UNREGISTERED]" : string.Empty;
         }
 
         private static string Tabulation(int count)
         {
             return new string('\t', count);
+        }
+
+        private static string Tags(DependencyInfo dependencyInfo)
+        {
+            var tags = new List<string>();
+
+            if (dependencyInfo.IsUnregistered)
+            {
+                tags.Add("[UNREGISTERED]");
+            }
+
+            if (dependencyInfo.ComponentType.IsGenericType)
+            {
+                tags.Add("[GENERIC]");
+            }
+
+            if (dependencyInfo.IsCollectionResolvable)
+            {
+                tags.Add("[COLLECTION]");
+            }
+
+            if (dependencyInfo.ServiceType == dependencyInfo.ComponentType)
+            {
+                tags.Add("[IMPLEMENTATION]");
+            }
+
+            tags.Add(Lifestyle(dependencyInfo.Lifestyle));
+
+            return string.Join(string.Empty, tags);
+        }
+
+        private static string Lifestyle(EnLifestyle lifestyle)
+        {
+            return $"[{lifestyle.ToString().ToUpperInvariant()}]";
         }
 
         private static string TrimGenerics(Type type)
@@ -65,8 +93,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
             const string format = "[{0}]";
 
-            var genericArguments = type.GetGenericTypeDefinition()
-                                       .GetGenericArguments();
+            var genericArguments = type.GetGenericTypeDefinition().GetGenericArguments();
 
             return string.Format(CultureInfo.InvariantCulture,
                                  format,

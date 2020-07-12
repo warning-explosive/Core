@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
 

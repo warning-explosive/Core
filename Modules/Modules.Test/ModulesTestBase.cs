@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Basics.Test;
     using Xunit.Abstractions;
 
@@ -16,7 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            DependencyContainer = AutoRegistration.DependencyContainer.Default(typeof(ModulesTestBase).Assembly);
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(typeof(ModulesTestBase).Assembly, new DependencyContainerOptions());
         }
 
         /// <summary>

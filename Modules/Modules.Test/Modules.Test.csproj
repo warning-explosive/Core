@@ -164,5 +164,8 @@
     <Compile Update="AutoWiringTest\DerivedUnregisteredExternalServiceImpl.cs">
       <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoWiringTest\ScopedLifestyleServiceImpl.cs">
+      <DependentUpon>IScopedLifestyleService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

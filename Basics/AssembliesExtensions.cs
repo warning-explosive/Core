@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Basics
         public static Assembly[] AllFromCurrentDomain()
         {
             return AppDomain.CurrentDomain
-                            .TryExtractFromNullable(() => new InvalidOperationException($"{nameof(AppDomain.CurrentDomain)} is null"))
+                            .EnsureNotNull(() => new InvalidOperationException($"{nameof(AppDomain.CurrentDomain)} is null"))
                             .GetAssemblies();
         }
 

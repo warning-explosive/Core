@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Linq;
     using AutoWiringApi.Enumerations;
     using Basics;
+    using Internals;
     using SimpleInjector;
 
     /// <summary>
@@ -42,7 +43,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         public Type ComponentType { get; }
 
         /// <summary>
-        /// Componemt lifestyle
+        /// Component lifestyle
         /// </summary>
         public EnLifestyle Lifestyle { get; }
 
@@ -113,7 +114,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             var newNodeInfo = new DependencyInfo(serviceType,
                                                  componentType,
-                                                 LifeStyleMapper.MapLifestyle(dependency.Lifestyle),
+                                                 dependency.Lifestyle.MapLifestyle(),
                                                  depth,
                                                  isCollectionResolvable);
 
@@ -126,7 +127,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                 dependencies = dependency.Registration
                                          .GetPropertyValue("Collection")
                                          .GetFieldValue("producers")
-                                         .ExtractType<IEnumerable>()
+                                         .EnsureType<IEnumerable>()
                                          .GetEnumerator()
                                          .ToObjectEnumerable()
                                          .Select(o => o.GetPropertyValue("Value"))

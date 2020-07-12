@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Linq;
     using Api;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
@@ -29,7 +30,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            DependencyContainer = AutoRegistration.DependencyContainer.Default(typeof(DiagnosticAnalyzerTestBase<>).Assembly);
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(typeof(DiagnosticAnalyzerTestBase<>).Assembly, new DependencyContainerOptions());
 
             _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();

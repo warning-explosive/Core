@@ -1,5 +1,6 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Internals
 {
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using YamlDotNet.Serialization;

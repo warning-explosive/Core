@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SettingsManager", "Modules\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modules.Test", "Modules\Modules.Test\Modules.Test.csproj", "{E5845FF6-CBAD-433A-A739-EA800F37BC7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint", "Modules\GenericEndpoint\GenericEndpoint.csproj", "{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{96C860FA-1B1E-4D1D-A6F2-EF08E8674920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96C860FA-1B1E-4D1D-A6F2-EF08E8674920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96C860FA-1B1E-4D1D-A6F2-EF08E8674920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -103,6 +109,7 @@ Global
 		{E5845FF6-CBAD-433A-A739-EA800F37BC7F} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{39A32FDC-5846-46AF-92AC-03E1340DE7B6} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{96C860FA-1B1E-4D1D-A6F2-EF08E8674920} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

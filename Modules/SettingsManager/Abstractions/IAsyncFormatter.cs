@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Abstractions
 {
     using System.Threading.Tasks;
     using AutoWiringApi.Abstractions;

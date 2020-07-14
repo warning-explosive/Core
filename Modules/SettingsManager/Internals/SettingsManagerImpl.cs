@@ -1,6 +1,8 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Internals
 {
     using System;
+    using System.Threading.Tasks;
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
 
@@ -16,23 +18,21 @@ namespace SpaceEngineers.Core.SettingsManager
             _formatter = formatter;
         }
 
-        public TSettings Get()
+        public Task<TSettings> Get()
         {
             if (typeof(IFileSystemSettings).IsAssignableFrom(typeof(TSettings)))
             {
-                return _formatter.Deserialize().Result;
+                return _formatter.Deserialize();
             }
 
             throw new NotSupportedException(typeof(TSettings).FullName);
         }
 
-        public void Set(TSettings value)
+        public Task Set(TSettings value)
         {
             if (typeof(IFileSystemSettings).IsAssignableFrom(typeof(TSettings)))
             {
-                _formatter.Serialize(value).Wait();
-
-                return;
+                return _formatter.Serialize(value);
             }
 
             throw new NotSupportedException(typeof(TSettings).FullName);

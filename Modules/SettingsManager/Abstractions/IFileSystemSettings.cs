@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Abstractions
 {
     /// <summary>
     /// Configuration stored into machine file system

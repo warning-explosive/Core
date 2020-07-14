@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.SettingsManager</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.SettingsManager</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.GenericEndpoint</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.GenericEndpoint</RootNamespace>
     <IsPackable>true</IsPackable>
-    <Title>SpaceEngineers.Core.SettingsManager</Title>
+    <Title>SpaceEngineers.Core.NServiceBus.GenericEndpoint</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.SettingsManager</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.NServiceBus.GenericEndpoint</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -31,13 +31,19 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
-    <PackageReference Include="YamlDotNet" Version="8.1.0" />
+    <ProjectReference Include="..\..\Basics\Basics.csproj" />
+    <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <PackageReference Include="NServiceBus" Version="7.3.0" />
+    <PackageReference Include="NServiceBus.Heartbeat" Version="3.0.1" />
+    <PackageReference Include="NServiceBus.Metrics" Version="3.0.0" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.4" />
+    <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
+    <PackageReference Include="NServiceBus.RabbitMQ" Version="5.2.0" />
+    <PackageReference Include="NServiceBus.Storage.MongoDB" Version="2.2.0" />
+    <PackageReference Include="NServiceBus.UniformSession" Version="2.1.0" />
   </ItemGroup>
 </Project>

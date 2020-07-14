@@ -200,13 +200,13 @@ namespace SpaceEngineers.Core.Basics.Test
 
         private bool CheckEquality(IEnumerable<IEnumerable<Type>> expected, IEnumerable<IEnumerable<Type>> actual)
         {
-            Showx(actual);
+            Show(actual);
 
             return expected.Count() == actual.Count()
                 && expected.Zip(actual).All(pair => pair.First.SequenceEqual(pair.Second));
         }
 
-        private void Showx(IEnumerable<IEnumerable<Type>> source) // Todo
+        private void Show(IEnumerable<IEnumerable<Type>> source)
         {
             foreach (var row in source)
             {

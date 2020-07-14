@@ -1,9 +1,10 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Internals
 {
     using System;
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
+    using Abstractions;
     using Basics;
 
     internal abstract class FileSystemFormatterBase<TSettings> : IAsyncFormatter<TSettings>
@@ -28,9 +29,9 @@ namespace SpaceEngineers.Core.SettingsManager
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
             {
-                var serialized = await Task.Run(() => SerializeInternal(value));
+                var serialized = SerializeInternal(value);
 
-                await fileStream.OverWriteAllAsync(serialized, _encoding);
+                await fileStream.OverWriteAllAsync(serialized, _encoding).ConfigureAwait(false);
             }
         }
 
@@ -39,9 +40,9 @@ namespace SpaceEngineers.Core.SettingsManager
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.None))
             {
-                var serialized = await fileStream.ReadAllAsync(_encoding);
+                var serialized = await fileStream.ReadAllAsync(_encoding).ConfigureAwait(false);
 
-                return await Task.Run(() => DeserializeInternal(serialized));
+                return DeserializeInternal(serialized);
             }
         }
 

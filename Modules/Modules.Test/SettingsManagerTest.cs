@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using Basics;
     using SettingsManager;
+    using SettingsManager.Abstractions;
     using Xunit;
     using Xunit.Abstractions;
 

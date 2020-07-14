@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.SettingsManager
+namespace SpaceEngineers.Core.SettingsManager.Abstractions
 {
     using System.Diagnostics.CodeAnalysis;
+    using System.Threading.Tasks;
     using AutoWiringApi.Abstractions;
 
     /// <summary>
@@ -14,13 +15,14 @@ namespace SpaceEngineers.Core.SettingsManager
         /// <summary>
         /// Get ISettings value
         /// </summary>
-        /// <returns>ISettings value</returns>
-        TSettings Get();
+        /// <returns>Get operation with ISettings value result</returns>
+        Task<TSettings> Get();
 
         /// <summary>
         /// Set ISettings value
         /// </summary>
         /// <param name="value">ISettings value</param>
-        void Set(TSettings value);
+        /// <returns>Set operation</returns>
+        Task Set(TSettings value);
     }
 }

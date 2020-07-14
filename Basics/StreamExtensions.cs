@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Encoded bytes</returns>
         public static async Task<string> ReadAllAsync(this Stream stream, Encoding encoding)
         {
-            return encoding.GetString(await stream.ReadAllAsync());
+            return encoding.GetString(await stream.ReadAllAsync().ConfigureAwait(false));
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Task-object</returns>
         public static async Task OverWriteAllAsync(this Stream stream, string serialized, Encoding encoding)
         {
-            await stream.OverWriteAllAsync(encoding.GetBytes(serialized));
+            await stream.OverWriteAllAsync(encoding.GetBytes(serialized)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.Basics
             var offset = 0;
             stream.Position = offset;
 
-            await stream.ReadAsync(buffer, offset, bytes);
+            await stream.ReadAsync(buffer, offset, bytes).ConfigureAwait(false);
 
             return buffer;
         }
@@ -58,14 +58,14 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Task-object</returns>
         public static async Task OverWriteAllAsync(this Stream stream, byte[] bytes)
         {
-            await stream.FlushAsync();
+            await stream.FlushAsync().ConfigureAwait(false);
 
             var offset = 0;
             stream.Position = offset;
 
             stream.SetLength(bytes.Length);
 
-            await stream.WriteAsync(bytes, offset, bytes.Length);
+            await stream.WriteAsync(bytes, offset, bytes.Length).ConfigureAwait(false);
         }
     }
 }

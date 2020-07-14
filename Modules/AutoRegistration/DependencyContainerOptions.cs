@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
+    using System.IO;
     using Abstractions;
 
     /// <summary>
@@ -12,5 +13,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Callback to register external dependencies. Called before container sealing.
         /// </summary>
         public Action<IRegistrationContainer>? RegistrationCallback { get; set; }
+
+        /// <summary>
+        /// SearchOption for assemblies in BaseDirectory
+        /// Default: SearchOption.TopDirectoryOnly
+        /// </summary>
+        public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
     }
 }

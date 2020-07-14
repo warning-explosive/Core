@@ -20,14 +20,14 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output) { }
 
         [Fact]
-        internal void YamlDeserializationTest()
+        internal async void YamlDeserializationTest()
         {
             var manager = DependencyContainer.Resolve<ISettingsManager<TestYamlConfig>>();
 
             /*
              * 1 - Read
              */
-            var config = manager.Get();
+            var config = await manager.Get().ConfigureAwait(false);
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
@@ -62,14 +62,14 @@ namespace SpaceEngineers.Core.Modules.Test
                                           }
                                       }
                      };
-            manager.Set(config);
+            await manager.Set(config).ConfigureAwait(false);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
 
             /*
              * 3 - Read again
              */
-            config = manager.Get();
+            config = await manager.Get().ConfigureAwait(false);
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
         }

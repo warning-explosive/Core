@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            DependencyContainer = AutoRegistration.DependencyContainer.Create(typeof(ModulesTestBase).Assembly, new DependencyContainerOptions());
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(new DependencyContainerOptions());
         }
 
         /// <summary>

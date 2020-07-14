@@ -147,9 +147,9 @@ namespace SpaceEngineers.Core.Basics
                                             .All(CheckConstraint);
 
             var filters = GetFiltersByTypeParameterAttributes(typeArgument.GenericParameterAttributes);
-            var byFilters = filters.All(filter => filter(typeForCheck));
+            var byGenericParameterAttributes = filters.All(filter => filter(typeForCheck));
 
-            return byConstraints && byFilters;
+            return byConstraints && byGenericParameterAttributes;
         }
 
         /// <inheritdoc />
@@ -187,13 +187,6 @@ namespace SpaceEngineers.Core.Basics
         {
             var filters = new List<Func<Type, bool>>();
 
-            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.None))
-            {
-                filters.Add(type => true);
-
-                return filters;
-            }
-
             if (genericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
             {
                 filters.Add(type => type.IsClass);
@@ -217,6 +210,11 @@ namespace SpaceEngineers.Core.Basics
 
                                 return ctor != null;
                             });
+            }
+
+            if (!filters.Any())
+            {
+                filters.Add(type => true);
             }
 
             return filters;

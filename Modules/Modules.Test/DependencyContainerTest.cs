@@ -10,6 +10,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringApi.Attributes;
     using AutoWiringTest;
     using Basics;
+    using CompositionInfoExtractor;
+    using SettingsManager.Abstractions;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -335,6 +337,48 @@ namespace SpaceEngineers.Core.Modules.Test
                 anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
                 await anotherService.DoSmth().ConfigureAwait(false);
                 Assert.True(ReferenceEquals(service, anotherService));
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        internal void SlimContainerTest(bool mode)
+        {
+            var settingsContainer = AutoRegistration.DependencyContainer
+                                                    .CreateBounded(new[]
+                                                                   {
+                                                                       typeof(ISettingsManager<>).Assembly,
+                                                                       typeof(ICompositionInfoExtractor).Assembly,
+                                                                   },
+                                                                   new DependencyContainerOptions());
+
+            var compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
+                                                   .GetCompositionInfo(mode)
+                                                   .ToArray();
+
+            Output.WriteLine($"Total: {compositionInfo.Length}\n");
+
+            Output.WriteLine(settingsContainer.Resolve<ICompositionInfoInterpreter<string>>()
+                                              .Visualize(compositionInfo));
+
+            var allowedAssemblies = new[]
+                                    {
+                                        typeof(Container).Assembly,                 // SimpleInjector assembly,
+                                        typeof(ITypeExtensions).Assembly,           // Basics assembly
+                                        typeof(LifestyleAttribute).Assembly,        // AutoWiringApi assembly
+                                        typeof(IDependencyContainer).Assembly,      // AutoRegistration assembly
+                                        typeof(ISettingsManager<>).Assembly,        // SettingsManager assembly
+                                        typeof(ICompositionInfoExtractor).Assembly, // CompositionInfoExtractor assembly
+                                    };
+
+            Assert.True(compositionInfo.All(Satisfy));
+
+            bool Satisfy(DependencyInfo info)
+            {
+                return allowedAssemblies.Contains(info.ServiceType.Assembly)
+                    && allowedAssemblies.Contains(info.ComponentType.Assembly)
+                    && info.Dependencies.All(Satisfy);
             }
         }
     }

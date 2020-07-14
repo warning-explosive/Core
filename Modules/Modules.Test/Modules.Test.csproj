@@ -43,7 +43,6 @@
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
     <ProjectReference Include="..\CompositionInfoExtractor\CompositionInfoExtractor.csproj" />
-    <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>

@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
+    using System;
+    using System.Linq;
     using System.Reflection;
     using Abstractions;
     using AutoWiringApi.Attributes;
@@ -12,19 +14,32 @@ namespace SpaceEngineers.Core.AutoRegistration
     {
         /// <summary>
         /// Default configured container
-        /// Assemblies loaded in CurrentDomain and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
+        /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
         /// </summary>
-        /// <param name="entryPointAssembly">Entry point assembly, should contains all references - application root</param>
         /// <param name="options">DependencyContainer creation options</param>
         /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer Create(Assembly entryPointAssembly,
-                                                  DependencyContainerOptions options)
+        public static IDependencyContainer Create(DependencyContainerOptions options)
         {
-            AssembliesExtensions.WarmUpAppDomain(entryPointAssembly);
+            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
             var autoWiringApi = typeof(LifestyleAttribute).Assembly;
 
             return new DependencyContainerImpl(AssembliesExtensions.AllFromCurrentDomain(),
+                                               new[] { autoWiringApi },
+                                               options?.RegistrationCallback);
+        }
+
+        /// <summary>
+        /// Container configured bounded by specified assemblies
+        /// </summary>
+        /// <param name="assemblies">Assemblies for container configuration</param>
+        /// <param name="options">DependencyContainer creation options</param>
+        /// <returns>DependencyContainer</returns>
+        public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
+        {
+            var autoWiringApi = typeof(LifestyleAttribute).Assembly;
+
+            return new DependencyContainerImpl(assemblies,
                                                new[] { autoWiringApi },
                                                options.RegistrationCallback);
         }

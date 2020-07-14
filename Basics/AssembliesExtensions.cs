@@ -24,29 +24,22 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Load all referenced assemblies into AppDomain
         /// </summary>
-        /// <param name="entryPointAssembly">Entry point assembly, should contains all references - application root</param>
-        public static void WarmUpAppDomain(Assembly entryPointAssembly)
+        /// <param name="searchOption">SearchOption for assemblies in BaseDirectory</param>
+        public static void WarmUpAppDomain(SearchOption searchOption)
         {
-            // 1 - load by referenced assemblies
-            foreach (var assembly in entryPointAssembly.GetReferencedAssemblies()
-                                                       .Where(a => a.ContentType != AssemblyContentType.WindowsRuntime))
-            {
-                AppDomain.CurrentDomain.Load(assembly);
-            }
+            /*
+             * 1 - load from directory
+             * 2 - load by referenced assemblies
+             */
 
-            // 2 - load from directory
-            var libraries = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly);
+            Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
+                     .Select(Load)
+                     .SelectMany(assembly => assembly.GetReferencedAssemblies())
+                     .Distinct()
+                     .Where(a => a.ContentType != AssemblyContentType.WindowsRuntime)
+                     .Each(assembly => AppDomain.CurrentDomain.Load(assembly));
 
-            foreach (var library in libraries)
-            {
-                try
-                {
-                    AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(library));
-                }
-                catch (FileNotFoundException)
-                {
-                }
-            }
+            Assembly Load(string library) => AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(library));
         }
     }
 }

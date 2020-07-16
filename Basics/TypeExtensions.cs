@@ -10,20 +10,31 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
-        private static ITypeExtensions _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(Array.Empty<Assembly>(), Array.Empty<Assembly>()));
+        private static readonly ITypeExtensions EmptyDefault = new TypeExtensionsImpl(new TypeInfoStorage(Array.Empty<Assembly>(), Array.Empty<Assembly>()));
+
+        private static Func<ITypeExtensions>? _typeExtensionsFactory;
+
+        private static ITypeExtensions TypeExtensionsService => _typeExtensionsFactory?.Invoke() ?? EmptyDefault;
 
         /// <summary>
-        /// Configure type info storage
-        /// Must be call only once
+        /// Build type extensions without side effects
         /// </summary>
         /// <param name="assemblies">All loaded assemblies</param>
         /// <param name="rootAssemblies">Root assemblies</param>
         /// <returns>Created instance of ITypeExtensions</returns>
-        public static ITypeExtensions Configure(Assembly[] assemblies, Assembly[] rootAssemblies)
+        public static ITypeExtensions Build(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            _typeExtensions = new TypeExtensionsImpl(new TypeInfoStorage(assemblies, rootAssemblies));
+            return new TypeExtensionsImpl(new TypeInfoStorage(assemblies, rootAssemblies));
+        }
 
-            return _typeExtensions;
+        /// <summary>
+        /// Configure type extensions class
+        /// Must be call only once
+        /// </summary>
+        /// <param name="typeExtensionsFactory">ITypeExtensions factory</param>
+        public static void Configure(Func<ITypeExtensions> typeExtensionsFactory)
+        {
+            _typeExtensionsFactory = typeExtensionsFactory;
         }
 
         /// <summary> Order collection by type dependencies (DependencyAttribute) </summary>
@@ -34,36 +45,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Ordered collection</returns>
         public static IOrderedEnumerable<T> OrderByDependencies<T>(this IEnumerable<T> source, Func<T, Type> accessor)
         {
-            return _typeExtensions.OrderByDependencies(source, accessor);
-        }
-
-        /// <summary>
-        /// Get all services (interfaces) that contains TInterface declaration
-        /// </summary>
-        /// <typeparam name="T">Type-argument</typeparam>
-        /// <returns>Result of check</returns>
-        public static Type[] AllOurServicesThatContainsDeclarationOfInterface<T>()
-            where T : class
-        {
-            return _typeExtensions.AllOurServicesThatContainsDeclarationOfInterface<T>();
-        }
-
-        /// <summary>
-        /// Get all types loaded in AppDomain
-        /// </summary>
-        /// <returns>All types loaded in AppDomain</returns>
-        public static Type[] AllLoadedTypes()
-        {
-            return _typeExtensions.AllLoadedTypes();
-        }
-
-        /// <summary>
-        /// Get all types located in our assemblies
-        /// </summary>
-        /// <returns>All types located in our assemblies</returns>
-        public static Type[] OurTypes()
-        {
-            return _typeExtensions.OurTypes();
+            return TypeExtensionsService.OrderByDependencies(source, accessor);
         }
 
         /// <summary>
@@ -73,7 +55,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Result of check</returns>
         public static bool IsOurType(this Type type)
         {
-            return _typeExtensions.IsOurType(type);
+            return TypeExtensionsService.IsOurType(type);
         }
 
         /// <summary>
@@ -83,7 +65,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Type dependencies</returns>
         public static ICollection<Type> GetDependenciesByAttribute(this Type type)
         {
-            return _typeExtensions.GetDependenciesByAttribute(type);
+            return TypeExtensionsService.GetDependenciesByAttribute(type);
         }
 
         /// <summary>
@@ -93,7 +75,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Result of check</returns>
         public static bool IsNullable(this Type type)
         {
-            return _typeExtensions.IsNullable(type);
+            return TypeExtensionsService.IsNullable(type);
         }
 
         /// <summary>
@@ -104,7 +86,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Result of check</returns>
         public static bool IsSubclassOfOpenGeneric(this Type type, Type openGenericAncestor)
         {
-            return _typeExtensions.IsSubclassOfOpenGeneric(type, openGenericAncestor);
+            return TypeExtensionsService.IsSubclassOfOpenGeneric(type, openGenericAncestor);
         }
 
         /// <summary>
@@ -115,7 +97,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Result of check</returns>
         public static bool IsContainsInterfaceDeclaration(this Type type, Type @interface)
         {
-            return _typeExtensions.IsContainsInterfaceDeclaration(type, @interface);
+            return TypeExtensionsService.IsContainsInterfaceDeclaration(type, @interface);
         }
 
         /// <summary>
@@ -126,7 +108,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>True - fits / False doesn't fits</returns>
         public static bool FitsForTypeArgument(this Type typeForCheck, Type typeArgument)
         {
-            return _typeExtensions.FitsForTypeArgument(typeForCheck, typeArgument);
+            return TypeExtensionsService.FitsForTypeArgument(typeForCheck, typeArgument);
         }
 
         /// <summary>
@@ -141,7 +123,7 @@ namespace SpaceEngineers.Core.Basics
                                                                            Type openGeneric,
                                                                            int typeArgumentAt = 0)
         {
-            return _typeExtensions.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
+            return TypeExtensionsService.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
         }
 
         /// <summary>
@@ -149,9 +131,9 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>GenericTypeDefinition or argument type</returns>
-        public static Type ExtractGenericTypeDefinition(Type type)
+        public static Type ExtractGenericTypeDefinition(this Type type)
         {
-            return _typeExtensions.ExtractGenericTypeDefinition(type);
+            return TypeExtensionsService.ExtractGenericTypeDefinition(type);
         }
     }
 }

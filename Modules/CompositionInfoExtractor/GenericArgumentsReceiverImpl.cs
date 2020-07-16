@@ -10,6 +10,13 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
     [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericArgumentsReceiverImpl : IGenericArgumentsReceiver
     {
+        private readonly ITypeExtensions _typeExtensions;
+
+        public GenericArgumentsReceiverImpl(ITypeExtensions typeExtensions)
+        {
+            _typeExtensions = typeExtensions;
+        }
+
         /// <inheritdoc />
         public Type CloseByConstraints(Type type)
         {
@@ -40,14 +47,14 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                    || type.IsConstructedGenericType;
         }
 
-        private static Type ReceiveSatisfyingType(Type typeArgument)
+        private Type ReceiveSatisfyingType(Type typeArgument)
         {
             bool CheckTypeArgument(Type type) => type.FitsForTypeArgument(typeArgument);
 
-            var satisfyingType = TypeExtensions.OurTypes()
-                                              .FirstOrDefault(CheckTypeArgument)
-                             ?? TypeExtensions.AllLoadedTypes()
-                                              .FirstOrDefault(CheckTypeArgument);
+            var satisfyingType = _typeExtensions.OurTypes()
+                                                .FirstOrDefault(CheckTypeArgument)
+                              ?? _typeExtensions.AllLoadedTypes()
+                                                .FirstOrDefault(CheckTypeArgument);
 
             return satisfyingType.EnsureNotNull($"Satisfying type for type argument {typeArgument} not found");
         }

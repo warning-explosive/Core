@@ -14,9 +14,10 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
     [Unregistered]
-    public class AutoWiringServicesProvider : IAutoWiringServicesProvider
+    internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {
         private readonly Container _container;
+
         private readonly ITypeExtensions _typeExtensions;
 
         /// <summary> .cctor </summary>
@@ -43,7 +44,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <inheritdoc />
         public IEnumerable<Type> Implementations()
         {
-            return _container.GetTypesToRegister(_typeExtensions, typeof(IResolvableImplementation));
+            return typeof(IResolvableImplementation).GetTypesToRegister(_container, _typeExtensions);
         }
 
         /// <inheritdoc />
@@ -53,8 +54,8 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .AllLoadedTypes()
                   .Where(type => type.IsClass
                               && !type.IsAbstract
-                              && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
-                  .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
+                              && type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)))
+                  .SelectMany(type => type.GetGenericArgumentsOfOpenGenericAt(typeof(IExternalResolvable<>), 0))
                   .Select(_typeExtensions.ExtractGenericTypeDefinition)
                   .Distinct();
         }

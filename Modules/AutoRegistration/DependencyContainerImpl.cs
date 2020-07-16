@@ -26,16 +26,13 @@ namespace SpaceEngineers.Core.AutoRegistration
         private readonly Container _container;
 
         /// <summary> .ctor </summary>
-        /// <param name="assemblies">All loaded assemblies</param>
-        /// <param name="rootAssemblies">Root assemblies</param>
+        /// <param name="typeExtensions">ITypeExtensions</param>
         /// <param name="registration">Register external dependencies</param>
-        internal DependencyContainerImpl(Assembly[] assemblies,
-                                         Assembly[] rootAssemblies,
+        internal DependencyContainerImpl(ITypeExtensions typeExtensions,
                                          Action<IRegistrationContainer>? registration = null)
         {
             _container = CreateContainer();
 
-            var typeExtensions = TypeExtensions.Configure(assemblies, rootAssemblies);
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
 
             RegisterSingletons(_container, this, typeExtensions, servicesProvider);
@@ -207,9 +204,9 @@ namespace SpaceEngineers.Core.AutoRegistration
             // register each element of collection as implementation to provide lifestyle for container
             container.RegisterImplementations(collectionResolvableRegistrationInfos);
 
-            typeExtensions.OrderByDependencies(collectionResolvableRegistrationInfos, z => z.ComponentType)
-                          .GroupBy(k => k.ServiceType, v => v.ComponentType)
-                          .Each(info => container.Collection.Register(info.Key, info));
+            collectionResolvableRegistrationInfos.OrderByDependencies(z => z.ComponentType)
+                                                 .GroupBy(k => k.ServiceType, v => v.ComponentType)
+                                                 .Each(info => container.Collection.Register(info.Key, info));
 
             /*
              * [IV] - Decorators
@@ -217,8 +214,9 @@ namespace SpaceEngineers.Core.AutoRegistration
             var decorators = Decorators(typeExtensions, typeof(IDecorator<>)).GetDecoratorInfo(typeof(IDecorator<>));
             var conditionalDecorators = Decorators(typeExtensions, typeof(IConditionalDecorator<,>)).GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
 
-            typeExtensions.OrderByDependencies(decorators.Concat(conditionalDecorators), z => z.ComponentType)
-                          .Each(container.RegisterDecorator);
+            decorators.Concat(conditionalDecorators)
+                      .OrderByDependencies(z => z.ComponentType)
+                      .Each(container.RegisterDecorator);
 
             /*
              * [V] - Collection decorators
@@ -226,21 +224,22 @@ namespace SpaceEngineers.Core.AutoRegistration
             var collectionDecorators = Decorators(typeExtensions, typeof(ICollectionDecorator<>)).GetDecoratorInfo(typeof(ICollectionDecorator<>));
             var collectionConditionalDecorators = Decorators(typeExtensions, typeof(ICollectionConditionalDecorator<,>)).GetConditionalDecoratorInfo(typeof(ICollectionConditionalDecorator<,>));
 
-            typeExtensions.OrderByDependencies(collectionDecorators.Concat(collectionConditionalDecorators), z => z.ComponentType)
-                          .Each(container.RegisterDecorator);
+            collectionDecorators.Concat(collectionConditionalDecorators)
+                                .OrderByDependencies(z => z.ComponentType)
+                                .Each(container.RegisterDecorator);
 
             /*
              * [VI] - Concrete Implementations
              */
-            var resolvableImplementations = autoWiringServicesProvider.Implementations().GetImplementationComponents(typeExtensions);
+            var resolvableImplementations = autoWiringServicesProvider.Implementations().GetImplementationComponents();
             container.RegisterImplementations(resolvableImplementations);
         }
 
         private static IEnumerable<Type> Decorators(ITypeExtensions typeExtensions, Type decoratorType)
         {
             return typeExtensions.OurTypes()
-                                  .Where(t => !t.IsInterface
-                                           && typeExtensions.IsSubclassOfOpenGeneric(t, decoratorType));
+                                 .Where(t => !t.IsInterface
+                                          && t.IsSubclassOfOpenGeneric(decoratorType));
         }
     }
 }

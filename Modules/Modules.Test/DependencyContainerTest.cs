@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
@@ -31,17 +32,25 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void IsOurTypeTest()
         {
-            var wrongOurTypes = TypeExtensions
-                               .OurTypes()
+            var ourTypes = DependencyContainer.Resolve<ITypeExtensions>()
+                                              .OurTypes();
+
+            var wrongOurTypes = ourTypes
                                .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
                                .ToArray();
 
             wrongOurTypes.Each(t => Output.WriteLine(t.FullName));
-            Assert.False(wrongOurTypes.Any());
+            Assert.False(wrongOurTypes.Any(), Show(wrongOurTypes));
 
-            Assert.False(typeof(object).IsOurType());
-            Assert.True(typeof(IDependencyContainer).IsOurType());
-            Assert.True(typeof(IDecorator<>).IsOurType());
+            wrongOurTypes = AssembliesExtensions.AllFromCurrentDomain()
+                                                .SelectMany(asm => asm.GetTypes())
+                                                .Except(ourTypes)
+                                                .Where(type => type.IsOurType())
+                                                .ToArray();
+
+            Assert.False(wrongOurTypes.Any(), Show(wrongOurTypes));
+
+            string Show(IEnumerable<Type> types) => string.Join(Environment.NewLine, types.Select(t => t.FullName));
         }
 
         [Fact]
@@ -343,6 +352,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
+        [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
         internal void SlimContainerTest(bool mode)
         {
             var settingsContainer = AutoRegistration.DependencyContainer
@@ -353,9 +363,12 @@ namespace SpaceEngineers.Core.Modules.Test
                                                                    },
                                                                    new DependencyContainerOptions());
 
-            var compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
-                                                   .GetCompositionInfo(mode)
-                                                   .ToArray();
+            DependencyInfo[] compositionInfo;
+
+            // TODO: Intercept resolution of ITypeExtensions
+            compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
+                                               .GetCompositionInfo(mode)
+                                               .ToArray();
 
             Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
@@ -380,6 +393,88 @@ namespace SpaceEngineers.Core.Modules.Test
                     && allowedAssemblies.Contains(info.ComponentType.Assembly)
                     && info.Dependencies.All(Satisfy);
             }
+        }
+
+        private class TypeExtensionsDecorator : ITypeExtensions
+        {
+            private readonly ITypeExtensions _decoratee;
+
+            public TypeExtensionsDecorator(ITypeExtensions decoratee)
+            {
+                _decoratee = decoratee;
+            }
+
+            public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
+            {
+                return _decoratee.OrderByDependencies(source, accessor);
+            }
+
+            public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
+                where TInterface : class
+            {
+                return _decoratee.AllOurServicesThatContainsDeclarationOfInterface<TInterface>();
+            }
+
+            public Type[] AllLoadedTypes()
+            {
+                return _decoratee.AllLoadedTypes();
+            }
+
+            public Type[] OurTypes()
+            {
+                return _decoratee.OurTypes()
+                                 .Concat(new[] { typeof(TestYamlConfig) })
+                                 .ToArray();
+            }
+
+            public Assembly[] OurAssemblies()
+            {
+                return _decoratee.OurAssemblies();
+            }
+
+            public bool IsOurType(Type type)
+            {
+                return _decoratee.IsOurType(type);
+            }
+
+            public Type[] GetDependenciesByAttribute(Type type)
+            {
+                return _decoratee.GetDependenciesByAttribute(type);
+            }
+
+            public bool IsNullable(Type type)
+            {
+                return _decoratee.IsNullable(type);
+            }
+
+            public bool IsSubclassOfOpenGeneric(Type type, Type openGenericAncestor)
+            {
+                return _decoratee.IsSubclassOfOpenGeneric(type, openGenericAncestor);
+            }
+
+            public bool IsContainsInterfaceDeclaration(Type type, Type i)
+            {
+                return _decoratee.IsContainsInterfaceDeclaration(type, i);
+            }
+
+            public bool FitsForTypeArgument(Type typeForCheck, Type typeArgument)
+            {
+                return _decoratee.FitsForTypeArgument(typeForCheck, typeArgument);
+            }
+
+            public IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived, Type openGeneric, int typeArgumentAt = 0)
+            {
+                return _decoratee.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
+            }
+
+            public Type ExtractGenericTypeDefinition(Type type)
+            {
+                return _decoratee.ExtractGenericTypeDefinition(type);
+            }
+        }
+
+        private class TestYamlConfig : IYamlSettings
+        {
         }
     }
 }

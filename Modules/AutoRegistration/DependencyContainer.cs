@@ -12,6 +12,12 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     public static class DependencyContainer
     {
+        private static readonly Assembly[] RootAssemblies = new[]
+                                                            {
+                                                                typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
+                                                                typeof(ITypeExtensions).Assembly,    // Basics
+                                                            };
+
         /// <summary>
         /// Default configured container
         /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
@@ -22,11 +28,15 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
-            var autoWiringApi = typeof(LifestyleAttribute).Assembly;
+            var typeExtensions = TypeExtensions.Build(AssembliesExtensions.AllFromCurrentDomain(), RootAssemblies);
 
-            return new DependencyContainerImpl(AssembliesExtensions.AllFromCurrentDomain(),
-                                               new[] { autoWiringApi },
-                                               options?.RegistrationCallback);
+            TypeExtensions.Configure(() => typeExtensions);
+
+            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options.RegistrationCallback);
+
+            TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
+
+            return dependencyContainer;
         }
 
         /// <summary>
@@ -37,11 +47,15 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            var autoWiringApi = typeof(LifestyleAttribute).Assembly;
+            var typeExtensions = TypeExtensions.Build(assemblies, RootAssemblies);
 
-            return new DependencyContainerImpl(assemblies,
-                                               new[] { autoWiringApi },
-                                               options.RegistrationCallback);
+            TypeExtensions.Configure(() => typeExtensions);
+
+            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options.RegistrationCallback);
+
+            TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
+
+            return dependencyContainer;
         }
     }
 }

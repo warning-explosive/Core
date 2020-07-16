@@ -11,9 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
     internal static class ServiceRegistrationInfoExtensions
     {
-        internal static IEnumerable<Type> GetTypesToRegister(this Container container,
-                                                             ITypeExtensions typeExtensions,
-                                                             Type serviceType)
+        internal static IEnumerable<Type> GetTypesToRegister(this Type serviceType, Container container, ITypeExtensions typeExtensions)
         {
             return container.GetTypesToRegister(serviceType,
                                                 typeExtensions.OurAssemblies(),
@@ -25,27 +23,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                 });
         }
 
-        internal static ICollection<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> services,
-                                                                           Container container,
-                                                                           ITypeExtensions typeExtensions)
+        internal static ICollection<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> services, Container container, ITypeExtensions typeExtensions)
         {
-            return services.SelectMany(i => container.GetTypesToRegister(typeExtensions, i).GetComponents(typeExtensions, i)).ToList();
+            return services.SelectMany(i => i.GetTypesToRegister(container, typeExtensions).GetComponents(i)).ToList();
         }
 
-        internal static ICollection<ServiceRegistrationInfo> GetImplementationComponents(this IEnumerable<Type> services,
-                                                                                         ITypeExtensions typeExtensions)
+        internal static ICollection<ServiceRegistrationInfo> GetImplementationComponents(this IEnumerable<Type> services)
         {
-            return services.GetComponents(typeExtensions, typeof(IResolvableImplementation)).ToList();
+            return services.GetComponents(typeof(IResolvableImplementation)).ToList();
         }
 
-        internal static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(this IEnumerable<Type> decorators,
-                                                                              Type decoratorType)
+        internal static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
         {
             return GetGenericDecoratorInfo(decorators, decoratorType).Select(pair => pair.Info);
         }
 
-        internal static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(this IEnumerable<Type> decorators,
-                                                                                         Type decoratorType)
+        internal static IEnumerable<ServiceRegistrationInfo> GetConditionalDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
         {
             return GetGenericDecoratorInfo(decorators, decoratorType)
                .Select(pair =>
@@ -55,8 +48,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                        });
         }
 
-        private static IEnumerable<(Type Decorator, ServiceRegistrationInfo Info)> GetGenericDecoratorInfo(IEnumerable<Type> decorators,
-                                                                                                           Type decoratorType)
+        private static IEnumerable<(Type Decorator, ServiceRegistrationInfo Info)> GetGenericDecoratorInfo(IEnumerable<Type> decorators, Type decoratorType)
         {
             return decorators.Where(ForAutoRegistration)
                              .Select(t => new
@@ -75,13 +67,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                     .Single(i => i.GetGenericTypeDefinition() == decoratorType);
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> types,
-                                                                          ITypeExtensions typeExtensions,
-                                                                          Type serviceType)
+        private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> types, Type serviceType)
         {
             return types
                   .Where(ForAutoRegistration)
-                  .SelectMany(cmp => GetClosedGenericImplForOpenGenericService(serviceType, cmp, typeExtensions))
+                  .SelectMany(cmp => GetClosedGenericImplForOpenGenericService(serviceType, cmp))
                   .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ComponentType, pair.ComponentType.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle));
         }
 
@@ -90,9 +80,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return type.GetCustomAttribute<UnregisteredAttribute>(true) == null;
         }
 
-        private static IEnumerable<(Type ComponentType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(Type serviceType,
-                                                                                                                     Type componentType,
-                                                                                                                     ITypeExtensions typeExtensions)
+        private static IEnumerable<(Type ComponentType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(Type serviceType, Type componentType)
         {
             if (serviceType.IsGenericType
              && serviceType.IsGenericTypeDefinition
@@ -104,7 +92,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
                 for (var i = 0; i < length; ++i)
                 {
-                    argsColumnStore[i] = typeExtensions.GetGenericArgumentsOfOpenGenericAt(componentType, serviceType, i).ToList();
+                    argsColumnStore[i] = componentType.GetGenericArgumentsOfOpenGenericAt(serviceType, i).ToList();
                 }
 
                 foreach (var typeArguments in argsColumnStore.Values.ColumnsCartesianProduct())

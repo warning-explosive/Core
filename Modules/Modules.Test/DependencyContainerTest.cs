@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
@@ -323,7 +324,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
-        internal async void AsyncScopeTest()
+        internal async Task AsyncScopeTest()
         {
             Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
 
@@ -365,7 +366,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             DependencyInfo[] compositionInfo;
 
-            // TODO: Intercept resolution of ITypeExtensions
+            // TODO: Intercept resolution of ITypeExtensions - constraints - class, ISettings
             compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
                                                .GetCompositionInfo(mode)
                                                .ToArray();

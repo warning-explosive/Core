@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class YamlFormatter<TSettings> : FileSystemFormatterBase<TSettings>
-        where TSettings : IYamlSettings, new()
+        where TSettings : class, IYamlSettings
     {
         private readonly ISerializer _serializer =
             new SerializerBuilder()

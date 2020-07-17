@@ -1,9 +1,9 @@
 ﻿﻿namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
-    using Conventions;
     using MongoDB.Driver;
     using NServiceBus;
+    using Settings;
 
     internal static class EndpointConfigurationExtensions
     {
@@ -25,7 +25,7 @@
             var metrics = configuration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(conventions.MonitoringQueueName, TimeSpan.FromSeconds(5));
 
-            configuration.SendHeartbeatTo(conventions.ServiceControlQueue, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30));
+            configuration.SendHeartbeatTo(conventions.ServiceControlQueueName, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(30));
 
             return configuration;
         }

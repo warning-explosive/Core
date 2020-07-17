@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
     internal class SettingsManagerImpl<TSettings> : ISettingsManager<TSettings>
-        where TSettings : ISettings, new()
+        where TSettings : class, ISettings
     {
         private readonly IAsyncFormatter<TSettings> _formatter;
 

@@ -8,13 +8,13 @@
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Conventions;
     using Internals;
     using NServiceBus;
     using NServiceBus.Features;
     using NServiceBus.Installation;
     using NServiceBus.MessageMutator;
     using NServiceBus.ObjectBuilder;
+    using Settings;
     using SettingsManager;
     using SettingsManager.Abstractions;
 
@@ -37,16 +37,12 @@
         }
 
         /// <summary> Run endpoint </summary>
-        /// <param name="entryPointAssembly">Assembly</param>
         /// <param name="endpointName">Endpoint name</param>
-        /// <param name="configure">Additional endpoint configuration. You can override exact configs</param>
+        /// <param name="configure">Additional endpoint configuration. You can override exact configs.</param>
         /// <returns>Async cleanup</returns>
-        public static async Task<IEndpoint> Run(Assembly entryPointAssembly,
-                                                string endpointName,
-                                                Action<EndpointConfiguration>? configure = null)
+        public static async Task<IEndpoint> Run(string endpointName, Action<EndpointConfiguration>? configure = null)
         {
-            // TODO: Settings container
-            var settingsContainer = DependencyContainer.Create(typeof(ISettingsManager<>).Assembly, new DependencyContainerOptions());
+            var settingsContainer = DependencyContainer.CreateBounded(new[] { typeof(ISettingsManager<>).Assembly }, new DependencyContainerOptions());
 
             var queueConventions = await settingsContainer.GetSetting<QueueConventions>().ConfigureAwait(false);
             var transportSettings = await settingsContainer.GetSetting<TransportSettings>().ConfigureAwait(false);
@@ -54,7 +50,7 @@
 
             var configuration = GetEndpointConfiguration(endpointName, configure, queueConventions, transportSettings, persistenceSettings);
 
-            var container = ExternallyManagedContainer(entryPointAssembly, configuration, out var endpointInstance, out var resolver);
+            var container = ExternallyManagedContainer(configuration, out var endpointInstance, out var resolver);
 
             var runningInstance = await endpointInstance.Start(resolver).ConfigureAwait(false);
 
@@ -98,8 +94,7 @@
                             .Configure(configure);
         }
 
-        private static IDependencyContainer ExternallyManagedContainer(Assembly entryPointAssembly,
-                                                                       EndpointConfiguration endpointConfiguration,
+        private static IDependencyContainer ExternallyManagedContainer(EndpointConfiguration endpointConfiguration,
                                                                        out IStartableEndpointWithExternallyManagedContainer outEndpointInstance,
                                                                        out IBuilder outResolver)
         {
@@ -120,7 +115,7 @@
                                                      }
                           };
 
-            var dependencyContainer = DependencyContainer.Create(entryPointAssembly, options);
+            var dependencyContainer = DependencyContainer.Create(options);
 
             outEndpointInstance = endpointInstance.EnsureNotNull("Endpoint instance must be created");
             outResolver = resolver.EnsureNotNull("Endpoint dependency resolver must be created");

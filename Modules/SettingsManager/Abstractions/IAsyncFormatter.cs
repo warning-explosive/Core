@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.SettingsManager.Abstractions
     /// </summary>
     /// <typeparam name="TSettings">ISettings</typeparam>
     public interface IAsyncFormatter<TSettings> : IResolvable
-        where TSettings : ISettings, new()
+        where TSettings : class, ISettings
     {
         /// <summary>
         /// Deserialize from string to ISettings object

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.SettingsManager.Abstractions
     /// <typeparam name="TSettings">ISettings</typeparam>
     [SuppressMessage("Microsoft.CodeQuality.Analyzers", "CA1716", Justification = "Reviewed")]
     public interface ISettingsManager<TSettings> : IResolvable
-        where TSettings : ISettings, new()
+        where TSettings : class, ISettings
     {
         /// <summary>
         /// Get ISettings value

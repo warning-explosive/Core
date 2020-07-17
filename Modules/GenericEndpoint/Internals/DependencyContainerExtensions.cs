@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     internal static class DependencyContainerExtensions
     {
         internal static Task<TSetting> GetSetting<TSetting>(this IDependencyContainer dependencyContainer)
-            where TSetting : ISettings, new()
+            where TSetting : class, ISettings
         {
             return dependencyContainer.Resolve<ISettingsManager<TSetting>>().Get();
         }

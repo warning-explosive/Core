@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using Basics;
 
     internal abstract class FileSystemFormatterBase<TSettings> : IAsyncFormatter<TSettings>
-        where TSettings : IFileSystemSettings, new()
+        where TSettings : class, IFileSystemSettings
     {
         private readonly Encoding _encoding = new UTF8Encoding(true);
 

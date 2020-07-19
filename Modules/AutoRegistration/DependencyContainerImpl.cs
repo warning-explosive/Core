@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reactive.Disposables;
     using System.Reflection;
     using Abstractions;
     using AutoWiringApi.Abstractions;
@@ -23,14 +24,19 @@ namespace SpaceEngineers.Core.AutoRegistration
     [Unregistered]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
+        private readonly Dictionary<Type, Stack<ServiceRegistrationInfo>> _stacks;
+
         private readonly Container _container;
+
+        private DecoratorInterceptor? _interceptor;
 
         /// <summary> .ctor </summary>
         /// <param name="typeExtensions">ITypeExtensions</param>
-        /// <param name="registration">Register external dependencies</param>
+        /// <param name="options">DependencyContainerOptions</param>
         internal DependencyContainerImpl(ITypeExtensions typeExtensions,
-                                         Action<IRegistrationContainer>? registration = null)
+                                         DependencyContainerOptions options)
         {
+            _stacks = new Dictionary<Type, Stack<ServiceRegistrationInfo>>();
             _container = CreateContainer();
 
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
@@ -39,9 +45,11 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             RegisterAutoWired(_container, typeExtensions, servicesProvider);
 
-            RegisterExternalDependencies(this, registration);
+            RegisterExternalDependencies(this, options.RegistrationCallback);
 
-            // TODO: _container.Verify(VerificationOption.VerifyAndDiagnose);
+            RegisterInterceptors(options.AllowResolveInterception);
+
+            _container.Verify(VerificationOption.VerifyAndDiagnose);
         }
 
         #region IRegistrationContainer
@@ -148,6 +156,33 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #endregion
 
+        #region IInterceptedContainer
+
+        /// <inheritdoc />
+        public IDisposable ApplyDecorator<TService, TImplementation>()
+            where TService : class
+            where TImplementation : TService, IDecorator<TService>
+        {
+            var info = new ServiceRegistrationInfo(typeof(TService), typeof(TImplementation), typeof(TImplementation).GetCustomAttribute<LifestyleAttribute>()?.Lifestyle);
+
+            var stack = _stacks.GetOrAdd(typeof(TService), () => new Stack<ServiceRegistrationInfo>());
+            stack.Push(info);
+            return Disposable.Create(_stacks, stacks =>
+                                              {
+                                                  if (stacks.TryGetValue(typeof(TService), out var s))
+                                                  {
+                                                      s.Pop();
+
+                                                      if (!s.Any())
+                                                      {
+                                                          stacks.Remove(typeof(TService));
+                                                      }
+                                                  }
+                                              });
+        }
+
+        #endregion
+
         private static Container CreateContainer()
         {
             return new Container
@@ -159,7 +194,6 @@ namespace SpaceEngineers.Core.AutoRegistration
                            UseFullyQualifiedTypeNames = true,
                            ResolveUnregisteredConcreteTypes = false,
                            AllowOverridingRegistrations = false,
-                           EnableDynamicAssemblyCompilation = false,
                            SuppressLifestyleMismatchVerification = false,
                        }
                    };
@@ -178,6 +212,16 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static void RegisterExternalDependencies(IRegistrationContainer container, Action<IRegistrationContainer>? registrationCallback)
         {
             registrationCallback?.Invoke(container);
+        }
+
+        private void RegisterInterceptors(bool allowResolveInterception)
+        {
+            if (allowResolveInterception)
+            {
+                _interceptor = new DecoratorInterceptor(_stacks);
+
+                _container.Options.RegisterResolveInterceptor(_interceptor.InterceptResolution, _ => true);
+            }
         }
 
         private static void RegisterAutoWired(Container container,
@@ -238,7 +282,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static IEnumerable<Type> Decorators(ITypeExtensions typeExtensions, Type decoratorType)
         {
             return typeExtensions.OurTypes()
-                                 .Where(t => !t.IsInterface
+                                 .Where(t => t.IsClass
+                                          && !t.IsInterface
+                                          && !t.IsAbstract
                                           && t.IsSubclassOfOpenGeneric(decoratorType));
         }
     }

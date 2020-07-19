@@ -19,5 +19,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Default: SearchOption.TopDirectoryOnly
         /// </summary>
         public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
+
+        /// <summary>
+        /// Allow resolve interception with unregistered decorators
+        /// Default: false
+        /// </summary>
+        public bool AllowResolveInterception { get; set; }
     }
 }

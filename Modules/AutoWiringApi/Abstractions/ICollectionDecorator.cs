@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
     /// </summary>
     /// <typeparam name="TCollectionResolvable">ICollectionResolvable</typeparam>
     public interface ICollectionDecorator<TCollectionResolvable>
-        where TCollectionResolvable : ICollectionResolvable
+        where TCollectionResolvable : class
     {
         /// <summary>
         /// Decoratee

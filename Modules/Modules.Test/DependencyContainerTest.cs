@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Enumerations;
     using AutoWiringTest;
     using Basics;
     using CompositionInfoExtractor;
@@ -33,8 +34,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void IsOurTypeTest()
         {
-            var ourTypes = DependencyContainer.Resolve<ITypeExtensions>()
-                                              .OurTypes();
+            var ourTypes = DependencyContainer.Resolve<ITypeExtensions>().OurTypes();
 
             var wrongOurTypes = ourTypes
                                .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
@@ -50,6 +50,18 @@ namespace SpaceEngineers.Core.Modules.Test
                                                 .ToArray();
 
             Assert.False(wrongOurTypes.Any(), Show(wrongOurTypes));
+
+            var notUniqueTypes = ourTypes.GroupBy(it => it)
+                                         .Where(grp => grp.Count() > 1)
+                                         .Select(grp => grp.Key.FullName)
+                                         .ToList();
+
+            if (notUniqueTypes.Any())
+            {
+                Output.WriteLine(string.Join(Environment.NewLine, notUniqueTypes));
+            }
+
+            Assert.Equal(ourTypes.Length, ourTypes.Distinct().Count());
 
             string Show(IEnumerable<Type> types) => string.Join(Environment.NewLine, types.Select(t => t.FullName));
         }
@@ -354,22 +366,35 @@ namespace SpaceEngineers.Core.Modules.Test
         [InlineData(true)]
         [InlineData(false)]
         [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
-        internal void SlimContainerTest(bool mode)
+        internal void BoundedContainerTest(bool mode)
         {
+            var options = new DependencyContainerOptions
+                          {
+                              AllowResolveInterception = true
+                          };
+
             var settingsContainer = AutoRegistration.DependencyContainer
                                                     .CreateBounded(new[]
                                                                    {
                                                                        typeof(ISettingsManager<>).Assembly,
                                                                        typeof(ICompositionInfoExtractor).Assembly,
                                                                    },
-                                                                   new DependencyContainerOptions());
+                                                                   options);
 
             DependencyInfo[] compositionInfo;
 
-            // TODO: Intercept resolution of ITypeExtensions - constraints - class, ISettings
-            compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
-                                               .GetCompositionInfo(mode)
-                                               .ToArray();
+            using (settingsContainer.ApplyDecorator<ITypeExtensions, TypeExtensionsDecorator>())
+            {
+                Assert.True(settingsContainer.Resolve<ITypeExtensions>() is TypeExtensionsDecorator);
+                Assert.True(settingsContainer.Resolve<ICompositionInfoExtractor>().GetFieldValue("_receiver").GetFieldValue("_typeExtensions") is TypeExtensionsDecorator);
+
+                compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
+                                                   .GetCompositionInfo(mode)
+                                                   .ToArray();
+            }
+
+            Assert.False(settingsContainer.Resolve<ITypeExtensions>() is TypeExtensionsDecorator);
+            Assert.False(settingsContainer.Resolve<ICompositionInfoExtractor>().GetFieldValue("_receiver").GetFieldValue("_typeExtensions") is TypeExtensionsDecorator);
 
             Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
@@ -386,6 +411,21 @@ namespace SpaceEngineers.Core.Modules.Test
                                         typeof(ICompositionInfoExtractor).Assembly, // CompositionInfoExtractor assembly
                                     };
 
+            var restricted = compositionInfo.Where(z => !Satisfy(z))
+                                            .SelectMany(z => new[]
+                                                             {
+                                                                 z.ServiceType.Assembly,
+                                                                 z.ComponentType.Assembly,
+                                                             })
+                                            .Distinct()
+                                            .Select(z => z.ToString())
+                                            .ToList();
+
+            if (restricted.Any())
+            {
+                Output.WriteLine(string.Join(Environment.NewLine, restricted));
+            }
+
             Assert.True(compositionInfo.All(Satisfy));
 
             bool Satisfy(DependencyInfo info)
@@ -396,81 +436,84 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TypeExtensionsDecorator : ITypeExtensions
+        [Lifestyle(EnLifestyle.Singleton)]
+        [Unregistered]
+        private class TypeExtensionsDecorator : ITypeExtensions,
+                                                IDecorator<ITypeExtensions>
         {
-            private readonly ITypeExtensions _decoratee;
-
             public TypeExtensionsDecorator(ITypeExtensions decoratee)
             {
-                _decoratee = decoratee;
+                Decoratee = decoratee;
             }
+
+            public ITypeExtensions Decoratee { get; }
 
             public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
             {
-                return _decoratee.OrderByDependencies(source, accessor);
+                return Decoratee.OrderByDependencies(source, accessor);
             }
 
             public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
                 where TInterface : class
             {
-                return _decoratee.AllOurServicesThatContainsDeclarationOfInterface<TInterface>();
+                return Decoratee.AllOurServicesThatContainsDeclarationOfInterface<TInterface>();
             }
 
             public Type[] AllLoadedTypes()
             {
-                return _decoratee.AllLoadedTypes();
+                return Decoratee.AllLoadedTypes();
             }
 
             public Type[] OurTypes()
             {
-                return _decoratee.OurTypes()
-                                 .Concat(new[] { typeof(TestYamlConfig) })
-                                 .ToArray();
+                return Decoratee.OurTypes()
+                                .Concat(new[] { typeof(TestYamlConfig) })
+                                .ToArray();
             }
 
             public Assembly[] OurAssemblies()
             {
-                return _decoratee.OurAssemblies();
+                return Decoratee.OurAssemblies();
             }
 
             public bool IsOurType(Type type)
             {
-                return _decoratee.IsOurType(type);
+                return Decoratee.IsOurType(type);
             }
 
             public Type[] GetDependenciesByAttribute(Type type)
             {
-                return _decoratee.GetDependenciesByAttribute(type);
+                return Decoratee.GetDependenciesByAttribute(type);
             }
 
             public bool IsNullable(Type type)
             {
-                return _decoratee.IsNullable(type);
+                return Decoratee.IsNullable(type);
             }
 
             public bool IsSubclassOfOpenGeneric(Type type, Type openGenericAncestor)
             {
-                return _decoratee.IsSubclassOfOpenGeneric(type, openGenericAncestor);
+                return Decoratee.IsSubclassOfOpenGeneric(type, openGenericAncestor);
             }
 
             public bool IsContainsInterfaceDeclaration(Type type, Type i)
             {
-                return _decoratee.IsContainsInterfaceDeclaration(type, i);
+                return Decoratee.IsContainsInterfaceDeclaration(type, i);
             }
 
             public bool FitsForTypeArgument(Type typeForCheck, Type typeArgument)
             {
-                return _decoratee.FitsForTypeArgument(typeForCheck, typeArgument);
+                return Decoratee.FitsForTypeArgument(typeForCheck, typeArgument);
             }
 
             public IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived, Type openGeneric, int typeArgumentAt = 0)
             {
-                return _decoratee.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
+                return Decoratee.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
             }
 
             public Type ExtractGenericTypeDefinition(Type type)
             {
-                return _decoratee.ExtractGenericTypeDefinition(type);
+                return Decoratee.ExtractGenericTypeDefinition(type);
             }
         }
 

@@ -28,7 +28,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             var container = context.Registration.Container;
             var serviceType = context.Producer.ServiceType;
-            var lifestyle = context.Registration.Lifestyle;
 
             var overrides = BuildOverrides(container, context.Producer, instanceProducer);
 
@@ -43,12 +42,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 return Invoke(expression);
             }
 
-            // Resolve service with override as dependency
+            // Resolve service with override as dependency in object graph
             expression = GetExpression(_madeDependencyMethod,
                                        new[] { serviceType, instanceProducer().GetType() },
                                        container,
-                                       lifestyle,
-                                       instanceProducer,
+                                       null,
                                        overrides);
 
             return Invoke(expression);
@@ -60,17 +58,27 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                           .ToDictionary(pair => pair.Key,
                                         pair =>
                                         {
-                                            var info = pair.Value.Peek();
-                                            var p = producer.ServiceType == info.ServiceType
-                                                               ? instanceProducer
-                                                               : null;
+                                            var interceptedExpression = producer.ServiceType == pair.Key
+                                                                            ? GetExpression(_typedExpressionInvocationMethod, new[] { producer.ServiceType }, instanceProducer)
+                                                                            : null;
 
-                                            return GetExpression(_madeDependencyMethod,
-                                                                 new[] { info.ServiceType, info.ComponentType },
-                                                                 container,
-                                                                 info.Lifestyle,
-                                                                 p,
-                                                                 null);
+                                            var expression = interceptedExpression;
+
+                                            if (!pair.Value.Any())
+                                            {
+                                                throw new InvalidOperationException("ApplyDecorator scope must have at least one override");
+                                            }
+
+                                            foreach (var info in pair.Value.Reverse())
+                                            {
+                                                expression = GetExpression(_madeDependencyMethod,
+                                                                           new[] { info.ServiceType, info.ComponentType },
+                                                                           container,
+                                                                           expression,
+                                                                           null);
+                                            }
+
+                                            return expression.EnsureNotNull("Expression must have value");
                                         });
         }
 
@@ -85,8 +93,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         private static object Invoke(Expression expression) => Expression.Lambda<Func<object>>(expression).Compile().Invoke();
 
         private Expression MadeDependency<TService, TImplementation>(Container container,
-                                                                     Lifestyle lifestyle,
-                                                                     Func<object>? instanceProducer = null,
+                                                                     Expression? expression = null,
                                                                      IReadOnlyDictionary<Type, Expression>? overrides = null)
             where TService : class
             where TImplementation : TService
@@ -98,28 +105,28 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             var parameters = cctor.GetParameters()
                                   .Select(parameter =>
                                           {
-                                              if (instanceProducer != null
+                                              if (expression != null
                                                && parameter.ParameterType == serviceType
                                                && typeof(IDecorator<>).MakeGenericType(serviceType).IsAssignableFrom(implementationType))
-                                              {
-                                                  return GetExpression(_typedExpressionInvocationMethod, new[] { serviceType }, instanceProducer);
-                                              }
-
-                                              if (overrides != null
-                                               && overrides.TryGetValue(parameter.ParameterType, out var expression))
                                               {
                                                   return expression;
                                               }
 
+                                              if (overrides != null
+                                               && overrides.TryGetValue(parameter.ParameterType, out var @override))
+                                              {
+                                                  return @override;
+                                              }
+
                                               var registration = container.GetRegistration(parameter.ParameterType).EnsureNotNull($"Parameter {parameter} must be registered in container");
 
-                                              if (registration.GetRelationships().Any())
+                                              if (registration.GetRelationships()
+                                                              .Any(r => !IsDecorator(r, container, parameter.ParameterType)))
                                               {
                                                   return GetExpression(_madeDependencyMethod,
                                                                        new[] { registration.ServiceType, registration.ImplementationType },
                                                                        container,
-                                                                       registration.Lifestyle,
-                                                                       instanceProducer,
+                                                                       null,
                                                                        overrides);
                                               }
 
@@ -127,13 +134,16 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                           })
                                   .ToList();
 
-            var cctorCall = Expression.Lambda<Func<TService>>(Expression.New(cctor, parameters)).Compile();
+            return Expression.New(cctor, parameters);
+        }
 
-            var coldProducer = lifestyle.CreateProducer(cctorCall, container);
-
-            var producerExpression = Expression.Lambda<Func<TService>>(coldProducer.BuildExpression());
-
-            return Expression.Invoke(producerExpression);
+        private static bool IsDecorator(KnownRelationship relationship, Container container, Type serviceType)
+        {
+            return typeof(IDecorator<>).MakeGenericType(serviceType).IsAssignableFrom(relationship.ImplementationType)
+                || container.Options.ConstructorResolutionBehavior
+                            .GetConstructor(relationship.ImplementationType)
+                            .GetParameters()
+                            .Any(parameter => parameter.ParameterType == serviceType);
         }
 
         private static Expression TypedProducerInvocation<TService>(Func<object> instanceProducer)

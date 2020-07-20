@@ -100,6 +100,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             var serviceType = typeof(TService);
             var implementationType = typeof(TImplementation);
+
             var cctor = container.Options.ConstructorResolutionBehavior.GetConstructor(implementationType);
 
             var parameters = cctor.GetParameters()
@@ -109,6 +110,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                && parameter.ParameterType == serviceType
                                                && typeof(IDecorator<>).MakeGenericType(serviceType).IsAssignableFrom(implementationType))
                                               {
+                                                  if (IsRegisteredDependency(container, serviceType, implementationType))
+                                                  {
+                                                      throw new InvalidOperationException();
+                                                  }
+
                                                   return expression;
                                               }
 
@@ -118,23 +124,50 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                   return @override;
                                               }
 
-                                              var registration = container.GetRegistration(parameter.ParameterType).EnsureNotNull($"Parameter {parameter} must be registered in container");
+                                              var registration = container.GetRegistration(parameter.ParameterType)
+                                                                          .EnsureNotNull($"Parameter {parameter} must be registered in container");
 
-                                              if (registration.GetRelationships()
-                                                              .Any(r => !IsDecorator(r, container, parameter.ParameterType)))
+                                              var decorated = registration.GetRelationships()
+                                                                          .All(r => IsDecorator(r, container, parameter.ParameterType));
+
+                                              if (decorated)
                                               {
-                                                  return GetExpression(_madeDependencyMethod,
-                                                                       new[] { registration.ServiceType, registration.ImplementationType },
-                                                                       container,
-                                                                       null,
-                                                                       overrides);
+                                                  return registration.BuildExpression();
                                               }
 
-                                              return registration.BuildExpression();
+                                              return GetExpression(_madeDependencyMethod,
+                                                                   new[] { registration.ServiceType, registration.ImplementationType },
+                                                                   container,
+                                                                   null,
+                                                                   overrides);
                                           })
                                   .ToList();
 
             return Expression.New(cctor, parameters);
+        }
+
+        private static bool IsRegisteredDependency(Container container, Type serviceType, Type implementation)
+        {
+            if (container.GetRegistration(implementation) != null)
+            {
+                return true;
+            }
+
+            var registration = container.GetRegistration(serviceType);
+
+            return registration.GetRelationships()
+                               .Select(r => r.ImplementationType)
+                               .Any(type =>
+                                    {
+                                        if (implementation.IsGenericType
+                                         && !implementation.IsConstructedGenericType)
+                                        {
+                                            var relationship = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                                            return relationship == implementation.GetGenericTypeDefinition();
+                                        }
+
+                                        return type == implementation;
+                                    });
         }
 
         private static bool IsDecorator(KnownRelationship relationship, Container container, Type serviceType)

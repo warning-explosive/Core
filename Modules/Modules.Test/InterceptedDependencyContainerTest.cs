@@ -4,7 +4,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using AutoWiringApi.Abstractions;
+    using Basics;
     using InterceptedContainerTest;
+    using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -49,23 +51,41 @@ namespace SpaceEngineers.Core.Modules.Test
                            };
 
             IServiceForInterception Resolve() => DependencyContainer.Resolve<IServiceForInterception>();
+            IServiceForInterception ResolveAsDependency1() => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceForInterception;
+            IServiceForInterception ResolveAsDependency2() => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceWithOverrideAsDependency.ServiceForInterception;
 
             Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#1", expected, Resolve());
+            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#2", expected, ResolveAsDependency1());
+            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#3", expected, ResolveAsDependency2());
 
             using (DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecoratorForInterception>())
             {
-                Assert.Throws<InvalidOperationException>(Resolve);
+                VerifyError(Resolve);
+                VerifyError(ResolveAsDependency1);
+                VerifyError(ResolveAsDependency2);
             }
         }
 
         [Fact]
-        internal void ResolveCollectionTest()
+        internal void DecoratedImplementationAsDependencyTest()
         {
             throw new NotImplementedException();
         }
 
         [Fact]
-        internal void RegisterAndApplyDecoratorTest()
+        internal void RegisteredDecoratorWithExtraDependencyTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        internal void OpenGenericTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        internal void ResolveCollectionTest()
         {
             throw new NotImplementedException();
         }
@@ -138,6 +158,19 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#5", expected, resolve());
+        }
+
+        private void VerifyError(Func<IServiceForInterception> resolve)
+        {
+            resolve.Try()
+                   .Catch<ActivationException>(ex =>
+                                               {
+                                                   if (!(ex.InnerException?.RealException() is InvalidOperationException))
+                                                   {
+                                                       throw ex;
+                                                   }
+                                               })
+                   .Invoke();
         }
     }
 }

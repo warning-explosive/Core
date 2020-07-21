@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reactive.Disposables;
     using AutoWiringApi.Abstractions;
     using Basics;
     using InterceptedContainerTest;
@@ -23,13 +24,13 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
-        internal void SimpleResolveNestedScopeTest()
+        internal void SimpleResolveTest()
         {
             VerifyNested(() => DependencyContainer.Resolve<IServiceForInterception>());
         }
 
         [Fact]
-        internal void DecoratorAsDependencyNestedScopeTest()
+        internal void DecoratorAsDependencyTest()
         {
             VerifyNested(() => DependencyContainer.Resolve<IServiceWithOverrideAsDependency>().ServiceForInterception);
         }
@@ -44,38 +45,158 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ApplyOnRegisteredDecoratorsTest()
         {
-            var expected = new[]
+            var resolves = new Func<IServiceForInterception>[]
                            {
-                               typeof(RegisteredDecoratorForInterception),
-                               typeof(ServiceForInterceptionImpl)
+                               () => DependencyContainer.Resolve<IServiceForInterception>(),
+                               () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceForInterception,
+                               () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceWithOverrideAsDependency.ServiceForInterception,
+                               () => DependencyContainer.Resolve<IServiceWithOverrideAsDependency>().ServiceForInterception,
                            };
 
-            IServiceForInterception Resolve() => DependencyContainer.Resolve<IServiceForInterception>();
-            IServiceForInterception ResolveAsDependency1() => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceForInterception;
-            IServiceForInterception ResolveAsDependency2() => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceWithOverrideAsDependency.ServiceForInterception;
-
-            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#1", expected, Resolve());
-            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#2", expected, ResolveAsDependency1());
-            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#3", expected, ResolveAsDependency2());
-
-            using (DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecoratorForInterception>())
+            foreach (var resolve in resolves)
             {
-                VerifyError(Resolve);
-                VerifyError(ResolveAsDependency1);
-                VerifyError(ResolveAsDependency2);
+                VerifyNested(
+                    () => DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecorator>(),
+                    () => DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecoratorWithExtraDependency>(),
+                    () => VerifyError(resolve),
+                    () => VerifyError(resolve),
+                    () => VerifyError(resolve));
             }
         }
 
         [Fact]
-        internal void DecoratedImplementationAsDependencyTest()
+        internal void DecoratorWithExtraDependencyTest()
         {
-            throw new NotImplementedException();
+            var outer = new[]
+                        {
+                            typeof(RegisteredDecorator),
+                            typeof(RegisteredDecoratorWithExtraDependency),
+                            typeof(ServiceForInterceptionImpl)
+                        };
+
+            var first = new[]
+                        {
+                            typeof(UnregisteredDecoratorWithExtraDependency),
+                            typeof(RegisteredDecorator),
+                            typeof(RegisteredDecoratorWithExtraDependency),
+                            typeof(ServiceForInterceptionImpl)
+                        };
+
+            var second = new[]
+                         {
+                             typeof(UnregisteredDecorator),
+                             typeof(UnregisteredDecoratorWithExtraDependency),
+                             typeof(RegisteredDecorator),
+                             typeof(RegisteredDecoratorWithExtraDependency),
+                             typeof(ServiceForInterceptionImpl)
+                         };
+
+            var resolves = new Func<IServiceForInterception>[]
+                {
+                    () => DependencyContainer.Resolve<IServiceForInterception>(),
+                    () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceForInterception,
+                    () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceWithOverrideAsDependency.ServiceForInterception,
+                    () => DependencyContainer.Resolve<IServiceWithOverrideAsDependency>().ServiceForInterception,
+                };
+
+            foreach (var resolve in resolves)
+            {
+                VerifyNested(
+                    () => DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecoratorWithExtraDependency>(),
+                    () => DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecorator>(),
+                    () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("outer", outer, resolve()),
+                    () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("first", first, resolve()),
+                    () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("second", second, resolve()));
+            }
         }
 
         [Fact]
-        internal void RegisteredDecoratorWithExtraDependencyTest()
+        internal void DecorateExtraDependenciesTest()
         {
-            throw new NotImplementedException();
+            var outer = new[]
+                        {
+                            typeof(RegisteredDecorator),
+                            typeof(RegisteredDecoratorWithExtraDependency),
+                            typeof(ServiceForInterceptionImpl)
+                        };
+
+            var resolves = new Func<IServiceForInterception>[]
+                {
+                    () => DependencyContainer.Resolve<IServiceForInterception>(),
+                    () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceForInterception,
+                    () => DependencyContainer.Resolve<IServiceWithSeveralDependenciesForOverride>().ServiceWithOverrideAsDependency.ServiceForInterception,
+                    () => DependencyContainer.Resolve<IServiceWithOverrideAsDependency>().ServiceForInterception,
+                };
+
+            IDisposable ApplyFirst()
+            {
+                return new CompositeDisposable
+                       {
+                           DependencyContainer.ApplyDecorator<IExtraDependency, UnregisteredExtraDependencyDecorator>(),
+                           DependencyContainer.ApplyDecorator<ImplementationExtra, UnregisteredImplementationExtraDecorator>()
+                       };
+            }
+
+            IDisposable ApplySecond()
+            {
+                throw new NotImplementedException();
+            }
+
+            var outerExtraExpected = new[]
+                                     {
+                                         typeof(RegisteredExtraDependencyDecorator),
+                                         typeof(ExtraDependencyImpl),
+                                     };
+
+            var outerImplExtraExpected = new[]
+                                         {
+                                             typeof(RegisteredImplementationExtraDecorator),
+                                             typeof(ImplementationExtra),
+                                         };
+
+            var firstExtraExpected = new[]
+                                     {
+                                         typeof(UnregisteredExtraDependencyDecorator),
+                                         typeof(RegisteredExtraDependencyDecorator),
+                                         typeof(ExtraDependencyImpl),
+                                     };
+
+            var firstImplExtraExpected = new[]
+                                         {
+                                             typeof(UnregisteredImplementationExtraDecorator),
+                                             typeof(RegisteredImplementationExtraDecorator),
+                                             typeof(ImplementationExtra),
+                                         };
+
+            void Check(string tag,
+                       Func<IServiceForInterception> resolve,
+                       Type[] mainGraphExpected,
+                       Type[] extraExpected,
+                       Type[] implExtraExpected)
+            {
+                // 1. IServiceForInterception
+                var resolved = resolve();
+                Compare<IServiceForInterception, IServiceForInterceptionDecorator>(tag, mainGraphExpected, resolved);
+                var decoratorWithExtraDependency = (RegisteredDecoratorWithExtraDependency)((RegisteredDecorator)resolved).Decoratee;
+
+                // 2. _extra
+                var extra = decoratorWithExtraDependency.GetFieldValue<IExtraDependency>("_extra");
+                Compare<IExtraDependency, IExtraDependencyDecorator>(tag + "_" + nameof(extra), extraExpected, extra);
+
+                // 3. _implExtra
+                var implExtra = decoratorWithExtraDependency.GetFieldValue<ImplementationExtra>("_implExtra");
+                Compare<ImplementationExtra, ImplementationExtraDecorator>(tag + "_" + nameof(implExtra), implExtraExpected, implExtra);
+            }
+
+            foreach (var resolve in resolves)
+            {
+                VerifyNested(
+                    ApplyFirst,
+                    ApplySecond,
+                    () => Check("outer", resolve, outer, outerExtraExpected, outerImplExtraExpected),
+                    () => Check("first", resolve, outer, firstExtraExpected, firstImplExtraExpected),
+                    () => Check("second", resolve, outer, firstExtraExpected, firstImplExtraExpected));
+            }
         }
 
         [Fact]
@@ -96,70 +217,6 @@ namespace SpaceEngineers.Core.Modules.Test
             throw new NotImplementedException();
         }
 
-        private static IEnumerable<Type> Extract<TService, TDecorator>(TService obj)
-            where TService : class
-            where TDecorator : IDecorator<TService>
-        {
-            yield return obj.GetType();
-
-            if (obj is TDecorator decorator)
-            {
-                foreach (var type in Extract<TService, TDecorator>(decorator.Decoratee))
-                {
-                    yield return type;
-                }
-            }
-        }
-
-        private void Verify<TService, TDecorator>(string label, IEnumerable<Type> expected, TService service)
-            where TService : class
-            where TDecorator : IDecorator<TService>
-        {
-            var actual = Extract<TService, TDecorator>(service).ToList();
-            Output.WriteLine(label + Environment.NewLine + string.Join(Environment.NewLine, actual.Select(type => type.FullName)));
-            Assert.True(expected.SequenceEqual(actual));
-        }
-
-        private void VerifyNested(Func<IServiceForInterception> resolve)
-        {
-            var expected = new[]
-                           {
-                               typeof(RegisteredDecoratorForInterception),
-                               typeof(ServiceForInterceptionImpl)
-                           };
-
-            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#1", expected, resolve());
-
-            using (DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecoratorForInterception>())
-            {
-                var expectedOuterScoped = new[]
-                                          {
-                                              typeof(UnregisteredDecoratorForInterception),
-                                              typeof(RegisteredDecoratorForInterception),
-                                              typeof(ServiceForInterceptionImpl)
-                                          };
-
-                Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#2", expectedOuterScoped, resolve());
-
-                using (DependencyContainer.ApplyDecorator<IServiceForInterception, AnotherUnregisteredDecoratorForInterception>())
-                {
-                    var expectedInnerScoped = new[]
-                                              {
-                                                  typeof(AnotherUnregisteredDecoratorForInterception),
-                                                  typeof(UnregisteredDecoratorForInterception),
-                                                  typeof(RegisteredDecoratorForInterception),
-                                                  typeof(ServiceForInterceptionImpl)
-                                              };
-
-                    Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#3", expectedInnerScoped, resolve());
-                }
-
-                Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#4", expectedOuterScoped, resolve());
-            }
-
-            Verify<IServiceForInterception, IServiceForInterceptionDecorator>("#5", expected, resolve());
-        }
-
         private void VerifyError(Func<IServiceForInterception> resolve)
         {
             resolve.Try()
@@ -171,6 +228,87 @@ namespace SpaceEngineers.Core.Modules.Test
                                                    }
                                                })
                    .Invoke();
+        }
+
+        private static IEnumerable<Type> ExtractDecorators<TService, TDecorator>(TService obj)
+            where TService : class
+            where TDecorator : IDecorator<TService>
+        {
+            yield return obj.GetType();
+
+            if (obj is TDecorator decorator)
+            {
+                foreach (var type in ExtractDecorators<TService, TDecorator>(decorator.Decoratee))
+                {
+                    yield return type;
+                }
+            }
+        }
+
+        private void Compare<TService, TDecorator>(string label, IEnumerable<Type> expected, TService service)
+            where TService : class
+            where TDecorator : IDecorator<TService>
+        {
+            var actual = ExtractDecorators<TService, TDecorator>(service).ToList();
+            Output.WriteLine(label + Environment.NewLine + string.Join(Environment.NewLine, actual.Select(type => type.FullName)));
+            Assert.True(expected.SequenceEqual(actual));
+        }
+
+        private static void VerifyNested(Func<IDisposable> applyFirst,
+                                         Func<IDisposable> applySecond,
+                                         Action outer,
+                                         Action first,
+                                         Action second)
+        {
+            outer();
+
+            using (applyFirst())
+            {
+                first();
+
+                using (applySecond())
+                {
+                    second();
+                }
+
+                first();
+            }
+
+            outer();
+        }
+
+        private void VerifyNested(Func<IServiceForInterception> resolve)
+        {
+            var outer = new[]
+                        {
+                            typeof(RegisteredDecorator),
+                            typeof(RegisteredDecoratorWithExtraDependency),
+                            typeof(ServiceForInterceptionImpl)
+                        };
+
+            var first = new[]
+                        {
+                            typeof(UnregisteredDecorator),
+                            typeof(RegisteredDecorator),
+                            typeof(RegisteredDecoratorWithExtraDependency),
+                            typeof(ServiceForInterceptionImpl)
+                        };
+
+            var second = new[]
+                         {
+                             typeof(AnotherUnregisteredDecoratorForInterception),
+                             typeof(UnregisteredDecorator),
+                             typeof(RegisteredDecorator),
+                             typeof(RegisteredDecoratorWithExtraDependency),
+                             typeof(ServiceForInterceptionImpl)
+                         };
+
+            VerifyNested(
+                () => DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecorator>(),
+                () => DependencyContainer.ApplyDecorator<IServiceForInterception, AnotherUnregisteredDecoratorForInterception>(),
+                () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("outer", outer, resolve()),
+                () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("first", first, resolve()),
+                () => Compare<IServiceForInterception, IServiceForInterceptionDecorator>("second", second, resolve()));
         }
     }
 }

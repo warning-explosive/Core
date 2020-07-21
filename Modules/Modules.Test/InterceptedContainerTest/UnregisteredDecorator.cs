@@ -6,9 +6,9 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
 
     [Lifestyle(EnLifestyle.Transient)]
     [Unregistered]
-    internal class UnregisteredDecoratorForInterception : IServiceForInterceptionDecorator
+    internal class UnregisteredDecorator : IServiceForInterceptionDecorator
     {
-        public UnregisteredDecoratorForInterception(IServiceForInterception decoratee)
+        public UnregisteredDecorator(IServiceForInterception decoratee)
         {
             Decoratee = decoratee;
         }

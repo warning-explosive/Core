@@ -5,20 +5,22 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
     using AutoWiringTest;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class RegisteredDecoratorWithExtraDependency : IServiceForInterceptionDecorator
+    internal class RegisteredDecoratorWithExtraDependency : IServiceForInterceptionDecorator,
+                                                            IWithExtra
     {
-        private readonly IExtraDependency _extra;
-        private readonly ImplementationExtra _implExtra;
-
         public RegisteredDecoratorWithExtraDependency(IServiceForInterception decoratee,
                                                       IExtraDependency extra,
                                                       ImplementationExtra implExtra)
         {
             Decoratee = decoratee;
-            _extra = extra;
-            _implExtra = implExtra;
+            Extra = extra;
+            ImplExtra = implExtra;
         }
 
         public IServiceForInterception Decoratee { get; }
+
+        public IExtraDependency Extra { get; }
+
+        public ImplementationExtra ImplExtra { get; }
     }
 }

@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Internals;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
+    using ResolveInterceptor = Internals.ResolveInterceptor;
 
     /// <summary>
     /// Dependency container implementation based on SimpleInjector
@@ -28,7 +29,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private readonly Container _container;
 
-        private DecoratorInterceptor? _interceptor;
+        private ResolveInterceptor? _interceptor;
 
         /// <summary> .ctor </summary>
         /// <param name="typeExtensions">ITypeExtensions</param>
@@ -218,7 +219,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             if (allowResolveInterception)
             {
-                _interceptor = new DecoratorInterceptor(_stacks);
+                _interceptor = new ResolveInterceptor(_stacks);
 
                 _container.Options.RegisterResolveInterceptor(_interceptor.InterceptResolution, _ => true);
             }

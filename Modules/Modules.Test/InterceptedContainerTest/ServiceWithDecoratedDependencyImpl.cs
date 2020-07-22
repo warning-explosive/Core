@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class ServiceWithOverrideAsDependencyImpl : IServiceWithOverrideAsDependency
+    internal class ServiceWithDecoratedDependencyImpl : IServiceWithDecoratedDependency
     {
-        public ServiceWithOverrideAsDependencyImpl(IServiceForInterception interception)
+        public ServiceWithDecoratedDependencyImpl(IServiceForInterception interception)
         {
             ServiceForInterception = interception;
         }

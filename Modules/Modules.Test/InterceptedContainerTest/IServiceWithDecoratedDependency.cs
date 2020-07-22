@@ -2,10 +2,8 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
 {
     using AutoWiringApi.Abstractions;
 
-    internal interface IServiceWithSeveralDependenciesForOverride : IResolvable
+    internal interface IServiceWithDecoratedDependency : IResolvable
     {
         IServiceForInterception ServiceForInterception { get; }
-
-        IServiceWithOverrideAsDependency ServiceWithOverrideAsDependency { get; }
     }
 }

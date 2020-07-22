@@ -6,20 +6,22 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
 
     [Lifestyle(EnLifestyle.Transient)]
     [Unregistered]
-    internal class UnregisteredDecoratorWithExtraDependency : IServiceForInterceptionDecorator
+    internal class UnregisteredDecoratorWithExtraDependency : IServiceForInterceptionDecorator,
+                                                              IWithExtra
     {
-        private readonly IExtraDependency _extra;
-        private readonly ImplementationExtra _implExtra;
-
         public UnregisteredDecoratorWithExtraDependency(IServiceForInterception decoratee,
                                                         IExtraDependency extra,
                                                         ImplementationExtra implExtra)
         {
             Decoratee = decoratee;
-            _extra = extra;
-            _implExtra = implExtra;
+            Extra = extra;
+            ImplExtra = implExtra;
         }
 
         public IServiceForInterception Decoratee { get; }
+
+        public IExtraDependency Extra { get; }
+
+        public ImplementationExtra ImplExtra { get; }
     }
 }

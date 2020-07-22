@@ -4,15 +4,17 @@ namespace SpaceEngineers.Core.Modules.Test.InterceptedContainerTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class ServiceForInterceptionImpl : IServiceForInterception
+    internal class ServiceForInterceptionImpl : IServiceForInterception,
+                                                IWithExtra
     {
-        private readonly IExtraDependency _extra;
-        private readonly ImplementationExtra _implExtra;
-
         public ServiceForInterceptionImpl(IExtraDependency extra, ImplementationExtra implExtra)
         {
-            _extra = extra;
-            _implExtra = implExtra;
+            Extra = extra;
+            ImplExtra = implExtra;
         }
+
+        public IExtraDependency Extra { get; }
+
+        public ImplementationExtra ImplExtra { get; }
     }
 }

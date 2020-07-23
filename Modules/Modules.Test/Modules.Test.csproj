@@ -225,5 +225,8 @@
     <Compile Update="InterceptedContainerTest\AnotherUnregisteredExtraDependencyDecorator.cs">
       <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
     </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredDecoratorCyclicReferenceProxy.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

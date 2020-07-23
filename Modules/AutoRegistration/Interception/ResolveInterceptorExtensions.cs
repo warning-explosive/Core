@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Interception
 {
     using System;
     using System.Collections.Generic;
@@ -64,11 +64,19 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                        .EnsureNotNull($"{methodName} method must exists");
         }
 
-        internal static Expression CallStaticGenericMethod(this MethodInfo methodInfo,
+        internal static TReturn CallGenericMethod<TReturn>(this object target,
+                                                           MethodInfo methodInfo,
                                                            Type[] genericArgs,
                                                            params object?[] args)
         {
-            return (Expression)methodInfo.MakeGenericMethod(genericArgs).Invoke(null, args);
+            return (TReturn)methodInfo.MakeGenericMethod(genericArgs).Invoke(target, args);
+        }
+
+        internal static TReturn CallStaticGenericMethod<TReturn>(this MethodInfo methodInfo,
+                                                                 Type[] genericArgs,
+                                                                 params object?[] args)
+        {
+            return (TReturn)methodInfo.MakeGenericMethod(genericArgs).Invoke(null, args);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Internals;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
-    using ResolveInterceptor = Internals.ResolveInterceptor;
+    using ResolveInterceptor = Interception.ResolveInterceptor;
 
     /// <summary>
     /// Dependency container implementation based on SimpleInjector
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     [Unregistered]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
-        private readonly Dictionary<Type, Stack<ServiceRegistrationInfo>> _stacks;
+        private readonly Dictionary<Type, Stack<ServiceRegistrationInfo>> _decorators;
 
         private readonly Container _container;
 
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         internal DependencyContainerImpl(ITypeExtensions typeExtensions,
                                          DependencyContainerOptions options)
         {
-            _stacks = new Dictionary<Type, Stack<ServiceRegistrationInfo>>();
+            _decorators = new Dictionary<Type, Stack<ServiceRegistrationInfo>>();
             _container = CreateContainer();
 
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
@@ -166,9 +166,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             var info = new ServiceRegistrationInfo(typeof(TService), typeof(TImplementation), typeof(TImplementation).GetCustomAttribute<LifestyleAttribute>()?.Lifestyle);
 
-            var stack = _stacks.GetOrAdd(typeof(TService), () => new Stack<ServiceRegistrationInfo>());
+            var stack = _decorators.GetOrAdd(typeof(TService), () => new Stack<ServiceRegistrationInfo>());
             stack.Push(info);
-            return Disposable.Create(_stacks, stacks =>
+            return Disposable.Create(_decorators, stacks =>
                                               {
                                                   if (stacks.TryGetValue(typeof(TService), out var s))
                                                   {
@@ -219,7 +219,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             if (allowResolveInterception)
             {
-                _interceptor = new ResolveInterceptor(_stacks);
+                _interceptor = new ResolveInterceptor(_decorators);
 
                 _container.Options.RegisterResolveInterceptor(_interceptor.InterceptResolution, _ => true);
             }

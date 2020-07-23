@@ -58,9 +58,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 VerifyNested(
                     () => DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecorator>(),
                     () => DependencyContainer.ApplyDecorator<IServiceForInterception, RegisteredDecoratorWithExtraDependency>(),
-                    () => VerifyError(resolve),
-                    () => VerifyError(resolve),
-                    () => VerifyError(resolve));
+                    () => resolve(),
+                    () => VerifyError(resolve, $"Decorator {typeof(RegisteredDecorator)} already registered in container"),
+                    () => VerifyError(resolve, $"Decorator {typeof(RegisteredDecoratorWithExtraDependency)} already registered in container"));
+            }
+
+            using (DependencyContainer.ApplyDecorator<ImplementationExtra, RegisteredImplementationExtraDecorator>())
+            {
+                VerifyError(() => DependencyContainer.Resolve<IServiceForInterception>(), $"Decorator {typeof(RegisteredImplementationExtraDecorator)} already registered in container");
             }
         }
 
@@ -286,7 +291,47 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ApplyOrderTest()
         {
-            throw new NotImplementedException();
+            var resolves = new Func<IServiceForInterception>[]
+                           {
+                               () => DependencyContainer.Resolve<IServiceForInterception>(),
+                               () => DependencyContainer.Resolve<IServiceWithSeveralDependencies>().ServiceForInterception,
+                               () => DependencyContainer.Resolve<IServiceWithSeveralDependencies>().ServiceWithDecoratedDependency.ServiceForInterception,
+                               () => DependencyContainer.Resolve<IServiceWithDecoratedDependency>().ServiceForInterception,
+                           };
+
+            IDisposable A() => DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecoratorWithExtraDependency>();
+            IDisposable B() => DependencyContainer.ApplyDecorator<IExtraDependency, UnregisteredExtraDependencyDecorator>();
+            IDisposable C() => DependencyContainer.ApplyDecorator<ImplementationExtra, UnregisteredImplementationExtraDecorator>();
+
+            var applications = new Func<IDisposable>[]
+                               {
+                                   () => new CompositeDisposable { A(), B(), C() },
+                                   () => new CompositeDisposable { A(), C(), B() },
+                                   () => new CompositeDisposable { B(), A(), C() },
+                                   () => new CompositeDisposable { B(), C(), A() },
+                                   () => new CompositeDisposable { C(), A(), B() },
+                                   () => new CompositeDisposable { C(), B(), A() },
+                               };
+
+            foreach (var app in applications)
+            {
+                using (app())
+                {
+                    foreach (var resolve in resolves)
+                    {
+                        resolve();
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        internal void CyclicDependencyTest()
+        {
+            using (DependencyContainer.ApplyDecorator<IServiceForInterception, UnregisteredDecoratorCyclicReferenceProxy>())
+            {
+                VerifyError(() => DependencyContainer.Resolve<IServiceForInterception>(), string.Empty);
+            }
         }
 
         [Fact]
@@ -307,15 +352,19 @@ namespace SpaceEngineers.Core.Modules.Test
             throw new NotImplementedException();
         }
 
-        private void VerifyError(Func<IServiceForInterception> resolve)
+        private void VerifyError(Func<IServiceForInterception> resolve, string msg)
         {
+            Assert.Throws<ActivationException>(resolve);
+
             resolve.Try()
                    .Catch<ActivationException>(ex =>
                                                {
-                                                   if (!(ex.InnerException?.RealException() is InvalidOperationException))
+                                                   if (!(ex.InnerException?.RealException() is InvalidOperationException invalidOperationException))
                                                    {
                                                        throw ex;
                                                    }
+
+                                                   Assert.Equal(msg, invalidOperationException.Message);
                                                })
                    .Invoke();
         }

@@ -127,10 +127,10 @@ namespace SpaceEngineers.Core.AutoRegistration
                 dependencies = dependency.Registration
                                          .GetPropertyValue("Collection")
                                          .GetFieldValue("producers")
+                                         .GetPropertyValue("Value")
                                          .EnsureType<IEnumerable>()
                                          .GetEnumerator()
                                          .ToObjectEnumerable()
-                                         .Select(o => o.GetPropertyValue("Value"))
                                          .OfType<InstanceProducer>()
                                          .ToArray();
             }

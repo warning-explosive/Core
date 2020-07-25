@@ -70,11 +70,11 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="message">Exception message</param>
         /// <typeparam name="TExpected">input type-argument</typeparam>
         /// <returns>Not null input or exception</returns>
-        /// <exception cref="ArgumentNullException">Throws if input is null</exception>
+        /// <exception cref="InvalidOperationException">Throws if input is null</exception>
         public static TExpected EnsureNotNull<TExpected>(this TExpected? input, string message)
             where TExpected : class
         {
-            return EnsureNotNull(input, () => new ArgumentNullException(message));
+            return EnsureNotNull(input, () => new InvalidOperationException(message));
         }
 
         /// <summary>

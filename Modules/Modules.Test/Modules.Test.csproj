@@ -171,5 +171,62 @@
     <Compile Update="GenericEndpointTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="InterceptedDependencyContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\ServiceForInterceptionImpl.cs">
+      <DependentUpon>IServiceForInterception.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredDecorator.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\RegisteredDecorator.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\IServiceForInterceptionDecorator.cs">
+      <DependentUpon>IServiceForInterception.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\ServiceWithDecoratedDependencyImpl.cs">
+      <DependentUpon>IServiceWithOverrideAsDependency.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\ServiceWithSeveralDependenciesImpl.cs">
+      <DependentUpon>IServiceWithSeveralDependenciesForOverride.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\RegisteredDecoratorWithExtraDependency.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredDecoratorWithExtraDependency.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\ExtraDependencyImpl.cs">
+      <DependentUpon>IExtraDependency.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\AnotherUnregisteredDecoratorForInterception.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\IExtraDependencyDecorator.cs">
+      <DependentUpon>IExtraDependency.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\ImplementationExtraDecorator.cs">
+      <DependentUpon>ImplementationExtra.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredExtraDependencyDecorator.cs">
+      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredImplementationExtraDecorator.cs">
+      <DependentUpon>ImplementationExtraDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\RegisteredExtraDependencyDecorator.cs">
+      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\RegisteredImplementationExtraDecorator.cs">
+      <DependentUpon>ImplementationExtraDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\AnotherUnregisteredExtraDependencyDecorator.cs">
+      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="InterceptedContainerTest\UnregisteredDecoratorCyclicReferenceProxy.cs">
+      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

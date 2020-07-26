@@ -171,9 +171,6 @@
     <Compile Update="GenericEndpointTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedDependencyContainerTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="InterceptedContainerTest\ServiceForInterceptionImpl.cs">
       <DependentUpon>IServiceForInterception.cs</DependentUpon>
     </Compile>

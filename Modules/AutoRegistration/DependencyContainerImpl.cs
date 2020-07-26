@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -14,7 +15,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Internals;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
-    using ResolveInterceptor = Interception.ResolveInterceptor;
 
     /// <summary>
     /// Dependency container implementation based on SimpleInjector
@@ -25,11 +25,9 @@ namespace SpaceEngineers.Core.AutoRegistration
     [Unregistered]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
-        private readonly Dictionary<Type, Stack<ServiceRegistrationInfo>> _decorators;
+        private readonly ConcurrentDictionary<Type, Type> _versions;
 
         private readonly Container _container;
-
-        private ResolveInterceptor? _interceptor;
 
         /// <summary> .ctor </summary>
         /// <param name="typeExtensions">ITypeExtensions</param>
@@ -37,7 +35,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         internal DependencyContainerImpl(ITypeExtensions typeExtensions,
                                          DependencyContainerOptions options)
         {
-            _decorators = new Dictionary<Type, Stack<ServiceRegistrationInfo>>();
+            _versions = new ConcurrentDictionary<Type, Type>();
             _container = CreateContainer();
 
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
@@ -48,7 +46,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             RegisterExternalDependencies(this, options.RegistrationCallback);
 
-            RegisterInterceptors(options.AllowResolveInterception);
+            RegisterVersions(_container, servicesProvider);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
         }
@@ -104,7 +102,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         public IRegistrationContainer RegisterCollection<TService>(IEnumerable<TService> implementationsCollection)
             where TService : class
         {
-            _container.Collection.Register(implementationsCollection);
+            _container.Collection.Register<TService>(implementationsCollection);
             return this;
         }
 
@@ -157,29 +155,23 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #endregion
 
-        #region IInterceptedContainer
+        #region IVersionedContainer
 
-        /// <inheritdoc />
-        public IDisposable ApplyDecorator<TService, TImplementation>()
+        public IDisposable UseVersion<TService, TImplementation>()
             where TService : class
-            where TImplementation : TService, IDecorator<TService>
+            where TImplementation : class, TService
         {
-            var info = new ServiceRegistrationInfo(typeof(TService), typeof(TImplementation), typeof(TImplementation).GetCustomAttribute<LifestyleAttribute>()?.Lifestyle);
+            _versions.GetOrAdd(typeof(TService), () => typeof(TImplementation));
 
-            var stack = _decorators.GetOrAdd(typeof(TService), () => new Stack<ServiceRegistrationInfo>());
-            stack.Push(info);
-            return Disposable.Create(_decorators, stacks =>
-                                              {
-                                                  if (stacks.TryGetValue(typeof(TService), out var s))
-                                                  {
-                                                      s.Pop();
+            return Disposable.Create(_versions, state => state.TryRemove(typeof(TService), out _));
+        }
 
-                                                      if (!s.Any())
-                                                      {
-                                                          stacks.Remove(typeof(TService));
-                                                      }
-                                                  }
-                                              });
+        public Type? AppliedVersion<TService>()
+            where TService : class
+        {
+            _versions.TryGetValue(typeof(TService), out var version);
+
+            return version;
         }
 
         #endregion
@@ -201,11 +193,14 @@ namespace SpaceEngineers.Core.AutoRegistration
         }
 
         private static void RegisterSingletons(Container container,
-                                               IDependencyContainer dependencyContainer,
+                                               DependencyContainerImpl dependencyContainer,
                                                ITypeExtensions typeExtensions,
                                                IAutoWiringServicesProvider servicesProvider)
         {
-            container.RegisterSingleton(() => dependencyContainer);
+            container.RegisterSingleton<IDependencyContainer>(() => dependencyContainer);
+            container.RegisterSingleton<IRegistrationContainer>(() => dependencyContainer);
+            container.RegisterSingleton<IScopedContainer>(() => dependencyContainer);
+            container.RegisterSingleton<IVersionedContainer>(() => dependencyContainer);
             container.RegisterSingleton(() => typeExtensions);
             container.RegisterSingleton(() => servicesProvider);
         }
@@ -213,16 +208,6 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static void RegisterExternalDependencies(IRegistrationContainer container, Action<IRegistrationContainer>? registrationCallback)
         {
             registrationCallback?.Invoke(container);
-        }
-
-        private void RegisterInterceptors(bool allowResolveInterception)
-        {
-            if (allowResolveInterception)
-            {
-                _interceptor = new ResolveInterceptor(_decorators);
-
-                _container.Options.RegisterResolveInterceptor(_interceptor.InterceptResolution, _ => true);
-            }
         }
 
         private static void RegisterAutoWired(Container container,
@@ -248,10 +233,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             // register each element of collection as implementation to provide lifestyle for container
             container.RegisterImplementations(collectionResolvableRegistrationInfos);
-
-            collectionResolvableRegistrationInfos.OrderByDependencies(z => z.ComponentType)
-                                                 .GroupBy(k => k.ServiceType, v => v.ComponentType)
-                                                 .Each(info => container.Collection.Register(info.Key, info));
+            container.RegisterCollections(collectionResolvableRegistrationInfos);
 
             /*
              * [IV] - Decorators
@@ -287,6 +269,13 @@ namespace SpaceEngineers.Core.AutoRegistration
                                           && !t.IsInterface
                                           && !t.IsAbstract
                                           && t.IsSubclassOfOpenGeneric(decoratorType));
+        }
+
+        private static void RegisterVersions(Container container, IAutoWiringServicesProvider autoWiringServicesProvider)
+        {
+            var versions = autoWiringServicesProvider.Versions().VersionComponents(container);
+
+            container.RegisterWithOpenGenericFallBack(versions);
         }
     }
 }

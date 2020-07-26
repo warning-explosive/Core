@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoRegistration.Internals;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
@@ -370,7 +371,12 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions
                           {
-                              AllowResolveInterception = true
+                              RegistrationCallback = registration =>
+                                                     {
+                                                         registration.RegisterConcrete<TestTypeExtensions>(EnLifestyle.Singleton);
+                                                         registration.RegisterCollection<IVersionFor<ITypeExtensions>>(new[] { new TestTypeExtensions() });
+                                                         registration.Register<IVersionedService<ITypeExtensions>, VersionedService<ITypeExtensions>>(EnLifestyle.Singleton);
+                                                     }
                           };
 
             var settingsContainer = AutoRegistration.DependencyContainer
@@ -383,18 +389,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             DependencyInfo[] compositionInfo;
 
-            using (settingsContainer.ApplyDecorator<ITypeExtensions, TypeExtensionsDecorator>())
+            using (settingsContainer.UseVersion<ITypeExtensions, TestTypeExtensions>())
             {
-                Assert.True(settingsContainer.Resolve<ITypeExtensions>() is TypeExtensionsDecorator);
-                Assert.True(settingsContainer.Resolve<ICompositionInfoExtractor>().GetFieldValue("_receiver").GetFieldValue("_typeExtensions") is TypeExtensionsDecorator);
-
                 compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
                                                    .GetCompositionInfo(mode)
                                                    .ToArray();
             }
-
-            Assert.False(settingsContainer.Resolve<ITypeExtensions>() is TypeExtensionsDecorator);
-            Assert.False(settingsContainer.Resolve<ICompositionInfoExtractor>().GetFieldValue("_receiver").GetFieldValue("_typeExtensions") is TypeExtensionsDecorator);
 
             Output.WriteLine($"Total: {compositionInfo.Length}\n");
 
@@ -437,83 +437,69 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Lifestyle(EnLifestyle.Singleton)]
-        [Unregistered]
-        private class TypeExtensionsDecorator : ITypeExtensions,
-                                                IDecorator<ITypeExtensions>
+        private class TestTypeExtensions : ITypeExtensions,
+                                           IVersionFor<ITypeExtensions>
         {
-            public TypeExtensionsDecorator(ITypeExtensions decoratee)
-            {
-                Decoratee = decoratee;
-            }
-
-            public ITypeExtensions Decoratee { get; }
+            public ITypeExtensions Version => this;
 
             public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
             {
-                return Decoratee.OrderByDependencies(source, accessor);
-            }
-
-            public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
-                where TInterface : class
-            {
-                return Decoratee.AllOurServicesThatContainsDeclarationOfInterface<TInterface>();
+                throw new NotSupportedException();
             }
 
             public Type[] AllLoadedTypes()
             {
-                return Decoratee.AllLoadedTypes();
+                throw new NotSupportedException();
             }
 
             public Type[] OurTypes()
             {
-                return Decoratee.OurTypes()
-                                .Concat(new[] { typeof(TestYamlConfig) })
-                                .ToArray();
+                return new[] { typeof(TestYamlConfig) };
             }
 
             public Assembly[] OurAssemblies()
             {
-                return Decoratee.OurAssemblies();
+                throw new NotSupportedException();
             }
 
             public bool IsOurType(Type type)
             {
-                return Decoratee.IsOurType(type);
+                throw new NotSupportedException();
             }
 
             public Type[] GetDependenciesByAttribute(Type type)
             {
-                return Decoratee.GetDependenciesByAttribute(type);
+                throw new NotSupportedException();
             }
 
             public bool IsNullable(Type type)
             {
-                return Decoratee.IsNullable(type);
+                throw new NotSupportedException();
             }
 
             public bool IsSubclassOfOpenGeneric(Type type, Type openGenericAncestor)
             {
-                return Decoratee.IsSubclassOfOpenGeneric(type, openGenericAncestor);
+                throw new NotSupportedException();
             }
 
             public bool IsContainsInterfaceDeclaration(Type type, Type i)
             {
-                return Decoratee.IsContainsInterfaceDeclaration(type, i);
+                throw new NotSupportedException();
             }
 
             public bool FitsForTypeArgument(Type typeForCheck, Type typeArgument)
             {
-                return Decoratee.FitsForTypeArgument(typeForCheck, typeArgument);
+                throw new NotSupportedException();
             }
 
             public IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived, Type openGeneric, int typeArgumentAt = 0)
             {
-                return Decoratee.GetGenericArgumentsOfOpenGenericAt(derived, openGeneric, typeArgumentAt);
+                throw new NotSupportedException();
             }
 
             public Type ExtractGenericTypeDefinition(Type type)
             {
-                return Decoratee.ExtractGenericTypeDefinition(type);
+                throw new NotSupportedException();
             }
         }
 

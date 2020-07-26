@@ -23,14 +23,25 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                 });
         }
 
-        internal static ICollection<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> services, Container container, ITypeExtensions typeExtensions)
+        internal static IEnumerable<ServiceRegistrationInfo> VersionComponents(this IEnumerable<Type> servicesWithVersions, Container container)
         {
-            return services.SelectMany(i => i.GetTypesToRegister(container, typeExtensions).GetComponents(i)).ToList();
+            foreach (var service in servicesWithVersions)
+            {
+                var serviceType = typeof(IVersionedService<>).MakeGenericType(service);
+                var componentType = typeof(VersionedService<>).MakeGenericType(service);
+                var lifestyle = container.GetRegistration(service).Lifestyle.MapLifestyle();
+                yield return new ServiceRegistrationInfo(serviceType, componentType, lifestyle);
+            }
         }
 
-        internal static ICollection<ServiceRegistrationInfo> GetImplementationComponents(this IEnumerable<Type> services)
+        internal static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> services, Container container, ITypeExtensions typeExtensions)
         {
-            return services.GetComponents(typeof(IResolvableImplementation)).ToList();
+            return services.SelectMany(i => i.GetTypesToRegister(container, typeExtensions).GetComponents(i));
+        }
+
+        internal static IEnumerable<ServiceRegistrationInfo> GetImplementationComponents(this IEnumerable<Type> services)
+        {
+            return services.GetComponents(typeof(IResolvableImplementation));
         }
 
         internal static IEnumerable<ServiceRegistrationInfo> GetDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
@@ -77,7 +88,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         private static bool ForAutoRegistration(Type type)
         {
-            return type.GetCustomAttribute<UnregisteredAttribute>(true) == null;
+            return type.GetCustomAttribute<UnregisteredAttribute>(true) == null
+                   && type.GetCustomAttribute<ManualRegistrationAttribute>(true) == null;
         }
 
         private static IEnumerable<(Type ComponentType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(Type serviceType, Type componentType)

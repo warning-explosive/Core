@@ -1,14 +1,12 @@
-namespace SpaceEngineers.Core.AutoRegistration
+namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics;
-    using Internals;
     using SimpleInjector;
 
     /// <inheritdoc />
@@ -32,13 +30,13 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <inheritdoc />
         public IEnumerable<Type> Resolvable()
         {
-            return _typeExtensions.AllOurServicesThatContainsDeclarationOfInterface<IResolvable>();
+            return Services(typeof(IResolvable));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Collections()
         {
-            return _typeExtensions.AllOurServicesThatContainsDeclarationOfInterface<ICollectionResolvable>();
+            return Services(typeof(ICollectionResolvable));
         }
 
         /// <inheritdoc />
@@ -54,10 +52,38 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .AllLoadedTypes()
                   .Where(type => type.IsClass
                               && !type.IsAbstract
-                              && type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)))
-                  .SelectMany(type => type.GetGenericArgumentsOfOpenGenericAt(typeof(IExternalResolvable<>), 0))
+                              && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
+                  .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
                   .Select(_typeExtensions.ExtractGenericTypeDefinition)
                   .Distinct();
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> Versions()
+        {
+            return _typeExtensions
+                  .OurTypes()
+                  .Where(z => z.IsClass
+                           && !z.IsAbstract
+                           && _typeExtensions.IsSubclassOfOpenGeneric(z, typeof(IVersionFor<>)))
+                  .SelectMany(z => z.GetInterfaces().Where(i => i.IsGenericType && !i.IsGenericTypeDefinition && i.GetGenericTypeDefinition() == typeof(IVersionFor<>)))
+                  .Distinct()
+                  .Select(version => version.GenericTypeArguments[0]);
+        }
+
+        private Type[] Services(Type serviceType)
+        {
+            if (!serviceType.IsInterface
+             || serviceType.IsGenericType)
+            {
+                throw new ArgumentException(serviceType.FullName);
+            }
+
+            return _typeExtensions
+                  .OurTypes()
+                  .Where(t => t.IsInterface
+                           && _typeExtensions.IsContainsInterfaceDeclaration(t, serviceType))
+                  .ToArray();
         }
     }
 }

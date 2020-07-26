@@ -60,5 +60,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 container.Register(info.ComponentType, info.ComponentType, info.Lifestyle);
             }
         }
+
+        internal static void RegisterCollections(this Container container, IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
+        {
+            serviceRegistrationInfos.OrderByDependencies(z => z.ComponentType)
+                                    .GroupBy(k => k.ServiceType, v => v.ComponentType)
+                                    .Each(info => container.Collection.Register(info.Key, info));
+        }
     }
 }

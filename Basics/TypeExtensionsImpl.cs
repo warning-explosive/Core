@@ -46,24 +46,6 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <inheritdoc />
-        public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
-            where TInterface : class
-        {
-            var type = typeof(TInterface);
-
-            if (!type.IsInterface)
-            {
-                throw new ArgumentException(typeof(TInterface).FullName);
-            }
-
-            return _typeInfoStorage
-                  .OurTypes
-                  .Where(t => t.IsInterface
-                              && IsContainsInterfaceDeclaration(t, typeof(TInterface)))
-                  .ToArray();
-        }
-
-        /// <inheritdoc />
         public Type[] AllLoadedTypes()
         {
             return _typeInfoStorage.AllLoadedTypes;

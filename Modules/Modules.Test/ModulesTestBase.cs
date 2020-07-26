@@ -17,12 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            var options = new DependencyContainerOptions
-                          {
-                              AllowResolveInterception = true
-                          };
-
-            DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(new DependencyContainerOptions());
         }
 
         /// <summary>

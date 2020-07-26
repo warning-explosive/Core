@@ -124,15 +124,17 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             if (isCollectionResolvable)
             {
-                dependencies = dependency.Registration
-                                         .GetPropertyValue("Collection")
-                                         .GetFieldValue("producers")
-                                         .GetPropertyValue("Value")
-                                         .EnsureType<IEnumerable>()
-                                         .GetEnumerator()
-                                         .ToObjectEnumerable()
-                                         .OfType<InstanceProducer>()
-                                         .ToArray();
+                var producer = dependency.Registration;
+                dependencies = producer.HasProperty("Collection")
+                                   ? producer.GetPropertyValue("Collection")
+                                             .GetFieldValue("producers")
+                                             .GetPropertyValue("Value")
+                                             .EnsureType<IEnumerable>()
+                                             .GetEnumerator()
+                                             .ToObjectEnumerable()
+                                             .OfType<InstanceProducer>()
+                                             .ToArray()
+                                   : Array.Empty<InstanceProducer>();
             }
             else
             {

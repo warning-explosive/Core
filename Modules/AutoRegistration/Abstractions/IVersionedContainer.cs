@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
+    using AutoWiringApi.Abstractions;
 
     /// <summary>
     /// Abstraction for dependency container that supports service versions
@@ -15,7 +16,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <returns>Scope cleanup</returns>
         IDisposable UseVersion<TService, TImplementation>()
             where TService : class
-            where TImplementation : class, TService;
+            where TImplementation : class, TService, IVersionFor<TService>;
 
         /// <summary>
         /// Pull actual applied version for service

@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     [Unregistered]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
-        private readonly ConcurrentDictionary<Type, Type> _versions;
+        private readonly ConcurrentDictionary<Type, Stack<Type>> _versions;
 
         private readonly Container _container;
 
@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         internal DependencyContainerImpl(ITypeExtensions typeExtensions,
                                          DependencyContainerOptions options)
         {
-            _versions = new ConcurrentDictionary<Type, Type>();
+            _versions = new ConcurrentDictionary<Type, Stack<Type>>();
             _container = CreateContainer();
 
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
@@ -159,19 +159,32 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         public IDisposable UseVersion<TService, TImplementation>()
             where TService : class
-            where TImplementation : class, TService
+            where TImplementation : class, TService, IVersionFor<TService>
         {
-            _versions.GetOrAdd(typeof(TService), () => typeof(TImplementation));
+            var stack = _versions.GetOrAdd(typeof(TService), () => new Stack<Type>());
+            stack.Push(typeof(TImplementation));
 
-            return Disposable.Create(_versions, state => state.TryRemove(typeof(TService), out _));
+            return Disposable.Create(_versions,
+                                     state =>
+                                     {
+                                         if (state.TryGetValue(typeof(TService), out var s))
+                                         {
+                                             s.Pop();
+
+                                             if (!s.Any())
+                                             {
+                                                 state.TryRemove(typeof(TService), out _);
+                                             }
+                                         }
+                                     });
         }
 
         public Type? AppliedVersion<TService>()
             where TService : class
         {
-            _versions.TryGetValue(typeof(TService), out var version);
+            _versions.TryGetValue(typeof(TService), out var stack);
 
-            return version;
+            return stack?.Peek();
         }
 
         #endregion

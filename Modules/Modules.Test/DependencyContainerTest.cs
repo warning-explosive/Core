@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using TypeExtensions = Basics.TypeExtensions;
 
     /// <summary>
-    /// DependencyContainer class tests
+    /// IDependencyContainer class tests
     /// </summary>
     public class DependencyContainerTest : ModulesTestBase
     {
@@ -334,33 +334,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
 
             Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IUnregisteredExternalService>());
-        }
-
-        [Fact]
-        internal async Task AsyncScopeTest()
-        {
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
-
-            using (DependencyContainer.OpenScope())
-            {
-                var service = DependencyContainer.Resolve<IScopedLifestyleService>();
-                await service.DoSmth().ConfigureAwait(false);
-
-                var anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
-                await anotherService.DoSmth().ConfigureAwait(false);
-                Assert.True(ReferenceEquals(service, anotherService));
-
-                using (DependencyContainer.OpenScope())
-                {
-                    anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
-                    await anotherService.DoSmth().ConfigureAwait(false);
-                    Assert.False(ReferenceEquals(service, anotherService));
-                }
-
-                anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
-                await anotherService.DoSmth().ConfigureAwait(false);
-                Assert.True(ReferenceEquals(service, anotherService));
-            }
         }
 
         [Theory]

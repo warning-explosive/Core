@@ -13,6 +13,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     {
         internal static IEnumerable<Type> GetTypesToRegister(this Type serviceType, Container container, ITypeExtensions typeExtensions)
         {
+            var versionType = typeof(IVersionFor<>).MakeGenericType(serviceType);
+
             return container.GetTypesToRegister(serviceType,
                                                 typeExtensions.OurAssemblies(),
                                                 new TypesToRegisterOptions
@@ -20,7 +22,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                     IncludeComposites = false,
                                                     IncludeDecorators = false,
                                                     IncludeGenericTypeDefinitions = true
-                                                });
+                                                })
+                            .Where(impl => !versionType.IsAssignableFrom(impl));
         }
 
         internal static IEnumerable<ServiceRegistrationInfo> VersionComponents(this IEnumerable<Type> servicesWithVersions, Container container)

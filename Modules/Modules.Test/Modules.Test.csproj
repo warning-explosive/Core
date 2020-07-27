@@ -171,59 +171,41 @@
     <Compile Update="GenericEndpointTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\ServiceForInterceptionImpl.cs">
-      <DependentUpon>IServiceForInterception.cs</DependentUpon>
+    <Compile Update="ScopedContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\UnregisteredDecorator.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\RegisteredDecorator.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImpl.cs">
+      <DependentUpon>IVersionedTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\IServiceForInterceptionDecorator.cs">
-      <DependentUpon>IServiceForInterception.cs</DependentUpon>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImpl.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\ServiceWithDecoratedDependencyImpl.cs">
-      <DependentUpon>IServiceWithOverrideAsDependency.cs</DependentUpon>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImpl.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\ServiceWithSeveralDependenciesImpl.cs">
-      <DependentUpon>IServiceWithSeveralDependenciesForOverride.cs</DependentUpon>
+    <Compile Update="VersionedContainer\ServiceWithVersionedDependenciesImpl.cs">
+      <DependentUpon>IServiceWithVersionedDependencies.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\RegisteredDecoratorWithExtraDependency.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImplV2.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\UnregisteredDecoratorWithExtraDependency.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImplV3.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\ExtraDependencyImpl.cs">
-      <DependentUpon>IExtraDependency.cs</DependentUpon>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImplV2.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\AnotherUnregisteredDecoratorForInterception.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImplV3.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\IExtraDependencyDecorator.cs">
-      <DependentUpon>IExtraDependency.cs</DependentUpon>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImplV2.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="InterceptedContainerTest\ImplementationExtraDecorator.cs">
-      <DependentUpon>ImplementationExtra.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\UnregisteredExtraDependencyDecorator.cs">
-      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\UnregisteredImplementationExtraDecorator.cs">
-      <DependentUpon>ImplementationExtraDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\RegisteredExtraDependencyDecorator.cs">
-      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\RegisteredImplementationExtraDecorator.cs">
-      <DependentUpon>ImplementationExtraDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\AnotherUnregisteredExtraDependencyDecorator.cs">
-      <DependentUpon>IExtraDependencyDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="InterceptedContainerTest\UnregisteredDecoratorCyclicReferenceProxy.cs">
-      <DependentUpon>IServiceForInterceptionDecorator.cs</DependentUpon>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImplV3.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

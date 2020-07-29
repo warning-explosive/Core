@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Disposables;
+    using AutoRegistration;
     using AutoRegistration.Internals;
     using AutoWiringApi.Abstractions;
     using VersionedContainer;
@@ -45,7 +46,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             ITransientVersionedService ResolveOriginal() => DependencyContainer.Resolve<ITransientVersionedService>();
             IEnumerable<ITransientVersionedService> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<ITransientVersionedService>>().Select(z => z.Version);
-            IVersionedService<ITransientVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersionedService<ITransientVersionedService>>();
+            IVersioned<ITransientVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<ITransientVersionedService>>();
         }
 
         [Fact]
@@ -76,7 +77,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             IScopedVersionedService ResolveOriginal() => DependencyContainer.Resolve<IScopedVersionedService>();
             IEnumerable<IScopedVersionedService> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<IScopedVersionedService>>().Select(z => z.Version);
-            IVersionedService<IScopedVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersionedService<IScopedVersionedService>>();
+            IVersioned<IScopedVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<IScopedVersionedService>>();
         }
 
         [Fact]
@@ -104,7 +105,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             ISingletonVersionedService ResolveOriginal() => DependencyContainer.Resolve<ISingletonVersionedService>();
             IEnumerable<ISingletonVersionedService> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<ISingletonVersionedService>>().Select(z => z.Version);
-            IVersionedService<ISingletonVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersionedService<ISingletonVersionedService>>();
+            IVersioned<ISingletonVersionedService> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<ISingletonVersionedService>>();
         }
 
         [Fact]
@@ -168,6 +169,67 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
+        internal void DecoratedVersionTest()
+        {
+            var outer = new[]
+                        {
+                            typeof(VersionedAndDecoratedDecorator),
+                            typeof(VersionedAndDecoratedImpl),
+                        };
+
+            var first = new[]
+                        {
+                            typeof(VersionedAndDecoratedDecorator),
+                            typeof(VersionedAndDecoratedImplV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(VersionedAndDecoratedDecorator),
+                             typeof(VersionedAndDecoratedImplV3),
+                         };
+
+            var versions = new[]
+                           {
+                               typeof(VersionedAndDecoratedImplV2),
+                               typeof(VersionedAndDecoratedImplV3),
+                           };
+
+            VerifyNested(ApplyFirst,
+                         ApplySecond,
+                         () => Check(outer, outer, versions),
+                         () => Check(outer, first, versions),
+                         () => Check(outer, second, versions));
+
+            IDisposable ApplyFirst() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV2>();
+            IDisposable ApplySecond() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV3>();
+
+            void Check(ICollection<Type> originalStructure, ICollection<Type> structure, ICollection<Type> resolvedVersions)
+            {
+                Assert.True(originalStructure.SequenceEqual(ExtractDecorators(ResolveOriginal())));
+                Assert.True(originalStructure.SequenceEqual(ExtractDecorators(ResolveVersioned().Original)));
+                Assert.True(structure.SequenceEqual(ExtractDecorators(ResolveVersioned().Current)));
+                Assert.True(resolvedVersions.SequenceEqual(Types(ResolveVersions())));
+                Assert.True(resolvedVersions.SequenceEqual(Types(ResolveVersioned().Versions)));
+            }
+
+            IVersionedAndDecorated ResolveOriginal() => DependencyContainer.Resolve<IVersionedAndDecorated>();
+            IEnumerable<IVersionedAndDecorated> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<IVersionedAndDecorated>>().Select(z => z.Version);
+            IVersioned<IVersionedAndDecorated> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<IVersionedAndDecorated>>();
+
+            IEnumerable<Type> ExtractDecorators(IVersionedAndDecorated service)
+            {
+                while (service is IVersionedAndDecoratedDecorator decorator)
+                {
+                    yield return decorator.GetType();
+                    service = decorator.Decoratee;
+                }
+
+                yield return service.GetType();
+            }
+        }
+
+        [Fact]
         internal void CollectionVersionsTest()
         {
             throw new NotImplementedException();
@@ -203,7 +265,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private void CheckTransient(Func<ITransientVersionedService> resolveOriginal,
                                     Func<IEnumerable<ITransientVersionedService>> resolveVersions,
-                                    Func<IVersionedService<ITransientVersionedService>> resolveVersioned,
+                                    Func<IVersioned<ITransientVersionedService>> resolveVersioned,
                                     Type currentVersion,
                                     Type[] expectedVersionsTypes)
         {
@@ -215,7 +277,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersions())));
 
             // versioned
-            Assert.True(resolveVersioned() is VersionedService<ITransientVersionedService>);
+            Assert.True(resolveVersioned() is Versioned<ITransientVersionedService>);
             Assert.NotSame(resolveVersioned(), resolveVersioned());
 
             Assert.True(resolveVersioned().Original is TransientVersionedServiceImpl);
@@ -228,7 +290,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private void CheckScoped(Func<IScopedVersionedService> resolveOriginal,
                                  Func<IEnumerable<IScopedVersionedService>> resolveVersions,
-                                 Func<IVersionedService<IScopedVersionedService>> resolveVersioned,
+                                 Func<IVersioned<IScopedVersionedService>> resolveVersioned,
                                  Type currentVersion,
                                  Type[] expectedVersionsTypes)
         {
@@ -245,7 +307,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersions())));
 
             // versioned
-            Assert.True(resolveVersioned() is VersionedService<IScopedVersionedService>);
+            Assert.True(resolveVersioned() is Versioned<IScopedVersionedService>);
             Assert.Same(resolveVersioned(), resolveVersioned());
             var outerVersioned = resolveVersioned();
             using (DependencyContainer.OpenScope())
@@ -274,7 +336,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private void CheckSingleton(Func<ISingletonVersionedService> resolveOriginal,
                                     Func<IEnumerable<ISingletonVersionedService>> resolveVersions,
-                                    Func<IVersionedService<ISingletonVersionedService>> resolveVersioned,
+                                    Func<IVersioned<ISingletonVersionedService>> resolveVersioned,
                                     Type currentVersion,
                                     Type[] expectedVersionsTypes)
         {
@@ -286,7 +348,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersions())));
 
             // versioned
-            Assert.True(resolveVersioned() is VersionedService<ISingletonVersionedService>);
+            Assert.True(resolveVersioned() is Versioned<ISingletonVersionedService>);
             Assert.Same(resolveVersioned(), resolveVersioned());
 
             Assert.True(resolveVersioned().Original is SingletonVersionedServiceImpl);

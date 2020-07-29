@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     /// </summary>
     /// <typeparam name="TService">TService type-argument</typeparam>
     [ManualRegistration]
-    public class VersionedService<TService> : IVersionedService<TService>
+    public class Versioned<TService> : IVersioned<TService>
         where TService : class
     {
         private readonly IVersionedContainer _container;
@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         /// <param name="container">IDependencyContainer</param>
         /// <param name="original">original TService</param>
         /// <param name="versions">Supplied versions</param>
-        public VersionedService(IVersionedContainer container, TService original, IEnumerable<IVersionFor<TService>> versions)
+        public Versioned(IVersionedContainer container, TService original, IEnumerable<IVersionFor<TService>> versions)
         {
             _container = container;
             Original = original;

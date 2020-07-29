@@ -7,27 +7,26 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Basics.Exceptions;
     using SimpleInjector;
 
-    [DebuggerDisplay("{ComponentType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]
+    [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]
     internal class ServiceRegistrationInfo
     {
-        internal ServiceRegistrationInfo(Type serviceType,
-                                         Type componentType,
-                                         EnLifestyle? lifestyle)
+        internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle? lifestyle)
         {
             ServiceType = serviceType.IsGenericType
                               ? serviceType.GetGenericTypeDefinition()
                               : serviceType;
-            ComponentType = componentType;
+
+            ImplementationType = implementationType;
 
             if (lifestyle == null)
             {
-                throw new AttributeRequiredException(typeof(LifestyleAttribute), componentType);
+                throw new AttributeRequiredException(typeof(LifestyleAttribute), implementationType);
             }
 
             Lifestyle = lifestyle.Value.MapLifestyle();
         }
 
-        internal Type ComponentType { get; }
+        internal Type ImplementationType { get; }
 
         internal Type ServiceType { get; }
 

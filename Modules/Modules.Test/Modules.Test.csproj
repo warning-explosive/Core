@@ -207,5 +207,26 @@
     <Compile Update="VersionedContainer\TransientVersionedServiceImplV3.cs">
       <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
+    <Compile Update="VersionedContainer\VersionedImplementationV2.cs">
+      <DependentUpon>VersionedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedImplementationV3.cs">
+      <DependentUpon>VersionedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImpl.cs">
+      <DependentUpon>IWithDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\IVersionedAndDecoratedDecorator.cs">
+      <DependentUpon>IWithDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedDecorator.cs">
+      <DependentUpon>IWithDecoratorDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImplV2.cs">
+      <DependentUpon>IDecoratorated.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImplV3.cs">
+      <DependentUpon>IVersionedAndDecorated.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -7,19 +7,19 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     [Lifestyle(EnLifestyle.Transient)]
     internal class ServiceWithVersionedDependenciesImpl : IServiceWithVersionedDependencies
     {
-        public ServiceWithVersionedDependenciesImpl(IVersionedService<ITransientVersionedService> transient,
-                                                    IVersionedService<IScopedVersionedService> scoped,
-                                                    IVersionedService<ISingletonVersionedService> singleton)
+        public ServiceWithVersionedDependenciesImpl(IVersioned<ITransientVersionedService> transient,
+                                                    IVersioned<IScopedVersionedService> scoped,
+                                                    IVersioned<ISingletonVersionedService> singleton)
         {
             Transient = transient;
             Scoped = scoped;
             Singleton = singleton;
         }
 
-        public IVersionedService<ITransientVersionedService> Transient { get; }
+        public IVersioned<ITransientVersionedService> Transient { get; }
 
-        public IVersionedService<IScopedVersionedService> Scoped { get; }
+        public IVersioned<IScopedVersionedService> Scoped { get; }
 
-        public IVersionedService<ISingletonVersionedService> Singleton { get; }
+        public IVersioned<ISingletonVersionedService> Singleton { get; }
     }
 }

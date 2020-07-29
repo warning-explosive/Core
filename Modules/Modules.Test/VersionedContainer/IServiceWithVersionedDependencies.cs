@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
 
     internal interface IServiceWithVersionedDependencies : IResolvable
     {
-        IVersionedService<ITransientVersionedService> Transient { get; }
+        IVersioned<ITransientVersionedService> Transient { get; }
 
-        IVersionedService<IScopedVersionedService> Scoped { get; }
+        IVersioned<IScopedVersionedService> Scoped { get; }
 
-        IVersionedService<ISingletonVersionedService> Singleton { get; }
+        IVersioned<ISingletonVersionedService> Singleton { get; }
     }
 }

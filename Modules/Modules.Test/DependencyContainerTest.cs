@@ -348,7 +348,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                                      {
                                                          registration.RegisterConcrete<TestTypeExtensions>(EnLifestyle.Singleton);
                                                          registration.RegisterCollection<IVersionFor<ITypeExtensions>>(new[] { new TestTypeExtensions() });
-                                                         registration.Register<IVersionedService<ITypeExtensions>, VersionedService<ITypeExtensions>>(EnLifestyle.Singleton);
+                                                         registration.Register<IVersioned<ITypeExtensions>, Versioned<ITypeExtensions>>(EnLifestyle.Singleton);
                                                      }
                           };
 

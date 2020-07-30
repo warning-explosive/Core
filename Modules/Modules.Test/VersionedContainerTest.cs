@@ -304,11 +304,11 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void DecoratedServiceTest()
         {
-            var outer = new[]
-                        {
-                            typeof(VersionedAndDecoratedDecorator),
-                            typeof(VersionedAndDecoratedImpl),
-                        };
+            var original = new[]
+                           {
+                               typeof(VersionedAndDecoratedDecorator),
+                               typeof(VersionedAndDecoratedImpl),
+                           };
 
             var first = new[]
                         {
@@ -330,76 +330,77 @@ namespace SpaceEngineers.Core.Modules.Test
 
             VerifyNested(ApplyFirst,
                          ApplySecond,
-                         () => Check(outer, outer, versions),
-                         () => Check(outer, first, versions),
-                         () => Check(outer, second, versions));
+                         () => Check(original, original, versions),
+                         () => Check(original, first, versions),
+                         () => Check(original, second, versions));
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV3>();
 
-            void Check(ICollection<Type> originalStructure, ICollection<Type> structure, ICollection<Type> resolvedVersions)
+            void Check(ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure,
+                       ICollection<Type> resolvedVersions)
             {
-                Assert.True(originalStructure.SequenceEqual(ExtractDecorators(ResolveOriginal())));
-                Assert.True(originalStructure.SequenceEqual(ExtractDecorators(ResolveVersioned().Original)));
-                Assert.True(structure.SequenceEqual(ExtractDecorators(ResolveVersioned().Current)));
-                Assert.True(resolvedVersions.SequenceEqual(Types(ResolveVersions())));
-                Assert.True(resolvedVersions.SequenceEqual(Types(ResolveVersioned().Versions)));
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, resolvedVersions);
             }
 
             IVersionedAndDecorated ResolveOriginal() => DependencyContainer.Resolve<IVersionedAndDecorated>();
             IEnumerable<IVersionedAndDecorated> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<IVersionedAndDecorated>>().Select(z => z.Version);
             IVersioned<IVersionedAndDecorated> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<IVersionedAndDecorated>>();
-
-            IEnumerable<Type> ExtractDecorators(IVersionedAndDecorated service)
-            {
-                while (service is IVersionedAndDecoratedDecorator decorator)
-                {
-                    yield return decorator.GetType();
-                    service = decorator.Decoratee;
-                }
-
-                yield return service.GetType();
-            }
         }
 
         [Fact]
         internal void DecoratedImplementationTest()
         {
-            throw new NotImplementedException();
+            var original = new[]
+                           {
+                               typeof(VersionedAndDecoratedImplementationDecorator),
+                               typeof(VersionedAndDecoratedImplementation),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(VersionedAndDecoratedImplementationDecorator),
+                            typeof(VersionedAndDecoratedImplementationV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(VersionedAndDecoratedImplementationDecorator),
+                             typeof(VersionedAndDecoratedImplementationV3),
+                         };
+
+            var versions = new[]
+                           {
+                               typeof(VersionedAndDecoratedImplementationV2),
+                               typeof(VersionedAndDecoratedImplementationV3),
+                           };
+
+            VerifyNested(ApplyFirst,
+                         ApplySecond,
+                         () => Check(original, original, versions),
+                         () => Check(original, first, versions),
+                         () => Check(original, second, versions));
+
+            IDisposable ApplyFirst() => DependencyContainer.UseVersion<VersionedAndDecoratedImplementation, VersionedAndDecoratedImplementationV2>();
+            IDisposable ApplySecond() => DependencyContainer.UseVersion<VersionedAndDecoratedImplementation, VersionedAndDecoratedImplementationV3>();
+
+            void Check(ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure,
+                       ICollection<Type> resolvedVersions)
+            {
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, resolvedVersions);
+            }
+
+            VersionedAndDecoratedImplementation ResolveOriginal() => DependencyContainer.Resolve<VersionedAndDecoratedImplementation>();
+            IEnumerable<VersionedAndDecoratedImplementation> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<VersionedAndDecoratedImplementation>>().Select(z => z.Version);
+            IVersioned<VersionedAndDecoratedImplementation> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<VersionedAndDecoratedImplementation>>();
         }
 
         [Fact]
         internal void CollectionVersionsTest()
         {
             throw new NotImplementedException();
-        }
-
-        private static void VerifyNested(Func<IDisposable> applyFirst,
-                                         Func<IDisposable> applySecond,
-                                         Action outer,
-                                         Action first,
-                                         Action second)
-        {
-            outer();
-
-            using (applyFirst())
-            {
-                first();
-
-                using (applySecond())
-                {
-                    second();
-                }
-
-                first();
-            }
-
-            outer();
-        }
-
-        private static IEnumerable<Type> Types(IEnumerable<object> objects)
-        {
-            return objects.Select(obj => obj.GetType());
         }
 
         private void CheckTransient<TTransient>(Func<TTransient> resolveOriginal,
@@ -497,6 +498,74 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Same(resolveVersioned(), resolveVersioned());
             Assert.Equal(currentVersion, resolveVersioned().Current.GetType());
             Assert.Same(resolveVersioned().Current, resolveVersioned().Current);
+        }
+
+        private void CheckDecorators<TService>(Func<TService> resolveOriginal,
+                                               Func<IEnumerable<TService>> resolveVersions,
+                                               Func<IVersioned<TService>> resolveVersioned,
+                                               ICollection<Type> originalStructure,
+                                               ICollection<Type> currentStructure,
+                                               ICollection<Type> resolvedVersions)
+            where TService : class
+        {
+            Assert.True(originalStructure.SequenceEqual(ExtractDecorators(resolveOriginal())));
+            Assert.True(originalStructure.SequenceEqual(ExtractDecorators(resolveVersioned().Original)));
+            Assert.True(currentStructure.SequenceEqual(ShowTypes(nameof(currentStructure), ExtractDecorators(resolveVersioned().Current))));
+            Assert.True(resolvedVersions.SequenceEqual(Types(resolveVersions())));
+            Assert.True(resolvedVersions.SequenceEqual(Types(resolveVersioned().Versions)));
+
+            IEnumerable<Type> ExtractDecorators(TService service)
+            {
+                while (service is IDecorator<TService> decorator)
+                {
+                    yield return decorator.GetType();
+                    service = decorator.Decoratee;
+                }
+
+                yield return service.GetType();
+            }
+        }
+
+        private static void VerifyNested(Func<IDisposable> applyFirst,
+                                         Func<IDisposable> applySecond,
+                                         Action outer,
+                                         Action first,
+                                         Action second)
+        {
+            outer();
+
+            using (applyFirst())
+            {
+                first();
+
+                using (applySecond())
+                {
+                    second();
+                }
+
+                first();
+            }
+
+            outer();
+        }
+
+        private static IEnumerable<Type> Types(IEnumerable<object> objects)
+        {
+            return objects.Select(obj => obj.GetType());
+        }
+
+        private IEnumerable<Type> ShowTypes(string tag, IEnumerable<Type> types)
+        {
+            return types.Select((type, i) =>
+                                {
+                                    if (i == 0)
+                                    {
+                                        Output.WriteLine(tag);
+                                    }
+
+                                    Output.WriteLine(type.FullName);
+                                    return type;
+                                });
         }
     }
 }

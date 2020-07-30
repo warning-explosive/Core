@@ -240,5 +240,14 @@
     <Compile Update="VersionedContainer\SingletonImplementationV3.cs">
       <DependentUpon>SingletonImplementation.cs</DependentUpon>
     </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationV2.cs">
+      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationV3.cs">
+      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationDecorator.cs">
+      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

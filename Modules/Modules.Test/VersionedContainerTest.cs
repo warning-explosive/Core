@@ -26,16 +26,36 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void TransientVersionsTest()
         {
+            var original = new[]
+                           {
+                               typeof(TransientVersionedServiceDecorator),
+                               typeof(TransientVersionedServiceImpl),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(TransientVersionedServiceDecorator),
+                            typeof(TransientVersionedServiceImplV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(TransientVersionedServiceDecorator),
+                             typeof(TransientVersionedServiceImplV3),
+                         };
+
             VerifyNested(ApplyFirst,
                          ApplySecond,
-                         () => Check(typeof(TransientVersionedServiceImpl)),
-                         () => Check(typeof(TransientVersionedServiceImplV2)),
-                         () => Check(typeof(TransientVersionedServiceImplV3)));
+                         () => Check(typeof(TransientVersionedServiceImpl), original, original),
+                         () => Check(typeof(TransientVersionedServiceImplV2), original, first),
+                         () => Check(typeof(TransientVersionedServiceImplV3), original, second));
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                             {
@@ -44,6 +64,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                             };
 
                 CheckTransient(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(TransientVersionedServiceImpl), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             ITransientVersionedService ResolveOriginal() => DependencyContainer.Resolve<ITransientVersionedService>();
@@ -54,19 +75,39 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ScopedVersionsTest()
         {
+            var original = new[]
+                           {
+                               typeof(ScopedVersionedServiceDecorator),
+                               typeof(ScopedVersionedServiceImpl),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(ScopedVersionedServiceDecorator),
+                            typeof(ScopedVersionedServiceImplV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(ScopedVersionedServiceDecorator),
+                             typeof(ScopedVersionedServiceImplV3),
+                         };
+
             using (DependencyContainer.OpenScope())
             {
                 VerifyNested(ApplyFirst,
                              ApplySecond,
-                             () => Check(typeof(ScopedVersionedServiceImpl)),
-                             () => Check(typeof(ScopedVersionedServiceImplV2)),
-                             () => Check(typeof(ScopedVersionedServiceImplV3)));
+                             () => Check(typeof(ScopedVersionedServiceImpl), original, original),
+                             () => Check(typeof(ScopedVersionedServiceImplV2), original, first),
+                             () => Check(typeof(ScopedVersionedServiceImplV3), original, second));
             }
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                             {
@@ -75,6 +116,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                             };
 
                 CheckScoped(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(ScopedVersionedServiceImpl), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             IScopedVersionedService ResolveOriginal() => DependencyContainer.Resolve<IScopedVersionedService>();
@@ -85,16 +127,36 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void SingletonVersionsTest()
         {
+            var original = new[]
+                           {
+                               typeof(SingletonVersionedServiceDecorator),
+                               typeof(SingletonVersionedServiceImpl),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(SingletonVersionedServiceDecorator),
+                            typeof(SingletonVersionedServiceImplV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(SingletonVersionedServiceDecorator),
+                             typeof(SingletonVersionedServiceImplV3),
+                         };
+
             VerifyNested(ApplyFirst,
                          ApplySecond,
-                         () => Check(typeof(SingletonVersionedServiceImpl)),
-                         () => Check(typeof(SingletonVersionedServiceImplV2)),
-                         () => Check(typeof(SingletonVersionedServiceImplV3)));
+                         () => Check(typeof(SingletonVersionedServiceImpl), original, original),
+                         () => Check(typeof(SingletonVersionedServiceImplV2), original, first),
+                         () => Check(typeof(SingletonVersionedServiceImplV3), original, second));
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                             {
@@ -103,6 +165,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                             };
 
                 CheckSingleton(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(SingletonVersionedServiceImpl), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             ISingletonVersionedService ResolveOriginal() => DependencyContainer.Resolve<ISingletonVersionedService>();
@@ -113,6 +176,114 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void CompositeVersionsTest()
         {
+            var originalTransientStructure = new[]
+                                             {
+                                                 typeof(TransientVersionedServiceDecorator),
+                                                 typeof(TransientVersionedServiceImpl),
+                                             };
+
+            var firstTransientStructure = new[]
+                                          {
+                                              typeof(TransientVersionedServiceDecorator),
+                                              typeof(TransientVersionedServiceImplV2),
+                                          };
+
+            var secondTransientStructure = new[]
+                                           {
+                                               typeof(TransientVersionedServiceDecorator),
+                                               typeof(TransientVersionedServiceImplV3),
+                                           };
+
+            var originalScopedStructure = new[]
+                                          {
+                                              typeof(ScopedVersionedServiceDecorator),
+                                              typeof(ScopedVersionedServiceImpl),
+                                          };
+
+            var firstScopedStructure = new[]
+                                       {
+                                           typeof(ScopedVersionedServiceDecorator),
+                                           typeof(ScopedVersionedServiceImplV2),
+                                       };
+
+            var secondScopedStructure = new[]
+                                        {
+                                            typeof(ScopedVersionedServiceDecorator),
+                                            typeof(ScopedVersionedServiceImplV3),
+                                        };
+
+            var originalSingletonStructure = new[]
+                                             {
+                                                 typeof(SingletonVersionedServiceDecorator),
+                                                 typeof(SingletonVersionedServiceImpl),
+                                             };
+
+            var firstSingletonStructure = new[]
+                                          {
+                                              typeof(SingletonVersionedServiceDecorator),
+                                              typeof(SingletonVersionedServiceImplV2),
+                                          };
+
+            var secondSingletonStructure = new[]
+                                           {
+                                               typeof(SingletonVersionedServiceDecorator),
+                                               typeof(SingletonVersionedServiceImplV3),
+                                           };
+
+            var originalTransientImplStructure = new[]
+                                                 {
+                                                     typeof(TransientImplementationDecorator),
+                                                     typeof(TransientImplementation),
+                                                 };
+
+            var firstTransientImplStructure = new[]
+                                              {
+                                                  typeof(TransientImplementationDecorator),
+                                                  typeof(TransientImplementationV2),
+                                              };
+
+            var secondTransientImplStructure = new[]
+                                               {
+                                                   typeof(TransientImplementationDecorator),
+                                                   typeof(TransientImplementationV3),
+                                               };
+
+            var originalScopedImplStructure = new[]
+                                              {
+                                                  typeof(ScopedImplementationDecorator),
+                                                  typeof(ScopedImplementation),
+                                              };
+
+            var firstScopedImplStructure = new[]
+                                           {
+                                               typeof(ScopedImplementationDecorator),
+                                               typeof(ScopedImplementationV2),
+                                           };
+
+            var secondScopedImplStructure = new[]
+                                            {
+                                                typeof(ScopedImplementationDecorator),
+                                                typeof(ScopedImplementationV3),
+                                            };
+
+            var originalSingletonImplStructure = new[]
+                                                 {
+                                                     typeof(SingletonImplementationDecorator),
+                                                     typeof(SingletonImplementation),
+                                                 };
+
+            var firstSingletonImplStructure = new[]
+                                              {
+                                                  typeof(SingletonImplementationDecorator),
+                                                  typeof(SingletonImplementationV2),
+                                              };
+
+            var secondSingletonImplStructure = new[]
+                                               {
+                                                   typeof(SingletonImplementationDecorator),
+                                                   typeof(SingletonImplementationV3),
+                                               };
+
             using (DependencyContainer.OpenScope())
             {
                 VerifyNested(ApplyFirst,
@@ -122,19 +293,37 @@ namespace SpaceEngineers.Core.Modules.Test
                                          typeof(SingletonVersionedServiceImpl),
                                          typeof(TransientImplementation),
                                          typeof(ScopedImplementation),
-                                         typeof(SingletonImplementation)),
+                                         typeof(SingletonImplementation),
+                                         originalTransientStructure,
+                                         originalScopedStructure,
+                                         originalSingletonStructure,
+                                         originalTransientImplStructure,
+                                         originalScopedImplStructure,
+                                         originalSingletonImplStructure),
                              () => Check(typeof(TransientVersionedServiceImplV2),
                                          typeof(ScopedVersionedServiceImplV2),
                                          typeof(SingletonVersionedServiceImplV2),
                                          typeof(TransientImplementationV2),
                                          typeof(ScopedImplementationV2),
-                                         typeof(SingletonImplementationV2)),
+                                         typeof(SingletonImplementationV2),
+                                         firstTransientStructure,
+                                         firstScopedStructure,
+                                         firstSingletonStructure,
+                                         firstTransientImplStructure,
+                                         firstScopedImplStructure,
+                                         firstSingletonImplStructure),
                              () => Check(typeof(TransientVersionedServiceImplV3),
                                          typeof(ScopedVersionedServiceImplV3),
                                          typeof(SingletonVersionedServiceImplV3),
                                          typeof(TransientImplementationV3),
                                          typeof(ScopedImplementationV3),
-                                         typeof(SingletonImplementationV3)));
+                                         typeof(SingletonImplementationV3),
+                                         secondTransientStructure,
+                                         secondScopedStructure,
+                                         secondSingletonStructure,
+                                         secondTransientImplStructure,
+                                         secondScopedImplStructure,
+                                         secondSingletonImplStructure));
             }
 
             IDisposable ApplyFirst()
@@ -162,7 +351,13 @@ namespace SpaceEngineers.Core.Modules.Test
                        Type currentSingletonVersion,
                        Type currentTransientImplementationVersion,
                        Type currentScopedImplementationVersion,
-                       Type currentSingletonImplementationVersion)
+                       Type currentSingletonImplementationVersion,
+                       Type[] currentTransientStructure,
+                       Type[] currentScopedStructure,
+                       Type[] currentSingletonStructure,
+                       Type[] currentTransientImplementationStructure,
+                       Type[] currentScopedImplementationStructure,
+                       Type[] currentSingletonImplementationStructure)
             {
                 var expectedTransientVersionsTypes = new[]
                                                      {
@@ -206,6 +401,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 CheckTransient<TransientImplementation>(() => Resolve().TransientImplementation.Original, () => Resolve().TransientImplementation.Versions, () => Resolve().TransientImplementation, typeof(TransientImplementation), currentTransientImplementationVersion, expectedTransientImplementationVersionsTypes);
                 CheckScoped<ScopedImplementation>(() => Resolve().ScopedImplementation.Original, () => Resolve().ScopedImplementation.Versions, () => Resolve().ScopedImplementation, typeof(ScopedImplementation), currentScopedImplementationVersion, expectedScopedImplementationVersionsTypes);
                 CheckSingleton<SingletonImplementation>(() => Resolve().SingletonImplementation.Original, () => Resolve().SingletonImplementation.Versions, () => Resolve().SingletonImplementation, typeof(SingletonImplementation), currentSingletonImplementationVersion, expectedSingletonImplementationVersionsTypes);
+
+                CheckDecorators<ITransientVersionedService>(() => Resolve().Transient.Original, () => Resolve().Transient.Versions, () => Resolve().Transient, originalTransientStructure!, currentTransientStructure, expectedTransientVersionsTypes);
+                CheckDecorators<IScopedVersionedService>(() => Resolve().Scoped.Original, () => Resolve().Scoped.Versions, () => Resolve().Scoped, originalScopedStructure!, currentScopedStructure, expectedScopedVersionsTypes);
+                CheckDecorators<ISingletonVersionedService>(() => Resolve().Singleton.Original, () => Resolve().Singleton.Versions, () => Resolve().Singleton, originalSingletonStructure!, currentSingletonStructure, expectedSingletonVersionsTypes);
+                CheckDecorators<TransientImplementation>(() => Resolve().TransientImplementation.Original, () => Resolve().TransientImplementation.Versions, () => Resolve().TransientImplementation, originalTransientImplStructure!, currentTransientImplementationStructure, expectedTransientImplementationVersionsTypes);
+                CheckDecorators<ScopedImplementation>(() => Resolve().ScopedImplementation.Original, () => Resolve().ScopedImplementation.Versions, () => Resolve().ScopedImplementation, originalScopedImplStructure!, currentScopedImplementationStructure, expectedScopedImplementationVersionsTypes);
+                CheckDecorators<SingletonImplementation>(() => Resolve().SingletonImplementation.Original, () => Resolve().SingletonImplementation.Versions, () => Resolve().SingletonImplementation, originalSingletonImplStructure!, currentSingletonImplementationStructure, expectedSingletonImplementationVersionsTypes);
             }
 
             IServiceWithVersionedDependencies Resolve() => DependencyContainer.Resolve<IServiceWithVersionedDependencies>();
@@ -214,16 +416,36 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void TransientImplementationTest()
         {
+            var original = new[]
+                           {
+                               typeof(TransientImplementationDecorator),
+                               typeof(TransientImplementation),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(TransientImplementationDecorator),
+                            typeof(TransientImplementationV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(TransientImplementationDecorator),
+                             typeof(TransientImplementationV3),
+                         };
+
             VerifyNested(ApplyFirst,
                          ApplySecond,
-                         () => Check(typeof(TransientImplementation)),
-                         () => Check(typeof(TransientImplementationV2)),
-                         () => Check(typeof(TransientImplementationV3)));
+                         () => Check(typeof(TransientImplementation), original, original),
+                         () => Check(typeof(TransientImplementationV2), original, first),
+                         () => Check(typeof(TransientImplementationV3), original, second));
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                          {
@@ -232,6 +454,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                          };
 
                 CheckTransient(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(TransientImplementation), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             TransientImplementation ResolveOriginal() => DependencyContainer.Resolve<TransientImplementation>();
@@ -242,19 +465,39 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ScopedImplementationTest()
         {
+            var original = new[]
+                           {
+                               typeof(ScopedImplementationDecorator),
+                               typeof(ScopedImplementation),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(ScopedImplementationDecorator),
+                            typeof(ScopedImplementationV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(ScopedImplementationDecorator),
+                             typeof(ScopedImplementationV3),
+                         };
+
             using (DependencyContainer.OpenScope())
             {
                 VerifyNested(ApplyFirst,
                              ApplySecond,
-                             () => Check(typeof(ScopedImplementation)),
-                             () => Check(typeof(ScopedImplementationV2)),
-                             () => Check(typeof(ScopedImplementationV3)));
+                             () => Check(typeof(ScopedImplementation), original, original),
+                             () => Check(typeof(ScopedImplementationV2), original, first),
+                             () => Check(typeof(ScopedImplementationV3), original, second));
             }
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                          {
@@ -263,6 +506,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                          };
 
                 CheckScoped(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(ScopedImplementation), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             ScopedImplementation ResolveOriginal() => DependencyContainer.Resolve<ScopedImplementation>();
@@ -273,19 +517,39 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void SingletonImplementationTest()
         {
+            var original = new[]
+                           {
+                               typeof(SingletonImplementationDecorator),
+                               typeof(SingletonImplementation),
+                           };
+
+            var first = new[]
+                        {
+                            typeof(SingletonImplementationDecorator),
+                            typeof(SingletonImplementationV2),
+                        };
+
+            var second = new[]
+                         {
+                             typeof(SingletonImplementationDecorator),
+                             typeof(SingletonImplementationV3),
+                         };
+
             using (DependencyContainer.OpenScope())
             {
                 VerifyNested(ApplyFirst,
                              ApplySecond,
-                             () => Check(typeof(SingletonImplementation)),
-                             () => Check(typeof(SingletonImplementationV2)),
-                             () => Check(typeof(SingletonImplementationV3)));
+                             () => Check(typeof(SingletonImplementation), original, original),
+                             () => Check(typeof(SingletonImplementationV2), original, first),
+                             () => Check(typeof(SingletonImplementationV3), original, second));
             }
 
             IDisposable ApplyFirst() => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>();
             IDisposable ApplySecond() => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>();
 
-            void Check(Type currentVersion)
+            void Check(Type currentVersion,
+                       ICollection<Type> originalStructure,
+                       ICollection<Type> currentStructure)
             {
                 var expectedVersionsTypes = new[]
                                          {
@@ -294,107 +558,12 @@ namespace SpaceEngineers.Core.Modules.Test
                                          };
 
                 CheckSingleton(ResolveOriginal, ResolveVersions, ResolveVersioned, typeof(SingletonImplementation), currentVersion, expectedVersionsTypes);
+                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, expectedVersionsTypes);
             }
 
             SingletonImplementation ResolveOriginal() => DependencyContainer.Resolve<SingletonImplementation>();
             IEnumerable<SingletonImplementation> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<SingletonImplementation>>().Select(z => z.Version);
             IVersioned<SingletonImplementation> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<SingletonImplementation>>();
-        }
-
-        [Fact]
-        internal void DecoratedServiceTest()
-        {
-            var original = new[]
-                           {
-                               typeof(VersionedAndDecoratedDecorator),
-                               typeof(VersionedAndDecoratedImpl),
-                           };
-
-            var first = new[]
-                        {
-                            typeof(VersionedAndDecoratedDecorator),
-                            typeof(VersionedAndDecoratedImplV2),
-                        };
-
-            var second = new[]
-                         {
-                             typeof(VersionedAndDecoratedDecorator),
-                             typeof(VersionedAndDecoratedImplV3),
-                         };
-
-            var versions = new[]
-                           {
-                               typeof(VersionedAndDecoratedImplV2),
-                               typeof(VersionedAndDecoratedImplV3),
-                           };
-
-            VerifyNested(ApplyFirst,
-                         ApplySecond,
-                         () => Check(original, original, versions),
-                         () => Check(original, first, versions),
-                         () => Check(original, second, versions));
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<IVersionedAndDecorated, VersionedAndDecoratedImplV3>();
-
-            void Check(ICollection<Type> originalStructure,
-                       ICollection<Type> currentStructure,
-                       ICollection<Type> resolvedVersions)
-            {
-                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, resolvedVersions);
-            }
-
-            IVersionedAndDecorated ResolveOriginal() => DependencyContainer.Resolve<IVersionedAndDecorated>();
-            IEnumerable<IVersionedAndDecorated> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<IVersionedAndDecorated>>().Select(z => z.Version);
-            IVersioned<IVersionedAndDecorated> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<IVersionedAndDecorated>>();
-        }
-
-        [Fact]
-        internal void DecoratedImplementationTest()
-        {
-            var original = new[]
-                           {
-                               typeof(VersionedAndDecoratedImplementationDecorator),
-                               typeof(VersionedAndDecoratedImplementation),
-                           };
-
-            var first = new[]
-                        {
-                            typeof(VersionedAndDecoratedImplementationDecorator),
-                            typeof(VersionedAndDecoratedImplementationV2),
-                        };
-
-            var second = new[]
-                         {
-                             typeof(VersionedAndDecoratedImplementationDecorator),
-                             typeof(VersionedAndDecoratedImplementationV3),
-                         };
-
-            var versions = new[]
-                           {
-                               typeof(VersionedAndDecoratedImplementationV2),
-                               typeof(VersionedAndDecoratedImplementationV3),
-                           };
-
-            VerifyNested(ApplyFirst,
-                         ApplySecond,
-                         () => Check(original, original, versions),
-                         () => Check(original, first, versions),
-                         () => Check(original, second, versions));
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<VersionedAndDecoratedImplementation, VersionedAndDecoratedImplementationV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<VersionedAndDecoratedImplementation, VersionedAndDecoratedImplementationV3>();
-
-            void Check(ICollection<Type> originalStructure,
-                       ICollection<Type> currentStructure,
-                       ICollection<Type> resolvedVersions)
-            {
-                CheckDecorators(ResolveOriginal, ResolveVersions, ResolveVersioned, originalStructure, currentStructure, resolvedVersions);
-            }
-
-            VersionedAndDecoratedImplementation ResolveOriginal() => DependencyContainer.Resolve<VersionedAndDecoratedImplementation>();
-            IEnumerable<VersionedAndDecoratedImplementation> ResolveVersions() => DependencyContainer.ResolveCollection<IVersionFor<VersionedAndDecoratedImplementation>>().Select(z => z.Version);
-            IVersioned<VersionedAndDecoratedImplementation> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<VersionedAndDecoratedImplementation>>();
         }
 
         [Fact]
@@ -412,10 +581,12 @@ namespace SpaceEngineers.Core.Modules.Test
             where TTransient : class
         {
             // original
-            Assert.Equal(originalVersion, resolveOriginal().GetType());
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveOriginal()).GetType());
             Assert.NotSame(resolveOriginal(), resolveOriginal());
-            Assert.Equal(originalVersion, resolveVersioned().Original.GetType());
+            Assert.NotSame(UnwrapDecorators(resolveOriginal()), UnwrapDecorators(resolveOriginal()));
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveVersioned().Original).GetType());
             Assert.NotSame(resolveVersioned().Original, resolveVersioned().Original);
+            Assert.NotSame(UnwrapDecorators(resolveVersioned().Original), UnwrapDecorators(resolveVersioned().Original));
 
             // versions
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersions())));
@@ -424,8 +595,9 @@ namespace SpaceEngineers.Core.Modules.Test
             // versioned
             Assert.True(resolveVersioned() is Versioned<TTransient>);
             Assert.NotSame(resolveVersioned(), resolveVersioned());
-            Assert.Equal(currentVersion, resolveVersioned().Current.GetType());
+            Assert.Equal(currentVersion, UnwrapDecorators(resolveVersioned().Current).GetType());
             Assert.NotSame(resolveVersioned().Current, resolveVersioned().Current);
+            Assert.NotSame(UnwrapDecorators(resolveVersioned().Current), UnwrapDecorators(resolveVersioned().Current));
         }
 
         private void CheckScoped<TScoped>(Func<TScoped> resolveOriginal,
@@ -437,20 +609,24 @@ namespace SpaceEngineers.Core.Modules.Test
             where TScoped : class
         {
             // original
-            Assert.Equal(originalVersion, resolveOriginal().GetType());
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveOriginal()).GetType());
             Assert.Same(resolveOriginal(), resolveOriginal());
+            Assert.Same(UnwrapDecorators(resolveOriginal()), UnwrapDecorators(resolveOriginal()));
             var outer = resolveOriginal();
             using (DependencyContainer.OpenScope())
             {
                 Assert.NotSame(outer, resolveOriginal());
+                Assert.NotSame(UnwrapDecorators(outer), UnwrapDecorators(resolveOriginal()));
             }
 
-            Assert.Equal(originalVersion, resolveVersioned().Original.GetType());
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveVersioned().Original).GetType());
             Assert.Same(resolveVersioned().Original, resolveVersioned().Original);
+            Assert.Same(UnwrapDecorators(resolveVersioned().Original), UnwrapDecorators(resolveVersioned().Original));
             outer = resolveVersioned().Original;
             using (DependencyContainer.OpenScope())
             {
                 Assert.NotSame(outer, resolveVersioned().Original);
+                Assert.NotSame(UnwrapDecorators(outer), UnwrapDecorators(resolveVersioned().Original));
             }
 
             // versions
@@ -466,12 +642,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.NotSame(outerVersioned, resolveVersioned());
             }
 
-            Assert.Equal(currentVersion, resolveVersioned().Current.GetType());
+            Assert.Equal(currentVersion, UnwrapDecorators(resolveVersioned().Current).GetType());
             Assert.Same(resolveVersioned().Current, resolveVersioned().Current);
+            Assert.Same(UnwrapDecorators(resolveVersioned().Current), UnwrapDecorators(resolveVersioned().Current));
             outer = resolveVersioned().Current;
             using (DependencyContainer.OpenScope())
             {
                 Assert.NotSame(outer, resolveVersioned().Current);
+                Assert.NotSame(UnwrapDecorators(outer), UnwrapDecorators(resolveVersioned().Current));
             }
         }
 
@@ -484,10 +662,12 @@ namespace SpaceEngineers.Core.Modules.Test
             where TSingleton : class
         {
             // original
-            Assert.Equal(originalVersion, resolveOriginal().GetType());
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveOriginal()).GetType());
             Assert.Same(resolveOriginal(), resolveOriginal());
-            Assert.Equal(originalVersion, resolveVersioned().Original.GetType());
+            Assert.Same(UnwrapDecorators(resolveOriginal()), UnwrapDecorators(resolveOriginal()));
+            Assert.Equal(originalVersion, UnwrapDecorators(resolveVersioned().Original).GetType());
             Assert.Same(resolveVersioned().Original, resolveVersioned().Original);
+            Assert.Same(UnwrapDecorators(resolveVersioned().Original), UnwrapDecorators(resolveVersioned().Original));
 
             // versions
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersions())));
@@ -496,8 +676,9 @@ namespace SpaceEngineers.Core.Modules.Test
             // versioned
             Assert.True(resolveVersioned() is Versioned<TSingleton>);
             Assert.Same(resolveVersioned(), resolveVersioned());
-            Assert.Equal(currentVersion, resolveVersioned().Current.GetType());
+            Assert.Equal(currentVersion, UnwrapDecorators(resolveVersioned().Current).GetType());
             Assert.Same(resolveVersioned().Current, resolveVersioned().Current);
+            Assert.Same(UnwrapDecorators(resolveVersioned().Current), UnwrapDecorators(resolveVersioned().Current));
         }
 
         private void CheckDecorators<TService>(Func<TService> resolveOriginal,
@@ -566,6 +747,17 @@ namespace SpaceEngineers.Core.Modules.Test
                                     Output.WriteLine(type.FullName);
                                     return type;
                                 });
+        }
+
+        private object UnwrapDecorators<TService>(TService service)
+            where TService : class
+        {
+            while (service is IDecorator<TService> decorator)
+            {
+                service = decorator.Decoratee;
+            }
+
+            return service;
         }
     }
 }

@@ -178,7 +178,7 @@
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\TransientVersionedServiceImpl.cs">
-      <DependentUpon>IVersionedTestService.cs</DependentUpon>
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\ScopedVersionedServiceImpl.cs">
       <DependentUpon>IScopedVersionedService.cs</DependentUpon>
@@ -208,25 +208,10 @@
       <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\TransientImplementationV2.cs">
-      <DependentUpon>VersionedImplementation.cs</DependentUpon>
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\TransientImplementationV3.cs">
-      <DependentUpon>VersionedImplementation.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImpl.cs">
-      <DependentUpon>IWithDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainer\IVersionedAndDecoratedDecorator.cs">
-      <DependentUpon>IWithDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedDecorator.cs">
-      <DependentUpon>IWithDecoratorDecorator.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImplV2.cs">
-      <DependentUpon>IDecoratorated.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImplV3.cs">
-      <DependentUpon>IVersionedAndDecorated.cs</DependentUpon>
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\ScopedImplementationV2.cs">
       <DependentUpon>ScopedImplementation.cs</DependentUpon>
@@ -240,14 +225,23 @@
     <Compile Update="VersionedContainer\SingletonImplementationV3.cs">
       <DependentUpon>SingletonImplementation.cs</DependentUpon>
     </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationV2.cs">
-      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    <Compile Update="VersionedContainer\SingletonImplementationDecorator.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
     </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationV3.cs">
-      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    <Compile Update="VersionedContainer\ScopedImplementationDecorator.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
     </Compile>
-    <Compile Update="VersionedContainer\VersionedAndDecoratedImplementationDecorator.cs">
-      <DependentUpon>VersionedAndDecoratedImplementation.cs</DependentUpon>
+    <Compile Update="VersionedContainer\TransientImplementationDecorator.cs">
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceDecorator.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientVersionedServiceDecorator.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceDecorator.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

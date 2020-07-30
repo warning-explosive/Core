@@ -85,7 +85,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                        });
         }
 
-        // TODO: remove
         internal static void RegisterImplementations(this Container container, IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
         {
             foreach (var info in serviceRegistrationInfos)

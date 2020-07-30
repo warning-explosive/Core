@@ -207,10 +207,10 @@
     <Compile Update="VersionedContainer\TransientVersionedServiceImplV3.cs">
       <DependentUpon>ITransientVersionedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="VersionedContainer\VersionedImplementationV2.cs">
+    <Compile Update="VersionedContainer\TransientImplementationV2.cs">
       <DependentUpon>VersionedImplementation.cs</DependentUpon>
     </Compile>
-    <Compile Update="VersionedContainer\VersionedImplementationV3.cs">
+    <Compile Update="VersionedContainer\TransientImplementationV3.cs">
       <DependentUpon>VersionedImplementation.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\VersionedAndDecoratedImpl.cs">
@@ -227,6 +227,18 @@
     </Compile>
     <Compile Update="VersionedContainer\VersionedAndDecoratedImplV3.cs">
       <DependentUpon>IVersionedAndDecorated.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedImplementationV2.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedImplementationV3.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonImplementationV2.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonImplementationV3.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

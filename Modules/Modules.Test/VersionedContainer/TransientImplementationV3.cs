@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class VersionedImplementationV2 : VersionedImplementation,
-                                               IVersionFor<VersionedImplementation>
+    internal class TransientImplementationV3 : TransientImplementation,
+                                               IVersionFor<TransientImplementation>
     {
-        public VersionedImplementation Version => this;
+        public TransientImplementation Version => this;
     }
 }

@@ -9,11 +9,17 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     {
         public ServiceWithVersionedDependenciesImpl(IVersioned<ITransientVersionedService> transient,
                                                     IVersioned<IScopedVersionedService> scoped,
-                                                    IVersioned<ISingletonVersionedService> singleton)
+                                                    IVersioned<ISingletonVersionedService> singleton,
+                                                    IVersioned<TransientImplementation> transientImplementation,
+                                                    IVersioned<ScopedImplementation> scopedImplementation,
+                                                    IVersioned<SingletonImplementation> singletonImplementation)
         {
             Transient = transient;
             Scoped = scoped;
             Singleton = singleton;
+            TransientImplementation = transientImplementation;
+            ScopedImplementation = scopedImplementation;
+            SingletonImplementation = singletonImplementation;
         }
 
         public IVersioned<ITransientVersionedService> Transient { get; }
@@ -21,5 +27,11 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
         public IVersioned<IScopedVersionedService> Scoped { get; }
 
         public IVersioned<ISingletonVersionedService> Singleton { get; }
+
+        public IVersioned<TransientImplementation> TransientImplementation { get; }
+
+        public IVersioned<ScopedImplementation> ScopedImplementation { get; }
+
+        public IVersioned<SingletonImplementation> SingletonImplementation { get; }
     }
 }

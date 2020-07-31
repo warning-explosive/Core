@@ -25,14 +25,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
             where TService : class
             where TImplementation : class, TService;
 
-        /// <summary> Register concrete type </summary>
+        /// <summary> Register factory delegate </summary>
         /// <param name="serviceType">Service type</param>
         /// <param name="factory">Instance factory</param>
         /// <param name="lifestyle">Instance lifestyle</param>
         /// <returns>IRegistrationContainer</returns>
         IRegistrationContainer Register(Type serviceType, Func<object> factory, EnLifestyle lifestyle);
 
-        /// <summary> Register concrete type </summary>
+        /// <summary> Register factory delegate </summary>
         /// <param name="factory">Instance factory</param>
         /// <param name="lifestyle">Instance lifestyle</param>
         /// <typeparam name="TService">TService type-argument</typeparam>
@@ -40,18 +40,18 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class;
 
-        /// <summary> Register concrete type </summary>
-        /// <param name="concreteType">Concrete type</param>
+        /// <summary> Register implementation type </summary>
+        /// <param name="implementationType">Implementation type</param>
         /// <param name="lifestyle">Instance lifestyle</param>
         /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterConcrete(Type concreteType, EnLifestyle lifestyle);
+        IRegistrationContainer RegisterImplementation(Type implementationType, EnLifestyle lifestyle);
 
-        /// <summary> Register concrete type </summary>
+        /// <summary> Register implementation type </summary>
         /// <param name="lifestyle">Instance lifestyle</param>
-        /// <typeparam name="TConcrete">TConcrete type-argument</typeparam>
+        /// <typeparam name="TImplementation">TImplementation type-argument</typeparam>
         /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterConcrete<TConcrete>(EnLifestyle lifestyle)
-            where TConcrete : class;
+        IRegistrationContainer RegisterImplementation<TImplementation>(EnLifestyle lifestyle)
+            where TImplementation : class;
 
         /// <summary> Register collection of services </summary>
         /// <param name="serviceType">Service type</param>

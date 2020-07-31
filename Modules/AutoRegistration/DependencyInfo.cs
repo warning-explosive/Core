@@ -20,11 +20,11 @@ namespace SpaceEngineers.Core.AutoRegistration
                                Type implementationType,
                                uint depth)
         {
-            ServiceType = serviceType;
-            ImplementationType = implementationType;
-            Dependencies = new List<DependencyInfo>();
-
             IsCollectionResolvable = CollectionResolvable(serviceType);
+            ServiceType = ExtractType(serviceType, IsCollectionResolvable);
+            ImplementationType = ExtractType(implementationType, IsCollectionResolvable);
+
+            Dependencies = new List<DependencyInfo>();
             Depth = depth;
             IsCyclic = false;
         }
@@ -97,31 +97,24 @@ namespace SpaceEngineers.Core.AutoRegistration
                 return nodeInfo;
             }
 
-            var isCollectionResolvable = CollectionResolvable(dependency.ServiceType);
-
-            var serviceType = isCollectionResolvable
-                                  ? dependency.ServiceType.GetGenericArguments()[0]
-                                  : dependency.ServiceType;
-
-            var implementationType = isCollectionResolvable
-                                         ? dependency.Registration.ImplementationType.GetGenericArguments()[0]
-                                         : dependency.Registration.ImplementationType;
-
             var lifestyle = new Func<EnLifestyle?>(() => dependency.Lifestyle.MapLifestyle())
                            .Try()
                            .Catch<NotSupportedException>()
                            .Invoke();
 
-            var newNodeInfo = new DependencyInfo(serviceType, implementationType, depth)
+            var newNodeInfo = new DependencyInfo(dependency.ServiceType,
+                                                 dependency.Registration.ImplementationType,
+                                                 depth)
                               {
                                   Lifestyle = lifestyle
                               };
 
             visited.Add(dependency, newNodeInfo);
 
-            newNodeInfo.Dependencies = dependency.GetRelationships()
-                                                 .Select(r => RetrieveDependencyGraph(r.Dependency, visited, depth + 1))
-                                                 .ToList();
+            newNodeInfo.Dependencies = dependency
+                                      .GetRelationships()
+                                      .Select(r => RetrieveDependencyGraph(r.Dependency, visited, depth + 1))
+                                      .ToList();
 
             return newNodeInfo;
         }
@@ -142,6 +135,13 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static bool CollectionResolvable(Type serviceType)
         {
             return serviceType.GetInterfaces().Contains(typeof(IEnumerable));
+        }
+
+        private static Type ExtractType(Type type, bool isCollectionResolvable)
+        {
+            return isCollectionResolvable && type.IsGenericType
+                       ? type.GetGenericArguments()[0]
+                       : type;
         }
     }
 }

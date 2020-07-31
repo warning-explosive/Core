@@ -346,7 +346,6 @@ namespace SpaceEngineers.Core.Modules.Test
                           {
                               RegistrationCallback = registration =>
                                                      {
-                                                         registration.RegisterConcrete<TestTypeExtensions>(EnLifestyle.Singleton);
                                                          registration.RegisterCollection<IVersionFor<ITypeExtensions>>(new[] { new TestTypeExtensions() });
                                                          registration.Register<IVersioned<ITypeExtensions>, Versioned<ITypeExtensions>>(EnLifestyle.Singleton);
                                                      }
@@ -384,15 +383,15 @@ namespace SpaceEngineers.Core.Modules.Test
                                         typeof(ICompositionInfoExtractor).Assembly, // CompositionInfoExtractor assembly
                                     };
 
-            var restricted = compositionInfo.Where(z => !Satisfy(z))
-                                            .SelectMany(z => new[]
-                                                             {
-                                                                 z.ServiceType.Assembly,
-                                                                 z.ImplementationType.Assembly,
-                                                             })
-                                            .Distinct()
-                                            .Select(z => z.ToString())
-                                            .ToList();
+            var restricted = compositionInfo
+                            .Where(info => !Satisfy(info))
+                            .SelectMany(info => new[]
+                                                {
+                                                    info.ServiceType,
+                                                    info.ImplementationType,
+                                                })
+                            .Select(type => type.ToString())
+                            .ToList();
 
             if (restricted.Any())
             {

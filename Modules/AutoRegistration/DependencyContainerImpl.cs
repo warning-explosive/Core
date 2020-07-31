@@ -80,16 +80,16 @@ namespace SpaceEngineers.Core.AutoRegistration
             return this;
         }
 
-        public IRegistrationContainer RegisterConcrete(Type concreteType, EnLifestyle lifestyle)
+        public IRegistrationContainer RegisterImplementation(Type implementationType, EnLifestyle lifestyle)
         {
-            _container.Register(concreteType, concreteType, lifestyle.MapLifestyle());
+            _container.Register(implementationType, implementationType, lifestyle.MapLifestyle());
             return this;
         }
 
-        public IRegistrationContainer RegisterConcrete<TConcrete>(EnLifestyle lifestyle)
-            where TConcrete : class
+        public IRegistrationContainer RegisterImplementation<TImplementation>(EnLifestyle lifestyle)
+            where TImplementation : class
         {
-            _container.Register<TConcrete>(lifestyle.MapLifestyle());
+            _container.Register<TImplementation>(lifestyle.MapLifestyle());
             return this;
         }
 

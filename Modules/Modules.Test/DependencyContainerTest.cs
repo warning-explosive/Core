@@ -388,7 +388,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                             .SelectMany(z => new[]
                                                              {
                                                                  z.ServiceType.Assembly,
-                                                                 z.ComponentType.Assembly,
+                                                                 z.ImplementationType.Assembly,
                                                              })
                                             .Distinct()
                                             .Select(z => z.ToString())
@@ -404,7 +404,7 @@ namespace SpaceEngineers.Core.Modules.Test
             bool Satisfy(DependencyInfo info)
             {
                 return allowedAssemblies.Contains(info.ServiceType.Assembly)
-                    && allowedAssemblies.Contains(info.ComponentType.Assembly)
+                    && allowedAssemblies.Contains(info.ImplementationType.Assembly)
                     && info.Dependencies.All(Satisfy);
             }
         }

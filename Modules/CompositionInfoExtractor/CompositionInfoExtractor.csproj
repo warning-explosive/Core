@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="CompositionInfoInterpreterImpl.cs">
-      <DependentUpon>ICompositionInfoVisualizer.cs</DependentUpon>
+      <DependentUpon>ICompositionInfoInterpreter.cs</DependentUpon>
     </Compile>
     <Compile Update="CompositionInfoExtractorImpl.cs">
       <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>

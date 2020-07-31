@@ -17,35 +17,32 @@ namespace SpaceEngineers.Core.AutoRegistration
     public class DependencyInfo
     {
         private DependencyInfo(Type serviceType,
-                               Type componentType,
-                               EnLifestyle lifestyle,
-                               uint depth,
-                               bool isCollectionResolvable)
+                               Type implementationType,
+                               uint depth)
         {
             ServiceType = serviceType;
-            ComponentType = componentType;
-            Lifestyle = lifestyle;
+            ImplementationType = implementationType;
             Dependencies = new List<DependencyInfo>();
 
+            IsCollectionResolvable = CollectionResolvable(serviceType);
             Depth = depth;
-            IsCollectionResolvable = isCollectionResolvable;
             IsCyclic = false;
         }
 
         /// <summary>
-        /// Service type (interface)
+        /// Service type
         /// </summary>
         public Type ServiceType { get; }
 
         /// <summary>
-        /// Component type (implementation)
+        /// Implementation type
         /// </summary>
-        public Type ComponentType { get; }
+        public Type ImplementationType { get; }
 
         /// <summary>
         /// Component lifestyle
         /// </summary>
-        public EnLifestyle Lifestyle { get; }
+        public EnLifestyle? Lifestyle { get; private set; }
 
         /// <summary>
         /// Component dependencies
@@ -100,52 +97,31 @@ namespace SpaceEngineers.Core.AutoRegistration
                 return nodeInfo;
             }
 
-            var isCollectionResolvable = dependency.ServiceType
-                                                   .GetInterfaces()
-                                                   .Contains(typeof(IEnumerable));
+            var isCollectionResolvable = CollectionResolvable(dependency.ServiceType);
 
             var serviceType = isCollectionResolvable
                                   ? dependency.ServiceType.GetGenericArguments()[0]
                                   : dependency.ServiceType;
 
-            var componentType = isCollectionResolvable
-                                    ? dependency.Registration.ImplementationType.GetGenericArguments()[0]
-                                    : dependency.Registration.ImplementationType;
+            var implementationType = isCollectionResolvable
+                                         ? dependency.Registration.ImplementationType.GetGenericArguments()[0]
+                                         : dependency.Registration.ImplementationType;
 
-            var newNodeInfo = new DependencyInfo(serviceType,
-                                                 componentType,
-                                                 dependency.Lifestyle.MapLifestyle(),
-                                                 depth,
-                                                 isCollectionResolvable);
+            var lifestyle = new Func<EnLifestyle?>(() => dependency.Lifestyle.MapLifestyle())
+                           .Try()
+                           .Catch<NotSupportedException>()
+                           .Invoke();
+
+            var newNodeInfo = new DependencyInfo(serviceType, implementationType, depth)
+                              {
+                                  Lifestyle = lifestyle
+                              };
 
             visited.Add(dependency, newNodeInfo);
 
-            InstanceProducer[] dependencies;
-
-            if (isCollectionResolvable)
-            {
-                var producer = dependency.Registration;
-                dependencies = producer.HasProperty("Collection")
-                                   ? producer.GetPropertyValue("Collection")
-                                             .GetFieldValue("producers")
-                                             .GetPropertyValue("Value")
-                                             .EnsureType<IEnumerable>()
-                                             .GetEnumerator()
-                                             .ToObjectEnumerable()
-                                             .OfType<InstanceProducer>()
-                                             .ToArray()
-                                   : Array.Empty<InstanceProducer>();
-            }
-            else
-            {
-                dependencies = dependency.GetRelationships()
-                                         .Select(z => z.Dependency)
-                                         .ToArray();
-            }
-
-            newNodeInfo.Dependencies = dependencies
-                                      .Select(d => RetrieveDependencyGraph(d, visited, depth + 1))
-                                      .ToList();
+            newNodeInfo.Dependencies = dependency.GetRelationships()
+                                                 .Select(r => RetrieveDependencyGraph(r.Dependency, visited, depth + 1))
+                                                 .ToList();
 
             return newNodeInfo;
         }
@@ -157,10 +133,15 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyInfo object</returns>
         public static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
         {
-            return new DependencyInfo(serviceType, serviceType, EnLifestyle.Transient, 0, false)
+            return new DependencyInfo(serviceType, serviceType, 0)
                    {
                        IsUnregistered = true
                    };
+        }
+
+        private static bool CollectionResolvable(Type serviceType)
+        {
+            return serviceType.GetInterfaces().Contains(typeof(IEnumerable));
         }
     }
 }

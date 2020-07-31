@@ -34,8 +34,8 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         {
             return Tabulation((int)dependencyInfo.Depth)
                  + Tags(dependencyInfo)
-                 + TrimGenerics(dependencyInfo.ComponentType)
-                 + Generics(dependencyInfo.ComponentType);
+                 + TrimGenerics(dependencyInfo.ImplementationType)
+                 + Generics(dependencyInfo.ImplementationType);
         }
 
         private static string Tabulation(int count)
@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                 tags.Add("[UNREGISTERED]");
             }
 
-            if (dependencyInfo.ComponentType.IsGenericType)
+            if (dependencyInfo.ImplementationType.IsGenericType)
             {
                 tags.Add("[GENERIC]");
             }
@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                 tags.Add("[COLLECTION]");
             }
 
-            if (dependencyInfo.ServiceType == dependencyInfo.ComponentType)
+            if (dependencyInfo.ServiceType == dependencyInfo.ImplementationType)
             {
                 tags.Add("[IMPLEMENTATION]");
             }
@@ -72,9 +72,9 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
             return string.Join(string.Empty, tags);
         }
 
-        private static string Lifestyle(EnLifestyle lifestyle)
+        private static string Lifestyle(EnLifestyle? lifestyle)
         {
-            return $"[{lifestyle.ToString().ToUpperInvariant()}]";
+            return $"[{(lifestyle?.ToString() ?? "UNSUPPORTED").ToUpperInvariant()}]";
         }
 
         private static string TrimGenerics(Type type)
@@ -91,13 +91,13 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                 return string.Empty;
             }
 
-            const string format = "[{0}]";
+            const string format = "<{0}>";
 
             var genericArguments = type.GetGenericTypeDefinition().GetGenericArguments();
 
             return string.Format(CultureInfo.InvariantCulture,
                                  format,
-                                 genericArguments.Length == 1 ? "T" : string.Join(", ", genericArguments.Select((t, i) => t.Name)));
+                                 string.Join(", ", genericArguments.Select((t, i) => t.Name)));
         }
     }
 }

@@ -24,6 +24,14 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output) { }
 
         [Fact]
+        internal void DependencyWithoutVersionsTest()
+        {
+            var versioned = DependencyContainer.Resolve<ImplementationWithDependencyWithoutVersions>().Versioned;
+
+            Assert.Empty(versioned.Versions);
+        }
+
+        [Fact]
         internal void TransientVersionsTest()
         {
             TransientVersionsTestInternal(

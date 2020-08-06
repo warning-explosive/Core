@@ -244,5 +244,8 @@
     <Compile Update="VersionedContainer\ScopedVersionedServiceDecorator.cs">
       <DependentUpon>IScopedVersionedService.cs</DependentUpon>
     </Compile>
+    <Compile Update="VersionedContainer\WithoutVersionsImpl.cs">
+      <DependentUpon>IWithoutVersions.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

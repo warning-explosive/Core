@@ -641,12 +641,6 @@ namespace SpaceEngineers.Core.Modules.Test
             IVersioned<SingletonImplementation> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<SingletonImplementation>>();
         }
 
-        [Fact]
-        internal void CollectionVersionsTest()
-        {
-            throw new NotImplementedException();
-        }
-
         private void CheckTransient<TTransient>(Func<TTransient> resolveOriginal,
                                                 Func<IEnumerable<TTransient>> resolveVersions,
                                                 Func<IVersioned<TTransient>> resolveVersioned,

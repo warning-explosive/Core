@@ -54,6 +54,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                               && !type.IsAbstract
                               && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
                   .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
+                  .Where(type => !type.IsGenericParameter)
                   .Select(_typeExtensions.ExtractGenericTypeDefinition)
                   .Distinct();
         }
@@ -63,12 +64,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             return _typeExtensions
                   .OurTypes()
-                  .Where(z => z.IsClass
-                           && !z.IsAbstract
-                           && _typeExtensions.IsSubclassOfOpenGeneric(z, typeof(IVersionFor<>)))
-                  .SelectMany(z => z.GetInterfaces().Where(i => i.IsGenericType && !i.IsGenericTypeDefinition && i.GetGenericTypeDefinition() == typeof(IVersionFor<>)))
-                  .Distinct()
-                  .Select(version => version.GenericTypeArguments[0]);
+                  .Where(type => type.IsClass
+                           && !type.IsAbstract
+                           && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IVersionFor<>)))
+                  .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IVersionFor<>), 0))
+                  .Where(type => !type.IsGenericParameter)
+                  .Distinct();
         }
 
         private Type[] Services(Type serviceType)

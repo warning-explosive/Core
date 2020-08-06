@@ -150,10 +150,11 @@ namespace SpaceEngineers.Core.Basics
             }
 
             return IsSubclassOfOpenGeneric(derived, openGeneric)
-                       ? _typeInfoStorage[derived].BaseTypes
-                                                  .Concat(derived.GetInterfaces())
-                                                  .Where(type => ExtractGenericTypeDefinition(type) == openGeneric)
-                                                  .Select(i => i.GetGenericArguments()[typeArgumentAt])
+                       ? new[] { derived }
+                        .Concat(_typeInfoStorage[derived].BaseTypes)
+                        .Concat(derived.GetInterfaces())
+                        .Where(type => ExtractGenericTypeDefinition(type) == openGeneric)
+                        .Select(type => type.GetGenericArguments()[typeArgumentAt])
                        : Enumerable.Empty<Type>();
         }
 

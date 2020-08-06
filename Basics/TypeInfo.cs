@@ -69,7 +69,14 @@ namespace SpaceEngineers.Core.Basics
 
         private void ExtractOpenGenericInterfaces(Type type)
         {
-            foreach (var i in type.GetInterfaces().Where(i => i.IsGenericType))
+            var source = type.GetInterfaces().AsEnumerable();
+
+            if (type.IsInterface)
+            {
+                source = new[] { type }.Concat(source);
+            }
+
+            foreach (var i in source.Where(i => i.IsGenericType))
             {
                 GenericInterfaceDefinitions.Add(i.GetGenericTypeDefinition());
             }

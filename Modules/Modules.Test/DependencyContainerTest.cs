@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Basics;
     using CompositionInfoExtractor;
+    using Moq;
     using SettingsManager.Abstractions;
     using SimpleInjector;
     using Xunit;
@@ -342,14 +343,14 @@ namespace SpaceEngineers.Core.Modules.Test
         [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
         internal void BoundedContainerTest(bool mode)
         {
-            var options = new DependencyContainerOptions
-                          {
-                              RegistrationCallback = registration =>
-                                                     {
-                                                         registration.RegisterCollection<IVersionFor<ITypeExtensions>>(new[] { new TestTypeExtensions() });
-                                                         registration.Register<IVersioned<ITypeExtensions>, Versioned<ITypeExtensions>>(EnLifestyle.Singleton);
-                                                     }
-                          };
+            var versionFactory = new Func<IVersionFor<ITypeExtensions>>(
+                () =>
+                {
+                    var mock = new Mock<IVersionFor<ITypeExtensions>>();
+                    mock.Setup(z => z.Version.OurTypes())
+                        .Returns(() => new[] { typeof(TestYamlConfig) });
+                    return mock.Object;
+                });
 
             var settingsContainer = AutoRegistration.DependencyContainer
                                                     .CreateBounded(new[]
@@ -357,11 +358,11 @@ namespace SpaceEngineers.Core.Modules.Test
                                                                        typeof(ISettingsManager<>).Assembly,
                                                                        typeof(ICompositionInfoExtractor).Assembly,
                                                                    },
-                                                                   options);
+                                                                   new DependencyContainerOptions());
 
             DependencyInfo[] compositionInfo;
 
-            using (settingsContainer.UseVersion<ITypeExtensions, TestTypeExtensions>())
+            using (settingsContainer.UseVersion<ITypeExtensions>(versionFactory))
             {
                 compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
                                                    .GetCompositionInfo(mode)
@@ -383,95 +384,25 @@ namespace SpaceEngineers.Core.Modules.Test
                                         typeof(ICompositionInfoExtractor).Assembly, // CompositionInfoExtractor assembly
                                     };
 
-            var restricted = compositionInfo
-                            .Where(info => !Satisfy(info))
-                            .SelectMany(info => new[]
-                                                {
-                                                    info.ServiceType,
-                                                    info.ImplementationType,
-                                                })
-                            .Select(type => type.ToString())
-                            .ToList();
+            Assert.True(compositionInfo.All(Satisfies));
 
-            if (restricted.Any())
+            bool Satisfies(DependencyInfo info)
             {
-                Output.WriteLine(string.Join(Environment.NewLine, restricted));
+                return TypeSatisfies(info.ServiceType)
+                    && TypeSatisfies(info.ImplementationType)
+                    && info.Dependencies.All(Satisfies);
             }
 
-            Assert.True(compositionInfo.All(Satisfy));
-
-            bool Satisfy(DependencyInfo info)
+            bool TypeSatisfies(Type type)
             {
-                return allowedAssemblies.Contains(info.ServiceType.Assembly)
-                    && allowedAssemblies.Contains(info.ImplementationType.Assembly)
-                    && info.Dependencies.All(Satisfy);
-            }
-        }
+                var condition = allowedAssemblies.Contains(type.Assembly);
 
-        [Lifestyle(EnLifestyle.Singleton)]
-        private class TestTypeExtensions : ITypeExtensions,
-                                           IVersionFor<ITypeExtensions>
-        {
-            public ITypeExtensions Version => this;
+                if (!condition)
+                {
+                    Output.WriteLine(type.FullName);
+                }
 
-            public IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Type[] AllLoadedTypes()
-            {
-                throw new NotSupportedException();
-            }
-
-            public Type[] OurTypes()
-            {
-                return new[] { typeof(TestYamlConfig) };
-            }
-
-            public Assembly[] OurAssemblies()
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool IsOurType(Type type)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Type[] GetDependenciesByAttribute(Type type)
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool IsNullable(Type type)
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool IsSubclassOfOpenGeneric(Type type, Type openGenericAncestor)
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool IsContainsInterfaceDeclaration(Type type, Type i)
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool FitsForTypeArgument(Type typeForCheck, Type typeArgument)
-            {
-                throw new NotSupportedException();
-            }
-
-            public IEnumerable<Type> GetGenericArgumentsOfOpenGenericAt(Type derived, Type openGeneric, int typeArgumentAt = 0)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Type ExtractGenericTypeDefinition(Type type)
-            {
-                throw new NotSupportedException();
+                return condition;
             }
         }
 

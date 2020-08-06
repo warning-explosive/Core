@@ -17,16 +17,16 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 && implementationType.GetCustomAttribute<ManualRegistrationAttribute>(true) == null;
         }
 
-        internal static bool IsNotVersion(this Type implementationType, ITypeExtensions typeExtensions)
+        internal static bool IsVersion(this Type implementationType, ITypeExtensions typeExtensions)
         {
             if (typeExtensions.IsSubclassOfOpenGeneric(implementationType, typeof(IVersionFor<>)))
             {
                 return typeExtensions
                       .GetGenericArgumentsOfOpenGenericAt(implementationType, typeof(IVersionFor<>), 0)
-                      .All(serviceType => !serviceType.IsAssignableFrom(implementationType));
+                      .Any(serviceType => serviceType.IsAssignableFrom(implementationType));
             }
 
-            return true;
+            return false;
         }
 
         internal static IEnumerable<Type> GetTypesToRegister(this Type serviceType, Container container, ITypeExtensions typeExtensions)

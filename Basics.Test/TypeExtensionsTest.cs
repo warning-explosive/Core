@@ -76,7 +76,7 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.False(typeof(TestGenericTypeImplementationBase<>).IsSubclassOfOpenGeneric(typeof(ITestInterface)));
 
             // ITestGenericInterfaceBase<T>
-            Assert.False(typeof(ITestGenericInterfaceBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
+            Assert.True(typeof(ITestGenericInterfaceBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
             Assert.True(typeof(ITestGenericInterface<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
             Assert.True(typeof(TestGenericTypeImplementationBase<>).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));
             Assert.True(typeof(TestTypeImplementation).IsSubclassOfOpenGeneric(typeof(ITestGenericInterfaceBase<>)));

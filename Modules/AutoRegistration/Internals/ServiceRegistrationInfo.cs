@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]
     internal class ServiceRegistrationInfo
     {
-        internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle? lifestyle)
+        internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)
         {
             ServiceType = serviceType.IsGenericType
                               ? serviceType.GetGenericTypeDefinition()
@@ -18,12 +18,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
             ImplementationType = implementationType;
 
-            if (lifestyle == null)
-            {
-                throw new AttributeRequiredException(typeof(LifestyleAttribute), implementationType);
-            }
-
-            Lifestyle = lifestyle.Value.MapLifestyle();
+            Lifestyle = lifestyle.MapLifestyle();
         }
 
         internal Type ImplementationType { get; }

@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                {
                                    ComponentType = t,
                                    Decorator = ExtractDecorator(decoratorType, t),
-                                   t.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle
+                                   Lifestyle = t.Lifestyle()
                                })
                   .Select(t => (t.Decorator, new ServiceRegistrationInfo(t.Decorator.GetGenericArguments()[0], t.ComponentType, t.Lifestyle)));
         }

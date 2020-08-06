@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
     using System.Collections.Generic;
+    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Enumerations;
 
     /// <summary>

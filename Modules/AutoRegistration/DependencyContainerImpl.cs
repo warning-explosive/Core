@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     [Unregistered]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
-        private readonly ConcurrentDictionary<Type, Stack<Type>> _versions;
+        private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
 
         private readonly Container _container;
 
@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         internal DependencyContainerImpl(ITypeExtensions typeExtensions,
                                          DependencyContainerOptions options)
         {
-            _versions = new ConcurrentDictionary<Type, Stack<Type>>();
+            _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
 
             var servicesProvider = new AutoWiringServicesProvider(_container, typeExtensions);
@@ -46,7 +46,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             RegisterExternalDependencies(this, options.RegistrationCallback);
 
-            RegisterVersions(_container, servicesProvider);
+            RegisterVersions(_container, typeExtensions, servicesProvider);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
         }
@@ -157,34 +157,45 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #region IVersionedContainer
 
-        public IDisposable UseVersion<TService, TImplementation>()
+        public IDisposable UseVersion<TService, TVersion>()
             where TService : class
-            where TImplementation : class, TService, IVersionFor<TService>
+            where TVersion : class, TService, IVersionFor<TService>
         {
-            var stack = _versions.GetOrAdd(typeof(TService), () => new Stack<Type>());
-            stack.Push(typeof(TImplementation));
-
-            return Disposable.Create(_versions,
-                                     state =>
-                                     {
-                                         if (state.TryGetValue(typeof(TService), out var s))
-                                         {
-                                             s.Pop();
-
-                                             if (!s.Any())
-                                             {
-                                                 state.TryRemove(typeof(TService), out _);
-                                             }
-                                         }
-                                     });
+            return UseVersionInternal(typeof(TService), typeof(TVersion), null);
         }
 
-        public Type? AppliedVersion<TService>()
+        public IDisposable UseVersion<TService>(Func<IVersionFor<TService>> versionFactory)
+            where TService : class
+        {
+            return UseVersionInternal(typeof(TService), null, versionFactory);
+        }
+
+        public VersionInfo? AppliedVersion<TService>()
             where TService : class
         {
             _versions.TryGetValue(typeof(TService), out var stack);
 
             return stack?.Peek();
+        }
+
+        private IDisposable UseVersionInternal(Type serviceType, Type? versionType, Func<object>? versionInstanceFactory)
+        {
+            var stack = _versions.GetOrAdd(serviceType, () => new Stack<VersionInfo>());
+            stack.Push(new VersionInfo(serviceType, versionType, versionInstanceFactory));
+
+            return Disposable.Create(_versions,
+                                     state =>
+                                     {
+                                         if (state.TryGetValue(serviceType, out var s))
+                                         {
+                                             s.Pop();
+
+                                             if (!s.Any())
+                                             {
+                                                 state.TryRemove(serviceType, out _);
+                                             }
+                                         }
+                                     });
         }
 
         #endregion
@@ -248,7 +259,7 @@ namespace SpaceEngineers.Core.AutoRegistration
              */
             var collectionResolvableRegistrationInfos = autoWiringServicesProvider
                                                        .Collections()
-                                                       .GetComponents(container, typeExtensions, true);
+                                                       .GetComponents(container, typeExtensions, false);
 
             // register each element of collection as implementation to provide lifestyle for container
             container.RegisterImplementations(collectionResolvableRegistrationInfos);
@@ -292,10 +303,44 @@ namespace SpaceEngineers.Core.AutoRegistration
                                           && t.IsSubclassOfOpenGeneric(decoratorType));
         }
 
-        private static void RegisterVersions(Container container, IAutoWiringServicesProvider servicesProvider)
+        private static void RegisterVersions(Container container, ITypeExtensions typeExtensions, IAutoWiringServicesProvider servicesProvider)
         {
-            var versioned = servicesProvider.Versions().VersionedComponents(container);
-            container.RegisterWithOpenGenericFallBack(versioned);
+            var fromDependencies = container
+                .GetCurrentRegistrations()
+                .Select(producer => producer.Registration.ImplementationType)
+                .Where(implementation => implementation.IsClass)
+                .Select(container.Options.ConstructorResolutionBehavior.GetConstructor)
+                .SelectMany(cctor => cctor.GetParameters())
+                .Select(parameter => parameter.ParameterType)
+                .Distinct()
+                .Where(parameterType => typeExtensions.IsSubclassOfOpenGeneric(parameterType, typeof(IVersioned<>)))
+                .SelectMany(service => typeExtensions.GetGenericArgumentsOfOpenGenericAt(service, typeof(IVersioned<>), 0))
+                .ToList();
+
+            var versioned = servicesProvider.Versions().Union(fromDependencies).ToList();
+
+            // 1. IVersioned<T>
+            container.RegisterWithOpenGenericFallBack(versioned.VersionedComponents(container));
+
+            // 2. IVersionFor<T> collection
+            var versionFor = versioned
+                            .Select(service => typeof(IVersionFor<>).MakeGenericType(service))
+                            .GetComponents(container, typeExtensions, true);
+
+            var versionForStubs = fromDependencies
+                .Except(servicesProvider.Versions())
+                .Select(service => new
+                                   {
+                                       ServiceType = typeof(IVersionFor<>).MakeGenericType(service),
+                                       ImplementationType = typeof(VersionForStub<>).MakeGenericType(service),
+                                   })
+                .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ImplementationType, EnLifestyle.Singleton));
+
+            var collections = versionFor.Concat(versionForStubs);
+
+            // register each element of collection as implementation to provide lifestyle for container
+            container.RegisterImplementations(collections);
+            container.RegisterCollections(collections);
         }
     }
 }

@@ -26,6 +26,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void TransientVersionsTest()
         {
+            TransientVersionsTestInternal(
+                () => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>(),
+                () => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>());
+
+            TransientVersionsTestInternal(
+                () => DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV2()),
+                () => DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV3()));
+        }
+
+        internal void TransientVersionsTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(TransientVersionedServiceDecorator),
@@ -44,14 +55,11 @@ namespace SpaceEngineers.Core.Modules.Test
                              typeof(TransientVersionedServiceImplV3),
                          };
 
-            VerifyNested(ApplyFirst,
-                         ApplySecond,
+            VerifyNested(applyFirst,
+                         applySecond,
                          () => Check(typeof(TransientVersionedServiceImpl), original, original),
                          () => Check(typeof(TransientVersionedServiceImplV2), original, first),
                          () => Check(typeof(TransientVersionedServiceImplV3), original, second));
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -75,6 +83,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ScopedVersionsTest()
         {
+            ScopedVersionsTestInternal(
+                () => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>(),
+                () => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>());
+
+            ScopedVersionsTestInternal(
+                () => DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV2()),
+                () => DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV3()));
+        }
+
+        internal void ScopedVersionsTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(ScopedVersionedServiceDecorator),
@@ -95,15 +114,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             using (DependencyContainer.OpenScope())
             {
-                VerifyNested(ApplyFirst,
-                             ApplySecond,
+                VerifyNested(applyFirst,
+                             applySecond,
                              () => Check(typeof(ScopedVersionedServiceImpl), original, original),
                              () => Check(typeof(ScopedVersionedServiceImplV2), original, first),
                              () => Check(typeof(ScopedVersionedServiceImplV3), original, second));
             }
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -127,6 +143,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void SingletonVersionsTest()
         {
+            SingletonVersionsTestInternal(
+                () => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>(),
+                () => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>());
+
+            SingletonVersionsTestInternal(
+                () => DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV2()),
+                () => DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV3()));
+        }
+
+        internal void SingletonVersionsTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(SingletonVersionedServiceDecorator),
@@ -145,14 +172,11 @@ namespace SpaceEngineers.Core.Modules.Test
                              typeof(SingletonVersionedServiceImplV3),
                          };
 
-            VerifyNested(ApplyFirst,
-                         ApplySecond,
+            VerifyNested(applyFirst,
+                         applySecond,
                          () => Check(typeof(SingletonVersionedServiceImpl), original, original),
                          () => Check(typeof(SingletonVersionedServiceImplV2), original, first),
                          () => Check(typeof(SingletonVersionedServiceImplV3), original, second));
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -175,6 +199,53 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Fact]
         internal void CompositeVersionsTest()
+        {
+            IDisposable ApplyFirst()
+            {
+                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>(),
+                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>(),
+                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>(),
+                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>(),
+                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>(),
+                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>());
+            }
+
+            IDisposable ApplySecond()
+            {
+                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>(),
+                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>(),
+                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>(),
+                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>(),
+                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>(),
+                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>());
+            }
+
+            CompositeVersionsTestInternal(ApplyFirst, ApplySecond);
+
+            IDisposable ApplyViaInstanceFirst()
+            {
+                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV2()),
+                                               DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV2()),
+                                               DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV2()),
+                                               DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV2()),
+                                               DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV2()),
+                                               DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV2()));
+            }
+
+            IDisposable ApplyViaInstanceSecond()
+            {
+                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV3()),
+                                               DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV3()),
+                                               DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV3()),
+                                               DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV3()),
+                                               DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV3()),
+                                               DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV3()));
+            }
+
+            CompositeVersionsTestInternal(ApplyViaInstanceFirst, ApplyViaInstanceSecond);
+        }
+
+        internal void CompositeVersionsTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
         {
             var originalTransientStructure = new[]
                                              {
@@ -286,8 +357,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
             using (DependencyContainer.OpenScope())
             {
-                VerifyNested(ApplyFirst,
-                             ApplySecond,
+                VerifyNested(applyFirst,
+                             applySecond,
                              () => Check(typeof(TransientVersionedServiceImpl),
                                          typeof(ScopedVersionedServiceImpl),
                                          typeof(SingletonVersionedServiceImpl),
@@ -324,26 +395,6 @@ namespace SpaceEngineers.Core.Modules.Test
                                          secondTransientImplStructure,
                                          secondScopedImplStructure,
                                          secondSingletonImplStructure));
-            }
-
-            IDisposable ApplyFirst()
-            {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>(),
-                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>(),
-                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>());
-            }
-
-            IDisposable ApplySecond()
-            {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>(),
-                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>(),
-                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>());
             }
 
             void Check(Type currentTransientVersion,
@@ -416,6 +467,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void TransientImplementationTest()
         {
+            TransientImplementationTestInternal(
+                () => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>(),
+                () => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>());
+
+            TransientImplementationTestInternal(
+                () => DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV2()),
+                () => DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV3()));
+        }
+
+        internal void TransientImplementationTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(TransientImplementationDecorator),
@@ -434,14 +496,11 @@ namespace SpaceEngineers.Core.Modules.Test
                              typeof(TransientImplementationV3),
                          };
 
-            VerifyNested(ApplyFirst,
-                         ApplySecond,
+            VerifyNested(applyFirst,
+                         applySecond,
                          () => Check(typeof(TransientImplementation), original, original),
                          () => Check(typeof(TransientImplementationV2), original, first),
                          () => Check(typeof(TransientImplementationV3), original, second));
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -465,6 +524,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ScopedImplementationTest()
         {
+            ScopedImplementationTestInternal(
+                () => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>(),
+                () => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>());
+
+            ScopedImplementationTestInternal(
+                () => DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV2()),
+                () => DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV3()));
+        }
+
+        internal void ScopedImplementationTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(ScopedImplementationDecorator),
@@ -485,15 +555,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             using (DependencyContainer.OpenScope())
             {
-                VerifyNested(ApplyFirst,
-                             ApplySecond,
+                VerifyNested(applyFirst,
+                             applySecond,
                              () => Check(typeof(ScopedImplementation), original, original),
                              () => Check(typeof(ScopedImplementationV2), original, first),
                              () => Check(typeof(ScopedImplementationV3), original, second));
             }
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -517,6 +584,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void SingletonImplementationTest()
         {
+            SingletonImplementationTestInternal(
+                () => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>(),
+                () => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>());
+
+            SingletonImplementationTestInternal(
+                () => DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV2()),
+                () => DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV3()));
+        }
+
+        internal void SingletonImplementationTestInternal(Func<IDisposable> applyFirst, Func<IDisposable> applySecond)
+        {
             var original = new[]
                            {
                                typeof(SingletonImplementationDecorator),
@@ -537,15 +615,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             using (DependencyContainer.OpenScope())
             {
-                VerifyNested(ApplyFirst,
-                             ApplySecond,
+                VerifyNested(applyFirst,
+                             applySecond,
                              () => Check(typeof(SingletonImplementation), original, original),
                              () => Check(typeof(SingletonImplementationV2), original, first),
                              () => Check(typeof(SingletonImplementationV3), original, second));
             }
-
-            IDisposable ApplyFirst() => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>();
-            IDisposable ApplySecond() => DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>();
 
             void Check(Type currentVersion,
                        ICollection<Type> originalStructure,
@@ -593,7 +668,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersioned().Versions)));
 
             // versioned
-            Assert.True(resolveVersioned() is Versioned<TTransient>);
             Assert.NotSame(resolveVersioned(), resolveVersioned());
             Assert.Equal(currentVersion, UnwrapDecorators(resolveVersioned().Current).GetType());
             Assert.NotSame(resolveVersioned().Current, resolveVersioned().Current);
@@ -634,7 +708,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersioned().Versions)));
 
             // versioned
-            Assert.True(resolveVersioned() is Versioned<TScoped>);
             Assert.Same(resolveVersioned(), resolveVersioned());
             var outerVersioned = resolveVersioned();
             using (DependencyContainer.OpenScope())
@@ -674,7 +747,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedVersionsTypes.SequenceEqual(Types(resolveVersioned().Versions)));
 
             // versioned
-            Assert.True(resolveVersioned() is Versioned<TSingleton>);
             Assert.Same(resolveVersioned(), resolveVersioned());
             Assert.Equal(currentVersion, UnwrapDecorators(resolveVersioned().Current).GetType());
             Assert.Same(resolveVersioned().Current, resolveVersioned().Current);

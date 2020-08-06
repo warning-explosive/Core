@@ -46,24 +46,6 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <inheritdoc />
-        public Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
-            where TInterface : class
-        {
-            var type = typeof(TInterface);
-
-            if (!type.IsInterface)
-            {
-                throw new ArgumentException(typeof(TInterface).FullName);
-            }
-
-            return _typeInfoStorage
-                  .OurTypes
-                  .Where(t => t.IsInterface
-                              && IsContainsInterfaceDeclaration(t, typeof(TInterface)))
-                  .ToArray();
-        }
-
-        /// <inheritdoc />
         public Type[] AllLoadedTypes()
         {
             return _typeInfoStorage.AllLoadedTypes;
@@ -168,10 +150,11 @@ namespace SpaceEngineers.Core.Basics
             }
 
             return IsSubclassOfOpenGeneric(derived, openGeneric)
-                       ? _typeInfoStorage[derived].BaseTypes
-                                                  .Concat(derived.GetInterfaces())
-                                                  .Where(type => ExtractGenericTypeDefinition(type) == openGeneric)
-                                                  .Select(i => i.GetGenericArguments()[typeArgumentAt])
+                       ? new[] { derived }
+                        .Concat(_typeInfoStorage[derived].BaseTypes)
+                        .Concat(derived.GetInterfaces())
+                        .Where(type => ExtractGenericTypeDefinition(type) == openGeneric)
+                        .Select(type => type.GetGenericArguments()[typeArgumentAt])
                        : Enumerable.Empty<Type>();
         }
 

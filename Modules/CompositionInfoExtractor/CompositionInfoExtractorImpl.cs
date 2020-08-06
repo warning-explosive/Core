@@ -87,7 +87,8 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
             var closedOrSame = _receiver.CloseByConstraints(type);
 
             // build graph by invocation
-            _container.GetAllInstances(closedOrSame);
+            Func<IEnumerable<object>> getAllInstances = () => _container.GetAllInstances(closedOrSame);
+            getAllInstances.Try().Catch<ActivationException>().Invoke();
 
             return typeof(IEnumerable<>).MakeGenericType(closedOrSame);
         }

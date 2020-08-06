@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
     /// <typeparam name="TResolvable">IResolvable</typeparam>
     /// <typeparam name="TAttribute">Attribute</typeparam>
     public interface IConditionalDecorator<TResolvable, TAttribute>
-        where TResolvable : IResolvable
+        where TResolvable : class
         where TAttribute : Attribute
     {
         /// <summary>

@@ -5,8 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class OpenGenericDecorableServiceDecorator3<T> : IOpenGenericDecorableServiceDecorator<T>,
-                                                              IDecorator<IOpenGenericDecorableService<T>>
+    internal class OpenGenericDecorableServiceDecorator3<T> : IOpenGenericDecorableServiceDecorator<T>
     {
         public OpenGenericDecorableServiceDecorator3(IOpenGenericDecorableService<T> decorateee)
         {

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
     /// <typeparam name="TCollectionResolvable">ICollectionResolvable</typeparam>
     /// <typeparam name="TAttribute">Attribute</typeparam>
     public interface ICollectionConditionalDecorator<TCollectionResolvable, TAttribute>
-        where TCollectionResolvable : ICollectionResolvable
+        where TCollectionResolvable : class
         where TAttribute : Attribute
     {
         /// <summary>

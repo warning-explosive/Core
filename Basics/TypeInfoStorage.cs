@@ -30,33 +30,44 @@ namespace SpaceEngineers.Core.Basics
 
         public TypeInfoStorage(Assembly[] assemblies, Assembly[] rootAssemblies)
         {
-            var loadedAssemblies = assemblies.Distinct(new AssemblyByNameEqualityComparer())
-                                             .ToDictionary(a => a.GetName().FullName);
+            assemblies = assemblies.Where(a => !a.IsDynamic).ToArray();
 
-            var visited = loadedAssemblies.Where(a => ExcludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
-                                          .ToDictionary(k => k.Key, v => false);
+            var loadedAssembliesDict = assemblies
+                                      .Distinct(new AssemblyByNameEqualityComparer())
+                                      .ToDictionary(a => a.GetName().FullName);
+
+            var rootAssembliesDict = rootAssemblies.ToDictionary(a => a.GetName().FullName, a => a);
+
+            var visited = loadedAssembliesDict
+                         .Where(a => ExcludedAssemblies.Any(ex => a.Key.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
+                         .ToDictionary(k => k.Key, v => false);
 
             foreach (var root in rootAssemblies)
             {
                 visited[root.GetName().FullName] = true;
             }
 
-            OurAssemblies = loadedAssemblies
-                           .Except(rootAssemblies.ToDictionary(a => a.GetName().FullName, a => a).ToArray())
-                           .Where(pair => IsOurReference(pair.Value, loadedAssemblies, visited))
+            OurAssemblies = loadedAssembliesDict
+                           .Except(rootAssembliesDict)
                            .Select(pair => pair.Value)
+                           .Where(a => IsOurReference(a, loadedAssembliesDict, visited))
                            .Concat(rootAssemblies)
                            .ToArray();
 
-            OurTypes = OurAssemblies.SelectMany(assembly => assembly.GetTypes()
-                                                                    .Where(t => t.FullName != null
-                                                                                && ExcludedTypes.All(mask => !t.FullName.Contains(mask))))
-                                    .ToArray();
+            IEnumerable<Type> ExtractOurTypes(Assembly assembly)
+            {
+                return assembly.GetTypes()
+                               .Where(t => t.FullName != null
+                                        && ExcludedTypes.All(mask => !t.FullName.Contains(mask)));
+            }
+
+            OurTypes = OurAssemblies
+                      .SelectMany(ExtractOurTypes)
+                      .ToArray();
 
             OurTypes.Each(type => _collection.Add(type.GUID, new TypeInfo(type)));
 
-            AllLoadedTypes = assemblies.SelectMany(a => a.GetTypes())
-                                       .ToArray();
+            AllLoadedTypes = assemblies.SelectMany(a => a.GetTypes()).ToArray();
         }
 
         public Assembly[] OurAssemblies { get; }

@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             TypeExtensions.Configure(() => typeExtensions);
 
-            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options.RegistrationCallback);
+            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options);
 
             TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
 
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             TypeExtensions.Configure(() => typeExtensions);
 
-            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options.RegistrationCallback);
+            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options);
 
             TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
 

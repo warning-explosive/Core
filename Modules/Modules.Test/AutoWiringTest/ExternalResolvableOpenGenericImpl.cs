@@ -9,8 +9,9 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     [OpenGenericFallBack(typeof(IComparable<>))]
     internal class ExternalResolvableOpenGenericImpl<T> : IComparable<T>,
                                                           IExternalResolvable<IComparable<T>>
+        where T : class
     {
-        public int CompareTo(T other)
+        public int CompareTo(T? other)
         {
             throw new ArgumentException(nameof(ExternalResolvableImpl), nameof(other));
         }

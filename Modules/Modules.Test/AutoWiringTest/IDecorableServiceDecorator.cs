@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    internal interface IDecorableServiceDecorator : IDecorableService
+    using AutoWiringApi.Abstractions;
+
+    internal interface IDecorableServiceDecorator : IDecorableService,
+                                                    IDecorator<IDecorableService>
     {
-        IDecorableService Decoratee { get; }
     }
 }

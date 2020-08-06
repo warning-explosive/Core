@@ -19,14 +19,6 @@ namespace SpaceEngineers.Core.Basics
         IOrderedEnumerable<T> OrderByDependencies<T>(IEnumerable<T> source, Func<T, Type> accessor);
 
         /// <summary>
-        /// Get all services (interfaces) that contains TInterface declaration
-        /// </summary>
-        /// <typeparam name="TInterface">Interface type-argument</typeparam>
-        /// <returns>Result of check</returns>
-        Type[] AllOurServicesThatContainsDeclarationOfInterface<TInterface>()
-            where TInterface : class;
-
-        /// <summary>
         /// Get all types loaded in AppDomain
         /// </summary>
         /// <returns>All types loaded in AppDomain</returns>

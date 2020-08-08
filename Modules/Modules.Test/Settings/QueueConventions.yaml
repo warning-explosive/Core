@@ -1,4 +1,0 @@
-ErrorQueueName: Error
-AuditQueueName: Audit
-MonitoringQueueName: Particular.Monitoring
-ServiceControlQueue: Particular.Servicecontrol

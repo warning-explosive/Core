@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Settings
     /// <summary>
     /// Persistence settings
     /// </summary>
-    public class PersistenceSettings : IYamlSettings
+    public class PersistenceSettings : IJsonSettings
     {
         /// <summary> .cctor </summary>
         /// <param name="mongoClientSettings">MongoClientSettings</param>

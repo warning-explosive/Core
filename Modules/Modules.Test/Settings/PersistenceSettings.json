@@ -1,0 +1,76 @@
+{
+  "MongoClientSettings": {
+    "AllowInsecureTls": false,
+    "ApplicationName": null,
+    "Compressors": {
+      "$type": "MongoDB.Driver.Core MongoDB.Driver.Core.Configuration.CompressorConfiguration[]",
+      "$values": []
+    },
+    "ClusterConfigurator": null,
+    "ConnectionMode": 0,
+    "ConnectTimeout": "00:00:30",
+    "Credential": null,
+    "Credentials": {
+      "$type": "MongoDB.Driver MongoDB.Driver.MongoCredentialStore",
+      "$values": []
+    },
+    "GuidRepresentation": 2,
+    "IsFrozen": false,
+    "HeartbeatInterval": "00:00:10",
+    "HeartbeatTimeout": "-00:00:00.0010000",
+    "IPv6": false,
+    "LocalThreshold": "00:00:00.0150000",
+    "MaxConnectionIdleTime": "00:10:00",
+    "MaxConnectionLifeTime": "00:30:00",
+    "MaxConnectionPoolSize": 100,
+    "MinConnectionPoolSize": 0,
+    "ReadConcern": {
+      "IsServerDefault": true,
+      "Level": null
+    },
+    "ReadEncoding": null,
+    "ReadPreference": {
+      "MaxStaleness": null,
+      "ReadPreferenceMode": 0,
+      "TagSets": {
+        "$type": "MongoDB.Driver.Core MongoDB.Driver.TagSet[]",
+        "$values": []
+      }
+    },
+    "ReplicaSetName": null,
+    "RetryReads": true,
+    "RetryWrites": true,
+    "Scheme": 0,
+    "SdamLogFilename": null,
+    "Server": {
+      "Host": "localhost",
+      "Port": 27017
+    },
+    "Servers": {
+      "$type": "System.Private.CoreLib System.Collections.ObjectModel.ReadOnlyCollection`1 [MongoDB.Driver MongoDB.Driver.MongoServerAddress]",
+      "$values": [
+        {
+          "Host": "localhost",
+          "Port": 27017
+        }
+      ]
+    },
+    "ServerSelectionTimeout": "00:00:30",
+    "SocketTimeout": "00:00:00",
+    "SslSettings": null,
+    "UseSsl": false,
+    "UseTls": false,
+    "VerifySslCertificate": true,
+    "WaitQueueSize": 500,
+    "WaitQueueTimeout": "00:02:00",
+    "WriteConcern": {
+      "FSync": null,
+      "IsAcknowledged": true,
+      "IsServerDefault": true,
+      "Journal": null,
+      "W": null,
+      "WTimeout": null
+    },
+    "WriteEncoding": null
+  }
+}

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Settings
     /// <summary>
     /// Queue conventions
     /// </summary>
-    public class QueueConventions : IYamlSettings
+    public class QueueConventions : IJsonSettings
     {
         /// <summary> .cctor </summary>
         /// <param name="errorQueueName">Error queue name</param>

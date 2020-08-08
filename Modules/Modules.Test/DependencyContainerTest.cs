@@ -34,6 +34,21 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output) { }
 
         [Fact]
+        internal void UniqueAssembliesTest()
+        {
+            var provider = DependencyContainer.Resolve<ITypeExtensions>();
+
+            CheckAssemblies(provider.OurAssemblies());
+            CheckAssemblies(provider.OurTypes().Select(t => t.Assembly).ToList());
+            CheckAssemblies(provider.AllLoadedTypes().Select(t => t.Assembly).ToList());
+
+            void CheckAssemblies(ICollection<Assembly> assemblies)
+            {
+                Assert.Equal(assemblies.Distinct().Count(), assemblies.GroupBy(a => a.FullName).Count());
+            }
+        }
+
+        [Fact]
         internal void IsOurTypeTest()
         {
             var ourTypes = DependencyContainer.Resolve<ITypeExtensions>().OurTypes();

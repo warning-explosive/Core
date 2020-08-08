@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Settings
     /// <summary>
     /// Transport settings
     /// </summary>
-    public class TransportSettings : IYamlSettings
+    public class TransportSettings : IJsonSettings
     {
         /// <summary> .cctor </summary>
         /// <param name="rabbitMqConnectionString">RabbitMqConnectionString</param>

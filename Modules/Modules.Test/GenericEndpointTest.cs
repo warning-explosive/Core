@@ -26,7 +26,6 @@ namespace SpaceEngineers.Core.Modules.Test
         [InlineData(typeof(TransportSettings))]
         internal async Task GenericEndpointSettingsReadWriteTest(Type settingsType)
         {
-            // TODO: Support constructors with parameters
             await this.CallMethod(nameof(GenericEndpointSettingsReadWriteTestInternal))
                       .WithTypeArgument(settingsType)
                       .Invoke<Task>()
@@ -34,7 +33,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         internal async Task GenericEndpointSettingsReadWriteTestInternal<TSetting>()
-            where TSetting : class, IYamlSettings
+            where TSetting : class, IJsonSettings
         {
             var manager = DependencyContainer.Resolve<ISettingsManager<TSetting>>();
 

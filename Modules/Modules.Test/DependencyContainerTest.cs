@@ -363,7 +363,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 {
                     var mock = new Mock<IVersionFor<ITypeExtensions>>();
                     mock.Setup(z => z.Version.OurTypes())
-                        .Returns(() => new[] { typeof(TestYamlConfig) });
+                        .Returns(() => new[] { typeof(TestYamlSettings) });
                     return mock.Object;
                 });
 
@@ -421,7 +421,7 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TestYamlConfig : IYamlSettings
+        private class TestYamlSettings : IYamlSettings
         {
         }
     }

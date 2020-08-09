@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
                             Converters = { new TypeNodeJsonConverter() }
                         };
 
-            // TODO: cache it in provider
+            // TODO: cache it in provider and refactor type extensions
             _associations = typeExtensions
                            .AllLoadedTypes()
                            .GroupBy(type => type.Assembly.GetName().Name)

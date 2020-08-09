@@ -1,0 +1,40 @@
+{
+  "Int": 1,
+  "Decimal": 42.42,
+  "String": "Hello world!",
+  "Date": "0001-01-01T00:00:00",
+  "Reference": {
+    "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+    "Int": 1,
+    "Decimal": 42.42,
+    "String": "Hello world!",
+    "Date": "0001-01-01T00:00:00",
+    "Reference": null,
+    "Collection": null,
+    "Dictionary": null
+  },
+  "Collection": [
+    {
+      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+      "Int": 1,
+      "Decimal": 42.42,
+      "String": "Hello world!",
+      "Date": "0001-01-01T00:00:00",
+      "Reference": null,
+      "Collection": null,
+      "Dictionary": null
+    }
+  ],
+  "Dictionary": {
+    "First": {
+      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+      "Int": 1,
+      "Decimal": 42.42,
+      "String": "Hello world!",
+      "Date": "0001-01-01T00:00:00",
+      "Reference": null,
+      "Collection": null,
+      "Dictionary": null
+    }
+  }
+}

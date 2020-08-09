@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -10,6 +11,8 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class AssembliesExtensions
     {
+        private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
+
         /// <summary>
         /// Get all assemblies from current domain
         /// </summary>
@@ -18,7 +21,24 @@ namespace SpaceEngineers.Core.Basics
         {
             return AppDomain.CurrentDomain
                             .EnsureNotNull(() => new InvalidOperationException($"{nameof(AppDomain.CurrentDomain)} is null"))
-                            .GetAssemblies();
+                            .GetAssemblies()
+                            .GroupBy(assembly => assembly.GetName().Name)
+                            .SelectMany(RemoveDuplicates)
+                            .ToArray();
+
+            IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)
+            {
+                if (grp.Key == Duplicate)
+                {
+                    yield return grp.First();
+                    yield break;
+                }
+
+                foreach (var item in grp)
+                {
+                    yield return item;
+                }
+            }
         }
 
         /// <summary>
@@ -27,11 +47,6 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="searchOption">SearchOption for assemblies in BaseDirectory</param>
         public static void WarmUpAppDomain(SearchOption searchOption)
         {
-            /*
-             * 1 - load from directory
-             * 2 - load by referenced assemblies
-             */
-
             Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
                      .Select(Load)
                      .SelectMany(assembly => assembly.GetReferencedAssemblies())

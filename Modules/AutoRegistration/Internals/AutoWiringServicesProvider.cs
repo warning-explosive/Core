@@ -16,15 +16,15 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     {
         private readonly Container _container;
 
-        private readonly ITypeExtensions _typeExtensions;
+        private readonly ITypeProvider _typeProvider;
 
         /// <summary> .cctor </summary>
         /// <param name="container">Container</param>
-        /// <param name="typeExtensions">ITypeExtensions</param>
-        public AutoWiringServicesProvider(Container container, ITypeExtensions typeExtensions)
+        /// <param name="typeProvider">ITypeProvider</param>
+        public AutoWiringServicesProvider(Container container, ITypeProvider typeProvider)
         {
             _container = container;
-            _typeExtensions = typeExtensions;
+            _typeProvider = typeProvider;
         }
 
         /// <inheritdoc />
@@ -42,32 +42,32 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         /// <inheritdoc />
         public IEnumerable<Type> Implementations()
         {
-            return typeof(IResolvableImplementation).GetTypesToRegister(_container, _typeExtensions);
+            return typeof(IResolvableImplementation).GetTypesToRegister(_container, _typeProvider);
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> External()
         {
-            return _typeExtensions
-                  .AllLoadedTypes()
+            return _typeProvider
+                  .AllLoadedTypes
                   .Where(type => type.IsClass
                               && !type.IsAbstract
-                              && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IExternalResolvable<>)))
-                  .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IExternalResolvable<>), 0))
+                              && type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)))
+                  .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
                   .Where(type => !type.IsGenericParameter)
-                  .Select(_typeExtensions.ExtractGenericTypeDefinition)
+                  .Select(type => type.GenericTypeDefinitionOrSelf())
                   .Distinct();
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Versions()
         {
-            return _typeExtensions
-                  .OurTypes()
+            return _typeProvider
+                  .OurTypes
                   .Where(type => type.IsClass
                            && !type.IsAbstract
-                           && _typeExtensions.IsSubclassOfOpenGeneric(type, typeof(IVersionFor<>)))
-                  .SelectMany(type => _typeExtensions.GetGenericArgumentsOfOpenGenericAt(type, typeof(IVersionFor<>), 0))
+                           && type.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
+                  .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IVersionFor<>), 0))
                   .Where(type => !type.IsGenericParameter)
                   .Distinct();
         }
@@ -80,10 +80,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 throw new ArgumentException(serviceType.FullName);
             }
 
-            return _typeExtensions
-                  .OurTypes()
-                  .Where(t => t.IsInterface
-                           && _typeExtensions.IsContainsInterfaceDeclaration(t, serviceType))
+            return _typeProvider
+                  .OurTypes
+                  .Where(t => t.IsInterface && t.IsContainsInterfaceDeclaration(serviceType)) // TODO: review this approach (use attributes with inheritance=false OR register all derived interfaces)
                   .ToArray();
         }
     }

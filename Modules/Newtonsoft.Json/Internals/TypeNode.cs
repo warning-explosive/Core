@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
     using System.Linq;
     using System.Security;
     using System.Text.RegularExpressions;
+    using AutoWiringApi.Abstractions;
     using Basics;
     using Newtonsoft.Json;
 
@@ -77,25 +78,24 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
             return node;
         }
 
-        internal Type BuildType(IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> associations)
+        internal Type BuildType(ITypeProvider typeProvider)
         {
-            if (!TryGetType(associations, out var type)
+            if (!TryGetType(typeProvider, out var type)
              || type == null)
             {
                 throw new SecurityException($"Untrusted type {Type}");
             }
 
             return GenericArguments.Any()
-                       ? type.MakeGenericType(GenericArguments.Select(child => child.BuildType(associations)).ToArray())
+                       ? type.MakeGenericType(GenericArguments.Select(child => child.BuildType(typeProvider)).ToArray())
                        : IsArray
                            ? typeof(Array).CallMethod(nameof(Array.Empty)).WithTypeArgument(type).Invoke().GetType()
                            : type;
         }
 
-        private bool TryGetType(IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> associations,
-                                out Type? type)
+        private bool TryGetType(ITypeProvider typeProvider, out Type? type)
         {
-            if (associations.TryGetValue(Assembly, out var types)
+            if (typeProvider.TypeCache.TryGetValue(Assembly, out var types)
              && types.TryGetValue(IsArray ? Type.Trim('[', ']') : Type, out type))
             {
                 return true;

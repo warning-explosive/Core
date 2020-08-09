@@ -93,5 +93,16 @@ namespace SpaceEngineers.Core.Basics
 
             return queue;
         }
+
+        /// <summary>
+        /// Materialize IEnumerable source to HashSet
+        /// </summary>
+        /// <param name="source">Source enumerable</param>
+        /// <typeparam name="T">Item type-argument</typeparam>
+        /// <returns>HashSet</returns>
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+        {
+            return new HashSet<T>(source);
+        }
     }
 }

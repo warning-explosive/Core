@@ -65,7 +65,6 @@ namespace SpaceEngineers.Core.Basics
                                                 && ValidateParameters(TypeArguments.ToArray(), m.GetGenericArguments()))
                                        .ToArray();
 
-            // TODO: extension for single extraction
             if (methods.Length < 1)
             {
                 throw new NotFoundException(MethodName);

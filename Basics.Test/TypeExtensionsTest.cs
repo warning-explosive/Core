@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Basics.Test
                            typeof(OrderByDependencyTestData.CycleDependencyTest3),
                        };
 
-            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencies(z => z).ToArray());
+            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencyAttribute(z => z).ToArray());
         }
 
         [Fact]
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.DependencyTest3),
             };
 
-            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencies(z => z)));
+            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencyAttribute(z => z)));
 
             var test2 = new[]
             {
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest3<>),
             };
 
-            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencies(z => z)));
+            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencyAttribute(z => z)));
 
             var test3 = new[]
             {
@@ -63,7 +63,16 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest3<int>),
             };
 
-            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencies(z => z)));
+            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencyAttribute(z => z)));
+        }
+
+        [Fact]
+        internal void IsNullableTest()
+        {
+            Assert.False(typeof(bool).IsNullable());
+            Assert.False(typeof(object).IsNullable());
+            Assert.True(typeof(bool?).IsNullable());
+            Assert.True(typeof(Nullable<>).IsNullable());
         }
 
         [Fact]
@@ -112,26 +121,32 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
-        internal void GetGenericArgumentsOfOpenGenericAtTest()
+        internal void ExtractGenericArgumentsAtTest()
         {
-            Assert.Equal(typeof(string), typeof(ITestGenericInterface<string>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
-            Assert.Equal(typeof(object), typeof(TestTypeImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
-            Assert.Equal(typeof(object), typeof(DirectTestTypeImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
-            Assert.Equal(typeof(bool), typeof(TestGenericTypeImplementation<bool>).GetGenericArgumentsOfOpenGenericAt(typeof(TestGenericTypeImplementationBase<>), 0).Single());
+            Assert.Equal(typeof(string), typeof(ITestGenericInterface<string>).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
+            Assert.Equal(typeof(object), typeof(TestTypeImplementation).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
+            Assert.Equal(typeof(object), typeof(DirectTestTypeImplementation).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<>), 0).Single());
+            Assert.Equal(typeof(bool), typeof(TestGenericTypeImplementation<bool>).ExtractGenericArgumentsAt(typeof(TestGenericTypeImplementationBase<>), 0).Single());
 
-            Assert.Equal(typeof(bool), typeof(ClosedImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 0).Single());
-            Assert.Equal(typeof(object), typeof(ClosedImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 1).Single());
-            Assert.Equal("T1", typeof(OpenedImplementation<,>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 0).Single().Name);
-            Assert.Equal("T2", typeof(OpenedImplementation<,>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 1).Single().Name);
-            Assert.Equal("T1", typeof(HalfOpenedImplementation<>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 0).Single().Name);
-            Assert.Equal(typeof(object), typeof(HalfOpenedImplementation<>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 1).Single());
-            Assert.True(new List<Type> { typeof(bool), typeof(string) }.SequenceEqual(typeof(SeveralImplementations).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 0).ToList()));
-            Assert.True(new List<Type> { typeof(object), typeof(int) }.SequenceEqual(typeof(SeveralImplementations).GetGenericArgumentsOfOpenGenericAt(typeof(ITestInterface<,>), 1).ToList()));
+            Assert.Equal(typeof(bool), typeof(ClosedImplementation).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 0).Single());
+            Assert.Equal(typeof(object), typeof(ClosedImplementation).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 1).Single());
+            Assert.Equal("T1", typeof(OpenedImplementation<,>).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 0).Single().Name);
+            Assert.Equal("T2", typeof(OpenedImplementation<,>).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 1).Single().Name);
+            Assert.Equal("T1", typeof(HalfOpenedImplementation<>).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 0).Single().Name);
+            Assert.Equal(typeof(object), typeof(HalfOpenedImplementation<>).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 1).Single());
+            Assert.True(new List<Type> { typeof(bool), typeof(string) }.SequenceEqual(typeof(SeveralImplementations).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 0).ToList()));
+            Assert.True(new List<Type> { typeof(object), typeof(int) }.SequenceEqual(typeof(SeveralImplementations).ExtractGenericArgumentsAt(typeof(ITestInterface<,>), 1).ToList()));
 
-            Assert.Throws<ArgumentException>(() => typeof(ITestGenericInterface<string>).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
-            Assert.Throws<ArgumentException>(() => typeof(TestTypeImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
-            Assert.Throws<ArgumentException>(() => typeof(DirectTestTypeImplementation).GetGenericArgumentsOfOpenGenericAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
-            Assert.Throws<ArgumentException>(() => typeof(TestGenericTypeImplementation<bool>).GetGenericArgumentsOfOpenGenericAt(typeof(TestGenericTypeImplementationBase<bool>), 0).Any());
+            Assert.Throws<ArgumentException>(() => typeof(ITestGenericInterface<string>).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
+            Assert.Throws<ArgumentException>(() => typeof(TestTypeImplementation).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
+            Assert.Throws<ArgumentException>(() => typeof(DirectTestTypeImplementation).ExtractGenericArgumentsAt(typeof(ITestGenericInterfaceBase<bool>), 0).Any());
+            Assert.Throws<ArgumentException>(() => typeof(TestGenericTypeImplementation<bool>).ExtractGenericArgumentsAt(typeof(TestGenericTypeImplementationBase<bool>), 0).Any());
+        }
+
+        [Fact]
+        internal void FitsForTypeArgumentTest()
+        {
+            throw new NotImplementedException();
         }
 
         private interface ITestInterface { }

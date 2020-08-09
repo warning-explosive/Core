@@ -6,17 +6,18 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Abstractions;
     using AutoWiringApi.Attributes;
     using Basics;
+    using Internals;
 
     /// <summary>
     /// IDependencyContainer factory
     /// </summary>
     public static class DependencyContainer
     {
-        private static readonly Assembly[] RootAssemblies = new[]
-                                                            {
-                                                                typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
-                                                                typeof(ITypeExtensions).Assembly,    // Basics
-                                                            };
+        private static readonly Assembly[] RootAssemblies =
+        {
+            typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
+            typeof(TypeExtensions).Assembly,     // Basics
+        };
 
         /// <summary>
         /// Default configured container
@@ -28,13 +29,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
-            var typeExtensions = TypeExtensions.Build(AssembliesExtensions.AllFromCurrentDomain(), RootAssemblies);
+            var typeProvider = new ContainerDependentTypeProvider(AssembliesExtensions.AllFromCurrentDomain(), RootAssemblies);
 
-            TypeExtensions.Configure(() => typeExtensions);
-
-            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options);
-
-            TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
+            var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
 
             return dependencyContainer;
         }
@@ -47,13 +44,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            var typeExtensions = TypeExtensions.Build(assemblies, RootAssemblies);
+            var typeProvider = new ContainerDependentTypeProvider(assemblies, RootAssemblies);
 
-            TypeExtensions.Configure(() => typeExtensions);
-
-            var dependencyContainer = new DependencyContainerImpl(typeExtensions, options);
-
-            TypeExtensions.Configure(() => dependencyContainer.Resolve<ITypeExtensions>());
+            var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
 
             return dependencyContainer;
         }

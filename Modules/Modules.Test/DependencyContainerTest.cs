@@ -34,15 +34,21 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output) { }
 
         [Fact]
+        internal void IsOurReferenceTest()
+        {
+            throw new NotImplementedException("Check all solution assemblies. Supply this test to derived solutions.");
+        }
+
+        [Fact]
         internal void UniqueAssembliesTest()
         {
-            var provider = DependencyContainer.Resolve<ITypeExtensions>();
+            var provider = DependencyContainer.Resolve<ITypeProvider>();
 
-            CheckAssemblies(provider.OurAssemblies());
-            CheckAssemblies(provider.OurTypes().Select(t => t.Assembly).ToList());
-            CheckAssemblies(provider.AllLoadedTypes().Select(t => t.Assembly).ToList());
+            CheckAssemblies(provider.OurAssemblies);
+            CheckAssemblies(provider.OurTypes.Select(t => t.Assembly).ToList());
+            CheckAssemblies(provider.AllLoadedTypes.Select(t => t.Assembly).ToList());
 
-            void CheckAssemblies(ICollection<Assembly> assemblies)
+            void CheckAssemblies(IReadOnlyCollection<Assembly> assemblies)
             {
                 Assert.Equal(assemblies.Distinct().Count(), assemblies.GroupBy(a => a.FullName).Count());
             }
@@ -51,7 +57,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void IsOurTypeTest()
         {
-            var ourTypes = DependencyContainer.Resolve<ITypeExtensions>().OurTypes();
+            var provider = DependencyContainer.Resolve<ITypeProvider>();
+            var ourTypes = provider.OurTypes;
 
             var wrongOurTypes = ourTypes
                                .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
@@ -63,7 +70,7 @@ namespace SpaceEngineers.Core.Modules.Test
             wrongOurTypes = AssembliesExtensions.AllFromCurrentDomain()
                                                 .SelectMany(asm => asm.GetTypes())
                                                 .Except(ourTypes)
-                                                .Where(type => type.IsOurType())
+                                                .Where(type => provider.IsOurType(type))
                                                 .ToArray();
 
             Assert.False(wrongOurTypes.Any(), Show(wrongOurTypes));
@@ -78,7 +85,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Output.WriteLine(string.Join(Environment.NewLine, notUniqueTypes));
             }
 
-            Assert.Equal(ourTypes.Length, ourTypes.Distinct().Count());
+            Assert.Equal(ourTypes.Count(), ourTypes.Distinct().Count());
 
             string Show(IEnumerable<Type> types) => string.Join(Environment.NewLine, types.Select(t => t.FullName));
         }
@@ -358,11 +365,11 @@ namespace SpaceEngineers.Core.Modules.Test
         [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
         internal void BoundedContainerTest(bool mode)
         {
-            var versionFactory = new Func<IVersionFor<ITypeExtensions>>(
+            var versionFactory = new Func<IVersionFor<ITypeProvider>>(
                 () =>
                 {
-                    var mock = new Mock<IVersionFor<ITypeExtensions>>();
-                    mock.Setup(z => z.Version.OurTypes())
+                    var mock = new Mock<IVersionFor<ITypeProvider>>();
+                    mock.Setup(z => z.Version.OurTypes)
                         .Returns(() => new[] { typeof(TestYamlSettings) });
                     return mock.Object;
                 });
@@ -377,7 +384,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             DependencyInfo[] compositionInfo;
 
-            using (settingsContainer.UseVersion<ITypeExtensions>(versionFactory))
+            using (settingsContainer.UseVersion<ITypeProvider>(versionFactory))
             {
                 compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
                                                    .GetCompositionInfo(mode)
@@ -392,7 +399,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var allowedAssemblies = new[]
                                     {
                                         typeof(Container).Assembly,                 // SimpleInjector assembly,
-                                        typeof(ITypeExtensions).Assembly,           // Basics assembly
+                                        typeof(TypeExtensions).Assembly,            // Basics assembly
                                         typeof(LifestyleAttribute).Assembly,        // AutoWiringApi assembly
                                         typeof(IDependencyContainer).Assembly,      // AutoRegistration assembly
                                         typeof(ISettingsManager<>).Assembly,        // SettingsManager assembly

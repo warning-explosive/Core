@@ -17,22 +17,21 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 && implementationType.GetCustomAttribute<ManualRegistrationAttribute>(true) == null;
         }
 
-        internal static bool IsVersion(this Type implementationType, ITypeExtensions typeExtensions)
+        internal static bool IsVersion(this Type implementationType)
         {
-            if (typeExtensions.IsSubclassOfOpenGeneric(implementationType, typeof(IVersionFor<>)))
+            if (implementationType.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
             {
-                return typeExtensions
-                      .GetGenericArgumentsOfOpenGenericAt(implementationType, typeof(IVersionFor<>), 0)
-                      .Any(serviceType => serviceType.IsAssignableFrom(implementationType));
+                return implementationType.ExtractGenericArgumentsAt(typeof(IVersionFor<>), 0)
+                                         .Any(serviceType => serviceType.IsAssignableFrom(implementationType));
             }
 
             return false;
         }
 
-        internal static IEnumerable<Type> GetTypesToRegister(this Type serviceType, Container container, ITypeExtensions typeExtensions)
+        internal static IEnumerable<Type> GetTypesToRegister(this Type serviceType, Container container, ITypeProvider typeProvider)
         {
             return container.GetTypesToRegister(serviceType,
-                                                typeExtensions.OurAssemblies(),
+                                                typeProvider.OurAssemblies,
                                                 new TypesToRegisterOptions
                                                 {
                                                     IncludeComposites = false,
@@ -95,7 +94,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         internal static void RegisterCollections(this Container container, IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
         {
-            serviceRegistrationInfos.OrderByDependencies(z => z.ImplementationType)
+            serviceRegistrationInfos.OrderByDependencyAttribute(z => z.ImplementationType)
                                     .GroupBy(k => k.ServiceType, v => v.ImplementationType)
                                     .Each(info => container.Collection.Register(info.Key, info));
         }

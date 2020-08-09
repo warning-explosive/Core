@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
+    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics;
@@ -16,7 +17,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
         private readonly JsonSerializerSettings _settings;
 
         [SuppressMessage("Microsoft.Security", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
-        public JsonSerializerImpl(ITypeExtensions typeExtensions,
+        public JsonSerializerImpl(ITypeProvider typeProvider,
                                   IEnumerable<IJsonConverter> converters)
         {
             _settings = new JsonSerializerSettings
@@ -25,7 +26,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
                             Formatting = Formatting.Indented,
                             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                             Converters = converters.Select(c => c.Converter).ToList(),
-                            SerializationBinder = new SecureSerializationBinder(typeExtensions)
+                            SerializationBinder = new SecureSerializationBinder(typeProvider)
                         };
         }
 

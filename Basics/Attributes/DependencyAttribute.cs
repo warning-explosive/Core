@@ -23,6 +23,6 @@ namespace SpaceEngineers.Core.Basics.Attributes
         /// <summary>
         /// Order
         /// </summary>
-        public ICollection<Type> Dependencies { get; }
+        public IReadOnlyCollection<Type> Dependencies { get; }
     }
 }

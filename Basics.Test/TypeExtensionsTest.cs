@@ -5,6 +5,9 @@ namespace SpaceEngineers.Core.Basics.Test
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection.Metadata;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -146,7 +149,40 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void FitsForTypeArgumentTest()
         {
-            throw new NotImplementedException();
+            Assert.True(typeof(bool).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+            Assert.True(typeof(Enum).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+            Assert.True(typeof(StringSplitOptions).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+            Assert.True(typeof(StructWithParameter).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+            Assert.True(typeof(object).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+            Assert.True(typeof(ClassWithParameter).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[0]));
+
+            Assert.True(typeof(bool).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+            Assert.True(typeof(Enum).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+            Assert.True(typeof(StringSplitOptions).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+            Assert.True(typeof(StructWithParameter).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+            Assert.True(typeof(object).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+            Assert.True(typeof(ClassWithParameter).FitsForTypeArgument(typeof(ITestInterface<,>).GetGenericArguments()[1]));
+
+            Assert.False(typeof(bool).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(Enum).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(StringSplitOptions).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(StructWithParameter).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(object).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(ClassWithParameter).FitsForTypeArgument(typeof(IClassConstrained<>).GetGenericArguments()[0]));
+
+            Assert.True(typeof(bool).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(Enum).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(StringSplitOptions).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(StructWithParameter).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(object).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(ClassWithParameter).FitsForTypeArgument(typeof(IStructConstrained<>).GetGenericArguments()[0]));
+
+            Assert.True(typeof(bool).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(Enum).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(StringSplitOptions).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(StructWithParameter).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+            Assert.True(typeof(object).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+            Assert.False(typeof(ClassWithParameter).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
         }
 
         private interface ITestInterface { }
@@ -172,5 +208,26 @@ namespace SpaceEngineers.Core.Basics.Test
         private class HalfOpenedImplementation<T1> : ITestInterface<T1, object> { }
 
         private class SeveralImplementations : ITestInterface<bool, object>, ITestInterface<string, int> { }
+
+        private interface IClassConstrained<T>
+            where T : class { }
+
+        private interface IStructConstrained<T>
+            where T : struct { }
+
+        private interface IDefaultCtorConstrained<T>
+            where T : new() { }
+
+        [SuppressMessage("Useless parameter", "CA1801", Justification = "For test reasons")]
+        private class ClassWithParameter
+        {
+            public ClassWithParameter(object param) { }
+        }
+
+        [SuppressMessage("Useless parameter", "CA1801", Justification = "For test reasons")]
+        private struct StructWithParameter
+        {
+            public StructWithParameter(object param) { }
+        }
     }
 }

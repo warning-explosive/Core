@@ -185,14 +185,14 @@ namespace SpaceEngineers.Core.Basics
 
             if (genericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
             {
-                filters.Add(type => type.IsValueType);
+                filters.Add(type => type.IsValueType && !type.IsNullable());
             }
 
             if (genericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
             {
                 filters.Add(type =>
                             {
-                                if (type.IsEnum)
+                                if (type.IsValueType)
                                 {
                                     return true;
                                 }

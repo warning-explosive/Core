@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using AutoWiringApi.Abstractions;
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                       .SelectMany(ExtractOurTypes)
                       .ToList();
 
-            _ourTypesCache = OurTypes.Select(type => type.FullName).ToHashSet();
+            _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));
         }
 
         public IReadOnlyCollection<Assembly> AllLoadedAssemblies { get; }

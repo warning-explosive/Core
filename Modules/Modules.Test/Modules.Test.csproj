@@ -247,5 +247,8 @@
     <Compile Update="VersionedContainer\WithoutVersionsImpl.cs">
       <DependentUpon>IWithoutVersions.cs</DependentUpon>
     </Compile>
+    <Compile Update="DependencyContainerDependenciesTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

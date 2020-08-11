@@ -65,19 +65,14 @@ namespace SpaceEngineers.Core.Basics
                                                 && ValidateParameters(TypeArguments.ToArray(), m.GetGenericArguments()))
                                        .ToArray();
 
-            if (methods.Length < 1)
-            {
-                throw new NotFoundException(MethodName);
-            }
-
-            if (methods.Length > 1)
+            string Amb(IEnumerable<MethodInfo> source)
             {
                 string Generics(MethodInfo m) => string.Join(", ", m.GetGenericArguments().Select(g => g.Name));
                 string Show(MethodInfo m) => DeclaringType.FullName + "." + m.Name + "[" + Generics(m) + "]";
-                throw new AmbiguousMatchException(string.Join(", ", methods.Select(Show)));
+                return string.Join(", ", methods.Select(Show));
             }
 
-            return methods.Single();
+            return methods.InformativeSingle(Amb);
         }
 
         private static bool ValidateParameters(Type[] actual, Type[] expected)

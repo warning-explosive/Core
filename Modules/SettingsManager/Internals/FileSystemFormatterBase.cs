@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     {
         private readonly Encoding _encoding = new UTF8Encoding(true);
 
+        // TODO: calculate settings directory path correctly - we can deploy only build artifacts
         private readonly string _folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Settings");
 
         /// <summary>

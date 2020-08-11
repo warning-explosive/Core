@@ -4,6 +4,8 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
+    using Exceptions;
 
     /// <summary>
     /// Enumerable extensions
@@ -95,14 +97,27 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Materialize IEnumerable source to HashSet
+        /// Informative single extraction
         /// </summary>
-        /// <param name="source">Source enumerable</param>
-        /// <typeparam name="T">Item type-argument</typeparam>
-        /// <returns>HashSet</returns>
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <typeparam name="T">Collection item type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingle<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            return new HashSet<T>(source);
+            if (!source.Any())
+            {
+                throw new NotFoundException("Source collection is empty");
+            }
+
+            if (source.Take(2).Count() != 1)
+            {
+                throw new AmbiguousMatchException(amb(source));
+            }
+
+            return source.Single();
         }
     }
 }

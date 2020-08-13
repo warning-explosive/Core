@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class ConcreteImplementationService : IResolvableImplementation
+    internal class ConcreteImplementationService : IResolvable
     {
         public ConcreteImplementationService()
         {

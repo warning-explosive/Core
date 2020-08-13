@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class SingletonImplementation : IResolvableImplementation
+    internal class SingletonImplementation : IResolvable
     {
     }
 }

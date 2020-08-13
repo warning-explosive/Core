@@ -7,7 +7,8 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 
     [Lifestyle(EnLifestyle.Transient)]
     [Dependency(typeof(DecorableServiceDecorator2))]
-    internal class DecorableServiceDecorator1 : IDecorableServiceDecorator
+    internal class DecorableServiceDecorator1 : IDecorableService,
+                                                IDecorableServiceDecorator
     {
         public DecorableServiceDecorator1(IDecorableService decoratorType)
         {

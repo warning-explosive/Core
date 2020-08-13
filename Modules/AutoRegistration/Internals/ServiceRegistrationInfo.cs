@@ -26,7 +26,5 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         internal Type ServiceType { get; }
 
         internal Lifestyle Lifestyle { get; }
-
-        internal Type? Attribute { get; set; }
     }
 }

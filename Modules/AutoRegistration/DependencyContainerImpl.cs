@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// Don't use it like ServiceLocator!
     /// </summary>
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
-    [Unregistered]
+    [ManualRegistration]
     internal class DependencyContainerImpl : IRegistrationContainer
     {
         private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
 
-            var servicesProvider = new AutoWiringServicesProvider(_container, typeProvider);
+            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
             RegisterSingletons(_container, this, typeProvider, servicesProvider);
 
@@ -236,12 +236,12 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private static void RegisterAutoWired(Container container,
                                               ITypeProvider typeProvider,
-                                              IAutoWiringServicesProvider autoWiringServicesProvider)
+                                              IAutoWiringServicesProvider servicesProvider)
         {
             /*
              * [I] - Single implementation service
              */
-            var resolvableRegistrationInfos = autoWiringServicesProvider
+            var resolvableRegistrationInfos = servicesProvider
                                              .Resolvable()
                                              .GetComponents(container, typeProvider, false);
             container.RegisterWithOpenGenericFallBack(resolvableRegistrationInfos);
@@ -249,7 +249,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             /*
              * [II] - External service single implementation
              */
-            var externalServicesRegistrationInfos = autoWiringServicesProvider
+            var externalServicesRegistrationInfos = servicesProvider
                                                    .External()
                                                    .GetComponents(container, typeProvider, false);
             container.RegisterWithOpenGenericFallBack(externalServicesRegistrationInfos);
@@ -257,7 +257,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             /*
              * [III] - Collection resolvable service
              */
-            var collectionResolvableRegistrationInfos = autoWiringServicesProvider
+            var collectionResolvableRegistrationInfos = servicesProvider
                                                        .Collections()
                                                        .GetComponents(container, typeProvider, false);
 
@@ -268,8 +268,15 @@ namespace SpaceEngineers.Core.AutoRegistration
             /*
              * [IV] - Decorators
              */
-            var decorators = Decorators(typeProvider, typeof(IDecorator<>)).GetDecoratorInfo(typeof(IDecorator<>));
-            var conditionalDecorators = Decorators(typeProvider, typeof(IConditionalDecorator<,>)).GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
+            var decorators = servicesProvider
+                            .Decorators()
+                            .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
+                            .GetDecoratorInfo(typeof(IDecorator<>));
+
+            var conditionalDecorators = servicesProvider
+                                       .Decorators()
+                                       .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
+                                       .GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
 
             decorators.Concat(conditionalDecorators)
                       .OrderByDependencyAttribute(z => z.ImplementationType)
@@ -278,8 +285,15 @@ namespace SpaceEngineers.Core.AutoRegistration
             /*
              * [V] - Collection decorators
              */
-            var collectionDecorators = Decorators(typeProvider, typeof(ICollectionDecorator<>)).GetDecoratorInfo(typeof(ICollectionDecorator<>));
-            var collectionConditionalDecorators = Decorators(typeProvider, typeof(ICollectionConditionalDecorator<,>)).GetConditionalDecoratorInfo(typeof(ICollectionConditionalDecorator<,>));
+            var collectionDecorators = servicesProvider
+                                      .CollectionDecorators()
+                                      .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
+                                      .GetDecoratorInfo(typeof(ICollectionDecorator<>));
+
+            var collectionConditionalDecorators = servicesProvider
+                                                 .CollectionDecorators()
+                                                 .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
+                                                 .GetConditionalDecoratorInfo(typeof(IConditionalCollectionDecorator<,>));
 
             collectionDecorators.Concat(collectionConditionalDecorators)
                                 .OrderByDependencyAttribute(z => z.ImplementationType)
@@ -288,19 +302,10 @@ namespace SpaceEngineers.Core.AutoRegistration
             /*
              * [VI] - Concrete Implementations
              */
-            var resolvableImplementations = autoWiringServicesProvider
+            var resolvableImplementations = servicesProvider
                                            .Implementations()
                                            .GetImplementationComponents(false);
             container.RegisterImplementations(resolvableImplementations);
-        }
-
-        private static IEnumerable<Type> Decorators(ITypeProvider typeProvider, Type decoratorType)
-        {
-            return typeProvider.OurTypes
-                               .Where(t => t.IsClass
-                                        && !t.IsInterface
-                                        && !t.IsAbstract
-                                        && t.IsSubclassOfOpenGeneric(decoratorType));
         }
 
         private static void RegisterVersions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)

@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.Basics.Test
         public ObjectExtensionsDeepCopyTest(ITestOutputHelper output)
             : base(output) { }
 
+        // TODO: Use Benchmark.NET
         [Fact]
         internal void DeepCopyPerfomanceTest()
         {

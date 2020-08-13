@@ -8,7 +8,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
     /// <summary>
     /// Registration container abstraction
     /// </summary>
-    public interface IRegistrationContainer : IDependencyContainer
+    public interface IRegistrationContainer : IDependencyContainer,
+                                              IResolvable
     {
         /// <summary> Register implementation of service </summary>
         /// <param name="serviceType">Service type</param>

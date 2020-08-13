@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
     /// <summary>
     /// Abstraction for dependency container that supports service versions
     /// </summary>
-    public interface IVersionedContainer
+    public interface IVersionedContainer : IResolvable
     {
         /// <summary>
         /// Opens scope with specified service version

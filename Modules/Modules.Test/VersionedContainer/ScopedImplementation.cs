@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Scoped)]
-    internal class ScopedImplementation : IResolvableImplementation
+    internal class ScopedImplementation : IResolvable
     {
     }
 }

@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         private Type CloseByConstraintsInternal(Type type)
         {
             var args = type.GetGenericArguments()
-                           .Select(typeArgument => CloseByConstraints(ReceiveSatisfyingType(typeArgument)))
+                           .Select(typeArgument => CloseByConstraints(ReceiveSatisfyingType(type, typeArgument)))
                            .ToArray();
 
             var closed = type.MakeGenericType(args);
@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                    || type.IsConstructedGenericType;
         }
 
-        private Type ReceiveSatisfyingType(Type typeArgument)
+        private Type ReceiveSatisfyingType(Type genericType, Type typeArgument)
         {
             bool CheckTypeArgument(Type type) => type.FitsForTypeArgument(typeArgument);
 
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
                               ?? typeProvider.AllLoadedTypes
                                              .FirstOrDefault(CheckTypeArgument);
 
-            return satisfyingType.EnsureNotNull($"Satisfying type for type argument {typeArgument} not found");
+            return satisfyingType.EnsureNotNull($"Satisfying type for type argument {typeArgument} in {genericType} not found");
         }
     }
 }

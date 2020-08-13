@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class TransientImplementation : IResolvableImplementation
+    internal class TransientImplementation : IResolvable
     {
     }
 }

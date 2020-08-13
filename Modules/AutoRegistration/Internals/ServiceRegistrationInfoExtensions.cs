@@ -17,7 +17,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             {
                 var versionedServiceType = typeof(IVersioned<>).MakeGenericType(serviceType);
                 var versionedImplementationType = typeof(Versioned<>).MakeGenericType(serviceType);
-                var lifestyle = container.GetRegistration(serviceType).Lifestyle.MapLifestyle();
+                var lifestyle = container.GetRegistration(serviceType)
+                                         .EnsureNotNull($"Container must has registration of {serviceType.FullName}")
+                                         .Lifestyle.MapLifestyle();
                 yield return new ServiceRegistrationInfo(versionedServiceType, versionedImplementationType, lifestyle);
             }
         }

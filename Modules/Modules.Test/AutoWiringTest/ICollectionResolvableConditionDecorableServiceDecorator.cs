@@ -1,7 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    internal interface ICollectionResolvableConditionDecorableServiceDecorator : ICollectionResolvableConditionDecorableService
+    using System;
+    using AutoWiringApi.Abstractions;
+
+    internal interface ICollectionResolvableConditionDecorableServiceDecorator<TAttribute> : IConditionalCollectionDecorator<ICollectionResolvableConditionDecorableService, TAttribute>
+        where TAttribute : Attribute
     {
-        ICollectionResolvableConditionDecorableService Decoratee { get; }
     }
 }

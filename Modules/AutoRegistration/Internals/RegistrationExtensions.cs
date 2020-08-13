@@ -13,8 +13,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     {
         internal static bool ForAutoRegistration(this Type implementationType)
         {
-            return implementationType.GetCustomAttribute<UnregisteredAttribute>(true) == null
-                && implementationType.GetCustomAttribute<ManualRegistrationAttribute>(true) == null;
+            return !implementationType.HasAttribute<UnregisteredAttribute>()
+                && !implementationType.HasAttribute<ManualRegistrationAttribute>();
         }
 
         internal static bool IsVersion(this Type implementationType)
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                 });
         }
 
-        internal static void RegisterDecorator(this Container container, ServiceRegistrationInfo info)
+        internal static void RegisterDecorator(this Container container, DecoratorRegistrationInfo info)
         {
             if (info.Attribute == null)
             {

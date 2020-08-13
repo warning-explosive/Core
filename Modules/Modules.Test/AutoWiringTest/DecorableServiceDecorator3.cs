@@ -5,7 +5,8 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class DecorableServiceDecorator3 : IDecorableServiceDecorator
+    internal class DecorableServiceDecorator3 : IDecorableService,
+                                                IDecorableServiceDecorator
     {
         public DecorableServiceDecorator3(IDecorableService decoratorType)
         {

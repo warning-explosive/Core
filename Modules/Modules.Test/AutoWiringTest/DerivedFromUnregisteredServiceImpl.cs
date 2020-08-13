@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiringApi.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
-    internal class DerivedUnregisteredExternalServiceImpl : BaseUnregisteredExternalServiceImpl
+    internal class DerivedFromUnregisteredServiceImpl : BaseUnregisteredServiceImpl
     {
     }
 }

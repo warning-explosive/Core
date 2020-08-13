@@ -157,13 +157,13 @@
     <Compile Update="AutoWiringTest\BaseUnregisteredServiceImpl.cs">
       <DependentUpon>IUnregisteredService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoWiringTest\DerivedUnregisteredServiceImpl.cs">
+    <Compile Update="AutoWiringTest\DerivedFromUnregisteredServiceImpl.cs">
       <DependentUpon>IUnregisteredService.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoWiringTest\BaseUnregisteredExternalServiceImpl.cs">
       <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoWiringTest\DerivedUnregisteredExternalServiceImpl.cs">
+    <Compile Update="AutoWiringTest\DerivedFromUnregisteredExternalServiceImpl.cs">
       <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoWiringTest\ScopedLifestyleServiceImpl.cs">

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Attributes
     /// <summary>
     /// Component lifestyle attribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class LifestyleAttribute : Attribute
     {
         /// <summary> .ctor </summary>

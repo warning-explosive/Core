@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
@@ -11,38 +12,46 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    [Unregistered]
+    [ManualRegistration]
     internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {
-        private readonly Container _container;
-
         private readonly ITypeProvider _typeProvider;
 
         /// <summary> .cctor </summary>
-        /// <param name="container">Container</param>
         /// <param name="typeProvider">ITypeProvider</param>
-        public AutoWiringServicesProvider(Container container, ITypeProvider typeProvider)
+        public AutoWiringServicesProvider(ITypeProvider typeProvider)
         {
-            _container = container;
             _typeProvider = typeProvider;
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Resolvable()
         {
-            return Services(typeof(IResolvable));
+            return _typeProvider
+                  .OurTypes
+                  .Where(type => type.IsInterface
+                              && typeof(IResolvable).IsAssignableFrom(type)
+                              && type != typeof(IResolvable));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Collections()
         {
-            return Services(typeof(ICollectionResolvable));
+            return _typeProvider
+                  .OurTypes
+                  .Where(type => type.IsInterface
+                              && typeof(ICollectionResolvable).IsAssignableFrom(type)
+                              && type != typeof(ICollectionResolvable));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Implementations()
         {
-            return typeof(IResolvableImplementation).GetTypesToRegister(_container, _typeProvider);
+            return _typeProvider
+                  .OurTypes
+                  .Where(type => type.IsClass
+                              && !type.IsAbstract
+                              && typeof(IResolvable).IsAssignableFrom(type));
         }
 
         /// <inheritdoc />
@@ -72,18 +81,26 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                   .Distinct();
         }
 
-        private Type[] Services(Type serviceType)
+        /// <inheritdoc />
+        public IEnumerable<Type> Decorators()
         {
-            if (!serviceType.IsInterface
-             || serviceType.IsGenericType)
-            {
-                throw new ArgumentException(serviceType.FullName);
-            }
-
             return _typeProvider
                   .OurTypes
-                  .Where(t => t.IsInterface && t.IsContainsInterfaceDeclaration(serviceType)) // TODO: review this approach (use attributes with inheritance=false OR register all derived interfaces)
-                  .ToArray();
+                  .Where(t => t.IsClass
+                           && !t.IsInterface
+                           && !t.IsAbstract
+                           && t.IsSubclassOfOpenGeneric(typeof(IDecorator<>)));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> CollectionDecorators()
+        {
+            return _typeProvider
+                  .OurTypes
+                  .Where(t => t.IsClass
+                           && !t.IsInterface
+                           && !t.IsAbstract
+                           && t.IsSubclassOfOpenGeneric(typeof(ICollectionDecorator<>)));
         }
     }
 }

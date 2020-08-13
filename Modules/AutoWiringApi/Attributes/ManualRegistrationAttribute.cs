@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Attributes
     /// Manual registration attribute
     /// For components that must be registered by hand // TODO: verify it on after registration phase
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class ManualRegistrationAttribute : Attribute
     {
     }

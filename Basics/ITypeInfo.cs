@@ -37,5 +37,10 @@ namespace SpaceEngineers.Core.Basics
         /// OriginalType GenericInterfaceDefinitions
         /// </summary>
         IReadOnlyCollection<Type> GenericInterfaceDefinitions { get; }
+
+        /// <summary>
+        /// Attributes
+        /// </summary>
+        IReadOnlyCollection<Attribute> Attributes { get; }
     }
 }

@@ -11,6 +11,20 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage.Get(type).Attributes
+                                  .OfType<TAttribute>()
+                                  .Any();
+        }
+
         /// <summary> Order collection by DependencyAttribute </summary>
         /// <param name="source">Unordered source collection</param>
         /// <param name="accessor">Type accessor</param>
@@ -132,7 +146,30 @@ namespace SpaceEngineers.Core.Basics
                         .Concat(TypeInfoStorage.Get(source).BaseTypes)
                         .Concat(source.GetInterfaces())
                         .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                        .Select(type => type.GetGenericArguments()[typeArgumentAt]);
+                        .Select(type => type.GetGenericArguments()[typeArgumentAt])
+                        .Distinct();
+        }
+
+        /// <summary>
+        /// Extract all type-arguments from derived class of open-generic type
+        /// </summary>
+        /// <param name="source">Source type for extraction</param>
+        /// <param name="openGeneric">Open-generic which derived</param>
+        /// <returns>Collection of type arguments at specified index.</returns>
+        public static IEnumerable<Type[]> ExtractGenericArguments(this Type source, Type openGeneric)
+        {
+            if (!openGeneric.IsGenericTypeDefinition)
+            {
+                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+            }
+
+            return !IsSubclassOfOpenGeneric(source, openGeneric)
+                       ? Enumerable.Empty<Type[]>()
+                       : new[] { source }
+                        .Concat(TypeInfoStorage.Get(source).BaseTypes)
+                        .Concat(source.GetInterfaces())
+                        .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
+                        .Select(type => type.GetGenericArguments().ToArray());
         }
 
         /// <summary>

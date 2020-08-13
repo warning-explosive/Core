@@ -7,7 +7,8 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 
     [Lifestyle(EnLifestyle.Transient)]
     [Dependency(typeof(OpenGenericDecorableServiceDecorator3<>))]
-    internal class OpenGenericDecorableServiceDecorator2<T> : IOpenGenericDecorableServiceDecorator<T>
+    internal class OpenGenericDecorableServiceDecorator2<T> : IOpenGenericDecorableService<T>,
+                                                              IOpenGenericDecorableServiceDecorator<T>
     {
         public OpenGenericDecorableServiceDecorator2(IOpenGenericDecorableService<T> decorateee)
         {

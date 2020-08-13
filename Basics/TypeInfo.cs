@@ -18,6 +18,7 @@ namespace SpaceEngineers.Core.Basics
             GenericTypeDefinitions = ExtractGenericTypeDefinitions(type).ToList();
             DeclaredInterfaces = ExtractDeclaredInterfaces(type).ToList();
             GenericInterfaceDefinitions = ExtractGenericInterfaceDefinitions(type).ToList();
+            Attributes = ExtractAttributes(type).ToList();
         }
 
         public Type OriginalType { get; }
@@ -31,6 +32,8 @@ namespace SpaceEngineers.Core.Basics
         public IReadOnlyCollection<Type> DeclaredInterfaces { get; }
 
         public IReadOnlyCollection<Type> GenericInterfaceDefinitions { get; }
+
+        public IReadOnlyCollection<Attribute> Attributes { get; }
 
         private static IEnumerable<Type> ExtractBaseTypes(Type currentType)
         {
@@ -89,6 +92,12 @@ namespace SpaceEngineers.Core.Basics
             {
                 yield return i.GetGenericTypeDefinition();
             }
+        }
+
+        private IEnumerable<Attribute> ExtractAttributes(Type type)
+        {
+            return type.GetCustomAttributes(true)
+                       .OfType<Attribute>();
         }
     }
 }

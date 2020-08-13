@@ -195,12 +195,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             void CheckRecursive(IConditionalDecorableService resolved, Type type)
             {
+                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
                 Assert.True(resolved.GetType() == type);
-                Output.WriteLine(type.Name);
 
                 if (types.TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = (IConditionalDecorableServiceDecorator)resolved;
+                    var decorator = (IDecorator<IConditionalDecorableService>)resolved;
                     CheckRecursive(decorator.Decoratee, nextDecorateeType);
                 }
             }
@@ -234,12 +234,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             void CheckRecursive(ICollectionResolvableConditionDecorableService resolved, int i, Type type)
             {
+                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
                 Assert.True(resolved.GetType() == type);
-                Output.WriteLine(type.Name);
 
                 if (types[i].TryGetValue(type, out var nextDecorateeType))
                 {
-                    var decorator = (ICollectionResolvableConditionDecorableServiceDecorator)resolved;
+                    var decorator = (ICollectionDecorator<ICollectionResolvableConditionDecorableService>)resolved;
 
                     CheckRecursive(decorator.Decoratee, i, nextDecorateeType);
                 }
@@ -277,14 +277,14 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.NotNull(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
             Assert.Null(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
 
-            Assert.Null(typeof(DerivedUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.NotNull(typeof(DerivedUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+            Assert.Null(typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.NotNull(typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
 
-            Assert.True(typeof(DerivedUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
-            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedUnregisteredServiceImpl)));
+            Assert.True(typeof(DerivedFromUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
+            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredServiceImpl)));
             Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(BaseUnregisteredServiceImpl)));
 
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IUnregisteredService>());
+            Assert.Equal(typeof(DerivedFromUnregisteredServiceImpl), DependencyContainer.Resolve<IUnregisteredService>().GetType());
         }
 
         [Fact]
@@ -293,14 +293,14 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.NotNull(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
             Assert.Null(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
 
-            Assert.Null(typeof(DerivedUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.NotNull(typeof(DerivedUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+            Assert.Null(typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
+            Assert.NotNull(typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
 
-            Assert.True(typeof(DerivedUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
-            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedUnregisteredExternalServiceImpl)));
+            Assert.True(typeof(DerivedFromUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
+            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedFromUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
 
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IUnregisteredExternalService>());
+            Assert.Equal(typeof(DerivedFromUnregisteredExternalServiceImpl), DependencyContainer.Resolve<IUnregisteredExternalService>().GetType());
         }
 
         [Theory]
@@ -309,15 +309,6 @@ namespace SpaceEngineers.Core.Modules.Test
         [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
         internal void BoundedContainerTest(bool mode)
         {
-            var versionFactory = new Func<IVersionFor<ITypeProvider>>(
-                () =>
-                {
-                    var mock = new Mock<IVersionFor<ITypeProvider>>();
-                    mock.Setup(z => z.Version.OurTypes)
-                        .Returns(() => new[] { typeof(TestYamlSettings) });
-                    return mock.Object;
-                });
-
             var settingsContainer = AutoRegistration.DependencyContainer
                                                     .CreateBounded(new[]
                                                                    {
@@ -325,6 +316,25 @@ namespace SpaceEngineers.Core.Modules.Test
                                                                        typeof(ICompositionInfoExtractor).Assembly,
                                                                    },
                                                                    new DependencyContainerOptions());
+
+            var versionFactory = new Func<IVersionFor<ITypeProvider>>(
+                () =>
+                {
+                    var mock = new Mock<IVersionFor<ITypeProvider>>(MockBehavior.Loose);
+                    mock.Setup(z => z.Version.OurTypes)
+                        .Returns(() => settingsContainer
+                                      .Resolve<ITypeProvider>()
+                                      .OurTypes
+                                      .Concat(new[]
+                                              {
+                                                  typeof(TestYamlSettings),
+                                                  typeof(TestJsonSettings)
+                                              })
+                                      .ToList());
+                    mock.Setup(z => z.Version.AllLoadedTypes)
+                        .Returns(() => settingsContainer.Resolve<ITypeProvider>().AllLoadedTypes);
+                    return mock.Object;
+                });
 
             DependencyInfo[] compositionInfo;
 
@@ -373,6 +383,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         private class TestYamlSettings : IYamlSettings
+        {
+        }
+
+        private class TestJsonSettings : IJsonSettings
         {
         }
     }

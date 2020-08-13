@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
     /// Represents abstraction for services that support versions
     /// </summary>
     /// <typeparam name="TService">TService type-argument</typeparam>
-    public interface IVersioned<TService>
+    public interface IVersioned<TService> : IResolvable
         where TService : class
     {
         /// <summary>

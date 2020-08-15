@@ -51,11 +51,14 @@
     <Compile Update="Abstractions\IFileSystemSettings.cs">
       <DependentUpon>ISettings.cs</DependentUpon>
     </Compile>
-    <Compile Update="Internals\YamlFormatter.cs">
+    <Compile Update="Internals\YamlSettingsManager.cs">
       <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="Internals\JsonFormatter.cs">
+    <Compile Update="Internals\JsonSettingsManager.cs">
       <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\EnvironmentSettings.cs">
+      <DependentUpon>ISettings.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

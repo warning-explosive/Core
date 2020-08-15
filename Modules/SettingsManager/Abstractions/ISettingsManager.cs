@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.SettingsManager.Abstractions
         /// <summary>
         /// Get ISettings value
         /// </summary>
-        /// <returns>Get operation with ISettings value result</returns>
+        /// <returns>Get operation with ISettings value as result</returns>
         Task<TSettings> Get();
 
         /// <summary>

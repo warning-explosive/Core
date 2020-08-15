@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using YamlDotNet.Serialization.TypeResolvers;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class YamlFormatter<TSettings> : FileSystemFormatterBase<TSettings>
+    internal class YamlSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
         where TSettings : class, IYamlSettings
     {
         private readonly ISerializer _serializer =

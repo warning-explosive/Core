@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.Basics
         public static Assembly[] AllFromCurrentDomain()
         {
             return AppDomain.CurrentDomain
-                            .EnsureNotNull(() => new InvalidOperationException($"{nameof(AppDomain.CurrentDomain)} is null"))
+                            .EnsureNotNull($"{nameof(AppDomain.CurrentDomain)} is null")
                             .GetAssemblies()
                             .GroupBy(assembly => assembly.GetName().Name)
                             .SelectMany(RemoveDuplicates)

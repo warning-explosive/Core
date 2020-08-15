@@ -16,8 +16,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Basics;
     using CompositionInfoExtractor;
+    using Core.SettingsManager.Abstractions;
     using Moq;
-    using SettingsManager.Abstractions;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;

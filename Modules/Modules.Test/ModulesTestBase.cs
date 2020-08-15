@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using Abstractions;
@@ -8,6 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Test;
+    using Core.SettingsManager;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -17,22 +19,35 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <exception cref="InvalidOperationException">AppDomain.CurrentDomain == null</exception>
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            var options = new DependencyContainerOptions
-                          {
-                              RegistrationCallback = Registration
-                          };
-
-            DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
+            SetupFileSystemSettingsDirectory();
+            DependencyContainer = SetupDependencyContainer();
         }
 
         /// <summary>
         /// DependencyContainer
         /// </summary>
         protected IDependencyContainer DependencyContainer { get; }
+
+        private static void SetupFileSystemSettingsDirectory()
+        {
+            var fileSystemSettingsDirectory = Path.Combine(SolutionExtensions.ProjectDirectory(), "Settings");
+            Environment.SetEnvironmentVariable(Constants.FileSystemSettingsDirectory,
+                                               fileSystemSettingsDirectory,
+                                               EnvironmentVariableTarget.Process);
+        }
+
+        private IDependencyContainer SetupDependencyContainer()
+        {
+            var options = new DependencyContainerOptions
+                          {
+                              RegistrationCallback = Registration
+                          };
+
+            return AutoRegistration.DependencyContainer.Create(options);
+        }
 
         private void Registration(IRegistrationContainer container)
         {

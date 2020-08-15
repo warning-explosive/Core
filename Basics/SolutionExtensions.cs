@@ -21,26 +21,18 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="DirectoryNotFoundException">If solution directory not found or depth in 42 nested directories exceeded</exception>
         public static string SolutionDirectory()
         {
-            var assembly = Assembly.GetExecutingAssembly()
-                                   .EnsureNotNull("ExecutingAssembly must exists");
+            return FindDirectory("*.sln");
+        }
 
-            var solutionDirectory = new FileInfo(assembly.Location).Directory.FullName;
-
-            for (var i = 0;
-                 !SolutionFileExist(solutionDirectory) && i < 42;
-                 ++i)
-            {
-                solutionDirectory = Path.Combine(solutionDirectory, "..");
-            }
-
-            if (!SolutionFileExist(solutionDirectory))
-            {
-                throw new DirectoryNotFoundException("SolutionDirectory not found");
-            }
-
-            return new DirectoryInfo(solutionDirectory).FullName;
-
-            bool SolutionFileExist(string dir) => Directory.GetFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Any();
+        /// <summary>
+        /// Find project directory
+        /// Has valid behavior only in test environment where we have full solution structure on disk
+        /// </summary>
+        /// <returns>Project directory path</returns>
+        /// <exception cref="DirectoryNotFoundException">If project directory not found or depth in 42 nested directories exceeded</exception>
+        public static string ProjectDirectory()
+        {
+            return FindDirectory("*.csproj");
         }
 
         /// <summary>
@@ -82,6 +74,30 @@ namespace SpaceEngineers.Core.Basics
             {
                 return string.Join(Environment.NewLine, source.Select(e => e.Value));
             }
+        }
+
+        private static string FindDirectory(string pattern)
+        {
+            var assembly = Assembly.GetExecutingAssembly()
+                                   .EnsureNotNull("ExecutingAssembly must exists");
+
+            var directory = new FileInfo(assembly.Location).Directory.FullName;
+
+            for (var i = 0;
+                 !SolutionFileExist(directory) && i < 42;
+                 ++i)
+            {
+                directory = Path.Combine(directory, "..");
+            }
+
+            if (!SolutionFileExist(directory))
+            {
+                throw new DirectoryNotFoundException($"Directory with {pattern} not found");
+            }
+
+            return new DirectoryInfo(directory).FullName;
+
+            bool SolutionFileExist(string dir) => Directory.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly).Any();
         }
     }
 }

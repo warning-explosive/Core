@@ -7,13 +7,23 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using Abstractions;
     using Basics;
 
-    internal abstract class FileSystemFormatterBase<TSettings> : IAsyncFormatter<TSettings>
+    internal abstract class FileSystemSettingsManagerBase<TSettings> : ISettingsManager<TSettings>
         where TSettings : class, IFileSystemSettings
     {
         private readonly Encoding _encoding = new UTF8Encoding(true);
+        private readonly string _folder;
 
-        // TODO: calculate settings directory path correctly - we can deploy only build artifacts
-        private readonly string _folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Settings");
+        protected FileSystemSettingsManagerBase()
+        {
+            var dir = new EnvironmentSettingsManager().Get(Constants.FileSystemSettingsDirectory).Value;
+
+            if (!Directory.Exists(dir))
+            {
+                throw new InvalidOperationException($"FileSystemSettingsDirectory: {dir} not exists");
+            }
+
+            _folder = dir;
+        }
 
         /// <summary>
         /// Extension of file
@@ -26,7 +36,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
         private Func<Type, string> SettingsPath => type => Path.ChangeExtension(Path.Combine(_folder, type.Name), Extension);
 
         /// <inheritdoc />
-        public async Task Serialize(TSettings value)
+        public async Task Set(TSettings value)
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
             {
@@ -37,7 +47,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
         }
 
         /// <inheritdoc />
-        public async Task<TSettings> Deserialize()
+        public async Task<TSettings> Get()
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.None))
             {

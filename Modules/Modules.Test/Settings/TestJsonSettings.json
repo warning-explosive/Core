@@ -4,7 +4,7 @@
   "String": "Hello world!",
   "Date": "0001-01-01T00:00:00",
   "Reference": {
-    "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+    "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManager.TestYamlSettings",
     "Int": 1,
     "Decimal": 42.42,
     "String": "Hello world!",
@@ -15,7 +15,7 @@
   },
   "Collection": [
     {
-      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManager.TestYamlSettings",
       "Int": 1,
       "Decimal": 42.42,
       "String": "Hello world!",
@@ -27,7 +27,7 @@
   ],
   "Dictionary": {
     "First": {
-      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManagerTest+TestYamlSettings",
+      "$type": "SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SettingsManager.TestYamlSettings",
       "Int": 1,
       "Decimal": 42.42,
       "String": "Hello world!",

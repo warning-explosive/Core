@@ -12,12 +12,12 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using NewtonSoft.Json.Abstractions;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class JsonFormatter<TSettings> : FileSystemFormatterBase<TSettings>
+    internal class JsonSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
         where TSettings : class, IJsonSettings
     {
         private readonly IJsonSerializer _jsonSerializer;
 
-        public JsonFormatter(IJsonSerializer jsonSerializer)
+        public JsonSettingsManager(IJsonSerializer jsonSerializer)
         {
             _jsonSerializer = jsonSerializer;
         }

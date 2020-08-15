@@ -256,5 +256,11 @@
     <Compile Update="AutoWiringTest\RegisteredByDelegateImpl.cs">
       <DependentUpon>IRegisteredByDelegate.cs</DependentUpon>
     </Compile>
+    <Compile Update="SettingsManager\TestJsonSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SettingsManager\TestYamlSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

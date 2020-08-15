@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Threading.Tasks;
     using Basics;
+    using Core.SettingsManager.Abstractions;
     using GenericEndpoint.Settings;
-    using SettingsManager.Abstractions;
     using Xunit;
     using Xunit.Abstractions;
 

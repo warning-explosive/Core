@@ -32,8 +32,8 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary> .ctor </summary>
         /// <param name="typeProvider">ITypeProvider</param>
         /// <param name="options">DependencyContainerOptions</param>
-        internal DependencyContainerImpl(ITypeProvider typeProvider,
-                                         DependencyContainerOptions options)
+        public DependencyContainerImpl(ITypeProvider typeProvider,
+                                       DependencyContainerOptions options)
         {
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
@@ -49,6 +49,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             RegisterVersions(_container, typeProvider, servicesProvider);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
+            _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
         }
 
         #region IRegistrationContainer
@@ -212,6 +213,8 @@ namespace SpaceEngineers.Core.AutoRegistration
                            ResolveUnregisteredConcreteTypes = false,
                            AllowOverridingRegistrations = false,
                            SuppressLifestyleMismatchVerification = false,
+                           UseStrictLifestyleMismatchBehavior = true,
+                           EnableAutoVerification = true
                        }
                    };
         }
@@ -221,12 +224,12 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                ITypeProvider typeProvider,
                                                IAutoWiringServicesProvider servicesProvider)
         {
-            container.RegisterSingleton<IRegistrationContainer>(() => dependencyContainer);
-            container.RegisterSingleton<IDependencyContainer>(() => dependencyContainer);
-            container.RegisterSingleton<IScopedContainer>(() => dependencyContainer);
-            container.RegisterSingleton<IVersionedContainer>(() => dependencyContainer);
-            container.RegisterSingleton(() => typeProvider);
-            container.RegisterSingleton(() => servicesProvider);
+            container.RegisterInstance<IRegistrationContainer>(dependencyContainer);
+            container.RegisterInstance<IDependencyContainer>(dependencyContainer);
+            container.RegisterInstance<IScopedContainer>(dependencyContainer);
+            container.RegisterInstance<IVersionedContainer>(dependencyContainer);
+            container.RegisterInstance<ITypeProvider>(typeProvider);
+            container.RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
         }
 
         private static void RegisterExternalDependencies(IRegistrationContainer container, Action<IRegistrationContainer>? registrationCallback)

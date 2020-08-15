@@ -44,7 +44,12 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            var typeProvider = new ContainerDependentTypeProvider(assemblies, RootAssemblies);
+            var supplemented = new[] { typeof(DependencyContainer).Assembly }
+                              .Concat(RootAssemblies)
+                              .Concat(assemblies)
+                              .ToArray();
+
+            var typeProvider = new ContainerDependentTypeProvider(supplemented, RootAssemblies);
 
             var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
 

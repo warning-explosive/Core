@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LifestyleAttributeCodeFixProvider))]
     public class LifestyleAttributeCodeFixProvider : CodeFixProvider
     {
-        private const string Title = "Mark with LifestyleAttribute";
+        private const string Title = "Mark with " + nameof(LifestyleAttribute);
         private const string EnLifestyleValue = "ChooseLifestyle";
 
         /// <inheritdoc />

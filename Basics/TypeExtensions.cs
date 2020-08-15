@@ -5,12 +5,34 @@ namespace SpaceEngineers.Core.Basics
     using System.Linq;
     using System.Reflection;
     using Attributes;
+    using Exceptions;
 
     /// <summary>
     /// System.Type extensions methods
     /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static TAttribute GetAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage.Get(type).Attributes
+                                  .OfType<TAttribute>()
+                                  .InformativeSingle(Amb);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
         /// <summary>
         /// Does the specified type has an attribute
         /// </summary>

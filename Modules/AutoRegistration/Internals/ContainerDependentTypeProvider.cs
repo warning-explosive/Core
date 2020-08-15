@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Basics;
     using Basics.EqualityComparers;
 
-    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     internal class ContainerDependentTypeProvider : ITypeProvider
     {

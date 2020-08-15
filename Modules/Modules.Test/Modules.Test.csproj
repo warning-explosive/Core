@@ -250,5 +250,11 @@
     <Compile Update="DependencyContainerDependenciesTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoWiringApiTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\RegisteredByDelegateImpl.cs">
+      <DependentUpon>IRegisteredByDelegate.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

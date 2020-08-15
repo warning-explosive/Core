@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Basics
             {
                 result = _clientFunction.Invoke();
             }
-            catch (Exception ex) when (ExecutionExtensions.CanBeCatched(ex.RealException()))
+            catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
             {
                 var realException = ex.RealException();
                 var handled = false;

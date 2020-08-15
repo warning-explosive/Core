@@ -50,11 +50,11 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Can be exception catched or not
+        /// Can be exception caught or not
         /// </summary>
         /// <param name="exception">Exception</param>
-        /// <returns>Can be exception catched or not sign</returns>
-        internal static bool CanBeCatched(Exception exception)
+        /// <returns>Can be exception caught or not sign</returns>
+        internal static bool CanBeCaught(Exception exception)
         {
             return !ExceptionTypesForSkip.Contains(exception.GetType());
         }

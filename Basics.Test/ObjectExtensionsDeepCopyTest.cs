@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
         // TODO: Use Benchmark.NET
         [Fact]
-        internal void DeepCopyPerfomanceTest()
+        internal void DeepCopyPerformanceTest()
         {
             var original = InitInstanceOfTestReferenceTypeWithOutTypes();
 

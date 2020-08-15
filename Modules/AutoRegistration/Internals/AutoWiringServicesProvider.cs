@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using SimpleInjector;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {

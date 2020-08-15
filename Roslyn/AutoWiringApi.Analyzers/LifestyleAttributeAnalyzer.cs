@@ -21,10 +21,10 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
         public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override string Title { get; } = "Concrete component must have LifestyleAttribute";
+        public override string Title { get; } = $"Concrete component must have {nameof(LifestyleAttribute)}";
 
         /// <inheritdoc />
-        public override string Message { get; } = "Mark component type by LifestyleAttribute and select its lifestyle";
+        public override string Message { get; } = $"Mark component type by {nameof(LifestyleAttribute)} and select its lifestyle";
 
         /// <inheritdoc />
         public override string Category { get; } = "DI Configuration";

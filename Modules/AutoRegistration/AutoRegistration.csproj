@@ -40,4 +40,21 @@
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Internals\ManualRegistrationTypesMustBeRegistered.cs">
+      <DependentUpon>AttributesVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\UnregisteredTypesMustBeUnregistered.cs">
+      <DependentUpon>AttributesVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\VersionForDependency.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\AttributesVerifierBase.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\MustNotHaveLifestyleAttribute.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

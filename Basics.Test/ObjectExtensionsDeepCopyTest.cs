@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Basics.Test
     using System.Reflection;
     using System.Runtime.Serialization;
     using Basics;
+    using DeepCopy;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -21,46 +22,6 @@ namespace SpaceEngineers.Core.Basics.Test
         /// <param name="output">ITestOutputHelper</param>
         public ObjectExtensionsDeepCopyTest(ITestOutputHelper output)
             : base(output) { }
-
-        // TODO: Use Benchmark.NET
-        [Fact]
-        internal void DeepCopyPerformanceTest()
-        {
-            var original = InitInstanceOfTestReferenceTypeWithOutTypes();
-
-            var sw1 = new Stopwatch();
-            var sw2 = new Stopwatch();
-
-            void SingleBatch()
-            {
-                sw1.Start();
-                var cloneBySerialization = original.DeepCopyBySerialization();
-                sw1.Stop();
-
-                Output.WriteLine("BySerialization");
-                Output.WriteLine(sw1.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
-                Output.WriteLine("=======");
-
-                sw2.Start();
-                var cloneByReflection = original.DeepCopy();
-                sw2.Stop();
-
-                Output.WriteLine("ByReflection");
-                Output.WriteLine(sw2.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
-                Output.WriteLine("=======");
-
-                AssertTestReferenceTypeWithOutTypes(original, cloneBySerialization, true);
-                AssertTestReferenceTypeWithOutTypes(original, cloneByReflection, false);
-
-                Output.WriteLine($"Profit = {sw1.ElapsedTicks / sw2.ElapsedTicks}");
-                Assert.True(sw1.ElapsedTicks > sw2.ElapsedTicks);
-            }
-
-            for (int i = 1; i <= 10; ++i)
-            {
-                SingleBatch();
-            }
-        }
 
         [Fact]
         internal void DeepCopyObjectTest()
@@ -85,7 +46,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void DeepCopyTest()
         {
-            var original = InitInstanceOfTestReferenceTypeWithTypes();
+            var original = TestReferenceWithSystemTypes.Create();
             var clone = original.DeepCopy();
 
             AssertTestReferenceTypeWithTypes(original, clone, false);
@@ -94,7 +55,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void DeepCopyBySerializationThrowsTest()
         {
-            var original = InitInstanceOfTestReferenceTypeWithTypes();
+            var original = TestReferenceWithSystemTypes.Create();
 
             Assert.Throws<SerializationException>(() => original.DeepCopyBySerialization());
         }
@@ -102,14 +63,14 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void DeepCopyBySerializationTest()
         {
-            var original = InitInstanceOfTestReferenceTypeWithOutTypes();
+            var original = TestReferenceWithoutSystemTypes.CreateOrInit();
             var clone = original.DeepCopyBySerialization();
 
             AssertTestReferenceTypeWithOutTypes(original, clone, true);
         }
 
-        private static void AssertTestReferenceTypeWithTypes(TestReferenceTypeWithTypes original,
-                                                             TestReferenceTypeWithTypes clone,
+        private static void AssertTestReferenceTypeWithTypes(TestReferenceWithSystemTypes original,
+                                                             TestReferenceWithSystemTypes clone,
                                                              bool bySerialization)
         {
             /*
@@ -131,8 +92,8 @@ namespace SpaceEngineers.Core.Basics.Test
             AssertTestReferenceTypeWithOutTypes(original, clone, bySerialization);
         }
 
-        private static void AssertTestReferenceTypeWithOutTypes(TestReferenceTypeWithOutTypes original,
-                                                                TestReferenceTypeWithOutTypes clone,
+        private static void AssertTestReferenceTypeWithOutTypes(TestReferenceWithoutSystemTypes original,
+                                                                TestReferenceWithoutSystemTypes clone,
                                                                 bool bySerialization)
         {
             /*
@@ -183,10 +144,10 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.False(original.CyclicReference?.Equals(clone.CyclicReference));
             Assert.False(ReferenceEquals(original.CyclicReference, clone.CyclicReference));
 
-            Assert.True(original.Equals(TestReferenceTypeWithOutTypes.StaticCyclicReference));
-            Assert.True(ReferenceEquals(original, TestReferenceTypeWithOutTypes.StaticCyclicReference));
-            Assert.False(clone.Equals(TestReferenceTypeWithOutTypes.StaticCyclicReference));
-            Assert.False(ReferenceEquals(clone, TestReferenceTypeWithOutTypes.StaticCyclicReference));
+            Assert.True(original.Equals(TestReferenceWithoutSystemTypes.StaticCyclicReference));
+            Assert.True(ReferenceEquals(original, TestReferenceWithoutSystemTypes.StaticCyclicReference));
+            Assert.False(clone.Equals(TestReferenceWithoutSystemTypes.StaticCyclicReference));
+            Assert.False(ReferenceEquals(clone, TestReferenceWithoutSystemTypes.StaticCyclicReference));
 
             /*
              * Nullable
@@ -262,103 +223,6 @@ namespace SpaceEngineers.Core.Basics.Test
             }
 
             return true;
-        }
-
-        private static TestReferenceTypeWithOutTypes InitInstanceOfTestReferenceTypeWithOutTypes(TestReferenceTypeWithOutTypes? instance = null)
-        {
-            instance ??= new TestReferenceTypeWithOutTypes();
-
-            instance.String = "PublicString123#'!";
-            instance.Int = 100;
-            instance.TestEnum = TestEnum.Value;
-            instance.ValueTypeArray = new[] { 1, 2, 3, 4, 5 };
-            instance.ValueTypeCollection = new List<int> { 1, 2, 3, 4, 5 };
-            instance.ReferenceTypeArray = new[] { new object(), new object(), new object() };
-            instance.ReferenceTypeCollection = new[] { new object(), new object(), new object() };
-            instance.ArrayOfNulls = new object?[] { null, null, null };
-            instance.CollectionOfNulls = new List<object?> { null, null, null };
-
-            instance.CyclicReference = instance;
-            TestReferenceTypeWithOutTypes.StaticCyclicReference = instance;
-
-            return instance;
-        }
-
-        private TestReferenceTypeWithTypes InitInstanceOfTestReferenceTypeWithTypes()
-        {
-            var instance = new TestReferenceTypeWithTypes
-                           {
-                               Type = typeof(TestReferenceTypeWithOutTypes),
-                               TypeArray = new[] { typeof(TestReferenceTypeWithOutTypes), typeof(string), typeof(int) },
-                               TypeCollection = new List<Type> { typeof(TestReferenceTypeWithOutTypes), typeof(string), typeof(int) },
-                           };
-
-            InitInstanceOfTestReferenceTypeWithOutTypes(instance);
-
-            return instance;
-        }
-
-        private enum TestEnum
-        {
-            Default = 0,
-            Value = 1,
-        }
-
-        [Serializable]
-        private class TestReferenceTypeWithTypes : TestReferenceTypeWithOutTypes
-        {
-            /*
-             * System.Type
-             */
-            internal Type? Type { get; set; }
-
-            internal Array? TypeArray { get; set; }
-
-            internal ICollection<Type>? TypeCollection { get; set; }
-        }
-
-        [SuppressMessage("Microsoft.NetCore.Analyzers", "CA5362", Justification = "For test reasons")]
-        [SuppressMessage("StyleCop.Analyzers", "SA1204", Justification = "For test reasons")]
-        [Serializable]
-        private class TestReferenceTypeWithOutTypes
-        {
-            /*
-             * String
-             */
-            internal string? String { get; set; }
-
-            /*
-             * ValueType
-             */
-            internal int Int { get; set; }
-
-            internal TestEnum TestEnum { get; set; }
-
-            internal Array? ValueTypeArray { get; set; }
-
-            internal ICollection<int>? ValueTypeCollection { get; set; }
-
-            /*
-             * ReferenceType
-             */
-            internal Array? ReferenceTypeArray { get; set; }
-
-            internal ICollection<object>? ReferenceTypeCollection { get; set; }
-
-            internal TestReferenceTypeWithOutTypes? CyclicReference { get; set; }
-
-            internal static TestReferenceTypeWithOutTypes? StaticCyclicReference { get; set; }
-
-            /*
-             * Nullable
-             */
-            internal int? NullableInt { get; } = null;
-
-            internal TestReferenceTypeWithOutTypes? NullableReference { get; } = null;
-
-            internal Array? ArrayOfNulls { get; set; }
-
-            internal ICollection<object?>? CollectionOfNulls { get; set; }
         }
     }
 }

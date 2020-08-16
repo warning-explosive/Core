@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.Roslyn", "Basics.Roslyn\Basics.Roslyn.csproj", "{6EEA9FC6-FD50-4477-A428-6832160EE569}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basics.Test", "Basics.Test\Basics.Test.csproj", "{6A9E2CC6-F4B7-452B-8461-D0348B294D44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.Benchmark", "Basics.Benchmark\Basics.Benchmark.csproj", "{0A093994-A3E6-479C-BDB0-0560D318D424}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{765D12D8-3CE5-4292-B159-81A6DF3869C7}"
 EndProject
@@ -103,6 +105,10 @@ Global
 		{04956563-F049-4503-974D-7EC8DB246E84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04956563-F049-4503-974D-7EC8DB246E84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04956563-F049-4503-974D-7EC8DB246E84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A093994-A3E6-479C-BDB0-0560D318D424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A093994-A3E6-479C-BDB0-0560D318D424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A093994-A3E6-479C-BDB0-0560D318D424}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A093994-A3E6-479C-BDB0-0560D318D424}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{54B04E29-27FD-4C60-B768-A271E9368D82} = {604765A9-BB32-4E7F-9A49-978799315BA8}
 		{6EEA9FC6-FD50-4477-A428-6832160EE569} = {604765A9-BB32-4E7F-9A49-978799315BA8}
 		{6A9E2CC6-F4B7-452B-8461-D0348B294D44} = {604765A9-BB32-4E7F-9A49-978799315BA8}
+		{0A093994-A3E6-479C-BDB0-0560D318D424} = {604765A9-BB32-4E7F-9A49-978799315BA8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

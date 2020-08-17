@@ -32,8 +32,8 @@ namespace Basics.Benchmark
             Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier}");
 
-            Assert.True(multiplier >= 4);
-            Assert.True(multiplier <= 6);
+            // TODO: remove magic numbers and use adaptive approach
+            Assert.True(multiplier >= 5);
         }
     }
 }

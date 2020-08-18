@@ -215,6 +215,8 @@ test_script:
       $loc = Get-Location
       Show $loc
 
+      $errorState = $LastExitCode
+
       Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
           $fileName = [System.IO.Path]::GetFileName($_)
           $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
@@ -226,11 +228,14 @@ test_script:
               $runTests = "dotnet test '$csprojAbsolutePath' --configuration '$env:CONFIGURATION' --no-build /property:Platform=AnyCPU"
               Show $runTests
               Invoke-Expression $runTests
+              if ($LastExitCode -ne 0) {
+                  $errorState = $LastExitCode
+              }
           }
       }
 
-      if ($LastExitCode -ne 0) {
-          $host.SetShouldExit($LastExitCode)
+      if ($errorState -ne 0) {
+          $host.SetShouldExit($errorState)
       }
 
 #---------------------------------#

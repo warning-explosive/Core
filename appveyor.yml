@@ -165,7 +165,10 @@ after_build:
           Show "Release packages have skipped"
           Show "Configuration: $env:CONFIGURATION"
           Show "Branch: $env:APPVEYOR_REPO_BRANCH"
-          EXIT
+
+          if ($LastExitCode -ne 0) {
+              $host.SetShouldExit($LastExitCode)
+          }
       }
 
       $loc = Get-Location

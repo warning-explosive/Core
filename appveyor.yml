@@ -200,7 +200,7 @@ after_build:
 
 test_script:
   - ps: |
-      $ErrorActionPreference = "Stop"
+      $ErrorActionPreference = "Continue"
 
       Function Show([string]$arg) {
           Write-host $arg -ForegroundColor blue
@@ -227,6 +227,10 @@ test_script:
               Show $runTests
               Invoke-Expression $runTests
           }
+      }
+
+      if ($LastExitCode -ne 0) {
+          $host.SetShouldExit($LastExitCode)
       }
 
 #---------------------------------#

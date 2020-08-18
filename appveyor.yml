@@ -218,22 +218,14 @@ test_script:
       Show $loc
 
       Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
-          $fileName = [System.IO.Path]::GetFileNameWithoutExtension($_)
+          $fileName = [System.IO.Path]::GetFileName($_)
           $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
           $isTest = $fileName -match $test
           $isBenchmark = $fileName -match $benchmark
-          $prefix = ""
-
-          if ($isTest) {
-              $prefix = "SpaceEngineers.Core."
-          }
 
           if ($isTest -or ($isBenchmark -and $isReleaseConfiguration)) {
-              $dllName = $prefix + $fileName
-              $dllRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, "bin", $env:CONFIGURATION, "netcoreapp3.1", $dllName) + ".dll"
-              $dllabsolutePath = [System.IO.Path]::Combine($loc, $dllRelativePath)
-
-              $runTests = "%xunit20%\xunit.console '$dllabsolutePath' -appveyor"
+              $csprojAbsolutePath = [System.IO.Path]::Combine($loc, $projectRelativeDirectory, $fileName)
+              $runTests = "dotnet test '$csprojAbsolutePath' --configuration '$env:CONFIGURATION' --no-build /property:Platform=AnyCPU"
               Show $runTests
               Invoke-Expression $runTests
           }

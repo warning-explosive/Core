@@ -165,34 +165,32 @@ after_build:
           Show "Release packages have skipped"
           Show "Configuration: $env:CONFIGURATION"
           Show "Branch: $env:APPVEYOR_REPO_BRANCH"
-
-          $host.SetShouldExit(0)
-          exit $LASTEXITCODE
       }
+      else {
+          $loc = Get-Location
+          Show $loc
 
-      $loc = Get-Location
-      Show $loc
+          $FullSemVer = gitversion /output json /showvariable FullSemVer
+          Show $FullSemVer
 
-      $FullSemVer = gitversion /output json /showvariable FullSemVer
-      Show $FullSemVer
+          Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
+              $csprojFileName = [System.IO.Path]::GetFileName($_)
+              $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+              $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
 
-      Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
-          $csprojFileName = [System.IO.Path]::GetFileName($_)
-          $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
-          $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
+              $packCmd = "msbuild '$csprojRelativePath' -t:pack -p:version=$FullSemVer -verbosity:minimal"
+              Show $packCmd
+              Invoke-Expression $packCmd
 
-          $packCmd = "msbuild '$csprojRelativePath' -t:pack -p:version=$FullSemVer -verbosity:minimal"
-          Show $packCmd
-          Invoke-Expression $packCmd
+              Get-ChildItem -Path $projectRelativeDirectory -Filter *.nupkg -Recurse -File -Name| ForEach-Object {
+                  $nupkgFileName = [System.IO.Path]::GetFileName($_)
+                  $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+                  $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
 
-          Get-ChildItem -Path $projectRelativeDirectory -Filter *.nupkg -Recurse -File -Name| ForEach-Object {
-              $nupkgFileName = [System.IO.Path]::GetFileName($_)
-              $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
-              $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
-
-              $pushArtifact = "appveyor PushArtifact '$nupkgRelativePath'"
-              Show $pushArtifact
-              Invoke-Expression $pushArtifact
+                  $pushArtifact = "appveyor PushArtifact '$nupkgRelativePath'"
+                  Show $pushArtifact
+                  Invoke-Expression $pushArtifact
+              }
           }
       }
 

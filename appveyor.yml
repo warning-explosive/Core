@@ -166,9 +166,8 @@ after_build:
           Show "Configuration: $env:CONFIGURATION"
           Show "Branch: $env:APPVEYOR_REPO_BRANCH"
 
-          if ($LastExitCode -ne 0) {
-              $host.SetShouldExit($LastExitCode)
-          }
+          $host.SetShouldExit(0)
+          exit $LASTEXITCODE
       }
 
       $loc = Get-Location
@@ -234,7 +233,7 @@ test_script:
               $dllRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, "bin", $env:CONFIGURATION, "netcoreapp3.1", $dllName) + ".dll"
               $dllabsolutePath = [System.IO.Path]::Combine($loc, $dllRelativePath)
 
-              $runTests = "xunit.console '$dllabsolutePath' /appveyor /xml '$artifact'"
+              $runTests = "%xunit20%\xunit.console '$dllabsolutePath' -appveyor"
               Show $runTests
               Invoke-Expression $runTests
           }

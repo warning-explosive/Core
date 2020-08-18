@@ -6,6 +6,8 @@ namespace Basics.Benchmark
     using System.Linq;
     using BenchmarkDotNet.Reports;
     using BenchmarkDotNet.Running;
+    using Microsoft.VisualStudio.TestPlatform.Utilities;
+    using SpaceEngineers.Core.Basics;
 
     internal static class BenchmarkRunnerExtensions
     {
@@ -30,7 +32,7 @@ namespace Basics.Benchmark
             return summary;
         }
 
-        internal static IDictionary<string, decimal> Measures(this Summary summary, string measureColumnName)
+        internal static IDictionary<string, decimal> Measures(this Summary summary, string measureColumnName, Action<string> output)
         {
             var methodColumn = summary.Table.Column("Method");
             var measureColumn = summary.Table.Column(measureColumnName);
@@ -43,6 +45,8 @@ namespace Basics.Benchmark
                                             var measure = rowContent[measureColumn]
                                                          .Split(" ", StringSplitOptions.RemoveEmptyEntries)
                                                          .First();
+
+                                            output($"{rowContent[methodColumn]} -> {measureColumnName} -> {rowContent[measureColumn]} -> {measure}");
 
                                             return decimal.Parse(measure, CultureInfo.InvariantCulture);
                                         });

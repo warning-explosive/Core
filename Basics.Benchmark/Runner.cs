@@ -22,7 +22,7 @@ namespace Basics.Benchmark
         internal void DeepCopyBenchmark()
         {
             var summary = BenchmarkRunnerExtensions.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
-            var measures = summary.Measures("Median");
+            var measures = summary.Measures("Median", Output.WriteLine);
 
             var bySerialization = measures[nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization)];
             var byReflection = measures[nameof(DeepCopyBenchmarkSource.DeepCopyByReflection)];

@@ -22,18 +22,18 @@ namespace Basics.Benchmark
         internal void DeepCopyBenchmark()
         {
             var summary = BenchmarkRunnerExtensions.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
-            var measures = summary.Measures("Median", Output.WriteLine);
+            var measures = summary.Measures("Mean", Output.WriteLine);
 
             var bySerialization = measures[nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization)];
             var byReflection = measures[nameof(DeepCopyBenchmarkSource.DeepCopyByReflection)];
-            var multiplier = (int)(bySerialization / byReflection);
+            var multiplier = bySerialization / byReflection;
 
             Output.WriteLine($"{nameof(bySerialization)}: {bySerialization}");
             Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
-            Output.WriteLine($"{nameof(multiplier)}: {multiplier}");
+            Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
             // TODO: remove magic numbers and use adaptive approach
-            Assert.True(multiplier >= 5);
+            Assert.True(multiplier >= 5m);
         }
     }
 }

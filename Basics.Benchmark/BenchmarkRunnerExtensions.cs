@@ -4,9 +4,11 @@ namespace Basics.Benchmark
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using BenchmarkDotNet.Columns;
     using BenchmarkDotNet.Reports;
     using BenchmarkDotNet.Running;
     using Microsoft.VisualStudio.TestPlatform.Utilities;
+    using Perfolizer.Horology;
     using SpaceEngineers.Core.Basics;
 
     internal static class BenchmarkRunnerExtensions
@@ -34,30 +36,37 @@ namespace Basics.Benchmark
 
         internal static IDictionary<string, decimal> Measures(this Summary summary, string measureColumnName, Action<string> output)
         {
-            var methodColumn = summary.Table.Column("Method");
-            var measureColumn = summary.Table.Column(measureColumnName);
+            var methodColumn = summary.Column("Method");
+            var measureColumn = summary.Column(measureColumnName);
 
-            return summary.Table
-                          .FullContent
-                          .ToDictionary(rowContent => rowContent[methodColumn],
-                                        rowContent =>
-                                        {
-                                            var measure = rowContent[measureColumn]
-                                                         .Split(" ", StringSplitOptions.RemoveEmptyEntries)
-                                                         .First();
+            if (!measureColumn.IsNumeric)
+            {
+                throw new InvalidOperationException($"{measureColumnName} isn't numeric");
+            }
 
-                                            output($"{rowContent[methodColumn]} -> {measureColumnName} -> {rowContent[measureColumn]} -> {measure}");
+            var style = new SummaryStyle(CultureInfo.InvariantCulture,
+                                         false,
+                                         SizeUnit.B,
+                                         TimeUnit.Nanosecond,
+                                         false,
+                                         true);
 
-                                            return decimal.Parse(measure, CultureInfo.InvariantCulture);
-                                        });
+            return summary
+                  .BenchmarksCases
+                  .ToDictionary(benchmarksCase => methodColumn.GetValue(summary, benchmarksCase),
+                                benchmarksCase =>
+                                {
+                                    var measure = measureColumn.GetValue(summary, benchmarksCase, style);
+
+                                    output($"{methodColumn.GetValue(summary, benchmarksCase)} -> {measureColumnName} -> {measure} {TimeUnit.Nanosecond.Name}");
+
+                                    return decimal.Parse(measure, CultureInfo.InvariantCulture);
+                                });
         }
 
-        private static int Column(this SummaryTable summaryTable, string columnName)
+        private static IColumn Column(this Summary summary, string columnName)
         {
-            return summaryTable.FullHeader
-                               .Select((element, i) => (element, i))
-                               .SingleOrDefault(pair => pair.element == columnName)
-                               .i;
+            return summary.GetColumns().Single(col => col.ColumnName == columnName);
         }
     }
 }

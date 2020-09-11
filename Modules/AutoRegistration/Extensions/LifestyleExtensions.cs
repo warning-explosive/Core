@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
     using System.Reflection;

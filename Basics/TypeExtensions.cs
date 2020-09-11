@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Attributes;
     using Exceptions;
 
     /// <summary>
@@ -152,14 +151,14 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Collection of type arguments at specified index.</returns>
         public static IEnumerable<Type> ExtractGenericArgumentsAt(this Type source, Type openGeneric, int typeArgumentAt = 0)
         {
-            if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
-            {
-                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
-            }
-
             if (!openGeneric.IsGenericTypeDefinition)
             {
                 throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+            }
+
+            if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
+            {
+                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
             }
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)

@@ -1,36 +1,36 @@
-namespace SpaceEngineers.Core.CompositionInfoExtractor
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Tracing;
     using System.Globalization;
     using System.Linq;
     using System.Text;
-    using AutoRegistration;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Contexts;
     using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Services;
     using Basics;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CompositionInfoInterpreterImpl : ICompositionInfoInterpreter<string>
+    internal class CompositionInfoInterpreter : ICompositionInfoInterpreter<string>
     {
         /// <inheritdoc />
-        public string Visualize(DependencyInfo[] compositionInfo)
+        public string Visualize(IReadOnlyCollection<IDependencyInfo> compositionInfo)
         {
             var builder = new StringBuilder();
 
-            compositionInfo.Each(dependencyInfo => dependencyInfo.ExecuteAction(di => VisualizeDependency(di, builder)));
+            compositionInfo.Each(dependencyInfo => dependencyInfo.TraverseByGraph(di => VisualizeDependency(di, builder)));
 
             return builder.ToString();
         }
 
-        private static void VisualizeDependency(DependencyInfo nodeInfo, StringBuilder builder)
+        private static void VisualizeDependency(IDependencyInfo nodeInfo, StringBuilder builder)
         {
             builder.AppendLine(DependencyAsString(nodeInfo));
         }
 
-        private static string DependencyAsString(DependencyInfo dependencyInfo)
+        private static string DependencyAsString(IDependencyInfo dependencyInfo)
         {
             return Tabulation((int)dependencyInfo.Depth)
                  + Tags(dependencyInfo)
@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
             return new string('\t', count);
         }
 
-        private static string Tags(DependencyInfo dependencyInfo)
+        private static string Tags(IDependencyInfo dependencyInfo)
         {
             var tags = new List<string>();
 

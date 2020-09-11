@@ -3,25 +3,21 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoRegistration.Internals;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Contexts;
+    using AutoWiringApi.Services;
     using AutoWiringTest;
     using Basics;
-    using CompositionInfoExtractor;
     using Core.SettingsManager.Abstractions;
     using Moq;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
-    using Xunit.Sdk;
     using TypeExtensions = Basics.TypeExtensions;
 
     /// <summary>
@@ -34,6 +30,83 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerTest(ITestOutputHelper output)
             : base(output) { }
 
+        /// <summary>
+        /// ResolveRegisteredServicesTest Data
+        /// </summary>
+        /// <returns>Test data</returns>
+        public static IEnumerable<object[]> ResolveRegisteredServicesTestData()
+        {
+            return new List<object[]>
+            {
+                new object[]
+                {
+                    typeof(IResolvable),
+                    new Func<IDependencyContainer, Type, object>((container, service) => container.Resolve(service))
+                },
+                new object[]
+                {
+                    typeof(ICollectionResolvable),
+                    new Func<IDependencyContainer, Type, object>((container, service) => container.ResolveCollection(service))
+                }
+            };
+        }
+
+        [Theory]
+        [MemberData(nameof(ResolveRegisteredServicesTestData))]
+        internal void ResolveRegisteredServicesTest(Type service, Func<IDependencyContainer, Type, object> resolve)
+        {
+            var servicesProvider = DependencyContainer.Resolve<ITypeProvider>();
+            var receiver = DependencyContainer.Resolve<IGenericTypeProvider>();
+
+            using (DependencyContainer.OpenScope())
+            {
+                servicesProvider
+                   .OurTypes
+                   .Where(type => service.IsAssignableFrom(type) && service != type)
+                   .Each(type =>
+                         {
+                             if (type.HasAttribute<UnregisteredAttribute>())
+                             {
+                                 Assert.Throws<ActivationException>(() => resolve(DependencyContainer, type));
+                             }
+                             else
+                             {
+                                 if (type.IsGenericType
+                                  && !type.IsConstructedGenericType)
+                                 {
+                                     var closedType = receiver.CloseByConstraints(type, TypeArgumentSelector(DependencyContainer));
+                                     resolve(DependencyContainer, closedType);
+                                 }
+                                 else
+                                 {
+                                     resolve(DependencyContainer, type);
+                                 }
+                             }
+                         });
+            }
+
+            Func<TypeArgumentSelectionContext, Type?> TypeArgumentSelector(IDependencyContainer container)
+            {
+                return ctx => FromExistedClosedTypes(container.Resolve<ITypeProvider>(), ctx) ?? FromMatches(ctx);
+            }
+
+            static Type? FromExistedClosedTypes(ITypeProvider typeProvider, TypeArgumentSelectionContext ctx)
+                => typeProvider
+                    .AllLoadedTypes
+                    .FirstOrDefault(t => (!t.IsGenericType || t.IsConstructedGenericType) && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
+                   ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
+                    .FirstOrDefault();
+
+            static Type? FromMatches(TypeArgumentSelectionContext ctx)
+            {
+                var predicate = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>))
+                    ? type => typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable)
+                    : new Func<Type, bool>(type => true);
+
+                return ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
+            }
+        }
+
         [Fact]
         internal void DependencyContainerSelfResolveTest()
         {
@@ -42,10 +115,40 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(ReferenceEquals(container, DependencyContainer));
             Assert.True(container.Equals(DependencyContainer));
 
-            container = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().InjectedDependencyContainer;
+            var versionedContainer = DependencyContainer.Resolve<IVersionedContainer>();
+
+            Assert.True(ReferenceEquals(versionedContainer, DependencyContainer));
+            Assert.True(versionedContainer.Equals(DependencyContainer));
+
+            var registrationContainer = DependencyContainer.Resolve<IRegistrationContainer>();
+
+            Assert.True(ReferenceEquals(registrationContainer, DependencyContainer));
+            Assert.True(registrationContainer.Equals(DependencyContainer));
+
+            var scopedContainer = DependencyContainer.Resolve<IScopedContainer>();
+
+            Assert.True(ReferenceEquals(scopedContainer, DependencyContainer));
+            Assert.True(scopedContainer.Equals(DependencyContainer));
+
+            container = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().DependencyContainer;
 
             Assert.True(ReferenceEquals(container, DependencyContainer));
             Assert.True(container.Equals(DependencyContainer));
+
+            versionedContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().VersionedContainer;
+
+            Assert.True(ReferenceEquals(versionedContainer, DependencyContainer));
+            Assert.True(versionedContainer.Equals(DependencyContainer));
+
+            registrationContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().RegistrationContainer;
+
+            Assert.True(ReferenceEquals(registrationContainer, DependencyContainer));
+            Assert.True(registrationContainer.Equals(DependencyContainer));
+
+            scopedContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().ScopedContainer;
+
+            Assert.True(ReferenceEquals(scopedContainer, DependencyContainer));
+            Assert.True(scopedContainer.Equals(DependencyContainer));
         }
 
         [Fact]
@@ -321,31 +424,28 @@ namespace SpaceEngineers.Core.Modules.Test
                 () =>
                 {
                     var mock = new Mock<IVersionFor<ITypeProvider>>(MockBehavior.Loose);
-                    mock.Setup(z => z.Version.OurTypes)
+                    mock.Setup(z => z.Version.AllLoadedTypes)
                         .Returns(() => settingsContainer
                                       .Resolve<ITypeProvider>()
-                                      .OurTypes
+                                      .AllLoadedTypes
                                       .Concat(new[]
                                               {
                                                   typeof(TestYamlSettings),
                                                   typeof(TestJsonSettings)
                                               })
                                       .ToList());
-                    mock.Setup(z => z.Version.AllLoadedTypes)
-                        .Returns(() => settingsContainer.Resolve<ITypeProvider>().AllLoadedTypes);
                     return mock.Object;
                 });
 
-            DependencyInfo[] compositionInfo;
+            IReadOnlyCollection<IDependencyInfo> compositionInfo;
 
             using (settingsContainer.UseVersion<ITypeProvider>(versionFactory))
             {
                 compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
-                                                   .GetCompositionInfo(mode)
-                                                   .ToArray();
+                                                   .GetCompositionInfo(mode);
             }
 
-            Output.WriteLine($"Total: {compositionInfo.Length}\n");
+            Output.WriteLine($"Total: {compositionInfo.Count}\n");
 
             Output.WriteLine(settingsContainer.Resolve<ICompositionInfoInterpreter<string>>()
                                               .Visualize(compositionInfo));
@@ -362,7 +462,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Assert.True(compositionInfo.All(Satisfies));
 
-            bool Satisfies(DependencyInfo info)
+            bool Satisfies(IDependencyInfo info)
             {
                 return TypeSatisfies(info.ServiceType)
                     && TypeSatisfies(info.ImplementationType)

@@ -1,20 +1,21 @@
-namespace SpaceEngineers.Core.AutoRegistration
+namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using AutoWiringApi.Contexts;
     using AutoWiringApi.Enumerations;
     using Basics;
-    using Internals;
+    using Extensions;
     using SimpleInjector;
 
     /// <summary>
     /// Dependency information about node in objects graph
     /// </summary>
     [DebuggerDisplay("{ServiceType}")]
-    public class DependencyInfo
+    internal class DependencyInfo : IDependencyInfo
     {
         private DependencyInfo(Type serviceType,
                                Type implementationType,
@@ -47,7 +48,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// Component dependencies
         /// </summary>
-        public ICollection<DependencyInfo> Dependencies { get; private set; }
+        public IReadOnlyCollection<IDependencyInfo> Dependencies { get; private set; }
 
         /// <summary>
         /// Component depth in objects graph
@@ -73,11 +74,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Execute action on DependencyInfo object and its dependencies
         /// </summary>
         /// <param name="action">Action</param>
-        public void ExecuteAction(Action<DependencyInfo> action)
+        public void TraverseByGraph(Action<IDependencyInfo> action)
         {
             action(this);
 
-            Dependencies.Each(relationship => relationship.ExecuteAction(action));
+            Dependencies.Each(relationship => relationship.TraverseByGraph(action));
         }
 
         /// <summary>
@@ -87,9 +88,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <param name="visited">Visited nodes</param>
         /// <param name="depth">Current dependency depth in objects graph</param>
         /// <returns>DependencyInfo object</returns>
-        public static DependencyInfo RetrieveDependencyGraph(InstanceProducer dependency,
-                                                             IDictionary<InstanceProducer, DependencyInfo> visited,
-                                                             uint depth)
+        internal static DependencyInfo RetrieveDependencyGraph(InstanceProducer dependency,
+                                                               IDictionary<InstanceProducer, DependencyInfo> visited,
+                                                               uint depth)
         {
             if (visited.TryGetValue(dependency, out var nodeInfo))
             {
@@ -124,7 +125,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// </summary>
         /// <param name="serviceType">Service type</param>
         /// <returns>DependencyInfo object</returns>
-        public static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
+        internal static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
         {
             return new DependencyInfo(serviceType, serviceType, 0)
                    {

@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
@@ -8,11 +7,23 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     [Lifestyle(EnLifestyle.Transient)]
     internal class WithInjectedDependencyContainerImpl : IWithInjectedDependencyContainer
     {
-        public WithInjectedDependencyContainerImpl(IDependencyContainer dependencyContainer)
+        public WithInjectedDependencyContainerImpl(IDependencyContainer dependencyContainer,
+                                                   IVersionedContainer versionedContainer,
+                                                   IRegistrationContainer registrationContainer,
+                                                   IScopedContainer scopedContainer)
         {
-            InjectedDependencyContainer = dependencyContainer;
+            DependencyContainer = dependencyContainer;
+            VersionedContainer = versionedContainer;
+            RegistrationContainer = registrationContainer;
+            ScopedContainer = scopedContainer;
         }
 
-        public IDependencyContainer InjectedDependencyContainer { get; }
+        public IDependencyContainer DependencyContainer { get; }
+
+        public IVersionedContainer VersionedContainer { get; }
+
+        public IRegistrationContainer RegistrationContainer { get; }
+
+        public IScopedContainer ScopedContainer { get; }
     }
 }

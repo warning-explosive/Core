@@ -1,14 +1,12 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Services;
     using Basics;
-    using SimpleInjector;
 
     /// <inheritdoc />
     [ManualRegistration]
@@ -28,8 +26,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             return _typeProvider
                   .OurTypes
-                  .Where(type => type.IsInterface
-                              && typeof(IResolvable).IsAssignableFrom(type)
+                  .Where(type => typeof(IResolvable).IsAssignableFrom(type)
                               && type != typeof(IResolvable));
         }
 
@@ -41,16 +38,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                   .Where(type => type.IsInterface
                               && typeof(ICollectionResolvable).IsAssignableFrom(type)
                               && type != typeof(ICollectionResolvable));
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<Type> Implementations()
-        {
-            return _typeProvider
-                  .OurTypes
-                  .Where(type => type.IsClass
-                              && !type.IsAbstract
-                              && typeof(IResolvable).IsAssignableFrom(type));
         }
 
         /// <inheritdoc />

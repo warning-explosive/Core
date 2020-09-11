@@ -1,11 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using Abstractions;
-    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
     using AutoWiringTest;
     using Basics;
     using Xunit;

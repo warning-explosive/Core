@@ -7,9 +7,7 @@ namespace Basics.Benchmark
     using BenchmarkDotNet.Columns;
     using BenchmarkDotNet.Reports;
     using BenchmarkDotNet.Running;
-    using Microsoft.VisualStudio.TestPlatform.Utilities;
     using Perfolizer.Horology;
-    using SpaceEngineers.Core.Basics;
 
     internal static class BenchmarkRunnerExtensions
     {

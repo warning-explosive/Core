@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Services;
     using Basics;
+    using Internals;
     using SimpleInjector;
 
     internal static class RegistrationExtensions
@@ -84,19 +86,28 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                        });
         }
 
-        internal static void RegisterImplementations(this Container container, IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
+        internal static void RegisterCollections(this Container container, ICollection<ServiceRegistrationInfo> infos)
         {
-            foreach (var info in serviceRegistrationInfos)
+            // register each element of collection as implementation to provide lifestyle for container
+            container.RegisterImplementations(infos);
+
+            infos.OrderByDependencyAttribute(z => z.ImplementationType)
+                 .GroupBy(k => k.ServiceType, v => v.ImplementationType)
+                 .Each(info => container.Collection.Register(info.Key, info));
+        }
+
+        internal static void RegisterVersionedComponents(this Container container, ICollection<ServiceRegistrationInfo> infos)
+        {
+            container.RegisterWithOpenGenericFallBack(infos);
+            container.RegisterImplementations(infos);
+        }
+
+        private static void RegisterImplementations(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        {
+            foreach (var info in infos)
             {
                 container.Register(info.ImplementationType, info.ImplementationType, info.Lifestyle);
             }
-        }
-
-        internal static void RegisterCollections(this Container container, IEnumerable<ServiceRegistrationInfo> serviceRegistrationInfos)
-        {
-            serviceRegistrationInfos.OrderByDependencyAttribute(z => z.ImplementationType)
-                                    .GroupBy(k => k.ServiceType, v => v.ImplementationType)
-                                    .Each(info => container.Collection.Register(info.Key, info));
         }
     }
 }

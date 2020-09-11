@@ -2,12 +2,8 @@ namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection.Metadata;
-    using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;

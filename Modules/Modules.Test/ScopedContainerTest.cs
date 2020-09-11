@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
-    using AutoRegistration;
     using AutoWiringTest;
     using SimpleInjector;
     using Xunit;

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
     using System.Linq;
     using System.Security;
     using System.Text.RegularExpressions;
-    using AutoWiringApi.Abstractions;
+    using AutoWiringApi.Services;
     using Basics;
     using Newtonsoft.Json;
 

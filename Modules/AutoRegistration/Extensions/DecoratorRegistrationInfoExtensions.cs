@@ -1,11 +1,10 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
-    using AutoWiringApi.Attributes;
     using Basics;
+    using Internals;
 
     internal static class DecoratorRegistrationInfoExtensions
     {

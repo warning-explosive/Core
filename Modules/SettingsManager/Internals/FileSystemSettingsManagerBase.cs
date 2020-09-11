@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
         /// <inheritdoc />
         public async Task Set(TSettings value)
         {
-            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
                 var serialized = SerializeInternal(value);
 

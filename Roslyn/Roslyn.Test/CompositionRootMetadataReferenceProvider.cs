@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Roslyn.Test
 {
     using System.Collections.Generic;
     using Api;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;

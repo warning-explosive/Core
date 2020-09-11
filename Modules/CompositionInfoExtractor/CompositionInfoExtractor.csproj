@@ -31,17 +31,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="CompositionInfoInterpreterImpl.cs">
-      <DependentUpon>ICompositionInfoInterpreter.cs</DependentUpon>
-    </Compile>
-    <Compile Update="CompositionInfoExtractorImpl.cs">
-      <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>
-    </Compile>
-    <Compile Update="GenericArgumentsReceiverImpl.cs">
-      <DependentUpon>IGenericArgumentsReceiver.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />

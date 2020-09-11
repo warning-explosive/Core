@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Linq;
-    using CompositionInfoExtractor;
+    using AutoWiringApi.Services;
     using Xunit;
     using Xunit.Abstractions;
 

@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
     using AutoWiringApi.Abstractions;
-    using Internals;
 
     /// <summary>
     /// Abstraction for dependency container that supports service versions

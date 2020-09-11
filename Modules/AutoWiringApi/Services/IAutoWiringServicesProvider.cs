@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
+namespace SpaceEngineers.Core.AutoWiringApi.Services
 {
     using System;
     using System.Collections.Generic;
+    using Abstractions;
 
     /// <summary>
     /// Services provider
@@ -21,19 +22,13 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
         IEnumerable<Type> Collections();
 
         /// <summary>
-        /// Gets exact types registered in container by AutoWiring.API include Unregistered and ManualRegistered types
-        /// </summary>
-        /// <returns>Exact types registered in container by AutoWiring.API</returns>
-        IEnumerable<Type> Implementations();
-
-        /// <summary>
         /// Gets external services registered in container by AutoWiring.API include Unregistered and ManualRegistered types
         /// </summary>
         /// <returns>External services registered in container by AutoWiring.API</returns>
         IEnumerable<Type> External();
 
         /// <summary>
-        /// Gets services which has versions registered in container by AutoWiring.API include Unregistered and ManualRegistered types
+        /// Gets services which has explicitly defined versions and registered in container by AutoWiring.API include Unregistered and ManualRegistered types
         /// </summary>
         /// <returns>External services registered in container by AutoWiring.API</returns>
         IEnumerable<Type> Versions();

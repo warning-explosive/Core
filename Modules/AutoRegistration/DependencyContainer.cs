@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
-    using System;
     using System.Linq;
     using System.Reflection;
     using Abstractions;
     using AutoWiringApi.Attributes;
     using Basics;
-    using Internals;
+    using Implementations;
 
     /// <summary>
     /// IDependencyContainer factory
@@ -15,8 +14,9 @@ namespace SpaceEngineers.Core.AutoRegistration
     {
         private static readonly Assembly[] RootAssemblies =
         {
-            typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
-            typeof(TypeExtensions).Assembly,     // Basics
+            typeof(DependencyContainer).Assembly, // AutoRegistration
+            typeof(LifestyleAttribute).Assembly,  // AutoWiringAPI
+            typeof(TypeExtensions).Assembly,      // Basics
         };
 
         /// <summary>
@@ -44,10 +44,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            var supplemented = new[] { typeof(DependencyContainer).Assembly }
-                              .Concat(RootAssemblies)
-                              .Concat(assemblies)
-                              .ToArray();
+            var supplemented = RootAssemblies.Union(assemblies).ToArray();
 
             var typeProvider = new ContainerDependentTypeProvider(supplemented, RootAssemblies);
 

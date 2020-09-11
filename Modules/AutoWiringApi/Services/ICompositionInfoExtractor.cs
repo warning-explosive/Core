@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.CompositionInfoExtractor
+namespace SpaceEngineers.Core.AutoWiringApi.Services
 {
-    using AutoRegistration;
-    using AutoWiringApi.Abstractions;
+    using System.Collections.Generic;
+    using Abstractions;
+    using Contexts;
 
     /// <summary>
     /// Extracts late-bound (bound at runtime) information about project objects composition
@@ -13,6 +14,6 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         /// </summary>
         /// <param name="activeMode">Get composition info in ACTIVE(TRUE) or PASSIVE(FALSE) mode (ACTIVE - try build all dependencies from AutoWiring.API; PASSIVE - Get current built components)</param>
         /// <returns>DependencyInfos</returns>
-        DependencyInfo[] GetCompositionInfo(bool activeMode);
+        IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(bool activeMode);
     }
 }

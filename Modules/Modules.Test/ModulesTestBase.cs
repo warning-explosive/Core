@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;

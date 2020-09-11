@@ -1,12 +1,13 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiringApi.Services;
     using Basics;
+    using Implementations;
+    using Internals;
     using SimpleInjector;
 
     internal static class ServiceRegistrationInfoExtensions

@@ -133,5 +133,23 @@ namespace SpaceEngineers.Core.Basics
 
             return source.Single();
         }
+
+        /// <summary>
+        /// Informative single or default extraction
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <typeparam name="T">Collection item type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
+        {
+            if (source.Take(2).Count() != 1)
+            {
+                throw new AmbiguousMatchException(amb(source));
+            }
+
+            return source.Single();
+        }
     }
 }

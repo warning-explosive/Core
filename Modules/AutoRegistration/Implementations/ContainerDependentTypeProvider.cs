@@ -1,14 +1,11 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
-    using Basics;
+    using AutoWiringApi.Services;
     using Basics.EqualityComparers;
 
     [ManualRegistration]
@@ -38,10 +35,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             AllLoadedAssemblies = assemblies.Where(a => !a.IsDynamic).ToList();
             AllLoadedTypes = AllLoadedAssemblies.SelectMany(a => a.GetTypes()).ToList();
-            TypeCache = AllLoadedTypes
-                       .GroupBy(type => type.Assembly.GetName().Name)
-                       .ToDictionary(grp => grp.Key,
-                                     grp => (IReadOnlyDictionary<string, Type>)grp.ToDictionary(type => type.FullName));
+            TypeCache = AllLoadedAssemblies
+                       .ToDictionary(assembly => assembly.GetName().Name,
+                                     assembly => (IReadOnlyDictionary<string, Type>)assembly.GetTypes().ToDictionary(type => type.FullName));
 
             var loadedAssembliesDict = AllLoadedAssemblies.Distinct(new AssemblyByNameEqualityComparer()).ToDictionary(a => a.GetName().FullName);
             var rootAssembliesDict = rootAssemblies.ToDictionary(a => a.GetName().FullName, a => a);

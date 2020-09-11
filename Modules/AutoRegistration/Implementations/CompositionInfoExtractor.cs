@@ -1,40 +1,40 @@
-namespace SpaceEngineers.Core.CompositionInfoExtractor
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Contexts;
     using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Services;
     using Basics;
     using Basics.EqualityComparers;
+    using Internals;
     using SimpleInjector;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CompositionInfoExtractorImpl : ICompositionInfoExtractor
+    internal class CompositionInfoExtractor : ICompositionInfoExtractor
     {
         private readonly Container _container;
-        private readonly IGenericArgumentsReceiver _receiver;
+        private readonly IGenericTypeProvider _provider;
         private readonly IAutoWiringServicesProvider _autoWiringServiceProvider;
 
         /// <summary> .ctor </summary>
         /// <param name="container">Container</param>
-        /// <param name="receiver">IGenericArgumentsReceiver</param>
+        /// <param name="provider">IGenericArgumentsReceiver</param>
         /// <param name="autoWiringServiceProvider">IServiceProvider</param>
-        public CompositionInfoExtractorImpl(Container container,
-                                            IGenericArgumentsReceiver receiver,
-                                            IAutoWiringServicesProvider autoWiringServiceProvider)
+        public CompositionInfoExtractor(Container container,
+                                        IGenericTypeProvider provider,
+                                        IAutoWiringServicesProvider autoWiringServiceProvider)
         {
             _container = container;
-            _receiver = receiver;
+            _provider = provider;
             _autoWiringServiceProvider = autoWiringServiceProvider;
         }
 
         /// <inheritdoc />
-        public DependencyInfo[] GetCompositionInfo(bool activeMode)
+        public IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(bool activeMode)
         {
             if (activeMode)
             {
@@ -66,14 +66,13 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         private IEnumerable<Type> GetClosedServices()
         {
             return _autoWiringServiceProvider.Resolvable().Select(CloseOpenGeneric)
-                                             .Concat(_autoWiringServiceProvider.Implementations().Select(CloseOpenGeneric))
                                              .Concat(_autoWiringServiceProvider.External().Select(CloseOpenGeneric))
                                              .Concat(_autoWiringServiceProvider.Collections().Select(CloseOpenGenericCollection));
         }
 
         private Type CloseOpenGeneric(Type type)
         {
-            var closedOrSame = _receiver.CloseByConstraints(type);
+            var closedOrSame = _provider.CloseByConstraints(type, ctx => ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault());
 
             // build graph by invocation
             Func<object> getInstance = () => _container.GetInstance(closedOrSame);
@@ -84,7 +83,7 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
 
         private Type CloseOpenGenericCollection(Type type)
         {
-            var closedOrSame = _receiver.CloseByConstraints(type);
+            var closedOrSame = _provider.CloseByConstraints(type, ctx => ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault());
 
             // build graph by invocation
             Func<IEnumerable<object>> getAllInstances = () => _container.GetAllInstances(closedOrSame);

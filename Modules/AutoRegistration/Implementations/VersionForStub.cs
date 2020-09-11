@@ -1,8 +1,7 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
 
     [ManualRegistration]
     internal class VersionForStub<TService> : IVersionFor<TService>

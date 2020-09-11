@@ -2,7 +2,6 @@
 {
     using System;
     using System.Linq;
-    using System.Reflection;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration;
@@ -10,12 +9,10 @@
     using Basics;
     using Internals;
     using NServiceBus;
-    using NServiceBus.Features;
     using NServiceBus.Installation;
     using NServiceBus.MessageMutator;
     using NServiceBus.ObjectBuilder;
     using Settings;
-    using SettingsManager;
     using SettingsManager.Abstractions;
 
     /// <summary>

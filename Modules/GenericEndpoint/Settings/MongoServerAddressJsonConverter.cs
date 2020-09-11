@@ -2,13 +2,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Settings
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using MongoDB.Driver;
     using Newtonsoft.Json;
     using NewtonSoft.Json.Abstractions;
-    using SettingsManager.Abstractions;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class MongoServerAddressJsonConverter : JsonConverter,

@@ -2,9 +2,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Diagnostics;
-    using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
-    using Basics.Exceptions;
+    using Extensions;
     using SimpleInjector;
 
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]

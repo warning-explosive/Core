@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.CompositionInfoExtractor
+namespace SpaceEngineers.Core.AutoWiringApi.Services
 {
-    using AutoRegistration;
-    using AutoWiringApi.Abstractions;
+    using System.Collections.Generic;
+    using Abstractions;
+    using Contexts;
 
     /// <summary>
     /// Interpretation of composition info
@@ -14,6 +15,6 @@ namespace SpaceEngineers.Core.CompositionInfoExtractor
         /// </summary>
         /// <param name="compositionInfo">Composition info</param>
         /// <returns>Visualization string</returns>
-        TOutput Visualize(DependencyInfo[] compositionInfo);
+        TOutput Visualize(IReadOnlyCollection<IDependencyInfo> compositionInfo);
     }
 }

@@ -5,8 +5,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reactive.Disposables;
-    using AutoRegistration;
-    using AutoRegistration.Internals;
     using AutoWiringApi.Abstractions;
     using VersionedContainer;
     using Xunit;

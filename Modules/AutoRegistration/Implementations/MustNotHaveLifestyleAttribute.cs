@@ -1,13 +1,11 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
-    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Services;
     using Basics;
-    using SimpleInjector;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class MustNotHaveLifestyleAttribute : IConfigurationVerifier

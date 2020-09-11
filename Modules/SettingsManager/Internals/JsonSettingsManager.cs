@@ -1,14 +1,8 @@
 namespace SpaceEngineers.Core.SettingsManager.Internals
 {
-    using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
-    using System.Security;
     using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
-    using Basics;
-    using Newtonsoft.Json;
     using NewtonSoft.Json.Abstractions;
 
     [Lifestyle(EnLifestyle.Singleton)]

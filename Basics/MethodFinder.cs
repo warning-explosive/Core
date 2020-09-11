@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Exceptions;
 
     /// <summary>
     /// Method finder

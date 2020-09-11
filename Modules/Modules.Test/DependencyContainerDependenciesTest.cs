@@ -2,10 +2,9 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using AutoWiringApi.Abstractions;
+    using AutoWiringApi.Services;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;

@@ -163,12 +163,10 @@ namespace SpaceEngineers.Core.Basics
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)
                        ? Enumerable.Empty<Type>()
-                       : new[] { source }
-                        .Concat(TypeInfoStorage.Get(source).BaseTypes)
-                        .Concat(source.GetInterfaces())
-                        .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                        .Select(type => type.GetGenericArguments()[typeArgumentAt])
-                        .Distinct();
+                       : source.IncludedTypes()
+                               .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
+                               .Select(type => type.GetGenericArguments()[typeArgumentAt])
+                               .Distinct();
         }
 
         /// <summary>
@@ -186,11 +184,24 @@ namespace SpaceEngineers.Core.Basics
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)
                        ? Enumerable.Empty<Type[]>()
-                       : new[] { source }
-                        .Concat(TypeInfoStorage.Get(source).BaseTypes)
-                        .Concat(source.GetInterfaces())
-                        .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                        .Select(type => type.GetGenericArguments().ToArray());
+                       : source.IncludedTypes()
+                               .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
+                               .Select(type => type.GetGenericArguments().ToArray());
+        }
+
+        /// <summary>
+        /// Types included in source type
+        /// - source
+        /// - base types
+        /// - interfaces
+        /// </summary>
+        /// <param name="source">Source type</param>
+        /// <returns>Included types</returns>
+        public static IEnumerable<Type> IncludedTypes(this Type source)
+        {
+            return new[] { source }
+                  .Concat(TypeInfoStorage.Get(source).BaseTypes)
+                  .Concat(source.GetInterfaces());
         }
 
         /// <summary>

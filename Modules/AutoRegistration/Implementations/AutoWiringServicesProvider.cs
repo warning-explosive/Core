@@ -33,60 +33,53 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         /// <inheritdoc />
         public IEnumerable<Type> Collections()
         {
-            return _typeProvider
-                  .OurTypes
-                  .Where(type => type.IsInterface
-                              && typeof(ICollectionResolvable).IsAssignableFrom(type)
-                              && type != typeof(ICollectionResolvable));
+            return ExtractGeneric(_typeProvider.OurTypes, typeof(ICollectionResolvable<>));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> External()
         {
-            return _typeProvider
-                  .AllLoadedTypes
-                  .Where(type => type.IsClass
-                              && !type.IsAbstract
-                              && type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)))
-                  .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
-                  .Where(type => !type.IsGenericParameter)
-                  .Select(type => type.GenericTypeDefinitionOrSelf())
-                  .Distinct();
+            return ExtractGeneric(_typeProvider.AllLoadedTypes, typeof(IExternalResolvable<>));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Versions()
         {
-            return _typeProvider
-                  .OurTypes
-                  .Where(type => type.IsClass
-                           && !type.IsAbstract
-                           && type.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
-                  .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IVersionFor<>), 0))
-                  .Where(type => !type.IsGenericParameter)
-                  .Distinct();
+            return ExtractGeneric(_typeProvider.OurTypes, typeof(IVersionFor<>));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> Decorators()
         {
-            return _typeProvider
-                  .OurTypes
-                  .Where(t => t.IsClass
-                           && !t.IsInterface
-                           && !t.IsAbstract
-                           && t.IsSubclassOfOpenGeneric(typeof(IDecorator<>)));
+            return ExtractDecorators(typeof(IDecorator<>));
         }
 
         /// <inheritdoc />
         public IEnumerable<Type> CollectionDecorators()
+        {
+            return ExtractDecorators(typeof(ICollectionDecorator<>));
+        }
+
+        private IEnumerable<Type> ExtractDecorators(Type decorator)
         {
             return _typeProvider
                   .OurTypes
                   .Where(t => t.IsClass
                            && !t.IsInterface
                            && !t.IsAbstract
-                           && t.IsSubclassOfOpenGeneric(typeof(ICollectionDecorator<>)));
+                           && t.IsSubclassOfOpenGeneric(decorator));
+        }
+
+        private static IEnumerable<Type> ExtractGeneric(IEnumerable<Type> source, Type openGenericService)
+        {
+            return source
+                  .Where(type => type.IsClass
+                              && !type.IsAbstract
+                              && type.IsSubclassOfOpenGeneric(openGenericService))
+                  .SelectMany(type => type.ExtractGenericArgumentsAt(openGenericService, 0))
+                  .Where(type => !type.IsGenericParameter)
+                  .Select(type => type.GenericTypeDefinitionOrSelf())
+                  .Distinct();
         }
     }
 }

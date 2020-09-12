@@ -252,7 +252,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             var resolvableRegistrationInfos = servicesProvider
                                              .Resolvable()
                                              .GetComponents(container, typeProvider, false);
-            container.RegisterWithOpenGenericFallBack(resolvableRegistrationInfos);
+            container.RegisterServicesWithOpenGenericFallBack(resolvableRegistrationInfos);
 
             /*
              * [II] - External service single implementation
@@ -260,7 +260,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             var externalServicesRegistrationInfos = servicesProvider
                                                    .External()
                                                    .GetComponents(container, typeProvider, false);
-            container.RegisterWithOpenGenericFallBack(externalServicesRegistrationInfos);
+            container.RegisterServicesWithOpenGenericFallBack(externalServicesRegistrationInfos);
 
             /*
              * [III] - Collection resolvable service

@@ -59,7 +59,35 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             }
         }
 
-        internal static void RegisterWithOpenGenericFallBack(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        internal static void RegisterCollections(this Container container, ICollection<ServiceRegistrationInfo> infos)
+        {
+            // register each element of collection as implementation to provide lifestyle for container
+            container.RegisterImplementationsWithOpenGenericFallBack(infos);
+
+            infos.OrderByDependencyAttribute(z => z.ImplementationType)
+                 .GroupBy(k => k.ServiceType, v => v.ImplementationType)
+                 .Each(info => container.Collection.Register(info.Key, info));
+        }
+
+        internal static void RegisterVersionedComponents(this Container container, ICollection<ServiceRegistrationInfo> infos)
+        {
+            container.RegisterServicesWithOpenGenericFallBack(infos);
+            container.RegisterImplementationsWithOpenGenericFallBack(infos);
+        }
+
+        internal static void RegisterServicesWithOpenGenericFallBack(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        {
+            RegisterWithOpenGenericFallBack(container, infos, info => info.ServiceType);
+        }
+
+        internal static void RegisterImplementationsWithOpenGenericFallBack(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        {
+            RegisterWithOpenGenericFallBack(container, infos, info => info.ImplementationType);
+        }
+
+        private static void RegisterWithOpenGenericFallBack(this Container container,
+                                                            IEnumerable<ServiceRegistrationInfo> infos,
+                                                            Func<ServiceRegistrationInfo, Type> serviceSelector)
         {
             infos.Select(info => new
                                  {
@@ -69,45 +97,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                  .OrderBy(pair => pair.FallBackFor != null) // fallback must be registered after all exact registrations
                  .Each(pair =>
                        {
+                           var service = serviceSelector(pair.Info);
+
                            if (pair.FallBackFor != null)
                            {
-                               if (pair.FallBackFor.ServiceType == pair.Info.ServiceType)
-                               {
-                                   container.RegisterConditional(pair.Info.ServiceType,
-                                                                 pair.Info.ImplementationType,
-                                                                 pair.Info.Lifestyle,
-                                                                 ctx => !ctx.Handled);
-                               }
+                               container.RegisterConditional(service,
+                                                             pair.Info.ImplementationType,
+                                                             pair.Info.Lifestyle,
+                                                             ctx => !ctx.Handled);
                            }
                            else
                            {
-                               container.Register(pair.Info.ServiceType, pair.Info.ImplementationType, pair.Info.Lifestyle);
+                               container.Register(service,
+                                                  pair.Info.ImplementationType,
+                                                  pair.Info.Lifestyle);
                            }
                        });
-        }
-
-        internal static void RegisterCollections(this Container container, ICollection<ServiceRegistrationInfo> infos)
-        {
-            // register each element of collection as implementation to provide lifestyle for container
-            container.RegisterImplementations(infos);
-
-            infos.OrderByDependencyAttribute(z => z.ImplementationType)
-                 .GroupBy(k => k.ServiceType, v => v.ImplementationType)
-                 .Each(info => container.Collection.Register(info.Key, info));
-        }
-
-        internal static void RegisterVersionedComponents(this Container container, ICollection<ServiceRegistrationInfo> infos)
-        {
-            container.RegisterWithOpenGenericFallBack(infos);
-            container.RegisterImplementations(infos);
-        }
-
-        private static void RegisterImplementations(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                container.Register(info.ImplementationType, info.ImplementationType, info.Lifestyle);
-            }
         }
     }
 }

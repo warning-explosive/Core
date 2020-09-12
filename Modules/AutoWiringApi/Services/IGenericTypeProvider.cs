@@ -27,7 +27,9 @@ namespace SpaceEngineers.Core.AutoWiringApi.Services
         Type CloseByConstraints(Type type, Func<TypeArgumentSelectionContext, Type?>? selector = null);
 
         /// <summary>
-        /// Default type argument selector - single or default
+        /// Default type argument selector
+        /// - Order matches by IsGenericType ASC
+        /// - SingleOrDefault
         /// </summary>
         /// <returns>Selector function</returns>
         Func<TypeArgumentSelectionContext, Type?> DefaultSelector();

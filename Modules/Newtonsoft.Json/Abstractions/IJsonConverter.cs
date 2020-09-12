@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Abstractions
     /// <summary>
     /// IJsonConverter abstraction
     /// </summary>
-    public interface IJsonConverter : ICollectionResolvable
+    public interface IJsonConverter : ICollectionResolvable<IJsonConverter>
     {
         /// <summary>
         /// JsonConverter

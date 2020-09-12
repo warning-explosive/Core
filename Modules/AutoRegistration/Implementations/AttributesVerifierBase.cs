@@ -34,12 +34,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
         protected IEnumerable<Type> ExtractAutoWiringServices(Type type)
         {
-            var interfaces = type.GetInterfaces();
-
-            return interfaces.Where(i => typeof(IResolvable).IsAssignableFrom(i))
-                             .Concat(interfaces.Where(i => typeof(ICollectionResolvable).IsAssignableFrom(i)))
-                             .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
-                             .Distinct();
+            return type.IncludedTypes().Where(i => typeof(IResolvable).IsAssignableFrom(i))
+                       .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))
+                       .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
+                       .Distinct();
         }
     }
 }

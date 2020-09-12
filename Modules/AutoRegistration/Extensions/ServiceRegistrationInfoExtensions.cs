@@ -35,15 +35,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                .GetComponents(versions);
         }
 
-        internal static IEnumerable<ServiceRegistrationInfo> GetImplementationComponents(this IEnumerable<Type> implementationTypes, bool versions)
-        {
-            return implementationTypes.Select(implementationType => (implementationType, implementationType)).GetComponents(versions);
-        }
-
         private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs, bool versions)
         {
             return pairs
-                  .Where(pair => pair.ImplementationType.ForAutoRegistration())
+                  .Where(pair => pair.ServiceType.ForAutoRegistration()
+                                 && pair.ImplementationType.ForAutoRegistration())
                   .SelectMany(pair => GetClosedGenericImplForOpenGenericService(pair.ServiceType, pair.ImplementationType))
                   .Select(pair => new
                                   {

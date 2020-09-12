@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Api
     /// <summary>
     /// MetadataReference provider for test sources
     /// </summary>
-    public interface IMetadataReferenceProvider : ICollectionResolvable
+    public interface IMetadataReferenceProvider : ICollectionResolvable<IMetadataReferenceProvider>
     {
         /// <summary>
         /// Receive MetadataReferences

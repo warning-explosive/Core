@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
             var baseSymbols = baseTypes.Select(GetBaseTypeSymbol).ToArray();
 
             var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable).FullName);
-            var collectionResolvable = context.Compilation.GetTypeByMetadataName(typeof(ICollectionResolvable).FullName);
+            var collectionResolvable = context.Compilation.GetTypeByMetadataName(typeof(ICollectionResolvable<>).FullName);
 
             bool IsDerivedFromService(INamedTypeSymbol symbol, INamedTypeSymbol service)
             {

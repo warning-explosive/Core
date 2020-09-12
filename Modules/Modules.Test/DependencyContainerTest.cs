@@ -41,69 +41,122 @@ namespace SpaceEngineers.Core.Modules.Test
                 new object[]
                 {
                     typeof(IResolvable),
+                    new Func<IEnumerable<Type>, IEnumerable<Type>>(SingleResolvable),
                     new Func<IDependencyContainer, Type, object>((container, service) => container.Resolve(service))
                 },
                 new object[]
                 {
-                    typeof(ICollectionResolvable),
+                    typeof(ICollectionResolvable<>),
+                    new Func<IEnumerable<Type>, IEnumerable<Type>>(Collections),
                     new Func<IDependencyContainer, Type, object>((container, service) => container.ResolveCollection(service))
                 }
             };
+
+            IEnumerable<Type> SingleResolvable(IEnumerable<Type> source)
+            {
+                return source.Where(t => typeof(IResolvable).IsAssignableFrom(t) && typeof(IResolvable) != t);
+            }
+
+            IEnumerable<Type> Collections(IEnumerable<Type> source)
+            {
+                return source.Where(t => t.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
+                             .SelectMany(t => t.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))
+                             .Where(type => !type.IsGenericParameter)
+                             .Select(type => type.GenericTypeDefinitionOrSelf())
+                             .Distinct();
+            }
+        }
+
+        internal Func<TypeArgumentSelectionContext, Type?> TestTypeArgumentSelector(IDependencyContainer container)
+        {
+            return ctx => FromExistedClosedTypes(container.Resolve<ITypeProvider>(), ctx) ?? FromMatches(ctx);
+        }
+
+        internal static Type? FromExistedClosedTypes(ITypeProvider typeProvider, TypeArgumentSelectionContext ctx)
+            => typeProvider
+              .AllLoadedTypes
+              .OrderBy(t => t.IsGenericType)
+              .FirstOrDefault(t => (!t.IsGenericType || t.IsConstructedGenericType) && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
+             ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
+              .FirstOrDefault();
+
+        internal static Type? FromMatches(TypeArgumentSelectionContext ctx)
+        {
+            var predicate = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>))
+                                ? type => typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable)
+                                : new Func<Type, bool>(type => true);
+
+            return ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
         }
 
         [Theory]
         [MemberData(nameof(ResolveRegisteredServicesTestData))]
-        internal void ResolveRegisteredServicesTest(Type service, Func<IDependencyContainer, Type, object> resolve)
+        internal void ResolveRegisteredServicesTest(Type apiService,
+                                                    Func<IEnumerable<Type>, IEnumerable<Type>> selector,
+                                                    Func<IDependencyContainer, Type, object> resolve)
         {
-            var servicesProvider = DependencyContainer.Resolve<ITypeProvider>();
+            Output.WriteLine(apiService.FullName);
+
             var receiver = DependencyContainer.Resolve<IGenericTypeProvider>();
 
             using (DependencyContainer.OpenScope())
             {
-                servicesProvider
-                   .OurTypes
-                   .Where(type => service.IsAssignableFrom(type) && service != type)
+                selector(DependencyContainer.Resolve<ITypeProvider>().OurTypes)
                    .Each(type =>
                          {
+                             var service = type.IsGenericType
+                                        && !type.IsConstructedGenericType
+                                               ? receiver.CloseByConstraints(type, TestTypeArgumentSelector(DependencyContainer))
+                                               : type;
+
                              if (type.HasAttribute<UnregisteredAttribute>())
                              {
-                                 Assert.Throws<ActivationException>(() => resolve(DependencyContainer, type));
+                                 Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
                              }
                              else
                              {
-                                 if (type.IsGenericType
-                                  && !type.IsConstructedGenericType)
-                                 {
-                                     var closedType = receiver.CloseByConstraints(type, TypeArgumentSelector(DependencyContainer));
-                                     resolve(DependencyContainer, closedType);
-                                 }
-                                 else
-                                 {
-                                     resolve(DependencyContainer, type);
-                                 }
+                                 resolve(DependencyContainer, service);
                              }
                          });
             }
+        }
 
-            Func<TypeArgumentSelectionContext, Type?> TypeArgumentSelector(IDependencyContainer container)
+        [Fact]
+        internal void EachServiceHasVersionedWrapperTest()
+        {
+            var receiver = DependencyContainer.Resolve<IGenericTypeProvider>();
+
+            using (DependencyContainer.OpenScope())
             {
-                return ctx => FromExistedClosedTypes(container.Resolve<ITypeProvider>(), ctx) ?? FromMatches(ctx);
-            }
+                DependencyContainer
+                   .Resolve<ITypeProvider>()
+                   .OurTypes
+                   .Where(t => typeof(IResolvable).IsAssignableFrom(t) && t != typeof(IResolvable))
+                   .Each(service =>
+                         {
+                             Type versioned;
 
-            static Type? FromExistedClosedTypes(ITypeProvider typeProvider, TypeArgumentSelectionContext ctx)
-                => typeProvider
-                    .AllLoadedTypes
-                    .FirstOrDefault(t => (!t.IsGenericType || t.IsConstructedGenericType) && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
-                   ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
-                    .FirstOrDefault();
+                             if (service.IsGenericType
+                              && !service.IsConstructedGenericType)
+                             {
+                                 var closedService = receiver.CloseByConstraints(service, TestTypeArgumentSelector(DependencyContainer));
+                                 versioned = typeof(IVersioned<>).MakeGenericType(closedService);
+                             }
+                             else
+                             {
+                                 versioned = typeof(IVersioned<>).MakeGenericType(service);
+                             }
 
-            static Type? FromMatches(TypeArgumentSelectionContext ctx)
-            {
-                var predicate = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>))
-                    ? type => typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable)
-                    : new Func<Type, bool>(type => true);
-
-                return ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
+                             if (service.HasAttribute<UnregisteredAttribute>()
+                                 || service.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
+                             {
+                                 Assert.Throws<ActivationException>(() => DependencyContainer.Resolve(versioned));
+                             }
+                             else
+                             {
+                                 DependencyContainer.Resolve(versioned);
+                             }
+                         });
             }
         }
 

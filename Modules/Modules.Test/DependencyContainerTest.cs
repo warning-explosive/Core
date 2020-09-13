@@ -7,9 +7,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoRegistration.Implementations;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Contexts;
+    using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using AutoWiringTest;
     using Basics;
@@ -67,26 +69,29 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        internal Func<TypeArgumentSelectionContext, Type?> TestTypeArgumentSelector(IDependencyContainer container)
+        internal Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
         {
-            return ctx => FromExistedClosedTypes(container.Resolve<ITypeProvider>(), ctx) ?? FromMatches(ctx);
+            return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx) ?? FromMatchesTypeArgumentSelector(ctx);
         }
 
-        internal static Type? FromExistedClosedTypes(ITypeProvider typeProvider, TypeArgumentSelectionContext ctx)
-            => typeProvider
-              .AllLoadedTypes
+        internal static Type? FromExistedClosedTypesTypeArgumentSelector(IEnumerable<Type> source, TypeArgumentSelectionContext ctx)
+            => source
               .OrderBy(t => t.IsGenericType)
               .FirstOrDefault(t => (!t.IsGenericType || t.IsConstructedGenericType) && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
              ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
               .FirstOrDefault();
 
-        internal static Type? FromMatches(TypeArgumentSelectionContext ctx)
+        internal static Type? FromMatchesTypeArgumentSelector(TypeArgumentSelectionContext ctx)
         {
-            var predicate = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>))
+            var isVersioned = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>));
+
+            var predicate = isVersioned
                                 ? type => typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable)
                                 : new Func<Type, bool>(type => true);
 
-            return ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
+            return ctx.Matches.Contains(typeof(object)) && !isVersioned
+                       ? typeof(object)
+                       : ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
         }
 
         [Theory]
@@ -97,7 +102,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Output.WriteLine(apiService.FullName);
 
-            var receiver = DependencyContainer.Resolve<IGenericTypeProvider>();
+            var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
 
             using (DependencyContainer.OpenScope())
             {
@@ -106,7 +111,7 @@ namespace SpaceEngineers.Core.Modules.Test
                          {
                              var service = type.IsGenericType
                                         && !type.IsConstructedGenericType
-                                               ? receiver.CloseByConstraints(type, TestTypeArgumentSelector(DependencyContainer))
+                                               ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))
                                                : type;
 
                              if (type.HasAttribute<UnregisteredAttribute>())
@@ -124,14 +129,19 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void EachServiceHasVersionedWrapperTest()
         {
-            var receiver = DependencyContainer.Resolve<IGenericTypeProvider>();
+            var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
+            var typeProvider = DependencyContainer.Resolve<ITypeProvider>();
 
-            using (DependencyContainer.OpenScope())
+            var localContainer = SetupDependencyContainer(Registration);
+
+            using (localContainer.OpenScope())
             {
-                DependencyContainer
+                localContainer
                    .Resolve<ITypeProvider>()
                    .OurTypes
-                   .Where(t => typeof(IResolvable).IsAssignableFrom(t) && t != typeof(IResolvable))
+                   .Where(t => typeof(IResolvable).IsAssignableFrom(t)
+                               && t != typeof(IResolvable)
+                               && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>)))
                    .Each(service =>
                          {
                              Type versioned;
@@ -139,7 +149,7 @@ namespace SpaceEngineers.Core.Modules.Test
                              if (service.IsGenericType
                               && !service.IsConstructedGenericType)
                              {
-                                 var closedService = receiver.CloseByConstraints(service, TestTypeArgumentSelector(DependencyContainer));
+                                 var closedService = genericTypeProvider.CloseByConstraints(service, HybridTypeArgumentSelector(localContainer));
                                  versioned = typeof(IVersioned<>).MakeGenericType(closedService);
                              }
                              else
@@ -148,15 +158,40 @@ namespace SpaceEngineers.Core.Modules.Test
                              }
 
                              if (service.HasAttribute<UnregisteredAttribute>()
-                                 || service.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
+                              || service.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
                              {
-                                 Assert.Throws<ActivationException>(() => DependencyContainer.Resolve(versioned));
+                                 Assert.Throws<ActivationException>(() => Resolve(versioned));
                              }
                              else
                              {
-                                 DependencyContainer.Resolve(versioned);
+                                 Output.WriteLine(versioned.ToString());
+                                 Resolve(versioned);
                              }
                          });
+            }
+
+            object Resolve(Type service) => localContainer.Resolve(service);
+
+            void Registration(IRegistrationContainer container)
+            {
+                var source = typeProvider.AllLoadedTypes;
+
+                source.Where(t => typeof(IResolvable).IsAssignableFrom(t)
+                               && t != typeof(IResolvable)
+                               && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
+                               && t.IsGenericType
+                               && !t.IsConstructedGenericType)
+                      .Each(service =>
+                            {
+                                var closed = genericTypeProvider.CloseByConstraints(service, HybridTypeArgumentSelector(DependencyContainer));
+                                var versionedService = typeof(IVersioned<>).MakeGenericType(closed);
+
+                                Output.WriteLine(closed.ToString());
+                                if (!container.HasRegistration(versionedService))
+                                {
+                                    container.RegisterVersion(closed, EnLifestyle.Transient);
+                                }
+                            });
             }
         }
 
@@ -207,8 +242,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void SingletonTest()
         {
+            // 1 - resolve via service type
             Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
                          DependencyContainer.Resolve<ISingletonTestService>());
+
+            // 2 - resolve via concrete type
+            Assert.Equal(DependencyContainer.Resolve<SingletonTestServiceImpl>(),
+                         DependencyContainer.Resolve<SingletonTestServiceImpl>());
+
+            // 3 - cross equals resolve
+            Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
+                         DependencyContainer.Resolve<SingletonTestServiceImpl>());
         }
 
         [Fact]
@@ -282,130 +326,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(DependencyContainer
                        .ResolveCollection<ISingletonGenericCollectionResolvableTestService<object>>()
                        .SequenceEqual(DependencyContainer.ResolveCollection<ISingletonGenericCollectionResolvableTestService<object>>()));
-        }
-
-        [Fact]
-        internal void DecoratorTest()
-        {
-            var service = DependencyContainer.Resolve<IDecorableService>();
-
-            var types = new Dictionary<Type, Type>
-            {
-                [typeof(DecorableServiceDecorator1)] = typeof(DecorableServiceDecorator2),
-                [typeof(DecorableServiceDecorator2)] = typeof(DecorableServiceDecorator3),
-                [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl),
-            };
-
-            void CheckRecursive(IDecorableService resolved, Type type)
-            {
-                Assert.True(resolved.GetType() == type);
-                Output.WriteLine(type.Name);
-
-                if (types.TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (IDecorableServiceDecorator)resolved;
-                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(service, typeof(DecorableServiceDecorator1));
-        }
-
-        [Fact]
-        internal void OpenGenericDecoratorTest()
-        {
-            var service = DependencyContainer.Resolve<IOpenGenericDecorableService<object>>();
-
-            var types = new Dictionary<Type, Type>
-            {
-                [typeof(OpenGenericDecorableServiceDecorator1<object>)] = typeof(OpenGenericDecorableServiceDecorator2<object>),
-                [typeof(OpenGenericDecorableServiceDecorator2<object>)] = typeof(OpenGenericDecorableServiceDecorator3<object>),
-                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>),
-            };
-
-            void CheckRecursive(IOpenGenericDecorableService<object> resolved, Type type)
-            {
-                Assert.True(resolved.GetType() == type);
-                Output.WriteLine(type.Name);
-
-                if (types.TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (IOpenGenericDecorableServiceDecorator<object>)resolved;
-                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(service, typeof(OpenGenericDecorableServiceDecorator1<object>));
-        }
-
-        [Fact]
-        internal void ConditionalDecoratorTest()
-        {
-            var service = DependencyContainer.Resolve<IConditionalDecorableService>();
-
-            var types = new Dictionary<Type, Type>
-            {
-                [typeof(ConditionalDecorableServiceDecorator1)] = typeof(ConditionalDecorableServiceDecorator3),
-                [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl),
-            };
-
-            void CheckRecursive(IConditionalDecorableService resolved, Type type)
-            {
-                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
-                Assert.True(resolved.GetType() == type);
-
-                if (types.TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (IDecorator<IConditionalDecorableService>)resolved;
-                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(service, typeof(ConditionalDecorableServiceDecorator1));
-        }
-
-        [Fact]
-        internal void CollectionResolvableConditionDecorableTest()
-        {
-            var services = DependencyContainer.ResolveCollection<ICollectionResolvableConditionDecorableService>()
-                                              .ToArray();
-
-            var types = new[]
-                        {
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceImpl3)
-                            },
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator2),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator2)] = typeof(CollectionResolvableConditionDecorableServiceImpl2),
-                            },
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator1),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator1)] = typeof(CollectionResolvableConditionDecorableServiceImpl1),
-                            }
-                        };
-
-            void CheckRecursive(ICollectionResolvableConditionDecorableService resolved, int i, Type type)
-            {
-                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
-                Assert.True(resolved.GetType() == type);
-
-                if (types[i].TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (ICollectionDecorator<ICollectionResolvableConditionDecorableService>)resolved;
-
-                    CheckRecursive(decorator.Decoratee, i, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(services[0], 0, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
-            Output.WriteLine(string.Empty);
-            CheckRecursive(services[1], 1, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
-            Output.WriteLine(string.Empty);
-            CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
         }
 
         [Fact]

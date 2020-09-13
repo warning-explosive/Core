@@ -109,6 +109,20 @@ namespace SpaceEngineers.Core.AutoRegistration
             return this;
         }
 
+        public IRegistrationContainer RegisterVersion<TService>(EnLifestyle lifestyle)
+            where TService : class
+        {
+            return RegisterVersion(typeof(TService), lifestyle);
+        }
+
+        public IRegistrationContainer RegisterVersion(Type serviceType, EnLifestyle lifestyle)
+        {
+            _container.Register(typeof(IVersioned<>).MakeGenericType(serviceType),
+                                typeof(Versioned<>).MakeGenericType(serviceType),
+                                lifestyle.MapLifestyle());
+            return this;
+        }
+
         public bool HasRegistration<TService>()
             where TService : class
         {

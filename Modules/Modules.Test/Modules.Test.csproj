@@ -261,5 +261,8 @@
     <Compile Update="SettingsManager\TestYamlSettings.cs">
       <DependentUpon>ITestSettings.cs</DependentUpon>
     </Compile>
+    <Compile Update="DependencyContainerDecoratorsTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

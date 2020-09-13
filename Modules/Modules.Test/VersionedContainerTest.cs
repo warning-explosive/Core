@@ -761,22 +761,11 @@ namespace SpaceEngineers.Core.Modules.Test
                                                ICollection<Type> resolvedVersions)
             where TService : class
         {
-            Assert.True(originalStructure.SequenceEqual(ExtractDecorators(resolveOriginal())));
-            Assert.True(originalStructure.SequenceEqual(ExtractDecorators(resolveVersioned().Original)));
-            Assert.True(currentStructure.SequenceEqual(ShowTypes(nameof(currentStructure), ExtractDecorators(resolveVersioned().Current))));
+            Assert.True(originalStructure.SequenceEqual(resolveOriginal().ExtractDecorators()));
+            Assert.True(originalStructure.SequenceEqual(resolveVersioned().Original.ExtractDecorators()));
+            Assert.True(currentStructure.SequenceEqual(resolveVersioned().Current.ExtractDecorators().ShowTypes(nameof(currentStructure), Output.WriteLine)));
             Assert.True(resolvedVersions.SequenceEqual(Types(resolveVersions())));
             Assert.True(resolvedVersions.SequenceEqual(Types(resolveVersioned().Versions)));
-
-            IEnumerable<Type> ExtractDecorators(TService service)
-            {
-                while (service is IDecorator<TService> decorator)
-                {
-                    yield return decorator.GetType();
-                    service = decorator.Decoratee;
-                }
-
-                yield return service.GetType();
-            }
         }
 
         private static void VerifyNested(Func<IDisposable> applyFirst,
@@ -805,20 +794,6 @@ namespace SpaceEngineers.Core.Modules.Test
         private static IEnumerable<Type> Types(IEnumerable<object> objects)
         {
             return objects.Select(obj => obj.GetType());
-        }
-
-        private IEnumerable<Type> ShowTypes(string tag, IEnumerable<Type> types)
-        {
-            return types.Select((type, i) =>
-                                {
-                                    if (i == 0)
-                                    {
-                                        Output.WriteLine(tag);
-                                    }
-
-                                    Output.WriteLine(type.FullName);
-                                    return type;
-                                });
         }
 
         private object UnwrapDecorators<TService>(TService service)

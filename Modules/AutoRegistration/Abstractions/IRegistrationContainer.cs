@@ -68,6 +68,25 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         IRegistrationContainer RegisterCollection<TService>(IEnumerable<TService> implementationsCollection)
             where TService : class;
 
+        /// <summary>
+        /// Register version
+        /// Use this method only to register closed version of open-generic service
+        /// </summary>
+        /// <param name="lifestyle">Instance lifestyle</param>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterVersion<TService>(EnLifestyle lifestyle)
+            where TService : class;
+
+        /// <summary>
+        /// Register version
+        /// Use this method only to register closed version of open-generic service
+        /// </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <param name="lifestyle">Instance lifestyle</param>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterVersion(Type serviceType, EnLifestyle lifestyle);
+
         /// <summary> Does container has registration of service type </summary>
         /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>Container has registration of service type or not</returns>

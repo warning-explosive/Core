@@ -30,33 +30,44 @@ namespace SpaceEngineers.Core.Modules.Test
         /// </summary>
         protected IDependencyContainer DependencyContainer { get; }
 
+        /// <summary>
+        /// Setup DependencyContainer
+        /// </summary>
+        /// <param name="registration">Registration action</param>
+        /// <returns>IDependencyContainer</returns>
+        protected static IDependencyContainer SetupDependencyContainer(Action<IRegistrationContainer>? registration = null)
+        {
+            var options = new DependencyContainerOptions
+                          {
+                              RegistrationCallback = container =>
+                                                     {
+                                                         Registration(container);
+                                                         registration?.Invoke(container);
+                                                     }
+                          };
+
+            return AutoRegistration.DependencyContainer.Create(options);
+        }
+
+        private static void Registration(IRegistrationContainer container)
+        {
+            AssembliesExtensions
+               .AllFromCurrentDomain()
+               .Where(a => !a.IsDynamic)
+               .SelectMany(a => a.GetTypes())
+               .Where(type => type.IsClass
+                           && (!type.IsGenericType || type.IsConstructedGenericType)
+                           && typeof(ITestClassWithRegistration).IsAssignableFrom(type))
+               .Select(type => Activator.CreateInstance(type).EnsureNotNull<ITestClassWithRegistration>("Test class hadn't instantiated. This class must have constructor without parameters."))
+               .Each(registration => registration.Register(container));
+        }
+
         private static void SetupFileSystemSettingsDirectory()
         {
             var fileSystemSettingsDirectory = Path.Combine(SolutionExtensions.ProjectDirectory(), "Settings");
             Environment.SetEnvironmentVariable(Constants.FileSystemSettingsDirectory,
                                                fileSystemSettingsDirectory,
                                                EnvironmentVariableTarget.Process);
-        }
-
-        private IDependencyContainer SetupDependencyContainer()
-        {
-            var options = new DependencyContainerOptions
-                          {
-                              RegistrationCallback = Registration
-                          };
-
-            return AutoRegistration.DependencyContainer.Create(options);
-        }
-
-        private void Registration(IRegistrationContainer container)
-        {
-            GetType().Assembly
-                     .GetTypes()
-                     .Where(type => type.IsClass
-                                 && (!type.IsGenericType || type.IsConstructedGenericType)
-                                 && typeof(ITestClassWithRegistration).IsAssignableFrom(type))
-                     .Select(type => Activator.CreateInstance(type).EnsureNotNull<ITestClassWithRegistration>("Test class hadn't instantiated. This class must have constructor without parameters."))
-                     .Each(registration => registration.Register(container));
         }
     }
 }

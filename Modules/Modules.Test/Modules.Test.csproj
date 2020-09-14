@@ -33,6 +33,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="Moq" Version="4.14.5" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
@@ -42,7 +43,7 @@
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
-    <ProjectReference Include="..\CompositionInfoExtractor\CompositionInfoExtractor.csproj" />
+    <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>
@@ -144,6 +145,123 @@
       <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
     </Compile>
     <Compile Update="DependencyContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\WithInjectedDependencyContainerImpl.cs">
+      <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ClosedGenericImplementationOfOpenGenericService.cs">
+      <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\BaseUnregisteredServiceImpl.cs">
+      <DependentUpon>IUnregisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DerivedFromUnregisteredServiceImpl.cs">
+      <DependentUpon>IUnregisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\BaseUnregisteredExternalServiceImpl.cs">
+      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\DerivedFromUnregisteredExternalServiceImpl.cs">
+      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\ScopedLifestyleServiceImpl.cs">
+      <DependentUpon>IScopedLifestyleService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GenericEndpointTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ScopedContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainerTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImpl.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImpl.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImpl.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ServiceWithVersionedDependenciesImpl.cs">
+      <DependentUpon>IServiceWithVersionedDependencies.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImplV2.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceImplV3.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImplV2.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceImplV3.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImplV2.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientVersionedServiceImplV3.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientImplementationV2.cs">
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientImplementationV3.cs">
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedImplementationV2.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedImplementationV3.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonImplementationV2.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonImplementationV3.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonImplementationDecorator.cs">
+      <DependentUpon>SingletonImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedImplementationDecorator.cs">
+      <DependentUpon>ScopedImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientImplementationDecorator.cs">
+      <DependentUpon>TransientImplementation.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\SingletonVersionedServiceDecorator.cs">
+      <DependentUpon>ISingletonVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\TransientVersionedServiceDecorator.cs">
+      <DependentUpon>ITransientVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\ScopedVersionedServiceDecorator.cs">
+      <DependentUpon>IScopedVersionedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="VersionedContainer\WithoutVersionsImpl.cs">
+      <DependentUpon>IWithoutVersions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerDependenciesTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringApiTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoWiringTest\RegisteredByDelegateImpl.cs">
+      <DependentUpon>IRegisteredByDelegate.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SettingsManager\TestJsonSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="SettingsManager\TestYamlSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerDecoratorsTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
   </ItemGroup>

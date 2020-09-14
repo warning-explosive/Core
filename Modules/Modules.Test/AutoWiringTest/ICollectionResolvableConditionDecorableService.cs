@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using AutoWiringApi.Abstractions;
 
-    internal interface ICollectionResolvableConditionDecorableService : ICollectionResolvable
+    internal interface ICollectionResolvableConditionDecorableService : ICollectionResolvable<ICollectionResolvableConditionDecorableService>
     {
     }
 }

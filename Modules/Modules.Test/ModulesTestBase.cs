@@ -1,9 +1,14 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
+    using System.IO;
+    using System.Linq;
+    using Abstractions;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Test;
+    using Core.SettingsManager;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -13,20 +18,56 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <exception cref="InvalidOperationException">AppDomain.CurrentDomain == null</exception>
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            var assemblies = AppDomain.CurrentDomain
-                                      .TryExtractFromNullable(() => new InvalidOperationException("CurrentDomain is null"))
-                                      .GetAssemblies();
-
-            DependencyContainer = new DependencyContainer(assemblies);
+            SetupFileSystemSettingsDirectory();
+            DependencyContainer = SetupDependencyContainer();
         }
 
         /// <summary>
         /// DependencyContainer
         /// </summary>
-        protected DependencyContainer DependencyContainer { get; }
+        protected IDependencyContainer DependencyContainer { get; }
+
+        /// <summary>
+        /// Setup DependencyContainer
+        /// </summary>
+        /// <param name="registration">Registration action</param>
+        /// <returns>IDependencyContainer</returns>
+        protected static IDependencyContainer SetupDependencyContainer(Action<IRegistrationContainer>? registration = null)
+        {
+            var options = new DependencyContainerOptions
+                          {
+                              RegistrationCallback = container =>
+                                                     {
+                                                         Registration(container);
+                                                         registration?.Invoke(container);
+                                                     }
+                          };
+
+            return AutoRegistration.DependencyContainer.Create(options);
+        }
+
+        private static void Registration(IRegistrationContainer container)
+        {
+            AssembliesExtensions
+               .AllFromCurrentDomain()
+               .Where(a => !a.IsDynamic)
+               .SelectMany(a => a.GetTypes())
+               .Where(type => type.IsClass
+                           && (!type.IsGenericType || type.IsConstructedGenericType)
+                           && typeof(ITestClassWithRegistration).IsAssignableFrom(type))
+               .Select(type => Activator.CreateInstance(type).EnsureNotNull<ITestClassWithRegistration>("Test class hadn't instantiated. This class must have constructor without parameters."))
+               .Each(registration => registration.Register(container));
+        }
+
+        private static void SetupFileSystemSettingsDirectory()
+        {
+            var fileSystemSettingsDirectory = Path.Combine(SolutionExtensions.ProjectDirectory(), "Settings");
+            Environment.SetEnvironmentVariable(Constants.FileSystemSettingsDirectory,
+                                               fileSystemSettingsDirectory,
+                                               EnvironmentVariableTarget.Process);
+        }
     }
 }

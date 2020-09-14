@@ -37,23 +37,28 @@
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="YamlFormatter.cs">
-      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="SettingsManagerImpl.cs">
-      <DependentUpon>ISettingsManger.cs</DependentUpon>
-    </Compile>
-    <Compile Update="IFileSystemSettings.cs">
-      <DependentUpon>ISettings.cs</DependentUpon>
-    </Compile>
-    <Compile Update="FileSystemFormatterBase.cs">
-      <DependentUpon>IAsyncFormatter.cs</DependentUpon>
-    </Compile>
-    <Compile Update="IYamlSettings.cs">
-      <DependentUpon>IFileSystemSettings.cs</DependentUpon>
-    </Compile>
+    <ProjectReference Include="..\..\Basics\Basics.csproj" />
+    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\Newtonsoft.Json\Newtonsoft.Json.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <Compile Update="Abstractions\IJsonSettings.cs">
+      <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IYamlSettings.cs">
+      <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IFileSystemSettings.cs">
+      <DependentUpon>ISettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\YamlSettingsManager.cs">
+      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\JsonSettingsManager.cs">
+      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\EnvironmentSettings.cs">
+      <DependentUpon>ISettings.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

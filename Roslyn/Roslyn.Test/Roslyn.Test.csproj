@@ -43,4 +43,12 @@
     <ProjectReference Include="..\..\Modules\AutoWiringApi\AutoWiringApi.csproj" />
     <ProjectReference Include="..\AutoWiringApi.Analyzers\AutoWiringApi.Analyzers.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Tests\ImplSuffixAnalyzerTest.cs">
+      <DependentUpon>DiagnosticAnalyzerTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Tests\CodeFixProviderTestBase.cs">
+      <DependentUpon>DiagnosticAnalyzerTestBase.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

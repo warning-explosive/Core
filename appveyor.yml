@@ -91,6 +91,9 @@ for:
       - /release-(\d)+.(\d)+.(\d)+/
       - /hotfix-(\d)+.(\d)+.(\d)+/
       - /support-(\d)+.(\d)+.(\d)+/
+      - develop
+      - /feature-(\d)+/
+      - /pull-request-(\d)+/
 
 # debug job filter
 -
@@ -108,7 +111,7 @@ for:
 # "project" is relative to the original build directory and not influenced by directory changes in "before_build".
 build:
   parallel: true                                                                # enable MSBuild parallel builds
-  project: Core.sln                                      # path to Visual Studio solution or project
+  project: Core.sln                                                             # path to Visual Studio solution or project
   publish_wap: false                                                            # package Web Application Projects (WAP) for Web Deploy
   publish_wap_xcopy: false                                                      # package Web Application Projects (WAP) for XCopy deployment
   publish_wap_beanstalk: false                                                  # Package Web Applications for AWS Elastic Beanstalk deployment
@@ -132,36 +135,62 @@ before_build:
 # scripts to run after build (working directory and environment changes are persisted from the previous steps)
 after_build:
   - ps: |
-      $ErrorActionPreference = "Stop";
+      $ErrorActionPreference = "Stop"
 
-      Function Show([string]$arg)
-      {
+      Function Show([string]$arg) {
           Write-host $arg -ForegroundColor blue
       }
 
-      $loc = Get-Location
-      Show $loc
+      # release branches
+      $master = "master"
+      $release = "release-(\d)+.(\d)+.(\d)+"
+      $hotfix = "hotfix-(\d)+.(\d)+.(\d)+"
+      $support = "support-(\d)+.(\d)+.(\d)+"
 
-      $FullSemVer = gitversion /output json /showvariable FullSemVer
-      Show $FullSemVer
+      $isReleaseBranch = ($env:APPVEYOR_REPO_BRANCH -match $master) -or ($env:APPVEYOR_REPO_BRANCH -match $release) -or ($env:APPVEYOR_REPO_BRANCH -match $hotfix) -or ($env:APPVEYOR_REPO_BRANCH -match $support)
+      $isReleaseConfiguration = ($env:CONFIGURATION -eq "Release")
 
-      Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
-          $csprojFileName = [System.IO.Path]::GetFileName($_)
-          $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
-          $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
+      # debug branches
+      $develop = "develop"
+      $feature = "feature-(\d)+"
+      $pullRequest = "pull-request-(\d)+"
 
-          $packCmd = "msbuild '$csprojRelativePath' -t:pack -p:version=$FullSemVer -verbosity:minimal"
-          Show $packCmd
-          Invoke-Expression $packCmd
+      $isDebugBranch = ($env:APPVEYOR_REPO_BRANCH -match $develop) -or ($env:APPVEYOR_REPO_BRANCH -match $feature) -or ($env:APPVEYOR_REPO_BRANCH -match $pullRequest)
+      $isDebugConfiguration = ($env:CONFIGURATION -eq "Debug")
 
-          Get-ChildItem -Path $projectRelativeDirectory -Filter *.nupkg -Recurse -File -Name| ForEach-Object {
-              $nupkgFileName = [System.IO.Path]::GetFileName($_)
-              $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
-              $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
+      $releasePackages = ($isReleaseConfiguration -and $isReleaseBranch) -or ($isDebugConfiguration -and $isDebugBranch)
+      Show "releasePackages: $releasePackages"
 
-              $pushArtifact = "appveyor PushArtifact '$nupkgRelativePath'"
-              Show $pushArtifact
-              Invoke-Expression $pushArtifact
+      if (-not ($releasePackages)) {
+          Show "Release packages have skipped"
+          Show "Configuration: $env:CONFIGURATION"
+          Show "Branch: $env:APPVEYOR_REPO_BRANCH"
+      }
+      else {
+          $loc = Get-Location
+          Show $loc
+
+          $FullSemVer = gitversion /output json /showvariable FullSemVer
+          Show $FullSemVer
+
+          Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
+              $csprojFileName = [System.IO.Path]::GetFileName($_)
+              $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+              $csprojRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $csprojFileName)
+
+              $packCmd = "msbuild '$csprojRelativePath' -t:pack -p:version=$FullSemVer -verbosity:minimal"
+              Show $packCmd
+              Invoke-Expression $packCmd
+
+              Get-ChildItem -Path $projectRelativeDirectory -Filter *.nupkg -Recurse -File -Name| ForEach-Object {
+                  $nupkgFileName = [System.IO.Path]::GetFileName($_)
+                  $nupkgRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+                  $nupkgRelativePath = [System.IO.Path]::Combine($projectRelativeDirectory, $nupkgRelativeDirectory, $nupkgFileName)
+
+                  $pushArtifact = "appveyor PushArtifact '$nupkgRelativePath'"
+                  Show $pushArtifact
+                  Invoke-Expression $pushArtifact
+              }
           }
       }
 
@@ -169,17 +198,64 @@ after_build:
 #       tests configuration       #
 #---------------------------------#
 
-# to run tests against only selected assemblies and/or categories
-test:
-  assemblies:
-    only:
-      - '**\*.Test.dll'
+test_script:
+  - ps: |
+      $ErrorActionPreference = "Continue"
+
+      Function Show([string]$arg) {
+          Write-host $arg -ForegroundColor blue
+      }
+
+      # patterns
+      $test = "(.)+.Test"
+      $benchmark = "(.)+.Benchmark"
+
+      $artifact = ".\xunit-results.xml"
+      $isReleaseConfiguration = ($env:CONFIGURATION -eq "Release")
+      $loc = Get-Location
+      Show $loc
+
+      $errorState = $LastExitCode
+
+      Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
+          $fileName = [System.IO.Path]::GetFileName($_)
+          $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+          $isTest = $fileName -match $test
+          $isBenchmark = $fileName -match $benchmark
+
+          if ($isTest -or ($isBenchmark -and $isReleaseConfiguration)) {
+              $csprojAbsolutePath = [System.IO.Path]::Combine($loc, $projectRelativeDirectory, $fileName)
+              $runTests = "dotnet test '$csprojAbsolutePath' --configuration '$env:CONFIGURATION' --no-build /property:Platform=AnyCPU"
+              Show $runTests
+              Invoke-Expression $runTests
+              if ($LastExitCode -ne 0) {
+                  $errorState = $LastExitCode
+              }
+          }
+      }
+
+      if ($errorState -ne 0) {
+          $host.SetShouldExit($errorState)
+      }
 
 #---------------------------------#
 #     deployment configuration    #
 #---------------------------------#
 
-deploy: off
+deploy:
+  # Deploy to GitHub Releases
+  - provider: GitHub
+    auth_token:
+      secure: dHlQZdAl9VU4cL1VZNSvegxfo65P8Er6Ns/k7J5sBGTSJupSDDO3riseP9B+hX4o
+    artifact: /.*\.nupkg/
+    release: v$(APPVEYOR_BUILD_VERSION)
+    description: ''
+    draft: true
+    prerelease: false
+    on:
+      branch: master
+      APPVEYOR_REPO_TAG: true
+
 
 #---------------------------------#
 #         notifications           #

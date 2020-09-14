@@ -31,18 +31,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="ITypeInfoStorage.cs">
-      <DependentUpon>TypeExtensions.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeExtensionsImpl.cs">
-      <DependentUpon>ITypeExtensions.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ITypeExtensions.cs">
-      <DependentUpon>TypeExtensions.cs</DependentUpon>
-    </Compile>
-    <Compile Update="TypeInfoStorage.cs">
-      <DependentUpon>ITypeInfoStorage.cs</DependentUpon>
-    </Compile>
     <Compile Update="ActionExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
@@ -55,10 +43,14 @@
     <Compile Update="MethodFinder.cs">
       <DependentUpon>MethodExtensions.cs</DependentUpon>
     </Compile>
+    <Compile Update="TypeInfo.cs">
+      <DependentUpon>ITypeInfo.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
   </ItemGroup>
 </Project>

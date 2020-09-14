@@ -12,6 +12,19 @@ namespace SpaceEngineers.Core.Basics
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
         /// <summary>
+        /// Check that object has property
+        /// </summary>
+        /// <param name="target">Target object</param>
+        /// <param name="propertyName">Name of the property</param>
+        /// <returns>Property value</returns>
+        public static bool HasProperty(this object target, string propertyName)
+        {
+            return target
+                  .GetType()
+                  .GetProperty(propertyName, Flags) != null;
+        }
+
+        /// <summary>
         /// Get property value from target object
         /// </summary>
         /// <param name="target">Target object</param>
@@ -26,6 +39,31 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Get property value from target object
+        /// </summary>
+        /// <param name="target">Target object</param>
+        /// <param name="propertyName">Name of the property</param>
+        /// <typeparam name="TProperty">TProperty type-argument</typeparam>
+        /// <returns>Property value</returns>
+        public static TProperty GetPropertyValue<TProperty>(this object target, string propertyName)
+        {
+            return (TProperty)target.GetPropertyValue(propertyName);
+        }
+
+        /// <summary>
+        /// Check that object has field
+        /// </summary>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <returns>Field value</returns>
+        public static bool HasField(this object target, string fieldName)
+        {
+            return target
+                  .GetType()
+                  .GetField(fieldName, Flags) != null;
+        }
+
+        /// <summary>
         /// Get field value from target object
         /// </summary>
         /// <param name="target">Target object</param>
@@ -37,6 +75,18 @@ namespace SpaceEngineers.Core.Basics
                   .GetType()
                   .GetField(fieldName, Flags)
                   .GetValue(target);
+        }
+
+        /// <summary>
+        /// Get field value from target object
+        /// </summary>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <typeparam name="TField">TField type-argument</typeparam>
+        /// <returns>Field value</returns>
+        public static TField GetFieldValue<TField>(this object target, string fieldName)
+        {
+            return (TField)target.GetFieldValue(fieldName);
         }
 
         /// <summary>

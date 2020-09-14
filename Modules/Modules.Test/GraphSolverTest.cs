@@ -423,7 +423,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.TryExtractFromNullable($"Path not found: {candidate}");
+                occurrence.EnsureNotNull($"Path not found: {candidate}");
             }
         }
     }

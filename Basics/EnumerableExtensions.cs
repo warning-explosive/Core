@@ -4,12 +4,52 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
+    using Exceptions;
 
     /// <summary>
     /// Enumerable extensions
     /// </summary>
     public static class EnumerableExtensions
     {
+        /// <summary> Produce cartesian product of source columns </summary>
+        /// <param name="sourceColumns">Source columns</param>
+        /// <typeparam name="T">Item type-argument</typeparam>
+        /// <returns>Cartesian product of source columns</returns>
+        public static IEnumerable<ICollection<T>> ColumnsCartesianProduct<T>(this IEnumerable<IEnumerable<T>> sourceColumns)
+        {
+            if (!sourceColumns.Any())
+            {
+                return Enumerable.Empty<ICollection<T>>();
+            }
+
+            IEnumerable<ICollection<T>> seed = sourceColumns.Take(1)
+                                                            .Single()
+                                                            .Select(item => new List<T> { item });
+
+            return sourceColumns.Skip(1)
+                                .Aggregate(seed,
+                                           (accumulator, next) =>
+                                               accumulator.Join(next,
+                                                                _ => true,
+                                                                _ => true,
+                                                                (left, right) => new List<T>(left) { right }));
+        }
+
+        /// <summary>
+        /// Source enumerator without nulls
+        /// </summary>
+        /// <param name="source">Source enumerator</param>
+        /// <typeparam name="TSource">Source item type type-argument</typeparam>
+        /// <typeparam name="TReturn">TReturn source item type type-argument</typeparam>
+        /// <returns>Source without nulls</returns>
+        public static IEnumerable<TReturn> WithoutNulls<TSource, TReturn>(this IEnumerable<TSource> source)
+            where TReturn : notnull, TSource
+        {
+            return source.Where(item => item != null)
+                         .OfType<TReturn>();
+        }
+
         /// <summary> Execute action on each element </summary>
         /// <param name="source">A sequence of values to invoke an action on</param>
         /// <param name="action">An action to apply to each source element</param>
@@ -36,6 +76,14 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
+        /// <summary> Select collection from untyped IEnumerable </summary>
+        /// <param name="enumerable">IEnumerable</param>
+        /// <returns>Collection of objects</returns>
+        public static IEnumerable<object> ToObjectEnumerable(this IEnumerable enumerable)
+        {
+            return enumerable.GetEnumerator().ToObjectEnumerable();
+        }
+
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
         /// <returns>Collection of objects</returns>
@@ -60,6 +108,48 @@ namespace SpaceEngineers.Core.Basics
             source.Each(queue.Enqueue);
 
             return queue;
+        }
+
+        /// <summary>
+        /// Informative single extraction
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <typeparam name="T">Collection item type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingle<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
+        {
+            if (!source.Any())
+            {
+                throw new NotFoundException("Source collection is empty");
+            }
+
+            if (source.Take(2).Count() != 1)
+            {
+                throw new AmbiguousMatchException(amb(source));
+            }
+
+            return source.Single();
+        }
+
+        /// <summary>
+        /// Informative single or default extraction
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <typeparam name="T">Collection item type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
+        {
+            if (source.Take(2).Count() != 1)
+            {
+                throw new AmbiguousMatchException(amb(source));
+            }
+
+            return source.Single();
         }
     }
 }

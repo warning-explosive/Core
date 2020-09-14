@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -33,19 +33,28 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
-    <PackageReference Include="SimpleInjector" Version="4.9.0" />
+    <PackageReference Include="SimpleInjector" Version="5.0.3" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="ServiceRegistrationInfo.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="LifeStyleMapper.cs">
-      <DependentUpon>DependencyContainer.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Implementations\ManualRegistrationTypesMustBeRegistered.cs">
+      <DependentUpon>AttributesVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\AttributesVerifierBase.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\UnregisteredTypesMustBeUnregistered.cs">
+      <DependentUpon>AttributesVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\MustNotHaveLifestyleAttribute.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\VersionForDependency.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

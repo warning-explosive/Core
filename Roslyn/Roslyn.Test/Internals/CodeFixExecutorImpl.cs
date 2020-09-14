@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
                              .Single()
                              .ChangedSolution
                              .GetDocument(document.Id)
-                             .TryExtractFromNullable();
+                             .EnsureNotNull($"{nameof(ApplyChangesOperation.ChangedSolution)} must contains document {document.Id}");
         }
 
         /// <summary>

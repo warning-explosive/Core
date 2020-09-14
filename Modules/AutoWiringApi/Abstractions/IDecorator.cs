@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
     /// </summary>
     /// <typeparam name="TResolvable">IResolvable</typeparam>
     public interface IDecorator<TResolvable>
-        where TResolvable : IResolvable
+        where TResolvable : class
     {
         /// <summary>
         /// Decoratee

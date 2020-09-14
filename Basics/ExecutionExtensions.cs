@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
     /// <summary>
@@ -41,19 +40,21 @@ namespace SpaceEngineers.Core.Basics
         /// Invoke client function
         /// </summary>
         /// <param name="info">FunctionExecutionInfo</param>
+        /// <param name="exceptionHandler">Exception handler</param>
         /// <typeparam name="TResult">Function TResult type-argument</typeparam>
         /// <returns>TResult</returns>
-        public static TResult Invoke<TResult>(this FunctionExecutionInfo<TResult> info)
+        public static TResult Invoke<TResult>(this FunctionExecutionInfo<TResult> info,
+                                              Func<Exception, TResult>? exceptionHandler = null)
         {
-            return info.InvokeInternal();
+            return info.InvokeInternal(exceptionHandler);
         }
 
         /// <summary>
-        /// Can be exception catched or not
+        /// Can be exception caught or not
         /// </summary>
         /// <param name="exception">Exception</param>
-        /// <returns>Can be exception catched or not sign</returns>
-        internal static bool CanBeCatched(Exception exception)
+        /// <returns>Can be exception caught or not sign</returns>
+        internal static bool CanBeCaught(Exception exception)
         {
             return !ExceptionTypesForSkip.Contains(exception.GetType());
         }

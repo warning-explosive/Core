@@ -139,7 +139,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             return argsDictionary;
         }
 
-        private static bool TryGetValue(Type type, string strValue, out object? typedValue)
+        private static bool TryGetValue(Type type, string? strValue, out object? typedValue)
         {
             typedValue = default;
 
@@ -208,8 +208,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             result = typeof(CliArgumentsParserImpl).CallMethod(nameof(TryParseEnum))
                                                    .WithTypeArgument(enumType)
                                                    .WithArgument(strValue)
-                                                   .Invoke()
-                                                   .TryExtractFromNullable<object>();
+                                                   .Invoke<object>();
 
             var separatedValues = strValue.ToUpperInvariant()
                                           .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -233,8 +232,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         {
             return value.CallMethod(nameof(Enum.ToString))
                         .WithArgument("G")
-                        .Invoke()
-                        .TryExtractFromNullable<string>();
+                        .Invoke<string>();
         }
     }
 }

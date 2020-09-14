@@ -1,10 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using System;
-    using Basics.Attributes;
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    internal sealed class TestCondition1Attribute : BaseAttribute
+    internal sealed class TestCondition1Attribute : Attribute
     {
     }
 }

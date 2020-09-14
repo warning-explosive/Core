@@ -1,0 +1,6 @@
+{
+  "ErrorQueueName": "errorQueueName",
+  "AuditQueueName": "auditQueueName",
+  "MonitoringQueueName": "monitoringQueueName",
+  "ServiceControlQueueName": "serviceControlQueueName"
+}

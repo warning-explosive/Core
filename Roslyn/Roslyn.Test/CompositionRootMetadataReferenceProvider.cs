@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Roslyn.Test
 {
     using System.Collections.Generic;
     using Api;
-    using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Microsoft.CodeAnalysis;
@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.Roslyn.Test
         {
             return new[]
                    {
-                       typeof(DependencyContainer).Assembly.CreateReference(),
+                       typeof(IDependencyContainer).Assembly.CreateReference(),
                        typeof(LifestyleAttribute).Assembly.CreateReference()
                    };
         }

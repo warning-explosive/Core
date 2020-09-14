@@ -19,6 +19,25 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
+        internal void HandleCaughtExceptionsTest()
+        {
+            Action action = () => throw TestExtensions.TrueException();
+
+            action.Try().Catch<TrueException>().Invoke();
+            action.Try().Catch<TrueException>(ex => { }).Invoke();
+
+            void HandleCaught() => action.Try()
+                                         .Catch<TrueException>()
+                                         .Invoke(ex => throw TestExtensions.FalseException());
+            Assert.Throws<FalseException>(HandleCaught);
+
+            void HandleNotCaught() => action.Try()
+                                            .Catch<FalseException>()
+                                            .Invoke(ex => throw TestExtensions.FalseException());
+            Assert.Throws<TrueException>(HandleNotCaught);
+        }
+
+        [Fact]
         internal void SimpleTest()
         {
             Action action = () => { };
@@ -58,6 +77,18 @@ namespace SpaceEngineers.Core.Basics.Test
             void TestAction() => action.Try()
                                        .Catch<FalseException>(ex => throw TrueException())
                                        .Invoke();
+
+            Assert.Throws<TrueException>(TestAction);
+        }
+
+        [Fact]
+        internal void ThrowInInvokeBlockTest()
+        {
+            Action action = () => throw FalseException();
+
+            void TestAction() => action.Try()
+                                       .Catch<FalseException>()
+                                       .Invoke(ex => throw TrueException());
 
             Assert.Throws<TrueException>(TestAction);
         }

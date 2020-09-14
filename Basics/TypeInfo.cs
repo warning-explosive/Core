@@ -8,31 +8,57 @@ namespace SpaceEngineers.Core.Basics
     using Attributes;
 
     [DebuggerDisplay("{OriginalType}")]
-    internal class TypeInfo
+    internal class TypeInfo : ITypeInfo
     {
         internal TypeInfo(Type type)
         {
             OriginalType = type;
-
-            Dependencies = type.GetCustomAttribute<DependencyAttribute>()?.Dependencies.ToArray()
-                        ?? Array.Empty<Type>();
-
-            ExtractDeclaredInterfaces(type);
-            ExtractBaseOpenGenericTypes(type);
-            ExtractOpenGenericInterfaces(type);
+            Dependencies = type.GetCustomAttribute<DependencyAttribute>()?.Dependencies ?? new List<Type>();
+            BaseTypes = ExtractBaseTypes(type).ToList();
+            GenericTypeDefinitions = ExtractGenericTypeDefinitions(type).ToList();
+            DeclaredInterfaces = ExtractDeclaredInterfaces(type).ToList();
+            GenericInterfaceDefinitions = ExtractGenericInterfaceDefinitions(type).ToList();
+            Attributes = ExtractAttributes(type).ToList();
         }
 
-        internal Type OriginalType { get; }
+        public Type OriginalType { get; }
 
-        internal Type[] Dependencies { get; }
+        public IReadOnlyCollection<Type> Dependencies { get; }
 
-        internal ICollection<Type> DeclaredInterfaces { get; } = new List<Type>();
+        public IReadOnlyCollection<Type> BaseTypes { get; }
 
-        internal ICollection<Type> GenericTypeDefinitions { get; } = new List<Type>();
+        public IReadOnlyCollection<Type> GenericTypeDefinitions { get; }
 
-        internal ICollection<Type> GenericInterfaceDefinitions { get; } = new List<Type>();
+        public IReadOnlyCollection<Type> DeclaredInterfaces { get; }
 
-        private void ExtractDeclaredInterfaces(Type type)
+        public IReadOnlyCollection<Type> GenericInterfaceDefinitions { get; }
+
+        public IReadOnlyCollection<Attribute> Attributes { get; }
+
+        private static IEnumerable<Type> ExtractBaseTypes(Type currentType)
+        {
+            while (currentType.BaseType != null)
+            {
+                yield return currentType.BaseType;
+
+                currentType = currentType.BaseType;
+            }
+        }
+
+        private static IEnumerable<Type> ExtractGenericTypeDefinitions(Type currentType)
+        {
+            while (currentType != null)
+            {
+                if (currentType.IsGenericType)
+                {
+                    yield return currentType.GetGenericTypeDefinition();
+                }
+
+                currentType = currentType.BaseType;
+            }
+        }
+
+        private static IEnumerable<Type> ExtractDeclaredInterfaces(Type type)
         {
             var allTypeInterfaces = type.GetInterfaces();
             var nestedInterfaces = allTypeInterfaces.SelectMany(i => i.GetInterfaces());
@@ -47,28 +73,31 @@ namespace SpaceEngineers.Core.Basics
                 currentType = currentType.BaseType;
             }
 
-            declaredInterfaces.Each(i => DeclaredInterfaces.Add(i));
-        }
-
-        private void ExtractBaseOpenGenericTypes(Type currentType)
-        {
-            while (currentType.BaseType != null)
+            foreach (var i in declaredInterfaces)
             {
-                if (currentType.IsGenericType)
-                {
-                    GenericTypeDefinitions.Add(currentType.GetGenericTypeDefinition());
-                }
-
-                currentType = currentType.BaseType;
+                yield return i;
             }
         }
 
-        private void ExtractOpenGenericInterfaces(Type type)
+        private static IEnumerable<Type> ExtractGenericInterfaceDefinitions(Type type)
         {
-            foreach (var i in type.GetInterfaces().Where(i => i.IsGenericType))
+            var source = type.GetInterfaces().AsEnumerable();
+
+            if (type.IsInterface)
             {
-                GenericInterfaceDefinitions.Add(i.GetGenericTypeDefinition());
+                source = new[] { type }.Concat(source);
             }
+
+            foreach (var i in source.Where(i => i.IsGenericType))
+            {
+                yield return i.GetGenericTypeDefinition();
+            }
+        }
+
+        private IEnumerable<Attribute> ExtractAttributes(Type type)
+        {
+            return type.GetCustomAttributes(true)
+                       .OfType<Attribute>();
         }
     }
 }

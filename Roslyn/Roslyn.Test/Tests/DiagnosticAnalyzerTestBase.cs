@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Linq;
     using Api;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
@@ -29,11 +30,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            var assemblies = AppDomain.CurrentDomain
-                                      .TryExtractFromNullable(() => new InvalidOperationException("CurrentDomain is null"))
-                                      .GetAssemblies();
-
-            DependencyContainer = new DependencyContainer(assemblies);
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(new DependencyContainerOptions());
 
             _analyzerExecutor = DependencyContainer.Resolve<IDiagnosticsAnalyzerExecutor>();
             _analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();
@@ -49,7 +46,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         /// <summary>
         /// DependencyContainer
         /// </summary>
-        protected DependencyContainer DependencyContainer { get; }
+        protected IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// Default test with empty source

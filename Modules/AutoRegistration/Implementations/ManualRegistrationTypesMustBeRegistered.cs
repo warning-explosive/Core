@@ -33,8 +33,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
         private static bool SkipBypassTypes(Type type)
         {
-            return type != typeof(Versioned<>)
-                && type != typeof(VersionForStub<>);
+            return type != typeof(Versioned<>);
         }
     }
 }

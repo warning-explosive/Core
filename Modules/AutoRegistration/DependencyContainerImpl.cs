@@ -109,13 +109,13 @@ namespace SpaceEngineers.Core.AutoRegistration
             return this;
         }
 
-        public IRegistrationContainer RegisterVersion<TService>(EnLifestyle lifestyle)
+        public IRegistrationContainer RegisterVersioned<TService>(EnLifestyle lifestyle)
             where TService : class
         {
-            return RegisterVersion(typeof(TService), lifestyle);
+            return RegisterVersioned(typeof(TService), lifestyle);
         }
 
-        public IRegistrationContainer RegisterVersion(Type serviceType, EnLifestyle lifestyle)
+        public IRegistrationContainer RegisterVersioned(Type serviceType, EnLifestyle lifestyle)
         {
             _container.Register(typeof(IVersioned<>).MakeGenericType(serviceType),
                                 typeof(Versioned<>).MakeGenericType(serviceType),
@@ -332,20 +332,20 @@ namespace SpaceEngineers.Core.AutoRegistration
             container.RegisterVersionedComponents(all.VersionedComponents(container).ToList());
 
             // 2. IVersionFor<T> collection
-            var versionFor = all
+            var versionFor = servicesProvider
+                .Versions()
                 .Select(service => typeof(IVersionFor<>).MakeGenericType(service))
-                .GetComponents(container, typeProvider, true);
+                .GetComponents(container, typeProvider, true)
+                .ToList();
 
-            var versionForStubs = all
-                .Except(servicesProvider.Versions())
-                .Select(service => new
-                {
-                    ServiceType = typeof(IVersionFor<>).MakeGenericType(service),
-                    ImplementationType = typeof(VersionForStub<>).MakeGenericType(service),
-                })
-                .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ImplementationType, EnLifestyle.Singleton));
-
-            container.RegisterCollections(versionFor.Concat(versionForStubs).ToList());
+            if (versionFor.Any())
+            {
+                container.RegisterCollections(versionFor);
+            }
+            else
+            {
+                container.RegisterEmptyCollection(typeof(IVersionFor<>));
+            }
         }
     }
 }

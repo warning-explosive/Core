@@ -7,11 +7,11 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     [Lifestyle(EnLifestyle.Transient)]
     internal class ConcreteImplementationWithOpenGenericVersionedDependency<T> : IResolvable
     {
-        private IVersioned<ConcreteImplementationGenericService<T>> _versionedOpenGeneric;
-
         public ConcreteImplementationWithOpenGenericVersionedDependency(IVersioned<ConcreteImplementationGenericService<T>> versionedOpenGeneric)
         {
-            _versionedOpenGeneric = versionedOpenGeneric;
+            VersionedOpenGeneric = versionedOpenGeneric;
         }
+
+        public IVersioned<ConcreteImplementationGenericService<T>> VersionedOpenGeneric { get; }
     }
 }

@@ -34,9 +34,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
             _container = container;
             _versionedContainer = versionedContainer;
             Original = original;
-            Versions = versions.Where(v => !v.GetType().IsSubclassOfOpenGeneric(typeof(VersionForStub<>)))
-                               .Select(v => v.Version)
-                               .ToList();
+            Versions = versions.Select(v => v.Version).ToList();
             _versionProducers = new Dictionary<Guid, InstanceProducer<TService>>();
         }
 

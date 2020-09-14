@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Extensions;
     using SimpleInjector;
 
-    [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle} - {Attribute}")]
+    [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle}")]
     internal class ServiceRegistrationInfo
     {
         internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)

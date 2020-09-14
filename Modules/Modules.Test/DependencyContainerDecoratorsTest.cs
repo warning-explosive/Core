@@ -29,8 +29,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var localContainer = SetupDependencyContainer(container =>
                                                           {
-                                                              container.RegisterVersion<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
-                                                              container.RegisterVersion<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
+                                                              container.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
+                                                              container.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
                                                           });
 
             // non-generic

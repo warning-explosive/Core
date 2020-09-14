@@ -189,10 +189,24 @@ namespace SpaceEngineers.Core.Modules.Test
                                 Output.WriteLine(closed.ToString());
                                 if (!container.HasRegistration(versionedService))
                                 {
-                                    container.RegisterVersion(closed, EnLifestyle.Transient);
+                                    container.RegisterVersioned(closed, EnLifestyle.Transient);
                                 }
                             });
             }
+        }
+
+        [Fact]
+        internal void ServiceWithOpenGenericVersionedDependencyTest()
+        {
+            var resolved = DependencyContainer.Resolve<ConcreteImplementationWithOpenGenericVersionedDependency<object>>();
+            Assert.Equal(resolved.VersionedOpenGeneric.Current, resolved.VersionedOpenGeneric.Original);
+        }
+
+        [Fact]
+        internal void ExternalServiceWithOpenGenericVersionedDependencyTest()
+        {
+            var resolved = DependencyContainer.Resolve<IVersioned<IComparable<ExternalResolvableImpl>>>();
+            Assert.Equal(resolved.Current, resolved.Original);
         }
 
         [Fact]

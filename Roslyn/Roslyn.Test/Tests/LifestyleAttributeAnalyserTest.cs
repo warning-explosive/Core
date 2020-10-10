@@ -1,9 +1,8 @@
-namespace SpaceEngineers.Core.Roslyn.Test
+namespace SpaceEngineers.Core.Roslyn.Test.Tests
 {
     using System;
     using Api;
     using AutoWiringApi.Analyzers;
-    using Tests;
     using Xunit;
     using Xunit.Abstractions;
 

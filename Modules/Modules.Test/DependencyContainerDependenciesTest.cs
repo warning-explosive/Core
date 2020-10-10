@@ -22,11 +22,12 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void IsOurReferenceTest()
         {
-            var solutionDirectory = SolutionExtensions.SolutionDirectory();
-            Output.WriteLine(solutionDirectory);
+            var solutionFile = SolutionExtensions.SolutionFile();
+            Output.WriteLine(solutionFile.FullName);
 
-            var ourAssembliesNames = solutionDirectory
-                                    .Projects()
+            var ourAssembliesNames = solutionFile
+                                    .Directory
+                                    .ProjectFiles()
                                     .Select(p => p.AssemblyName())
                                     .ToHashSet();
 

@@ -64,9 +64,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private static void SetupFileSystemSettingsDirectory()
         {
-            var fileSystemSettingsDirectory = Path.Combine(SolutionExtensions.ProjectDirectory(), "Settings");
+            var fileSystemSettingsDirectory = SolutionExtensions.ProjectFile().Directory.StepInto("Settings");
             Environment.SetEnvironmentVariable(Constants.FileSystemSettingsDirectory,
-                                               fileSystemSettingsDirectory,
+                                               fileSystemSettingsDirectory.FullName,
                                                EnvironmentVariableTarget.Process);
         }
     }

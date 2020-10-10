@@ -13,47 +13,58 @@ namespace SpaceEngineers.Core.Basics
     public static class SolutionExtensions
     {
         /// <summary>
-        /// Find solution directory
+        /// Find nearest solution file (*.sln)
         /// Has valid behavior only in test environment where we have full solution structure on disk
         /// </summary>
         /// <returns>Solution directory path</returns>
         /// <exception cref="DirectoryNotFoundException">If solution directory not found or depth in 42 nested directories exceeded</exception>
-        public static string SolutionDirectory()
+        public static FileInfo SolutionFile()
         {
-            return FindDirectory("*.sln");
+            return FindFile("*.sln");
         }
 
         /// <summary>
-        /// Find project directory
+        /// Find nearest project file (*.csproj)
         /// Has valid behavior only in test environment where we have full solution structure on disk
         /// </summary>
         /// <returns>Project directory path</returns>
         /// <exception cref="DirectoryNotFoundException">If project directory not found or depth in 42 nested directories exceeded</exception>
-        public static string ProjectDirectory()
+        public static FileInfo ProjectFile()
         {
-            return FindDirectory("*.csproj");
+            return FindFile("*.csproj");
         }
 
         /// <summary>
-        /// Returns all projects files paths (*.csproj) in specified solution directory
+        /// Returns all projects files (*.csproj) in specified solution directory
         /// Has valid behavior only in test environment where we have full solution structure on disk
         /// </summary>
-        /// <param name="solutionDirectory">Solution directory path</param>
+        /// <param name="solutionDirectory">Solution directory (*.sln)</param>
         /// <returns>Projects files paths in specified solution directory</returns>
-        public static string[] Projects(this string solutionDirectory)
+        public static FileInfo[] ProjectFiles(this DirectoryInfo solutionDirectory)
         {
-            return Directory.GetFiles(solutionDirectory, "*.csproj", SearchOption.AllDirectories);
+            return solutionDirectory.GetFiles("*.csproj", SearchOption.AllDirectories);
+        }
+
+        /// <summary>
+        /// Returns all source files (*.cs) in specified project directory
+        /// Has valid behavior only in test environment where we have full solution structure on disk
+        /// </summary>
+        /// <param name="projectDirectory">Project directory (*.csproj)</param>
+        /// <returns>Projects files paths in specified solution directory</returns>
+        public static FileInfo[] SourceFiles(this DirectoryInfo projectDirectory)
+        {
+            return projectDirectory.GetFiles("*.cs", SearchOption.AllDirectories);
         }
 
         /// <summary>
         /// Returns assembly name of specified project file (.*csproj)
         /// </summary>
-        /// <param name="projectFilePath">Project file path (.*csproj)</param>
+        /// <param name="csproj">Project file (.*csproj)</param>
         /// <returns>Assembly name of specified project</returns>
         /// <exception cref="InvalidOperationException">Throws if project file has invalid structure</exception>
-        public static string AssemblyName(this string projectFilePath)
+        public static string AssemblyName(this FileInfo csproj)
         {
-            var projectDocument = XDocument.Load(projectFilePath, LoadOptions.None);
+            var projectDocument = XDocument.Load(csproj.FullName, LoadOptions.None);
 
             if (projectDocument.Root == null
              || projectDocument.Root.Name != "Project")
@@ -75,28 +86,36 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        private static string FindDirectory(string pattern)
+        private static FileInfo FindFile(string pattern)
         {
             var assembly = Assembly.GetExecutingAssembly()
-                                   .EnsureNotNull("ExecutingAssembly must exists");
+                                   .EnsureNotNull("ExecutingAssembly must exists")
+                                   .Location
+                                   .EnsureNotNull($"ExecutingAssembly must have {nameof(Assembly.Location)}");
 
-            var directory = new FileInfo(assembly.Location).Directory.FullName;
+            var directory = assembly.AsFileInfo().Directory;
 
             for (var i = 0;
-                 !SolutionFileExist(directory) && i < 42;
+                 !FileExist(directory, out _) && i < 42;
                  ++i)
             {
-                directory = Path.Combine(directory, "..");
+                directory = directory.Parent;
             }
 
-            if (!SolutionFileExist(directory))
+            if (!FileExist(directory, out var file))
             {
                 throw new DirectoryNotFoundException($"Directory with {pattern} not found");
             }
 
-            return new DirectoryInfo(directory).FullName;
+            return file.EnsureNotNull("File must exists");
 
-            bool SolutionFileExist(string dir) => Directory.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly).Any();
+            bool FileExist(DirectoryInfo directoryInfo, out FileInfo? fileInfo)
+            {
+                fileInfo = directoryInfo.GetFiles(pattern, SearchOption.TopDirectoryOnly)
+                                        .FirstOrDefault();
+
+                return fileInfo != null;
+            }
         }
     }
 }

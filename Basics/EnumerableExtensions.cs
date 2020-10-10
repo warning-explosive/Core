@@ -12,6 +12,18 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class EnumerableExtensions
     {
+        /// <summary>
+        /// Flatten source stream
+        /// </summary>
+        /// <param name="source">Source stream</param>
+        /// <param name="unfold">Unfold function</param>
+        /// <typeparam name="T">Element type-argument</typeparam>
+        /// <returns> Flatten source </returns>
+        public static IEnumerable<T> Flatten<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> unfold)
+        {
+            return source.SelectMany(item => Flatten(unfold(item), unfold).Concat(new[] { item }));
+        }
+
         /// <summary> Produce cartesian product of source columns </summary>
         /// <param name="sourceColumns">Source columns</param>
         /// <typeparam name="T">Item type-argument</typeparam>
@@ -144,12 +156,12 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            if (source.Take(2).Count() != 1)
+            if (source.Take(2).Count() == 2)
             {
                 throw new AmbiguousMatchException(amb(source));
             }
 
-            return source.Single();
+            return source.SingleOrDefault();
         }
     }
 }

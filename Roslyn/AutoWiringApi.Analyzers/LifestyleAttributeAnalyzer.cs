@@ -98,9 +98,10 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                     || symbol.AllInterfaces.Any(i => i.Equals(service));
             }
 
-            var isComponent = baseSymbols.OfType<INamedTypeSymbol>()
-                                         .Any(symbol => IsDerivedFromService(symbol, resolvable)
-                                                   || IsDerivedFromService(symbol, collectionResolvable));
+            var isComponent = baseSymbols
+                             .OfType<INamedTypeSymbol>()
+                             .Any(symbol => (resolvable != null && IsDerivedFromService(symbol, resolvable))
+                                         || (collectionResolvable != null && IsDerivedFromService(symbol, collectionResolvable)));
 
             return isComponent;
         }

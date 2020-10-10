@@ -69,9 +69,10 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        internal Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
+        internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
         {
-            return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx) ?? FromMatchesTypeArgumentSelector(ctx);
+            return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
+                       ?? FromMatchesTypeArgumentSelector(ctx);
         }
 
         internal static Type? FromExistedClosedTypesTypeArgumentSelector(IEnumerable<Type> source, TypeArgumentSelectionContext ctx)

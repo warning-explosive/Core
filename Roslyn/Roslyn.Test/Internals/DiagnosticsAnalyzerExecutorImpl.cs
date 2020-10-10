@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using Api;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
+    using Basics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -82,6 +83,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
         {
             return project.GetCompilationAsync()
                           .Result
+                          .EnsureNotNull("Compilation must have value")
                           .WithAnalyzers(ImmutableArray.Create(analyzer))
                           .GetAnalyzerDiagnosticsAsync()
                           .Result

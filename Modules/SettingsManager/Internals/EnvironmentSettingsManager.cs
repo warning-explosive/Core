@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
             throw new InvalidOperationException("Setting environment variables is prohibited");
         }
 
-        internal EnvironmentSettingsEntry Get(string entryKey)
+        internal static EnvironmentSettingsEntry Get(string entryKey)
         {
             var entryValue = Environment
                             .GetEnvironmentVariable(entryKey, EnvironmentVariableTarget.Process)

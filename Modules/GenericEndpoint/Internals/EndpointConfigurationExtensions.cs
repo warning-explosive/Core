@@ -37,10 +37,8 @@
             transport.ConnectionString(settings.RabbitMqConnectionString.ToString());
             transport.Transactions(TransportTransactionMode.ReceiveOnly);
             transport.UseConventionalRoutingTopology();
-            transport.UsePublisherConfirms(true);
 
             configuration.EnableDurableMessages();
-            transport.UseDurableExchangesAndQueues(true);
 
             transport.PrefetchCount(settings.PrefetchCount);
             transport.SetHeartbeatInterval(settings.HeartbeatInterval);

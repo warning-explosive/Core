@@ -41,9 +41,9 @@ namespace SpaceEngineers.Core.Basics.Test.DeepCopy
         /*
          * Nullable
          */
-        internal int? NullableInt { get; } = null;
+        internal int? NullableInt { get; }
 
-        internal TestReferenceWithoutSystemTypes? NullableReference { get; } = null;
+        internal TestReferenceWithoutSystemTypes? NullableReference { get; }
 
         internal Array? ArrayOfNulls { get; set; }
 

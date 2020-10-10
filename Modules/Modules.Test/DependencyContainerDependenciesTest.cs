@@ -123,7 +123,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Output.WriteLine(string.Join(Environment.NewLine, notUniqueTypes));
             }
 
-            Assert.Equal(ourTypes.Count(), ourTypes.Distinct().Count());
+            Assert.Equal(ourTypes.Count, ourTypes.Distinct().Count());
         }
     }
 }

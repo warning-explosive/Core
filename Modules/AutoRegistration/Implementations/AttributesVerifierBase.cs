@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
                   .Distinct();
         }
 
-        protected IEnumerable<Type> ExtractAutoWiringServices(Type type)
+        protected static IEnumerable<Type> ExtractAutoWiringServices(Type type)
         {
             return type.IncludedTypes().Where(i => typeof(IResolvable).IsAssignableFrom(i))
                        .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))

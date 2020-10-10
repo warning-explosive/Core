@@ -391,7 +391,7 @@ namespace SpaceEngineers.Core.Modules.Test
             public TestFlagsEnum? NullableTestFlagsEnum { get; set; }
 
             /// <summary> String </summary>
-            public string? String { get; set; } = null;
+            public string? String { get; set; }
 
             /// <inheritdoc />
             public override string ToString()

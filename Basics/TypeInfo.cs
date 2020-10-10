@@ -94,7 +94,7 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        private IEnumerable<Attribute> ExtractAttributes(Type type)
+        private static IEnumerable<Attribute> ExtractAttributes(Type type)
         {
             return type.GetCustomAttributes(true)
                        .OfType<Attribute>();

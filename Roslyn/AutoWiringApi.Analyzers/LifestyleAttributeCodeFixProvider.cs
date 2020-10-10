@@ -107,7 +107,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                                     syntax.WithAdditionalAnnotations(syntaxAnnotation));
         }
 
-        private SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
+        private static SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
         {
             var trivia = namespaceDeclaration.Usings.First().GetLeadingTrivia();
 
@@ -127,7 +127,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                   .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
         }
 
-        private SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
+        private static SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
         {
             var originalAttributesList = typeDeclaration.AttributeLists;
 

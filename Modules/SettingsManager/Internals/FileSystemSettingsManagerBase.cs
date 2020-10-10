@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
 
         protected FileSystemSettingsManagerBase()
         {
-            var dir = new EnvironmentSettingsManager().Get(Constants.FileSystemSettingsDirectory).Value;
+            var dir = EnvironmentSettingsManager.Get(Constants.FileSystemSettingsDirectory).Value;
 
             if (!Directory.Exists(dir))
             {

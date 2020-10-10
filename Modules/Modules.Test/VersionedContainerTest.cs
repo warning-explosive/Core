@@ -647,12 +647,12 @@ namespace SpaceEngineers.Core.Modules.Test
             IVersioned<SingletonImplementation> ResolveVersioned() => DependencyContainer.Resolve<IVersioned<SingletonImplementation>>();
         }
 
-        private void CheckTransient<TTransient>(Func<TTransient> resolveOriginal,
-                                                Func<IEnumerable<TTransient>> resolveVersions,
-                                                Func<IVersioned<TTransient>> resolveVersioned,
-                                                Type originalVersion,
-                                                Type currentVersion,
-                                                Type[] expectedVersionsTypes)
+        private static void CheckTransient<TTransient>(Func<TTransient> resolveOriginal,
+                                                       Func<IEnumerable<TTransient>> resolveVersions,
+                                                       Func<IVersioned<TTransient>> resolveVersioned,
+                                                       Type originalVersion,
+                                                       Type currentVersion,
+                                                       Type[] expectedVersionsTypes)
             where TTransient : class
         {
             // original
@@ -726,12 +726,12 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private void CheckSingleton<TSingleton>(Func<TSingleton> resolveOriginal,
-                                                Func<IEnumerable<TSingleton>> resolveVersions,
-                                                Func<IVersioned<TSingleton>> resolveVersioned,
-                                                Type originalVersion,
-                                                Type currentVersion,
-                                                Type[] expectedVersionsTypes)
+        private static void CheckSingleton<TSingleton>(Func<TSingleton> resolveOriginal,
+                                                       Func<IEnumerable<TSingleton>> resolveVersions,
+                                                       Func<IVersioned<TSingleton>> resolveVersioned,
+                                                       Type originalVersion,
+                                                       Type currentVersion,
+                                                       Type[] expectedVersionsTypes)
             where TSingleton : class
         {
             // original
@@ -796,7 +796,7 @@ namespace SpaceEngineers.Core.Modules.Test
             return objects.Select(obj => obj.GetType());
         }
 
-        private object UnwrapDecorators<TService>(TService service)
+        private static object UnwrapDecorators<TService>(TService service)
             where TService : class
         {
             while (service is IDecorator<TService> decorator)

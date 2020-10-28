@@ -88,6 +88,7 @@
                             .ConfigurePersistence(persistenceSettings)
                             .ConfigureSerializer()
                             .ConfigureDependencyInjection()
+                            .ConfigureCustomFeatures()
                             .Configure(configure);
         }
 

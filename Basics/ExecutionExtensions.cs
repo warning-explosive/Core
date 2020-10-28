@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.Basics
             typeof(StackOverflowException),
             typeof(OutOfMemoryException),
             typeof(OperationCanceledException),
+            typeof(AccessViolationException)
         };
 
         /// <summary>

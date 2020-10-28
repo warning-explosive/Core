@@ -19,12 +19,12 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Attribute</returns>
         /// <exception cref="NotFoundException">Throws if source is empty</exception>
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
-        public static TAttribute GetAttribute<TAttribute>(this Type type)
+        public static TAttribute? GetAttribute<TAttribute>(this Type type)
             where TAttribute : Attribute
         {
             return TypeInfoStorage.Get(type).Attributes
                                   .OfType<TAttribute>()
-                                  .InformativeSingle(Amb);
+                                  .InformativeSingleOrDefault(Amb);
 
             string Amb(IEnumerable<TAttribute> arg)
             {

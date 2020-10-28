@@ -72,6 +72,11 @@
             return configuration;
         }
 
+        internal static EndpointConfiguration ConfigureCustomFeatures(this EndpointConfiguration configuration)
+        {
+            return configuration;
+        }
+
         internal static EndpointConfiguration Configure(this EndpointConfiguration configuration,
                                                         Action<EndpointConfiguration>? configure)
         {

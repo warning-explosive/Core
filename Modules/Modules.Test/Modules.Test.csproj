@@ -273,5 +273,8 @@
     <Compile Update="DependencyContainerDecoratorsTest.cs">
       <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="SerializationTest.cs">
+      <DependentUpon>ModulesTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

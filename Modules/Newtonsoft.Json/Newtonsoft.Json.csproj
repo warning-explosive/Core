@@ -37,4 +37,21 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="ObjectTree\DefaultObjectTreeValueReader.cs">
+      <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectTree\ValueNode.cs">
+      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectTree\RootNode.cs">
+      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectTree\ArrayNode.cs">
+      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectTree\ObjectNode.cs">
+      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

@@ -17,9 +17,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
         internal TypeNode(Type type)
         {
             Assembly = type.Assembly.GetName().Name;
-            Type = type.IsGenericType
-                       ? type.GetGenericTypeDefinition().FullName
-                       : type.FullName;
+            Type = type.GenericTypeDefinitionOrSelf().FullName;
             GenericArguments = type.IsGenericType
                                    ? type.GetGenericArguments()
                                          .Select(genericArgument => new TypeNode(genericArgument))

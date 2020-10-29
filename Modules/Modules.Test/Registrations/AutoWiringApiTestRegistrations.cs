@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using System;
     using Abstractions;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
 

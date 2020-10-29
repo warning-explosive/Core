@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoRegistration.Implementations;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Contexts;

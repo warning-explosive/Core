@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
-    using System.IO;
     using System.Linq;
     using Abstractions;
     using AutoRegistration;

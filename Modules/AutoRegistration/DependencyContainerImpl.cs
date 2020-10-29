@@ -14,7 +14,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Basics;
     using Extensions;
     using Implementations;
-    using Internals;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
 

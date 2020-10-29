@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Tests
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -16,6 +17,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     public class SolutionAnalysisTest
     {
         private readonly ITestOutputHelper _output;
+
+        private static readonly HashSet<string> IgnoredSources
+            = new HashSet<string>
+              {
+                  "AssemblyAttributes.cs",
+                  "Microsoft.NET.Test.Sdk.Program.cs"
+              };
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
@@ -51,8 +59,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                            .GetProject(projectId)
                                            .EnsureNotNull($"Project with {projectId} must exist in solution");
 
-                    var errors = await CompileProject(project)
-                                    .ConfigureAwait(false);
+                    var errors = await CompileProject(project).ConfigureAwait(false);
 
                     _output.WriteLine($"{project.Name}: {errors.Count}");
                     totalErrorsCount += errors.Count;
@@ -73,6 +80,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             return compilation
                   .GetDiagnostics()
                   .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+                  .Where(diagnostic => IgnoredSources.All(p => !diagnostic.Location.SourceTree.FilePath.Contains(p, StringComparison.InvariantCulture)))
                   .ToList();
         }
     }

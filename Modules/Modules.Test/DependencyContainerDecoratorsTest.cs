@@ -3,11 +3,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoRegistration.Implementations;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
-    using Basics;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;

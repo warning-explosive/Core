@@ -144,6 +144,19 @@ namespace SpaceEngineers.Core.AutoRegistration
             return AsyncScopedLifestyle.BeginScope(_container);
         }
 
+#if NETSTANDARD2_1
+
+        /// <summary>
+        /// Open specified scope
+        /// </summary>
+        /// <returns>Scope cleanup</returns>
+        public IAsyncDisposable OpenScopeAsync()
+        {
+            return AsyncScopedLifestyle.BeginScope(_container);
+        }
+
+#endif
+
         #endregion
 
         #region IDependencyContainer

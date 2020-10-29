@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         {
             return assembly.GetTypes()
                            .Where(t => t.FullName != null
-                                    && ExcludedTypes.All(mask => !t.FullName.Contains(mask)));
+                                    && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCulture)));
         }
     }
 }

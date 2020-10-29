@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System;
     using System.IO;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -44,8 +46,9 @@ namespace SpaceEngineers.Core.Basics
 
             var offset = 0;
             stream.Position = offset;
+            var memory = new Memory<byte>(buffer, offset, bytes);
 
-            await stream.ReadAsync(buffer, offset, bytes).ConfigureAwait(false);
+            await stream.ReadAsync(memory).ConfigureAwait(false);
 
             return buffer;
         }
@@ -62,10 +65,10 @@ namespace SpaceEngineers.Core.Basics
 
             var offset = 0;
             stream.Position = offset;
+            var memory = new ReadOnlyMemory<byte>(bytes, offset, bytes.Length);
 
             stream.SetLength(bytes.Length);
-
-            await stream.WriteAsync(bytes, offset, bytes.Length).ConfigureAwait(false);
+            await stream.WriteAsync(memory).ConfigureAwait(false);
         }
     }
 }

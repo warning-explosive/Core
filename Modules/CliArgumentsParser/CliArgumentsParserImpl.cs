@@ -217,7 +217,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
             var parsed = ToEnumString(result).ToUpperInvariant();
 
-            return separatedValues.All(single => parsed.Contains(single));
+            return separatedValues.All(single => parsed.Contains(single, StringComparison.InvariantCulture));
         }
 
         private static TEnum TryParseEnum<TEnum>(string strValue)

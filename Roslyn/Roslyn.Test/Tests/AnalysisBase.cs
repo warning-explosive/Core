@@ -12,10 +12,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     /// <summary>
     /// AnalysisBase
     /// </summary>
-    public abstract class AnalysisBase : IDisposable
+    public abstract class AnalysisBase
     {
-        private static readonly ManualResetEventSlim Event = new ManualResetEventSlim(true);
-
         private static readonly Lazy<VisualStudioInstance> VisualStudioInstance
             = new Lazy<VisualStudioInstance>(MSBuildLocator.RegisterDefaults, LazyThreadSafetyMode.ExecutionAndPublication);
 
@@ -23,9 +21,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         /// <param name="output">ITestOutputHelper</param>
         protected AnalysisBase(ITestOutputHelper output)
         {
-            Event.Wait();
-            Event.Reset();
-
             Assert.NotNull(VisualStudioInstance.Value);
 
             Output = output;
@@ -51,18 +46,5 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         /// IDependencyContainer
         /// </summary>
         protected IDependencyContainer DependencyContainer { get; }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            try
-            {
-                MSBuildLocator.Unregister();
-            }
-            finally
-            {
-                Event.Set();
-            }
-        }
     }
 }

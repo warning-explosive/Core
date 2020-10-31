@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     /// <summary>
     /// AnalyzerTest
     /// </summary>
+    [Collection(nameof(Analysis))]
     public class Analysis : AnalysisBase
     {
         private static readonly ImmutableArray<string> IgnoredProjects

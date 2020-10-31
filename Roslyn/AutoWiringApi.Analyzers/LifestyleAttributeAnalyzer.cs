@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     using Abstractions;
     using Attributes;
     using Basics.Roslyn;
+    using Enumerations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,6 +15,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     /// <summary>
     /// Concrete component must have LifestyleAttribute (component - service implementation)
     /// </summary>
+    [Lifestyle(EnLifestyle.Singleton)]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class LifestyleAttributeAnalyzer : SyntaxAnalyzerBase
     {
@@ -94,8 +96,8 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
 
             bool IsDerivedFromService(INamedTypeSymbol symbol, INamedTypeSymbol service)
             {
-                return symbol.Equals(service)
-                    || symbol.AllInterfaces.Any(i => i.Equals(service));
+                return symbol.OriginalDefinition.Equals(service)
+                    || symbol.AllInterfaces.Any(i => i.OriginalDefinition.Equals(service));
             }
 
             var isComponent = baseSymbols

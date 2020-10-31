@@ -23,6 +23,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// Don't use it like ServiceLocator!
     /// </summary>
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
+    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [ManualRegistration]
     internal class DependencyContainerImpl : IRegistrationContainer
     {

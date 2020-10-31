@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Roslyn.Test.Api
+namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System.Collections.Generic;
     using AutoWiringApi.Abstractions;
@@ -9,9 +9,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Api
     /// </summary>
     public interface IMetadataReferenceProvider : ICollectionResolvable<IMetadataReferenceProvider>
     {
-        /// <summary>
-        /// Receive MetadataReferences
-        /// </summary>
+        /// <summary> Receive MetadataReferences </summary>
         /// <returns>MetadataReference collection</returns>
         IEnumerable<MetadataReference> ReceiveReferences();
     }

@@ -1,14 +1,15 @@
-namespace SpaceEngineers.Core.Roslyn.Test
+namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System.Collections.Generic;
-    using Api;
+    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
+    using Extensions;
     using Microsoft.CodeAnalysis;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Transient)]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal class CompositionRootMetadataReferenceProvider : IMetadataReferenceProvider
     {
         /// <inheritdoc />
@@ -16,8 +17,8 @@ namespace SpaceEngineers.Core.Roslyn.Test
         {
             return new[]
                    {
-                       typeof(IDependencyContainer).Assembly.CreateReference(),
-                       typeof(LifestyleAttribute).Assembly.CreateReference()
+                       typeof(IDependencyContainer).Assembly.AsMetadataReference(),
+                       typeof(LifestyleAttribute).Assembly.AsMetadataReference()
                    };
         }
     }

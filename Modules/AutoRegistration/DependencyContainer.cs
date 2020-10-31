@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using Abstractions;
@@ -29,7 +30,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
-            var typeProvider = new ContainerDependentTypeProvider(AssembliesExtensions.AllFromCurrentDomain(), RootAssemblies);
+            var typeProvider = new ContainerDependentTypeProvider(AssembliesExtensions.AllFromCurrentDomain(),
+                                                                  RootAssemblies,
+                                                                  options.ExcludedNamespaces ?? new List<string>());
 
             var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
 
@@ -46,7 +49,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             var supplemented = RootAssemblies.Union(assemblies).ToArray();
 
-            var typeProvider = new ContainerDependentTypeProvider(supplemented, RootAssemblies);
+            var typeProvider = new ContainerDependentTypeProvider(supplemented,
+                                                                  RootAssemblies,
+                                                                  options.ExcludedNamespaces ?? new List<string>());
 
             var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
 

@@ -1,18 +1,18 @@
-namespace SpaceEngineers.Core.Roslyn.Test.Api
+namespace SpaceEngineers.Core.Roslyn.Test.ValueObjects
 {
     using System;
 
     /// <summary>
     /// Location where the diagnostic appears, as determined by source file name, line number, and column number.
     /// </summary>
-    public class DiagnosticResultLocation
+    public class DiagnosticLocation
     {
         /// <summary> .ctor </summary>
         /// <param name="sourceFile">Name of source file (without extension)</param>
         /// <param name="line">Line</param>
         /// <param name="column">Column</param>
         /// <exception cref="ArgumentOutOfRangeException">Line/Column must be >= -1</exception>
-        public DiagnosticResultLocation(string sourceFile, int line, int column)
+        public DiagnosticLocation(string sourceFile, int line, int column)
         {
             if (line < -1)
             {

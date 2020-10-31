@@ -62,14 +62,11 @@
     <ProjectReference Include="..\AutoWiringApi.Analyzers\AutoWiringApi.Analyzers.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Tests\ImplSuffixAnalyzerTest.cs">
-      <DependentUpon>DiagnosticAnalyzerTestBase.cs</DependentUpon>
+    <Compile Update="Tests\Analysis.cs">
+      <DependentUpon>AnalysisBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="Tests\CodeFixProviderTestBase.cs">
-      <DependentUpon>DiagnosticAnalyzerTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Tests\LifestyleAttributeAnalyserTest.cs">
-      <DependentUpon>CodeFixProviderTestBase.cs</DependentUpon>
+    <Compile Update="Tests\SolutionAnalysis.cs">
+      <DependentUpon>AnalysisBase.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

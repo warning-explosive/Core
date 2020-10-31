@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics.Roslyn
 {
     using System.Collections.Immutable;
+    using AutoWiringApi.Abstractions;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -8,7 +9,9 @@ namespace SpaceEngineers.Core.Basics.Roslyn
     /// <summary>
     /// SyntaxAnalyzerBase
     /// </summary>
-    public abstract class SyntaxAnalyzerBase : DiagnosticAnalyzer, IIdentifiedAnalyzer
+    public abstract class SyntaxAnalyzerBase : DiagnosticAnalyzer,
+                                               IIdentifiedAnalyzer,
+                                               ICollectionResolvable<IIdentifiedAnalyzer>
     {
         private const string Branch = "master";
 

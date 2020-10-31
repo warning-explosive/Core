@@ -2,12 +2,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Services;
     using Basics.EqualityComparers;
 
+    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [ManualRegistration]
     internal class ContainerDependentTypeProvider : ITypeProvider
     {
@@ -32,7 +34,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
         private readonly HashSet<string> _ourTypesCache;
 
-        public ContainerDependentTypeProvider(Assembly[] assemblies, Assembly[] rootAssemblies)
+        public ContainerDependentTypeProvider(Assembly[] assemblies,
+                                              Assembly[] rootAssemblies,
+                                              IReadOnlyCollection<string> excludedNamespaces)
         {
             AllLoadedAssemblies = assemblies.Where(a => !a.IsDynamic).ToList();
             AllLoadedTypes = AllLoadedAssemblies.SelectMany(a => a.GetTypes()).ToList();
@@ -53,6 +57,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
             OurTypes = OurAssemblies
                       .SelectMany(ExtractOurTypes)
+                      .Where(t => !excludedNamespaces.Contains(t.Namespace, StringComparer.InvariantCulture))
                       .ToList();
 
             _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));

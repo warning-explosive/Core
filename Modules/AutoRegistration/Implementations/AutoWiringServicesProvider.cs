@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
@@ -9,6 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using Basics;
 
     /// <inheritdoc />
+    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [ManualRegistration]
     internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {

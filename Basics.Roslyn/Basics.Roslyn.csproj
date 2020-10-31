@@ -46,4 +46,7 @@
     </PackageReference>
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\AutoWiringApi\AutoWiringApi.csproj" />
+  </ItemGroup>
 </Project>

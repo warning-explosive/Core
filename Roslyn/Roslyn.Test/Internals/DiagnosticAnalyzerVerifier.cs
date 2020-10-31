@@ -1,29 +1,77 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
     using System.Text;
-    using Api;
+    using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
+    using AutoWiringApi.Services;
+    using Basics;
+    using Basics.Exceptions;
+    using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.Diagnostics;
+    using ValueObjects;
     using Xunit;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class DiagnosticAnalyzerVerifierImpl : IDiagnosticAnalyzerVerifier
+    internal class DiagnosticAnalyzerVerifier : IDiagnosticAnalyzerVerifier
     {
+        private readonly IDependencyContainer _container;
+
+        /// <summary> .cctor </summary>
+        /// <param name="container">IDependencyContainer</param>
+        public DiagnosticAnalyzerVerifier(IDependencyContainer container)
+        {
+            _container = container;
+        }
+
         /// <inheritdoc />
-        public void VerifyDiagnostics(DiagnosticAnalyzer analyzer, Diagnostic[] actualResults, params DiagnosticResult[] expectedResults)
+        public void VerifyDiagnosticsGroup(SyntaxAnalyzerBase analyzer, Diagnostic[] actualDiagnostics)
+        {
+            var byFileName = ExpectedDiagnosticsProvider(analyzer, _container).ByFileName(analyzer);
+
+            actualDiagnostics
+               .Select(d => new
+                            {
+                                Name = d.Location.SourceTree.FilePath.Split('.', StringSplitOptions.RemoveEmptyEntries)[0],
+                                Diagnostic = d
+                            })
+               .GroupBy(pair => pair.Name,
+                        pair => pair.Diagnostic)
+               .Each(grp =>
+                     {
+                         if (!byFileName.Remove(grp.Key, out var expected))
+                         {
+                             throw new InvalidOperationException($"Unsupported source file: {grp.Key}");
+                         }
+
+                         VerifyDiagnostics(analyzer, grp.ToArray(), expected);
+                     });
+
+            if (byFileName.Any())
+            {
+                var files = string.Join(", ", byFileName.Keys);
+                throw new InvalidOperationException($"Ambiguous diagnostics in files: {files}");
+            }
+        }
+
+        /// <inheritdoc />
+        public void VerifyDiagnostics(SyntaxAnalyzerBase analyzer,
+                                      Diagnostic[] actualDiagnostics,
+                                      params ExpectedDiagnostic[] expectedResults)
         {
             var expectedCount = expectedResults.Length;
-            var actualCount = actualResults.Length;
+            var actualCount = actualDiagnostics.Length;
 
             if (expectedCount != actualCount)
             {
-                var diagnosticsOutput = actualResults.Any() ? FormatDiagnostics(analyzer, actualResults.ToArray()) : "    NONE.";
+                var diagnosticsOutput = actualDiagnostics.Any() ? FormatDiagnostics(analyzer, actualDiagnostics.ToArray()) : "    NONE.";
 
                 Assert.True(false,
                             $"Mismatch between number of diagnostics returned, expected \"{expectedCount}\" actual \"{actualCount}\"\r\n\r\nDiagnostics:\r\n{diagnosticsOutput}\r\n");
@@ -31,10 +79,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 
             for (var i = 0; i < expectedResults.Length; i++)
             {
-                var actual = actualResults[i];
+                var actual = actualDiagnostics[i];
                 var expected = expectedResults[i];
 
-                if (expected.Line == -1 && expected.Column == -1)
+                if (expected.Location.Line == -1 && expected.Location.Column == -1)
                 {
                     if (actual.Location != Location.None)
                     {
@@ -44,25 +92,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
                 }
                 else
                 {
-                    VerifyDiagnosticLocation(analyzer, actual, actual.Location, expected.Locations.First());
-                    var additionalLocations = actual.AdditionalLocations.ToArray();
-
-                    if (additionalLocations.Length != expected.Locations.Count() - 1)
-                    {
-                        Assert.True(false,
-                                    $"Expected {expected.Locations.Count() - 1} additional locations but got {additionalLocations.Length} for Diagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
-                    }
-
-                    for (var j = 0; j < additionalLocations.Length; ++j)
-                    {
-                        VerifyDiagnosticLocation(analyzer, actual, additionalLocations[j], expected.Locations.ElementAt(j + 1));
-                    }
+                    VerifyDiagnosticLocation(analyzer, actual, actual.Location, expected.Location);
                 }
 
-                if (actual.Id != expected.Id)
+                if (actual.Id != expected.Descriptor.Id)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic id to be \"{expected.Id}\" was \"{actual.Id}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
+                                $"Expected diagnostic id to be \"{expected.Descriptor.Id}\" was \"{actual.Id}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
                 }
 
                 if (actual.Severity != expected.Severity)
@@ -71,26 +107,21 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
                                 $"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
                 }
 
-                if (actual.GetMessage() != expected.Message)
+                if (actual.GetMessage() != expected.ActualMessage)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic message to be \"{expected.Message}\" was \"{actual.GetMessage()}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
+                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage()}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
                 }
             }
         }
 
-        /// <summary>
-        /// Helper method to VerifyDiagnosticResult that checks the location of a diagnostic and compares it with the location in the expected DiagnosticResult.
-        /// </summary>
-        /// <param name="analyzer">The analyzer that was being run on the sources</param>
-        /// <param name="diagnostic">The diagnostic that was found in the code</param>
-        /// <param name="actual">The Location of the Diagnostic found in the code</param>
-        /// <param name="expected">The DiagnosticResultLocation that should have been found</param>
-        private static void VerifyDiagnosticLocation(DiagnosticAnalyzer analyzer, Diagnostic diagnostic, Location actual, DiagnosticResultLocation expected)
+        private static void VerifyDiagnosticLocation(DiagnosticAnalyzer analyzer, Diagnostic diagnostic, Location actual, DiagnosticLocation expected)
         {
             var actualSpan = actual.GetLineSpan();
 
-            Assert.True(actualSpan.Path == expected.SourceFile || (actualSpan.Path != null && actualSpan.Path.Contains("Source0.", StringComparison.InvariantCulture) && expected.SourceFile.Contains("Source.", StringComparison.InvariantCulture)),
+            Assert.True(actualSpan.Path == expected.SourceFile
+                     || (actualSpan.Path != null
+                      && actualSpan.Path.Contains(expected.SourceFile, StringComparison.InvariantCulture)),
                         $"Expected diagnostic to be in file \"{expected.SourceFile}\" was actually in file \"{actualSpan.Path}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
 
             var actualLinePosition = actualSpan.StartLinePosition;
@@ -116,12 +147,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
             }
         }
 
-        /// <summary>
-        /// Helper method to format a Diagnostic into an easily readable string
-        /// </summary>
-        /// <param name="analyzer">The analyzer that this verifier tests</param>
-        /// <param name="diagnostics">The Diagnostics to be formatted</param>
-        /// <returns>The Diagnostics formatted as a string</returns>
         private static string FormatDiagnostics(DiagnosticAnalyzer analyzer, params Diagnostic[] diagnostics)
         {
             var builder = new StringBuilder();
@@ -146,16 +171,19 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
                             Assert.True(location.IsInSource,
                                 $"Test base does not currently handle diagnostics in metadata locations. Diagnostic in metadata: {diagnostics[i]}\r\n");
 
-                            var resultMethodName = diagnostics[i].Location.SourceTree.FilePath.EndsWith(".cs", StringComparison.InvariantCultureIgnoreCase) ? "GetCSharpResultAt" : "GetBasicResultAt";
+                            var resultMethodName = diagnostics[i].Location.SourceTree.FilePath.EndsWith(".cs", StringComparison.InvariantCultureIgnoreCase)
+                                                       ? "expected(("
+                                                       : throw new InvalidOperationException("Choose another language from C#");
                             var linePosition = diagnostics[i].Location.GetLineSpan().StartLinePosition;
 
                             builder.AppendFormat(CultureInfo.InvariantCulture,
-                                "{0}({1}, {2}, {3}.{4})",
+                                "{0}({1}, {2}, {3}.{4}, \"{5}\"))",
                                 resultMethodName,
                                 linePosition.Line + 1,
                                 linePosition.Character + 1,
-                                analyzerType.Name,
-                                rule.Id);
+                                nameof(DiagnosticSeverity),
+                                rule.DefaultSeverity,
+                                rule.MessageFormat);
                         }
 
                         if (i != diagnostics.Length - 1)
@@ -170,6 +198,20 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
             }
 
             return builder.ToString();
+        }
+
+        private static IExpectedDiagnosticsProvider ExpectedDiagnosticsProvider(
+            DiagnosticAnalyzer analyzer,
+            IDependencyContainer container)
+        {
+            // convention
+            var providerTypeName = analyzer.GetType().Name + nameof(ExpectedDiagnosticsProvider);
+            var providerType = container
+                              .Resolve<ITypeProvider>()
+                              .OurTypes
+                              .SingleOrDefault(t => t.Name == providerTypeName)
+                ?? throw new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzer.GetType().Name} or place it in directory different from source directory");
+            return (IExpectedDiagnosticsProvider)container.Resolve(providerType);
         }
     }
 }

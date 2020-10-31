@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using Abstractions;
 
@@ -19,5 +20,13 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Default: SearchOption.TopDirectoryOnly
         /// </summary>
         public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
+
+        /// <summary>
+        /// Excluded namespaces
+        /// Namespaces excluded from type loading
+        /// These types will be identified as third party and won't participate in the container registrations
+        /// </summary>
+        // TODO: test different namespaces for service and impl
+        public IReadOnlyCollection<string>? ExcludedNamespaces { get; set; }
     }
 }

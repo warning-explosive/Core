@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
     using AutoWiringApi.Abstractions;
@@ -13,6 +14,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     /// Wrapper around service that supports versions
     /// </summary>
     /// <typeparam name="TService">TService type-argument</typeparam>
+    [SuppressMessage("Analysis", "CR1", Justification = "Automatically registered in DependencyContainerImpl")]
     [ManualRegistration]
     internal class Versioned<TService> : IVersioned<TService>
         where TService : class

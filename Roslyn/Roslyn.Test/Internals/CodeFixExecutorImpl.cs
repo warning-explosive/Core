@@ -1,3 +1,4 @@
+/*
 namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System.Collections.Generic;
@@ -156,3 +157,4 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
         }
     }
 }
+*/

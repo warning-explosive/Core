@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Api
     using AutoWiringApi.Abstractions;
 
     /// <summary>
-    /// Verifyes code fix results
+    /// Verifies code fix results
     /// </summary>
     public interface ICodeFixVerifier : IResolvable
     {

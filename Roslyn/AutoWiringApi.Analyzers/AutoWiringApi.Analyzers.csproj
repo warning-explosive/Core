@@ -49,9 +49,4 @@
     <ProjectReference Include="..\..\Basics.Roslyn\Basics.Roslyn.csproj" />
     <ProjectReference Include="..\..\Modules\AutoWiringApi\AutoWiringApi.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="LifestyleAttributeCodeFixProvider.cs">
-      <DependentUpon>LifestyleAttributeAnalyzer.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

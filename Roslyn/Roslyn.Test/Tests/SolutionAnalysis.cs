@@ -22,8 +22,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             = ImmutableArray<string>.Empty;
 
         private static readonly ImmutableArray<string> IgnoredSources
-            = ImmutableArray.Create("AssemblyAttributes.cs",
-                                    "Microsoft.NET.Test.Sdk.Program.cs");
+            = ImmutableArray.Create("AssemblyAttributes",
+                                    "Microsoft.NET.Test.Sdk.Program");
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
@@ -34,7 +34,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <inheritdoc />
         protected override ImmutableArray<string> IgnoredNamespaces =>
-            ImmutableArray.Create("SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer");
+            ImmutableArray.Create("SpaceEngineers.Core.Roslyn.Test.Sources",
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer",
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected");
 
         [Fact]
         internal async Task SolutionAnalysisTest()
@@ -61,10 +63,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 await workspace.OpenSolutionAsync(SolutionExtensions.SolutionFile().FullName)
                                .ConfigureAwait(false);
 
-                await foreach (var diagnostic in workspace.CurrentSolution.CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces))
+                await foreach (var analyzedDocument in workspace.CurrentSolution.CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces))
                 {
-                    totalErrorsCount++;
-                    Output.WriteLine(diagnostic.ToString());
+                    foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
+                    {
+                        totalErrorsCount++;
+                        Output.WriteLine(diagnostic.ToString());
+                    }
                 }
             }
 

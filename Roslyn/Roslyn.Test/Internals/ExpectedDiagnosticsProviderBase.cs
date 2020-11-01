@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Linq;
     using Abstractions;
     using Basics.Roslyn;
@@ -10,12 +11,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 
     internal abstract class ExpectedDiagnosticsProviderBase : IExpectedDiagnosticsProvider
     {
-        public IDictionary<string, ExpectedDiagnostic[]> ByFileName(SyntaxAnalyzerBase analyzer)
+        public IDictionary<string, ImmutableArray<ExpectedDiagnostic>> ByFileName(SyntaxAnalyzerBase analyzer)
         {
             return ExpectedInternal(analyzer, Compose(analyzer));
         }
 
-        protected abstract IDictionary<string, ExpectedDiagnostic[]> ExpectedInternal(
+        protected abstract IDictionary<string, ImmutableArray<ExpectedDiagnostic>> ExpectedInternal(
             SyntaxAnalyzerBase analyzer,
             Func<(string, int, int, DiagnosticSeverity, string), ExpectedDiagnostic> expected);
 

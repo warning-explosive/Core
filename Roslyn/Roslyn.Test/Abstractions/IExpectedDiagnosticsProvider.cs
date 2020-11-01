@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using AutoWiringApi.Abstractions;
     using Basics.Roslyn;
     using ValueObjects;
@@ -15,6 +16,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
         /// </summary>
         /// <param name="analyzer">Identified diagnostic analyzer</param>
         /// <returns>Expected diagnostics</returns>
-        IDictionary<string, ExpectedDiagnostic[]> ByFileName(SyntaxAnalyzerBase analyzer);
+        IDictionary<string, ImmutableArray<ExpectedDiagnostic>> ByFileName(SyntaxAnalyzerBase analyzer);
     }
 }

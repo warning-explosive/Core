@@ -147,6 +147,25 @@ namespace SpaceEngineers.Core.Basics
             return fileInfo.Name.Substring(0, fileInfo.Name.Length - fileInfo.Extension.Length);
         }
 
+        /// <summary>
+        /// Gets file name without extension
+        /// </summary>
+        /// <param name="fileName">fileName</param>
+        /// <returns>File name without extension</returns>
+        public static string NameWithoutExtension(this string fileName)
+        {
+            var extension = fileName
+                           .Split(".", StringSplitOptions.RemoveEmptyEntries)
+                           .LastOrDefault();
+
+            if (extension == null)
+            {
+                return fileName;
+            }
+
+            return fileName.Substring(0, fileName.Length - extension.Length - 1);
+        }
+
         private static bool EqualsFileName(FileInfo file, string fileNameWithoutExtension, string? extension)
         {
             string left, right;

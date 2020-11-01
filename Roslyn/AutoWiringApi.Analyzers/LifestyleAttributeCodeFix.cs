@@ -4,7 +4,9 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     using System.Collections.Immutable;
     using System.Linq;
     using System.Threading.Tasks;
+    using Abstractions;
     using Attributes;
+    using Basics.Roslyn;
     using Enumerations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
@@ -15,8 +17,11 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     /// <summary>
     /// CodeFixProvider that inserts LifestyleAttribute on components (component - service implementation)
     /// </summary>
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LifestyleAttributeCodeFixProvider))]
-    public class LifestyleAttributeCodeFixProvider : CodeFixProvider
+    [Lifestyle(EnLifestyle.Transient)]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LifestyleAttributeCodeFix))]
+    public class LifestyleAttributeCodeFix : CodeFixProvider,
+                                             IIdentifiedCodeFix,
+                                             ICollectionResolvable<IIdentifiedCodeFix>
     {
         private const string Title = "Mark with " + nameof(LifestyleAttribute);
         private const string EnLifestyleValue = "ChooseLifestyle";
@@ -34,7 +39,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
         /// <inheritdoc />
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
+            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
             if (root == null)
             {
@@ -109,22 +114,34 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
 
         private static SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
         {
-            var trivia = namespaceDeclaration.Usings.First().GetLeadingTrivia();
+            var leadingTrivia = namespaceDeclaration.Usings.FirstOrDefault()?.GetLeadingTrivia();
+            var repeat = 1;
 
-            var attributeDirective = GetUsingDirective(trivia, typeof(LifestyleAttribute));
-            var enumerationDirective = GetUsingDirective(trivia, typeof(EnLifestyle));
+            if (leadingTrivia == null)
+            {
+                leadingTrivia = SyntaxFactory.TriviaList(Enumerable.Repeat(SyntaxFactory.Space, 4));
+                repeat = 2;
+            }
+
+            var trailingTrivia = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed);
+            var attributeDirective = GetUsingDirective(typeof(LifestyleAttribute), leadingTrivia, trailingTrivia);
+
+            trailingTrivia = SyntaxFactory.TriviaList(Enumerable.Repeat(SyntaxFactory.CarriageReturnLineFeed, repeat));
+            var enumerationDirective = GetUsingDirective(typeof(EnLifestyle), leadingTrivia, trailingTrivia);
 
             return root.ReplaceNode(namespaceDeclaration,
                                     namespaceDeclaration.AddUsings(attributeDirective, enumerationDirective));
         }
 
-        private static UsingDirectiveSyntax GetUsingDirective(SyntaxTriviaList trivia, Type type)
+        private static UsingDirectiveSyntax GetUsingDirective(Type type,
+                                                              SyntaxTriviaList? leadingTrivia,
+                                                              SyntaxTriviaList? trailingTrivia)
         {
             return SyntaxFactory
                   .UsingDirective(SyntaxFactory.IdentifierName(type.Namespace))
                   .NormalizeWhitespace()
-                  .WithLeadingTrivia(trivia)
-                  .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
+                  .WithLeadingTrivia(leadingTrivia)
+                  .WithTrailingTrivia(trailingTrivia);
         }
 
         private static SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)

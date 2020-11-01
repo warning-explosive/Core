@@ -1,15 +1,19 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Tests
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading.Tasks;
     using Abstractions;
+    using Basics.Exceptions;
     using Basics.Roslyn;
     using Extensions;
+    using Internals;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
-    using ValueObjects;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -34,28 +38,37 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <inheritdoc />
         protected override ImmutableArray<string> IgnoredNamespaces =>
-            ImmutableArray.Create("SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer");
+            ImmutableArray.Create("SpaceEngineers.Core.Roslyn.Test.Sources",
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer",
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected");
 
         [Fact]
         internal async Task AnalysisTest()
         {
-            var testCases = DependencyContainer
+            var analyzers = DependencyContainer
                            .ResolveCollection<IIdentifiedAnalyzer>()
-                           .OfType<SyntaxAnalyzerBase>()
-                           .Select(analyzer => (analyzer, analyzer.AnalysisSources().ToArray()));
+                           .OfType<SyntaxAnalyzerBase>();
 
-            foreach (var (analyzer, sources) in testCases)
+            foreach (var analyzer in analyzers)
             {
-                await TestSingleAnalyzer(analyzer, sources).ConfigureAwait(false);
+                var conventionalProvider = DependencyContainer.Resolve<IConventionalProvider>();
+                var codeFixProvider = conventionalProvider.CodeFixProvider(analyzer);
+
+                await TestSingleAnalyzer(analyzer, codeFixProvider, conventionalProvider).ConfigureAwait(false);
             }
         }
 
-        private async Task TestSingleAnalyzer(SyntaxAnalyzerBase analyzer, SourceFile[] sources)
+        [SuppressMessage("CodeAnalysis", "CA1506", Justification = "Reviewed")]
+        private async Task TestSingleAnalyzer(SyntaxAnalyzerBase analyzer,
+                                              CodeFixProvider? codeFix,
+                                              IConventionalProvider conventionalProvider)
         {
-            IDiagnosticAnalyzerVerifier verifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();
+            var analyzerVerifier = DependencyContainer.Resolve<IDiagnosticAnalyzerVerifier>();
+            var codeFixVerifier = DependencyContainer.Resolve<ICodeFixVerifier>();
             var metadataReferences = DependencyContainer
                                     .ResolveCollection<IMetadataReferenceProvider>()
                                     .SelectMany(p => p.ReceiveReferences())
+                                    .Distinct()
                                     .ToArray();
 
             using (var workspace = new AdhocWorkspace())
@@ -65,25 +78,59 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                                  Output.WriteLine(workspaceFailedArgs.Diagnostic.Message);
                                              };
 
+                var analyzerSources = conventionalProvider.SourceFiles(analyzer);
                 var diagnostics = workspace
                                  .CurrentSolution
-                                 .SetupSolution(GetType().Name, sources, metadataReferences)
-                                 .CompileSolution(ImmutableArray.Create((DiagnosticAnalyzer)analyzer), IgnoredProjects, IgnoredSources, ImmutableArray<string>.Empty)
-                                 .ConfigureAwait(false);
+                                 .SetupSolution(GetType().Name, analyzerSources, metadataReferences)
+                                 .CompileSolution(ImmutableArray.Create((DiagnosticAnalyzer)analyzer),
+                                                  IgnoredProjects,
+                                                  IgnoredSources,
+                                                  ImmutableArray<string>.Empty);
 
-                var actualDiagnostics = new List<Diagnostic>();
+                var expectedDiagnostics = conventionalProvider
+                                         .ExpectedDiagnosticsProvider(analyzer)
+                                         .ByFileName(analyzer);
+                var expectedFixedSources = conventionalProvider
+                                          .SourceFiles(analyzer, "Expected")
+                                          .ToDictionary(s => s.Name);
 
-                await foreach (var diagnostic in diagnostics)
+                await foreach (var analyzedDocument in diagnostics)
                 {
-                    actualDiagnostics.Add(diagnostic);
-                    Output.WriteLine(diagnostic.ToString());
+                    foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
+                    {
+                        Output.WriteLine(diagnostic.ToString());
+                    }
+
+                    if (!expectedDiagnostics.Remove(analyzedDocument.Name, out var expected))
+                    {
+                        throw new InvalidOperationException($"Unsupported source file: {analyzedDocument.Name}");
+                    }
+
+                    analyzerVerifier.VerifyAnalyzedDocument(analyzer, analyzedDocument, expected);
+
+                    if (codeFix != null
+                     && expectedFixedSources.Remove(analyzedDocument.Name + Conventions.Expected, out var expectedSource))
+                    {
+                        await codeFixVerifier.VerifyCodeFix(analyzer, codeFix, analyzedDocument, expectedSource, Output.WriteLine).ConfigureAwait(false);
+                    }
                 }
 
-                verifier.VerifyDiagnosticsGroup(analyzer, actualDiagnostics.ToArray());
-            }
+                if (expectedDiagnostics.Any())
+                {
+                    var files = string.Join(", ", expectedDiagnostics.Keys);
+                    throw new InvalidOperationException($"Ambiguous diagnostics in files: {files}");
+                }
 
-            // TODO: Execute fix
-            // TODO: verify fix
+                if (expectedFixedSources.Any())
+                {
+                    if (codeFix == null)
+                    {
+                        throw new NotFoundException($"Specify code fix for: {analyzer.GetType().Name}");
+                    }
+
+                    throw new InvalidOperationException($"Ambiguous expected codeFix sources: {string.Join(", ", expectedFixedSources.Keys)}");
+                }
+            }
         }
     }
 }

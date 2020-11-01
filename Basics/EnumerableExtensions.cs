@@ -13,6 +13,34 @@ namespace SpaceEngineers.Core.Basics
     public static class EnumerableExtensions
     {
         /// <summary>
+        /// LeftJoin
+        /// </summary>
+        /// <param name="leftSource">Left source</param>
+        /// <param name="rightSource">Right source</param>
+        /// <param name="leftKeySelector">Left key selector</param>
+        /// <param name="rightKeySelector">Right key selector</param>
+        /// <param name="resultSelector">Result selector (right could be null for reference types)</param>
+        /// <typeparam name="TLeft">TLeft type-argument</typeparam>
+        /// <typeparam name="TRight">TRight type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Left join result</returns>
+        public static IEnumerable<TResult> LeftJoin<TLeft, TRight, TKey, TResult>(
+            this IEnumerable<TLeft> leftSource,
+            IEnumerable<TRight> rightSource,
+            Func<TLeft, TKey> leftKeySelector,
+            Func<TRight, TKey> rightKeySelector,
+            Func<TLeft, TRight, TResult> resultSelector)
+        {
+            return from left in leftSource
+                   join right in rightSource
+                       on leftKeySelector(left) equals rightKeySelector(right)
+                       into rightMatch
+                   from nullableRight in rightMatch.DefaultIfEmpty()
+                   select resultSelector(left, nullableRight);
+        }
+
+        /// <summary>
         /// Flatten source stream
         /// </summary>
         /// <param name="source">Source stream</param>

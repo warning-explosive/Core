@@ -3,34 +3,18 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.IO;
     using System.Linq;
     using Basics;
+    using Basics.Exceptions;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Diagnostics;
-    using Microsoft.CodeAnalysis.Text;
     using ValueObjects;
 
     internal static class AnalysisExtensions
     {
         internal const string CSharpDefaultFileExt = ".cs";
-
-        internal static IEnumerable<SourceFile> AnalysisSources(this DiagnosticAnalyzer analyzer)
-        {
-            return SolutionExtensions
-                  .ProjectFile()
-                  .Directory
-                  .StepInto("Sources")
-                  .StepInto(analyzer.GetType().Name)
-                  .GetFiles("*" + AnalysisExtensions.CSharpDefaultFileExt, SearchOption.TopDirectoryOnly)
-                  .Select(file =>
-                          {
-                              using var stream = file.OpenRead();
-                              return new SourceFile(file.NameWithoutExtension(), SourceText.From(stream));
-                          });
-        }
 
         internal static Solution SetupSolution(this Solution solution,
                                                string projectName,
@@ -57,11 +41,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
             return solution;
         }
 
-        internal static async IAsyncEnumerable<Diagnostic> CompileSolution(this Solution solution,
-                                                                           ImmutableArray<DiagnosticAnalyzer> analyzers,
-                                                                           ImmutableArray<string> ignoredProjects,
-                                                                           ImmutableArray<string> ignoredSources,
-                                                                           ImmutableArray<string> ignoredNamespaces)
+        internal static async IAsyncEnumerable<AnalyzedDocument> CompileSolution(
+            this Solution solution,
+            ImmutableArray<DiagnosticAnalyzer> analyzers,
+            ImmutableArray<string> ignoredProjects,
+            ImmutableArray<string> ignoredSources,
+            ImmutableArray<string> ignoredNamespaces)
         {
             var projectTree = solution.GetProjectDependencyGraph();
             foreach (var projectId in projectTree.GetTopologicallySortedProjects())
@@ -85,14 +70,16 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
                 return !ignoredProjects.Contains(project.Name, StringComparer.InvariantCulture);
             }
 
-            bool IsNotIgnoredSource(Diagnostic diagnostic)
+            bool IsNotIgnoredSource(AnalyzedDocument analyzedDocument)
             {
-                return ignoredSources.All(p => !diagnostic.Location.SourceTree.FilePath.Contains(p, StringComparison.InvariantCulture));
+                return ignoredSources.All(p => !analyzedDocument.Name.Contains(p, StringComparison.InvariantCulture));
             }
 
-            bool IsNotIgnoredNamespace(Diagnostic diagnostic)
+            bool IsNotIgnoredNamespace(AnalyzedDocument analyzedDocument)
             {
-                if (!(diagnostic.Location.SourceTree?.GetRoot() is CompilationUnitSyntax cus))
+                var syntaxTree = analyzedDocument.Document.GetSyntaxTreeAsync().Result;
+
+                if (!(syntaxTree?.GetRoot() is CompilationUnitSyntax cus))
                 {
                     return true;
                 }
@@ -110,7 +97,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
             }
         }
 
-        private static async IAsyncEnumerable<Diagnostic> CompileProject(this Project project, ImmutableArray<DiagnosticAnalyzer> analyzers)
+        private static async IAsyncEnumerable<AnalyzedDocument> CompileProject(
+            this Project project,
+            ImmutableArray<DiagnosticAnalyzer> analyzers)
         {
             var options = project.CompilationOptions
                                  .WithPlatform(Platform.AnyCpu)
@@ -120,13 +109,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
                                  .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
                                  .WithGeneralDiagnosticOption(ReportDiagnostic.Error);
 
-            var compilation = await project.WithCompilationOptions(options)
-                                           .GetCompilationAsync()
-                                           .ConfigureAwait(false);
+            project = project.WithCompilationOptions(options);
 
-            foreach (var diagnostic in compilation.GetDiagnostics())
+            var compilation = await project.GetCompilationAsync().ConfigureAwait(false);
+
+            foreach (var analyzedDocument in GroupByDocument(project, compilation.GetDiagnostics()))
             {
-                yield return diagnostic;
+                yield return analyzedDocument;
             }
 
             if (!analyzers.Any())
@@ -138,9 +127,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
                                                        .GetAnalyzerDiagnosticsAsync()
                                                        .ConfigureAwait(false);
 
-            foreach (var diagnostic in analyzerDiagnostics)
+            foreach (var analyzedDocument in GroupByDocument(project, analyzerDiagnostics))
             {
-                yield return diagnostic;
+                yield return analyzedDocument;
             }
         }
 
@@ -149,6 +138,25 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
             var sourceFileName = sourceFile.Name + CSharpDefaultFileExt;
             var documentId = DocumentId.CreateNewId(projectId, sourceFileName);
             return solution.AddDocument(documentId, sourceFileName, sourceFile.Text);
+        }
+
+        private static IEnumerable<AnalyzedDocument> GroupByDocument(Project project, IEnumerable<Diagnostic> source)
+        {
+            return source
+                  .Select(diagnostic =>
+                          {
+                              var document = project.GetDocument(diagnostic.Location.SourceTree);
+
+                              if (document == null)
+                              {
+                                  throw new NotFoundException("Couldn't find document");
+                              }
+
+                              return (document, diagnostic);
+                          })
+                  .GroupBy(pair => pair.document,
+                           pair => pair.diagnostic)
+                  .Select(grp => new AnalyzedDocument(grp.Key, ImmutableArray.Create(grp.ToArray())));
         }
     }
 }

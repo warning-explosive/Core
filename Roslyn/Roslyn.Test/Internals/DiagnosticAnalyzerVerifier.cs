@@ -1,17 +1,13 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Globalization;
     using System.Linq;
     using System.Text;
     using Abstractions;
-    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
-    using Basics;
-    using Basics.Exceptions;
     using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -22,49 +18,17 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     [Lifestyle(EnLifestyle.Singleton)]
     internal class DiagnosticAnalyzerVerifier : IDiagnosticAnalyzerVerifier
     {
-        private readonly IDependencyContainer _container;
-
-        /// <summary> .cctor </summary>
-        /// <param name="container">IDependencyContainer</param>
-        public DiagnosticAnalyzerVerifier(IDependencyContainer container)
+        /// <inheritdoc />
+        public void VerifyAnalyzedDocument(SyntaxAnalyzerBase analyzer,
+                                           AnalyzedDocument analyzedDocument,
+                                           ImmutableArray<ExpectedDiagnostic> expectedDiagnostics)
         {
-            _container = container;
+            VerifyDiagnostics(analyzer, analyzedDocument.ActualDiagnostics.ToArray(), expectedDiagnostics.ToArray());
         }
 
-        /// <inheritdoc />
-        public void VerifyDiagnosticsGroup(SyntaxAnalyzerBase analyzer, Diagnostic[] actualDiagnostics)
-        {
-            var byFileName = ExpectedDiagnosticsProvider(analyzer, _container).ByFileName(analyzer);
-
-            actualDiagnostics
-               .Select(d => new
-                            {
-                                Name = d.Location.SourceTree.FilePath.Split('.', StringSplitOptions.RemoveEmptyEntries)[0],
-                                Diagnostic = d
-                            })
-               .GroupBy(pair => pair.Name,
-                        pair => pair.Diagnostic)
-               .Each(grp =>
-                     {
-                         if (!byFileName.Remove(grp.Key, out var expected))
-                         {
-                             throw new InvalidOperationException($"Unsupported source file: {grp.Key}");
-                         }
-
-                         VerifyDiagnostics(analyzer, grp.ToArray(), expected);
-                     });
-
-            if (byFileName.Any())
-            {
-                var files = string.Join(", ", byFileName.Keys);
-                throw new InvalidOperationException($"Ambiguous diagnostics in files: {files}");
-            }
-        }
-
-        /// <inheritdoc />
-        public void VerifyDiagnostics(SyntaxAnalyzerBase analyzer,
-                                      Diagnostic[] actualDiagnostics,
-                                      params ExpectedDiagnostic[] expectedResults)
+        private static void VerifyDiagnostics(SyntaxAnalyzerBase analyzer,
+                                              Diagnostic[] actualDiagnostics,
+                                              params ExpectedDiagnostic[] expectedResults)
         {
             var expectedCount = expectedResults.Length;
             var actualCount = actualDiagnostics.Length;
@@ -198,20 +162,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
             }
 
             return builder.ToString();
-        }
-
-        private static IExpectedDiagnosticsProvider ExpectedDiagnosticsProvider(
-            DiagnosticAnalyzer analyzer,
-            IDependencyContainer container)
-        {
-            // convention
-            var providerTypeName = analyzer.GetType().Name + nameof(ExpectedDiagnosticsProvider);
-            var providerType = container
-                              .Resolve<ITypeProvider>()
-                              .OurTypes
-                              .SingleOrDefault(t => t.Name == providerTypeName)
-                ?? throw new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzer.GetType().Name} or place it in directory different from source directory");
-            return (IExpectedDiagnosticsProvider)container.Resolve(providerType);
         }
     }
 }

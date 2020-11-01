@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     /// <summary>
     /// Concrete component must have LifestyleAttribute (component - service implementation)
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Lifestyle(EnLifestyle.Transient)]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class LifestyleAttributeAnalyzer : SyntaxAnalyzerBase
     {
@@ -93,6 +93,11 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
 
             var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable).FullName);
             var collectionResolvable = context.Compilation.GetTypeByMetadataName(typeof(ICollectionResolvable<>).FullName);
+            var externalResolvable = context.Compilation.GetTypeByMetadataName(typeof(IExternalResolvable<>).FullName);
+            var decorator = context.Compilation.GetTypeByMetadataName(typeof(IDecorator<>).FullName);
+            var conditionalDecorator = context.Compilation.GetTypeByMetadataName(typeof(IConditionalDecorator<,>).FullName);
+            var collectionDecorator = context.Compilation.GetTypeByMetadataName(typeof(ICollectionDecorator<>).FullName);
+            var conditionalCollectionDecorator = context.Compilation.GetTypeByMetadataName(typeof(IConditionalCollectionDecorator<,>).FullName);
 
             bool IsDerivedFromService(INamedTypeSymbol symbol, INamedTypeSymbol service)
             {
@@ -103,7 +108,12 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
             var isComponent = baseSymbols
                              .OfType<INamedTypeSymbol>()
                              .Any(symbol => (resolvable != null && IsDerivedFromService(symbol, resolvable))
-                                         || (collectionResolvable != null && IsDerivedFromService(symbol, collectionResolvable)));
+                                         || (collectionResolvable != null && IsDerivedFromService(symbol, collectionResolvable))
+                                         || (externalResolvable != null && IsDerivedFromService(symbol, externalResolvable))
+                                         || (decorator != null && IsDerivedFromService(symbol, decorator))
+                                         || (conditionalDecorator != null && IsDerivedFromService(symbol, conditionalDecorator))
+                                         || (collectionDecorator != null && IsDerivedFromService(symbol, collectionDecorator))
+                                         || (conditionalCollectionDecorator != null && IsDerivedFromService(symbol, conditionalCollectionDecorator)));
 
             return isComponent;
         }
@@ -118,14 +128,6 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                 return false;
             }
 
-            ITypeSymbol? GetAttributeSymbol(AttributeSyntax syntax)
-            {
-                return context.Compilation
-                    .GetSemanticModel(syntax.SyntaxTree)
-                    .GetTypeInfo(syntax)
-                    .Type;
-            }
-
             var attribute = context.Compilation.GetTypeByMetadataName(typeof(LifestyleAttribute).FullName);
 
             var isContainsAttribute = attributeList
@@ -134,6 +136,14 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                 .Any(z => z.Equals(attribute));
 
             return isContainsAttribute;
+
+            ITypeSymbol? GetAttributeSymbol(AttributeSyntax syntax)
+            {
+                return context.Compilation
+                              .GetSemanticModel(syntax.SyntaxTree)
+                              .GetTypeInfo(syntax)
+                              .Type;
+            }
         }
     }
 }

@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree.Internals
             switch (_reader.TokenType)
             {
                 case JsonToken.StartObject:
-                    IObjectTreeNode child = new ObjectNode(_current);
+                    IObjectTreeNode child = new ObjectNode(_current, _reader.Path);
                     _current.Add(child);
                     next = child;
                     read = _reader.Read();
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree.Internals
                     read = _reader.Read();
                     break;
                 case JsonToken.StartArray:
-                    child = new ArrayNode(_current);
+                    child = new ArrayNode(_current, _reader.Path);
                     _current.Add(child);
                     next = child;
                     read = _reader.Read();
@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree.Internals
                     break;
                 case JsonToken.PropertyName when _current is ObjectNode objectNode:
                     var property = _reader.Value.EnsureNotNull("null named property").ToString();
-                    objectNode.Members.Add(property, new ValueNode(objectNode));
+                    objectNode.Members.Add(property, new ValueNode(objectNode, _reader.Path));
                     objectNode.CurrentProperty = property;
                     next = _current;
                     read = _reader.Read();

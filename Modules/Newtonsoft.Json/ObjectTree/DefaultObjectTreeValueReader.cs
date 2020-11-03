@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         /// <inheritdoc />
         public (bool read, ValueNode value) Read(JsonReader reader, IObjectTreeNode parent)
         {
-            var value = new ValueNode(parent, reader.Value);
+            var value = new ValueNode(parent, reader.Path, reader.Value);
             return (reader.Read(), value);
         }
     }

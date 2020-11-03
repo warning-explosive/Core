@@ -42,15 +42,18 @@
       <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
     </Compile>
     <Compile Update="ObjectTree\ValueNode.cs">
-      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+      <DependentUpon>NodeBase.cs</DependentUpon>
     </Compile>
     <Compile Update="ObjectTree\RootNode.cs">
-      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+      <DependentUpon>NodeBase.cs</DependentUpon>
     </Compile>
     <Compile Update="ObjectTree\ArrayNode.cs">
-      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+      <DependentUpon>NodeBase.cs</DependentUpon>
     </Compile>
     <Compile Update="ObjectTree\ObjectNode.cs">
+      <DependentUpon>NodeBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ObjectTree\NodeBase.cs">
       <DependentUpon>IObjectTreeNode.cs</DependentUpon>
     </Compile>
   </ItemGroup>

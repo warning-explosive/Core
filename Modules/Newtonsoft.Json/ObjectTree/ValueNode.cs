@@ -1,27 +1,22 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
 {
     using System;
+    using System.Linq;
 
     /// <summary>
     /// ValueNode - simple leaf-node
     /// </summary>
-    public sealed class ValueNode : IObjectTreeNode
+    public sealed class ValueNode : NodeBase
     {
         /// <summary> .cctor </summary>
         /// <param name="parent">Parent node</param>
         /// <param name="value">NodeValue</param>
-        public ValueNode(IObjectTreeNode? parent, object? value = null)
+        /// <param name="path">Node path</param>
+        public ValueNode(IObjectTreeNode? parent, string path, object? value = null)
+            : base(parent, path)
         {
-            Parent = parent;
             Value = value;
-            Depth = (parent?.Depth ?? 0) + 1;
         }
-
-        /// <inheritdoc />
-        public int Depth { get; }
-
-        /// <inheritdoc />
-        public IObjectTreeNode? Parent { get; }
 
         /// <summary>
         /// Node value
@@ -29,15 +24,21 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         public object? Value { get; }
 
         /// <inheritdoc />
-        public void Add(IObjectTreeNode child)
+        public override void Add(IObjectTreeNode child)
         {
             throw new InvalidOperationException("Trying to add a child into the leaf-node");
         }
 
         /// <inheritdoc />
-        public object? ExtractTree()
+        public override object? ExtractTree()
         {
             return Value;
+        }
+
+        /// <inheritdoc />
+        public override IObjectTreeNode? ExtractPath(params string[] path)
+        {
+            return path.Any() ? null : this;
         }
     }
 }

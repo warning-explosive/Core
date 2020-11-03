@@ -6,22 +6,16 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
     /// <summary>
     /// ArrayNode - collection of nodes
     /// </summary>
-    public class ArrayNode : IObjectTreeNode
+    public class ArrayNode : NodeBase
     {
         /// <summary> .cctor </summary>
         /// <param name="parent">Parent node</param>
-        public ArrayNode(IObjectTreeNode? parent)
+        /// <param name="path">Node path</param>
+        public ArrayNode(IObjectTreeNode? parent, string path)
+            : base(parent, path)
         {
-            Parent = parent;
             Items = new List<IObjectTreeNode>();
-            Depth = (parent?.Depth ?? 0) + 1;
         }
-
-        /// <inheritdoc />
-        public int Depth { get; }
-
-        /// <inheritdoc />
-        public IObjectTreeNode? Parent { get; }
 
         /// <summary>
         /// Items
@@ -29,15 +23,35 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         public ICollection<IObjectTreeNode> Items { get; }
 
         /// <inheritdoc />
-        public void Add(IObjectTreeNode child)
+        public override void Add(IObjectTreeNode child)
         {
             Items.Add(child);
         }
 
         /// <inheritdoc />
-        public object? ExtractTree()
+        public override object? ExtractTree()
         {
             return Items.Select(i => i.ExtractTree()).ToList();
+        }
+
+        /// <inheritdoc />
+        public override IObjectTreeNode? ExtractPath(params string[] path)
+        {
+            if (!path.Any())
+            {
+                return this;
+            }
+
+            var next = path.First();
+
+            if (int.TryParse(next, out var index)
+             && index >= 0
+             && index < Items.Count)
+            {
+                return Items.ElementAt(index).ExtractPath(path.Skip(1).ToArray());
+            }
+
+            return null;
         }
     }
 }

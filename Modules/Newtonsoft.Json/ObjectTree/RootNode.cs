@@ -1,24 +1,18 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
 {
     using System;
+    using System.Linq;
 
     /// <summary>
     /// RootNode - object-tree root
     /// </summary>
-    public class RootNode : IObjectTreeNode
+    public class RootNode : NodeBase
     {
         /// <summary> .cctor </summary>
         public RootNode()
+            : base(null, ".")
         {
-            Parent = null;
-            Depth = 0;
         }
-
-        /// <inheritdoc />
-        public int Depth { get; }
-
-        /// <inheritdoc />
-        public IObjectTreeNode? Parent { get; }
 
         /// <summary>
         /// Child node
@@ -26,7 +20,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         public IObjectTreeNode? Child { get; private set; }
 
         /// <inheritdoc />
-        public void Add(IObjectTreeNode child)
+        public override void Add(IObjectTreeNode child)
         {
             if (Child == null)
             {
@@ -38,9 +32,24 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         }
 
         /// <inheritdoc />
-        public object? ExtractTree()
+        public override object? ExtractTree()
         {
             return Child;
+        }
+
+        /// <inheritdoc />
+        public override IObjectTreeNode? ExtractPath(params string[] path)
+        {
+            if (!path.Any())
+            {
+                return this;
+            }
+
+            var next = path.First();
+
+            return next == "."
+                       ? Child?.ExtractPath(path.Skip(1).ToArray())
+                       : throw new InvalidOperationException($"Invalid root path: '{next}'. Use '.' instead");
         }
     }
 }

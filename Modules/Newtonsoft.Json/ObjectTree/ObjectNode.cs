@@ -7,22 +7,16 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
     /// <summary>
     /// ObjectNode - associative array of nodes
     /// </summary>
-    public class ObjectNode : IObjectTreeNode
+    public class ObjectNode : NodeBase
     {
         /// <summary> .cctor </summary>
         /// <param name="parent">Parent node</param>
-        public ObjectNode(IObjectTreeNode? parent)
+        /// <param name="path">Node path</param>
+        public ObjectNode(IObjectTreeNode? parent, string path)
+            : base(parent, path)
         {
-            Parent = parent;
             Members = new Dictionary<string, IObjectTreeNode>();
-            Depth = (parent?.Depth ?? 0) + 1;
         }
-
-        /// <inheritdoc />
-        public int Depth { get; }
-
-        /// <inheritdoc />
-        public IObjectTreeNode? Parent { get; }
 
         /// <summary>
         /// Members
@@ -35,7 +29,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         public string? CurrentProperty { get; set; }
 
         /// <inheritdoc />
-        public void Add(IObjectTreeNode child)
+        public override void Add(IObjectTreeNode child)
         {
             if (CurrentProperty == null
              || !Members.ContainsKey(CurrentProperty))
@@ -47,9 +41,27 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         }
 
         /// <inheritdoc />
-        public object? ExtractTree()
+        public override object? ExtractTree()
         {
             return Members.ToDictionary(m => m.Key, m => m.Value.ExtractTree());
+        }
+
+        /// <inheritdoc />
+        public override IObjectTreeNode? ExtractPath(params string[] path)
+        {
+            if (!path.Any())
+            {
+                return this;
+            }
+
+            var next = path.First();
+
+            if (Members.ContainsKey(next))
+            {
+                return Members[next].ExtractPath(path.Skip(1).ToArray());
+            }
+
+            return null;
         }
     }
 }

@@ -6,14 +6,19 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
     public interface IObjectTreeNode
     {
         /// <summary>
+        /// Node parent
+        /// </summary>
+        public IObjectTreeNode? Parent { get; }
+
+        /// <summary>
         /// Node composition depth
         /// </summary>
         public int Depth { get; }
 
         /// <summary>
-        /// Node parent
+        /// Node path
         /// </summary>
-        public IObjectTreeNode? Parent { get; }
+        public string Path { get; }
 
         /// <summary>
         /// Add child to node
@@ -26,5 +31,12 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
         /// </summary>
         /// <returns>Object-tree</returns>
         object? ExtractTree();
+
+        /// <summary>
+        /// Extract node by specified path
+        /// </summary>
+        /// <param name="path">Path</param>
+        /// <returns>Object-tree</returns>
+        IObjectTreeNode? ExtractPath(params string[] path);
     }
 }

@@ -11,9 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Extensions;
     using SimpleInjector;
 
-    /// <summary>
-    /// Dependency information about node in objects graph
-    /// </summary>
+    /// <inheritdoc />
     [DebuggerDisplay("{ServiceType}")]
     internal class DependencyInfo : IDependencyInfo
     {
@@ -30,55 +28,42 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             IsCyclic = false;
         }
 
-        /// <summary>
-        /// Service type
-        /// </summary>
+        /// <inheritdoc />
         public Type ServiceType { get; }
 
-        /// <summary>
-        /// Implementation type
-        /// </summary>
+        /// <inheritdoc />
         public Type ImplementationType { get; }
 
-        /// <summary>
-        /// Component lifestyle
-        /// </summary>
+        /// <inheritdoc />
         public EnLifestyle? Lifestyle { get; private set; }
 
-        /// <summary>
-        /// Component dependencies
-        /// </summary>
+        /// <inheritdoc />
         public IReadOnlyCollection<IDependencyInfo> Dependencies { get; private set; }
 
-        /// <summary>
-        /// Component depth in objects graph
-        /// </summary>
+        /// <inheritdoc />
         public uint Depth { get; }
 
-        /// <summary>
-        /// IsCollectionResolvable attribute of service
-        /// </summary>
+        /// <inheritdoc />
+        public uint ComplexityDepth
+            => Dependencies.Any()
+                   ? Dependencies.Max(d => d.ComplexityDepth)
+                   : Depth;
+
+        /// <inheritdoc />
         public bool IsCollectionResolvable { get; }
 
-        /// <summary>
-        /// Cyclic dependency attribute
-        /// </summary>
+        /// <inheritdoc />
         public bool IsCyclic { get; private set; }
 
-        /// <summary>
-        /// IsUnregistered attribute
-        /// </summary>
+        /// <inheritdoc />
         public bool IsUnregistered { get; private set; }
 
-        /// <summary>
-        /// Execute action on DependencyInfo object and its dependencies
-        /// </summary>
-        /// <param name="action">Action</param>
+        /// <inheritdoc />
         public void TraverseByGraph(Action<IDependencyInfo> action)
         {
             action(this);
 
-            Dependencies.Each(relationship => relationship.TraverseByGraph(action));
+            Dependencies.Each(dependency => dependency.TraverseByGraph(action));
         }
 
         /// <summary>
@@ -88,9 +73,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         /// <param name="visited">Visited nodes</param>
         /// <param name="depth">Current dependency depth in objects graph</param>
         /// <returns>DependencyInfo object</returns>
-        internal static DependencyInfo RetrieveDependencyGraph(InstanceProducer dependency,
-                                                               IDictionary<InstanceProducer, DependencyInfo> visited,
-                                                               uint depth)
+        internal static DependencyInfo RetrieveDependencyGraph(
+            InstanceProducer dependency,
+            IDictionary<InstanceProducer, DependencyInfo> visited,
+            uint depth)
         {
             if (visited.TryGetValue(dependency, out var nodeInfo))
             {

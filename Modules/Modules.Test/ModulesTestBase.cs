@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Test;
-    using Core.SettingsManager;
     using Core.SettingsManager.Extensions;
     using Xunit.Abstractions;
 

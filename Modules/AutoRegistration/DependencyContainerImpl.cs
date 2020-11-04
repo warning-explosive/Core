@@ -337,9 +337,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static void RegisterVersions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)
         {
             var all = container
-                .GetCurrentRegistrations()
-                .Select(producer => producer.ServiceType)
-                .ToList();
+                     .GetCurrentRegistrations()
+                     .Where(producer => typeProvider.IsOurType(producer.ServiceType))
+                     .OrderByComplexityDepth()
+                     .Select(producer => producer.ServiceType)
+                     .ToList();
 
             // 1. IVersioned<T>
             container.RegisterVersionedComponents(all.VersionedComponents(container).ToList());

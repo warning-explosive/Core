@@ -35,6 +35,11 @@ namespace SpaceEngineers.Core.AutoWiringApi.Contexts
         uint Depth { get; }
 
         /// <summary>
+        /// Depth of the deepest child dependency
+        /// </summary>
+        uint ComplexityDepth { get; }
+
+        /// <summary>
         /// IsCollectionResolvable attribute of service
         /// </summary>
         bool IsCollectionResolvable { get; }

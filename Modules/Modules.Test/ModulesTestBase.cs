@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Basics.Test;
     using Core.SettingsManager;
+    using Core.SettingsManager.Extensions;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -20,7 +21,11 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            SetupFileSystemSettingsDirectory();
+            SolutionExtensions.ProjectFile()
+                              .Directory
+                              .StepInto("Settings")
+                              .SetupFileSystemSettingsDirectory();
+
             DependencyContainer = SetupDependencyContainer();
         }
 
@@ -59,14 +64,6 @@ namespace SpaceEngineers.Core.Modules.Test
                            && typeof(ITestClassWithRegistration).IsAssignableFrom(type))
                .Select(type => Activator.CreateInstance(type).EnsureNotNull<ITestClassWithRegistration>("Test class hadn't instantiated. This class must have constructor without parameters."))
                .Each(registration => registration.Register(container));
-        }
-
-        private static void SetupFileSystemSettingsDirectory()
-        {
-            var fileSystemSettingsDirectory = SolutionExtensions.ProjectFile().Directory.StepInto("Settings");
-            Environment.SetEnvironmentVariable(Constants.FileSystemSettingsDirectory,
-                                               fileSystemSettingsDirectory.FullName,
-                                               EnvironmentVariableTarget.Process);
         }
     }
 }

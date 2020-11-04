@@ -1,6 +1,10 @@
-﻿﻿namespace SpaceEngineers.Core.GenericEndpoint
+﻿namespace SpaceEngineers.Core.GenericEndpoint
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using Abstractions;
@@ -8,6 +12,8 @@
     using AutoRegistration.Abstractions;
     using Basics;
     using Internals;
+    using MongoDB.Driver;
+    using NewtonSoft.Json.Abstractions;
     using NServiceBus;
     using NServiceBus.Installation;
     using NServiceBus.MessageMutator;
@@ -39,8 +45,7 @@
         /// <returns>Async cleanup</returns>
         public static async Task<IEndpoint> Run(string endpointName, Action<EndpointConfiguration>? configure = null)
         {
-            var settingsContainer = DependencyContainer.CreateBounded(new[] { typeof(ISettingsManager<>).Assembly }, new DependencyContainerOptions());
-
+            var settingsContainer = SettingsContainer();
             var queueConventions = await settingsContainer.GetSetting<QueueConventions>().ConfigureAwait(false);
             var transportSettings = await settingsContainer.GetSetting<TransportSettings>().ConfigureAwait(false);
             var persistenceSettings = await settingsContainer.GetSetting<PersistenceSettings>().ConfigureAwait(false);
@@ -90,6 +95,27 @@
                             .ConfigureDependencyInjection()
                             .ConfigureCustomFeatures()
                             .Configure(configure);
+        }
+
+        private static IDependencyContainer SettingsContainer()
+        {
+            var trustedAssemblies
+                = new[]
+                  {
+                      typeof(object).Assembly,               // mscorlib
+                      typeof(IEnumerable).Assembly,          // System.Collections
+                      typeof(IEnumerable<>).Assembly,        // System.Collections.Generic
+                      typeof(ReadOnlyCollection<>).Assembly, // System.Collections.ObjectModel
+
+                      typeof(ISettingsManager<>).Assembly,              // SpaceEngineers.Core.SettingsManager
+                      typeof(IJsonSerializer).Assembly,                 // SpaceEngineers.Core.Newtonsoft.Json
+                      typeof(MongoServerAddressJsonConverter).Assembly, // SpaceEngineers.Core.GenericEndpoint
+
+                      typeof(MongoClientSettings).Assembly,                                       // MongoDB.Driver
+                      typeof(MongoDB.Driver.Core.Configuration.CompressorConfiguration).Assembly, // MongoDB.Driver.Core
+                  };
+
+            return DependencyContainer.CreateBounded(trustedAssemblies, new DependencyContainerOptions());
         }
 
         private static IDependencyContainer ExternallyManagedContainer(EndpointConfiguration endpointConfiguration,

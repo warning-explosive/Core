@@ -46,6 +46,15 @@ namespace SpaceEngineers.Core.Basics
                                   .Any();
         }
 
+        /// <summary> Order types collection by DependencyAttribute </summary>
+        /// <param name="source">Unordered types collection</param>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
+        /// <returns>Ordered by DependencyAttribute collection</returns>
+        public static IOrderedEnumerable<Type> OrderByDependencyAttribute(this IEnumerable<Type> source)
+        {
+            return source.OrderByDependencyAttribute(t => t);
+        }
+
         /// <summary> Order collection by DependencyAttribute </summary>
         /// <param name="source">Unordered source collection</param>
         /// <param name="accessor">Type accessor</param>
@@ -214,6 +223,16 @@ namespace SpaceEngineers.Core.Basics
             return type.IsGenericType
                        ? type.GetGenericTypeDefinition()
                        : type;
+        }
+
+        /// <summary>
+        /// True for non-generic or constructed generic types
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is constructed or simple type</returns>
+        public static bool IsConstructedOrSimpleType(this Type type)
+        {
+            return !type.IsGenericType || type.IsConstructedGenericType;
         }
 
         /// <summary>

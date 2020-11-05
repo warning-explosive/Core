@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.Basics.Test
                            typeof(OrderByDependencyTestData.CycleDependencyTest3),
                        };
 
-            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencyAttribute(z => z).ToArray());
+            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencyAttribute().ToArray());
         }
 
         [Fact]
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.DependencyTest3),
             };
 
-            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencyAttribute(z => z)));
+            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencyAttribute()));
 
             var test2 = new[]
             {
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest3<>),
             };
 
-            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencyAttribute(z => z)));
+            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencyAttribute()));
 
             var test3 = new[]
             {
@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest3<int>),
             };
 
-            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencyAttribute(z => z)));
+            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencyAttribute()));
         }
 
         [Fact]

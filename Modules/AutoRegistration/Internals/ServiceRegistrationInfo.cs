@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System;
     using System.Diagnostics;
     using AutoWiringApi.Enumerations;
+    using Basics;
     using Extensions;
     using SimpleInjector;
 
@@ -11,12 +12,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     {
         internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)
         {
-            ServiceType = serviceType.IsGenericType
-                              ? serviceType.GetGenericTypeDefinition()
-                              : serviceType;
-
+            ServiceType = serviceType.GenericTypeDefinitionOrSelf();
             ImplementationType = implementationType;
-
             Lifestyle = lifestyle.MapLifestyle();
         }
 

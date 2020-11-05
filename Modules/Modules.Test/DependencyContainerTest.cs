@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.SettingsManager.Abstractions;
     using Moq;
+    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -68,32 +69,6 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
-        {
-            return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
-                       ?? FromMatchesTypeArgumentSelector(ctx);
-        }
-
-        internal static Type? FromExistedClosedTypesTypeArgumentSelector(IEnumerable<Type> source, TypeArgumentSelectionContext ctx)
-            => source
-              .OrderBy(t => t.IsGenericType)
-              .FirstOrDefault(t => (!t.IsGenericType || t.IsConstructedGenericType) && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
-             ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
-              .FirstOrDefault();
-
-        internal static Type? FromMatchesTypeArgumentSelector(TypeArgumentSelectionContext ctx)
-        {
-            var isVersioned = ctx.OpenGeneric.IsSubclassOfOpenGeneric(typeof(IVersioned<>));
-
-            var predicate = isVersioned
-                                ? type => typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable)
-                                : new Func<Type, bool>(type => true);
-
-            return ctx.Matches.Contains(typeof(object)) && !isVersioned
-                       ? typeof(object)
-                       : ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault(predicate);
-        }
-
         [Theory]
         [MemberData(nameof(ResolveRegisteredServicesTestData))]
         internal void ResolveRegisteredServicesTest(Type apiService,
@@ -111,7 +86,7 @@ namespace SpaceEngineers.Core.Modules.Test
                          {
                              var service = type.IsGenericType
                                         && !type.IsConstructedGenericType
-                                               ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))
+                                               ? genericTypeProvider.CloseByConstraints(type, VersionedOpenGenericRegistration.HybridTypeArgumentSelector(DependencyContainer))
                                                : type;
 
                              if (type.HasAttribute<UnregisteredAttribute>())
@@ -129,16 +104,28 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void EachServiceHasVersionedWrapperTest()
         {
-            var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
-            var typeProvider = DependencyContainer.Resolve<ITypeProvider>();
+            var options
+                = new DependencyContainerOptions
+                  {
+                      RegistrationCallback
+                          = r =>
+                            {
+                                new TestDelegatesRegistration().Register(r);
 
-            var localContainer = SetupDependencyContainer(Registration);
+                                VersionedOpenGenericRegistration.RegisterVersionedForOpenGenerics(DependencyContainer, r)
+                                                                .Select(type => type.ToString())
+                                                                .Each(Output.WriteLine);
+                            }
+                  };
+            var localContainer = AutoRegistration.DependencyContainer.Create(options);
+
+            var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
 
             using (localContainer.OpenScope())
             {
                 localContainer
                    .Resolve<ITypeProvider>()
-                   .OurTypes
+                   .AllLoadedTypes
                    .Where(t => typeof(IResolvable).IsAssignableFrom(t)
                                && t != typeof(IResolvable)
                                && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>)))
@@ -149,7 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
                              if (service.IsGenericType
                               && !service.IsConstructedGenericType)
                              {
-                                 var closedService = genericTypeProvider.CloseByConstraints(service, HybridTypeArgumentSelector(localContainer));
+                                 var closedService = genericTypeProvider.CloseByConstraints(service, VersionedOpenGenericRegistration.HybridTypeArgumentSelector(localContainer));
                                  versioned = typeof(IVersioned<>).MakeGenericType(closedService);
                              }
                              else
@@ -171,28 +158,6 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             object Resolve(Type service) => localContainer.Resolve(service);
-
-            void Registration(IRegistrationContainer container)
-            {
-                var source = typeProvider.AllLoadedTypes;
-
-                source.Where(t => typeof(IResolvable).IsAssignableFrom(t)
-                               && t != typeof(IResolvable)
-                               && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
-                               && t.IsGenericType
-                               && !t.IsConstructedGenericType)
-                      .Each(service =>
-                            {
-                                var closed = genericTypeProvider.CloseByConstraints(service, HybridTypeArgumentSelector(DependencyContainer));
-                                var versionedService = typeof(IVersioned<>).MakeGenericType(closed);
-
-                                Output.WriteLine(closed.ToString());
-                                if (!container.HasRegistration(versionedService))
-                                {
-                                    container.RegisterVersioned(closed, EnLifestyle.Transient);
-                                }
-                            });
-            }
         }
 
         [Fact]
@@ -391,6 +356,85 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
 
             Assert.Equal(typeof(DerivedFromUnregisteredExternalServiceImpl), DependencyContainer.Resolve<IUnregisteredExternalService>().GetType());
+        }
+
+        [Fact]
+        internal void RegistrationCallbackResolutionTest()
+        {
+            var cctorResolutionBehavior = SimpleInjector(DependencyContainer)
+                                         .Options
+                                         .ConstructorResolutionBehavior;
+
+            var parameterType = cctorResolutionBehavior
+                               .TryGetConstructor(typeof(WiredTestServiceImpl), out var error)
+                               .GetParameters()
+                               .Single()
+                               .ParameterType;
+            Assert.Null(error);
+            Assert.Equal(typeof(IIndependentTestService), parameterType);
+
+            var expectedCollection = new[]
+                                     {
+                                         typeof(CollectionResolvableTestServiceImpl1),
+                                         typeof(CollectionResolvableTestServiceImpl2),
+                                     };
+
+            var options
+                = new DependencyContainerOptions
+                  {
+                      RegistrationCallback =
+                          r =>
+                          {
+                              r.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
+                              r.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
+                              r.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
+                              r.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                              r.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
+                          }
+                  };
+            var empty = Array.Empty<Assembly>();
+            var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
+
+            localContainer.Resolve<IWiredTestService>();
+            localContainer.Resolve<IVersioned<IWiredTestService>>();
+            localContainer.Resolve<WiredTestServiceImpl>();
+            localContainer.Resolve<IVersioned<WiredTestServiceImpl>>();
+
+            localContainer.Resolve<IIndependentTestService>();
+            localContainer.Resolve<IVersioned<IIndependentTestService>>();
+            localContainer.Resolve<IndependentTestServiceImpl>();
+            localContainer.Resolve<IVersioned<IndependentTestServiceImpl>>();
+
+            var actual = localContainer.ResolveCollection<ICollectionResolvableTestService>()
+                                       .Select(r => r.GetType())
+                                       .ToList();
+            Assert.True(expectedCollection.OrderByDependencyAttribute().SequenceEqual(expectedCollection.Reverse()));
+            Assert.True(expectedCollection.OrderByDependencyAttribute().SequenceEqual(actual));
+
+            localContainer.Resolve<IOpenGenericTestService<object>>();
+            Assert.Throws<ActivationException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
+            Assert.Throws<ActivationException>(() => localContainer.Resolve<IVersioned<IOpenGenericTestService<string>>>());
+
+            localContainer.Resolve<IRegisteredByDelegate>();
+            localContainer.Resolve<IVersioned<IRegisteredByDelegate>>();
+
+            options = new DependencyContainerOptions
+                      {
+                          RegistrationCallback
+                              = r =>
+                                {
+                                    r.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                                    r.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
+                                }
+                      };
+
+            var localContainerWithSpecifiedVersions = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
+
+            localContainerWithSpecifiedVersions.Resolve<IOpenGenericTestService<object>>();
+            localContainerWithSpecifiedVersions.Resolve<IVersioned<IOpenGenericTestService<object>>>();
+            Assert.Throws<ActivationException>(() => localContainerWithSpecifiedVersions.Resolve<IVersioned<IOpenGenericTestService<string>>>());
+
+            static Container SimpleInjector(IDependencyContainer container) => container.GetFieldValue<Container>("_container");
         }
 
         [Theory]

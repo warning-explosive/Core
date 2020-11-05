@@ -23,12 +23,12 @@
 
         public void ConfigureComponent(Type concreteComponent, DependencyLifecycle dependencyLifecycle)
         {
-            _registration.RegisterImplementation(concreteComponent, dependencyLifecycle.MapLifestyle());
+            _registration.Register(concreteComponent, concreteComponent, dependencyLifecycle.MapLifestyle());
         }
 
         public void ConfigureComponent<T>(DependencyLifecycle dependencyLifecycle)
         {
-            _registration.RegisterImplementation(typeof(T), dependencyLifecycle.MapLifestyle());
+            _registration.Register(typeof(T), typeof(T), dependencyLifecycle.MapLifestyle());
         }
 
         public void ConfigureComponent<T>(Func<T> componentFactory, DependencyLifecycle dependencyLifecycle)

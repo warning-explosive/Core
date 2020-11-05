@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Basics;
     using Extensions;
     using Implementations;
+    using Internals;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
 
@@ -31,24 +32,32 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private readonly Container _container;
 
+        private readonly ICollection<ServiceRegistrationInfo> _external = new List<ServiceRegistrationInfo>();
+
+        private readonly ICollection<ServiceRegistrationInfo> _externalCollections = new List<ServiceRegistrationInfo>();
+
+        private readonly ICollection<ServiceRegistrationInfo> _externalVersioned = new List<ServiceRegistrationInfo>();
+
         /// <summary> .ctor </summary>
         /// <param name="typeProvider">ITypeProvider</param>
+        /// <param name="servicesProvider">IAutoWiringServicesProvider</param>
         /// <param name="options">DependencyContainerOptions</param>
         public DependencyContainerImpl(ITypeProvider typeProvider,
+                                       IAutoWiringServicesProvider servicesProvider,
                                        DependencyContainerOptions options)
         {
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
 
-            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+            RegisterSingletons(_container, this, (ContainerDependentTypeProvider)typeProvider, (AutoWiringServicesProvider)servicesProvider);
 
-            RegisterSingletons(_container, this, (ContainerDependentTypeProvider)typeProvider, servicesProvider);
+            options.RegistrationCallback?.Invoke(this);
 
-            RegisterAutoWired(_container, typeProvider, servicesProvider);
-
-            RegisterExternalDependencies(this, options.RegistrationCallback);
-
-            RegisterVersions(_container, typeProvider, servicesProvider);
+            Resolvable(_container, typeProvider, servicesProvider).Concat(_external).ToList().RegisterServicesWithOpenGenericFallBack(_container);
+            Collections(_container, typeProvider, servicesProvider).Concat(_externalCollections).ToList().RegisterCollections(_container);
+            Decorators(servicesProvider).RegisterDecorators(_container);
+            Versioned(_container).Concat(_externalVersioned).ToList().RegisterVersioned(_container);
+            Versions(_container, typeProvider, servicesProvider).ToList().RegisterVersions(_container);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
             _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
@@ -58,7 +67,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         public IRegistrationContainer Register(Type serviceType, Type implementationType, EnLifestyle lifestyle)
         {
-            _container.Register(serviceType, implementationType, lifestyle.MapLifestyle());
+            ServiceRegistrationInfoExtensions.ExternalComponents(serviceType, implementationType, lifestyle).Each(_external.Add);
             return this;
         }
 
@@ -66,8 +75,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             where TService : class
             where TImplementation : class, TService
         {
-            _container.Register<TService, TImplementation>(lifestyle.MapLifestyle());
-            return this;
+            return Register(typeof(TService), typeof(TImplementation), lifestyle);
         }
 
         public IRegistrationContainer Register(Type serviceType, Func<object> factory, EnLifestyle lifestyle)
@@ -79,33 +87,19 @@ namespace SpaceEngineers.Core.AutoRegistration
         public IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class
         {
-            _container.Register(factory.Invoke, lifestyle.MapLifestyle());
-            return this;
+            return Register(typeof(TService), factory.Invoke, lifestyle);
         }
 
-        public IRegistrationContainer RegisterImplementation(Type implementationType, EnLifestyle lifestyle)
-        {
-            _container.Register(implementationType, implementationType, lifestyle.MapLifestyle());
-            return this;
-        }
-
-        public IRegistrationContainer RegisterImplementation<TImplementation>(EnLifestyle lifestyle)
-            where TImplementation : class
-        {
-            _container.Register<TImplementation>(lifestyle.MapLifestyle());
-            return this;
-        }
-
-        public IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<object> implementationsCollection)
-        {
-            _container.Collection.Register(serviceType, implementationsCollection);
-            return this;
-        }
-
-        public IRegistrationContainer RegisterCollection<TService>(IEnumerable<TService> implementationsCollection)
+        public IRegistrationContainer RegisterCollection<TService>(IEnumerable<Type> implementations, EnLifestyle lifestyle)
             where TService : class
         {
-            _container.Collection.Register<TService>(implementationsCollection);
+            return RegisterCollection(typeof(TService), implementations, lifestyle);
+        }
+
+        public IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations, EnLifestyle lifestyle)
+        {
+            implementations.Select(implementation => new ServiceRegistrationInfo(serviceType, implementation, lifestyle))
+                           .Each(_externalCollections.Add);
             return this;
         }
 
@@ -117,9 +111,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         public IRegistrationContainer RegisterVersioned(Type serviceType, EnLifestyle lifestyle)
         {
-            _container.Register(typeof(IVersioned<>).MakeGenericType(serviceType),
-                                typeof(Versioned<>).MakeGenericType(serviceType),
-                                lifestyle.MapLifestyle());
+            _externalVersioned.Add(serviceType.VersionedComponent(lifestyle));
             return this;
         }
 
@@ -230,6 +222,8 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #endregion
 
+        #region Internals
+
         private static Container CreateContainer()
         {
             return new Container
@@ -264,44 +258,25 @@ namespace SpaceEngineers.Core.AutoRegistration
             container.RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
         }
 
-        private static void RegisterExternalDependencies(IRegistrationContainer container, Action<IRegistrationContainer>? registrationCallback)
+        private static IEnumerable<ServiceRegistrationInfo> Resolvable(
+            Container container,
+            ITypeProvider typeProvider,
+            IAutoWiringServicesProvider servicesProvider)
         {
-            registrationCallback?.Invoke(container);
+            return servicesProvider.Resolvable().Concat(servicesProvider.External())
+                                   .GetComponents(container, typeProvider, false);
         }
 
-        private static void RegisterAutoWired(Container container,
-                                              ITypeProvider typeProvider,
-                                              IAutoWiringServicesProvider servicesProvider)
+        private static IEnumerable<ServiceRegistrationInfo> Collections(
+            Container container,
+            ITypeProvider typeProvider,
+            IAutoWiringServicesProvider servicesProvider)
         {
-            /*
-             * [I] - Single implementation service
-             */
-            var resolvableRegistrationInfos = servicesProvider
-                                             .Resolvable()
-                                             .GetComponents(container, typeProvider, false);
-            container.RegisterServicesWithOpenGenericFallBack(resolvableRegistrationInfos);
+            return servicesProvider.Collections().GetComponents(container, typeProvider, false);
+        }
 
-            /*
-             * [II] - External service single implementation
-             */
-            var externalServicesRegistrationInfos = servicesProvider
-                                                   .External()
-                                                   .GetComponents(container, typeProvider, false);
-            container.RegisterServicesWithOpenGenericFallBack(externalServicesRegistrationInfos);
-
-            /*
-             * [III] - Collection resolvable service
-             */
-            var collectionResolvableRegistrationInfos = servicesProvider
-                                                       .Collections()
-                                                       .GetComponents(container, typeProvider, false)
-                                                       .ToList();
-
-            container.RegisterCollections(collectionResolvableRegistrationInfos);
-
-            /*
-             * [IV] - Decorators
-             */
+        private static IEnumerable<DecoratorRegistrationInfo> Decorators(IAutoWiringServicesProvider servicesProvider)
+        {
             var decorators = servicesProvider
                             .Decorators()
                             .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
@@ -312,13 +287,6 @@ namespace SpaceEngineers.Core.AutoRegistration
                                        .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
                                        .GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
 
-            decorators.Concat(conditionalDecorators)
-                      .OrderByDependencyAttribute(z => z.ImplementationType)
-                      .Each(container.RegisterDecorator);
-
-            /*
-             * [V] - Collection decorators
-             */
             var collectionDecorators = servicesProvider
                                       .CollectionDecorators()
                                       .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
@@ -329,38 +297,28 @@ namespace SpaceEngineers.Core.AutoRegistration
                                                  .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
                                                  .GetConditionalDecoratorInfo(typeof(IConditionalCollectionDecorator<,>));
 
-            collectionDecorators.Concat(collectionConditionalDecorators)
-                                .OrderByDependencyAttribute(z => z.ImplementationType)
-                                .Each(container.RegisterDecorator);
+            var simple = decorators.Concat(collectionDecorators);
+            var conditional = conditionalDecorators.Concat(collectionConditionalDecorators);
+            return simple.Concat(conditional);
         }
 
-        private static void RegisterVersions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)
+        private static IEnumerable<ServiceRegistrationInfo> Versioned(Container container)
         {
-            var all = container
-                     .GetCurrentRegistrations()
-                     .Where(producer => typeProvider.IsOurType(producer.ServiceType))
-                     .OrderByComplexityDepth()
-                     .Select(producer => producer.ServiceType)
-                     .ToList();
-
-            // 1. IVersioned<T>
-            container.RegisterVersionedComponents(all.VersionedComponents(container).ToList());
-
-            // 2. IVersionFor<T> collection
-            var versionFor = servicesProvider
-                .Versions()
-                .Select(service => typeof(IVersionFor<>).MakeGenericType(service))
-                .GetComponents(container, typeProvider, true)
-                .ToList();
-
-            if (versionFor.Any())
-            {
-                container.RegisterCollections(versionFor);
-            }
-            else
-            {
-                container.RegisterEmptyCollection(typeof(IVersionFor<>));
-            }
+            return container
+                  .GetCurrentRegistrations()
+                  .OrderByComplexityDepth()
+                  .Select(producer => producer.ServiceType)
+                  .VersionedComponents(container);
         }
+
+        private static IEnumerable<ServiceRegistrationInfo> Versions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)
+        {
+            return servicesProvider
+                  .Versions()
+                  .Select(service => typeof(IVersionFor<>).MakeGenericType(service))
+                  .GetComponents(container, typeProvider, true);
+        }
+
+        #endregion
     }
 }

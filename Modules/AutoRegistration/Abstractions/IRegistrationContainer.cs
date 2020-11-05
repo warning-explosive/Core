@@ -42,31 +42,20 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class;
 
-        /// <summary> Register implementation type </summary>
-        /// <param name="implementationType">Implementation type</param>
+        /// <summary> Register collection of services </summary>
+        /// <param name="implementations">Collection of implementation types</param>
         /// <param name="lifestyle">Instance lifestyle</param>
+        /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterImplementation(Type implementationType, EnLifestyle lifestyle);
-
-        /// <summary> Register implementation type </summary>
-        /// <param name="lifestyle">Instance lifestyle</param>
-        /// <typeparam name="TImplementation">TImplementation type-argument</typeparam>
-        /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterImplementation<TImplementation>(EnLifestyle lifestyle)
-            where TImplementation : class;
+        IRegistrationContainer RegisterCollection<TService>(IEnumerable<Type> implementations, EnLifestyle lifestyle)
+            where TService : class;
 
         /// <summary> Register collection of services </summary>
         /// <param name="serviceType">Service type</param>
-        /// <param name="implementationsCollection">Collection of implementations</param>
+        /// <param name="implementations">Collection of implementation types</param>
+        /// <param name="lifestyle">Instance lifestyle</param>
         /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<object> implementationsCollection);
-
-        /// <summary> Register collection of services </summary>
-        /// <param name="implementationsCollection">Collection of implementations</param>
-        /// <typeparam name="TService">TService type-argument</typeparam>
-        /// <returns>IRegistrationContainer</returns>
-        IRegistrationContainer RegisterCollection<TService>(IEnumerable<TService> implementationsCollection)
-            where TService : class;
+        IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations, EnLifestyle lifestyle);
 
         /// <summary>
         /// Register versioned service

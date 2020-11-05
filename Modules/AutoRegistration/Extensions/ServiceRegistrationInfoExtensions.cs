@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System.Collections.Generic;
     using System.Linq;
     using AutoWiringApi.Abstractions;
+    using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using Basics;
     using Implementations;
@@ -12,17 +13,30 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
     internal static class ServiceRegistrationInfoExtensions
     {
+        internal static IEnumerable<ServiceRegistrationInfo> ExternalComponents(Type serviceType, Type implementationType,  EnLifestyle lifestyle)
+        {
+            yield return new ServiceRegistrationInfo(serviceType, implementationType, lifestyle);
+            yield return new ServiceRegistrationInfo(implementationType, implementationType, lifestyle);
+        }
+
         internal static IEnumerable<ServiceRegistrationInfo> VersionedComponents(this IEnumerable<Type> servicesWithVersions, Container container)
         {
             foreach (var serviceType in servicesWithVersions)
             {
-                var versionedServiceType = typeof(IVersioned<>).MakeGenericType(serviceType);
-                var versionedImplementationType = typeof(Versioned<>).MakeGenericType(serviceType);
                 var lifestyle = container.GetRegistration(serviceType)
                                          .EnsureNotNull($"Container must has registration of {serviceType.FullName}")
-                                         .Lifestyle.MapLifestyle();
-                yield return new ServiceRegistrationInfo(versionedServiceType, versionedImplementationType, lifestyle);
+                                         .Lifestyle
+                                         .MapLifestyle();
+
+                yield return VersionedComponent(serviceType, lifestyle);
             }
+        }
+
+        internal static ServiceRegistrationInfo VersionedComponent(this Type serviceType, EnLifestyle lifestyle)
+        {
+            var versionedServiceType = typeof(IVersioned<>).MakeGenericType(serviceType);
+            var versionedImplementationType = typeof(Versioned<>).MakeGenericType(serviceType);
+            return new ServiceRegistrationInfo(versionedServiceType, versionedImplementationType, lifestyle);
         }
 
         internal static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> serviceTypes,

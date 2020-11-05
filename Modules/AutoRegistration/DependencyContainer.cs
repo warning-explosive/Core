@@ -33,8 +33,8 @@ namespace SpaceEngineers.Core.AutoRegistration
             var typeProvider = new ContainerDependentTypeProvider(AssembliesExtensions.AllFromCurrentDomain(),
                                                                   RootAssemblies,
                                                                   options.ExcludedNamespaces ?? new List<string>());
-
-            var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
+            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+            var dependencyContainer = new DependencyContainerImpl(typeProvider, servicesProvider, options);
 
             return dependencyContainer;
         }
@@ -52,8 +52,8 @@ namespace SpaceEngineers.Core.AutoRegistration
             var typeProvider = new ContainerDependentTypeProvider(supplemented,
                                                                   RootAssemblies,
                                                                   options.ExcludedNamespaces ?? new List<string>());
-
-            var dependencyContainer = new DependencyContainerImpl(typeProvider, options);
+            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+            var dependencyContainer = new DependencyContainerImpl(typeProvider, servicesProvider, options);
 
             return dependencyContainer;
         }

@@ -42,50 +42,61 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                 });
         }
 
-        internal static void RegisterDecorator(this Container container, DecoratorRegistrationInfo info)
+        internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, Container container)
         {
-            if (info.Attribute == null)
+            infos.OrderByDependencyAttribute(z => z.ImplementationType)
+                 .Each(info =>
+                       {
+                           if (info.Attribute == null)
+                           {
+                               container.RegisterDecorator(info.ServiceType,
+                                                           info.ImplementationType,
+                                                           info.Lifestyle);
+                           }
+                           else
+                           {
+                               container.RegisterDecorator(info.ServiceType,
+                                                           info.ImplementationType,
+                                                           info.Lifestyle,
+                                                           c => c.ImplementationType.GetCustomAttribute(info.Attribute) != null);
+                           }
+                       });
+        }
+
+        internal static void RegisterVersions(this ICollection<ServiceRegistrationInfo> infos, Container container)
+        {
+            if (infos.Any())
             {
-                container.RegisterDecorator(info.ServiceType,
-                                            info.ImplementationType,
-                                            info.Lifestyle);
+                infos.RegisterCollections(container);
             }
             else
             {
-                container.RegisterDecorator(info.ServiceType,
-                                            info.ImplementationType,
-                                            info.Lifestyle,
-                                            c => c.ImplementationType.GetCustomAttribute(info.Attribute) != null);
+                container.RegisterEmptyCollection(typeof(IVersionFor<>));
             }
         }
 
-        internal static void RegisterEmptyCollection(this Container container, Type service)
-        {
-            container.Collection.Register(service, Enumerable.Empty<Type>());
-        }
-
-        internal static void RegisterCollections(this Container container, ICollection<ServiceRegistrationInfo> infos)
+        internal static void RegisterCollections(this ICollection<ServiceRegistrationInfo> infos, Container container)
         {
             // register each element of collection as implementation to provide lifestyle for container
-            container.RegisterImplementationsWithOpenGenericFallBack(infos);
+            infos.RegisterImplementationsWithOpenGenericFallBack(container);
 
             infos.OrderByDependencyAttribute(z => z.ImplementationType)
                  .GroupBy(k => k.ServiceType, v => v.ImplementationType)
                  .Each(info => container.Collection.Register(info.Key, info));
         }
 
-        internal static void RegisterVersionedComponents(this Container container, ICollection<ServiceRegistrationInfo> infos)
+        internal static void RegisterVersioned(this ICollection<ServiceRegistrationInfo> infos, Container container)
         {
-            container.RegisterServicesWithOpenGenericFallBack(infos);
-            container.RegisterImplementationsWithOpenGenericFallBack(infos);
+            infos.RegisterServicesWithOpenGenericFallBack(container);
+            infos.RegisterImplementationsWithOpenGenericFallBack(container);
         }
 
-        internal static void RegisterServicesWithOpenGenericFallBack(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        internal static void RegisterServicesWithOpenGenericFallBack(this IEnumerable<ServiceRegistrationInfo> infos, Container container)
         {
             RegisterWithOpenGenericFallBack(container, infos, info => info.ServiceType);
         }
 
-        internal static void RegisterImplementationsWithOpenGenericFallBack(this Container container, IEnumerable<ServiceRegistrationInfo> infos)
+        internal static void RegisterImplementationsWithOpenGenericFallBack(this IEnumerable<ServiceRegistrationInfo> infos, Container container)
         {
             RegisterWithOpenGenericFallBack(container, infos, info => info.ImplementationType);
         }
@@ -118,6 +129,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                   pair.Info.Lifestyle);
                            }
                        });
+        }
+
+        private static void RegisterEmptyCollection(this Container container, Type service)
+        {
+            container.Collection.Register(service, Enumerable.Empty<Type>());
         }
     }
 }

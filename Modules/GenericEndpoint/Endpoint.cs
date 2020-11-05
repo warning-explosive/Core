@@ -9,6 +9,7 @@
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoWiringApi.Enumerations;
     using Basics;
     using Internals;
     using MongoDB.Driver;
@@ -124,19 +125,21 @@
             IBuilder? resolver = null;
             IStartableEndpointWithExternallyManagedContainer? endpointInstance = null;
 
-            var options = new DependencyContainerOptions
-                          {
-                              RegistrationCallback = registration =>
-                                                     {
-                                                         registration.RegisterCollection(Enumerable.Empty<INeedToInstallSomething>());
-                                                         registration.RegisterCollection(Enumerable.Empty<IMutateOutgoingMessages>());
-                                                         registration.RegisterCollection(Enumerable.Empty<IMutateOutgoingTransportMessages>());
+            var options
+                = new DependencyContainerOptions
+                  {
+                      RegistrationCallback
+                          = registration =>
+                            {
+                                registration.RegisterCollection<INeedToInstallSomething>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
+                                registration.RegisterCollection<IMutateOutgoingMessages>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
+                                registration.RegisterCollection<IMutateOutgoingTransportMessages>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
 
-                                                         resolver = new NServiceBusDependencyContainerResolutionAdapter(registration);
-                                                         var registrations = new NServiceBusDependencyContainerRegistrationAdapter(registration, resolver);
-                                                         endpointInstance = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, registrations);
-                                                     }
-                          };
+                                resolver = new NServiceBusDependencyContainerResolutionAdapter(registration);
+                                var registrations = new NServiceBusDependencyContainerRegistrationAdapter(registration, resolver);
+                                endpointInstance = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, registrations);
+                            }
+                  };
 
             var dependencyContainer = DependencyContainer.Create(options);
 

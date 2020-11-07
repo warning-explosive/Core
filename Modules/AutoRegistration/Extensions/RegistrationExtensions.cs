@@ -75,6 +75,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             }
         }
 
+        internal static void RegisterEmptyCollection(this Container container, Type service)
+        {
+            container.Collection.Register(service, Enumerable.Empty<Type>());
+        }
+
         internal static void RegisterCollections(this ICollection<ServiceRegistrationInfo> infos, Container container)
         {
             // register each element of collection as implementation to provide lifestyle for container
@@ -129,11 +134,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                   pair.Info.Lifestyle);
                            }
                        });
-        }
-
-        private static void RegisterEmptyCollection(this Container container, Type service)
-        {
-            container.Collection.Register(service, Enumerable.Empty<Type>());
         }
     }
 }

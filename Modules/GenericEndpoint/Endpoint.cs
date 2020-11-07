@@ -4,12 +4,10 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Linq;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Enumerations;
     using Basics;
     using Internals;
     using MongoDB.Driver;
@@ -125,21 +123,21 @@
             IBuilder? resolver = null;
             IStartableEndpointWithExternallyManagedContainer? endpointInstance = null;
 
-            var options
-                = new DependencyContainerOptions
-                  {
-                      RegistrationCallback
-                          = registration =>
-                            {
-                                registration.RegisterCollection<INeedToInstallSomething>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
-                                registration.RegisterCollection<IMutateOutgoingMessages>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
-                                registration.RegisterCollection<IMutateOutgoingTransportMessages>(Enumerable.Empty<Type>(), EnLifestyle.Singleton);
+            var options = new DependencyContainerOptions
+                          {
+                              VerifyContainer = false
+                          };
 
-                                resolver = new NServiceBusDependencyContainerResolutionAdapter(registration);
-                                var registrations = new NServiceBusDependencyContainerRegistrationAdapter(registration, resolver);
-                                endpointInstance = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, registrations);
-                            }
-                  };
+            options.OnRegistration += (s, e) =>
+                                      {
+                                          e.Registration.RegisterEmptyCollection<INeedToInstallSomething>();
+                                          e.Registration.RegisterEmptyCollection<IMutateOutgoingMessages>();
+                                          e.Registration.RegisterEmptyCollection<IMutateOutgoingTransportMessages>();
+
+                                          resolver = new NServiceBusDependencyContainerResolutionAdapter(e.Registration);
+                                          var registrations = new NServiceBusDependencyContainerRegistrationAdapter(e.Registration, resolver);
+                                          endpointInstance = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, registrations);
+                                      };
 
             var dependencyContainer = DependencyContainer.Create(options);
 

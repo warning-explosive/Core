@@ -57,6 +57,17 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <returns>IRegistrationContainer</returns>
         IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations, EnLifestyle lifestyle);
 
+        /// <summary> Register empty collection of services </summary>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterEmptyCollection<TService>()
+            where TService : class;
+
+        /// <summary> Register empty collection of services </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterEmptyCollection(Type serviceType);
+
         /// <summary>
         /// Register versioned service
         /// Use this method only to register closed version of open-generic service

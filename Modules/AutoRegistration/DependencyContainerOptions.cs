@@ -11,9 +11,22 @@ namespace SpaceEngineers.Core.AutoRegistration
     public class DependencyContainerOptions
     {
         /// <summary>
-        /// Callback to register external dependencies. Called before container sealing.
+        /// Applies DependencyContainer registration rules to external dependencies
+        /// Calls before container registration phase.
         /// </summary>
-        public Action<IRegistrationContainer>? RegistrationCallback { get; set; }
+        public event EventHandler<RegistrationEventArgs>? OnRegistration;
+
+        /// <summary>
+        /// Registers external dependencies without applying DependencyContainer registration rules.
+        /// Calls before container sealing.
+        /// </summary>
+        public event EventHandler<RegistrationEventArgs>? OnVerify;
+
+        /// <summary>
+        /// Verify container or not
+        /// </summary>
+        /// <remarks>Default: true</remarks>
+        public bool VerifyContainer { get; set; } = true;
 
         /// <summary>
         /// SearchOption for assemblies in BaseDirectory
@@ -28,5 +41,15 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// </summary>
         // TODO: test different namespaces for service and impl
         public IReadOnlyCollection<string>? ExcludedNamespaces { get; set; }
+
+        internal void NotifyOnRegistration(IRegistrationContainer registration)
+        {
+            OnRegistration?.Invoke(this, new RegistrationEventArgs(registration));
+        }
+
+        internal void NotifyOnVerify(IRegistrationContainer registration)
+        {
+            OnVerify?.Invoke(this, new RegistrationEventArgs(registration));
+        }
     }
 }

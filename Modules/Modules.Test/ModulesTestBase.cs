@@ -40,14 +40,12 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>IDependencyContainer</returns>
         protected static IDependencyContainer SetupDependencyContainer(Action<IRegistrationContainer>? registration = null)
         {
-            var options = new DependencyContainerOptions
-                          {
-                              RegistrationCallback = container =>
-                                                     {
-                                                         Registration(container);
-                                                         registration?.Invoke(container);
-                                                     }
-                          };
+            var options = new DependencyContainerOptions();
+            options.OnRegistration += (s, e) =>
+                                      {
+                                          Registration(e.Registration);
+                                          registration?.Invoke(e.Registration);
+                                      };
 
             return AutoRegistration.DependencyContainer.Create(options);
         }

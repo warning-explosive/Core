@@ -104,19 +104,16 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void EachServiceHasVersionedWrapperTest()
         {
-            var options
-                = new DependencyContainerOptions
-                  {
-                      RegistrationCallback
-                          = r =>
-                            {
-                                new TestDelegatesRegistration().Register(r);
+            var options = new DependencyContainerOptions();
+            options.OnRegistration += (s, e) =>
+                                      {
+                                          new TestDelegatesRegistration().Register(e.Registration);
 
-                                VersionedOpenGenericRegistration.RegisterVersionedForOpenGenerics(DependencyContainer, r)
-                                                                .Select(type => type.ToString())
-                                                                .Each(Output.WriteLine);
-                            }
-                  };
+                                          VersionedOpenGenericRegistration
+                                             .RegisterVersionedForOpenGenerics(DependencyContainer, e.Registration)
+                                             .Select(type => type.ToString())
+                                             .Each(Output.WriteLine);
+                                      };
             var localContainer = AutoRegistration.DependencyContainer.Create(options);
 
             var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
@@ -379,19 +376,17 @@ namespace SpaceEngineers.Core.Modules.Test
                                          typeof(CollectionResolvableTestServiceImpl2),
                                      };
 
-            var options
-                = new DependencyContainerOptions
-                  {
-                      RegistrationCallback =
-                          r =>
-                          {
-                              r.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
-                              r.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
-                              r.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
-                              r.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                              r.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
-                          }
-                  };
+            var options = new DependencyContainerOptions();
+            options.OnRegistration += (s, e) =>
+                                      {
+                                          e.Registration.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
+                                          e.Registration.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
+                                          e.Registration.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient);
+                                          e.Registration.Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Transient);
+                                          e.Registration.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
+                                          e.Registration.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                                          e.Registration.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
+                                      };
             var empty = Array.Empty<Assembly>();
             var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
 
@@ -404,6 +399,12 @@ namespace SpaceEngineers.Core.Modules.Test
             localContainer.Resolve<IVersioned<IIndependentTestService>>();
             localContainer.Resolve<IndependentTestServiceImpl>();
             localContainer.Resolve<IVersioned<IndependentTestServiceImpl>>();
+
+            localContainer.Resolve<ConcreteImplementationWithDependencyService>();
+            localContainer.Resolve<IVersioned<ConcreteImplementationWithDependencyService>>();
+
+            localContainer.Resolve<ConcreteImplementationService>();
+            localContainer.Resolve<IVersioned<ConcreteImplementationService>>();
 
             var actual = localContainer.ResolveCollection<ICollectionResolvableTestService>()
                                        .Select(r => r.GetType())
@@ -418,15 +419,12 @@ namespace SpaceEngineers.Core.Modules.Test
             localContainer.Resolve<IRegisteredByDelegate>();
             localContainer.Resolve<IVersioned<IRegisteredByDelegate>>();
 
-            options = new DependencyContainerOptions
-                      {
-                          RegistrationCallback
-                              = r =>
-                                {
-                                    r.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                                    r.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
-                                }
-                      };
+            options = new DependencyContainerOptions();
+            options.OnRegistration += (s, e) =>
+                                      {
+                                          e.Registration.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                                          e.Registration.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
+                                      };
 
             var localContainerWithSpecifiedVersions = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
 

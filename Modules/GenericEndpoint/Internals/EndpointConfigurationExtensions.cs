@@ -1,4 +1,4 @@
-﻿﻿namespace SpaceEngineers.Core.GenericEndpoint.Internals
+﻿namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
     using MongoDB.Driver;
@@ -74,14 +74,6 @@
 
         internal static EndpointConfiguration ConfigureCustomFeatures(this EndpointConfiguration configuration)
         {
-            return configuration;
-        }
-
-        internal static EndpointConfiguration Configure(this EndpointConfiguration configuration,
-                                                        Action<EndpointConfiguration>? configure)
-        {
-            configure?.Invoke(configuration);
-
             return configuration;
         }
     }

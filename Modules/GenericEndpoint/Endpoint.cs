@@ -8,14 +8,12 @@
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using Basics;
     using Internals;
     using MongoDB.Driver;
     using NewtonSoft.Json.Abstractions;
     using NServiceBus;
-    using NServiceBus.Installation;
-    using NServiceBus.MessageMutator;
     using NServiceBus.ObjectBuilder;
+    using NServiceBus.ObjectBuilder.Common;
     using Settings;
     using SettingsManager.Abstractions;
 
@@ -37,31 +35,39 @@
             _cleanup = cleanup;
         }
 
-        /// <summary> Run endpoint </summary>
-        /// <param name="endpointName">Endpoint name</param>
-        /// <param name="configure">Additional endpoint configuration. You can override exact configs.</param>
-        /// <returns>Async cleanup</returns>
-        public static async Task<IEndpoint> Run(string endpointName, Action<EndpointConfiguration>? configure = null)
+        /// <summary> Endpoint configuration </summary>
+        /// <param name="endpointName">Endpoint logical name</param>
+        /// <returns>Configuration</returns>
+        public static EndpointConfiguration Configuration(string endpointName)
         {
             var settingsContainer = SettingsContainer();
-            var queueConventions = await settingsContainer.GetSetting<QueueConventions>().ConfigureAwait(false);
-            var transportSettings = await settingsContainer.GetSetting<TransportSettings>().ConfigureAwait(false);
-            var persistenceSettings = await settingsContainer.GetSetting<PersistenceSettings>().ConfigureAwait(false);
+            var queueConventions = settingsContainer.GetSetting<QueueConventions>().Result;
+            var transportSettings = settingsContainer.GetSetting<TransportSettings>().Result;
+            var persistenceSettings = settingsContainer.GetSetting<PersistenceSettings>().Result;
 
-            var configuration = GetEndpointConfiguration(endpointName, configure, queueConventions, transportSettings, persistenceSettings);
+            return GetEndpointConfiguration(endpointName, queueConventions, transportSettings, persistenceSettings);
+        }
 
-            var container = ExternallyManagedContainer(configuration, out var endpointInstance, out var resolver);
+        /// <summary> Run endpoint </summary>
+        /// <param name="endpointName">Endpoint name</param>
+        /// <returns>Async cleanup</returns>
+        public static async Task<IEndpoint> Run(string endpointName) // TODO: Remove
+        {
+            var dependencyContainer = DependencyContainer.Create(new DependencyContainerOptions());
+            var builder = Builder();
+            var compositeBuilder = new CompositeBuilder((IBuilder)builder, (IConfigureComponents)builder, dependencyContainer);
 
-            var runningInstance = await endpointInstance.Start(resolver).ConfigureAwait(false);
-
+            var endpointConfiguration = Configuration(endpointName);
+            var endpoint = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, compositeBuilder);
+            var endpointInstance = await endpoint.Start(compositeBuilder).ConfigureAwait(false);
             Console.WriteLine("Instance successfully started. Press any key to stop them.");
 
-            return new Endpoint(container, CleanUp);
+            return new Endpoint(dependencyContainer, CleanUp);
 
             async Task CleanUp()
             {
-                await runningInstance.Stop().ConfigureAwait(false);
-                resolver.Dispose();
+                await endpointInstance.Stop().ConfigureAwait(false);
+                compositeBuilder.Dispose();
                 Console.WriteLine("Instance successfully stopped.");
             }
         }
@@ -79,7 +85,6 @@
         }
 
         private static EndpointConfiguration GetEndpointConfiguration(string endpointName,
-                                                                      Action<EndpointConfiguration>? configure,
                                                                       QueueConventions queueConventions,
                                                                       TransportSettings transportSettings,
                                                                       PersistenceSettings persistenceSettings)
@@ -91,8 +96,7 @@
                             .ConfigurePersistence(persistenceSettings)
                             .ConfigureSerializer()
                             .ConfigureDependencyInjection()
-                            .ConfigureCustomFeatures()
-                            .Configure(configure);
+                            .ConfigureCustomFeatures();
         }
 
         private static IDependencyContainer SettingsContainer()
@@ -116,35 +120,11 @@
             return DependencyContainer.CreateBounded(trustedAssemblies, new DependencyContainerOptions());
         }
 
-        private static IDependencyContainer ExternallyManagedContainer(EndpointConfiguration endpointConfiguration,
-                                                                       out IStartableEndpointWithExternallyManagedContainer outEndpointInstance,
-                                                                       out IBuilder outResolver)
+        private static object Builder()
         {
-            IBuilder? resolver = null;
-            IStartableEndpointWithExternallyManagedContainer? endpointInstance = null;
-
-            var options = new DependencyContainerOptions
-                          {
-                              VerifyContainer = false
-                          };
-
-            options.OnRegistration += (s, e) =>
-                                      {
-                                          e.Registration.RegisterEmptyCollection<INeedToInstallSomething>();
-                                          e.Registration.RegisterEmptyCollection<IMutateOutgoingMessages>();
-                                          e.Registration.RegisterEmptyCollection<IMutateOutgoingTransportMessages>();
-
-                                          resolver = new NServiceBusDependencyContainerResolutionAdapter(e.Registration);
-                                          var registrations = new NServiceBusDependencyContainerRegistrationAdapter(e.Registration, resolver);
-                                          endpointInstance = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, registrations);
-                                      };
-
-            var dependencyContainer = DependencyContainer.Create(options);
-
-            outEndpointInstance = endpointInstance.EnsureNotNull("Endpoint instance must be created");
-            outResolver = resolver.EnsureNotNull("Endpoint dependency resolver must be created");
-
-            return dependencyContainer;
+            var assembly = typeof(NServiceBus.Endpoint).Assembly;
+            var container = (IContainer)Activator.CreateInstance(assembly.GetType("NServiceBus.LightInjectObjectBuilder"));
+            return Activator.CreateInstance(assembly.GetType("NServiceBus.CommonObjectBuilder"), container);
         }
     }
 }

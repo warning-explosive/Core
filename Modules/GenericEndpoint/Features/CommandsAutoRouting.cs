@@ -5,9 +5,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Features
     using System.Linq;
     using Attributes;
     using Basics;
+    using Basics.Exceptions;
     using NServiceBus;
     using NServiceBus.Features;
     using NServiceBus.Routing;
+    using Conventions = Internals.Conventions;
 
     /// <summary>
     /// CommandsAutoRouting via RouteToEndpointAttribute
@@ -36,13 +38,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Features
                   .AllFromCurrentDomain()
                   .SelectMany(a => a.GetTypes())
                   .Where(t => typeof(ICommand).IsAssignableFrom(t))
-                  .Select(t => new
-                               {
-                                   CommandType = t,
-                                   RouteTo = t.GetAttribute<RouteToEndpointAttribute>()?.EndpointName
-                               })
-                  .Where(pair => pair.RouteTo != null)
-                  .Select(pair => new RouteTableEntry(pair.CommandType, UnicastRoute.CreateFromEndpointName(pair.RouteTo)))
+                  .Select(cmd => new
+                                 {
+                                     CommandType = cmd,
+                                     RouteTo = cmd.GetAttribute<RouteToEndpointAttribute>()?.EndpointName
+                                            ?? throw new AttributeRequiredException(typeof(RouteToEndpointAttribute), cmd)
+                                 })
+                  .Select(pair => new RouteTableEntry(pair.CommandType, UnicastRoute.CreateFromEndpointName(Conventions.InputQueueName(pair.RouteTo))))
                   .ToList();
         }
     }

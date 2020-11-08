@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.Internals
+﻿﻿namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
     using MongoDB.Driver;
@@ -10,7 +10,7 @@
         internal static EndpointConfiguration NamedEndpointConfiguration(string endpointName)
         {
             var configuration = new EndpointConfiguration(endpointName);
-            configuration.OverrideLocalAddress($"{endpointName}.Input");
+            configuration.OverrideLocalAddress(Conventions.InputQueueName(endpointName));
             configuration.UniquelyIdentifyRunningInstance()
                          .UsingNames(endpointName, Environment.MachineName);
 

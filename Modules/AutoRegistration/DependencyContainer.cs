@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                                    DependencyContainerOptions options)
         {
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
-            _container = CreateContainer(options);
+            _container = CreateContainer();
 
             options.NotifyOnRegistration(this);
 
@@ -71,11 +71,8 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             options.NotifyOnVerify(this);
 
-            if (options.VerifyContainer)
-            {
-                _container.Verify(VerificationOption.VerifyAndDiagnose);
-                _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
-            }
+            _container.Verify(VerificationOption.VerifyAndDiagnose);
+            _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
         }
 
         #region Creation
@@ -310,7 +307,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #region Internals
 
-        private static Container CreateContainer(DependencyContainerOptions options)
+        private static Container CreateContainer()
         {
             return new Container
                    {
@@ -323,7 +320,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                            AllowOverridingRegistrations = false,
                            SuppressLifestyleMismatchVerification = false,
                            UseStrictLifestyleMismatchBehavior = true,
-                           EnableAutoVerification = options.VerifyContainer
+                           EnableAutoVerification = true
                        }
                    };
         }

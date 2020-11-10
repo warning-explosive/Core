@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Implementations
+namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 {
     using System;
     using System.Collections.Generic;
@@ -7,10 +7,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using Basics;
+    using Implementations;
     using SimpleInjector;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class ManualRegistrationTypesMustBeRegistered : AttributesVerifierBase
+    internal class ManualRegistrationTypesMustBeRegistered : AttributesConfigurationVerifierBase
     {
         private readonly ITypeProvider _typeProvider;
 

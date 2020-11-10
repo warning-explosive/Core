@@ -1,9 +1,10 @@
-namespace SpaceEngineers.Core.AutoRegistration.Implementations
+namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
@@ -14,13 +15,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     /// IVersionFor -> if version defined in code we must use it as dependency
     /// </summary>
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class VersionForDependency : IConfigurationVerifier
+    internal class RequiredVersionForDependency : IConfigurationVerifier
     {
         private readonly Container _container;
         private readonly IAutoWiringServicesProvider _servicesProvider;
         private readonly MethodInfo _isDecorator;
 
-        public VersionForDependency(Container container, IAutoWiringServicesProvider servicesProvider)
+        public RequiredVersionForDependency(Container container, IAutoWiringServicesProvider servicesProvider)
         {
             _container = container;
             _servicesProvider = servicesProvider;

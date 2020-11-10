@@ -12,8 +12,6 @@
     using MongoDB.Driver;
     using NewtonSoft.Json.Abstractions;
     using NServiceBus;
-    using NServiceBus.ObjectBuilder;
-    using NServiceBus.ObjectBuilder.Common;
     using Settings;
     using SettingsManager.Abstractions;
 
@@ -54,8 +52,7 @@
         public static async Task<IEndpoint> Run(string endpointName) // TODO: Remove
         {
             var dependencyContainer = DependencyContainer.Create(new DependencyContainerOptions());
-            var builder = Builder();
-            var compositeBuilder = new CompositeBuilder((IBuilder)builder, (IConfigureComponents)builder, dependencyContainer);
+            var compositeBuilder = new CompositeBuilder(dependencyContainer);
 
             var endpointConfiguration = Configuration(endpointName);
             var endpoint = EndpointWithExternallyManagedContainer.Create(endpointConfiguration, compositeBuilder);
@@ -118,13 +115,6 @@
                   };
 
             return DependencyContainer.CreateBounded(trustedAssemblies, new DependencyContainerOptions());
-        }
-
-        private static object Builder()
-        {
-            var assembly = typeof(NServiceBus.Endpoint).Assembly;
-            var container = (IContainer)Activator.CreateInstance(assembly.GetType("NServiceBus.LightInjectObjectBuilder"));
-            return Activator.CreateInstance(assembly.GetType("NServiceBus.CommonObjectBuilder"), container);
         }
     }
 }

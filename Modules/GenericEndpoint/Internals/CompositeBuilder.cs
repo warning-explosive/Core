@@ -4,9 +4,13 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reactive.Disposables;
     using AutoRegistration.Abstractions;
+    using Basics;
     using NServiceBus;
     using NServiceBus.ObjectBuilder;
+    using NServiceBus.ObjectBuilder.Common;
+    using SimpleInjector;
 
     /// <summary>
     /// Resolution adapter for IDependencyContainer managed in external mode
@@ -14,6 +18,9 @@
     [SuppressMessage("Regions", "SA1124", Justification = "Integration composition")]
     internal class CompositeBuilder : IBuilder, IConfigureComponents
     {
+        private const string LightInjectObjectBuilder = "NServiceBus.LightInjectObjectBuilder";
+        private const string CommonObjectBuilder = "NServiceBus.CommonObjectBuilder";
+
         private readonly IBuilder _builder;
 
         private readonly IConfigureComponents _configure;
@@ -22,12 +29,22 @@
 
         private readonly IDisposable _cleanup;
 
-        public CompositeBuilder(IBuilder builder, IConfigureComponents configure, IDependencyContainer container)
+        /// <summary> .cctor </summary>
+        /// <param name="dependencyContainer">IDependencyContainer</param>
+        public CompositeBuilder(IDependencyContainer dependencyContainer)
+            : this(Builder(), dependencyContainer)
+        {
+        }
+
+        private CompositeBuilder(IBuilder builder, IDependencyContainer dependencyContainer)
         {
             _builder = builder;
-            _configure = configure;
-            _container = container;
-            _cleanup = _container.OpenScope();
+            _configure = (IConfigureComponents)_builder;
+
+            _container = dependencyContainer;
+            var scope = _container.OpenScope();
+
+            _cleanup = Disposable.Create(scope, s => s.Dispose());
         }
 
         #region IBuilder
@@ -35,21 +52,24 @@
         public void Dispose()
         {
             _cleanup.Dispose();
-            _builder.Dispose();
         }
 
         public T Build<T>()
         {
-            // TODO
-            return _builder.Build<T>()
-                 ?? (T)_container.Resolve(typeof(T));
+            return new Func<T>(() => (T)_container.Resolve(typeof(T)))
+                  .Try()
+                  .Catch<ActivationException>()
+                  .Invoke()
+                ?? _builder.Build<T>();
         }
 
         public object Build(Type typeToBuild)
         {
-            // TODO
-            return _builder.Build(typeToBuild)
-                ?? _container.Resolve(typeToBuild);
+            return new Func<object>(() => _container.Resolve(typeToBuild))
+                  .Try()
+                  .Catch<ActivationException>()
+                  .Invoke()
+                ?? _builder.Build(typeToBuild);
         }
 
         public void BuildAndDispatch(Type typeToBuild, Action<object> action)
@@ -59,10 +79,11 @@
 
         public IEnumerable<T> BuildAll<T>()
         {
-            // TODO
-            return _builder.BuildAll<T>()
-                ?? _container.ResolveCollection(typeof(T))
-                             .OfType<T>();
+            return new Func<IEnumerable<T>>(() => _container.ResolveCollection(typeof(T)).OfType<T>())
+                  .Try()
+                  .Catch<ActivationException>()
+                  .Invoke()
+                ?? _builder.BuildAll<T>();
         }
 
         public IEnumerable<object> BuildAll(Type typeToBuild)
@@ -76,7 +97,7 @@
 
         public IBuilder CreateChildBuilder()
         {
-            return new CompositeBuilder(_builder, _configure, _container);
+            return new CompositeBuilder(_builder.CreateChildBuilder(), _container);
         }
 
         #endregion
@@ -124,5 +145,12 @@
         }
 
         #endregion
+
+        private static IBuilder Builder()
+        {
+            var assembly = typeof(Endpoint).Assembly;
+            var container = (IContainer)Activator.CreateInstance(assembly.GetType(LightInjectObjectBuilder));
+            return (IBuilder)Activator.CreateInstance(assembly.GetType(CommonObjectBuilder), container);
+        }
     }
 }

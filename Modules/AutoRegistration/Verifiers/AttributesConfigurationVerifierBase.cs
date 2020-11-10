@@ -1,17 +1,18 @@
-namespace SpaceEngineers.Core.AutoRegistration.Implementations
+namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
     using AutoWiringApi.Abstractions;
     using Basics;
     using SimpleInjector;
 
-    internal abstract class AttributesVerifierBase : IConfigurationVerifier
+    internal abstract class AttributesConfigurationVerifierBase : IConfigurationVerifier
     {
         private readonly Container _container;
 
-        protected AttributesVerifierBase(Container container)
+        protected AttributesConfigurationVerifierBase(Container container)
         {
             _container = container;
         }

@@ -36,8 +36,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Features
         {
             return AssembliesExtensions
                   .AllFromCurrentDomain()
-                  .SelectMany(a => a.GetTypes())
-                  .Where(t => typeof(ICommand).IsAssignableFrom(t))
+                  .SelectMany(assembly => assembly.GetTypes())
+                  .Where(type => typeof(ICommand).IsAssignableFrom(type)
+                                 && typeof(ICommand) != type)
                   .Select(cmd => new
                                  {
                                      CommandType = cmd,

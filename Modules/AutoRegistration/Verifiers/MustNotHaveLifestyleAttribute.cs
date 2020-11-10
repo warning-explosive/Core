@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.AutoRegistration.Implementations
+namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 {
     using System;
     using System.Linq;
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;

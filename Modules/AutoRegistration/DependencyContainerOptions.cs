@@ -23,12 +23,6 @@ namespace SpaceEngineers.Core.AutoRegistration
         public event EventHandler<RegistrationEventArgs>? OnVerify;
 
         /// <summary>
-        /// Verify container or not
-        /// </summary>
-        /// <remarks>Default: true</remarks>
-        public bool VerifyContainer { get; set; } = true;
-
-        /// <summary>
         /// SearchOption for assemblies in BaseDirectory
         /// Default: SearchOption.TopDirectoryOnly
         /// </summary>

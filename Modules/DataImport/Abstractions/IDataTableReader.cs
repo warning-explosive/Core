@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// </summary>
         /// <param name="row">DataRow</param>
         /// <param name="propertyToColumn">Property to column map (PropertyInfo.Name -> DataTable.ColumnId)</param>
-        /// <returns>Element</returns>
-        TElement ReadRow(DataRow row, IReadOnlyDictionary<string, string> propertyToColumn);
+        /// <returns>Element or null if row isn't valid</returns>
+        TElement? ReadRow(DataRow row, IReadOnlyDictionary<string, string> propertyToColumn);
     }
 }

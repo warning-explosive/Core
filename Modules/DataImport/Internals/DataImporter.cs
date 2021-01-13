@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataImport.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
@@ -60,7 +61,12 @@
             {
                 var row = dataTable.Rows[i];
 
-                yield return dataTableReader.ReadRow(row, propertyToColumn);
+                var element = dataTableReader.ReadRow(row, propertyToColumn);
+
+                if (element != null)
+                {
+                    yield return element;
+                }
             }
         }
     }

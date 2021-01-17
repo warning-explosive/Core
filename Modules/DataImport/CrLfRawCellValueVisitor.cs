@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataImport.Internals
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class CrLfRawCellValueVisitor : IRawCellValueVisitor
+    public class CrLfRawCellValueVisitor : IRawCellValueVisitor
     {
         /// <inheritdoc />
         public string Visit(string value)

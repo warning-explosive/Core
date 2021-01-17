@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     /// <summary>
     /// Cell value
     /// </summary>
-    internal class ExcelCellValue
+    public class ExcelCellValue
     {
         /// <summary> .cctor </summary>
         /// <param name="rowIndex">Row index</param>

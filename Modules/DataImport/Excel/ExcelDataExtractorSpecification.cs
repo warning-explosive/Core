@@ -13,14 +13,17 @@ namespace SpaceEngineers.Core.DataImport.Excel
         /// <param name="dataStream">Data stream</param>
         /// <param name="sheetName">Sheet name</param>
         /// <param name="range">Rows range for import</param>
+        /// <param name="tableMetadata">Excel table metadata</param>
         public ExcelDataExtractorSpecification(
             Stream dataStream,
             string sheetName,
-            Range range)
+            Range range,
+            ExcelTableMetadata tableMetadata)
         {
             DataStream = dataStream;
             SheetName = sheetName;
             Range = range;
+            TableMetadata = tableMetadata;
         }
 
         /// <summary>
@@ -37,5 +40,10 @@ namespace SpaceEngineers.Core.DataImport.Excel
         /// Rows range for import
         /// </summary>
         public Range Range { get; }
+
+        /// <summary>
+        /// DataTable metadata
+        /// </summary>
+        public ExcelTableMetadata TableMetadata { get; }
     }
 }

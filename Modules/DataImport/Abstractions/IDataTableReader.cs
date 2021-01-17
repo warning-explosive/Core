@@ -8,7 +8,9 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
     /// Data table reader
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
-    public interface IDataTableReader<TElement> : IResolvable
+    /// <typeparam name="TTableMeta">TTableMeta type-argument</typeparam>
+    public interface IDataTableReader<TElement, TTableMeta> : IResolvable
+        where TTableMeta : IDataTableMeta
     {
         /// <summary>
         /// Property to column caption map (PropertyInfo.Name -> DataTable.ColumnCaption)
@@ -19,8 +21,19 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// Read data row
         /// </summary>
         /// <param name="row">DataRow</param>
+        /// <param name="rowIndex">Row index (relative)</param>
         /// <param name="propertyToColumn">Property to column map (PropertyInfo.Name -> DataTable.ColumnId)</param>
+        /// <param name="meta">DataTable meta</param>
         /// <returns>Element or null if row isn't valid</returns>
-        TElement? ReadRow(DataRow row, IReadOnlyDictionary<string, string> propertyToColumn);
+        TElement? ReadRow(
+            DataRow row,
+            int rowIndex,
+            IReadOnlyDictionary<string, string> propertyToColumn,
+            TTableMeta meta);
+
+        /// <summary>
+        /// After table read
+        /// </summary>
+        void AfterTableRead();
     }
 }

@@ -6,15 +6,23 @@ namespace SpaceEngineers.Core.DataImport
     using System.Globalization;
     using Abstractions;
     using Basics;
+    using Excel;
 
     /// <inheritdoc />
-    public abstract class DataTableReaderBase<TElement> : IDataTableReader<TElement>
+    public abstract class DataTableReaderBase<TElement> : IDataTableReader<TElement, ExcelTableMetadata>
     {
         /// <inheritdoc />
         public abstract IReadOnlyDictionary<string, string> PropertyToColumnCaption { get; }
 
         /// <inheritdoc />
-        public abstract TElement? ReadRow(DataRow row, IReadOnlyDictionary<string, string> propertyToColumn);
+        public abstract TElement? ReadRow(
+            DataRow row,
+            int rowIndex,
+            IReadOnlyDictionary<string, string> propertyToColumn,
+            ExcelTableMetadata tableMetadata);
+
+        /// <inheritdoc />
+        public abstract void AfterTableRead();
 
         /// <summary>
         /// Read property value as object

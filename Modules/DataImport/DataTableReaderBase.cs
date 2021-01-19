@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataImport
     using System.Collections.Generic;
     using System.Data;
     using System.Globalization;
+    using System.Linq;
     using Abstractions;
     using Basics;
 
@@ -23,6 +24,32 @@ namespace SpaceEngineers.Core.DataImport
 
         /// <inheritdoc />
         public abstract void AfterTableRead();
+
+        /// <summary>
+        /// DataRow is empty (each column has no value)
+        /// </summary>
+        /// <param name="row">DataRow</param>
+        /// <param name="propertyToColumn">Property to column caption map (PropertyInfo.Name -> DataTable.ColumnCaption)</param>
+        /// <returns>DataRow is empty attribute</returns>
+        protected bool RowIsEmpty(
+            DataRow row,
+            IReadOnlyDictionary<string, string> propertyToColumn)
+        {
+            return propertyToColumn.All(pair => row[pair.Value].ToString().IsNullOrEmpty());
+        }
+
+        /// <summary>
+        /// DataRow is fully filled (each column has value)
+        /// </summary>
+        /// <param name="row">DataRow</param>
+        /// <param name="propertyToColumn">Property to column caption map (PropertyInfo.Name -> DataTable.ColumnCaption)</param>
+        /// <returns>DataRow is fully filled attribute</returns>
+        protected bool RowIsFullyFilled(
+            DataRow row,
+            IReadOnlyDictionary<string, string> propertyToColumn)
+        {
+            return propertyToColumn.All(pair => !row[pair.Value].ToString().IsNullOrEmpty());
+        }
 
         /// <summary>
         /// Read property value as object

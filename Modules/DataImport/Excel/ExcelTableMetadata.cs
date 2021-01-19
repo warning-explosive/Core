@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataImport.Excel
 {
     using System.Collections.Generic;
+    using System.Linq;
     using Abstractions;
 
     /// <summary>
@@ -11,19 +12,19 @@ namespace SpaceEngineers.Core.DataImport.Excel
         /// <summary> .cctor </summary>
         public ExcelTableMetadata()
         {
-            TableMetadata = new Dictionary<string, string>();
+            TableMetadata = new Dictionary<string, object>();
         }
 
         /// <summary> .cctor </summary>
         /// <param name="tableMetadata">Table metadata</param>
-        public ExcelTableMetadata(IReadOnlyDictionary<string, string> tableMetadata)
+        public ExcelTableMetadata(IDictionary<string, object> tableMetadata)
         {
-            TableMetadata = tableMetadata;
+            TableMetadata = tableMetadata.ToDictionary(it => it.Key, it => it.Value);
         }
 
         /// <summary>
         /// Table metadata
         /// </summary>
-        private IReadOnlyDictionary<string, string> TableMetadata { get; }
+        public IReadOnlyDictionary<string, object> TableMetadata { get; }
     }
 }

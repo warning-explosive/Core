@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// System.String extensions
     /// </summary>
@@ -10,7 +12,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="source">Source string</param>
         /// <returns>IsNullOrEmpty attribute</returns>
-        public static bool IsNullOrEmpty(this string? source)
+        public static bool IsNullOrEmpty([NotNullWhen(false)] this string? source)
         {
             return string.IsNullOrEmpty(source);
         }

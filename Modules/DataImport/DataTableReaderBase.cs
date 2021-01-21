@@ -15,6 +15,24 @@ namespace SpaceEngineers.Core.DataImport
         /// <inheritdoc />
         public abstract IReadOnlyDictionary<string, string> PropertyToColumnCaption { get; }
 
+        private Func<string?, IFormatProvider, int?> IntegerParser { get; }
+            = (value, formatter)
+                => int.TryParse(value, NumberStyles.Any, formatter, out var number)
+                    ? number
+                    : null;
+
+        private Func<string?, IFormatProvider, decimal?> DecimalParser { get; }
+            = (value, formatter)
+                => decimal.TryParse(value, NumberStyles.Any, formatter, out var number)
+                    ? number
+                    : null;
+
+        private Func<string?, IFormatProvider, DateTime?> DateTimeParser { get; }
+            = (value, formatter)
+                => DateTime.TryParse(value, formatter, DateTimeStyles.AllowWhiteSpaces, out var dateTime)
+                    ? dateTime
+                    : null;
+
         /// <inheritdoc />
         public abstract TElement? ReadRow(
             DataRow row,
@@ -78,7 +96,7 @@ namespace SpaceEngineers.Core.DataImport
             string property,
             IReadOnlyDictionary<string, string> propertyToColumn)
         {
-            return Read(row, property, propertyToColumn)?.ToString();
+            return Read(row, property, propertyToColumn)?.ToString().Trim();
         }
 
         /// <summary>
@@ -98,7 +116,7 @@ namespace SpaceEngineers.Core.DataImport
 
             return value != null && !value.IsNullOrEmpty()
                 ? value
-                : throw RequiredException(property);
+                : throw RequiredException(property, value);
         }
 
         /// <summary>
@@ -135,8 +153,9 @@ namespace SpaceEngineers.Core.DataImport
             IReadOnlyDictionary<string, string> propertyToColumn)
             where TEnum : struct, Enum
         {
-            return ReadEnum<TEnum>(row, property, propertyToColumn)
-                   ?? throw RequiredException(property);
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseRequiredEnum<TEnum>(property, value);
         }
 
         /// <summary>
@@ -156,20 +175,7 @@ namespace SpaceEngineers.Core.DataImport
         {
             var value = ReadString(row, property, propertyToColumn);
 
-            if (value.IsNullOrEmpty())
-            {
-                return null;
-            }
-
-            foreach (var formatter in formatters)
-            {
-                if (decimal.TryParse(value, NumberStyles.Any, formatter, out var amount))
-                {
-                    return amount;
-                }
-            }
-
-            throw new ArgumentException($"Unrecognized decimal: {value}");
+            return ParseDecimal(value, formatters);
         }
 
         /// <summary>
@@ -187,8 +193,9 @@ namespace SpaceEngineers.Core.DataImport
             IReadOnlyDictionary<string, string> propertyToColumn,
             IFormatProvider[] formatters)
         {
-            return ReadDecimal(row, property, propertyToColumn, formatters)
-                   ?? throw RequiredException(property);
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseRequiredDecimal(property, value, formatters);
         }
 
         /// <summary>
@@ -208,20 +215,7 @@ namespace SpaceEngineers.Core.DataImport
         {
             var value = ReadString(row, property, propertyToColumn);
 
-            if (value.IsNullOrEmpty())
-            {
-                return null;
-            }
-
-            foreach (var formatter in formatters)
-            {
-                if (int.TryParse(value, NumberStyles.Any, formatter, out var amount))
-                {
-                    return amount;
-                }
-            }
-
-            throw new ArgumentException($"Unrecognized integer: {value}");
+            return ParseInt(value, formatters);
         }
 
         /// <summary>
@@ -239,8 +233,9 @@ namespace SpaceEngineers.Core.DataImport
             IReadOnlyDictionary<string, string> propertyToColumn,
             IFormatProvider[] formatters)
         {
-            return ReadInt(row, property, propertyToColumn, formatters)
-                   ?? throw RequiredException(property);
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseRequiredInt(property, value, formatters);
         }
 
         /// <summary>
@@ -278,8 +273,9 @@ namespace SpaceEngineers.Core.DataImport
             IReadOnlyDictionary<string, string> propertyToColumn,
             IFormatProvider[] formatters)
         {
-            return ReadDateTime(row, property, propertyToColumn, formatters)
-                   ?? throw RequiredException(property);
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseRequiredDateTime(property, value, formatters);
         }
 
         /// <summary>
@@ -302,18 +298,76 @@ namespace SpaceEngineers.Core.DataImport
         /// <summary>
         /// Parse value to required enum
         /// </summary>
-        /// <param name="value">Value</param>
         /// <param name="property">Property name</param>
+        /// <param name="value">Value</param>
         /// <returns>Enum-value</returns>
         /// <typeparam name="TEnum">TEnum type-argument</typeparam>
         /// <exception cref="ArgumentException">Value is null or empty</exception>
         protected TEnum ParseRequiredEnum<TEnum>(
-            string? value,
-            string property)
+            string property,
+            string? value)
             where TEnum : struct, Enum
         {
             return ParseEnum<TEnum>(value)
-                   ?? throw RequiredException(property);
+                   ?? throw RequiredException(property, value);
+        }
+
+        /// <summary>
+        /// Parse value to nullable integer
+        /// </summary>
+        /// <param name="value">value</param>
+        /// <param name="formatters">Format providers</param>
+        /// <exception cref="ArgumentException">Unrecognized integer value</exception>
+        /// <returns>Integer-value</returns>
+        protected int? ParseInt(string? value, IFormatProvider[] formatters)
+        {
+            return Parse(value, formatters, IntegerParser);
+        }
+
+        /// <summary>
+        /// Parse value to required integer
+        /// </summary>
+        /// <param name="property">Property name</param>
+        /// <param name="value">value</param>
+        /// <param name="formatters">Format providers</param>
+        /// <exception cref="ArgumentException">Unrecognized integer value</exception>
+        /// <returns>Integer-value</returns>
+        protected int ParseRequiredInt(
+            string property,
+            string? value,
+            IFormatProvider[] formatters)
+        {
+            return ParseRequired(property, value, formatters, IntegerParser);
+        }
+
+        /// <summary>
+        /// Parse value to nullable decimal
+        /// </summary>
+        /// <param name="value">value</param>
+        /// <param name="formatters">Format providers</param>
+        /// <exception cref="ArgumentException">Unrecognized decimal value</exception>
+        /// <returns>Decimal-value</returns>
+        protected decimal? ParseDecimal(
+            string? value,
+            IFormatProvider[] formatters)
+        {
+            return Parse(value, formatters, DecimalParser);
+        }
+
+        /// <summary>
+        /// Parse value to required decimal
+        /// </summary>
+        /// <param name="property">Property name</param>
+        /// <param name="value">value</param>
+        /// <param name="formatters">Format providers</param>
+        /// <exception cref="ArgumentException">Unrecognized decimal value</exception>
+        /// <returns>Decimal-value</returns>
+        protected decimal ParseRequiredDecimal(
+            string property,
+            string? value,
+            IFormatProvider[] formatters)
+        {
+            return ParseRequired(property, value, formatters, DecimalParser);
         }
 
         /// <summary>
@@ -327,6 +381,31 @@ namespace SpaceEngineers.Core.DataImport
             string? value,
             IFormatProvider[] formatters)
         {
+            return Parse(value, formatters, DateTimeParser);
+        }
+
+        /// <summary>
+        /// Parse value to required DateTime
+        /// </summary>
+        /// <param name="property">Property name</param>
+        /// <param name="value">value</param>
+        /// <param name="formatters">Format providers</param>
+        /// <exception cref="ArgumentException">Unrecognized DateTime value</exception>
+        /// <returns>DateTime-value</returns>
+        protected DateTime ParseRequiredDateTime(
+            string property,
+            string? value,
+            IFormatProvider[] formatters)
+        {
+            return ParseRequired(property, value, formatters, DateTimeParser);
+        }
+
+        private static T? Parse<T>(
+            string? value,
+            IFormatProvider[] formatters,
+            Func<string?, IFormatProvider, T?> parser)
+            where T : struct
+        {
             if (value.IsNullOrEmpty())
             {
                 return null;
@@ -334,35 +413,31 @@ namespace SpaceEngineers.Core.DataImport
 
             foreach (var formatter in formatters)
             {
-                if (DateTime.TryParse(value, formatter, DateTimeStyles.AllowWhiteSpaces, out var dateTime))
+                var result = parser.Invoke(value, formatter);
+
+                if (result != null)
                 {
-                    return dateTime;
+                    return result;
                 }
             }
 
-            throw new ArgumentException($"Unrecognized DateTime: {value}");
+            return null;
         }
 
-        /// <summary>
-        /// Parse value to required DateTime
-        /// </summary>
-        /// <param name="value">value</param>
-        /// <param name="property">Property name</param>
-        /// <param name="formatters">Format providers</param>
-        /// <exception cref="ArgumentException">Unrecognized DateTime value</exception>
-        /// <returns>DateTime-value</returns>
-        protected DateTime ParseRequiredDateTime(
-            string? value,
+        private T ParseRequired<T>(
             string property,
-            IFormatProvider[] formatters)
+            string? value,
+            IFormatProvider[] formatters,
+            Func<string?, IFormatProvider, T?> parser)
+            where T : struct
         {
-            return ParseDateTime(value, formatters)
-                   ?? throw RequiredException(property);
+            return Parse(value, formatters, parser)
+                   ?? throw RequiredException(property, value);
         }
 
-        private static Exception RequiredException(string property)
+        private static Exception RequiredException(string property, string? value)
         {
-            return new ArgumentException($"{property} is required");
+            return new ArgumentException($"Unrecognized {property} value: {value}");
         }
     }
 }

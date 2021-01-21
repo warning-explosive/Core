@@ -144,7 +144,10 @@
             {
                 var row = dataTable.Rows[i];
 
-                var element = _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata);
+                var element = new Func<TElement?>(() => _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata))
+                    .Try()
+                    .Catch<Exception>(ex => throw new InvalidOperationException($"Error in row {i}", ex))
+                    .Invoke();
 
                 if (element != null)
                 {

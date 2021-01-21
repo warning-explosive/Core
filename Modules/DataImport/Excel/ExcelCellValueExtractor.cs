@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataImport.Excel
 {
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using Abstractions;
     using AutoWiringApi.Attributes;
@@ -40,7 +41,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
                         break;
                     case CellValues.SharedString:
                         value = cell.CellValue != null
-                            ? sharedStrings[int.Parse(cell.CellValue.Text)]
+                            ? sharedStrings[int.Parse(cell.CellValue.Text, CultureInfo.InvariantCulture)]
                             : null;
                         break;
                     default:

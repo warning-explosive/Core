@@ -73,6 +73,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
             return SolutionExtensions
                   .ProjectFile()
                   .Directory
+                  .EnsureNotNull($"Project directory {nameof(Roslyn)}.{nameof(Roslyn.Test)} not found")
                   .StepInto(Conventions.SourceDirectory)
                   .StepInto(analyzer.GetType().Name + (directorySuffix ?? string.Empty))
                   .GetFiles("*" + AnalysisExtensions.CSharpDefaultFileExt, SearchOption.TopDirectoryOnly)

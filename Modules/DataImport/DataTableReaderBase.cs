@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataImport
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
-            TTableMeta tableMetadata);
+            TTableMeta tableMeta);
 
         /// <inheritdoc />
         public abstract void AfterTableRead();
@@ -424,7 +424,7 @@ namespace SpaceEngineers.Core.DataImport
             return null;
         }
 
-        private T ParseRequired<T>(
+        private static T ParseRequired<T>(
             string property,
             string? value,
             IFormatProvider[] formatters,

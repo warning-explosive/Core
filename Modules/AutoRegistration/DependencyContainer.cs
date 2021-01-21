@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reactive.Disposables;
     using System.Reflection;
     using Abstractions;
     using AutoWiringApi.Abstractions;

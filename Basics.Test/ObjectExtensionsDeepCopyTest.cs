@@ -84,7 +84,11 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.False(original.TypeCollection?.Equals(clone.TypeCollection));
             Assert.False(ReferenceEquals(original.TypeCollection, clone.TypeCollection));
-            Assert.True(original.TypeCollection?.SequenceEqual(clone.TypeCollection));
+            Assert.NotNull(original.TypeCollection);
+            Assert.NotNull(clone.TypeCollection);
+            Assert.True(original.TypeCollection != null
+                        && clone.TypeCollection != null
+                        && original.TypeCollection.SequenceEqual(clone.TypeCollection));
 
             AssertTestReferenceTypeWithOutTypes(original, clone, bySerialization);
         }
@@ -114,7 +118,11 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.False(original.ValueTypeCollection?.Equals(clone.ValueTypeCollection));
             Assert.False(ReferenceEquals(original.ValueTypeCollection, clone.ValueTypeCollection));
-            Assert.True(original.ValueTypeCollection?.SequenceEqual(clone.ValueTypeCollection));
+            Assert.NotNull(original.ValueTypeCollection);
+            Assert.NotNull(clone.ValueTypeCollection);
+            Assert.True(original.ValueTypeCollection != null
+                        && clone.ValueTypeCollection != null
+                        && original.ValueTypeCollection.SequenceEqual(clone.ValueTypeCollection));
 
             /*
              * ReferenceType
@@ -125,7 +133,11 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.False(original.ReferenceTypeCollection?.Equals(clone.ReferenceTypeCollection));
             Assert.False(ReferenceEquals(original.ReferenceTypeCollection, clone.ReferenceTypeCollection));
-            Assert.False(original.ReferenceTypeCollection?.SequenceEqual(clone.ReferenceTypeCollection));
+            Assert.NotNull(original.ReferenceTypeCollection);
+            Assert.NotNull(clone.ReferenceTypeCollection);
+            Assert.False(original.ReferenceTypeCollection != null
+                         && clone.ReferenceTypeCollection != null
+                         && original.ReferenceTypeCollection.SequenceEqual(clone.ReferenceTypeCollection));
 
             Assert.True(original.Equals(original.CyclicReference));
             Assert.True(ReferenceEquals(original, original.CyclicReference));

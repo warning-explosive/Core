@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reactive.Disposables;
     using AutoWiringApi.Abstractions;
+    using Basics;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -208,44 +208,48 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             IDisposable ApplyFirst()
             {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>(),
-                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>(),
-                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>(),
-                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>());
+                return Disposable.CreateComposite(
+                    DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV2>(),
+                    DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV2>(),
+                    DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV2>(),
+                    DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV2>(),
+                    DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV2>(),
+                    DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV2>());
             }
 
             IDisposable ApplySecond()
             {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>(),
-                                               DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>(),
-                                               DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>(),
-                                               DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>());
+                return Disposable.CreateComposite(
+                    DependencyContainer.UseVersion<ITransientVersionedService, TransientVersionedServiceImplV3>(),
+                    DependencyContainer.UseVersion<IScopedVersionedService, ScopedVersionedServiceImplV3>(),
+                    DependencyContainer.UseVersion<ISingletonVersionedService, SingletonVersionedServiceImplV3>(),
+                    DependencyContainer.UseVersion<TransientImplementation, TransientImplementationV3>(),
+                    DependencyContainer.UseVersion<ScopedImplementation, ScopedImplementationV3>(),
+                    DependencyContainer.UseVersion<SingletonImplementation, SingletonImplementationV3>());
             }
 
             CompositeVersionsTestInternal(ApplyFirst, ApplySecond);
 
             IDisposable ApplyViaInstanceFirst()
             {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV2()),
-                                               DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV2()),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV2()),
-                                               DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV2()),
-                                               DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV2()),
-                                               DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV2()));
+                return Disposable.CreateComposite(
+                    DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV2()),
+                    DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV2()),
+                    DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV2()),
+                    DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV2()),
+                    DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV2()),
+                    DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV2()));
             }
 
             IDisposable ApplyViaInstanceSecond()
             {
-                return new CompositeDisposable(DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV3()),
-                                               DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV3()),
-                                               DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV3()),
-                                               DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV3()),
-                                               DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV3()),
-                                               DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV3()));
+                return Disposable.CreateComposite(
+                    DependencyContainer.UseVersion<ITransientVersionedService>(() => new TransientVersionedServiceImplV3()),
+                    DependencyContainer.UseVersion<IScopedVersionedService>(() => new ScopedVersionedServiceImplV3()),
+                    DependencyContainer.UseVersion<ISingletonVersionedService>(() => new SingletonVersionedServiceImplV3()),
+                    DependencyContainer.UseVersion<TransientImplementation>(() => new TransientImplementationV3()),
+                    DependencyContainer.UseVersion<ScopedImplementation>(() => new ScopedImplementationV3()),
+                    DependencyContainer.UseVersion<SingletonImplementation>(() => new SingletonImplementationV3()));
             }
 
             CompositeVersionsTestInternal(ApplyViaInstanceFirst, ApplyViaInstanceSecond);

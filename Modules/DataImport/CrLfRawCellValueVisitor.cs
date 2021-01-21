@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataImport.Internals
 {
+    using System;
     using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
@@ -12,8 +13,8 @@ namespace SpaceEngineers.Core.DataImport.Internals
         public string Visit(string value)
         {
             return value
-                .Replace("\r", string.Empty)
-                .Replace("\n", string.Empty);
+                .Replace("\r", string.Empty, StringComparison.Ordinal)
+                .Replace("\n", string.Empty, StringComparison.Ordinal);
         }
     }
 }

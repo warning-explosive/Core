@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
     using System.Linq;
     using Abstractions;
     using Attributes;
@@ -13,20 +14,32 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// Concrete component must have LifestyleAttribute (component - service implementation)
+    /// Component must be marked with LifestyleAttribute
     /// </summary>
     [Lifestyle(EnLifestyle.Transient)]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class LifestyleAttributeAnalyzer : SyntaxAnalyzerBase
     {
+        /// <summary>
+        /// MarkWithLifestyleAttribute message
+        /// </summary>
+        public string MarkWithLifestyleAttribute { get; } =
+            $"Mark component with {nameof(LifestyleAttribute)} and select lifestyle";
+
+        /// <summary>
+        /// RemoveLifestyleAttribute message
+        /// </summary>
+        public string RemoveLifestyleAttribute { get; } =
+            $"Remove {nameof(LifestyleAttribute)} from component marked with {{0}}";
+
         /// <inheritdoc />
         public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override string Title { get; } = $"Concrete component must have {nameof(LifestyleAttribute)}";
+        public override string Title { get; } = $"Component must be marked with {nameof(LifestyleAttribute)}";
 
         /// <inheritdoc />
-        public override string Message { get; } = $"Mark component type by {nameof(LifestyleAttribute)} and select its lifestyle";
+        public override string Message { get; } = "{0}";
 
         /// <inheritdoc />
         public override string Category { get; } = "DI Configuration";
@@ -40,9 +53,6 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
-            /*
-             * 1. Check that declaring type is concrete non abstract type
-             */
             var isAbstract = classDeclarationSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
 
             if (isAbstract)
@@ -50,20 +60,32 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                 return;
             }
 
-            /*
-             * 2. Check that declaring type is derived from IResolvable
-             */
             if (!IsComponent(context, classDeclarationSyntax))
             {
                 return;
             }
 
-            /*
-             * 3. Find LifestyleAttribute
-             */
-            if (!IsContainsAttribute(context, classDeclarationSyntax))
+            if (IsContainsAttribute<LifestyleAttribute>(context, classDeclarationSyntax))
             {
-                ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation());
+                if (IsContainsAttribute<UnregisteredAttribute>(context, classDeclarationSyntax))
+                {
+                    var args = string.Format(CultureInfo.InvariantCulture, RemoveLifestyleAttribute, nameof(UnregisteredAttribute));
+                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), args);
+                }
+
+                if (IsContainsAttribute<ManualRegistrationAttribute>(context, classDeclarationSyntax))
+                {
+                    var args = string.Format(CultureInfo.InvariantCulture, RemoveLifestyleAttribute, nameof(ManualRegistrationAttribute));
+                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), args);
+                }
+            }
+            else
+            {
+                if (!IsContainsAttribute<UnregisteredAttribute>(context, classDeclarationSyntax)
+                    && !IsContainsAttribute<ManualRegistrationAttribute>(context, classDeclarationSyntax))
+                {
+                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithLifestyleAttribute);
+                }
             }
         }
 
@@ -119,7 +141,10 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
         }
 
         [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
-        private static bool IsContainsAttribute(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
+        private static bool IsContainsAttribute<TAttribute>(
+            SyntaxNodeAnalysisContext context,
+            ClassDeclarationSyntax classDeclarationSyntax)
+            where TAttribute : Attribute
         {
             var attributeList = classDeclarationSyntax.ChildNodes().OfType<AttributeListSyntax>().ToArray();
 
@@ -128,7 +153,7 @@ namespace SpaceEngineers.Core.AutoWiringApi.Analyzers
                 return false;
             }
 
-            var attribute = context.Compilation.GetTypeByMetadataName(typeof(LifestyleAttribute).FullName);
+            var attribute = context.Compilation.GetTypeByMetadataName(typeof(TAttribute).FullName);
 
             var isContainsAttribute = attributeList
                 .SelectMany(z => z.Attributes)

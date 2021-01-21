@@ -37,10 +37,14 @@
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="NServiceBus" Version="7.4.4" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="3.0.1" />
     <PackageReference Include="NServiceBus.Metrics" Version="3.0.0" />
-    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.4" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.6" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="2.2.0" />
     <PackageReference Include="NServiceBus.RabbitMQ" Version="6.0.0" />
     <PackageReference Include="NServiceBus.Storage.MongoDB" Version="2.2.0" />

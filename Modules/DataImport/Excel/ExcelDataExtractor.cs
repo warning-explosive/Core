@@ -67,39 +67,40 @@
             IReadOnlyDictionary<int, string> sharedStrings,
             ExcelDataExtractorSpecification specification)
         {
-            var dataTable = new DataTable();
-
-            foreach (var sheetData in worksheet.Elements<SheetData>())
+            using (var dataTable = new DataTable())
             {
-                var rows = sheetData.Elements<Row>();
-
-                if (!specification.Range.Equals(Range.All))
+                foreach (var sheetData in worksheet.Elements<SheetData>())
                 {
-                    rows = rows.Where(row => (row.RowIndex.Value - 1).BetweenInclude(specification.Range));
+                    var rows = sheetData.Elements<Row>();
+
+                    if (!specification.Range.Equals(Range.All))
+                    {
+                        rows = rows.Where(row => (row.RowIndex.Value - 1).BetweenInclude(specification.Range));
+                    }
+
+                    var columns = _columnsSelectionBehavior.ExtractColumns(rows, sharedStrings, _dataTableReader.PropertyToColumnCaption);
+
+                    dataTable.Columns.AddRange(columns);
+
+                    var dataRows = _columnsSelectionBehavior.FirstRowIsHeader
+                        ? rows.Skip(1)
+                        : rows;
+
+                    foreach (var dataRow in dataRows)
+                    {
+                        var row = ExtractDataRow(dataRow, sharedStrings, dataTable);
+                        dataTable.Rows.Add(row);
+                    }
                 }
 
-                var columns = _columnsSelectionBehavior.ExtractColumns(rows, sharedStrings, _dataTableReader.PropertyToColumnCaption);
+                var propertyToColumn = MergeColumns(dataTable);
 
-                dataTable.Columns.AddRange(columns);
+                var elements = ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ToList();
 
-                var dataRows = _columnsSelectionBehavior.FirstRowIsHeader
-                    ? rows.Skip(1)
-                    : rows;
+                _dataTableReader.AfterTableRead();
 
-                foreach (var dataRow in dataRows)
-                {
-                    var row = ExtractDataRow(dataRow, sharedStrings, dataTable);
-                    dataTable.Rows.Add(row);
-                }
+                return elements;
             }
-
-            var propertyToColumn = MergeColumns(dataTable);
-
-            var elements = ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ToList();
-
-            _dataTableReader.AfterTableRead();
-
-            return elements;
         }
 
         private DataRow ExtractDataRow(

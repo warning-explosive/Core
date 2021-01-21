@@ -23,13 +23,13 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// <param name="row">DataRow</param>
         /// <param name="rowIndex">Row index (relative)</param>
         /// <param name="propertyToColumn">Property to column map (PropertyInfo.Name -> DataTable.ColumnId)</param>
-        /// <param name="meta">DataTable meta</param>
+        /// <param name="tableMeta">DataTable meta</param>
         /// <returns>Element or null if row isn't valid</returns>
         TElement? ReadRow(
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
-            TTableMeta meta);
+            TTableMeta tableMeta);
 
         /// <summary>
         /// After table read

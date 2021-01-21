@@ -86,9 +86,13 @@ namespace SpaceEngineers.Core.Basics.Roslyn
         /// </summary>
         /// <param name="context">SyntaxNodeAnalysisContext</param>
         /// <param name="location">Diagnostic location</param>
-        protected void ReportDiagnostic(SyntaxNodeAnalysisContext context, Location location)
+        /// <param name="args">Message args</param>
+        protected void ReportDiagnostic(
+            SyntaxNodeAnalysisContext context,
+            Location location,
+            params object[] args)
         {
-            var diagnostic = Diagnostic.Create(DiagnosticDescriptor, location);
+            var diagnostic = Diagnostic.Create(DiagnosticDescriptor, location, args);
             context.ReportDiagnostic(diagnostic);
         }
     }

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Attributes
     /// Route command to specified endpoint
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class RouteToEndpointAttribute : Attribute
+    public sealed class RouteToEndpointAttribute : Attribute
     {
         /// <summary> .cctor </summary>
         /// <param name="endpointName">Logical endpoint name</param>

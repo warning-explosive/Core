@@ -4,6 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration;
@@ -49,6 +50,7 @@
         /// <summary> Run endpoint </summary>
         /// <param name="endpointName">Endpoint name</param>
         /// <returns>Async cleanup</returns>
+        [SuppressMessage("Analyzers", "CA2000", Justification = "Dispose in cleanup call")]
         public static async Task<IEndpoint> Run(string endpointName) // TODO: Remove
         {
             var dependencyContainer = DependencyContainer.Create(new DependencyContainerOptions());

@@ -20,10 +20,12 @@ namespace SpaceEngineers.Core.Modules.Test
         protected ModulesTestBase(ITestOutputHelper output)
             : base(output)
         {
-            SolutionExtensions.ProjectFile()
-                              .Directory
-                              .StepInto("Settings")
-                              .SetupFileSystemSettingsDirectory();
+            SolutionExtensions
+                .ProjectFile()
+                .Directory
+                .EnsureNotNull($"Project directory {nameof(Modules)}.{nameof(Modules.Test)} not found")
+                .StepInto("Settings")
+                .SetupFileSystemSettingsDirectory();
 
             DependencyContainer = SetupDependencyContainer();
         }

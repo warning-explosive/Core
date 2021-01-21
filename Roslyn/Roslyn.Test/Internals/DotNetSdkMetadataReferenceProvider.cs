@@ -15,7 +15,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
         /// <inheritdoc />
         public IEnumerable<MetadataReference> ReceiveReferences()
         {
-            var frameworkDirectory = typeof(object).Assembly.Location.AsFileInfo().Directory;
+            var frameworkDirectory = typeof(object)
+                .Assembly
+                .Location
+                .AsFileInfo()
+                .Directory
+                .EnsureNotNull(".NET Framework directory not found");
 
             yield return frameworkDirectory.GetFile("netstandard", ".dll").AsMetadataReference();
             yield return frameworkDirectory.GetFile("mscorlib", ".dll").AsMetadataReference();

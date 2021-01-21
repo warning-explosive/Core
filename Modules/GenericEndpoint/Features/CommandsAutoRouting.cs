@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Features
                .Invoke(ex => context.Settings.Get<CriticalError>().Raise("Ambiguous route detected", ex));
         }
 
-        private List<RouteTableEntry> ExtractCommandRoutes()
+        private static List<RouteTableEntry> ExtractCommandRoutes()
         {
             return AssembliesExtensions
                   .AllFromCurrentDomain()

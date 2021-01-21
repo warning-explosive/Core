@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
-    using System.Reactive.Disposables;
     using System.Threading;
 
     /// <summary>

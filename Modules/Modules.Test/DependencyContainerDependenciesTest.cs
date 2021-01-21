@@ -26,10 +26,11 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(solutionFile.FullName);
 
             var ourAssembliesNames = solutionFile
-                                    .Directory
-                                    .ProjectFiles()
-                                    .Select(p => p.AssemblyName())
-                                    .ToHashSet();
+                .Directory
+                .EnsureNotNull("Solution directory not found")
+                .ProjectFiles()
+                .Select(p => p.AssemblyName())
+                .ToHashSet();
 
             ourAssembliesNames.Each(Output.WriteLine);
 

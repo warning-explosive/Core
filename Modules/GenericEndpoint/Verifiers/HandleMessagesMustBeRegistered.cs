@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
 {
     using System;
     using System.Linq;
-    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;

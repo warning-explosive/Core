@@ -1,7 +1,5 @@
-namespace SpaceEngineers.Core.AutoRegistration.Abstractions
+namespace SpaceEngineers.Core.AutoWiringApi.Abstractions
 {
-    using AutoWiringApi.Abstractions;
-
     /// <summary>
     /// IConfigurationVerifier
     /// </summary>

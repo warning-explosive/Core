@@ -35,7 +35,14 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
     </ItemGroup>
 </Project>

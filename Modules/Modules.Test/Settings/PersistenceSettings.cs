@@ -1,7 +1,7 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Settings
+namespace SpaceEngineers.Core.Modules.Test.Settings
 {
+    using Core.SettingsManager.Abstractions;
     using MongoDB.Driver;
-    using SettingsManager.Abstractions;
 
     /// <summary>
     /// Persistence settings

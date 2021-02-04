@@ -2,6 +2,7 @@
   "MongoClientSettings": {
     "AllowInsecureTls": false,
     "ApplicationName": null,
+    "AutoEncryptionOptions": null,
     "Compressors": {
       "$type": "MongoDB.Driver.Core MongoDB.Driver.Core.Configuration.CompressorConfiguration[]",
       "$values": []
@@ -30,6 +31,7 @@
     },
     "ReadEncoding": null,
     "ReadPreference": {
+      "Hedge": null,
       "MaxStaleness": null,
       "ReadPreferenceMode": 0,
       "TagSets": {

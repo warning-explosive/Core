@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
-    using System.Reflection;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
+    using Basics;
     using Basics.Exceptions;
     using SimpleInjector;
 
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
         internal static EnLifestyle Lifestyle(this Type type)
         {
-            var lifestyle = type.GetCustomAttribute<LifestyleAttribute>()?.Lifestyle;
+            var lifestyle = type.GetAttribute<LifestyleAttribute>()?.Lifestyle;
 
             if (lifestyle == null)
             {

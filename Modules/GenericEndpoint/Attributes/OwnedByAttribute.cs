@@ -3,14 +3,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Attributes
     using System;
 
     /// <summary>
-    /// Route command to specified endpoint
+    /// Specifies logical (not physical) owner for events and commands
+    /// Event owner - publisher endpoint
+    /// Command owner - send operation target endpoint
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class RouteToEndpointAttribute : Attribute
+    public sealed class OwnedByAttribute : Attribute
     {
         /// <summary> .cctor </summary>
         /// <param name="endpointName">Logical endpoint name</param>
-        public RouteToEndpointAttribute(string endpointName)
+        public OwnedByAttribute(string endpointName)
         {
             EndpointName = endpointName;
         }

@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Services;
@@ -58,7 +57,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                container.RegisterDecorator(info.ServiceType,
                                                            info.ImplementationType,
                                                            info.Lifestyle,
-                                                           c => c.ImplementationType.GetCustomAttribute(info.Attribute) != null);
+                                                           c => c.ImplementationType.HasAttribute(info.Attribute));
                            }
                        });
         }
@@ -113,7 +112,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             infos.Select(info => new
                                  {
                                      Info = info,
-                                     FallBackFor = info.ImplementationType.GetCustomAttribute<OpenGenericFallBackAttribute>()
+                                     FallBackFor = info.ImplementationType.GetAttribute<OpenGenericFallBackAttribute>()
                                  })
                  .OrderBy(pair => pair.FallBackFor != null) // fallback must be registered after all exact registrations
                  .Each(pair =>

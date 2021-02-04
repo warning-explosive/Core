@@ -6,6 +6,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading.Tasks;
     using Basics;
     using Core.SettingsManager.Abstractions;
+    using GenericEndpoint.Settings;
+    using Settings;
     using SettingsManager;
     using Xunit;
     using Xunit.Abstractions;
@@ -73,6 +75,18 @@ namespace SpaceEngineers.Core.Modules.Test
                       .ConfigureAwait(false);
         }
 
+        [Theory]
+        [InlineData(typeof(QueueConventions))]
+        [InlineData(typeof(PersistenceSettings))]
+        [InlineData(typeof(TransportSettings))]
+        internal async Task GenericEndpointSettingsReadWriteTest(Type settingsType)
+        {
+            await this.CallMethod(nameof(GenericEndpointSettingsReadWriteTestInternal))
+                .WithTypeArgument(settingsType)
+                .Invoke<Task>()
+                .ConfigureAwait(false);
+        }
+
         private async Task ReadWriteTestInternal<TSettings>(Func<object> cfgFactory)
             where TSettings : class, ISettings
         {
@@ -101,6 +115,17 @@ namespace SpaceEngineers.Core.Modules.Test
             config = await manager.Get().ConfigureAwait(false);
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+        }
+
+        private async Task GenericEndpointSettingsReadWriteTestInternal<TSetting>()
+            where TSetting : class, IJsonSettings
+        {
+            var manager = DependencyContainer.Resolve<ISettingsManager<TSetting>>();
+
+            var setting = await manager.Get().ConfigureAwait(false);
+            Assert.NotNull(setting);
+
+            await manager.Set(setting).ConfigureAwait(false);
         }
     }
 }

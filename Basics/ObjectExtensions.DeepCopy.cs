@@ -87,7 +87,7 @@
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
         public static object DeepCopyBySerialization(this object original)
         {
-            original.GetType().GetCustomAttribute<SerializableAttribute>();
+            original.GetType().GetAttribute<SerializableAttribute>();
 
             using (var stream = new MemoryStream())
             {

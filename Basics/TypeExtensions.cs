@@ -22,9 +22,11 @@ namespace SpaceEngineers.Core.Basics
         public static TAttribute? GetAttribute<TAttribute>(this Type type)
             where TAttribute : Attribute
         {
-            return TypeInfoStorage.Get(type).Attributes
-                                  .OfType<TAttribute>()
-                                  .InformativeSingleOrDefault(Amb);
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>()
+                .InformativeSingleOrDefault(Amb);
 
             string Amb(IEnumerable<TAttribute> arg)
             {
@@ -41,9 +43,25 @@ namespace SpaceEngineers.Core.Basics
         public static bool HasAttribute<TAttribute>(this Type type)
             where TAttribute : Attribute
         {
-            return TypeInfoStorage.Get(type).Attributes
-                                  .OfType<TAttribute>()
-                                  .Any();
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>()
+                .Any();
+        }
+
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <param name="attributeType">Attribute type</param>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute(this Type type, Type attributeType)
+        {
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .Any(attributeType.IsInstanceOfType);
         }
 
         /// <summary> Order types collection by DependencyAttribute </summary>

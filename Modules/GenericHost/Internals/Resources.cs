@@ -8,22 +8,30 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     {
         internal const string StartedSuccessfully = "{0} started successfully";
         internal const string WaitingForIncomingMessages = "Waiting for incoming messages...";
-        internal const string DispatchMessage = "Dispatch '{0}' message on thread {1}";
 
         private static readonly IReadOnlyDictionary<string, int> Map
             = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 [StartedSuccessfully] = 0,
                 [WaitingForIncomingMessages] = 1,
-                [DispatchMessage] = 2,
             };
 
+        // TODO: ILogger extensions
         internal static void Information(
             this ILogger logger,
             string message,
             params object[] args)
         {
             logger.Log(LogLevel.Information, Map[message], message, args);
+        }
+
+        internal static void Error(
+            this ILogger logger,
+            Exception exception,
+            string message,
+            params object[] args)
+        {
+            logger.Log(LogLevel.Error, exception, message, args);
         }
     }
 }

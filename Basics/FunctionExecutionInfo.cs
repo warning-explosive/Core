@@ -53,13 +53,11 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="exceptionHandler">Exception handler</param>
         /// <returns>TResult</returns>
-        internal TResult InvokeInternal(Func<Exception, TResult>? exceptionHandler = null)
+        internal TResult InvokeInternal(Func<Exception, TResult> exceptionHandler)
         {
-            TResult result = default!;
-
             try
             {
-                result = _clientFunction.Invoke();
+                return _clientFunction.Invoke();
             }
             catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
             {
@@ -81,17 +79,12 @@ namespace SpaceEngineers.Core.Basics
                     throw realException;
                 }
 
-                if (exceptionHandler != null)
-                {
-                    return exceptionHandler.Invoke(realException);
-                }
+                return exceptionHandler.Invoke(realException);
             }
             finally
             {
                 _finallyAction?.Invoke();
             }
-
-            return result;
         }
     }
 }

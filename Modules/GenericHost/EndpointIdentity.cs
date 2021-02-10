@@ -14,10 +14,10 @@ namespace SpaceEngineers.Core.GenericHost
         /// <summary> .cctor </summary>
         /// <param name="logicalName">Endpoint logical name</param>
         /// <param name="instanceName">Endpoint instance name</param>
-        public EndpointIdentity(string logicalName, string instanceName)
+        public EndpointIdentity(string logicalName, object instanceName)
         {
             LogicalName = logicalName;
-            InstanceName = instanceName;
+            InstanceName = instanceName.ToString();
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.GenericHost
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{LogicalName} - {InstanceName}";
+            return $"{LogicalName}_{InstanceName}";
         }
 
         /// <inheritdoc />

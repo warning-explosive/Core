@@ -87,7 +87,11 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
             return GenericArguments.Any()
                        ? type.MakeGenericType(GenericArguments.Select(child => child.BuildType(typeProvider)).ToArray())
                        : IsArray
-                           ? typeof(Array).CallMethod(nameof(Array.Empty)).WithTypeArgument(type).Invoke().GetType()
+                           ? typeof(Array)
+                               .CallMethod(nameof(Array.Empty))
+                               .WithTypeArgument(type)
+                               .Invoke()
+                               .GetType()
                            : type;
         }
 

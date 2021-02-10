@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
     /// <summary>
@@ -45,9 +46,27 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TResult">Function TResult type-argument</typeparam>
         /// <returns>TResult</returns>
         public static TResult Invoke<TResult>(this FunctionExecutionInfo<TResult> info,
-                                              Func<Exception, TResult>? exceptionHandler = null)
+                                              Func<Exception, TResult> exceptionHandler)
         {
             return info.InvokeInternal(exceptionHandler);
+        }
+
+        /// <summary>
+        /// Invoke client function
+        /// </summary>
+        /// <param name="info">FunctionExecutionInfo</param>
+        /// <param name="exceptionHandler">Exception handler</param>
+        /// <typeparam name="TResult">Function TResult type-argument</typeparam>
+        /// <returns>TResult</returns>
+        [return: MaybeNull]
+        public static TResult? Invoke<TResult>(this FunctionExecutionInfo<TResult> info,
+                                               Action<Exception>? exceptionHandler = null)
+        {
+            return info.InvokeInternal(ex =>
+            {
+                exceptionHandler?.Invoke(ex);
+                return default!;
+            });
         }
 
         /// <summary>

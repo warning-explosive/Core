@@ -205,19 +205,26 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static bool TryParseEnum(Type enumType, string strValue, out object? result)
         {
-            result = typeof(CliArgumentsParserImpl).CallMethod(nameof(TryParseEnum))
-                                                   .WithTypeArgument(enumType)
-                                                   .WithArgument(strValue)
-                                                   .Invoke<object>();
+            result = ParseEnum(enumType, strValue);
 
-            var separatedValues = strValue.ToUpperInvariant()
-                                          .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                          .SelectMany(s => s)
-                                          .ToArray();
+            var separatedValues = strValue
+                .ToUpperInvariant()
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .SelectMany(s => s)
+                .ToArray();
 
             var parsed = ToEnumString(result).ToUpperInvariant();
 
             return separatedValues.All(single => parsed.Contains(single, StringComparison.InvariantCulture));
+        }
+
+        private static object ParseEnum(Type enumType, string strValue)
+        {
+            return typeof(CliArgumentsParserImpl)
+                .CallMethod(nameof(TryParseEnum))
+                .WithTypeArgument(enumType)
+                .WithArgument(strValue)
+                .Invoke<object>();
         }
 
         private static TEnum TryParseEnum<TEnum>(string strValue)
@@ -230,9 +237,10 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static string ToEnumString(object value)
         {
-            return value.CallMethod(nameof(Enum.ToString))
-                        .WithArgument("G")
-                        .Invoke<string>();
+            return value
+                .CallMethod(nameof(Enum.ToString))
+                .WithArgument("G")
+                .Invoke<string>();
         }
     }
 }

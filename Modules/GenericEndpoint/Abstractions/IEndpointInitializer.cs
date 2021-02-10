@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiringApi.Abstractions;
 
@@ -11,7 +12,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <summary>
         /// Initialize endpoint
         /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
-        Task Initialize();
+        Task Initialize(CancellationToken cancellationToken);
     }
 }

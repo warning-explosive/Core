@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using GenericEndpoint.Abstractions;
 
@@ -11,22 +13,24 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     {
         /// <summary>
         /// OnMessage event
+        /// Fires on receiving new incoming message
         /// </summary>
-        event EventHandler<IntegrationMessageEventArgs>? OnMessage;
+        event EventHandler<IntegrationMessageEventArgs> OnMessage;
 
         /// <summary>
-        /// IIntegrationContext getter
-        /// </summary>
-        /// <returns>IIntegrationContext</returns>
-        IIntegrationContext Context { get; }
-
-        /// <summary>
-        /// Initialize transport topology
+        /// Initialize transport (topology, state, etc...)
         /// Invokes multiple times for each in-process endpoint
         /// </summary>
-        /// <param name="endpoint">IGenericEndpoint</param>
+        /// <param name="endpoints">Generic endpoints</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
-        Task InitializeTopology(IGenericEndpoint endpoint);
+        Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// IIntegrationContext factory
+        /// </summary>
+        /// <returns>IIntegrationContext</returns>
+        IIntegrationContext CreateContext();
 
         /// <summary>
         /// Dispatch incoming message to endpoint
@@ -34,7 +38,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <param name="message">IIntegrationMessage</param>
         /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>Running operation</returns>
-        Task Dispatch<TMessage>(TMessage message)
+        Task DispatchToEndpoint<TMessage>(TMessage message)
             where TMessage : IIntegrationMessage;
     }
 }

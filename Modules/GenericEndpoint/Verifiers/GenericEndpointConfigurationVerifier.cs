@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         public void Verify()
         {
             /*
-             * TODO: implement
+             * TODO: implement endpoint checks
              * Messages must be marked with MessageOwnerAttribute
              * Events must be immutable and sealed (records/sealed classes)
              */

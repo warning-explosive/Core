@@ -50,6 +50,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                                && !type.IsAbstract
                                && type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                 .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IMessageHandler<>), 0))
+                .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
+                               && !type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
                 .Distinct();
         }
     }

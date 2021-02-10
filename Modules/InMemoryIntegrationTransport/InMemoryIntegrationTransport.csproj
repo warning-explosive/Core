@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <AssemblyName>SpaceEngineers.Core.InMemoryIntegrationTransport</AssemblyName>
@@ -25,20 +25,12 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <TieredCompilation>true</TieredCompilation>
-        <Library />
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="InMemoryIntegrationContext.cs">
-        <DependentUpon>InMemoryIntegrationTransport.cs</DependentUpon>
-      </Compile>
-      <Compile Update="TestCommand.cs">
-        <DependentUpon>Program.cs</DependentUpon>
-      </Compile>
-      <Compile Update="TestCommandMessageHandler.cs">
-        <DependentUpon>Program.cs</DependentUpon>
-      </Compile>
+      <Compile Remove="TestCommand.cs" />
     </ItemGroup>
 </Project>

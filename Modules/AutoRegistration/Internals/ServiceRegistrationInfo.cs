@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using SimpleInjector;
 
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle}")]
-    internal class ServiceRegistrationInfo
+    internal class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>
     {
         internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)
         {
@@ -22,5 +22,43 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         internal Type ServiceType { get; }
 
         internal Lifestyle Lifestyle { get; }
+
+        public bool Equals(ServiceRegistrationInfo? other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return ServiceType == other.ServiceType
+                   && ImplementationType == other.ImplementationType
+                   && Lifestyle.Equals(other.Lifestyle);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return obj.GetType() == GetType()
+                   && Equals((ServiceRegistrationInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(ImplementationType, ServiceType, Lifestyle);
+        }
     }
 }

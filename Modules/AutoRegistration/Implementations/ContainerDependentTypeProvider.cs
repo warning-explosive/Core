@@ -34,25 +34,33 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
         private readonly HashSet<string> _ourTypesCache;
 
-        public ContainerDependentTypeProvider(Assembly[] assemblies,
+        public ContainerDependentTypeProvider(Assembly[] allAssemblies,
                                               Assembly[] rootAssemblies,
                                               IReadOnlyCollection<string> excludedNamespaces)
         {
-            AllLoadedAssemblies = assemblies.Where(a => !a.IsDynamic).ToList();
-            AllLoadedTypes = AllLoadedAssemblies.SelectMany(a => a.GetTypes()).ToList();
+            AllLoadedAssemblies = allAssemblies
+                .Union(rootAssemblies)
+                .Distinct(new AssemblyByNameEqualityComparer())
+                .Where(a => !a.IsDynamic)
+                .ToList();
+
+            AllLoadedTypes = AllLoadedAssemblies
+                .SelectMany(a => a.GetTypes())
+                .ToList();
+
             TypeCache = AllLoadedAssemblies
                        .ToDictionary(assembly => assembly.GetName().Name,
                                      assembly => (IReadOnlyDictionary<string, Type>)assembly.GetTypes().ToDictionary(type => type.FullName));
 
-            var loadedAssembliesDict = AllLoadedAssemblies.Distinct(new AssemblyByNameEqualityComparer()).ToDictionary(a => a.GetName().FullName);
-            var rootAssembliesDict = rootAssemblies.ToDictionary(a => a.GetName().FullName, a => a);
-            var visited = rootAssemblies.ToDictionary(root => root.GetName().FullName, _ => true);
+            var allAssembliesDict = AllLoadedAssemblies.ToDictionary(a => a.GetName().FullName);
 
-            OurAssemblies = loadedAssembliesDict
-                           .Except(rootAssembliesDict)
+            var visited = rootAssemblies
+                .Distinct(new AssemblyByNameEqualityComparer())
+                .ToDictionary(root => root.GetName().FullName, _ => true);
+
+            OurAssemblies = allAssembliesDict
                            .Select(pair => pair.Value)
-                           .Where(a => IsOurReference(a, loadedAssembliesDict, visited))
-                           .Concat(rootAssemblies)
+                           .Where(a => IsOurReference(a, allAssembliesDict, visited))
                            .ToList();
 
             OurTypes = OurAssemblies
@@ -78,11 +86,17 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
             return _ourTypesCache.Contains(type.FullName);
         }
 
-        private bool IsOurReference(Assembly assembly, IReadOnlyDictionary<string, Assembly> loadedAssemblies, IDictionary<string, bool> visited)
+        private bool IsOurReference(Assembly assembly, IReadOnlyDictionary<string, Assembly> all, IDictionary<string, bool> visited)
         {
+            var key = assembly.GetName().FullName;
+
+            if (visited.ContainsKey(key) && visited[key])
+            {
+                return true;
+            }
+
             var exclusiveReferences = assembly.GetReferencedAssemblies();
             var isReferencedDirectly = exclusiveReferences.Any(a => visited.ContainsKey(a.FullName) && visited[a.FullName]);
-            var key = assembly.GetName().FullName;
 
             if (isReferencedDirectly)
             {
@@ -93,8 +107,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
             var isIndirectlyReferenced = exclusiveReferences
                 .Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
                                         && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
-                .Any(unknownReference => loadedAssemblies.TryGetValue(unknownReference.FullName, out var unknownAssembly)
-                                         && IsOurReference(unknownAssembly, loadedAssemblies, visited));
+                .Any(unknownReference => all.TryGetValue(unknownReference.FullName, out var unknownAssembly)
+                                         && IsOurReference(unknownAssembly, all, visited));
 
             visited[key] = isIndirectlyReferenced;
             return isIndirectlyReferenced;

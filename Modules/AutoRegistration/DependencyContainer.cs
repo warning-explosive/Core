@@ -77,7 +77,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         #region Creation
 
         /// <summary>
-        /// Default configured container
+        /// Creates default dependency container without assembly limitations
         /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
@@ -86,32 +86,54 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
-            var typeProvider = new ContainerDependentTypeProvider(AssembliesExtensions.AllFromCurrentDomain(),
-                                                                  RootAssemblies,
-                                                                  options.ExcludedNamespaces ?? new List<string>());
-            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
-            var dependencyContainer = new DependencyContainer(typeProvider, servicesProvider, options);
+            var typeProvider = new ContainerDependentTypeProvider(
+                AssembliesExtensions.AllFromCurrentDomain(),
+                RootAssemblies,
+                options.ExcludedNamespaces ?? new List<string>());
 
-            return dependencyContainer;
+            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+
+            return new DependencyContainer(typeProvider, servicesProvider, options);
         }
 
         /// <summary>
-        /// Container configured bounded by specified assemblies
+        /// Creates dependency container exactly bounded by specified assemblies
         /// </summary>
         /// <param name="assemblies">Assemblies for container configuration</param>
         /// <param name="options">DependencyContainer creation options</param>
         /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateBounded(Assembly[] assemblies, DependencyContainerOptions options)
+        public static IDependencyContainer CreateExactlyBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            var supplemented = RootAssemblies.Union(assemblies).ToArray();
+            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
 
-            var typeProvider = new ContainerDependentTypeProvider(supplemented,
-                                                                  RootAssemblies,
-                                                                  options.ExcludedNamespaces ?? new List<string>());
+            var typeProvider = new ContainerDependentTypeProvider(
+                assemblies,
+                RootAssemblies,
+                options.ExcludedNamespaces ?? new List<string>());
+
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
-            var dependencyContainer = new DependencyContainer(typeProvider, servicesProvider, options);
 
-            return dependencyContainer;
+            return new DependencyContainer(typeProvider, servicesProvider, options);
+        }
+
+        /// <summary>
+        /// Creates dependency container bounded above by specified assembly (project)
+        /// </summary>
+        /// <param name="assembly">Assembly for container configuration</param>
+        /// <param name="options">DependencyContainer creation options</param>
+        /// <returns>DependencyContainer</returns>
+        public static IDependencyContainer CreateBoundedAbove(Assembly assembly, DependencyContainerOptions options)
+        {
+            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
+
+            var typeProvider = new ContainerDependentTypeProvider(
+                AssembliesExtensions.AllFromCurrentDomain().Below(assembly),
+                RootAssemblies,
+                options.ExcludedNamespaces ?? new List<string>());
+
+            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+
+            return new DependencyContainer(typeProvider, servicesProvider, options);
         }
 
         #endregion

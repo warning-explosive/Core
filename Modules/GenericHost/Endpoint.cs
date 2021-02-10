@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.GenericHost
                 e.Registration.RegisterEmptyCollection<IEndpointInitializer>();
             };
 
-            return DependencyContainer.Create(containerOptions); // TODO: bounded by assembly
+            return DependencyContainer.CreateBoundedAbove(endpointOptions.Assembly, containerOptions);
         }
     }
 }

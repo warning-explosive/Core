@@ -50,7 +50,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
         {
             return serviceTypes.SelectMany(serviceType => serviceType.GetTypesToRegister(container, typeProvider)
                                                                      .Select(implementationType => (serviceType, implementationType)))
-                               .GetComponents(versions);
+                               .GetComponents(versions)
+                               .Distinct();
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs, bool versions)

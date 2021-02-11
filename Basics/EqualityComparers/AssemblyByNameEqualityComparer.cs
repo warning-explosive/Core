@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Basics.EqualityComparers
         /// <inheritdoc />
         public override bool Equals(Assembly x, Assembly y)
         {
-            return x?.GetName().FullName == y?.GetName().FullName;
+            return x.GetName().FullName.Equals(y.GetName().FullName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />

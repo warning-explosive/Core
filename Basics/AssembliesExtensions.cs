@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Basics
 
             IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)
             {
-                if (grp.Key == Duplicate)
+                if (grp.Key.Equals(Duplicate, StringComparison.OrdinalIgnoreCase))
                 {
                     yield return grp.First();
                     yield break;
@@ -55,15 +55,49 @@ namespace SpaceEngineers.Core.Basics
 
             if (previous == default)
             {
-                Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
-                    .Select(Load)
-                    .SelectMany(assembly => assembly.GetReferencedAssemblies())
-                    .Distinct()
-                    .Where(a => a.ContentType != AssemblyContentType.WindowsRuntime)
-                    .Each(assembly => AppDomain.CurrentDomain.Load(assembly));
+                var loaded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                _ = Directory
+                    .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
+                    .Select(AssemblyName.GetAssemblyName)
+                    .SelectMany(name => LoadReferences(name, loaded))
+                    .ToList();
             }
 
-            static Assembly Load(string library) => AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(library));
+            static Assembly? LoadByName(AssemblyName assemblyName)
+            {
+                return ExecutionExtensions
+                    .Try(() => AppDomain.CurrentDomain.Load(assemblyName))
+                    .Catch<FileNotFoundException>()
+                    .Invoke();
+            }
+
+            static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)
+            {
+                if (loaded.Contains(assemblyName.FullName))
+                {
+                    return Enumerable.Empty<Assembly>();
+                }
+
+                if (assemblyName.ContentType == AssemblyContentType.WindowsRuntime)
+                {
+                    return Enumerable.Empty<Assembly>();
+                }
+
+                var assembly = LoadByName(assemblyName);
+
+                if (assembly == null)
+                {
+                    return Enumerable.Empty<Assembly>();
+                }
+
+                loaded.Add(assemblyName.FullName);
+
+                return new[] { assembly }
+                    .Concat(assembly
+                        .GetReferencedAssemblies()
+                        .SelectMany(referenceName => LoadReferences(referenceName, loaded)));
+            }
         }
 
         /// <summary>
@@ -77,22 +111,25 @@ namespace SpaceEngineers.Core.Basics
             var all = allAssemblies
                 .Union(new[] { assembly })
                 .Distinct(new AssemblyByNameEqualityComparer())
-                .ToDictionary(a => a.GetName().FullName);
+                .ToDictionary(a => a.GetName().FullName, StringComparer.OrdinalIgnoreCase);
 
-            return new[] { assembly }
-                .Concat(BelowReference(assembly, all))
-                .Distinct(new AssemblyByNameEqualityComparer())
-                .ToArray();
+            return BelowReference(assembly.GetName(), all).ToArray();
 
-            static IEnumerable<Assembly> BelowReference(Assembly assembly, IReadOnlyDictionary<string, Assembly> all)
+            static IEnumerable<Assembly> BelowReference(
+                AssemblyName assemblyName,
+                IReadOnlyDictionary<string, Assembly> all)
             {
-                var references = assembly
-                    .GetReferencedAssemblies()
-                    .Where(reference => all.ContainsKey(reference.FullName))
-                    .Select(reference => all[reference.FullName])
-                    .ToList();
+                var key = assemblyName.FullName;
 
-                return references.Concat(references.SelectMany(reference => BelowReference(reference, all)));
+                if (!all.TryGetValue(key, out var assembly))
+                {
+                    return Enumerable.Empty<Assembly>();
+                }
+
+                return new[] { assembly }
+                    .Concat(assembly
+                        .GetReferencedAssemblies()
+                        .SelectMany(name => BelowReference(name, all)));
             }
         }
     }

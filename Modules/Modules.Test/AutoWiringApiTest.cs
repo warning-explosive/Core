@@ -3,13 +3,14 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringApi.Attributes;
     using AutoWiringTest;
     using Basics;
+    using Basics.Test;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
     /// AutoWiringApi assembly tests
     /// </summary>
-    public class AutoWiringApiTest : ModulesTestBase
+    public class AutoWiringApiTest : BasicsTestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>

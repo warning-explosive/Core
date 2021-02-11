@@ -4,6 +4,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using AutoRegistration.Abstractions;
+    using Basics.Test;
+    using ClassFixtures;
     using NewtonSoft.Json.Abstractions;
     using NewtonSoft.Json.ObjectTree;
     using Xunit;
@@ -13,12 +16,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// SerializationTest
     ///     Newtonsoft.Json module
     /// </summary>
-    public class SerializationTest : ModulesTestBase
+    public class SerializationTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public SerializationTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IJsonSerializer).Assembly);
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void ObjectTreeDeserializationTest()

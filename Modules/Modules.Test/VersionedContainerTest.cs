@@ -4,8 +4,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using Basics;
+    using Basics.Test;
+    using ClassFixtures;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -14,12 +17,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// IVersionedContainer class tests
     /// </summary>
     [SuppressMessage("Coupling", "CA1506", Justification = "For test reasons")]
-    public class VersionedContainerTest : ModulesTestBase
+    public class VersionedContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public VersionedContainerTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public VersionedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void DependencyWithoutVersionsTest()

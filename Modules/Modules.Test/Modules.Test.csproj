@@ -53,18 +53,6 @@
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="CompositionInfoExtractorTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="GraphSolverTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="SettingsManagerTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="CliArgumentsParserTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoWiringTest\CollectionResolvableConditionDecorableServiceDecorator1.cs">
       <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
@@ -149,9 +137,6 @@
     <Compile Update="AutoWiringTest\OpenGenericTestServiceImpl.cs">
       <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="DependencyContainerTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoWiringTest\WithInjectedDependencyContainerImpl.cs">
       <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
     </Compile>
@@ -172,12 +157,6 @@
     </Compile>
     <Compile Update="AutoWiringTest\ScopedLifestyleServiceImpl.cs">
       <DependentUpon>IScopedLifestyleService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ScopedContainerTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="VersionedContainerTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="VersionedContainer\TransientVersionedServiceImpl.cs">
       <DependentUpon>ITransientVersionedService.cs</DependentUpon>
@@ -248,12 +227,6 @@
     <Compile Update="VersionedContainer\WithoutVersionsImpl.cs">
       <DependentUpon>IWithoutVersions.cs</DependentUpon>
     </Compile>
-    <Compile Update="DependencyContainerDependenciesTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AutoWiringApiTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoWiringTest\RegisteredByDelegateImpl.cs">
       <DependentUpon>IRegisteredByDelegate.cs</DependentUpon>
     </Compile>
@@ -262,12 +235,6 @@
     </Compile>
     <Compile Update="SettingsManager\TestYamlSettings.cs">
       <DependentUpon>ITestSettings.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DependencyContainerDecoratorsTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="SerializationTest.cs">
-      <DependentUpon>ModulesTestBase.cs</DependentUpon>
     </Compile>
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
       <DependentUpon>PersistenceSettings.cs</DependentUpon>

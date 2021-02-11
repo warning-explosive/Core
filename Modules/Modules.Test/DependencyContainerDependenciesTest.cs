@@ -4,20 +4,32 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Services;
     using Basics;
+    using Basics.Test;
+    using ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
     /// IDependencyContainer dependencies tests
     /// </summary>
-    public class DependencyContainerDependenciesTest : ModulesTestBase
+    public class DependencyContainerDependenciesTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public DependencyContainerDependenciesTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void IsOurReferenceTest()

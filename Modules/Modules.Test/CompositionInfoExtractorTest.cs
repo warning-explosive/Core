@@ -1,19 +1,31 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Linq;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Services;
+    using Basics.Test;
+    using ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
     /// CompositionInfoExtractor class tests
     /// </summary>
-    public class CompositionInfoExtractorTest : ModulesTestBase
+    public class CompositionInfoExtractorTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public CompositionInfoExtractorTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IDependencyContainer).Assembly);
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Theory]
         [InlineData(false)]

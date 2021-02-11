@@ -4,7 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Reflection;
     using System.Threading.Tasks;
+    using AutoRegistration.Abstractions;
     using Basics;
+    using Basics.Test;
+    using ClassFixtures;
     using Core.SettingsManager.Abstractions;
     using GenericEndpoint.Settings;
     using Settings;
@@ -15,12 +18,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// SettingsManager class tests
     /// </summary>
-    public class SettingsManagerTest : ModulesTestBase
+    public class SettingsManagerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public SettingsManagerTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         /// <summary> ReadWriteTest data member </summary>
         /// <returns>Test data</returns>

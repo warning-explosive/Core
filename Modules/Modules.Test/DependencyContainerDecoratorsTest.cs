@@ -3,9 +3,14 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
+    using Basics.Test;
+    using ClassFixtures;
+    using Registrations;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -13,23 +18,36 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// DependencyContainer decorators test class
     /// </summary>
-    public class DependencyContainerDecoratorsTest : ModulesTestBase
+    public class DependencyContainerDecoratorsTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
+        private readonly ModulesTestFixture _fixture;
+
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public DependencyContainerDecoratorsTest(ITestOutputHelper output)
+        /// <param name="fixture">ModulesTestFixture</param>
+        public DependencyContainerDecoratorsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+            _fixture = fixture;
         }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void CheckDecoratorsOnVersionedServicesTest()
         {
-            var localContainer = SetupDependencyContainer(container =>
-                                                          {
-                                                              container.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
-                                                              container.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
-                                                          });
+            var localContainer = _fixture
+                .GetDependencyContainer(GetType().Assembly,
+                    new ITestClassWithRegistration[]
+                    {
+                        new TestDelegatesRegistration(),
+                        new VersionedOpenGenericRegistration(),
+                        new RegisterVersionedOpenGenerics()
+                    });
 
             // non-generic
             var nonGenericServiceExpected = new[]
@@ -190,6 +208,15 @@ namespace SpaceEngineers.Core.Modules.Test
             CheckRecursive(services[1], 1, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
             Output.WriteLine(string.Empty);
             CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
+        }
+
+        private class RegisterVersionedOpenGenerics : ITestClassWithRegistration
+        {
+            public void Register(IRegistrationContainer registration)
+            {
+                registration.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
+                registration.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
+            }
         }
     }
 }

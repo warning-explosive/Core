@@ -1,7 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
+    using AutoRegistration.Abstractions;
     using AutoWiringTest;
+    using Basics.Test;
+    using ClassFixtures;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -9,12 +12,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// IScopedContainer class tests
     /// </summary>
-    public class ScopedContainerTest : ModulesTestBase
+    public class ScopedContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public ScopedContainerTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public ScopedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal async Task AsyncScopeTest()

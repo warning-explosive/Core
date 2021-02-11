@@ -14,6 +14,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringApi.Services;
     using AutoWiringTest;
     using Basics;
+    using Basics.Test;
+    using ClassFixtures;
     using Core.SettingsManager.Abstractions;
     using Moq;
     using Registrations;
@@ -25,12 +27,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// IDependencyContainer class tests
     /// </summary>
-    public class DependencyContainerTest : ModulesTestBase
+    public class DependencyContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public DependencyContainerTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.DefaultDependencyContainer;
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// ResolveRegisteredServicesTest Data
@@ -388,7 +399,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                           e.Registration.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
                                       };
             var empty = Array.Empty<Assembly>();
-            var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
+            var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateExactlyBounded(empty, options);
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<IVersioned<IWiredTestService>>();
@@ -426,7 +437,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                           e.Registration.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
                                       };
 
-            var localContainerWithSpecifiedVersions = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateBounded(empty, options);
+            var localContainerWithSpecifiedVersions = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateExactlyBounded(empty, options);
 
             localContainerWithSpecifiedVersions.Resolve<IOpenGenericTestService<object>>();
             localContainerWithSpecifiedVersions.Resolve<IVersioned<IOpenGenericTestService<object>>>();
@@ -442,7 +453,7 @@ namespace SpaceEngineers.Core.Modules.Test
         internal void BoundedContainerTest(bool mode)
         {
             var settingsContainer = AutoRegistration.DependencyContainer
-                                                    .CreateBounded(new[]
+                                                    .CreateExactlyBounded(new[]
                                                                    {
                                                                        typeof(ISettingsManager<>).Assembly,
                                                                        typeof(ICompositionInfoExtractor).Assembly,

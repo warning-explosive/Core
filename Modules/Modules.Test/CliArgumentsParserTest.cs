@@ -3,7 +3,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using AutoRegistration.Abstractions;
     using Basics;
+    using Basics.Test;
+    using ClassFixtures;
     using CliArgumentsParser;
     using Xunit;
     using Xunit.Abstractions;
@@ -11,12 +14,21 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// CliArgumentsParser class tests
     /// </summary>
-    public class CliArgumentsParserTest : ModulesTestBase
+    public class CliArgumentsParserTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public CliArgumentsParserTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public CliArgumentsParserTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.GetDependencyContainer(typeof(ICliArgumentsParser).Assembly);
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
 

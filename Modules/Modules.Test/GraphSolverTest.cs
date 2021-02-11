@@ -5,8 +5,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Exceptions;
+    using Basics.Test;
+    using ClassFixtures;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;
@@ -14,7 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// GraphSolver class tests
     /// </summary>
-    public class GraphSolverTest : ModulesTestBase
+    public class GraphSolverTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         private const char A = 'A';
         private const char B = 'B';
@@ -54,8 +57,17 @@ namespace SpaceEngineers.Core.Modules.Test
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public GraphSolverTest(ITestOutputHelper output)
-            : base(output) { }
+        /// <param name="fixture">ModulesTestFixture</param>
+        public GraphSolverTest(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output)
+        {
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly);
+        }
+
+        /// <summary>
+        /// DependencyContainer
+        /// </summary>
+        protected IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// Test1 - All paths

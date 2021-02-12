@@ -64,15 +64,18 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseTransport(transport, compositeEndpoint)
                 .Build();
 
-            /*
-            TODO: run host, calculate messages, wait graceful shutdown
-
             SendAndPublish(transport);
 
-            cts.CancelAfter(TimeSpan.FromSeconds(10));
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-            await Assert.ThrowsAsync<TaskCanceledException>(() => transportHost.RunAsync(cts.Token)).ConfigureAwait(false);
-            */
+            var runningHost = transportHost.RunAsync(cts.Token);
+            var timeout = Task.Delay(TimeSpan.FromSeconds(10), CancellationToken.None);
+
+            var actual = await Task
+                .WhenAny(runningHost, timeout)
+                .ConfigureAwait(false);
+
+            Assert.Equal(runningHost, actual);
         }
 
         private static void SendAndPublish(IIntegrationTransport transport)

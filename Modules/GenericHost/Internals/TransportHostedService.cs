@@ -41,6 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _cts.Token.Register(() => _ready.Set());
 
             await _transport.Initialize(_endpoints, Token).ConfigureAwait(false);
 

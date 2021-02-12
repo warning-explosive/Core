@@ -88,7 +88,9 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
 
                 if (selectedEndpoints.Any())
                 {
-                    return Task.WhenAll(selectedEndpoints.Select(endpoint => ((IExecutableEndpoint)endpoint).InvokeMessageHandler(message, CreateContext())));
+                    return Task.WhenAll(selectedEndpoints
+                        .OfType<IExecutableEndpoint>()
+                        .Select(endpoint => endpoint.InvokeMessageHandler(message, CreateContext())));
                 }
             }
 

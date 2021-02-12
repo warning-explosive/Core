@@ -27,11 +27,7 @@ namespace SpaceEngineers.Core.Modules.Test.ClassFixtures
         private static readonly Lazy<IDependencyContainer> LazyDefaultDependencyContainer
             = new Lazy<IDependencyContainer>(() => CreateDependencyContainer(
                 typeof(ModulesTestFixture).Assembly,
-                new ITestClassWithRegistration[]
-                {
-                    new TestDelegatesRegistration(),
-                    new VersionedOpenGenericRegistration()
-                }),
+                InternalRegistrations),
                 LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary> .cctor </summary>
@@ -46,10 +42,43 @@ namespace SpaceEngineers.Core.Modules.Test.ClassFixtures
         }
 
         /// <summary>
-        /// IDependencyContainer
+        /// Default DependencyContainer
         /// </summary>
         [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
         public IDependencyContainer DefaultDependencyContainer => LazyDefaultDependencyContainer.Value;
+
+        /// <summary>
+        /// Default DependencyContainerOptions
+        /// </summary>
+        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
+        public DependencyContainerOptions DefaultOptions => CreateDependencyContainerOptions(Registrations);
+
+        /// <summary>
+        /// Registrations
+        /// </summary>
+        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
+        [SuppressMessage("Analyzers", "CA1819", Justification = "generated array")]
+        public IModulesTestRegistration[] Registrations => InternalRegistrations;
+
+        private static IModulesTestRegistration[] InternalRegistrations =>
+            new IModulesTestRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration(),
+                new EndpointIdentityRegistration()
+            };
+
+        /// <summary>
+        /// Get DependencyContainerOptions with applied registrations
+        /// </summary>
+        /// <param name="excludedTypes">excluded IModulesTestRegistration types</param>
+        /// <returns>DependencyContainerOptions</returns>
+        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
+        public DependencyContainerOptions GetDependencyContainerOptions(
+            params Type[] excludedTypes)
+        {
+            return CreateDependencyContainerOptions(InternalRegistrations.Where(r => !excludedTypes.Contains(r.GetType())));
+        }
 
         /// <summary>
         /// Setup DependencyContainer
@@ -60,10 +89,10 @@ namespace SpaceEngineers.Core.Modules.Test.ClassFixtures
         [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
         public IDependencyContainer GetDependencyContainer(
             Assembly assembly,
-            IEnumerable<ITestClassWithRegistration>? registrations = null)
+            IEnumerable<IModulesTestRegistration>? registrations = null)
         {
             var objects = new[] { assembly.GetName().FullName }
-                .Concat((registrations ?? Enumerable.Empty<ITestClassWithRegistration>())
+                .Concat((registrations ?? Enumerable.Empty<IModulesTestRegistration>())
                         .Select(r => r.GetType().FullName!))
                 .ToList();
 
@@ -88,7 +117,15 @@ namespace SpaceEngineers.Core.Modules.Test.ClassFixtures
 
         private static IDependencyContainer CreateDependencyContainer(
             Assembly assembly,
-            IEnumerable<ITestClassWithRegistration>? registrations)
+            IEnumerable<IModulesTestRegistration>? registrations)
+        {
+            var options = CreateDependencyContainerOptions(registrations);
+
+            return DependencyContainer.CreateBoundedAbove(assembly, options);
+        }
+
+        private static DependencyContainerOptions CreateDependencyContainerOptions(
+            IEnumerable<IModulesTestRegistration>? registrations)
         {
             var options = new DependencyContainerOptions();
             options.OnRegistration += (_, e) =>
@@ -96,7 +133,7 @@ namespace SpaceEngineers.Core.Modules.Test.ClassFixtures
                 registrations?.Each(r => r.Register(e.Registration));
             };
 
-            return DependencyContainer.CreateBoundedAbove(assembly, options);
+            return options;
         }
     }
 }

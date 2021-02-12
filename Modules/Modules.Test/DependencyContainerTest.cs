@@ -29,6 +29,8 @@ namespace SpaceEngineers.Core.Modules.Test
     /// </summary>
     public class DependencyContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
+        private readonly ModulesTestFixture _fixture;
+
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
@@ -36,6 +38,7 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output)
         {
             DependencyContainer = fixture.DefaultDependencyContainer;
+            _fixture = fixture;
         }
 
         /// <summary>
@@ -115,11 +118,9 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void EachServiceHasVersionedWrapperTest()
         {
-            var options = new DependencyContainerOptions();
+            var options = _fixture.GetDependencyContainerOptions(typeof(VersionedOpenGenericRegistration));
             options.OnRegistration += (s, e) =>
                                       {
-                                          new TestDelegatesRegistration().Register(e.Registration);
-
                                           VersionedOpenGenericRegistration
                                              .RegisterVersionedForOpenGenerics(DependencyContainer, e.Registration)
                                              .Select(type => type.ToString())

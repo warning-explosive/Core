@@ -266,7 +266,7 @@ namespace SpaceEngineers.Core.Modules.Test
                   .Catch<NotFoundException>(ex =>
                                             {
                                                 Output.WriteLine(ex.Message);
-                                                Assert.Contains("Path not found", ex.Message, StringComparison.InvariantCulture);
+                                                Assert.Contains("Path not found", ex.Message, StringComparison.Ordinal);
                                             })
                   .Invoke();
         }
@@ -303,7 +303,7 @@ namespace SpaceEngineers.Core.Modules.Test
                   .Catch<AmbiguousMatchException>(ex =>
                                                   {
                                                       Output.WriteLine(ex.Message);
-                                                      Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.InvariantCulture);
+                                                      Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.Ordinal);
                                                   })
                   .Invoke();
 

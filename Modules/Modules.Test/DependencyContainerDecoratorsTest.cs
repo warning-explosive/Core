@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Basics.Test;
     using ClassFixtures;
-    using Registrations;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -40,14 +39,11 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void CheckDecoratorsOnVersionedServicesTest()
         {
-            var localContainer = _fixture
-                .GetDependencyContainer(GetType().Assembly,
-                    new ITestClassWithRegistration[]
-                    {
-                        new TestDelegatesRegistration(),
-                        new VersionedOpenGenericRegistration(),
-                        new RegisterVersionedOpenGenerics()
-                    });
+            var registrations = _fixture
+                .Registrations
+                .Concat(new[] { new RegisterVersionedOpenGenerics() });
+
+            var localContainer = _fixture.GetDependencyContainer(GetType().Assembly, registrations);
 
             // non-generic
             var nonGenericServiceExpected = new[]
@@ -210,7 +206,7 @@ namespace SpaceEngineers.Core.Modules.Test
             CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
         }
 
-        private class RegisterVersionedOpenGenerics : ITestClassWithRegistration
+        private class RegisterVersionedOpenGenerics : IModulesTestRegistration
         {
             public void Register(IRegistrationContainer registration)
             {

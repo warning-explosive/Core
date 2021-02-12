@@ -67,12 +67,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
 
             bool IsNotIgnoredProject(Project project)
             {
-                return !ignoredProjects.Contains(project.Name, StringComparer.InvariantCulture);
+                return !ignoredProjects.Contains(project.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             bool IsNotIgnoredSource(AnalyzedDocument analyzedDocument)
             {
-                return ignoredSources.All(p => !analyzedDocument.Name.Contains(p, StringComparison.InvariantCulture));
+                return ignoredSources.All(p => !analyzedDocument.Name.Contains(p, StringComparison.OrdinalIgnoreCase));
             }
 
             bool IsNotIgnoredNamespace(AnalyzedDocument analyzedDocument)

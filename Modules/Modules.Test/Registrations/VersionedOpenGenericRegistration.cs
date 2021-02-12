@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using AutoWiringTest;
     using Basics;
 
-    internal class VersionedOpenGenericRegistration : ITestClassWithRegistration
+    internal class VersionedOpenGenericRegistration : IModulesTestRegistration
     {
         public void Register(IRegistrationContainer registration)
         {

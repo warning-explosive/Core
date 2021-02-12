@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 
         private static SourceText ReplaceExpectedSuffix(SourceText source)
         {
-            return SourceText.From(source.ToString().Replace(Conventions.Expected, string.Empty, StringComparison.InvariantCulture));
+            return SourceText.From(source.ToString().Replace(Conventions.Expected, string.Empty, StringComparison.Ordinal));
         }
 
         private static bool TryGetReplacement(SourceText source, out (string, TextSpan) replacement)

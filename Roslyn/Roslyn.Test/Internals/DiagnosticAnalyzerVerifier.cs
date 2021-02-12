@@ -85,7 +85,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 
             Assert.True(actualSpan.Path == expected.SourceFile
                      || (actualSpan.Path != null
-                      && actualSpan.Path.Contains(expected.SourceFile, StringComparison.InvariantCulture)),
+                      && actualSpan.Path.Contains(expected.SourceFile, StringComparison.Ordinal)),
                         $"Expected diagnostic to be in file \"{expected.SourceFile}\" was actually in file \"{actualSpan.Path}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
 
             var actualLinePosition = actualSpan.StartLinePosition;
@@ -135,7 +135,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
                             Assert.True(location.IsInSource,
                                 $"Test base does not currently handle diagnostics in metadata locations. Diagnostic in metadata: {diagnostics[i]}\r\n");
 
-                            var resultMethodName = diagnostics[i].Location.SourceTree.FilePath.EndsWith(".cs", StringComparison.InvariantCultureIgnoreCase)
+                            var resultMethodName = diagnostics[i].Location.SourceTree.FilePath.EndsWith(".cs", StringComparison.Ordinal)
                                                        ? "expected(("
                                                        : throw new InvalidOperationException("Choose another language from C#");
                             var linePosition = diagnostics[i].Location.GetLineSpan().StartLinePosition;

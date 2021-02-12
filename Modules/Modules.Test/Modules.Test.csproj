@@ -49,6 +49,7 @@
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
+    <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
   </ItemGroup>

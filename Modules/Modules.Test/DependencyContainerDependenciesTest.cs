@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             // #1 - ITypeProvider
             var wrongOurTypes = ourTypes
-                               .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
+                               .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
                                .ShowTypes("#1 - ITypeProvider", Output.WriteLine)
                                .ToArray();
 
@@ -118,9 +118,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             wrongOurTypes = AssembliesExtensions.AllFromCurrentDomain()
                                                 .SelectMany(asm => asm.GetTypes())
-                                                .Where(t => (t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.InvariantCulture) ?? true)
+                                                .Where(t => (t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
                                                          && !provider.IsOurType(t)
-                                                         && excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCulture)))
+                                                         && excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)))
                                                 .ShowTypes("#3 - missing", Output.WriteLine)
                                                 .ToArray();
 

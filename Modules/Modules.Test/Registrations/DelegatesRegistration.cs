@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
 
-    internal class TestDelegatesRegistration : ITestClassWithRegistration
+    internal class DelegatesRegistration : IModulesTestRegistration
     {
         public void Register(IRegistrationContainer registration)
         {

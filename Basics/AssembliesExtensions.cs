@@ -53,51 +53,18 @@ namespace SpaceEngineers.Core.Basics
         {
             var previous = Interlocked.Exchange(ref _alreadyWarmedUp, 1);
 
-            if (previous == default)
+            if (previous != default)
             {
-                var loaded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                _ = Directory
-                    .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
-                    .Select(AssemblyName.GetAssemblyName)
-                    .SelectMany(name => LoadReferences(name, loaded))
-                    .ToList();
+                return;
             }
 
-            static Assembly? LoadByName(AssemblyName assemblyName)
-            {
-                return ExecutionExtensions
-                    .Try(() => AppDomain.CurrentDomain.Load(assemblyName))
-                    .Catch<FileNotFoundException>()
-                    .Invoke();
-            }
+            var loaded = new HashSet<string>();
 
-            static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)
-            {
-                if (loaded.Contains(assemblyName.FullName))
-                {
-                    return Enumerable.Empty<Assembly>();
-                }
-
-                if (assemblyName.ContentType == AssemblyContentType.WindowsRuntime)
-                {
-                    return Enumerable.Empty<Assembly>();
-                }
-
-                var assembly = LoadByName(assemblyName);
-
-                if (assembly == null)
-                {
-                    return Enumerable.Empty<Assembly>();
-                }
-
-                loaded.Add(assemblyName.FullName);
-
-                return new[] { assembly }
-                    .Concat(assembly
-                        .GetReferencedAssemblies()
-                        .SelectMany(referenceName => LoadReferences(referenceName, loaded)));
-            }
+            _ = Directory
+                .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
+                .Select(AssemblyName.GetAssemblyName)
+                .SelectMany(name => LoadReferences(name, loaded))
+                .ToList();
         }
 
         /// <summary>
@@ -111,26 +78,69 @@ namespace SpaceEngineers.Core.Basics
             var all = allAssemblies
                 .Union(new[] { assembly })
                 .Distinct(new AssemblyByNameEqualityComparer())
-                .ToDictionary(a => a.GetName().FullName, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(a => string.Intern(a.GetName().FullName));
 
-            return BelowReference(assembly.GetName(), all).ToArray();
+            var visited = new HashSet<string>();
 
-            static IEnumerable<Assembly> BelowReference(
-                AssemblyName assemblyName,
-                IReadOnlyDictionary<string, Assembly> all)
+            return BelowReference(assembly.GetName(), all, visited).ToArray();
+        }
+
+        private static IEnumerable<Assembly> BelowReference(
+            AssemblyName assemblyName,
+            IReadOnlyDictionary<string, Assembly> all,
+            HashSet<string> visited)
+        {
+            var key = string.Intern(assemblyName.FullName);
+
+            if (!visited.Add(key))
             {
-                var key = assemblyName.FullName;
-
-                if (!all.TryGetValue(key, out var assembly))
-                {
-                    return Enumerable.Empty<Assembly>();
-                }
-
-                return new[] { assembly }
-                    .Concat(assembly
-                        .GetReferencedAssemblies()
-                        .SelectMany(name => BelowReference(name, all)));
+                return Enumerable.Empty<Assembly>();
             }
+
+            if (!all.TryGetValue(key, out var assembly))
+            {
+                return Enumerable.Empty<Assembly>();
+            }
+
+            return new[] { assembly }
+                .Concat(assembly
+                    .GetReferencedAssemblies()
+                    .SelectMany(name => BelowReference(name, all, visited)));
+        }
+
+        private static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)
+        {
+            var name = string.Intern(assemblyName.FullName);
+
+            if (!loaded.Add(name))
+            {
+                return Enumerable.Empty<Assembly>();
+            }
+
+            if (assemblyName.ContentType == AssemblyContentType.WindowsRuntime)
+            {
+                return Enumerable.Empty<Assembly>();
+            }
+
+            var assembly = LoadByName(assemblyName);
+
+            if (assembly == null)
+            {
+                return Enumerable.Empty<Assembly>();
+            }
+
+            return new[] { assembly }
+                .Concat(assembly
+                    .GetReferencedAssemblies()
+                    .SelectMany(referenceName => LoadReferences(referenceName, loaded)));
+        }
+
+        private static Assembly? LoadByName(AssemblyName assemblyName)
+        {
+            return ExecutionExtensions
+                .Try(() => AppDomain.CurrentDomain.Load(assemblyName))
+                .Catch<FileNotFoundException>()
+                .Invoke();
         }
     }
 }

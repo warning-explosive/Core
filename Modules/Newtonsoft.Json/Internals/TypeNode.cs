@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
             Assembly = assembly;
             Type = type;
             GenericArguments = new List<TypeNode>();
-            IsArray = type.EndsWith("[]", StringComparison.InvariantCultureIgnoreCase);
+            IsArray = type.EndsWith("[]", StringComparison.OrdinalIgnoreCase);
         }
 
         [JsonProperty]

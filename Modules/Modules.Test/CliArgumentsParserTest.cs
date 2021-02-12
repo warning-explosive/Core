@@ -279,7 +279,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var ex = Assert.Throws<ArgumentException>(() => DependencyContainer.Resolve<ICliArgumentsParser>().Parse<TestPoco>(args));
 
-            Assert.Contains("'bool' already added", ex.Message, StringComparison.InvariantCulture);
+            Assert.Contains("'bool' already added", ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -295,7 +295,7 @@ namespace SpaceEngineers.Core.Modules.Test
                        };
 
             var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
-            Assert.Contains("Value 'value3' is not recognized", ex.Message, StringComparison.InvariantCulture);
+            Assert.Contains("Value 'value3' is not recognized", ex.Message, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -361,7 +361,7 @@ namespace SpaceEngineers.Core.Modules.Test
                        };
 
             var ex = Assert.Throws<ArgumentException>(() => parser.Parse<TestPoco>(args));
-            Assert.Contains("Values 'value3' is not recognized", ex.Message, StringComparison.InvariantCulture);
+            Assert.Contains("Values 'value3' is not recognized", ex.Message, StringComparison.Ordinal);
         }
 
         #pragma warning restore xUnit2000 // Constants and literals should be the expected argument

@@ -215,7 +215,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
             var parsed = ToEnumString(result).ToUpperInvariant();
 
-            return separatedValues.All(single => parsed.Contains(single, StringComparison.InvariantCulture));
+            return separatedValues.All(single => parsed.Contains(single, StringComparison.OrdinalIgnoreCase));
         }
 
         private static object ParseEnum(Type enumType, string strValue)

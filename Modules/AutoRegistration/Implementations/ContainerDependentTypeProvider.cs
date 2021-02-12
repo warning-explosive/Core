@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
             OurTypes = OurAssemblies
                       .SelectMany(ExtractOurTypes)
-                      .Where(t => !excludedNamespaces.Contains(t.Namespace, StringComparer.InvariantCulture))
+                      .Where(t => !excludedNamespaces.Contains(t.Namespace, StringComparer.OrdinalIgnoreCase))
                       .ToList();
 
             _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));
@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
         private bool IsOurReference(Assembly assembly, IReadOnlyDictionary<string, Assembly> all, IDictionary<string, bool> visited)
         {
-            var key = assembly.GetName().FullName;
+            var key = string.Intern(assembly.GetName().FullName);
 
             if (visited.ContainsKey(key) && visited[key])
             {
@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
             var isIndirectlyReferenced = exclusiveReferences
                 .Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
-                                        && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.InvariantCultureIgnoreCase)))
+                                        && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
                 .Any(unknownReference => all.TryGetValue(unknownReference.FullName, out var unknownAssembly)
                                          && IsOurReference(unknownAssembly, all, visited));
 
@@ -118,7 +118,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         {
             return assembly.GetTypes()
                            .Where(t => t.FullName != null
-                                    && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.InvariantCulture)));
+                                    && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)));
         }
     }
 }

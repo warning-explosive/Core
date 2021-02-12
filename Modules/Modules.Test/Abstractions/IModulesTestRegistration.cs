@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.Abstractions
     /// <summary>
     /// ITestClassWithRegistration
     /// </summary>
-    public interface ITestClassWithRegistration
+    public interface IModulesTestRegistration
     {
         /// <summary>
         /// Register services for test purposes

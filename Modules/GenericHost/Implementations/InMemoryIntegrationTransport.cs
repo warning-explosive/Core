@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using Basics.Async;
     using Basics.Exceptions;
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericHost;
@@ -21,20 +22,15 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             = new ConcurrentDictionary<Type, ICollection<IGenericEndpoint>>();
 
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
-
         private readonly IIntegrationContext _context;
-
-        // TODO: use async counterpart
-        private readonly ManualResetEventSlim _manualResetEvent;
+        private readonly AsyncManualResetEvent _manualResetEvent;
 
         /// <summary> .cctor </summary>
         /// <param name="selectionBehavior">IEndpointInstanceSelectionBehavior</param>
         public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior selectionBehavior)
         {
             _selectionBehavior = selectionBehavior;
-
-            _manualResetEvent = new ManualResetEventSlim(false);
-
+            _manualResetEvent = new AsyncManualResetEvent(false);
             _context = new InMemoryIntegrationContext(this, _manualResetEvent);
         }
 
@@ -97,11 +93,10 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             throw new NotFoundException($"Target endpoint for message '{typeof(TMessage)}' not found");
         }
 
-        internal Task NotifyOnMessage<TMessage>(TMessage integrationMessage)
+        internal void NotifyOnMessage<TMessage>(TMessage integrationMessage)
             where TMessage : IIntegrationMessage
         {
             OnMessage?.Invoke(this, new IntegrationMessageEventArgs(integrationMessage, typeof(TMessage)));
-            return Task.CompletedTask;
         }
     }
 }

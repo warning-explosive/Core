@@ -4,14 +4,15 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
+    using Basics.Async;
     using Core.GenericEndpoint.Abstractions;
 
     internal class GenericEndpoint : IRunnableEndpoint, IExecutableEndpoint, IGenericEndpoint
     {
         private readonly IDependencyContainer _dependencyContainer;
+        private readonly AsyncManualResetEvent _ready;
 
-        // TODO: use async counterpart
-        private readonly ManualResetEventSlim _ready;
+        // TODO: recode with async countdown event
         private readonly ManualResetEventSlim _handlerIsRunning;
 
         private CancellationTokenSource? _cts;
@@ -26,7 +27,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             _dependencyContainer = dependencyContainer;
 
-            _ready = new ManualResetEventSlim(false);
+            _ready = new AsyncManualResetEvent(false);
             _handlerIsRunning = new ManualResetEventSlim(false);
         }
 
@@ -41,16 +42,27 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return new ValueTask(StopAsync());
         }
 
-        public Task InvokeMessageHandler<TMessage>(
+        public async Task InvokeMessageHandler<TMessage>(
             TMessage message,
             IIntegrationContext context)
             where TMessage : IIntegrationMessage
         {
-            _ready.Wait(Token);
+            await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            var runningHandler = InvokeMessageHandlerWithTracking(message, context);
+            _handlerIsRunning.Reset();
+            Interlocked.Increment(ref _runningHandlers);
 
-            return runningHandler;
+            await _dependencyContainer
+                .Resolve<IMessageHandler<TMessage>>()
+                .Handle(message, context, Token)
+                .ConfigureAwait(false);
+
+            var actual = Interlocked.Decrement(ref _runningHandlers);
+
+            if (actual <= 0)
+            {
+                _handlerIsRunning.Set();
+            }
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -80,26 +92,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 await Task
                     .WhenAny(Task.Factory.StartNew(() => _handlerIsRunning.Wait(Token), Token), Task.Delay(Timeout.Infinite, Token))
                     .ConfigureAwait(false);
-            }
-        }
-
-        private async Task InvokeMessageHandlerWithTracking<TMessage>(TMessage message, IIntegrationContext context)
-            where TMessage : IIntegrationMessage
-        {
-            // TODO: recode with async counter
-            _handlerIsRunning.Reset();
-            Interlocked.Increment(ref _runningHandlers);
-
-            await _dependencyContainer
-                .Resolve<IMessageHandler<TMessage>>()
-                .Handle(message, context, Token)
-                .ConfigureAwait(false);
-
-            var actual = Interlocked.Decrement(ref _runningHandlers);
-
-            if (actual <= 0)
-            {
-                _handlerIsRunning.Set();
             }
         }
     }

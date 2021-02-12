@@ -2,16 +2,17 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics.Async;
     using Core.GenericEndpoint.Abstractions;
 
     internal class InMemoryIntegrationContext : IIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;
-        private readonly ManualResetEventSlim _manualResetEvent;
+        private readonly AsyncManualResetEvent _manualResetEvent;
 
         public InMemoryIntegrationContext(
             InMemoryIntegrationTransport transport,
-            ManualResetEventSlim manualResetEvent)
+            AsyncManualResetEvent manualResetEvent)
         {
             _transport = transport;
             _manualResetEvent = manualResetEvent;
@@ -20,17 +21,21 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
         public Task Send<TCommand>(TCommand integrationCommand, CancellationToken cancellationToken)
             where TCommand : IIntegrationCommand
         {
-            _manualResetEvent.Wait(cancellationToken);
-
-            return _transport.NotifyOnMessage(integrationCommand);
+            return Notify(integrationCommand, cancellationToken);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken)
             where TEvent : IIntegrationEvent
         {
-            _manualResetEvent.Wait(cancellationToken);
+            return Notify(integrationEvent, cancellationToken);
+        }
 
-            return _transport.NotifyOnMessage(integrationEvent);
+        private async Task Notify<TMessage>(TMessage integrationMessage, CancellationToken cancellationToken)
+            where TMessage : IIntegrationMessage
+        {
+            await _manualResetEvent.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            _transport.NotifyOnMessage(integrationMessage);
         }
     }
 }

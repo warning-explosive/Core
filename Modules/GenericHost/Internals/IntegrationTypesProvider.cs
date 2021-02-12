@@ -7,8 +7,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using Basics;
-    using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Attributes;
+    using Core.GenericEndpoint.Abstractions;
+    using Core.GenericEndpoint.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class IntegrationTypesProvider : IIntegrationTypesProvider

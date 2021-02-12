@@ -20,11 +20,17 @@ namespace SpaceEngineers.Core.GenericHost
         /// <summary>
         /// Integration message
         /// </summary>
-        internal IIntegrationMessage Message { get; }
+        public IIntegrationMessage Message { get; }
 
         /// <summary>
         /// Reflected type
         /// </summary>
-        internal Type ReflectedType { get; }
+        public Type ReflectedType { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"Type: {ReflectedType}; Payload: {Message};";
+        }
     }
 }

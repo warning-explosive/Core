@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost
 {
     using System.Reflection;
+    using AutoRegistration;
 
     /// <summary>
     /// Endpoint initialization options
@@ -9,11 +10,9 @@ namespace SpaceEngineers.Core.GenericHost
     {
         /// <summary> .cctor </summary>
         /// <param name="identity">Endpoint identity</param>
-        /// <param name="assembly">Endpoint assembly</param>
-        public EndpointOptions(EndpointIdentity identity, Assembly assembly)
+        public EndpointOptions(EndpointIdentity identity)
         {
             Identity = identity;
-            Assembly = assembly;
         }
 
         /// <summary>
@@ -24,6 +23,11 @@ namespace SpaceEngineers.Core.GenericHost
         /// <summary>
         /// Endpoint assembly that limits assembly loading for endpoint's dependency container
         /// </summary>
-        public Assembly Assembly { get; }
+        public Assembly? Assembly { get; set; }
+
+        /// <summary>
+        /// Dependency container options
+        /// </summary>
+        public DependencyContainerOptions? ContainerOptions { get; set; }
     }
 }

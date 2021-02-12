@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost
 {
     using System;
+    using System.Linq;
     using Abstractions;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,21 @@ namespace SpaceEngineers.Core.GenericHost
     public static class GenericHost
     {
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
+
+        /// <summary>
+        /// Use transport
+        /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="transport">IIntegrationTransport</param>
+        /// <param name="compositeEndpoint">Composite endpoint</param>
+        /// <returns>Same IHostBuilder</returns>
+        public static IHostBuilder UseTransport(
+            this IHostBuilder hostBuilder,
+            IIntegrationTransport transport,
+            ICompositeEndpoint compositeEndpoint)
+        {
+            return UseTransport(hostBuilder, transport, compositeEndpoint.Endpoints.ToArray());
+        }
 
         /// <summary>
         /// Use transport

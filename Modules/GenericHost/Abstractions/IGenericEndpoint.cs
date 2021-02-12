@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
-    using System;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// Generic endpoint abstraction
     /// </summary>
-    public interface IGenericEndpoint : IAsyncDisposable
+    public interface IGenericEndpoint
     {
         /// <summary>
         /// Endpoint identity

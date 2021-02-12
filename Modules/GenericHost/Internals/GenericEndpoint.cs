@@ -1,12 +1,12 @@
-namespace SpaceEngineers.Core.GenericHost.Implementations
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoRegistration.Abstractions;
     using Core.GenericEndpoint.Abstractions;
-    using Internals;
 
-    internal class GenericEndpoint : IExecutableEndpoint
+    internal class GenericEndpoint : IRunnableEndpoint, IExecutableEndpoint, IGenericEndpoint
     {
         private readonly IDependencyContainer _dependencyContainer;
 
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             return runningHandler;
         }
 
-        internal async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             _ready.Set();
         }
 
-        private async Task StopAsync()
+        public async Task StopAsync()
         {
             _ready.Reset();
 

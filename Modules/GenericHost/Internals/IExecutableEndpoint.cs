@@ -1,13 +1,12 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Threading.Tasks;
-    using Abstractions;
-    using GenericEndpoint.Abstractions;
+    using Core.GenericEndpoint.Abstractions;
 
     /// <summary>
     /// Executable endpoint abstraction
     /// </summary>
-    internal interface IExecutableEndpoint : IGenericEndpoint
+    internal interface IExecutableEndpoint
     {
         /// <summary> Build and invoke integration message handler </summary>
         /// <param name="message">Integration message</param>

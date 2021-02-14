@@ -8,20 +8,21 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using Basics;
+    using Basics.Async;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
-    internal class TransportHostedService : IHostedService
+    internal class TransportHostedService : IHostedService, IDisposable
     {
         private readonly ILogger<TransportHostedService> _logger;
         private readonly IIntegrationTransport _transport;
         private readonly IReadOnlyCollection<IGenericEndpoint> _endpoints;
 
-        // TODO: use async counterpart with cancellation token
-        private readonly AutoResetEvent _ready;
+        private readonly AsyncAutoResetEvent _autoResetEvent;
         private readonly ConcurrentQueue<IntegrationMessageEventArgs> _queue;
         private Task? _messageProcessingTask;
         private CancellationTokenSource? _cts;
+        private IDisposable? _registration;
 
         public TransportHostedService(
             ILogger<TransportHostedService> logger,
@@ -32,7 +33,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _transport = transport;
             _endpoints = endpoints.ToList();
 
-            _ready = new AutoResetEvent(false);
+            _autoResetEvent = new AsyncAutoResetEvent(false);
             _queue = new ConcurrentQueue<IntegrationMessageEventArgs>();
         }
 
@@ -41,7 +42,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _cts.Token.Register(() => _ready.Set());
+            _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
             await _transport.Initialize(_endpoints, Token).ConfigureAwait(false);
 
@@ -78,11 +79,18 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
         }
 
+        public void Dispose()
+        {
+            _messageProcessingTask?.Dispose();
+            _registration?.Dispose();
+            _cts?.Dispose();
+        }
+
         private Task StartMessageProcessing()
         {
             while (!Token.IsCancellationRequested)
             {
-                _ready.WaitOne();
+                _autoResetEvent.WaitAsync();
 
                 if (_queue.TryDequeue(out var args))
                 {
@@ -108,7 +116,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         private void OnMessage(object? sender, IntegrationMessageEventArgs args)
         {
             _queue.Enqueue(args);
-            _ready.Set();
+            _autoResetEvent.Set();
         }
     }
 }

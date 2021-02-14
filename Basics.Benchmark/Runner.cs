@@ -7,6 +7,7 @@ namespace Basics.Benchmark
     /// <summary>
     /// Benchmark runner
     /// </summary>
+    // TODO: remove magic numbers and use adaptive approach -> store test artifacts in DB and search performance change points
     public class Runner
     {
         /// <summary> .cctor </summary>
@@ -32,8 +33,18 @@ namespace Basics.Benchmark
             Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            // TODO: remove magic numbers and use adaptive approach
             Assert.True(multiplier >= 5m);
+        }
+
+        [Fact]
+        internal void AssembliesExtensionsBelowBenchmark()
+        {
+            var summary = BenchmarkRunnerExtensions.Run<AssembliesExtensionsBelowSource>(Output.WriteLine);
+
+            var measures = summary.Measures("Mean", Output.WriteLine);
+            var measure = measures[nameof(AssembliesExtensionsBelowSource.Below)] / 1000m;
+
+            Assert.True(measure <= 100m);
         }
     }
 }

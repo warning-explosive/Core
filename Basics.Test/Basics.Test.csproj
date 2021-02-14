@@ -70,5 +70,8 @@
     <Compile Update="EnumerableExtensionsTest.cs">
       <DependentUpon>BasicsTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="AsyncSynchronizationPrimitivesTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -94,5 +94,39 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.Equal(waitAll, actual);
             Assert.False(autoResetEvent.WaitAsync().IsCompleted);
         }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(3)]
+        internal async Task AsyncCountdownEventTest(int initialCount)
+        {
+            var countdownEvent = new AsyncCountdownEvent(initialCount);
+
+            Assert.True(initialCount <= 0
+                ? countdownEvent.WaitAsync().IsCompleted
+                : !countdownEvent.WaitAsync().IsCompleted);
+
+            if (initialCount <= 0)
+            {
+                Enumerable
+                    .Range(0, 3)
+                    .Each(_ => countdownEvent.Increment());
+            }
+
+            Assert.Equal(3, countdownEvent.Read());
+            Assert.False(countdownEvent.WaitAsync().IsCompleted);
+
+            Enumerable
+                .Range(0, 3 - 1)
+                .Each(_ =>
+                {
+                    countdownEvent.Decrement();
+                    Assert.False(countdownEvent.WaitAsync().IsCompleted);
+                });
+
+            Assert.Equal(0, countdownEvent.Decrement());
+            Assert.True(countdownEvent.WaitAsync().IsCompleted);
+            await countdownEvent.WaitAsync().ConfigureAwait(false);
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
+    using Basics;
     using Basics.Async;
     using Core.GenericEndpoint.Abstractions;
 
@@ -11,12 +12,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly AsyncManualResetEvent _ready;
-
-        // TODO: recode with async countdown event
-        private readonly ManualResetEventSlim _handlerIsRunning;
+        private readonly AsyncCountdownEvent _runningHandlers;
 
         private CancellationTokenSource? _cts;
-        private int _runningHandlers;
 
         public GenericEndpoint(
             EndpointIdentity endpointIdentity,
@@ -28,7 +26,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _dependencyContainer = dependencyContainer;
 
             _ready = new AsyncManualResetEvent(false);
-            _handlerIsRunning = new ManualResetEventSlim(false);
+            _runningHandlers = new AsyncCountdownEvent(0);
         }
 
         public EndpointIdentity Identity { get; }
@@ -49,19 +47,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            _handlerIsRunning.Reset();
-            Interlocked.Increment(ref _runningHandlers);
-
-            await _dependencyContainer
-                .Resolve<IMessageHandler<TMessage>>()
-                .Handle(message, context, Token)
-                .ConfigureAwait(false);
-
-            var actual = Interlocked.Decrement(ref _runningHandlers);
-
-            if (actual <= 0)
+            _runningHandlers.Increment();
+            using (Disposable.Create(() => _runningHandlers.Decrement()))
             {
-                _handlerIsRunning.Set();
+                await _dependencyContainer
+                    .Resolve<IMessageHandler<TMessage>>()
+                    .Handle(message, context, Token)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -90,7 +82,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 // Wait until completes all running handlers or the stop token triggers
                 await Task
-                    .WhenAny(Task.Factory.StartNew(() => _handlerIsRunning.Wait(Token), Token), Task.Delay(Timeout.Infinite, Token))
+                    .WhenAny(_runningHandlers.WaitAsync(Token), Task.Delay(Timeout.Infinite, Token))
                     .ConfigureAwait(false);
             }
         }

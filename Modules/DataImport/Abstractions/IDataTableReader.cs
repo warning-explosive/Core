@@ -2,14 +2,13 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
     using System.Data;
-    using AutoWiringApi.Abstractions;
 
     /// <summary>
     /// Data table reader
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
     /// <typeparam name="TTableMeta">TTableMeta type-argument</typeparam>
-    public interface IDataTableReader<TElement, TTableMeta> : IResolvable
+    public interface IDataTableReader<TElement, TTableMeta>
         where TTableMeta : IDataTableMeta
     {
         /// <summary>

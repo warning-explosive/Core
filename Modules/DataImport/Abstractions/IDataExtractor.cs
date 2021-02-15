@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiringApi.Abstractions;
 
     /// <summary>
     /// Data extractor
     /// </summary>
     /// <typeparam name="TElement">Element type-argument</typeparam>
     /// <typeparam name="TSpec">Data extractor specification type-argument</typeparam>
-    public interface IDataExtractor<TElement, TSpec> : IResolvable
+    public interface IDataExtractor<TElement, TSpec>
         where TSpec : IDataExtractorSpecification
     {
         /// <summary>

@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericDomain", "Modules\Ge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericHost", "Modules\GenericHost\GenericHost.csproj", "{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "Modules\DataAccess\DataAccess.csproj", "{A2C1EE02-85B4-402D-B9FC-7108D78505DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,10 @@ Global
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2C1EE02-85B4-402D-B9FC-7108D78505DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2C1EE02-85B4-402D-B9FC-7108D78505DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2C1EE02-85B4-402D-B9FC-7108D78505DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2C1EE02-85B4-402D-B9FC-7108D78505DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,6 +149,7 @@ Global
 		{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{A2C1EE02-85B4-402D-B9FC-7108D78505DC} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

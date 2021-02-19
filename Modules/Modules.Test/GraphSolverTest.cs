@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public GraphSolverTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly, Array.Empty<Assembly>());
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 "(6) => [AB1(1), AB2(1)] => [BB1(1), BB2(1)] => [BD(1)] => [DE(1)] => [EA(1)] => [AC(1)]",
                 "(6) => [AB1(1), AB2(1)] => [BB1(1), BB2(1)] => [BC(1)] => [CD(1)] => [DE(1)] => [EA(1)]",
                 "(6) => [AC(1)] => [CB(1)] => [BB1(1), BB2(1)] => [BD(1)] => [DE(1)] => [EA(1)]",
-                "(6) => [AC(1)] => [CD(1)] => [DE(1)] => [EA(1)] => [AB1(1), AB2(1)] => [BB1(1), BB2(1)]",
+                "(6) => [AC(1)] => [CD(1)] => [DE(1)] => [EA(1)] => [AB1(1), AB2(1)] => [BB1(1), BB2(1)]"
             };
 
             CheckCandidates(candidates, strPaths);
@@ -219,7 +219,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var candidates = new List<string>
                              {
                                  "(3) => [AB1(1), AB2(1)] => [BD(1)] => [DE(1)]",
-                                 "(3) => [AC(1)] => [CD(1)] => [DE(1)]",
+                                 "(3) => [AC(1)] => [CD(1)] => [DE(1)]"
                              };
 
             Action action = () => GetShortestStrPath(graph, solverInfo1, sw);
@@ -368,7 +368,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                  "(10) => [AC(1)] => [CB(4)] => [BD(3)] => [DE(2)]",
                                  "(11) => [AB1(2), AB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]",
                                  "(11) => [AC(1)] => [CB(4)] => [BB1(1), BB2(2)] => [BD(3)] => [DE(2)]",
-                                 "(12) => [AB1(2), AB2(2)] => [BB1(1), BB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]",
+                                 "(12) => [AB1(2), AB2(2)] => [BB1(1), BB2(2)] => [BC(4)] => [CD(3)] => [DE(2)]"
                              };
 
             CheckCandidates(candidates, strPaths);

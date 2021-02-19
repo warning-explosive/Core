@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public CliArgumentsParserTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(ICliArgumentsParser).Assembly);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(ICliArgumentsParser).Assembly, Array.Empty<Assembly>());
         }
 
         /// <summary>

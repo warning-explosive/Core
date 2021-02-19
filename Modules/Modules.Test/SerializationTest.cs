@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Reflection;
     using AutoRegistration.Abstractions;
     using Basics.Test;
     using ClassFixtures;
@@ -24,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IJsonSerializer).Assembly);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IJsonSerializer).Assembly, Array.Empty<Assembly>());
         }
 
         /// <summary>

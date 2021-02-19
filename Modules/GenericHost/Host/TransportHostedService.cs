@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericHost.Host
 {
     using System;
     using System.Collections.Concurrent;
@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Abstractions;
     using Basics;
     using Basics.Async;
+    using Internals;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -39,9 +40,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken token)
         {
-            _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
             await _transport.Initialize(_endpoints, Token).ConfigureAwait(false);
@@ -54,7 +55,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _messageProcessingTask = StartMessageProcessing();
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken token)
         {
             if (_messageProcessingTask == null)
             {
@@ -74,7 +75,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 // Wait until the task completes or the stop token triggers
                 await Task
-                    .WhenAny(_messageProcessingTask, Task.Delay(Timeout.Infinite, cancellationToken))
+                    .WhenAny(_messageProcessingTask, Task.Delay(Timeout.Infinite, token))
                     .ConfigureAwait(false);
             }
         }
@@ -92,6 +93,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 _autoResetEvent.WaitAsync();
 
+                // TODO: use async queue
                 if (_queue.TryDequeue(out var args))
                 {
                     DispatchToEndpointUnsafe(args)

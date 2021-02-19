@@ -1,10 +1,10 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericHost.Endpoint
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using InternalAbstractions;
 
     internal class CompositeEndpoint : ICompositeEndpoint, IRunnableEndpoint
     {
@@ -24,21 +24,21 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return new ValueTask(StopAsync());
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken token)
         {
-            _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            foreach (var endpoint in Endpoints.OfType<IRunnableEndpoint>())
+            foreach (var endpoint in Endpoints)
             {
-                await endpoint.StartAsync(cancellationToken).ConfigureAwait(false);
+                await ((IRunnableEndpoint)endpoint).StartAsync(token).ConfigureAwait(false);
             }
         }
 
         public async Task StopAsync()
         {
-            foreach (var endpoint in Endpoints.OfType<IRunnableEndpoint>())
+            foreach (var endpoint in Endpoints)
             {
-                await endpoint.StartAsync(Token).ConfigureAwait(false);
+                await ((IRunnableEndpoint)endpoint).StartAsync(Token).ConfigureAwait(false);
             }
         }
     }

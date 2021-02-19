@@ -9,7 +9,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics.Test;
     using ClassFixtures;
     using Core.SettingsManager.Abstractions;
+    using GenericEndpoint.Abstractions;
     using GenericEndpoint.Settings;
+    using GenericHost.Host;
+    using Registrations;
     using Settings;
     using SettingsManager;
     using Xunit;
@@ -26,7 +29,19 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.DefaultDependencyContainer;
+            var excludedAssemblies = new[]
+            {
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(GenericHost).Assembly // GenericHost
+            };
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration()
+            };
+
+            DependencyContainer = fixture.GetDependencyContainer(typeof(SettingsManagerTest).Assembly, excludedAssemblies, registrations);
         }
 
         /// <summary>

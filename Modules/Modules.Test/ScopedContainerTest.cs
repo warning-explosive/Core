@@ -5,6 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Basics.Test;
     using ClassFixtures;
+    using GenericEndpoint.Abstractions;
+    using GenericHost.Host;
+    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -20,7 +23,19 @@ namespace SpaceEngineers.Core.Modules.Test
         public ScopedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.DefaultDependencyContainer;
+            var excludedAssemblies = new[]
+            {
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(GenericHost).Assembly // GenericHost
+            };
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration()
+            };
+
+            DependencyContainer = fixture.GetDependencyContainer(typeof(ScopedContainerTest).Assembly, excludedAssemblies, registrations);
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.Basics.Test.DeepCopy
                            {
                                Type = typeof(TestReferenceWithoutSystemTypes),
                                TypeArray = new[] { typeof(TestReferenceWithoutSystemTypes), typeof(string), typeof(int) },
-                               TypeCollection = new List<Type> { typeof(TestReferenceWithoutSystemTypes), typeof(string), typeof(int) },
+                               TypeCollection = new List<Type> { typeof(TestReferenceWithoutSystemTypes), typeof(string), typeof(int) }
                            };
 
             CreateOrInit(instance);

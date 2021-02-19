@@ -9,6 +9,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Basics.Test;
     using ClassFixtures;
+    using GenericEndpoint.Abstractions;
+    using GenericHost.Host;
+    using Registrations;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -25,7 +28,19 @@ namespace SpaceEngineers.Core.Modules.Test
         public VersionedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.DefaultDependencyContainer;
+            var excludedAssemblies = new[]
+            {
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(GenericHost).Assembly // GenericHost
+            };
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration()
+            };
+
+            DependencyContainer = fixture.GetDependencyContainer(typeof(VersionedContainerTest).Assembly, excludedAssemblies, registrations);
         }
 
         /// <summary>
@@ -58,19 +73,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(TransientVersionedServiceDecorator),
-                               typeof(TransientVersionedServiceImpl),
+                               typeof(TransientVersionedServiceImpl)
                            };
 
             var first = new[]
                         {
                             typeof(TransientVersionedServiceDecorator),
-                            typeof(TransientVersionedServiceImplV2),
+                            typeof(TransientVersionedServiceImplV2)
                         };
 
             var second = new[]
                          {
                              typeof(TransientVersionedServiceDecorator),
-                             typeof(TransientVersionedServiceImplV3),
+                             typeof(TransientVersionedServiceImplV3)
                          };
 
             VerifyNested(applyFirst,
@@ -115,19 +130,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(ScopedVersionedServiceDecorator),
-                               typeof(ScopedVersionedServiceImpl),
+                               typeof(ScopedVersionedServiceImpl)
                            };
 
             var first = new[]
                         {
                             typeof(ScopedVersionedServiceDecorator),
-                            typeof(ScopedVersionedServiceImplV2),
+                            typeof(ScopedVersionedServiceImplV2)
                         };
 
             var second = new[]
                          {
                              typeof(ScopedVersionedServiceDecorator),
-                             typeof(ScopedVersionedServiceImplV3),
+                             typeof(ScopedVersionedServiceImplV3)
                          };
 
             using (DependencyContainer.OpenScope())
@@ -175,19 +190,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(SingletonVersionedServiceDecorator),
-                               typeof(SingletonVersionedServiceImpl),
+                               typeof(SingletonVersionedServiceImpl)
                            };
 
             var first = new[]
                         {
                             typeof(SingletonVersionedServiceDecorator),
-                            typeof(SingletonVersionedServiceImplV2),
+                            typeof(SingletonVersionedServiceImplV2)
                         };
 
             var second = new[]
                          {
                              typeof(SingletonVersionedServiceDecorator),
-                             typeof(SingletonVersionedServiceImplV3),
+                             typeof(SingletonVersionedServiceImplV3)
                          };
 
             VerifyNested(applyFirst,
@@ -272,109 +287,109 @@ namespace SpaceEngineers.Core.Modules.Test
             var originalTransientStructure = new[]
                                              {
                                                  typeof(TransientVersionedServiceDecorator),
-                                                 typeof(TransientVersionedServiceImpl),
+                                                 typeof(TransientVersionedServiceImpl)
                                              };
 
             var firstTransientStructure = new[]
                                           {
                                               typeof(TransientVersionedServiceDecorator),
-                                              typeof(TransientVersionedServiceImplV2),
+                                              typeof(TransientVersionedServiceImplV2)
                                           };
 
             var secondTransientStructure = new[]
                                            {
                                                typeof(TransientVersionedServiceDecorator),
-                                               typeof(TransientVersionedServiceImplV3),
+                                               typeof(TransientVersionedServiceImplV3)
                                            };
 
             var originalScopedStructure = new[]
                                           {
                                               typeof(ScopedVersionedServiceDecorator),
-                                              typeof(ScopedVersionedServiceImpl),
+                                              typeof(ScopedVersionedServiceImpl)
                                           };
 
             var firstScopedStructure = new[]
                                        {
                                            typeof(ScopedVersionedServiceDecorator),
-                                           typeof(ScopedVersionedServiceImplV2),
+                                           typeof(ScopedVersionedServiceImplV2)
                                        };
 
             var secondScopedStructure = new[]
                                         {
                                             typeof(ScopedVersionedServiceDecorator),
-                                            typeof(ScopedVersionedServiceImplV3),
+                                            typeof(ScopedVersionedServiceImplV3)
                                         };
 
             var originalSingletonStructure = new[]
                                              {
                                                  typeof(SingletonVersionedServiceDecorator),
-                                                 typeof(SingletonVersionedServiceImpl),
+                                                 typeof(SingletonVersionedServiceImpl)
                                              };
 
             var firstSingletonStructure = new[]
                                           {
                                               typeof(SingletonVersionedServiceDecorator),
-                                              typeof(SingletonVersionedServiceImplV2),
+                                              typeof(SingletonVersionedServiceImplV2)
                                           };
 
             var secondSingletonStructure = new[]
                                            {
                                                typeof(SingletonVersionedServiceDecorator),
-                                               typeof(SingletonVersionedServiceImplV3),
+                                               typeof(SingletonVersionedServiceImplV3)
                                            };
 
             var originalTransientImplStructure = new[]
                                                  {
                                                      typeof(TransientImplementationDecorator),
-                                                     typeof(TransientImplementation),
+                                                     typeof(TransientImplementation)
                                                  };
 
             var firstTransientImplStructure = new[]
                                               {
                                                   typeof(TransientImplementationDecorator),
-                                                  typeof(TransientImplementationV2),
+                                                  typeof(TransientImplementationV2)
                                               };
 
             var secondTransientImplStructure = new[]
                                                {
                                                    typeof(TransientImplementationDecorator),
-                                                   typeof(TransientImplementationV3),
+                                                   typeof(TransientImplementationV3)
                                                };
 
             var originalScopedImplStructure = new[]
                                               {
                                                   typeof(ScopedImplementationDecorator),
-                                                  typeof(ScopedImplementation),
+                                                  typeof(ScopedImplementation)
                                               };
 
             var firstScopedImplStructure = new[]
                                            {
                                                typeof(ScopedImplementationDecorator),
-                                               typeof(ScopedImplementationV2),
+                                               typeof(ScopedImplementationV2)
                                            };
 
             var secondScopedImplStructure = new[]
                                             {
                                                 typeof(ScopedImplementationDecorator),
-                                                typeof(ScopedImplementationV3),
+                                                typeof(ScopedImplementationV3)
                                             };
 
             var originalSingletonImplStructure = new[]
                                                  {
                                                      typeof(SingletonImplementationDecorator),
-                                                     typeof(SingletonImplementation),
+                                                     typeof(SingletonImplementation)
                                                  };
 
             var firstSingletonImplStructure = new[]
                                               {
                                                   typeof(SingletonImplementationDecorator),
-                                                  typeof(SingletonImplementationV2),
+                                                  typeof(SingletonImplementationV2)
                                               };
 
             var secondSingletonImplStructure = new[]
                                                {
                                                    typeof(SingletonImplementationDecorator),
-                                                   typeof(SingletonImplementationV3),
+                                                   typeof(SingletonImplementationV3)
                                                };
 
             using (DependencyContainer.OpenScope())
@@ -453,19 +468,19 @@ namespace SpaceEngineers.Core.Modules.Test
                 var expectedTransientImplementationVersionsTypes = new[]
                                                                    {
                                                                        typeof(TransientImplementationV2),
-                                                                       typeof(TransientImplementationV3),
+                                                                       typeof(TransientImplementationV3)
                                                                    };
 
                 var expectedScopedImplementationVersionsTypes = new[]
                                                                 {
                                                                     typeof(ScopedImplementationV2),
-                                                                    typeof(ScopedImplementationV3),
+                                                                    typeof(ScopedImplementationV3)
                                                                 };
 
                 var expectedSingletonImplementationVersionsTypes = new[]
                                                                    {
                                                                        typeof(SingletonImplementationV2),
-                                                                       typeof(SingletonImplementationV3),
+                                                                       typeof(SingletonImplementationV3)
                                                                    };
 
                 CheckTransient<ITransientVersionedService>(() => Resolve().Transient.Original, () => Resolve().Transient.Versions, () => Resolve().Transient, typeof(TransientVersionedServiceImpl), currentTransientVersion, expectedTransientVersionsTypes);
@@ -503,19 +518,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(TransientImplementationDecorator),
-                               typeof(TransientImplementation),
+                               typeof(TransientImplementation)
                            };
 
             var first = new[]
                         {
                             typeof(TransientImplementationDecorator),
-                            typeof(TransientImplementationV2),
+                            typeof(TransientImplementationV2)
                         };
 
             var second = new[]
                          {
                              typeof(TransientImplementationDecorator),
-                             typeof(TransientImplementationV3),
+                             typeof(TransientImplementationV3)
                          };
 
             VerifyNested(applyFirst,
@@ -560,19 +575,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(ScopedImplementationDecorator),
-                               typeof(ScopedImplementation),
+                               typeof(ScopedImplementation)
                            };
 
             var first = new[]
                         {
                             typeof(ScopedImplementationDecorator),
-                            typeof(ScopedImplementationV2),
+                            typeof(ScopedImplementationV2)
                         };
 
             var second = new[]
                          {
                              typeof(ScopedImplementationDecorator),
-                             typeof(ScopedImplementationV3),
+                             typeof(ScopedImplementationV3)
                          };
 
             using (DependencyContainer.OpenScope())
@@ -620,19 +635,19 @@ namespace SpaceEngineers.Core.Modules.Test
             var original = new[]
                            {
                                typeof(SingletonImplementationDecorator),
-                               typeof(SingletonImplementation),
+                               typeof(SingletonImplementation)
                            };
 
             var first = new[]
                         {
                             typeof(SingletonImplementationDecorator),
-                            typeof(SingletonImplementationV2),
+                            typeof(SingletonImplementationV2)
                         };
 
             var second = new[]
                          {
                              typeof(SingletonImplementationDecorator),
-                             typeof(SingletonImplementationV3),
+                             typeof(SingletonImplementationV3)
                          };
 
             using (DependencyContainer.OpenScope())

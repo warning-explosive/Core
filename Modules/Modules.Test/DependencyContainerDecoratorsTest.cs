@@ -3,13 +3,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
+    using System.Reflection;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
     using Basics.Test;
     using ClassFixtures;
+    using GenericEndpoint.Abstractions;
+    using GenericHost.Host;
+    using Registrations;
     using VersionedContainer;
     using Xunit;
     using Xunit.Abstractions;
@@ -20,6 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
     public class DependencyContainerDecoratorsTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
         private readonly ModulesTestFixture _fixture;
+        private readonly Assembly[] _excludedAssemblies;
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
@@ -27,7 +31,20 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDecoratorsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.DefaultDependencyContainer;
+            _excludedAssemblies = new[]
+            {
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(GenericHost).Assembly // GenericHost
+            };
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration()
+            };
+
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDecoratorsTest).Assembly, _excludedAssemblies, registrations);
+
             _fixture = fixture;
         }
 
@@ -39,11 +56,14 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void CheckDecoratorsOnVersionedServicesTest()
         {
-            var registrations = _fixture
-                .Registrations
-                .Concat(new[] { new RegisterVersionedOpenGenerics() });
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration(),
+                new RegisterVersionedOpenGenerics()
+            };
 
-            var localContainer = _fixture.GetDependencyContainer(GetType().Assembly, registrations);
+            var localContainer = _fixture.GetDependencyContainer(GetType().Assembly, _excludedAssemblies, registrations);
 
             // non-generic
             var nonGenericServiceExpected = new[]
@@ -68,11 +88,11 @@ namespace SpaceEngineers.Core.Modules.Test
                                              typeof(OpenGenericDecorableServiceDecorator1<object>),
                                              typeof(OpenGenericDecorableServiceDecorator2<object>),
                                              typeof(OpenGenericDecorableServiceDecorator3<object>),
-                                             typeof(OpenGenericDecorableServiceImpl<object>),
+                                             typeof(OpenGenericDecorableServiceImpl<object>)
                                          };
             var genericServiceImplExpected = new[]
                                              {
-                                                 typeof(OpenGenericDecorableServiceImpl<object>),
+                                                 typeof(OpenGenericDecorableServiceImpl<object>)
                                              };
 
             var genericService = localContainer.Resolve<IVersioned<IOpenGenericDecorableService<object>>>().Original;
@@ -91,7 +111,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 [typeof(DecorableServiceDecorator1)] = typeof(DecorableServiceDecorator2),
                 [typeof(DecorableServiceDecorator2)] = typeof(DecorableServiceDecorator3),
-                [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl),
+                [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl)
             };
 
             void CheckRecursive(IDecorableService resolved, Type type)
@@ -118,7 +138,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 [typeof(OpenGenericDecorableServiceDecorator1<object>)] = typeof(OpenGenericDecorableServiceDecorator2<object>),
                 [typeof(OpenGenericDecorableServiceDecorator2<object>)] = typeof(OpenGenericDecorableServiceDecorator3<object>),
-                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>),
+                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>)
             };
 
             void CheckRecursive(IOpenGenericDecorableService<object> resolved, Type type)
@@ -144,7 +164,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var types = new Dictionary<Type, Type>
             {
                 [typeof(ConditionalDecorableServiceDecorator1)] = typeof(ConditionalDecorableServiceDecorator3),
-                [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl),
+                [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl)
             };
 
             void CheckRecursive(IConditionalDecorableService resolved, Type type)
@@ -177,12 +197,12 @@ namespace SpaceEngineers.Core.Modules.Test
                             new Dictionary<Type, Type>
                             {
                                 [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator2),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator2)] = typeof(CollectionResolvableConditionDecorableServiceImpl2),
+                                [typeof(CollectionResolvableConditionDecorableServiceDecorator2)] = typeof(CollectionResolvableConditionDecorableServiceImpl2)
                             },
                             new Dictionary<Type, Type>
                             {
                                 [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator1),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator1)] = typeof(CollectionResolvableConditionDecorableServiceImpl1),
+                                [typeof(CollectionResolvableConditionDecorableServiceDecorator1)] = typeof(CollectionResolvableConditionDecorableServiceImpl1)
                             }
                         };
 
@@ -206,12 +226,12 @@ namespace SpaceEngineers.Core.Modules.Test
             CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
         }
 
-        private class RegisterVersionedOpenGenerics : IModulesTestRegistration
+        private class RegisterVersionedOpenGenerics : IManualRegistration
         {
-            public void Register(IRegistrationContainer registration)
+            public void Register(IRegistrationContainer container)
             {
-                registration.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
-                registration.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
+                container.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
+                container.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);
             }
         }
     }

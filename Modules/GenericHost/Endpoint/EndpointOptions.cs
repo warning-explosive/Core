@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.GenericHost
+namespace SpaceEngineers.Core.GenericHost.Endpoint
 {
     using System.Reflection;
     using AutoRegistration;
+    using Core.GenericEndpoint;
 
     /// <summary>
     /// Endpoint initialization options

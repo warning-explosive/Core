@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost
+namespace SpaceEngineers.Core.GenericEndpoint
 {
     using System;
     using AutoWiringApi.Abstractions;

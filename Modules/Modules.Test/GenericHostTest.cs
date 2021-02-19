@@ -5,15 +5,18 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics.Test;
     using ClassFixtures;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Attributes;
-    using GenericHost;
     using GenericHost.Abstractions;
-    using GenericHost.Implementations;
+    using GenericHost.Endpoint;
+    using GenericHost.Host;
+    using GenericHost.Transport;
     using Microsoft.Extensions.Hosting;
     using Registrations;
     using Xunit;
@@ -46,7 +49,18 @@ namespace SpaceEngineers.Core.Modules.Test
             var assembly = GetType().Assembly;
 
             DependencyContainerOptions ContainerOptions()
-                => _fixture.GetDependencyContainerOptions(typeof(EndpointIdentityRegistration));
+            {
+                var registrations = new IManualRegistration[]
+                {
+                    new DelegatesRegistration(),
+                    new VersionedOpenGenericRegistration()
+                };
+
+                return new DependencyContainerOptions
+                {
+                    ManualRegistrations = registrations
+                };
+            }
 
             var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0)) { Assembly = assembly, ContainerOptions = ContainerOptions() };
             var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1)) { Assembly = assembly, ContainerOptions = ContainerOptions() };
@@ -103,12 +117,12 @@ namespace SpaceEngineers.Core.Modules.Test
         [Lifestyle(EnLifestyle.Transient)]
         private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>
         {
-            public Task Handle(TestCommand message, IIntegrationContext context, CancellationToken cancellationToken)
+            public Task Handle(TestCommand message, IIntegrationContext context, CancellationToken token)
             {
                 return Task.CompletedTask;
             }
 
-            public Task Handle(TestEvent message, IIntegrationContext context, CancellationToken cancellationToken)
+            public Task Handle(TestEvent message, IIntegrationContext context, CancellationToken token)
             {
                 return Task.CompletedTask;
             }
@@ -121,6 +135,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Id = id;
             }
+
+            public EndpointIdentity? SendTo { get; set; }
 
             private int Id { get; }
 
@@ -137,6 +153,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Id = id;
             }
+
+            public EndpointIdentity? SendTo { get; set; }
 
             private int Id { get; }
 

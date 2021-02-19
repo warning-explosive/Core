@@ -12,8 +12,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <summary>
         /// Initialize endpoint
         /// </summary>
-        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
-        Task Initialize(CancellationToken cancellationToken);
+        Task Initialize(CancellationToken token);
     }
 }

@@ -10,6 +10,6 @@ namespace SpaceEngineers.Core.Basics.Test.DeepCopy
         /// <summary>
         /// Value
         /// </summary>
-        Value = 1,
+        Value = 1
     }
 }

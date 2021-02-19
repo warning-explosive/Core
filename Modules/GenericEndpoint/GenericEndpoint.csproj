@@ -47,6 +47,12 @@
     <Compile Update="Abstractions\IIntegrationEvent.cs">
       <DependentUpon>IIntegrationMessage.cs</DependentUpon>
     </Compile>
+    <Compile Update="Abstractions\IIntegrationQuery.cs">
+      <DependentUpon>IIntegrationMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IIntegrationContext.cs">
+      <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />

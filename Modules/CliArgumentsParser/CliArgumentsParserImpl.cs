@@ -185,7 +185,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                         var perValueResult = flagsValues.Select(value => new
                                                                          {
                                                                              Success = TryParseEnum(enumType, value, out _),
-                                                                             Value = value,
+                                                                             Value = value
                                                                          });
                         throw new ArgumentException($"Values {string.Join(string.Empty, perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'"))} is not recognized");
                     }

@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 [StartedSuccessfully] = 0,
-                [WaitingForIncomingMessages] = 1,
+                [WaitingForIncomingMessages] = 1
             };
 
         // TODO: ILogger extensions
@@ -32,6 +32,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             params object[] args)
         {
             logger.Log(LogLevel.Error, exception, message, args);
+        }
+
+        internal static void Error(
+            this ILogger logger,
+            Exception exception)
+        {
+            logger.Log(LogLevel.Error, exception, string.Empty);
         }
     }
 }

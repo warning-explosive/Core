@@ -2,8 +2,9 @@ namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
+    using System.Reflection;
     using Abstractions;
+    using Internals;
 
     /// <summary>
     /// DependencyContainer creation options
@@ -11,39 +12,32 @@ namespace SpaceEngineers.Core.AutoRegistration
     public class DependencyContainerOptions
     {
         /// <summary>
-        /// Applies DependencyContainer registration rules to external dependencies
-        /// Calls before container registration phase.
+        /// Excluded assemblies
+        /// Assemblies excluded from type loading
+        /// These assemblies and their types will be identified as third party and won't participate in the container registrations
         /// </summary>
-        public event EventHandler<RegistrationEventArgs>? OnRegistration;
-
-        /// <summary>
-        /// Registers external dependencies without applying DependencyContainer registration rules.
-        /// Calls before container sealing.
-        /// </summary>
-        public event EventHandler<RegistrationEventArgs>? OnVerify;
-
-        /// <summary>
-        /// SearchOption for assemblies in BaseDirectory
-        /// Default: SearchOption.TopDirectoryOnly
-        /// </summary>
-        public SearchOption SearchOption { get; set; } = SearchOption.TopDirectoryOnly;
+        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; set; } = Array.Empty<Assembly>();
 
         /// <summary>
         /// Excluded namespaces
         /// Namespaces excluded from type loading
         /// These types will be identified as third party and won't participate in the container registrations
         /// </summary>
-        // TODO: test different namespaces for service and impl
-        public IReadOnlyCollection<string>? ExcludedNamespaces { get; set; }
+        public IReadOnlyCollection<string> ExcludedNamespaces { get; set; } = Array.Empty<string>();
 
-        internal void NotifyOnRegistration(IRegistrationContainer registration)
-        {
-            OnRegistration?.Invoke(this, new RegistrationEventArgs(registration));
-        }
+        /// <summary>
+        /// Manual registrations
+        /// </summary>
+        public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; set; } = Array.Empty<IManualRegistration>();
 
-        internal void NotifyOnVerify(IRegistrationContainer registration)
+        /// <summary>
+        /// Generates IManualRegistration object with specified delegate
+        /// </summary>
+        /// <param name="registrationAction">Action with IRegistrationContainer instance</param>
+        /// <returns>IManualRegistration instance</returns>
+        public static IManualRegistration DelegateRegistration(Action<IRegistrationContainer> registrationAction)
         {
-            OnVerify?.Invoke(this, new RegistrationEventArgs(registration));
+            return new ManualDelegateRegistration(registrationAction);
         }
     }
 }

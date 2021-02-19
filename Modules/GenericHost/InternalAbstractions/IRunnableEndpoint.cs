@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericHost.InternalAbstractions
 {
     using System;
     using System.Threading;
@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal interface IRunnableEndpoint : IAsyncDisposable
     {
-        Task StartAsync(CancellationToken cancellationToken);
+        Task StartAsync(CancellationToken token);
 
         Task StopAsync();
     }

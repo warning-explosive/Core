@@ -1,6 +1,5 @@
 namespace Basics.Benchmark.Sources
 {
-    using System.IO;
     using System.Reflection;
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
@@ -18,7 +17,6 @@ namespace Basics.Benchmark.Sources
         /// <summary> .cctor </summary>
         public AssembliesExtensionsBelowSource()
         {
-            AssembliesExtensions.WarmUpAppDomain(SearchOption.TopDirectoryOnly);
             _allAssemblies = AssembliesExtensions.AllFromCurrentDomain();
             _belowAssembly = GetType().Assembly;
         }

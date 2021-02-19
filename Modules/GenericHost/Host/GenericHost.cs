@@ -1,9 +1,8 @@
-namespace SpaceEngineers.Core.GenericHost
+namespace SpaceEngineers.Core.GenericHost.Host
 {
     using System;
     using System.Linq;
     using Abstractions;
-    using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -42,6 +41,8 @@ namespace SpaceEngineers.Core.GenericHost
             IIntegrationTransport transport,
             params IGenericEndpoint[] genericEndpoints)
         {
+            ValidateEndpoints(genericEndpoints);
+
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
                 ValidateConfiguration(ctx);
@@ -56,6 +57,20 @@ namespace SpaceEngineers.Core.GenericHost
                     serviceProvider.GetRequiredService<ILogger<TransportHostedService>>(),
                     serviceProvider.GetRequiredService<IIntegrationTransport>(),
                     genericEndpoints);
+            }
+        }
+
+        private static void ValidateEndpoints(IGenericEndpoint[] genericEndpoints)
+        {
+            var duplicates = genericEndpoints
+                .GroupBy(e => e.Identity)
+                .Where(grp => grp.Count() > 1)
+                .Select(grp => grp.Key.ToString())
+                .ToList();
+
+            if (duplicates.Any())
+            {
+                throw new InvalidOperationException($"Endpoint duplicates found: {string.Join(", ", duplicates)}");
             }
         }
 

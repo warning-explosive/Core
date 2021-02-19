@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericHost.Endpoint
 {
     using System;
     using System.Collections.Generic;
@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using Basics;
+    using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericEndpoint.Attributes;
 
@@ -30,6 +31,15 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 .OurTypes
                 .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
                                && typeof(IIntegrationCommand) != type
+                               && type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public IEnumerable<Type> EndpointQueries()
+        {
+            return _typeProvider
+                .OurTypes
+                .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
+                               && typeof(IIntegrationQuery<>) != type.GenericTypeDefinitionOrSelf()
                                && type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
         }
 

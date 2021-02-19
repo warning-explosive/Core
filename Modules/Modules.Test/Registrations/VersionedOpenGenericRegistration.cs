@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Contexts;
@@ -12,12 +11,12 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using AutoWiringTest;
     using Basics;
 
-    internal class VersionedOpenGenericRegistration : IModulesTestRegistration
+    internal class VersionedOpenGenericRegistration : IManualRegistration
     {
-        public void Register(IRegistrationContainer registration)
+        public void Register(IRegistrationContainer container)
         {
-            registration.RegisterVersioned(typeof(ConcreteImplementationGenericService<object>), EnLifestyle.Transient);
-            registration.RegisterVersioned(typeof(IComparable<ExternalResolvableImpl>), EnLifestyle.Transient);
+            container.RegisterVersioned(typeof(ConcreteImplementationGenericService<object>), EnLifestyle.Transient);
+            container.RegisterVersioned(typeof(IComparable<ExternalResolvableImpl>), EnLifestyle.Transient);
         }
 
         internal static ICollection<Type> RegisterVersionedForOpenGenerics(

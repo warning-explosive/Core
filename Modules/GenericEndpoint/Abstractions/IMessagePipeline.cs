@@ -5,12 +5,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using AutoWiringApi.Abstractions;
 
     /// <summary>
-    /// Message handler abstraction
-    /// Implements reaction on incoming messages
+    /// IMessagePipeline abstraction
     /// </summary>
-    /// <typeparam name="TMessage">TMessage type-argument</typeparam>
-    public interface IMessageHandler<in TMessage> : IResolvable
-        where TMessage : IIntegrationMessage
+    public interface IMessagePipeline : IResolvable
     {
         /// <summary>
         /// Handle incoming message
@@ -18,10 +15,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <param name="message">Incoming message</param>
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>Ongoing handle task</returns>
-        Task Handle(
-            TMessage message,
-            IIntegrationContext context,
-            CancellationToken token);
+        Task Process<TMessage>(TMessage message, IExtendedIntegrationContext context, CancellationToken token)
+            where TMessage : IIntegrationMessage;
     }
 }

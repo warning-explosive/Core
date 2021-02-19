@@ -18,6 +18,6 @@ namespace SpaceEngineers.Core.AutoWiringApi.Enumerations
         /// <summary>
         /// Scoped lifestyle
         /// </summary>
-        Scoped,
+        Scoped
     }
 }

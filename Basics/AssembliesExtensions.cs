@@ -15,7 +15,22 @@ namespace SpaceEngineers.Core.Basics
     {
         private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
-        private static int _alreadyWarmedUp;
+        private static readonly Lazy<Assembly[]> LoadedAssemblies
+            = new Lazy<Assembly[]>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
+
+        /// <summary>
+        /// Find type in app domain assemblies
+        /// </summary>
+        /// <param name="assemblyName">Assembly short name</param>
+        /// <param name="typeFullName">Type full name</param>
+        /// <returns>Found type</returns>
+        public static Type? FindType(string assemblyName, string typeFullName)
+        {
+            return AllFromCurrentDomain()
+                .SingleOrDefault(assembly => assembly.GetName().Name.Equals(assemblyName, StringComparison.Ordinal))
+                ?.GetTypes()
+                .SingleOrDefault(type => type.FullName.Equals(typeFullName, StringComparison.Ordinal));
+        }
 
         /// <summary>
         /// Get all assemblies from current domain
@@ -23,48 +38,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>All assemblies from current domain</returns>
         public static Assembly[] AllFromCurrentDomain()
         {
-            return AppDomain.CurrentDomain
-                            .EnsureNotNull($"{nameof(AppDomain.CurrentDomain)} is null")
-                            .GetAssemblies()
-                            .GroupBy(assembly => assembly.GetName().Name)
-                            .SelectMany(RemoveDuplicates)
-                            .ToArray();
-
-            IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)
-            {
-                if (grp.Key.Equals(Duplicate, StringComparison.OrdinalIgnoreCase))
-                {
-                    yield return grp.First();
-                    yield break;
-                }
-
-                foreach (var item in grp)
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Load all referenced assemblies into AppDomain
-        /// </summary>
-        /// <param name="searchOption">SearchOption for assemblies in BaseDirectory</param>
-        public static void WarmUpAppDomain(SearchOption searchOption)
-        {
-            var previous = Interlocked.Exchange(ref _alreadyWarmedUp, 1);
-
-            if (previous != default)
-            {
-                return;
-            }
-
-            var loaded = new HashSet<string>();
-
-            _ = Directory
-                .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", searchOption)
-                .Select(AssemblyName.GetAssemblyName)
-                .SelectMany(name => LoadReferences(name, loaded))
-                .ToList();
+            return LoadedAssemblies.Value;
         }
 
         /// <summary>
@@ -108,6 +82,24 @@ namespace SpaceEngineers.Core.Basics
                     .SelectMany(name => BelowReference(name, all, visited)));
         }
 
+        private static Assembly[] WarmUpAppDomain()
+        {
+            var loaded = new HashSet<string>();
+
+            _ = Directory
+                .GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly)
+                .Select(AssemblyName.GetAssemblyName)
+                .SelectMany(name => LoadReferences(name, loaded))
+                .ToList();
+
+            return AppDomain.CurrentDomain
+                .EnsureNotNull($"{nameof(AppDomain.CurrentDomain)} is null")
+                .GetAssemblies()
+                .GroupBy(assembly => assembly.GetName().Name)
+                .SelectMany(RemoveDuplicates)
+                .ToArray();
+        }
+
         private static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)
         {
             var name = string.Intern(assemblyName.FullName);
@@ -141,6 +133,20 @@ namespace SpaceEngineers.Core.Basics
                 .Try(() => AppDomain.CurrentDomain.Load(assemblyName))
                 .Catch<FileNotFoundException>()
                 .Invoke();
+        }
+
+        private static IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)
+        {
+            if (grp.Key.Equals(Duplicate, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return grp.First();
+                yield break;
+            }
+
+            foreach (var item in grp)
+            {
+                yield return item;
+            }
         }
     }
 }

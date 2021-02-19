@@ -11,14 +11,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     {
         /// <summary>
         /// Receive endpoint integration commands
-        /// Marked with MessageOwnerAttribute
         /// </summary>
         /// <returns>Endpoint integration commands</returns>
         IEnumerable<Type> EndpointCommands();
 
         /// <summary>
+        /// Receive endpoint integration queries
+        /// </summary>
+        /// <returns>Endpoint integration queries</returns>
+        IEnumerable<Type> EndpointQueries();
+
+        /// <summary>
         /// Receive endpoint integration events
-        /// Marked with MessageOwnerAttribute
         /// </summary>
         /// <returns>Endpoint integration events</returns>
         IEnumerable<Type> EndpointEvents();

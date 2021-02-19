@@ -37,7 +37,9 @@
         public static T DeepCopy<T>(this T original)
             where T : class
         {
-            return (T)DeepCopy((object)original);
+            return original
+                .DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
+                .EnsureNotNull<T>("Not nullable input must be copied into not nullable output");
         }
 
         /// <summary>
@@ -63,19 +65,6 @@
         public static object ShallowCopy(this object original)
         {
             return ShallowCopyMethod.Invoke(original, null);
-        }
-
-        /// <summary>
-        /// Get deep copy of object (by reflection)
-        /// Copy all internal reference links except System.String, System.Type, System.ValueType
-        /// </summary>
-        /// <param name="original">Original object</param>
-        /// <returns>Deep copy of original object</returns>
-        /// <exception cref="InvalidOperationException">InvalidOperationException if copy or original is null</exception>
-        public static object DeepCopy(this object original)
-        {
-            return original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                           .EnsureNotNull<object>("Not nullable input must be copied into not nullable output");
         }
 
         /// <summary>

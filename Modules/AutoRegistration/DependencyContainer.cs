@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             typeof(DependencyContainer).Assembly, // AutoRegistration
             typeof(LifestyleAttribute).Assembly,  // AutoWiringAPI
-            typeof(TypeExtensions).Assembly,      // Basics
+            typeof(TypeExtensions).Assembly // Basics
         };
 
         private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
 
-            options.NotifyOnRegistration(this);
+            options.ManualRegistrations.Each(manual => manual.Register(this));
 
             RegisterSingletons(_container, this, typeProvider, servicesProvider);
             Resolvable(_container, typeProvider, servicesProvider).Concat(_external).ToList().RegisterServicesWithOpenGenericFallBack(_container);
@@ -67,8 +67,6 @@ namespace SpaceEngineers.Core.AutoRegistration
             Decorators(servicesProvider).RegisterDecorators(_container);
             Versioned(_container).Concat(_externalVersioned).ToList().RegisterVersioned(_container);
             Versions(_container, typeProvider, servicesProvider).ToList().RegisterVersions(_container);
-
-            options.NotifyOnVerify(this);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
             _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
@@ -84,11 +82,10 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer Create(DependencyContainerOptions options)
         {
-            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
-
             var typeProvider = new ContainerDependentTypeProvider(
                 AssembliesExtensions.AllFromCurrentDomain(),
                 RootAssemblies,
+                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
                 options.ExcludedNamespaces ?? new List<string>());
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
@@ -104,11 +101,10 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateExactlyBounded(Assembly[] assemblies, DependencyContainerOptions options)
         {
-            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
-
             var typeProvider = new ContainerDependentTypeProvider(
                 assemblies,
                 RootAssemblies,
+                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
                 options.ExcludedNamespaces ?? new List<string>());
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
@@ -124,11 +120,10 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBoundedAbove(Assembly assembly, DependencyContainerOptions options)
         {
-            AssembliesExtensions.WarmUpAppDomain(options.SearchOption);
-
             var typeProvider = new ContainerDependentTypeProvider(
                 AssembliesExtensions.AllFromCurrentDomain().Below(assembly),
                 RootAssemblies,
+                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
                 options.ExcludedNamespaces ?? new List<string>());
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);

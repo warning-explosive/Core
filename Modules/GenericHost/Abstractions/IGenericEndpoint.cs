@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>

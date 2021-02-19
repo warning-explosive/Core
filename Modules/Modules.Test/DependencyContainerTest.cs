@@ -17,6 +17,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics.Test;
     using ClassFixtures;
     using Core.SettingsManager.Abstractions;
+    using GenericEndpoint.Abstractions;
+    using GenericHost.Host;
     using Moq;
     using Registrations;
     using SimpleInjector;
@@ -37,7 +39,20 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.DefaultDependencyContainer;
+            var excludedAssemblies = new[]
+            {
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(GenericHost).Assembly // GenericHost
+            };
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration()
+            };
+
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerTest).Assembly, excludedAssemblies, registrations);
+
             _fixture = fixture;
         }
 
@@ -118,15 +133,23 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void EachServiceHasVersionedWrapperTest()
         {
-            var options = _fixture.GetDependencyContainerOptions(typeof(VersionedOpenGenericRegistration));
-            options.OnRegistration += (s, e) =>
-                                      {
-                                          VersionedOpenGenericRegistration
-                                             .RegisterVersionedForOpenGenerics(DependencyContainer, e.Registration)
-                                             .Select(type => type.ToString())
-                                             .Each(Output.WriteLine);
-                                      };
-            var localContainer = AutoRegistration.DependencyContainer.Create(options);
+            var versionedOpenGenericRegistration = DependencyContainerOptions
+                .DelegateRegistration(container =>
+                {
+                    VersionedOpenGenericRegistration
+                        .RegisterVersionedForOpenGenerics(DependencyContainer, container)
+                        .Select(type => type.ToString())
+                        .Each(Output.WriteLine);
+                });
+
+            var registrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new GenericEndpointRegistration(),
+                versionedOpenGenericRegistration
+            };
+
+            var localContainer = _fixture.GetDependencyContainer(GetType().Assembly, Array.Empty<Assembly>(), registrations);
 
             var genericTypeProvider = DependencyContainer.Resolve<IGenericTypeProvider>();
 
@@ -274,7 +297,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(CollectionResolvableTestServiceImpl3),
                 typeof(CollectionResolvableTestServiceImpl2),
-                typeof(CollectionResolvableTestServiceImpl1),
+                typeof(CollectionResolvableTestServiceImpl1)
             };
 
             Assert.True(resolvedTypes.SequenceEqual(types));
@@ -290,7 +313,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(CollectionResolvableTestServiceImpl3),
                 typeof(CollectionResolvableTestServiceImpl2),
-                typeof(CollectionResolvableTestServiceImpl1),
+                typeof(CollectionResolvableTestServiceImpl1)
             };
 
             Assert.True(resolvedTypes.SequenceEqual(types));
@@ -306,7 +329,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         {
                             typeof(SingletonGenericCollectionResolvableTestServiceImpl3<object>),
                             typeof(SingletonGenericCollectionResolvableTestServiceImpl2<object>),
-                            typeof(SingletonGenericCollectionResolvableTestServiceImpl1<object>),
+                            typeof(SingletonGenericCollectionResolvableTestServiceImpl1<object>)
                         };
 
             Assert.True(resolvedTypes.SequenceEqual(types));
@@ -385,20 +408,26 @@ namespace SpaceEngineers.Core.Modules.Test
             var expectedCollection = new[]
                                      {
                                          typeof(CollectionResolvableTestServiceImpl1),
-                                         typeof(CollectionResolvableTestServiceImpl2),
+                                         typeof(CollectionResolvableTestServiceImpl2)
                                      };
 
-            var options = new DependencyContainerOptions();
-            options.OnRegistration += (s, e) =>
-                                      {
-                                          e.Registration.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
-                                          e.Registration.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
-                                          e.Registration.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient);
-                                          e.Registration.Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Transient);
-                                          e.Registration.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
-                                          e.Registration.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                                          e.Registration.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
-                                      };
+            var registration = DependencyContainerOptions.DelegateRegistration(
+                container =>
+                {
+                    container.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
+                    container.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
+                    container.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient);
+                    container.Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Transient);
+                    container.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
+                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                    container.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
+                });
+
+            var options = new DependencyContainerOptions
+            {
+                ManualRegistrations = new[] { registration }
+            };
+
             var empty = Array.Empty<Assembly>();
             var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateExactlyBounded(empty, options);
 
@@ -431,12 +460,17 @@ namespace SpaceEngineers.Core.Modules.Test
             localContainer.Resolve<IRegisteredByDelegate>();
             localContainer.Resolve<IVersioned<IRegisteredByDelegate>>();
 
-            options = new DependencyContainerOptions();
-            options.OnRegistration += (s, e) =>
-                                      {
-                                          e.Registration.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                                          e.Registration.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
-                                      };
+            registration = DependencyContainerOptions
+                .DelegateRegistration(container =>
+                {
+                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                    container.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
+                });
+
+            options = new DependencyContainerOptions
+            {
+                ManualRegistrations = new[] { registration }
+            };
 
             var localContainerWithSpecifiedVersions = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateExactlyBounded(empty, options);
 
@@ -457,7 +491,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                                     .CreateExactlyBounded(new[]
                                                                    {
                                                                        typeof(ISettingsManager<>).Assembly,
-                                                                       typeof(ICompositionInfoExtractor).Assembly,
+                                                                       typeof(ICompositionInfoExtractor).Assembly
                                                                    },
                                                                    new DependencyContainerOptions());
 
@@ -498,7 +532,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                         typeof(LifestyleAttribute).Assembly,        // AutoWiringApi assembly
                                         typeof(IDependencyContainer).Assembly,      // AutoRegistration assembly
                                         typeof(ISettingsManager<>).Assembly,        // SettingsManager assembly
-                                        typeof(ICompositionInfoExtractor).Assembly, // CompositionInfoExtractor assembly
+                                        typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
                                     };
 
             Assert.True(compositionInfo.All(Satisfies));

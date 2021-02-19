@@ -12,8 +12,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             /*
              * TODO: implement endpoint checks
-             * Messages must be marked with MessageOwnerAttribute
-             * Events must be immutable and sealed (records/sealed classes)
+             * 1. Messages must be marked with MessageOwnerAttribute
+             * 2. Message implements only one interface (command, query, event, message)
+             * 3. Queries handlers must call reply
              */
         }
     }

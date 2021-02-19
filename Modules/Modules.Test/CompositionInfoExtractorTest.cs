@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
+    using System;
     using System.Linq;
+    using System.Reflection;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Services;
     using Basics.Test;
@@ -19,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IDependencyContainer).Assembly);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IDependencyContainer).Assembly, Array.Empty<Assembly>());
         }
 
         /// <summary>

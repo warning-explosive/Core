@@ -22,9 +22,9 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// Invokes multiple times for each in-process endpoint
         /// </summary>
         /// <param name="endpoints">Generic endpoints</param>
-        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
-        Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken cancellationToken);
+        Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token);
 
         /// <summary>
         /// IIntegrationContext factory

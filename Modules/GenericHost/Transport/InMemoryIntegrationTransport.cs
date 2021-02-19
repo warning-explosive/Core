@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Implementations
+namespace SpaceEngineers.Core.GenericHost.Transport
 {
     using System;
     using System.Collections.Concurrent;
@@ -7,11 +7,13 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using Basics;
     using Basics.Async;
     using Basics.Exceptions;
-    using Core.GenericEndpoint.Abstractions;
     using Core.GenericHost;
-    using Internals;
+    using GenericEndpoint;
+    using GenericEndpoint.Abstractions;
+    using InternalAbstractions;
 
     /// <summary>
     /// InMemoryIntegrationTransport
@@ -22,7 +24,6 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             = new ConcurrentDictionary<Type, ICollection<IGenericEndpoint>>();
 
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
-        private readonly IIntegrationContext _context;
         private readonly AsyncManualResetEvent _manualResetEvent;
 
         /// <summary> .cctor </summary>
@@ -31,20 +32,24 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
         {
             _selectionBehavior = selectionBehavior;
             _manualResetEvent = new AsyncManualResetEvent(false);
-            _context = new InMemoryIntegrationContext(this, _manualResetEvent);
         }
 
         /// <inheritdoc />
         public event EventHandler<IntegrationMessageEventArgs>? OnMessage;
 
         /// <inheritdoc />
-        public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken cancellationToken)
+        public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)
         {
             foreach (var endpoint in endpoints)
             {
-                foreach (var integrationCommand in endpoint.IntegrationTypesProvider.EndpointCommands())
+                foreach (var command in endpoint.IntegrationTypesProvider.EndpointCommands())
                 {
-                    AddMessageTarget(integrationCommand, endpoint);
+                    AddMessageTarget(command, endpoint);
+                }
+
+                foreach (var query in endpoint.IntegrationTypesProvider.EndpointQueries())
+                {
+                    AddMessageTarget(query, endpoint);
                 }
 
                 foreach (var integrationEvent in endpoint.IntegrationTypesProvider.EndpointSubscriptions())
@@ -69,7 +74,7 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
         }
 
         /// <inheritdoc />
-        public IIntegrationContext CreateContext() => _context;
+        public IIntegrationContext CreateContext() => CreateContext(null);
 
         /// <inheritdoc />
         public Task DispatchToEndpoint<TMessage>(TMessage message)
@@ -79,24 +84,50 @@ namespace SpaceEngineers.Core.GenericHost.Implementations
             {
                 var selectedEndpoints = endpoints
                     .GroupBy(endpoint => endpoint.Identity.LogicalName, StringComparer.OrdinalIgnoreCase)
-                    .Select(grp => _selectionBehavior.SelectInstance(message, grp.ToList()))
+                    .Select(grp => SelectEndpointInstance(message, grp.ToList()))
                     .ToList();
 
                 if (selectedEndpoints.Any())
                 {
-                    return Task.WhenAll(selectedEndpoints
-                        .OfType<IExecutableEndpoint>()
-                        .Select(endpoint => endpoint.InvokeMessageHandler(message, CreateContext())));
+                    var runningHandlers = selectedEndpoints.Select(endpoint => DispatchToEndpointInstance(message, endpoint));
+
+                    return Task.WhenAll(runningHandlers);
                 }
             }
 
             throw new NotFoundException($"Target endpoint for message '{typeof(TMessage)}' not found");
         }
 
-        internal void NotifyOnMessage<TMessage>(TMessage integrationMessage)
+        internal async Task NotifyOnMessage<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage
         {
-            OnMessage?.Invoke(this, new IntegrationMessageEventArgs(integrationMessage, typeof(TMessage)));
+            await _manualResetEvent.WaitAsync(token).ConfigureAwait(false);
+
+            OnMessage?.Invoke(this, new IntegrationMessageEventArgs(message, typeof(TMessage)));
+        }
+
+        private IGenericEndpoint SelectEndpointInstance<TMessage>(TMessage message, IReadOnlyCollection<IGenericEndpoint> endpoints)
+            where TMessage : IIntegrationMessage
+        {
+            return _selectionBehavior.SelectInstance(message, endpoints);
+        }
+
+        private Task DispatchToEndpointInstance<TMessage>(TMessage message, IGenericEndpoint endpoint)
+            where TMessage : IIntegrationMessage
+        {
+            var messageCopy = message.DeepCopy<IIntegrationMessage>();
+            var exclusiveContext = CreateContext(endpoint.Identity);
+
+            return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext);
+        }
+
+        private InMemoryIntegrationContext CreateContext(EndpointIdentity? endpointIdentity)
+        {
+            var context = new InMemoryIntegrationContext(this);
+
+            return endpointIdentity != null
+                ? context.WithinEndpointScope(endpointIdentity)
+                : context;
         }
     }
 }

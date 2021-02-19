@@ -1,16 +1,15 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
-    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Enumerations;
     using AutoWiringTest;
 
-    internal class DelegatesRegistration : IModulesTestRegistration
+    internal class DelegatesRegistration : IManualRegistration
     {
-        public void Register(IRegistrationContainer registration)
+        public void Register(IRegistrationContainer container)
         {
-            registration.Register<IRegisteredByDelegate>(() => (IRegisteredByDelegate)new RegisteredByDelegateImpl(), EnLifestyle.Transient);
-            registration.Register<ConcreteRegisteredByDelegate>(() => new ConcreteRegisteredByDelegate(), EnLifestyle.Transient);
+            container.Register<IRegisteredByDelegate>(() => (IRegisteredByDelegate)new RegisteredByDelegateImpl(), EnLifestyle.Transient);
+            container.Register<ConcreteRegisteredByDelegate>(() => new ConcreteRegisteredByDelegate(), EnLifestyle.Transient);
         }
     }
 }

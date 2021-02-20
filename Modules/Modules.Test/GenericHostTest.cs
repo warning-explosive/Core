@@ -74,35 +74,39 @@ namespace SpaceEngineers.Core.Modules.Test
                 Output.WriteLine(e.ToString());
             };
 
-            using var transportHost = Host.CreateDefaultBuilder()
+            using var host = Host.CreateDefaultBuilder()
                 .UseTransport(transport, compositeEndpoint)
                 .Build();
 
-            SendAndPublish(transport);
-
-            cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-            var runningHost = transportHost.RunAsync(cts.Token);
-            var timeout = Task.Delay(TimeSpan.FromSeconds(10), CancellationToken.None);
+            var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
+            var backgroundInitiatorTask = SendAndPublish(transport);
+            var timeout = Task.Delay(TimeSpan.FromSeconds(10), cts.Token);
 
             var actual = await Task
-                .WhenAny(runningHost, timeout)
+                .WhenAny(timeout, backgroundInitiatorTask)
                 .ConfigureAwait(false);
 
-            Assert.Equal(runningHost, actual);
+            Assert.Equal(backgroundInitiatorTask, actual);
+
+            cts.Cancel();
+            await runningHost.ConfigureAwait(false);
         }
 
-        private static void SendAndPublish(IIntegrationTransport transport)
+        private static Task SendAndPublish(IIntegrationTransport transport)
         {
-            Task.Run(async () =>
+            return Task.Run(async () =>
             {
                 var ctx = transport.CreateContext();
 
                 for (var i = 0; i < 100; ++i)
                 {
-                    if (i % 2 == 0)
+                    if (i % 3 == 0)
                     {
                         await ctx.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
+                    }
+                    else if (i % 3 == 1)
+                    {
+                        await ctx.Request<TestQuery, TestQueryResponse>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
                     }
                     else
                     {
@@ -136,7 +140,21 @@ namespace SpaceEngineers.Core.Modules.Test
                 Id = id;
             }
 
-            public EndpointIdentity? SendTo { get; set; }
+            private int Id { get; }
+
+            public override string ToString()
+            {
+                return Id.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        [OwnedBy(Endpoint1)]
+        private class TestQuery : IIntegrationQuery<TestQueryResponse>
+        {
+            public TestQuery(int id)
+            {
+                Id = id;
+            }
 
             private int Id { get; }
 
@@ -146,6 +164,10 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
+        private class TestQueryResponse : IIntegrationMessage
+        {
+        }
+
         [OwnedBy(Endpoint2)]
         private class TestEvent : IIntegrationEvent
         {
@@ -153,8 +175,6 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Id = id;
             }
-
-            public EndpointIdentity? SendTo { get; set; }
 
             private int Id { get; }
 

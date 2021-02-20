@@ -111,7 +111,7 @@ namespace SpaceEngineers.Core.Basics
         /// Invoke configured method
         /// </summary>
         /// <returns>Return value of method</returns>
-        public object Invoke()
+        public object? Invoke()
         {
             // 1 - prepare and check
             var isInstanceMethod = _target != null;
@@ -141,7 +141,7 @@ namespace SpaceEngineers.Core.Basics
                                         ? methodInfo.MakeGenericMethod(_typeArguments.ToArray())
                                         : methodInfo;
 
-            Func<object> action = () => constructedMethod.Invoke(_target, _args.ToArray());
+            Func<object?> action = () => constructedMethod.Invoke(_target, _args.ToArray());
 
             return action.Try().Invoke(ex => throw ex);
         }

@@ -42,17 +42,17 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         {
             foreach (var endpoint in endpoints)
             {
-                foreach (var command in endpoint.IntegrationTypesProvider.EndpointCommands())
+                foreach (var command in endpoint.IntegrationTypeProvider.EndpointCommands())
                 {
                     AddMessageTarget(command, endpoint);
                 }
 
-                foreach (var query in endpoint.IntegrationTypesProvider.EndpointQueries())
+                foreach (var query in endpoint.IntegrationTypeProvider.EndpointQueries())
                 {
                     AddMessageTarget(query, endpoint);
                 }
 
-                foreach (var integrationEvent in endpoint.IntegrationTypesProvider.EndpointSubscriptions())
+                foreach (var integrationEvent in endpoint.IntegrationTypeProvider.EndpointSubscriptions())
                 {
                     AddMessageTarget(integrationEvent, endpoint);
                 }
@@ -115,7 +115,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private Task DispatchToEndpointInstance<TMessage>(TMessage message, IGenericEndpoint endpoint)
             where TMessage : IIntegrationMessage
         {
-            var messageCopy = message.DeepCopy<IIntegrationMessage>();
+            var messageCopy = message.DeepCopy();
             var exclusiveContext = CreateContext(endpoint.Identity);
 
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext);

@@ -8,6 +8,8 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public class ActionExecutionInfo
     {
+        private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
+
         private readonly Action _clientAction;
 
         private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
@@ -30,7 +32,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>ActionExecutionInfo</returns>
         public ActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
-            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
+            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
             return this;
         }
@@ -48,11 +50,30 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Invoke client action with strongly typed exception handler
+        /// </summary>
+        /// <param name="exceptionHandler">Exception handler</param>
+        /// <typeparam name="TException">Real exception type-argument</typeparam>
+        public void Invoke<TException>(Action<Exception>? exceptionHandler = null)
+            where TException : Exception
+        {
+            if (exceptionHandler != null)
+            {
+                _exceptionHandlers[typeof(TException)] = exceptionHandler;
+            }
+        }
+
+        /// <summary>
         /// Invoke client action
         /// </summary>
         /// <param name="exceptionHandler">Exception handler</param>
         public void Invoke(Action<Exception>? exceptionHandler = null)
         {
+            if (exceptionHandler != null)
+            {
+                _exceptionHandlers[typeof(Exception)] = exceptionHandler;
+            }
+
             try
             {
                 _clientAction.Invoke();
@@ -76,8 +97,6 @@ namespace SpaceEngineers.Core.Basics
                 {
                     throw realException;
                 }
-
-                exceptionHandler?.Invoke(realException);
             }
             finally
             {

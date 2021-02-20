@@ -55,6 +55,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
   </ItemGroup>
 </Project>

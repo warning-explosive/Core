@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using System.Runtime.Serialization.Formatters.Binary;
@@ -34,8 +35,7 @@
         /// <param name="original">Original object</param>
         /// <typeparam name="T">Object type</typeparam>
         /// <returns>Deep copy of original object</returns>
-        public static T DeepCopy<T>(this T original)
-            where T : class
+        public static T DeepCopy<T>([DisallowNull] this T original)
         {
             return original
                 .DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
@@ -87,7 +87,7 @@
             }
         }
 
-        private static object? DeepCopyInternal(this object original, IDictionary<object, object> visited)
+        private static object? DeepCopyInternal(this object? original, IDictionary<object, object> visited)
         {
             if (original == null)
             {
@@ -129,7 +129,7 @@
                    || type == typeof(string);
         }
 
-        private static void ProcessClone(this object clone, object original, Type typeToReflect, IDictionary<object, object> visited)
+        private static void ProcessClone(this object? clone, object original, Type typeToReflect, IDictionary<object, object> visited)
         {
             if (clone == null)
             {

@@ -9,6 +9,8 @@ namespace SpaceEngineers.Core.Basics
     /// <typeparam name="TResult">Function TResult Type-argument</typeparam>
     public class FunctionExecutionInfo<TResult>
     {
+        private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
+
         private readonly Func<TResult> _clientFunction;
 
         private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
@@ -31,7 +33,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>FunctionExecutionInfo</returns>
         public FunctionExecutionInfo<TResult> Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
-            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
+            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
             return this;
         }
@@ -49,11 +51,55 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Try invoke client function
+        /// Invoke client function
         /// </summary>
         /// <param name="exceptionHandler">Exception handler</param>
         /// <returns>TResult</returns>
-        internal TResult InvokeInternal(Func<Exception, TResult> exceptionHandler)
+        public TResult? Invoke(Action<Exception>? exceptionHandler = null)
+        {
+            if (exceptionHandler != null)
+            {
+                _exceptionHandlers[typeof(Exception)] = exceptionHandler;
+            }
+
+            try
+            {
+                return _clientFunction.Invoke();
+            }
+            catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
+            {
+                var realException = ex.RealException();
+                var handled = false;
+
+                foreach (var pair in _exceptionHandlers)
+                {
+                    if (pair.Key.IsInstanceOfType(realException))
+                    {
+                        pair.Value.Invoke(realException);
+                        handled = true;
+                        break;
+                    }
+                }
+
+                if (!handled)
+                {
+                    throw realException;
+                }
+
+                return default;
+            }
+            finally
+            {
+                _finallyAction?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Invoke client function
+        /// </summary>
+        /// <param name="exceptionHandler">Exception handler, creates result from handled exception</param>
+        /// <returns>TResult</returns>
+        public TResult Invoke(Func<Exception, TResult> exceptionHandler)
         {
             try
             {

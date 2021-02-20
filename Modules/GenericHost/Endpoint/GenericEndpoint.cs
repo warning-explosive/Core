@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
             Identity = endpointOptions.Identity;
 
             _dependencyContainer = DependencyContainerPerEndpoint(endpointOptions);
-            IntegrationTypesProvider = _dependencyContainer.Resolve<IIntegrationTypesProvider>();
+            IntegrationTypeProvider = _dependencyContainer.Resolve<IIntegrationTypeProvider>();
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new AsyncCountdownEvent(0);
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
 
         public EndpointIdentity Identity { get; }
 
-        public IIntegrationTypesProvider IntegrationTypesProvider { get; }
+        public IIntegrationTypeProvider IntegrationTypeProvider { get; }
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 

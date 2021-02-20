@@ -14,8 +14,8 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         EndpointIdentity Identity { get; }
 
         /// <summary>
-        /// Integration types provider
+        /// Integration type provider
         /// </summary>
-        IIntegrationTypesProvider IntegrationTypesProvider { get; }
+        IIntegrationTypeProvider IntegrationTypeProvider { get; }
     }
 }

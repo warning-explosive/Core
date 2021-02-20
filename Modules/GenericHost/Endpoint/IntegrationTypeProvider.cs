@@ -12,17 +12,25 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
     using Core.GenericEndpoint.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class IntegrationTypesProvider : IIntegrationTypesProvider
+    internal class IntegrationTypeProvider : IIntegrationTypeProvider
     {
         private readonly ITypeProvider _typeProvider;
         private readonly EndpointIdentity _endpointIdentity;
 
-        public IntegrationTypesProvider(
+        public IntegrationTypeProvider(
             EndpointIdentity endpointIdentity,
             ITypeProvider typeProvider)
         {
             _typeProvider = typeProvider;
             _endpointIdentity = endpointIdentity;
+        }
+
+        public IEnumerable<Type> IntegrationMessageTypes()
+        {
+            return _typeProvider
+                .OurTypes
+                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
+                               && typeof(IIntegrationMessage) != type);
         }
 
         public IEnumerable<Type> EndpointCommands()

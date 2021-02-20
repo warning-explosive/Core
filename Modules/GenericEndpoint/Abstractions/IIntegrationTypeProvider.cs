@@ -7,8 +7,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     /// <summary>
     /// Integration types provider
     /// </summary>
-    public interface IIntegrationTypesProvider : IResolvable
+    public interface IIntegrationTypeProvider : IResolvable
     {
+        /// <summary>
+        /// All types that implements IIntegrationMessage directly or indirectly
+        /// </summary>
+        /// <returns>All IIntegrationMessage types</returns>
+        IEnumerable<Type> IntegrationMessageTypes();
+
         /// <summary>
         /// Receive endpoint integration commands
         /// </summary>

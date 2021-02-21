@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
             where TMessage : IIntegrationMessage
         {
             return ExecutionExtensions
-                .Try(async () => await Decoratee.Process(message, context, token).ConfigureAwait(false))
+                .TryAsync(() => Decoratee.Process(message, context, token), false)
                 .Invoke(ex => OnError(ex, message, context, token));
         }
 

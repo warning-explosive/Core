@@ -49,6 +49,12 @@
     <Compile Update="ICompositeDisposable.cs">
       <DependentUpon>Disposable.cs</DependentUpon>
     </Compile>
+    <Compile Update="AsyncOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AsyncGenericOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

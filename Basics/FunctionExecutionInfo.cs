@@ -9,11 +9,11 @@ namespace SpaceEngineers.Core.Basics
     /// <typeparam name="TResult">Function TResult Type-argument</typeparam>
     public class FunctionExecutionInfo<TResult>
     {
-        private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
+        private static readonly Action<Exception> EmptyExceptionHandler =
+            _ => { };
 
         private readonly Func<TResult> _clientFunction;
-
-        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
+        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.Basics
         public FunctionExecutionInfo(Func<TResult> clientFunction)
         {
             _clientFunction = clientFunction;
+            _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
 
         /// <summary>
@@ -51,15 +52,15 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client function
+        /// Invoke client's function
         /// </summary>
-        /// <param name="exceptionHandler">Exception handler</param>
+        /// <param name="fallbackExceptionHandler">Fallback exception handler</param>
         /// <returns>TResult</returns>
-        public TResult? Invoke(Action<Exception>? exceptionHandler = null)
+        public TResult? Invoke(Action<Exception>? fallbackExceptionHandler = null)
         {
-            if (exceptionHandler != null)
+            if (fallbackExceptionHandler != null)
             {
-                _exceptionHandlers[typeof(Exception)] = exceptionHandler;
+                _exceptionHandlers[typeof(Exception)] = fallbackExceptionHandler;
             }
 
             try
@@ -95,11 +96,11 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client function
+        /// Invoke client's function
         /// </summary>
-        /// <param name="exceptionHandler">Exception handler, creates result from handled exception</param>
+        /// <param name="exceptionResultFactory">Creates result from handled exception</param>
         /// <returns>TResult</returns>
-        public TResult Invoke(Func<Exception, TResult> exceptionHandler)
+        public TResult Invoke(Func<Exception, TResult> exceptionResultFactory)
         {
             try
             {
@@ -125,7 +126,7 @@ namespace SpaceEngineers.Core.Basics
                     throw realException;
                 }
 
-                return exceptionHandler.Invoke(realException);
+                return exceptionResultFactory.Invoke(realException);
             }
             finally
             {

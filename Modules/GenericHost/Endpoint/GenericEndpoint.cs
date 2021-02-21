@@ -29,6 +29,7 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
 
             _dependencyContainer = DependencyContainerPerEndpoint(endpointOptions);
             IntegrationTypeProvider = _dependencyContainer.Resolve<IIntegrationTypeProvider>();
+            Pipeline = _dependencyContainer.Resolve<IMessagePipeline>();
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new AsyncCountdownEvent(0);
@@ -37,6 +38,8 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
         public EndpointIdentity Identity { get; }
 
         public IIntegrationTypeProvider IntegrationTypeProvider { get; }
+
+        private IMessagePipeline Pipeline { get; }
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
@@ -50,7 +53,7 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
             IExtendedIntegrationContext context)
             where TMessage : IIntegrationMessage
         {
-            return Process(message, context, Token);
+            return Pipeline.Process(message, context, Token);
         }
 
         public async Task Process<TMessage>(TMessage message, IExtendedIntegrationContext context, CancellationToken token)

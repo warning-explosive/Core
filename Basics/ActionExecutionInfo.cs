@@ -8,11 +8,11 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public class ActionExecutionInfo
     {
-        private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
+        private static readonly Action<Exception> EmptyExceptionHandler =
+            _ => { };
 
         private readonly Action _clientAction;
-
-        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
+        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
@@ -21,6 +21,7 @@ namespace SpaceEngineers.Core.Basics
         public ActionExecutionInfo(Action clientAction)
         {
             _clientAction = clientAction;
+            _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
 
         /// <summary>
@@ -50,28 +51,14 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client action with strongly typed exception handler
+        /// Invoke client's action
         /// </summary>
-        /// <param name="exceptionHandler">Exception handler</param>
-        /// <typeparam name="TException">Real exception type-argument</typeparam>
-        public void Invoke<TException>(Action<Exception>? exceptionHandler = null)
-            where TException : Exception
+        /// <param name="fallbackExceptionHandler">Fallback exception handler</param>
+        public void Invoke(Action<Exception>? fallbackExceptionHandler = null)
         {
-            if (exceptionHandler != null)
+            if (fallbackExceptionHandler != null)
             {
-                _exceptionHandlers[typeof(TException)] = exceptionHandler;
-            }
-        }
-
-        /// <summary>
-        /// Invoke client action
-        /// </summary>
-        /// <param name="exceptionHandler">Exception handler</param>
-        public void Invoke(Action<Exception>? exceptionHandler = null)
-        {
-            if (exceptionHandler != null)
-            {
-                _exceptionHandlers[typeof(Exception)] = exceptionHandler;
+                _exceptionHandlers[typeof(Exception)] = fallbackExceptionHandler;
             }
 
             try

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Host
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System;
     using System.Collections.Concurrent;
@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericHost.Host
     using Abstractions;
     using Basics;
     using Basics.Async;
-    using Internals;
+    using Core.GenericEndpoint.Abstractions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -87,32 +87,32 @@ namespace SpaceEngineers.Core.GenericHost.Host
             _cts?.Dispose();
         }
 
-        private Task StartMessageProcessing()
+        private async Task StartMessageProcessing()
         {
             while (!Token.IsCancellationRequested)
             {
-                _autoResetEvent.WaitAsync();
+                await _autoResetEvent.WaitAsync().ConfigureAwait(false);
 
                 // TODO: use async queue
                 if (_queue.TryDequeue(out var args))
                 {
-                    DispatchToEndpointUnsafe(args)
-                        .Try()
-                        .Invoke(ex => _logger.Error(ex, "Transport error on message: {0} {1}", args.ReflectedType, args.Message));
+                    await ExecutionExtensions
+                        .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
+                        .Invoke(ex => OnError(ex, args))
+                        .ConfigureAwait(false);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
-        private Action DispatchToEndpointUnsafe(IntegrationMessageEventArgs args)
+        private Task OnError(Exception exception, IntegrationMessageEventArgs args)
         {
-            return () => _transport
-                .CallMethod(nameof(IIntegrationTransport.DispatchToEndpoint))
-                .WithTypeArgument(args.ReflectedType)
-                .WithArgument(args.Message)
-                .Invoke<Task>()
-                .Wait(Token); // unwrap error
+            _logger.Error(
+                exception,
+                "Transport error on message: {0} {1}",
+                args.GeneralMessage.ReflectedType,
+                args.GeneralMessage.Message);
+
+            return Task.CompletedTask;
         }
 
         private void OnMessage(object? sender, IntegrationMessageEventArgs args)

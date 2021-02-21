@@ -73,6 +73,22 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Execute method with arguments
+        /// </summary>
+        /// <param name="arguments">Arguments</param>
+        /// <returns>MethodExecutionInfo</returns>
+        public MethodExecutionInfo WithArguments(params object[] arguments)
+        {
+            foreach (var argument in arguments)
+            {
+                _args.Add(argument);
+                _argumentTypes.Add(argument.GetType());
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Execute generic method with type argument
         /// </summary>
         /// <typeparam name="TTypeArgument">Type of Type-Argument</typeparam>

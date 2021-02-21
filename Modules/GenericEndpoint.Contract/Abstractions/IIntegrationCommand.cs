@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
+namespace SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions
 {
     /// <summary>
     /// Command that used to make request to perform integration action between endpoints

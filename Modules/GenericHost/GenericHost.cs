@@ -1,11 +1,15 @@
-namespace SpaceEngineers.Core.GenericHost.Host
+namespace SpaceEngineers.Core.GenericHost
 {
     using System;
     using System.Linq;
     using Abstractions;
+    using GenericEndpoint;
+    using GenericEndpoint.Abstractions;
+    using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Transport;
 
     /// <summary>
     /// Generic host entry point
@@ -13,6 +17,23 @@ namespace SpaceEngineers.Core.GenericHost.Host
     public static class GenericHost
     {
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
+
+        /// <summary>
+        /// Creates InMemoryIntegrationTransport hierarchy
+        /// </summary>
+        /// <param name="endpointInstanceSelectionBehavior">IEndpointInstanceSelectionBehavior</param>
+        /// <returns>InMemoryIntegrationTransport</returns>
+        public static IIntegrationTransport InMemoryTransport(
+            IEndpointInstanceSelectionBehavior endpointInstanceSelectionBehavior)
+        {
+            // TODO: use container & move IntegrationMessageFactory to Endpoint project
+            return new InMemoryIntegrationTransport(
+                endpointInstanceSelectionBehavior,
+                new IntegrationMessageFactory(new[]
+                {
+                    new IntegratedMessageHeader()
+                }));
+        }
 
         /// <summary>
         /// Use transport

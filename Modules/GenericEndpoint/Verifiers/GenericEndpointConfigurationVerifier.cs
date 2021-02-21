@@ -4,11 +4,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using Attributes;
     using AutoWiringApi.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics;
+    using Contract.Abstractions;
+    using Contract.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiringApi.Abstractions;
+    using Contract.Abstractions;
 
     /// <summary>
     /// Message handler abstraction

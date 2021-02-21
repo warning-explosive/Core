@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System.Collections.Generic;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
@@ -15,7 +16,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <param name="endpoints">Endpoint instances</param>
         /// <returns>Only one instance</returns>
         IGenericEndpoint SelectInstance(
-            IIntegrationMessage message,
+            IntegrationMessage message,
             IReadOnlyCollection<IGenericEndpoint> endpoints);
     }
 }

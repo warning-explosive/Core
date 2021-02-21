@@ -8,12 +8,14 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     {
         internal const string StartedSuccessfully = "{0} started successfully";
         internal const string WaitingForIncomingMessages = "Waiting for incoming messages...";
+        internal const string EndpointScopeRequired = "context.{0}() must be executed within endpoint scope (in message handler)";
 
         private static readonly IReadOnlyDictionary<string, int> Map
             = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 [StartedSuccessfully] = 0,
-                [WaitingForIncomingMessages] = 1
+                [WaitingForIncomingMessages] = 1,
+                [EndpointScopeRequired] = 2
             };
 
         // TODO: ILogger extensions

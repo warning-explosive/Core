@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Contract.Abstractions;
 
     /// <summary>
     /// Integration context
@@ -43,6 +44,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 
         /// <summary>
         /// Reply to initiator endpoint
+        /// Must be called within endpoint scope (in message handler)
         /// </summary>
         /// <param name="query">Integration query</param>
         /// <param name="response">Integration response</param>

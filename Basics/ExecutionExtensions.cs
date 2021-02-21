@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
         /// <param name="configureAwait">Configure await option</param>
         /// <returns>AsyncOperationExecutionInfo</returns>
-        public static AsyncOperationExecutionInfo TryAsync(Func<Task> clientAsyncOperationFactory, bool configureAwait)
+        public static AsyncOperationExecutionInfo TryAsync(Func<Task> clientAsyncOperationFactory, bool configureAwait = false)
         {
             return new AsyncOperationExecutionInfo(clientAsyncOperationFactory, configureAwait);
         }
@@ -56,7 +56,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="configureAwait">Configure await option</param>
         /// <typeparam name="TResult">Async operation result type-argument</typeparam>
         /// <returns>AsyncOperationExecutionInfo</returns>
-        public static AsyncGenericOperationExecutionInfo<TResult> TryAsync<TResult>(Func<Task<TResult>> clientAsyncOperationFactory, bool configureAwait)
+        public static AsyncGenericOperationExecutionInfo<TResult> TryAsync<TResult>(Func<Task<TResult>> clientAsyncOperationFactory, bool configureAwait = false)
         {
             return new AsyncGenericOperationExecutionInfo<TResult>(clientAsyncOperationFactory, configureAwait);
         }

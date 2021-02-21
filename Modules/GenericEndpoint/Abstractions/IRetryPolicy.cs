@@ -1,9 +1,8 @@
-namespace SpaceEngineers.Core.GenericHost.Abstractions
+namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiringApi.Abstractions;
-    using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// IRetryStrategy abstraction
@@ -16,9 +15,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <param name="message">Integration message</param>
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>Ongoing retry operation</returns>
-        Task Apply<TMessage>(TMessage message, IExtendedIntegrationContext context, CancellationToken token)
-            where TMessage : IIntegrationMessage;
+        Task Apply(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token);
     }
 }

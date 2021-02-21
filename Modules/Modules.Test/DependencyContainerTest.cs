@@ -18,7 +18,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using ClassFixtures;
     using Core.SettingsManager.Abstractions;
     using GenericEndpoint.Abstractions;
-    using GenericHost.Host;
+    using GenericEndpoint.Contract.Abstractions;
+    using GenericHost;
     using Moq;
     using Registrations;
     using SimpleInjector;
@@ -41,7 +42,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var excludedAssemblies = new[]
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
                 typeof(GenericHost).Assembly // GenericHost
             };
 

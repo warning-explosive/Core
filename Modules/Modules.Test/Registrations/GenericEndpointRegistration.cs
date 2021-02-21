@@ -6,8 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using Basics;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
-    using GenericHost.Abstractions;
-    using GenericHost.Endpoint;
+    using GenericHost;
 
     internal class GenericEndpointRegistration : IManualRegistration
     {
@@ -15,8 +14,8 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
         {
             var endpointIdentity = new EndpointIdentity("mock_endpoint", 0);
 
-            var assemblyName = $"{nameof(SpaceEngineers)}.{nameof(Core)}.{nameof(GenericHost)}";
-            var typeFullName = $"{assemblyName}.{nameof(GenericHost.Endpoint)}.GenericEndpoint";
+            var assemblyName = $"{nameof(SpaceEngineers)}.{nameof(Core)}.{nameof(Core.GenericHost)}";
+            var typeFullName = $"{assemblyName}.Internals.GenericEndpoint";
             var genericEndpointType = AssembliesExtensions
                 .FindType(assemblyName, typeFullName)
                 .EnsureNotNull($"{typeFullName} must be found");

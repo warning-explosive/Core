@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
@@ -35,10 +36,8 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <summary>
         /// Dispatch incoming message to endpoint
         /// </summary>
-        /// <param name="message">IIntegrationMessage</param>
-        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
+        /// <param name="message">Integration message</param>
         /// <returns>Running operation</returns>
-        Task DispatchToEndpoint<TMessage>(TMessage message)
-            where TMessage : IIntegrationMessage;
+        Task DispatchToEndpoint(IntegrationMessage message);
     }
 }

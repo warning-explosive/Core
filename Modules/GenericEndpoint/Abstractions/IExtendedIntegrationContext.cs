@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Contract.Abstractions;
 
     /// <summary>
     /// IExtendedIntegrationContext abstraction
@@ -10,6 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     {
         /// <summary>
         /// Retry integration message processing
+        /// Must be called within endpoint scope (in message handler)
         /// </summary>
         /// <param name="message">Integration message</param>
         /// <param name="token">Cancellation token</param>

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost
 {
     using System;
-    using SpaceEngineers.Core.GenericEndpoint.Abstractions;
+    using GenericEndpoint;
 
     /// <summary>
     /// IntegrationMessageEventArgs
@@ -10,27 +10,20 @@ namespace SpaceEngineers.Core.GenericHost
     {
         /// <summary> .cctor </summary>
         /// <param name="message">Integration message</param>
-        /// <param name="reflectedType">Reflected type</param>
-        public IntegrationMessageEventArgs(IIntegrationMessage message, Type reflectedType)
+        public IntegrationMessageEventArgs(IntegrationMessage message)
         {
-            Message = message;
-            ReflectedType = reflectedType;
+            GeneralMessage = message;
         }
 
         /// <summary>
-        /// Integration message
+        /// General integration message
         /// </summary>
-        public IIntegrationMessage Message { get; }
-
-        /// <summary>
-        /// Reflected type
-        /// </summary>
-        public Type ReflectedType { get; }
+        public IntegrationMessage GeneralMessage { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Type: {ReflectedType}; Payload: {Message};";
+            return GeneralMessage.ToString();
         }
     }
 }

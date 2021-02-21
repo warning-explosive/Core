@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.GenericHost.Endpoint
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
-    using InternalAbstractions;
+    using Core.GenericEndpoint.Abstractions;
 
     internal class CompositeEndpoint : ICompositeEndpoint, IRunnableEndpoint
     {

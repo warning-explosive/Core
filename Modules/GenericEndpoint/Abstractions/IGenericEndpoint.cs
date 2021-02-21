@@ -1,7 +1,6 @@
-namespace SpaceEngineers.Core.GenericHost.Abstractions
+namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using GenericEndpoint;
-    using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// Generic endpoint abstraction

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
+namespace SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions
 {
     /// <summary>
     /// Event that used for integration between endpoints and describe performed action in the past

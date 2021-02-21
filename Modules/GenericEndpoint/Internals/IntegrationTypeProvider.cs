@@ -1,15 +1,15 @@
-namespace SpaceEngineers.Core.GenericHost.Endpoint
+namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using AutoWiringApi.Services;
     using Basics;
-    using Core.GenericEndpoint;
-    using Core.GenericEndpoint.Abstractions;
-    using Core.GenericEndpoint.Attributes;
+    using Contract.Abstractions;
+    using Contract.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class IntegrationTypeProvider : IIntegrationTypeProvider

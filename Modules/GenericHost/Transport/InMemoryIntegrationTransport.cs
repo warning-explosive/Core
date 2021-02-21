@@ -13,24 +13,25 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using Core.GenericHost;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
-    using InternalAbstractions;
+    using Internals;
 
-    /// <summary>
-    /// InMemoryIntegrationTransport
-    /// </summary>
-    public class InMemoryIntegrationTransport : IIntegrationTransport
+    internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
         private static readonly ConcurrentDictionary<Type, ICollection<IGenericEndpoint>> TopologyMap
             = new ConcurrentDictionary<Type, ICollection<IGenericEndpoint>>();
 
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
+        private readonly IIntegrationMessageFactory _messageFactory;
+
         private readonly AsyncManualResetEvent _manualResetEvent;
 
-        /// <summary> .cctor </summary>
-        /// <param name="selectionBehavior">IEndpointInstanceSelectionBehavior</param>
-        public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior selectionBehavior)
+        public InMemoryIntegrationTransport(
+            IEndpointInstanceSelectionBehavior selectionBehavior,
+            IIntegrationMessageFactory messageFactory)
         {
             _selectionBehavior = selectionBehavior;
+            _messageFactory = messageFactory;
+
             _manualResetEvent = new AsyncManualResetEvent(false);
         }
 
@@ -74,13 +75,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         }
 
         /// <inheritdoc />
-        public IIntegrationContext CreateContext() => CreateContext(null);
+        public IIntegrationContext CreateContext() => CreateContextInternal();
 
         /// <inheritdoc />
-        public Task DispatchToEndpoint<TMessage>(TMessage message)
-            where TMessage : IIntegrationMessage
+        public Task DispatchToEndpoint(IntegrationMessage message)
         {
-            if (TopologyMap.TryGetValue(typeof(TMessage), out var endpoints))
+            if (TopologyMap.TryGetValue(message.ReflectedType, out var endpoints))
             {
                 var selectedEndpoints = endpoints
                     .GroupBy(endpoint => endpoint.Identity.LogicalName, StringComparer.OrdinalIgnoreCase)
@@ -95,39 +95,30 @@ namespace SpaceEngineers.Core.GenericHost.Transport
                 }
             }
 
-            throw new NotFoundException($"Target endpoint for message '{typeof(TMessage)}' not found");
+            throw new NotFoundException($"Target endpoint for message '{message.ReflectedType.FullName}' not found");
         }
 
-        internal async Task NotifyOnMessage<TMessage>(TMessage message, CancellationToken token)
-            where TMessage : IIntegrationMessage
+        internal async Task NotifyOnMessage(IntegrationMessage message, CancellationToken token)
         {
             await _manualResetEvent.WaitAsync(token).ConfigureAwait(false);
 
-            OnMessage?.Invoke(this, new IntegrationMessageEventArgs(message, typeof(TMessage)));
+            OnMessage?.Invoke(this, new IntegrationMessageEventArgs(message));
         }
 
-        private IGenericEndpoint SelectEndpointInstance<TMessage>(TMessage message, IReadOnlyCollection<IGenericEndpoint> endpoints)
-            where TMessage : IIntegrationMessage
+        private IGenericEndpoint SelectEndpointInstance(IntegrationMessage message, IReadOnlyCollection<IGenericEndpoint> endpoints)
         {
             return _selectionBehavior.SelectInstance(message, endpoints);
         }
 
-        private Task DispatchToEndpointInstance<TMessage>(TMessage message, IGenericEndpoint endpoint)
-            where TMessage : IIntegrationMessage
+        private Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
         {
             var messageCopy = message.DeepCopy();
-            var exclusiveContext = CreateContext(endpoint.Identity);
+            var exclusiveContext = CreateContextInternal().WithinEndpointScope(endpoint.Identity, messageCopy);
 
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext);
         }
 
-        private InMemoryIntegrationContext CreateContext(EndpointIdentity? endpointIdentity)
-        {
-            var context = new InMemoryIntegrationContext(this);
-
-            return endpointIdentity != null
-                ? context.WithinEndpointScope(endpointIdentity)
-                : context;
-        }
+        private InMemoryIntegrationContext CreateContextInternal()
+            => new InMemoryIntegrationContext(this, _messageFactory);
     }
 }

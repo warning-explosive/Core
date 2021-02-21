@@ -28,13 +28,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     [ManualRegistration]
     public class DependencyContainer : IRegistrationContainer
     {
-        private static readonly Assembly[] RootAssemblies =
-        {
-            typeof(DependencyContainer).Assembly, // AutoRegistration
-            typeof(LifestyleAttribute).Assembly,  // AutoWiringAPI
-            typeof(TypeExtensions).Assembly // Basics
-        };
-
         private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
 
         private readonly Container _container;
@@ -84,9 +77,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             var typeProvider = new ContainerDependentTypeProvider(
                 AssembliesExtensions.AllFromCurrentDomain(),
-                RootAssemblies,
-                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
-                options.ExcludedNamespaces ?? new List<string>());
+                RootAssemblies(),
+                options.ExcludedAssemblies,
+                options.ExcludedNamespaces);
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
@@ -103,9 +96,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             var typeProvider = new ContainerDependentTypeProvider(
                 assemblies,
-                RootAssemblies,
-                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
-                options.ExcludedNamespaces ?? new List<string>());
+                RootAssemblies(),
+                options.ExcludedAssemblies,
+                options.ExcludedNamespaces);
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
@@ -122,9 +115,9 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             var typeProvider = new ContainerDependentTypeProvider(
                 AssembliesExtensions.AllFromCurrentDomain().Below(assembly),
-                RootAssemblies,
-                options.ExcludedAssemblies ?? Array.Empty<Assembly>(),
-                options.ExcludedNamespaces ?? new List<string>());
+                RootAssemblies(),
+                options.ExcludedAssemblies,
+                options.ExcludedNamespaces);
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
@@ -322,6 +315,28 @@ namespace SpaceEngineers.Core.AutoRegistration
         #endregion
 
         #region Internals
+
+        private static Assembly[] RootAssemblies()
+        {
+            var regularRootAssemblies = new[]
+            {
+                typeof(DependencyContainer).Assembly, // AutoRegistration
+                typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
+                typeof(TypeExtensions).Assembly // Basics
+            };
+
+            return regularRootAssemblies.Concat(OptionalRootAssemblies()).ToArray();
+        }
+
+        private static IEnumerable<Assembly> OptionalRootAssemblies()
+        {
+            const string optionalAssemblyName = "SpaceEngineers.Core.GenericEndpoint.Contract";
+            var genericEndpointContract = AssembliesExtensions.FindAssembly(optionalAssemblyName);
+
+            return genericEndpointContract != null
+                ? new[] { genericEndpointContract }
+                : Array.Empty<Assembly>();
+        }
 
         private static Container CreateContainer()
         {

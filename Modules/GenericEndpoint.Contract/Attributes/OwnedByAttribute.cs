@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Attributes
+namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
 {
     using System;
 

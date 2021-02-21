@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.InternalAbstractions
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System;
     using System.Threading;

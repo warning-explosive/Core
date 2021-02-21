@@ -5,8 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     /// <summary>
     /// IMessagePipelineStep abstraction
     /// </summary>
-    public interface IMessagePipelineStep : IMessagePipeline,
-                                            IDecorator<IMessagePipeline>
+    public interface IMessagePipelineStep : IDecorator<IMessagePipeline>
     {
     }
 }

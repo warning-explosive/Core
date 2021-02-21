@@ -1,10 +1,11 @@
-namespace SpaceEngineers.Core.GenericHost.Transport
+namespace SpaceEngineers.Core.GenericHost.Defaults
 {
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
@@ -17,12 +18,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
         /// <inheritdoc />
         public IGenericEndpoint SelectInstance(
-            IIntegrationMessage message,
+            IntegrationMessage message,
             IReadOnlyCollection<IGenericEndpoint> endpoints)
         {
             if (endpoints.Count == 0)
             {
-                throw new InvalidOperationException($"Process must have at least one endpoint to handle '{message.GetType()}'");
+                throw new InvalidOperationException($"Process must have at least one endpoint to handle '{message.ReflectedType.FullName}'");
             }
 
             if (endpoints.Count == 1)
@@ -33,7 +34,6 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             var indexMap = endpoints
                 .Select((endpoint, i) => (endpoint, i))
                 .ToDictionary(pair => pair.i, pair => pair.endpoint);
-
             var logicalName = endpoints.First().Identity.LogicalName;
 
             var index = IndexMap.GetOrAdd(logicalName, _ => 0);

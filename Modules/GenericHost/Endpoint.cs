@@ -1,9 +1,10 @@
-namespace SpaceEngineers.Core.GenericHost.Endpoint
+namespace SpaceEngineers.Core.GenericHost
 {
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
+    using GenericEndpoint.Abstractions;
+    using Internals;
 
     /// <summary>
     /// Generic endpoint entry point

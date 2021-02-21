@@ -26,10 +26,20 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Found type</returns>
         public static Type? FindType(string assemblyName, string typeFullName)
         {
-            return AllFromCurrentDomain()
-                .SingleOrDefault(assembly => assembly.GetName().Name.Equals(assemblyName, StringComparison.Ordinal))
-                ?.GetTypes()
+            return FindAssembly(assemblyName)
+               ?.GetTypes()
                 .SingleOrDefault(type => type.FullName.Equals(typeFullName, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Find type in app domain assemblies
+        /// </summary>
+        /// <param name="assemblyName">Assembly short name</param>
+        /// <returns>Found type</returns>
+        public static Assembly? FindAssembly(string assemblyName)
+        {
+            return AllFromCurrentDomain()
+                .SingleOrDefault(assembly => assembly.GetName().Name.Equals(assemblyName, StringComparison.Ordinal));
         }
 
         /// <summary>

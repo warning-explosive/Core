@@ -12,11 +12,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using ClassFixtures;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Attributes;
+    using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Contract.Attributes;
+    using GenericHost;
     using GenericHost.Abstractions;
-    using GenericHost.Endpoint;
-    using GenericHost.Host;
-    using GenericHost.Transport;
+    using GenericHost.Defaults;
     using Microsoft.Extensions.Hosting;
     using Registrations;
     using Xunit;
@@ -68,10 +68,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var compositeEndpoint = await Endpoint.StartAsync(cts.Token, options10, options11, options20).ConfigureAwait(false);
 
-            var transport = new InMemoryIntegrationTransport(new DefaultEndpointInstanceSelectionBehavior());
-            transport.OnMessage += (_, e) =>
+            var transport = GenericHost.InMemoryTransport(new DefaultEndpointInstanceSelectionBehavior());
+            var totalCount = 0;
+            transport.OnMessage += (_, args) =>
             {
-                Output.WriteLine(e.ToString());
+                Output.WriteLine($"{Interlocked.Increment(ref totalCount)}: {args.GeneralMessage}");
             };
 
             using var host = Host.CreateDefaultBuilder()
@@ -80,13 +81,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
             var backgroundInitiatorTask = SendAndPublish(transport);
-            var timeout = Task.Delay(TimeSpan.FromSeconds(10), cts.Token);
 
-            var actual = await Task
-                .WhenAny(timeout, backgroundInitiatorTask)
-                .ConfigureAwait(false);
-
-            Assert.Equal(backgroundInitiatorTask, actual);
+            await backgroundInitiatorTask.ConfigureAwait(false);
 
             cts.Cancel();
             await runningHost.ConfigureAwait(false);
@@ -119,7 +115,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Lifestyle(EnLifestyle.Transient)]
-        private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>
+        private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>, IMessageHandler<TestQuery>
         {
             public Task Handle(TestCommand message, IIntegrationContext context, CancellationToken token)
             {
@@ -129,6 +125,11 @@ namespace SpaceEngineers.Core.Modules.Test
             public Task Handle(TestEvent message, IIntegrationContext context, CancellationToken token)
             {
                 return Task.CompletedTask;
+            }
+
+            public Task Handle(TestQuery message, IIntegrationContext context, CancellationToken token)
+            {
+                return context.Reply(message, new TestQueryResponse(), token);
             }
         }
 

@@ -1,16 +1,16 @@
-namespace SpaceEngineers.Core.GenericHost.Endpoint
+namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics;
-    using Core.GenericEndpoint.Abstractions;
+    using Basics.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    internal class ErrorHandlingPipeline : IMessagePipelineStep
+    [Dependency(typeof(QueryReplyValidationPipeline))]
+    internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
     {
         private readonly IRetryPolicy _retryPolicy;
 
@@ -24,16 +24,14 @@ namespace SpaceEngineers.Core.GenericHost.Endpoint
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process<TMessage>(TMessage message, IExtendedIntegrationContext context, CancellationToken token)
-            where TMessage : IIntegrationMessage
+        public Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => Decoratee.Process(message, context, token), false)
-                .Invoke(ex => OnError(ex, message, context, token));
+                .TryAsync(() => Decoratee.Process(message, context, token))
+                .Invoke(_ => OnError(message, context, token));
         }
 
-        private Task OnError<TMessage>(Exception exception, TMessage message, IExtendedIntegrationContext context, CancellationToken token)
-            where TMessage : IIntegrationMessage
+        private Task OnError(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
         {
             // TODO: log error
             return _retryPolicy.Apply(message, context, token);

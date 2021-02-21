@@ -41,21 +41,16 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Abstractions\IIntegrationCommand.cs">
-      <DependentUpon>IIntegrationMessage.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Abstractions\IIntegrationEvent.cs">
-      <DependentUpon>IIntegrationMessage.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Abstractions\IIntegrationQuery.cs">
-      <DependentUpon>IIntegrationMessage.cs</DependentUpon>
-    </Compile>
     <Compile Update="Abstractions\IIntegrationContext.cs">
       <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IMessagePipelineStep.cs">
+      <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
   </ItemGroup>
 </Project>

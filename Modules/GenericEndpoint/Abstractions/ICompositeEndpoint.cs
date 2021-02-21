@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Abstractions
+namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Collections.Generic;
 

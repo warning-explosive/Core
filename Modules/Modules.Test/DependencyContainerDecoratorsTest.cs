@@ -11,7 +11,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics.Test;
     using ClassFixtures;
     using GenericEndpoint.Abstractions;
-    using GenericHost.Host;
+    using GenericEndpoint.Contract.Abstractions;
+    using GenericHost;
     using Registrations;
     using VersionedContainer;
     using Xunit;
@@ -33,7 +34,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             _excludedAssemblies = new[]
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint
+                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
                 typeof(GenericHost).Assembly // GenericHost
             };
 

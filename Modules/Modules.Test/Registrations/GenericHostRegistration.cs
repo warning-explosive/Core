@@ -15,8 +15,10 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
             string typeFullName = AssembliesExtensions.BuildName(assemblyName, "Transport", "InMemoryIntegrationTransport");
             var transportType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
             container.Register(typeof(IIntegrationTransport), transportType, EnLifestyle.Singleton);
+            container.Register(transportType, transportType, EnLifestyle.Singleton);
 
             container.Register<IEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
+            container.Register<DefaultEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
         }
     }
 }

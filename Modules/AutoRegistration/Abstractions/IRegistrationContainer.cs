@@ -42,6 +42,19 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class;
 
+        /// <summary> Register singleton instance </summary>
+        /// <param name="singletonInstance">Singleton instance</param>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterInstance<TService>(TService singletonInstance)
+            where TService : class;
+
+        /// <summary> Register singleton instance </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <param name="singletonInstance">Singleton instance</param>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterInstance(Type serviceType, object singletonInstance);
+
         /// <summary> Register collection of services </summary>
         /// <param name="implementations">Collection of implementation types</param>
         /// <param name="lifestyle">Instance lifestyle</param>

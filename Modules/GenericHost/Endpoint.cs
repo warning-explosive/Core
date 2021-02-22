@@ -1,8 +1,13 @@
 namespace SpaceEngineers.Core.GenericHost
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration;
+    using AutoRegistration.Abstractions;
+    using AutoWiringApi.Enumerations;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using Internals;
 
@@ -21,15 +26,13 @@ namespace SpaceEngineers.Core.GenericHost
             CancellationToken token,
             params EndpointOptions[] endpointOptionsCollection)
         {
-            var endpoints = endpointOptionsCollection
-                .Select(endpointOptions => (IGenericEndpoint)new GenericEndpoint(endpointOptions))
+            var startingEndpoints = endpointOptionsCollection
+                .Select(endpointOptions => StartAsync(token, endpointOptions))
                 .ToArray();
 
-            var compositeEndpoint = new CompositeEndpoint(endpoints);
+            var endpoints = await Task.WhenAll(startingEndpoints).ConfigureAwait(false);
 
-            await compositeEndpoint.StopAsync().ConfigureAwait(false);
-
-            return compositeEndpoint;
+            return new CompositeEndpoint(endpoints);
         }
 
         /// <summary>
@@ -42,11 +45,49 @@ namespace SpaceEngineers.Core.GenericHost
             CancellationToken token,
             EndpointOptions endpointOptions)
         {
-            var endpoint = new GenericEndpoint(endpointOptions);
+            var dependencyContainer = DependencyContainerPerEndpoint(endpointOptions);
 
+            var endpoint = dependencyContainer.Resolve<IRunnableEndpoint>();
             await endpoint.StartAsync(token).ConfigureAwait(false);
 
-            return endpoint;
+            return dependencyContainer.Resolve<GenericEndpoint>();
+        }
+
+        private static IDependencyContainer DependencyContainerPerEndpoint(EndpointOptions endpointOptions)
+        {
+            var containerOptions = endpointOptions.ContainerOptions ?? new DependencyContainerOptions();
+
+            var registrations = new List<IManualRegistration>(containerOptions.ManualRegistrations)
+            {
+                new GenericEndpointManualRegistration(endpointOptions.Identity)
+            };
+
+            containerOptions.ManualRegistrations = registrations;
+
+            return endpointOptions.Assembly != null
+                ? DependencyContainer.CreateBoundedAbove(endpointOptions.Assembly, containerOptions)
+                : DependencyContainer.Create(containerOptions);
+        }
+
+        private class GenericEndpointManualRegistration : IManualRegistration
+        {
+            private readonly EndpointIdentity _endpointIdentity;
+
+            public GenericEndpointManualRegistration(EndpointIdentity endpointIdentity)
+            {
+                _endpointIdentity = endpointIdentity;
+            }
+
+            public void Register(IRegistrationContainer container)
+            {
+                container.RegisterInstance(_endpointIdentity);
+
+                container.Register<IGenericEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
+                container.Register<IRunnableEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
+                container.Register<IExecutableEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
+                container.Register<IMessagePipeline, GenericEndpoint>(EnLifestyle.Singleton);
+                container.Register<GenericEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics.Test;
@@ -16,6 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericHost;
     using GenericHost.Abstractions;
     using Microsoft.Extensions.Hosting;
+    using Registrations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -43,21 +45,20 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             using var cts = new CancellationTokenSource();
 
-            var assembly = typeof(EndpointIdentity).Assembly;
+            var assembly = GetType().Assembly;
 
             DependencyContainerOptions ContainerOptions()
             {
-                var registration = DependencyContainerOptions
-                    .DelegateRegistration(container =>
-                    {
-                        container.Register(typeof(IMessageHandler<>), typeof(TestMessageHandler), EnLifestyle.Transient);
-
-                        // TODO: register custom IIntegrationTypeProvider
-                    });
+                var registrations = new IManualRegistration[]
+                {
+                    new DelegatesRegistration(),
+                    new VersionedOpenGenericRegistration(),
+                    new GenericHostRegistration()
+                };
 
                 return new DependencyContainerOptions
                 {
-                    ManualRegistrations = new[] { registration }
+                    ManualRegistrations = registrations
                 };
             }
 

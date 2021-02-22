@@ -164,15 +164,18 @@ namespace SpaceEngineers.Core.GenericHost
                 .DelegateRegistration(container =>
                 {
                     container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
+                    container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
 
                     var behavior = transportOptions.EndpointInstanceSelectionBehavior;
-                    container.Register<IEndpointInstanceSelectionBehavior>(() => behavior, EnLifestyle.Singleton);
+                    container.RegisterInstance(behavior);
+                    container.RegisterInstance(behavior.GetType(), behavior);
 
                     var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(SpaceEngineers.Core.GenericEndpoint));
                     var typeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "IntegrationMessageFactory");
                     var messageFactoryType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
                     var messageFactoryLifestyle = messageFactoryType.Lifestyle();
                     container.Register(typeof(IIntegrationMessageFactory), messageFactoryType, messageFactoryLifestyle);
+                    container.Register(messageFactoryType, messageFactoryType, messageFactoryLifestyle);
 
                     container.RegisterCollection<IMessageHeaderProvider>(headerProviders, messageFactoryLifestyle);
                 });

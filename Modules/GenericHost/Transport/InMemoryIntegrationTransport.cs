@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using Basics;
     using Basics.Async;
@@ -28,9 +29,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private readonly AsyncManualResetEvent _manualResetEvent;
 
         public InMemoryIntegrationTransport(
+            IDependencyContainer dependencyContainer,
             IEndpointInstanceSelectionBehavior selectionBehavior,
             IIntegrationMessageFactory messageFactory)
         {
+            DependencyContainer = dependencyContainer;
+
             _selectionBehavior = selectionBehavior;
             _messageFactory = messageFactory;
 
@@ -39,6 +43,9 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
         /// <inheritdoc />
         public event EventHandler<IntegrationMessageEventArgs>? OnMessage;
+
+        /// <inheritdoc />
+        public IDependencyContainer DependencyContainer { get; }
 
         /// <inheritdoc />
         public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)

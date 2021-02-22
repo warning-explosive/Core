@@ -394,7 +394,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
-        internal void RegistrationCallbackResolutionTest()
+        internal void ManualRegistrationResolutionTest()
         {
             var cctorResolutionBehavior = SimpleInjector(DependencyContainer)
                                          .Options
@@ -418,7 +418,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 container =>
                 {
                     container.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
+                    container.Register<WiredTestServiceImpl, WiredTestServiceImpl>(EnLifestyle.Transient);
                     container.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
+                    container.Register<IndependentTestServiceImpl, IndependentTestServiceImpl>(EnLifestyle.Transient);
                     container.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient);
                     container.Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Transient);
                     container.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
@@ -467,7 +469,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .DelegateRegistration(container =>
                 {
                     container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                    container.RegisterVersioned<IOpenGenericTestService<object>>(EnLifestyle.Transient);
+                    container.Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
                 });
 
             options = new DependencyContainerOptions

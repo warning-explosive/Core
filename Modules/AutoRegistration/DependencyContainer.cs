@@ -138,7 +138,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <inheritdoc />
         public IRegistrationContainer Register(Type serviceType, Type implementationType, EnLifestyle lifestyle)
         {
-            ServiceRegistrationInfoExtensions.ExternalComponents(serviceType, implementationType, lifestyle).Each(_external.Add);
+            _container.Register(serviceType, implementationType, lifestyle.MapLifestyle());
             return this;
         }
 
@@ -147,7 +147,8 @@ namespace SpaceEngineers.Core.AutoRegistration
             where TService : class
             where TImplementation : class, TService
         {
-            return Register(typeof(TService), typeof(TImplementation), lifestyle);
+            _container.Register<TService, TImplementation>(lifestyle.MapLifestyle());
+            return this;
         }
 
         /// <inheritdoc />
@@ -161,7 +162,23 @@ namespace SpaceEngineers.Core.AutoRegistration
         public IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class
         {
-            return Register(typeof(TService), factory.Invoke, lifestyle);
+            _container.Register<TService>(factory.Invoke, lifestyle.MapLifestyle());
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IRegistrationContainer RegisterInstance<TService>(TService singletonInstance)
+            where TService : class
+        {
+            _container.RegisterInstance<TService>(singletonInstance);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IRegistrationContainer RegisterInstance(Type serviceType, object singletonInstance)
+        {
+            _container.RegisterInstance(serviceType, singletonInstance);
+            return this;
         }
 
         /// <inheritdoc />

@@ -1,11 +1,12 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
+    using AutoWiringApi.Abstractions;
     using GenericEndpoint;
 
     /// <summary>
     /// Generic endpoint abstraction
     /// </summary>
-    public interface IGenericEndpoint
+    public interface IGenericEndpoint : IResolvable
     {
         /// <summary>
         /// Endpoint identity

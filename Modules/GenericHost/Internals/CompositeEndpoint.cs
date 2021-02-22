@@ -3,8 +3,10 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiringApi.Attributes;
     using Core.GenericEndpoint.Abstractions;
 
+    [Unregistered]
     internal class CompositeEndpoint : ICompositeEndpoint, IRunnableEndpoint
     {
         private CancellationTokenSource? _cts;

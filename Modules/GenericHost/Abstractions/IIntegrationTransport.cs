@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
@@ -18,6 +19,11 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// Fires on receiving new incoming message
         /// </summary>
         event EventHandler<IntegrationMessageEventArgs> OnMessage;
+
+        /// <summary>
+        /// Dependency container
+        /// </summary>
+        IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// Initialize transport (topology, state, etc...)

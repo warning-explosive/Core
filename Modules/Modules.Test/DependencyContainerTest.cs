@@ -148,6 +148,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 new DelegatesRegistration(),
                 new GenericEndpointRegistration(),
+                new GenericHostRegistration(),
                 versionedOpenGenericRegistration
             };
 

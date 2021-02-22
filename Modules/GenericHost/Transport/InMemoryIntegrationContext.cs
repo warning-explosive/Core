@@ -13,8 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private readonly InMemoryIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;
 
-        private EndpointIdentity? _endpointIdentity;
-        private IntegrationMessage? _integrationMessage;
+        private EndpointScope? _endpointScope;
 
         public InMemoryIntegrationContext(
             InMemoryIntegrationTransport transport,
@@ -27,14 +26,14 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            var integrationMessage = _factory.CreateGeneralMessage(command, _endpointIdentity, _integrationMessage);
+            var integrationMessage = _factory.CreateGeneralMessage(command, _endpointScope);
             return Gather(integrationMessage, token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            var integrationMessage = _factory.CreateGeneralMessage(integrationEvent, _endpointIdentity, _integrationMessage);
+            var integrationMessage = _factory.CreateGeneralMessage(integrationEvent, _endpointScope);
             return Gather(integrationMessage, token);
         }
 
@@ -42,7 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             where TQuery : IIntegrationQuery<TResponse>
             where TResponse : IIntegrationMessage
         {
-            var integrationMessage = _factory.CreateGeneralMessage(query, _endpointIdentity, _integrationMessage);
+            var integrationMessage = _factory.CreateGeneralMessage(query, _endpointScope);
             return Gather(integrationMessage, token);
         }
 
@@ -50,11 +49,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             where TQuery : IIntegrationQuery<TResponse>
             where TResponse : IIntegrationMessage
         {
-            var initiatorIntegrationMessage = _integrationMessage
+            _endpointScope
                 .EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Reply)))
+                .InitiatorMessage
                 .SetReplied();
 
-            var integrationMessage = _factory.CreateGeneralMessage(response, _endpointIdentity, initiatorIntegrationMessage);
+            var integrationMessage = _factory.CreateGeneralMessage(response, _endpointScope);
 
             await Gather(integrationMessage, token).ConfigureAwait(false);
         }
@@ -62,23 +62,18 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         public async Task Retry<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage
         {
-            var initiatorIntegrationMessage = _integrationMessage
-                .EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Retry)));
+            _endpointScope.EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Retry)));
 
             var integrationMessage = _factory
-                .CreateGeneralMessage(message, _endpointIdentity, initiatorIntegrationMessage)
+                .CreateGeneralMessage(message, _endpointScope)
                 .IncrementRetryCounter();
 
             await Gather(integrationMessage, token).ConfigureAwait(false);
         }
 
-        internal InMemoryIntegrationContext WithinEndpointScope(
-            EndpointIdentity endpointIdentity,
-            IntegrationMessage integrationMessage)
+        internal InMemoryIntegrationContext WithinEndpointScope(EndpointScope endpointScope)
         {
-            _endpointIdentity = endpointIdentity;
-            _integrationMessage = integrationMessage;
-
+            _endpointScope = endpointScope;
             return this;
         }
 

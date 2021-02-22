@@ -44,6 +44,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
         /// <param name="servicesProvider">AutoWiringServicesProvider</param>
         /// <param name="options">DependencyContainerOptions</param>
+        [Obsolete("Use factory methods instead")]
         public DependencyContainer(ITypeProvider typeProvider,
                                    IAutoWiringServicesProvider servicesProvider,
                                    DependencyContainerOptions options)
@@ -83,7 +84,9 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
+#pragma warning disable 618
             return new DependencyContainer(typeProvider, servicesProvider, options);
+#pragma warning restore 618
         }
 
         /// <summary>
@@ -102,7 +105,9 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
+#pragma warning disable 618
             return new DependencyContainer(typeProvider, servicesProvider, options);
+#pragma warning restore 618
         }
 
         /// <summary>
@@ -121,7 +126,9 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
+#pragma warning disable 618
             return new DependencyContainer(typeProvider, servicesProvider, options);
+#pragma warning restore 618
         }
 
         #endregion

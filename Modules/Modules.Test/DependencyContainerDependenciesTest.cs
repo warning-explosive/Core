@@ -28,7 +28,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration(),
-                new GenericEndpointRegistration()
+                new GenericEndpointRegistration(),
+                new GenericHostRegistration()
             };
 
             DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDependenciesTest).Assembly, Array.Empty<Assembly>(), registrations);

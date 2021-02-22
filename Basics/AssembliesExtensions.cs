@@ -13,13 +13,36 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class AssembliesExtensions
     {
+        private const string Dot = ".";
         private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
         private static readonly Lazy<Assembly[]> LoadedAssemblies
             = new Lazy<Assembly[]>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
-        /// Find type in app domain assemblies
+        /// Build name
+        /// </summary>
+        /// <param name="nameParts">Name parts</param>
+        /// <returns>Built name</returns>
+        public static string BuildName(params string[] nameParts)
+        {
+            return string.Join(Dot, nameParts);
+        }
+
+        /// <summary>
+        /// Find required type in current AppDomain
+        /// </summary>
+        /// <param name="assemblyName">Assembly short name</param>
+        /// <param name="typeFullName">Type full name</param>
+        /// <returns>Found type</returns>
+        public static Type FindRequiredType(string assemblyName, string typeFullName)
+        {
+            return FindType(assemblyName, typeFullName)
+                .EnsureNotNull($"Type {typeFullName} must be found in current AppDomain");
+        }
+
+        /// <summary>
+        /// Find type in current AppDomain
         /// </summary>
         /// <param name="assemblyName">Assembly short name</param>
         /// <param name="typeFullName">Type full name</param>
@@ -32,10 +55,21 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Find type in app domain assemblies
+        /// Find required assembly in current AppDomain
         /// </summary>
         /// <param name="assemblyName">Assembly short name</param>
-        /// <returns>Found type</returns>
+        /// <returns>Found assembly</returns>
+        public static Assembly FindRequiredAssembly(string assemblyName)
+        {
+            return FindAssembly(assemblyName)
+                .EnsureNotNull($"Assembly {assemblyName} must be found in current AppDomain");
+        }
+
+        /// <summary>
+        /// Find assembly in current AppDomain
+        /// </summary>
+        /// <param name="assemblyName">Assembly short name</param>
+        /// <returns>Found assembly</returns>
         public static Assembly? FindAssembly(string assemblyName)
         {
             return AllFromCurrentDomain()

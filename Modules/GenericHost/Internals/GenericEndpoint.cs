@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                     .Resolve(handlerType)
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
                     .WithTypeArgument(message.ReflectedType)
-                    .WithArguments(message.Message, context, Token)
+                    .WithArguments(message.Payload, context, Token)
                     .Invoke<Task>()
                     .ConfigureAwait(false);
             }

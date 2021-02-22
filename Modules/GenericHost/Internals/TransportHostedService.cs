@@ -110,7 +110,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 exception,
                 "Transport error on message: {0} {1}",
                 args.GeneralMessage.ReflectedType,
-                args.GeneralMessage.Message);
+                args.GeneralMessage.Payload);
 
             return Task.CompletedTask;
         }

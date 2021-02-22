@@ -5,12 +5,14 @@ namespace SpaceEngineers.Core.GenericHost.Defaults
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
+    using AutoWiringApi.Attributes;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// DefaultEndpointInstanceSelectionBehavior
     /// </summary>
+    [ManualRegistration]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap

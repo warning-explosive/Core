@@ -1,12 +1,13 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
-    using Core.GenericEndpoint;
-    using Core.GenericEndpoint.Abstractions;
-    using Core.GenericEndpoint.Contract.Abstractions;
+    using Contract.Abstractions;
+    using GenericEndpoint;
 
     [Lifestyle(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory
@@ -18,20 +19,19 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _providers = providers.ToList();
         }
 
-        public IntegrationMessage CreateGeneralMessage<TMessage>(
-            TMessage messageToSend,
-            EndpointIdentity? endpointIdentity,
-            IntegrationMessage? initiatorMessage)
+        public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointScope? endpointScope)
             where TMessage : IIntegrationMessage
         {
-            var message = new IntegrationMessage(messageToSend, typeof(TMessage));
+            var message = new IntegrationMessage(payload, typeof(TMessage));
 
-            if (endpointIdentity != null)
+            if (endpointScope == null)
             {
-                message.Headers[IntegratedMessageHeader.SentFrom] = endpointIdentity;
+                return message;
             }
 
-            return ForwardHeaders(message, initiatorMessage);
+            message.Headers[IntegratedMessageHeader.SentFrom] = endpointScope.Identity;
+
+            return ForwardHeaders(message, endpointScope.InitiatorMessage);
         }
 
         private IntegrationMessage ForwardHeaders(IntegrationMessage messageToSend, IntegrationMessage? initiatorMessage)
@@ -41,7 +41,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 return messageToSend;
             }
 
-            foreach (var header in _providers.SelectMany(p => p.ForAutomaticForwarding))
+            var headersToForward = _providers
+                .SelectMany(p => p.ForAutomaticForwarding)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var header in headersToForward)
             {
                 if (initiatorMessage.Headers.TryGetValue(header, out var value))
                 {

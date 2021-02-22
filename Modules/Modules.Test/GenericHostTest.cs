@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
     using Basics.Test;
@@ -16,9 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract.Attributes;
     using GenericHost;
     using GenericHost.Abstractions;
-    using GenericHost.Defaults;
     using Microsoft.Extensions.Hosting;
-    using Registrations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -46,19 +43,21 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             using var cts = new CancellationTokenSource();
 
-            var assembly = GetType().Assembly;
+            var assembly = typeof(EndpointIdentity).Assembly;
 
             DependencyContainerOptions ContainerOptions()
             {
-                var registrations = new IManualRegistration[]
-                {
-                    new DelegatesRegistration(),
-                    new VersionedOpenGenericRegistration()
-                };
+                var registration = DependencyContainerOptions
+                    .DelegateRegistration(container =>
+                    {
+                        container.Register(typeof(IMessageHandler<>), typeof(TestMessageHandler), EnLifestyle.Transient);
+
+                        // TODO: register custom IIntegrationTypeProvider
+                    });
 
                 return new DependencyContainerOptions
                 {
-                    ManualRegistrations = registrations
+                    ManualRegistrations = new[] { registration }
                 };
             }
 
@@ -68,7 +67,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var compositeEndpoint = await Endpoint.StartAsync(cts.Token, options10, options11, options20).ConfigureAwait(false);
 
-            var transport = GenericHost.InMemoryTransport(new DefaultEndpointInstanceSelectionBehavior());
+            var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
             var totalCount = 0;
             transport.OnMessage += (_, args) =>
             {
@@ -86,6 +85,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
             cts.Cancel();
             await runningHost.ConfigureAwait(false);
+
+            Assert.True(totalCount > 1000);
         }
 
         private static Task SendAndPublish(IIntegrationTransport transport)

@@ -2,13 +2,19 @@ namespace SpaceEngineers.Core.GenericHost
 {
     using System;
     using System.Linq;
+    using System.Reflection;
     using Abstractions;
-    using GenericEndpoint;
+    using AutoRegistration;
+    using AutoRegistration.Abstractions;
+    using AutoRegistration.Extensions;
+    using AutoWiringApi.Enumerations;
+    using Basics;
     using GenericEndpoint.Abstractions;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using SimpleInjector;
     using Transport;
 
     /// <summary>
@@ -19,20 +25,58 @@ namespace SpaceEngineers.Core.GenericHost
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
 
         /// <summary>
-        /// Creates InMemoryIntegrationTransport hierarchy
+        /// Use in-memory integration transport implementation
         /// </summary>
-        /// <param name="endpointInstanceSelectionBehavior">IEndpointInstanceSelectionBehavior</param>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="transportOptions">In-memory integration transport options</param>
+        /// <param name="compositeEndpoint">Composite endpoint</param>
         /// <returns>InMemoryIntegrationTransport</returns>
-        public static IIntegrationTransport InMemoryTransport(
-            IEndpointInstanceSelectionBehavior endpointInstanceSelectionBehavior)
+        public static IHostBuilder UseInMemoryTransport(
+            this IHostBuilder hostBuilder,
+            InMemoryIntegrationTransportOptions transportOptions,
+            ICompositeEndpoint compositeEndpoint)
         {
-            // TODO: use container & move IntegrationMessageFactory to Endpoint project
-            return new InMemoryIntegrationTransport(
-                endpointInstanceSelectionBehavior,
-                new IntegrationMessageFactory(new[]
-                {
-                    new IntegratedMessageHeader()
-                }));
+            return hostBuilder.UseInMemoryTransport(transportOptions, compositeEndpoint.Endpoints.ToArray());
+        }
+
+        /// <summary>
+        /// Use in-memory integration transport implementation
+        /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="transportOptions">In-memory integration transport options</param>
+        /// <param name="genericEndpoints">Endpoint instances</param>
+        /// <returns>InMemoryIntegrationTransport</returns>
+        public static IHostBuilder UseInMemoryTransport(
+            this IHostBuilder hostBuilder,
+            InMemoryIntegrationTransportOptions transportOptions,
+            params IGenericEndpoint[] genericEndpoints)
+        {
+            var transport = InMemoryIntegrationTransport(transportOptions);
+            return hostBuilder.UseTransport(transport, genericEndpoints);
+        }
+
+        /// <summary>
+        /// Builds in-memory integration transport implementation
+        /// </summary>
+        /// <param name="transportOptions">In-memory integration transport options</param>
+        /// <returns>IIntegrationTransport instance</returns>
+        public static IIntegrationTransport InMemoryIntegrationTransport(InMemoryIntegrationTransportOptions transportOptions)
+        {
+            var registration = InMemoryIntegrationTransportRegistration(transportOptions);
+
+            var registrations = transportOptions
+                .AdditionalRegistrations
+                .Concat(new[] { registration })
+                .ToArray();
+
+            var containerOptions = new DependencyContainerOptions
+            {
+                ManualRegistrations = registrations
+            };
+
+            return DependencyContainer
+                .CreateExactlyBounded(Array.Empty<Assembly>(), containerOptions)
+                .Resolve<InMemoryIntegrationTransport>();
         }
 
         /// <summary>
@@ -55,7 +99,7 @@ namespace SpaceEngineers.Core.GenericHost
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="transport">IIntegrationTransport</param>
-        /// <param name="genericEndpoints">Generic endpoints</param>
+        /// <param name="genericEndpoints">Endpoint instances</param>
         /// <returns>Same IHostBuilder</returns>
         public static IHostBuilder UseTransport(
             this IHostBuilder hostBuilder,
@@ -103,6 +147,35 @@ namespace SpaceEngineers.Core.GenericHost
             }
 
             ctx.Properties[HostAlreadyConfigured] = null;
+        }
+
+        private static IManualRegistration InMemoryIntegrationTransportRegistration(InMemoryIntegrationTransportOptions transportOptions)
+        {
+            Type[] headerProviders;
+
+            using (var templateContainer = new Container())
+            {
+                headerProviders = typeof(IMessageHeaderProvider)
+                    .GetTypesToRegister(templateContainer, AssembliesExtensions.AllFromCurrentDomain())
+                    .ToArray();
+            }
+
+            return DependencyContainerOptions
+                .DelegateRegistration(container =>
+                {
+                    container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
+
+                    var behavior = transportOptions.EndpointInstanceSelectionBehavior;
+                    container.Register<IEndpointInstanceSelectionBehavior>(() => behavior, EnLifestyle.Singleton);
+
+                    var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(SpaceEngineers.Core.GenericEndpoint));
+                    var typeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "IntegrationMessageFactory");
+                    var messageFactoryType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
+                    var messageFactoryLifestyle = messageFactoryType.Lifestyle();
+                    container.Register(typeof(IIntegrationMessageFactory), messageFactoryType, messageFactoryLifestyle);
+
+                    container.RegisterCollection<IMessageHeaderProvider>(headerProviders, messageFactoryLifestyle);
+                });
         }
     }
 }

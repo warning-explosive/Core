@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoWiringApi.Attributes;
     using Basics;
     using Basics.Async;
     using Basics.Exceptions;
@@ -15,6 +16,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint.Abstractions;
     using Internals;
 
+    [ManualRegistration]
     internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
         private static readonly ConcurrentDictionary<Type, ICollection<IGenericEndpoint>> TopologyMap
@@ -113,7 +115,8 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
         {
             var messageCopy = message.DeepCopy();
-            var exclusiveContext = CreateContextInternal().WithinEndpointScope(endpoint.Identity, messageCopy);
+            var endpointScope = new EndpointScope(endpoint.Identity, messageCopy);
+            var exclusiveContext = CreateContextInternal().WithinEndpointScope(endpointScope);
 
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext);
         }

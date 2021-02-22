@@ -1,13 +1,14 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System.Collections.Generic;
+    using AutoWiringApi.Abstractions;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// IEndpointInstanceSelectionBehavior
     /// </summary>
-    public interface IEndpointInstanceSelectionBehavior
+    public interface IEndpointInstanceSelectionBehavior : IResolvable
     {
         /// <summary>
         /// Select instance in one logical group

@@ -14,11 +14,9 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
         {
             var endpointIdentity = new EndpointIdentity("mock_endpoint", 0);
 
-            var assemblyName = $"{nameof(SpaceEngineers)}.{nameof(Core)}.{nameof(Core.GenericHost)}";
-            var typeFullName = $"{assemblyName}.Internals.GenericEndpoint";
-            var genericEndpointType = AssembliesExtensions
-                .FindType(assemblyName, typeFullName)
-                .EnsureNotNull($"{typeFullName} must be found");
+            var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericHost));
+            var typeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "GenericEndpoint");
+            var genericEndpointType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
 
             var options = new EndpointOptions(endpointIdentity)
             {

@@ -12,13 +12,13 @@ namespace SpaceEngineers.Core.GenericEndpoint
     public class IntegrationMessage
     {
         /// <summary> .cctor </summary>
-        /// <param name="message">Integration message instance</param>
+        /// <param name="payload">User-defined payload message</param>
         /// <param name="reflectedType">Message reflected type</param>
         public IntegrationMessage(
-            IIntegrationMessage message,
+            IIntegrationMessage payload,
             Type reflectedType)
         {
-            Message = message;
+            Payload = payload;
             ReflectedType = reflectedType;
             Headers = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
             {
@@ -27,9 +27,9 @@ namespace SpaceEngineers.Core.GenericEndpoint
         }
 
         /// <summary>
-        /// Integration message instance
+        /// User-defined payload message
         /// </summary>
-        public IIntegrationMessage Message { get; }
+        public IIntegrationMessage Payload { get; }
 
         /// <summary>
         /// Message reflected type
@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
             var dict = new Dictionary<string, object>
             {
                 ["Type"] = ReflectedType.Name,
-                ["Content"] = Message
+                ["Payload"] = Payload
             };
 
             return string.Join(" ", dict.Concat(Headers));

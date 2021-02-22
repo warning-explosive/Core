@@ -4,13 +4,14 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiringApi.Abstractions;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// Abstraction for integration transport
     /// </summary>
-    public interface IIntegrationTransport
+    public interface IIntegrationTransport : IResolvable
     {
         /// <summary>
         /// OnMessage event

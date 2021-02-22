@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
             return context
                 .CallMethod(nameof(IExtendedIntegrationContext.Retry))
                 .WithTypeArgument(message.ReflectedType)
-                .WithArguments(message.Message, token)
+                .WithArguments(message.Payload, token)
                 .Invoke<Task>();
         }
     }

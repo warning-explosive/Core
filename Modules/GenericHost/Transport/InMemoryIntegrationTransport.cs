@@ -20,8 +20,8 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     [ManualRegistration]
     internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
-        private static readonly ConcurrentDictionary<Type, ICollection<IGenericEndpoint>> TopologyMap
-            = new ConcurrentDictionary<Type, ICollection<IGenericEndpoint>>();
+        private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap
+            = new ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
 
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
         private readonly IIntegrationMessageFactory _messageFactory;
@@ -74,11 +74,19 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
             static void AddMessageTarget(Type message, IGenericEndpoint endpoint)
             {
-                var collection = TopologyMap.GetOrAdd(message, _ => new List<IGenericEndpoint>());
+                var logicalNameMap = TopologyMap
+                    .GetOrAdd(message, _ => new Dictionary<string, IReadOnlyCollection<IGenericEndpoint>>(StringComparer.OrdinalIgnoreCase));
 
-                lock (collection)
+                lock (logicalNameMap)
                 {
-                    collection.Add(endpoint);
+                    if (logicalNameMap.TryGetValue(endpoint.Identity.LogicalName, out var collection))
+                    {
+                        ((List<IGenericEndpoint>)collection).Add(endpoint);
+                    }
+                    else
+                    {
+                        logicalNameMap[endpoint.Identity.LogicalName] = new List<IGenericEndpoint> { endpoint };
+                    }
                 }
             }
         }
@@ -92,8 +100,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             if (TopologyMap.TryGetValue(message.ReflectedType, out var endpoints))
             {
                 var selectedEndpoints = endpoints
-                    .GroupBy(endpoint => endpoint.Identity.LogicalName, StringComparer.OrdinalIgnoreCase)
-                    .Select(grp => SelectEndpointInstance(message, grp.ToList()))
+                    .Select(grp => SelectEndpointInstance(message, grp.Value))
                     .ToList();
 
                 if (selectedEndpoints.Any())

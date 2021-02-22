@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -10,6 +11,9 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     internal class MethodFinder
     {
+        private static readonly ConcurrentDictionary<string, MethodInfo?> Cache
+            = new ConcurrentDictionary<string, MethodInfo?>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary> .ctor </summary>
         /// <param name="declaringType">Type that declare method</param>
         /// <param name="methodName">Method name</param>
@@ -41,18 +45,39 @@ namespace SpaceEngineers.Core.Basics
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{DeclaringType.FullName}.{MethodName} with {TypeArguments.Count} type arguments and arguments types: {string.Join(", ", ArgumentTypes.Select(t => t.Name))}";
+            var properties = new Dictionary<string, string>
+            {
+                [nameof(DeclaringType)] = DeclaringType.FullName,
+                [nameof(MethodName)] = MethodName,
+                [nameof(BindingFlags)] = BindingFlags.ToString("G"),
+                [nameof(TypeArguments)] = string.Join(string.Empty, TypeArguments.Select(type => type.FullName)),
+                [nameof(ArgumentTypes)] = string.Join(string.Empty, ArgumentTypes.Select(type => type.FullName))
+            };
+
+            return string.Join(string.Empty, properties);
         }
 
         /// <summary> Find method </summary>
         /// <returns>MethodInfo</returns>
         internal MethodInfo? FindMethod()
         {
+            var key = string.Intern(ToString());
+
+            return Cache.GetOrAdd(key, _ => Find());
+        }
+
+        private MethodInfo? Find()
+        {
             var isGenericMethod = TypeArguments.Any();
 
             return isGenericMethod
-                       ? FindGenericMethod()
-                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
+                ? FindGenericMethod()
+                : FindNonGenericMethod();
+        }
+
+        private MethodInfo? FindNonGenericMethod()
+        {
+            return DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
         }
 
         private MethodInfo? FindGenericMethod()

@@ -2,13 +2,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiringApi.Abstractions;
     using Contract.Abstractions;
 
     /// <summary>
     /// Integration context
     /// Used for managing integration operations between endpoints
     /// </summary>
-    public interface IIntegrationContext
+    public interface IIntegrationContext : IResolvable
     {
         /// <summary>
         /// Send integration command to logical owner

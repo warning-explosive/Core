@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
     using Basics;
@@ -26,11 +27,14 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             EndpointIdentity endpointIdentity,
             IDependencyContainer dependencyContainer,
             IIntegrationTypeProvider integrationTypeProvider,
+            IIntegrationTransport integrationTransport,
             IEnumerable<IEndpointInitializer> initializers)
         {
             Identity = endpointIdentity;
             DependencyContainer = dependencyContainer;
             IntegrationTypeProvider = integrationTypeProvider;
+            Transport = integrationTransport;
+
             _initializers = initializers.ToList();
 
             _ready = new AsyncManualResetEvent(false);
@@ -40,6 +44,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public EndpointIdentity Identity { get; }
 
         public IDependencyContainer DependencyContainer { get; }
+
+        public IIntegrationTransport Transport { get; }
 
         public IIntegrationTypeProvider IntegrationTypeProvider { get; }
 
@@ -52,9 +58,12 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return new ValueTask(StopAsync());
         }
 
-        public Task InvokeMessageHandler(IntegrationMessage message, IExtendedIntegrationContext context)
+        public async Task InvokeMessageHandler(IntegrationMessage message, IExtendedIntegrationContext context)
         {
-            return Pipeline.Process(message, context, Token);
+            await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+            {
+                await Pipeline.Process(message, context, Token).ConfigureAwait(false);
+            }
         }
 
         public async Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
@@ -64,12 +73,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _runningHandlers.Increment();
             using (Disposable.Create(_runningHandlers, @event => @event.Decrement()))
             {
-                var handlerType = typeof(IMessageHandler<>).MakeGenericType(message.ReflectedType);
+                var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(message.ReflectedType);
 
                 await DependencyContainer
-                    .Resolve(handlerType)
+                    .Resolve(handlerServiceType)
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
-                    .WithTypeArgument(message.ReflectedType)
                     .WithArguments(message.Payload, context, Token)
                     .Invoke<Task>()
                     .ConfigureAwait(false);

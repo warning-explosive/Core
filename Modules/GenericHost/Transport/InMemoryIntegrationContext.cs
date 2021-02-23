@@ -1,17 +1,23 @@
 namespace SpaceEngineers.Core.GenericHost.Transport
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiringApi.Attributes;
     using Basics;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using Internals;
 
+    [ManualRegistration]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;
+        private readonly ICollection<IntegrationMessage> _messages;
 
         private EndpointScope? _endpointScope;
 
@@ -21,31 +27,29 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         {
             _transport = transport;
             _factory = factory;
+            _messages = new List<IntegrationMessage>();
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            var integrationMessage = _factory.CreateGeneralMessage(command, _endpointScope);
-            return Gather(integrationMessage, token);
+            return Gather(command, token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            var integrationMessage = _factory.CreateGeneralMessage(integrationEvent, _endpointScope);
-            return Gather(integrationMessage, token);
+            return Gather(integrationEvent, token);
         }
 
         public Task Request<TQuery, TResponse>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TResponse>
             where TResponse : IIntegrationMessage
         {
-            var integrationMessage = _factory.CreateGeneralMessage(query, _endpointScope);
-            return Gather(integrationMessage, token);
+            return Gather(query, token);
         }
 
-        public async Task Reply<TQuery, TResponse>(TQuery query, TResponse response, CancellationToken token)
+        public Task Reply<TQuery, TResponse>(TQuery query, TResponse response, CancellationToken token)
             where TQuery : IIntegrationQuery<TResponse>
             where TResponse : IIntegrationMessage
         {
@@ -54,32 +58,64 @@ namespace SpaceEngineers.Core.GenericHost.Transport
                 .InitiatorMessage
                 .SetReplied();
 
-            var integrationMessage = _factory.CreateGeneralMessage(response, _endpointScope);
-
-            await Gather(integrationMessage, token).ConfigureAwait(false);
+            return Gather(response, token);
         }
 
-        public async Task Retry<TMessage>(TMessage message, CancellationToken token)
+        public Task Retry<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage
         {
             _endpointScope.EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Retry)));
 
-            var integrationMessage = _factory
-                .CreateGeneralMessage(message, _endpointScope)
-                .IncrementRetryCounter();
+            var integrationMessage = CreateGeneralMessage(message).IncrementRetryCounter();
 
-            await Gather(integrationMessage, token).ConfigureAwait(false);
+            return Deliver(integrationMessage, token);
         }
 
-        internal InMemoryIntegrationContext WithinEndpointScope(EndpointScope endpointScope)
+        public IAsyncDisposable WithinEndpointScope(EndpointScope endpointScope, CancellationToken token)
         {
             _endpointScope = endpointScope;
-            return this;
+            return AsyncDisposable.Create(token, DeliverAll);
         }
 
-        private Task Gather(IntegrationMessage message, CancellationToken token)
+        private Task Gather<TMessage>(TMessage message, CancellationToken token)
+            where TMessage : IIntegrationMessage
         {
-            // TODO: Gather messages until message handler is running and send all as batch
+            var integrationMessage = CreateGeneralMessage(message);
+
+            if (_endpointScope == null)
+            {
+                return Deliver(integrationMessage, token);
+            }
+
+            lock (_messages)
+            {
+                _messages.Add(integrationMessage);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
+            where TMessage : IIntegrationMessage
+        {
+            return _factory.CreateGeneralMessage(message, _endpointScope?.Identity, _endpointScope?.InitiatorMessage);
+        }
+
+        private Task DeliverAll(CancellationToken token)
+        {
+            if (_endpointScope == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            lock (_messages)
+            {
+                return Task.WhenAll(_messages.Select(message => Deliver(message, token)));
+            }
+        }
+
+        private Task Deliver(IntegrationMessage message, CancellationToken token)
+        {
             return _transport.NotifyOnMessage(message, token);
         }
     }

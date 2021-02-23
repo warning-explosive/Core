@@ -13,10 +13,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// Creates IntegrationMessage instance from user defined payload
         /// </summary>
         /// <param name="payload">User defined payload message</param>
-        /// <param name="endpointScope">Optional endpoint scope</param>
+        /// <param name="endpointIdentity">Optional endpoint identity</param>
+        /// <param name="initiatorMessage">Optional initiator message</param>
         /// <typeparam name="TMessage">IntegrationMessage type-argument</typeparam>
         /// <returns>IntegrationMessage instance</returns>
-        IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointScope? endpointScope)
+        IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage;
     }
 }

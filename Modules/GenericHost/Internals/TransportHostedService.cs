@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Abstractions;
     using Basics;
     using Basics.Async;
-    using Core.GenericEndpoint.Abstractions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -17,7 +16,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     {
         private readonly ILogger<TransportHostedService> _logger;
         private readonly IIntegrationTransport _transport;
-        private readonly IReadOnlyCollection<IGenericEndpoint> _endpoints;
+        private readonly IReadOnlyCollection<EndpointOptions> _endpointOptions;
 
         private readonly AsyncAutoResetEvent _autoResetEvent;
         private readonly ConcurrentQueue<IntegrationMessageEventArgs> _queue;
@@ -28,11 +27,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public TransportHostedService(
             ILogger<TransportHostedService> logger,
             IIntegrationTransport transport,
-            IEnumerable<IGenericEndpoint> endpoints)
+            IReadOnlyCollection<EndpointOptions> endpointOptions)
         {
             _logger = logger;
             _transport = transport;
-            _endpoints = endpoints.ToList();
+            _endpointOptions = endpointOptions;
 
             _autoResetEvent = new AsyncAutoResetEvent(false);
             _queue = new ConcurrentQueue<IntegrationMessageEventArgs>();
@@ -45,13 +44,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
-            await _transport.Initialize(_endpoints, Token).ConfigureAwait(false);
+            var endpoints = await Task
+                .WhenAll(_endpointOptions.Select(options => Endpoint.StartAsync(options, Token)))
+                .ConfigureAwait(false);
+
+            await _transport.Initialize(endpoints, Token).ConfigureAwait(false);
 
             _logger.Information(Resources.StartedSuccessfully, _transport);
             _logger.Information(Resources.WaitingForIncomingMessages, _transport);
 
             _transport.OnMessage += OnMessage;
-
             _messageProcessingTask = StartMessageProcessing();
         }
 
@@ -89,17 +91,20 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private async Task StartMessageProcessing()
         {
-            while (!Token.IsCancellationRequested)
+            await using (_transport.DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                await _autoResetEvent.WaitAsync().ConfigureAwait(false);
-
-                // TODO: use async queue
-                if (_queue.TryDequeue(out var args))
+                while (!Token.IsCancellationRequested)
                 {
-                    await ExecutionExtensions
-                        .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
-                        .Invoke(ex => OnError(ex, args))
-                        .ConfigureAwait(false);
+                    await _autoResetEvent.WaitAsync().ConfigureAwait(false);
+
+                    // TODO: use async queue
+                    if (_queue.TryDequeue(out var args))
+                    {
+                        await ExecutionExtensions
+                            .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
+                            .Invoke(ex => OnError(ex, args))
+                            .ConfigureAwait(false);
+                    }
                 }
             }
         }

@@ -7,8 +7,10 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Attributes;
+    using AutoWiringApi.Enumerations;
     using Basics;
     using Basics.Async;
     using Basics.Exceptions;
@@ -18,27 +20,25 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using Internals;
 
     [ManualRegistration]
-    internal class InMemoryIntegrationTransport : IIntegrationTransport
+    internal class InMemoryIntegrationTransport : IIntegrationTransport, IAsyncDisposable
     {
         private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap
             = new ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
 
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
-        private readonly IIntegrationMessageFactory _messageFactory;
 
         private readonly AsyncManualResetEvent _manualResetEvent;
+        private readonly IAsyncDisposable _rootScope;
 
         public InMemoryIntegrationTransport(
             IDependencyContainer dependencyContainer,
-            IEndpointInstanceSelectionBehavior selectionBehavior,
-            IIntegrationMessageFactory messageFactory)
+            IEndpointInstanceSelectionBehavior selectionBehavior)
         {
             DependencyContainer = dependencyContainer;
-
             _selectionBehavior = selectionBehavior;
-            _messageFactory = messageFactory;
 
             _manualResetEvent = new AsyncManualResetEvent(false);
+            _rootScope = dependencyContainer.OpenScopeAsync();
         }
 
         /// <inheritdoc />
@@ -46,6 +46,26 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
         /// <inheritdoc />
         public IDependencyContainer DependencyContainer { get; }
+
+        public IManualRegistration Registration => DependencyContainerOptions
+            .DelegateRegistration(container =>
+            {
+                container.RegisterInstance<IIntegrationTransport>(this);
+                container.RegisterInstance<InMemoryIntegrationTransport>(this);
+
+                container.Register<IIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+                container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+                container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+
+                container.RegisterInstance<IEndpointInstanceSelectionBehavior>(_selectionBehavior);
+                container.RegisterInstance(_selectionBehavior.GetType(), _selectionBehavior);
+            });
+
+        /// <inheritdoc />
+        public ValueTask DisposeAsync()
+        {
+            return _rootScope.DisposeAsync();
+        }
 
         /// <inheritdoc />
         public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)
@@ -92,9 +112,6 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         }
 
         /// <inheritdoc />
-        public IIntegrationContext CreateContext() => CreateContextInternal();
-
-        /// <inheritdoc />
         public Task DispatchToEndpoint(IntegrationMessage message)
         {
             if (TopologyMap.TryGetValue(message.ReflectedType, out var endpoints))
@@ -126,16 +143,17 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             return _selectionBehavior.SelectInstance(message, endpoints);
         }
 
-        private Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
+        private async Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
         {
             var messageCopy = message.DeepCopy();
-            var endpointScope = new EndpointScope(endpoint.Identity, messageCopy);
-            var exclusiveContext = CreateContextInternal().WithinEndpointScope(endpointScope);
 
-            return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext);
+            await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+            {
+                var exclusiveContext = DependencyContainer
+                    .Resolve<IExtendedIntegrationContext>();
+
+                await ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext).ConfigureAwait(false);
+            }
         }
-
-        private InMemoryIntegrationContext CreateContextInternal()
-            => new InMemoryIntegrationContext(this, _messageFactory);
     }
 }

@@ -1,49 +1,19 @@
-namespace SpaceEngineers.Core.GenericHost
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Enumerations;
-    using GenericEndpoint;
-    using GenericEndpoint.Abstractions;
-    using Internals;
+    using Core.GenericEndpoint;
+    using Core.GenericEndpoint.Abstractions;
 
-    /// <summary>
-    /// Generic endpoint entry point
-    /// </summary>
-    public static class Endpoint
+    internal static class Endpoint
     {
-        /// <summary>
-        /// Create and start several generic endpoint instances
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <param name="endpointOptionsCollection">Endpoints options collection</param>
-        /// <returns>IGenericEndpoints collection</returns>
-        public static async Task<ICompositeEndpoint> StartAsync(
-            CancellationToken token,
-            params EndpointOptions[] endpointOptionsCollection)
-        {
-            var startingEndpoints = endpointOptionsCollection
-                .Select(endpointOptions => StartAsync(token, endpointOptions))
-                .ToArray();
-
-            var endpoints = await Task.WhenAll(startingEndpoints).ConfigureAwait(false);
-
-            return new CompositeEndpoint(endpoints);
-        }
-
-        /// <summary>
-        /// Create and start generic endpoint instance
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <param name="endpointOptions">Endpoint options</param>
-        /// <returns>IGenericEndpoint</returns>
-        public static async Task<IGenericEndpoint> StartAsync(
-            CancellationToken token,
-            EndpointOptions endpointOptions)
+        internal static async Task<IGenericEndpoint> StartAsync(
+            EndpointOptions endpointOptions,
+            CancellationToken token)
         {
             var dependencyContainer = DependencyContainerPerEndpoint(endpointOptions);
 
@@ -59,7 +29,8 @@ namespace SpaceEngineers.Core.GenericHost
 
             var registrations = new List<IManualRegistration>(containerOptions.ManualRegistrations)
             {
-                new GenericEndpointManualRegistration(endpointOptions.Identity)
+                new GenericEndpointManualRegistration(endpointOptions.Identity),
+                endpointOptions.Transport.Registration
             };
 
             containerOptions.ManualRegistrations = registrations;

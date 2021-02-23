@@ -41,9 +41,57 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Fact]
+        internal async Task StartStopRunTest()
+        {
+            var noneToken = CancellationToken.None;
+
+            using (var startStopHost = BuildHost())
+            {
+                await startStopHost.StartAsync(noneToken).ConfigureAwait(false);
+                await startStopHost.StopAsync(noneToken).ConfigureAwait(false);
+            }
+
+            using (var runHost = BuildHost())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await runHost.RunAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            IHost BuildHost()
+            {
+                var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
+
+                var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport)
+                {
+                    Assembly = GetType().Assembly,
+                    ContainerOptions = new DependencyContainerOptions
+                    {
+                        ManualRegistrations = new IManualRegistration[]
+                        {
+                            new DelegatesRegistration(),
+                            new VersionedOpenGenericRegistration(),
+                        }
+                    }
+                };
+
+                return Host
+                    .CreateDefaultBuilder()
+                    .ConfigureHost(transport, endpointOptions)
+                    .Build();
+            }
+        }
+
+        [Fact]
         internal async Task SimpleHostTest()
         {
             using var cts = new CancellationTokenSource();
+
+            var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
+            var totalCount = 0;
+            transport.OnMessage += (_, args) =>
+            {
+                Output.WriteLine($"{Interlocked.Increment(ref totalCount)}: {args.GeneralMessage}");
+            };
 
             var assembly = GetType().Assembly;
 
@@ -53,7 +101,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 {
                     new DelegatesRegistration(),
                     new VersionedOpenGenericRegistration(),
-                    new GenericHostRegistration()
                 };
 
                 return new DependencyContainerOptions
@@ -62,21 +109,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 };
             }
 
-            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0)) { Assembly = assembly, ContainerOptions = ContainerOptions() };
-            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1)) { Assembly = assembly, ContainerOptions = ContainerOptions() };
-            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0)) { Assembly = assembly, ContainerOptions = ContainerOptions() };
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
+            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
 
-            var compositeEndpoint = await Endpoint.StartAsync(cts.Token, options10, options11, options20).ConfigureAwait(false);
-
-            var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
-            var totalCount = 0;
-            transport.OnMessage += (_, args) =>
-            {
-                Output.WriteLine($"{Interlocked.Increment(ref totalCount)}: {args.GeneralMessage}");
-            };
-
-            using var host = Host.CreateDefaultBuilder()
-                .UseTransport(transport, compositeEndpoint)
+            using var host = Host
+                .CreateDefaultBuilder()
+                .ConfigureHost(transport, options10, options11, options20)
                 .Build();
 
             var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
@@ -87,6 +126,7 @@ namespace SpaceEngineers.Core.Modules.Test
             cts.Cancel();
             await runningHost.ConfigureAwait(false);
 
+            Output.WriteLine($"{nameof(totalCount)}: {totalCount}");
             Assert.True(totalCount > 1000);
         }
 
@@ -94,21 +134,21 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             return Task.Run(async () =>
             {
-                var ctx = transport.CreateContext();
+                var ctx = transport.DependencyContainer.Resolve<IIntegrationContext>();
 
                 for (var i = 0; i < 100; ++i)
                 {
-                    if (i % 3 == 0)
+                    if (i % 3 == 2)
                     {
                         await ctx.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
                     }
                     else if (i % 3 == 1)
                     {
-                        await ctx.Request<TestQuery, TestQueryResponse>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
+                        await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
                     }
                     else
                     {
-                        await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
+                        await ctx.Request<TestQuery, TestQueryResponse>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
                     }
 
                     await Task.Delay(TimeSpan.FromMilliseconds(10)).ConfigureAwait(false);
@@ -131,7 +171,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             public Task Handle(TestQuery message, IIntegrationContext context, CancellationToken token)
             {
-                return context.Reply(message, new TestQueryResponse(), token);
+                return message.Id % 6 == 0
+                    ? Task.CompletedTask
+                    : context.Reply(message, new TestQueryResponse(), token);
             }
         }
 
@@ -159,7 +201,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Id = id;
             }
 
-            private int Id { get; }
+            public int Id { get; }
 
             public override string ToString()
             {

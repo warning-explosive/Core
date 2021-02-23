@@ -25,37 +25,6 @@ namespace SpaceEngineers.Core.GenericHost
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
 
         /// <summary>
-        /// Use in-memory integration transport implementation
-        /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="transportOptions">In-memory integration transport options</param>
-        /// <param name="compositeEndpoint">Composite endpoint</param>
-        /// <returns>InMemoryIntegrationTransport</returns>
-        public static IHostBuilder UseInMemoryTransport(
-            this IHostBuilder hostBuilder,
-            InMemoryIntegrationTransportOptions transportOptions,
-            ICompositeEndpoint compositeEndpoint)
-        {
-            return hostBuilder.UseInMemoryTransport(transportOptions, compositeEndpoint.Endpoints.ToArray());
-        }
-
-        /// <summary>
-        /// Use in-memory integration transport implementation
-        /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="transportOptions">In-memory integration transport options</param>
-        /// <param name="genericEndpoints">Endpoint instances</param>
-        /// <returns>InMemoryIntegrationTransport</returns>
-        public static IHostBuilder UseInMemoryTransport(
-            this IHostBuilder hostBuilder,
-            InMemoryIntegrationTransportOptions transportOptions,
-            params IGenericEndpoint[] genericEndpoints)
-        {
-            var transport = InMemoryIntegrationTransport(transportOptions);
-            return hostBuilder.UseTransport(transport, genericEndpoints);
-        }
-
-        /// <summary>
         /// Builds in-memory integration transport implementation
         /// </summary>
         /// <param name="transportOptions">In-memory integration transport options</param>
@@ -80,33 +49,18 @@ namespace SpaceEngineers.Core.GenericHost
         }
 
         /// <summary>
-        /// Use transport
+        /// Configure host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="transport">IIntegrationTransport</param>
-        /// <param name="compositeEndpoint">Composite endpoint</param>
-        /// <returns>Same IHostBuilder</returns>
-        public static IHostBuilder UseTransport(
+        /// <param name="endpointOptions">Endpoint options</param>
+        /// <returns>Configured IHostBuilder</returns>
+        public static IHostBuilder ConfigureHost(
             this IHostBuilder hostBuilder,
             IIntegrationTransport transport,
-            ICompositeEndpoint compositeEndpoint)
+            params EndpointOptions[] endpointOptions)
         {
-            return UseTransport(hostBuilder, transport, compositeEndpoint.Endpoints.ToArray());
-        }
-
-        /// <summary>
-        /// Use transport
-        /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="transport">IIntegrationTransport</param>
-        /// <param name="genericEndpoints">Endpoint instances</param>
-        /// <returns>Same IHostBuilder</returns>
-        public static IHostBuilder UseTransport(
-            this IHostBuilder hostBuilder,
-            IIntegrationTransport transport,
-            params IGenericEndpoint[] genericEndpoints)
-        {
-            ValidateEndpoints(genericEndpoints);
+            ValidateEndpoints(endpointOptions);
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
@@ -121,13 +75,13 @@ namespace SpaceEngineers.Core.GenericHost
                 return new TransportHostedService(
                     serviceProvider.GetRequiredService<ILogger<TransportHostedService>>(),
                     serviceProvider.GetRequiredService<IIntegrationTransport>(),
-                    genericEndpoints);
+                    endpointOptions);
             }
         }
 
-        private static void ValidateEndpoints(IGenericEndpoint[] genericEndpoints)
+        private static void ValidateEndpoints(EndpointOptions[] endpointOptions)
         {
-            var duplicates = genericEndpoints
+            var duplicates = endpointOptions
                 .GroupBy(e => e.Identity)
                 .Where(grp => grp.Count() > 1)
                 .Select(grp => grp.Key.ToString())
@@ -143,7 +97,7 @@ namespace SpaceEngineers.Core.GenericHost
         {
             if (ctx.Properties.ContainsKey(HostAlreadyConfigured))
             {
-                throw new InvalidOperationException($"`{nameof(UseTransport)}` can only be used once on the same host instance because subsequent calls would introduce errors.");
+                throw new InvalidOperationException($"`{nameof(ConfigureHost)}` can only be used once on the same host instance because subsequent calls would introduce errors.");
             }
 
             ctx.Properties[HostAlreadyConfigured] = null;
@@ -165,6 +119,10 @@ namespace SpaceEngineers.Core.GenericHost
                 {
                     container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
                     container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
+
+                    container.Register<IIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+                    container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+                    container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
 
                     var behavior = transportOptions.EndpointInstanceSelectionBehavior;
                     container.RegisterInstance(behavior);

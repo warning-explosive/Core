@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost
 {
     using System.Reflection;
+    using Abstractions;
     using AutoRegistration;
     using GenericEndpoint;
 
@@ -11,9 +12,11 @@ namespace SpaceEngineers.Core.GenericHost
     {
         /// <summary> .cctor </summary>
         /// <param name="identity">Endpoint identity</param>
-        public EndpointOptions(EndpointIdentity identity)
+        /// <param name="transport">Integration transport</param>
+        public EndpointOptions(EndpointIdentity identity, IIntegrationTransport transport)
         {
             Identity = identity;
+            Transport = transport;
         }
 
         /// <summary>
@@ -30,5 +33,10 @@ namespace SpaceEngineers.Core.GenericHost
         /// Dependency container options
         /// </summary>
         public DependencyContainerOptions? ContainerOptions { get; set; }
+
+        /// <summary>
+        /// Integration transport instance
+        /// </summary>
+        public IIntegrationTransport Transport { get; }
     }
 }

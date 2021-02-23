@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Basics.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]
-    [Dependency(typeof(QueryReplyValidationPipeline))]
+    [Dependency(typeof(UnitOfWorkPipeline))]
     internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
     {
         private readonly IRetryPolicy _retryPolicy;

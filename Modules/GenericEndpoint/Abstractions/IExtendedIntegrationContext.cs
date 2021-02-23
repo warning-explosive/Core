@@ -1,8 +1,10 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Contract.Abstractions;
+    using GenericEndpoint;
 
     /// <summary>
     /// IExtendedIntegrationContext abstraction
@@ -19,5 +21,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <returns>Ongoing retry operation</returns>
         Task Retry<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage;
+
+        /// <summary>
+        /// Apply endpoint scope to current integration context
+        /// </summary>
+        /// <param name="endpointScope">Endpoint scope</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Scope resource</returns>
+        IAsyncDisposable WithinEndpointScope(EndpointScope endpointScope, CancellationToken token);
     }
 }

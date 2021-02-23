@@ -26,6 +26,11 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
+        /// Manual registration for endpoints
+        /// </summary>
+        IManualRegistration Registration { get; }
+
+        /// <summary>
         /// Initialize transport (topology, state, etc...)
         /// Invokes multiple times for each in-process endpoint
         /// </summary>
@@ -33,12 +38,6 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
         Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token);
-
-        /// <summary>
-        /// IIntegrationContext factory
-        /// </summary>
-        /// <returns>IIntegrationContext</returns>
-        IIntegrationContext CreateContext();
 
         /// <summary>
         /// Dispatch incoming message to endpoint

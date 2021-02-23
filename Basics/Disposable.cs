@@ -4,16 +4,14 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
 
     /// <summary>
-    /// Disposables
+    /// Disposable
     /// </summary>
     public static class Disposable
     {
-        private static readonly IDisposable _empty = new EmptyDisposable();
-
         /// <summary>
         /// Empty disposable
         /// </summary>
-        public static IDisposable Empty => _empty;
+        public static IDisposable Empty { get; } = new EmptyDisposable();
 
         /// <summary>
         /// Custom disposable with state
@@ -24,7 +22,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>IDisposable</returns>
         public static IDisposable Create<TState>(TState state, Action<TState> finallyAction)
         {
-            return new ActionDisposable<TState>(state, finallyAction);
+            return new DisposableAction<TState>(state, finallyAction);
         }
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>IDisposable</returns>
         public static IDisposable Create(Action finallyAction)
         {
-            return new ActionDisposable(finallyAction);
+            return new DisposableAction(finallyAction);
         }
 
         /// <summary>
@@ -71,12 +69,12 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        private class ActionDisposable<TState> : IDisposable
+        private class DisposableAction<TState> : IDisposable
         {
             private readonly TState _state;
             private readonly Action<TState> _finallyAction;
 
-            public ActionDisposable(TState state, Action<TState> finallyAction)
+            public DisposableAction(TState state, Action<TState> finallyAction)
             {
                 _state = state;
                 _finallyAction = finallyAction;
@@ -88,11 +86,11 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        private class ActionDisposable : IDisposable
+        private class DisposableAction : IDisposable
         {
             private readonly Action _finallyAction;
 
-            public ActionDisposable(Action finallyAction)
+            public DisposableAction(Action finallyAction)
             {
                 _finallyAction = finallyAction;
             }

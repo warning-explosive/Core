@@ -19,28 +19,26 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             _providers = providers.ToList();
         }
 
-        public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointScope? endpointScope)
+        public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage
         {
             var message = new IntegrationMessage(payload, typeof(TMessage));
 
-            if (endpointScope == null)
+            if (endpointIdentity != null)
             {
-                return message;
+                message.Headers[IntegratedMessageHeader.SentFrom] = endpointIdentity;
             }
 
-            message.Headers[IntegratedMessageHeader.SentFrom] = endpointScope.Identity;
+            if (initiatorMessage != null)
+            {
+                ForwardHeaders(message, initiatorMessage);
+            }
 
-            return ForwardHeaders(message, endpointScope.InitiatorMessage);
+            return message;
         }
 
-        private IntegrationMessage ForwardHeaders(IntegrationMessage messageToSend, IntegrationMessage? initiatorMessage)
+        private void ForwardHeaders(IntegrationMessage messageToSend, IntegrationMessage initiatorMessage)
         {
-            if (initiatorMessage == null)
-            {
-                return messageToSend;
-            }
-
             var headersToForward = _providers
                 .SelectMany(p => p.ForAutomaticForwarding)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -52,8 +50,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                     messageToSend.Headers[header] = value;
                 }
             }
-
-            return messageToSend;
         }
     }
 }

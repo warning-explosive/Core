@@ -12,10 +12,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <summary>
         /// Handle incoming message
         /// </summary>
-        /// <param name="message">Incoming integration message</param>
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing handle task</returns>
-        Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token);
+        Task Process(IExtendedIntegrationContext context, CancellationToken token);
     }
 }

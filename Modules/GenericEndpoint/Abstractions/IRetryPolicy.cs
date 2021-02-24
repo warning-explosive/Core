@@ -12,10 +12,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <summary>
         /// Apply retry strategy
         /// </summary>
-        /// <param name="message">Integration message</param>
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing retry operation</returns>
-        Task Apply(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token);
+        Task Apply(IExtendedIntegrationContext context, CancellationToken token);
     }
 }

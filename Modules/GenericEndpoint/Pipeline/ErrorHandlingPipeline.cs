@@ -24,17 +24,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
+        public Task Process(IExtendedIntegrationContext context, CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => Decoratee.Process(message, context, token))
-                .Invoke(_ => OnError(message, context, token));
+                .TryAsync(() => Decoratee.Process(context, token))
+                .Invoke(_ => OnError(context, token));
         }
 
-        private Task OnError(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
+        private Task OnError(IExtendedIntegrationContext context, CancellationToken token)
         {
             // TODO: log error
-            return _retryPolicy.Apply(message, context, token);
+            return _retryPolicy.Apply(context, token);
         }
     }
 }

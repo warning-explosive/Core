@@ -10,16 +10,19 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
-    using Internals;
 
     [ManualRegistration]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
+        private const string EndpointContextRequired = "Method must be executed within endpoint context (in message handler)";
+
         private readonly InMemoryIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;
         private readonly ICollection<IntegrationMessage> _messages;
 
-        private EndpointScope? _endpointScope;
+        private bool _deliverImmediately;
+        private IntegrationMessage? _message;
+        private EndpointIdentity? _endpointIdentity;
 
         public InMemoryIntegrationContext(
             InMemoryIntegrationTransport transport,
@@ -28,6 +31,18 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             _transport = transport;
             _factory = factory;
             _messages = new List<IntegrationMessage>();
+            _deliverImmediately = true;
+        }
+
+        public IntegrationMessage Message => _message.EnsureNotNull(EndpointContextRequired);
+
+        public EndpointIdentity EndpointIdentity => _endpointIdentity.EnsureNotNull(EndpointContextRequired);
+
+        public void Initialize(IntegrationMessage message, EndpointIdentity endpointIdentity)
+        {
+            _message = message;
+            _endpointIdentity = endpointIdentity;
+            _deliverImmediately = false;
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
@@ -53,36 +68,32 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             where TQuery : IIntegrationQuery<TResponse>
             where TResponse : IIntegrationMessage
         {
-            _endpointScope
-                .EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Reply)))
-                .InitiatorMessage
-                .SetReplied();
+            Message.SetReplied();
 
             return Gather(response, token);
         }
 
-        public Task Retry<TMessage>(TMessage message, CancellationToken token)
-            where TMessage : IIntegrationMessage
+        public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
-            _endpointScope.EnsureNotNull(string.Format(Resources.EndpointScopeRequired, nameof(Retry)));
+            /* TODO: use due time between retries */
 
-            var integrationMessage = CreateGeneralMessage(message).IncrementRetryCounter();
+            Message.IncrementRetryCounter();
 
-            return Deliver(integrationMessage, token);
+            return Deliver(Message, token);
         }
 
-        public IAsyncDisposable WithinEndpointScope(EndpointScope endpointScope, CancellationToken token)
+        public IAsyncDisposable WithinEndpointScope(AsyncUnitOfWorkBuilder<EndpointIdentity> unitOfWorkBuilder)
         {
-            _endpointScope = endpointScope;
-            return AsyncDisposable.Create(token, DeliverAll);
+            unitOfWorkBuilder.RegisterOnCommit(DeliverAll);
+            return AsyncDisposable.Empty;
         }
 
         private Task Gather<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage
         {
-            var integrationMessage = CreateGeneralMessage(message);
+            var integrationMessage = _factory.CreateGeneralMessage(message, _endpointIdentity, _message);
 
-            if (_endpointScope == null)
+            if (_deliverImmediately)
             {
                 return Deliver(integrationMessage, token);
             }
@@ -95,23 +106,17 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             return Task.CompletedTask;
         }
 
-        private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
-            where TMessage : IIntegrationMessage
+        private async Task DeliverAll(EndpointIdentity endpointIdentity, CancellationToken token)
         {
-            return _factory.CreateGeneralMessage(message, _endpointScope?.Identity, _endpointScope?.InitiatorMessage);
-        }
-
-        private Task DeliverAll(CancellationToken token)
-        {
-            if (_endpointScope == null)
-            {
-                return Task.CompletedTask;
-            }
+            ICollection<IntegrationMessage> forDelivery;
 
             lock (_messages)
             {
-                return Task.WhenAll(_messages.Select(message => Deliver(message, token)));
+                forDelivery = _messages.ToList();
+                _messages.Clear();
             }
+
+            await Task.WhenAll(forDelivery.Select(message => Deliver(message, token))).ConfigureAwait(false);
         }
 
         private Task Deliver(IntegrationMessage message, CancellationToken token)

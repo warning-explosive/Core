@@ -9,6 +9,11 @@ namespace SpaceEngineers.Core.Basics
     public static class AsyncDisposable
     {
         /// <summary>
+        /// Empty async disposable
+        /// </summary>
+        public static IAsyncDisposable Empty { get; } = new EmptyAsyncDisposable();
+
+        /// <summary>
         /// Creates IAsyncDisposable
         /// </summary>
         /// <param name="finallyAction">finallyAction</param>
@@ -44,6 +49,14 @@ namespace SpaceEngineers.Core.Basics
             public ValueTask DisposeAsync()
             {
                 return new ValueTask(_finallyAction.Invoke(_state));
+            }
+        }
+
+        private class EmptyAsyncDisposable : IAsyncDisposable
+        {
+            public ValueTask DisposeAsync()
+            {
+                return new ValueTask(Task.CompletedTask);
             }
         }
     }

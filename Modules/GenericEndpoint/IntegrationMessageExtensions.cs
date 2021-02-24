@@ -13,14 +13,11 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// Increment retry counter
         /// </summary>
         /// <param name="message">Integration message</param>
-        /// <returns>Integration message with incremented retry counter</returns>
-        public static IntegrationMessage IncrementRetryCounter(this IntegrationMessage message)
+        public static void IncrementRetryCounter(this IntegrationMessage message)
         {
             var actualCounter = message.ReadRetryCounter();
 
             message.Headers[IntegratedMessageHeader.MessageRetryCounter] = actualCounter + 1;
-
-            return message;
         }
 
         /// <summary>
@@ -40,9 +37,8 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// Set replied header
         /// </summary>
         /// <param name="message">Integration message</param>
-        /// <returns>Set integration message</returns>
         /// <exception cref="InvalidOperationException">Replied header already set</exception>
-        public static IntegrationMessage SetReplied(this IntegrationMessage message)
+        public static void SetReplied(this IntegrationMessage message)
         {
             if (message.HandlerReplied())
             {
@@ -50,15 +46,23 @@ namespace SpaceEngineers.Core.GenericEndpoint
             }
 
             message.Headers[IntegratedMessageHeader.HandlerRepliedToTheQuery] = true;
-
-            return message;
         }
 
-        internal static bool HandlerReplied(this IntegrationMessage message)
+        /// <summary>
+        /// Is handler replied
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <returns>Handler replied header value</returns>
+        public static bool HandlerReplied(this IntegrationMessage message)
         {
             return message.Headers.TryGetValue(IntegratedMessageHeader.HandlerRepliedToTheQuery, out var value)
                    && value is bool handlerReplied
                    && handlerReplied;
+        }
+
+        internal static bool IsCommand(this IntegrationMessage message)
+        {
+            return typeof(IIntegrationCommand).IsAssignableFrom(message.ReflectedType);
         }
 
         internal static bool IsQuery(this IntegrationMessage message)

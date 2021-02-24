@@ -1,11 +1,11 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Defaults
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoWiringApi.Attributes;
     using AutoWiringApi.Enumerations;
-    using Basics;
 
     /// <summary>
     /// Default IRetryPolicy implementation
@@ -13,14 +13,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
     [Lifestyle(EnLifestyle.Singleton)]
     public class DefaultRetryPolicy : IRetryPolicy
     {
+        private static readonly int[] Scale = new[] { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
+
         /// <inheritdoc />
-        public Task Apply(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
+        public Task Apply(IExtendedIntegrationContext context, CancellationToken token)
         {
-            return context
-                .CallMethod(nameof(IExtendedIntegrationContext.Retry))
-                .WithTypeArgument(message.ReflectedType)
-                .WithArguments(message.Payload, token)
-                .Invoke<Task>();
+            var actualCounter = context.Message.ReadRetryCounter();
+
+            if (actualCounter < Scale.Length)
+            {
+                var dueTime = TimeSpan.FromSeconds(Scale[actualCounter]);
+                return context.Retry(dueTime, token);
+            }
+
+            // TODO: move message to error queue
+            return Task.CompletedTask;
         }
     }
 }

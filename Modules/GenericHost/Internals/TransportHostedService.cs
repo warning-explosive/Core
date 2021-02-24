@@ -91,20 +91,17 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private async Task StartMessageProcessing()
         {
-            await using (_transport.DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+            while (!Token.IsCancellationRequested)
             {
-                while (!Token.IsCancellationRequested)
-                {
-                    await _autoResetEvent.WaitAsync().ConfigureAwait(false);
+                await _autoResetEvent.WaitAsync().ConfigureAwait(false);
 
-                    // TODO: use async queue
-                    if (_queue.TryDequeue(out var args))
-                    {
-                        await ExecutionExtensions
-                            .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
-                            .Invoke(ex => OnError(ex, args))
-                            .ConfigureAwait(false);
-                    }
+                // TODO: use async queue
+                if (_queue.TryDequeue(out var args))
+                {
+                    await ExecutionExtensions
+                        .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
+                        .Invoke(ex => OnError(ex, args))
+                        .ConfigureAwait(false);
                 }
             }
         }

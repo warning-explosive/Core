@@ -58,27 +58,27 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return new ValueTask(StopAsync());
         }
 
-        public async Task InvokeMessageHandler(IntegrationMessage message, IExtendedIntegrationContext context)
+        public async Task InvokeMessageHandler(IExtendedIntegrationContext context)
         {
             await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                await Pipeline.Process(message, context, Token).ConfigureAwait(false);
+                await Pipeline.Process(context, Token).ConfigureAwait(false);
             }
         }
 
-        public async Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
+        public async Task Process(IExtendedIntegrationContext context, CancellationToken token)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
             _runningHandlers.Increment();
             using (Disposable.Create(_runningHandlers, @event => @event.Decrement()))
             {
-                var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(message.ReflectedType);
+                var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(context.Message.ReflectedType);
 
                 await DependencyContainer
                     .Resolve(handlerServiceType)
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
-                    .WithArguments(message.Payload, context, Token)
+                    .WithArguments(context.Message.Payload, context, Token)
                     .Invoke<Task>()
                     .ConfigureAwait(false);
             }

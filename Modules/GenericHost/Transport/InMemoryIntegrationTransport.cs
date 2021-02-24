@@ -149,10 +149,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
             await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = DependencyContainer
-                    .Resolve<IExtendedIntegrationContext>();
+                var exclusiveContext = DependencyContainer.Resolve<IExtendedIntegrationContext>();
 
-                await ((IExecutableEndpoint)endpoint).InvokeMessageHandler(messageCopy, exclusiveContext).ConfigureAwait(false);
+                // TODO: Add IResolvable with initialization for services with runtime information as dependency
+                exclusiveContext.Initialize(messageCopy, endpoint.Identity);
+
+                await ((IExecutableEndpoint)endpoint).InvokeMessageHandler(exclusiveContext).ConfigureAwait(false);
             }
         }
     }

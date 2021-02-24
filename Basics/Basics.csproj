@@ -55,6 +55,12 @@
     <Compile Update="AsyncGenericOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
+    <Compile Update="AsyncUnitOfWork.cs">
+      <DependentUpon>IAsyncUnitOfWork.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AsyncUnitOfWorkBuilder.cs">
+      <DependentUpon>IAsyncUnitOfWork.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

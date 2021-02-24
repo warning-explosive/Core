@@ -127,7 +127,7 @@ namespace SpaceEngineers.Core.Modules.Test
             await runningHost.ConfigureAwait(false);
 
             Output.WriteLine($"{nameof(totalCount)}: {totalCount}");
-            Assert.True(totalCount > 1000);
+            Assert.True(totalCount > 300);
         }
 
         private static Task SendAndPublish(IIntegrationTransport transport)

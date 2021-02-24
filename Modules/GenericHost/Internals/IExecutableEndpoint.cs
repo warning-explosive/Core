@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiringApi.Abstractions;
-    using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
 
     internal interface IExecutableEndpoint : IResolvable
@@ -13,6 +12,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         IIntegrationTransport Transport { get; }
 
-        Task InvokeMessageHandler(IntegrationMessage message, IExtendedIntegrationContext context);
+        Task InvokeMessageHandler(IExtendedIntegrationContext context);
     }
 }

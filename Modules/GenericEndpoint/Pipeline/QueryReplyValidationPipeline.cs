@@ -17,12 +17,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public async Task Process(IntegrationMessage message, IExtendedIntegrationContext context, CancellationToken token)
+        public async Task Process(IExtendedIntegrationContext context, CancellationToken token)
         {
-            await Decoratee.Process(message, context, token).ConfigureAwait(false);
+            await Decoratee.Process(context, token).ConfigureAwait(false);
 
-            if (message.IsQuery()
-                && !message.HandlerReplied())
+            if (context.Message.IsQuery()
+                && !context.Message.HandlerReplied())
             {
                 throw new InvalidOperationException("Message handler must reply to the query");
             }

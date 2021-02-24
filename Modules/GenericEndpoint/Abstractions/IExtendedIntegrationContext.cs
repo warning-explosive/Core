@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Contract.Abstractions;
+    using Basics;
     using GenericEndpoint;
 
     /// <summary>
@@ -12,22 +12,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     public interface IExtendedIntegrationContext : IIntegrationContext
     {
         /// <summary>
+        /// Integration message, processing initiator
+        /// </summary>
+        IntegrationMessage Message { get; }
+
+        /// <summary>
+        /// Current endpoint identity
+        /// </summary>
+        EndpointIdentity EndpointIdentity { get; }
+
+        /// <summary>
+        /// Initialize IExtendedIntegrationContext instance
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <param name="endpointIdentity">Endpoint identity</param>
+        void Initialize(IntegrationMessage message, EndpointIdentity endpointIdentity);
+
+        /// <summary>
         /// Retry integration message processing
         /// Must be called within endpoint scope (in message handler)
         /// </summary>
-        /// <param name="message">Integration message</param>
+        /// <param name="dueTime">Time that transport waits before deliver message again</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>Ongoing retry operation</returns>
-        Task Retry<TMessage>(TMessage message, CancellationToken token)
-            where TMessage : IIntegrationMessage;
+        Task Retry(TimeSpan dueTime, CancellationToken token);
 
         /// <summary>
-        /// Apply endpoint scope to current integration context
+        /// Subscribe current integration context to logical transaction callbacks
         /// </summary>
-        /// <param name="endpointScope">Endpoint scope</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Scope resource</returns>
-        IAsyncDisposable WithinEndpointScope(EndpointScope endpointScope, CancellationToken token);
+        /// <param name="unitOfWorkBuilder">Unit of work builder</param>
+        /// <returns>Opened context scope</returns>
+        IAsyncDisposable WithinEndpointScope(AsyncUnitOfWorkBuilder<EndpointIdentity> unitOfWorkBuilder);
     }
 }

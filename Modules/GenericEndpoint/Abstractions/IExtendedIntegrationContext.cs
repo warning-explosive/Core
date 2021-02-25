@@ -3,13 +3,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiringApi.Abstractions;
     using Basics;
     using GenericEndpoint;
 
     /// <summary>
     /// IExtendedIntegrationContext abstraction
     /// </summary>
-    public interface IExtendedIntegrationContext : IIntegrationContext
+    public interface IExtendedIntegrationContext : IIntegrationContext, IInitializable<EndpointRuntimeInfo>
     {
         /// <summary>
         /// Integration message, processing initiator
@@ -20,13 +21,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// Current endpoint identity
         /// </summary>
         EndpointIdentity EndpointIdentity { get; }
-
-        /// <summary>
-        /// Initialize IExtendedIntegrationContext instance
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <param name="endpointIdentity">Endpoint identity</param>
-        void Initialize(IntegrationMessage message, EndpointIdentity endpointIdentity);
 
         /// <summary>
         /// Retry integration message processing

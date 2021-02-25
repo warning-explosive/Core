@@ -263,10 +263,21 @@ namespace SpaceEngineers.Core.AutoRegistration
         #region IDependencyContainer
 
         /// <inheritdoc />
-        public T Resolve<T>()
-            where T : class
+        public TService Resolve<TService>()
+            where TService : class
         {
-            return _container.GetInstance<T>();
+            return _container.GetInstance<TService>();
+        }
+
+        /// <inheritdoc />
+        public TService Resolve<TService, TRuntimeInfo>(TRuntimeInfo runtimeInfo)
+            where TService : class, IInitializable<TRuntimeInfo>
+        {
+            var instance = _container.GetInstance<TService>();
+
+            instance.Initialize(runtimeInfo);
+
+            return instance;
         }
 
         /// <inheritdoc />
@@ -276,10 +287,10 @@ namespace SpaceEngineers.Core.AutoRegistration
         }
 
         /// <inheritdoc />
-        public IEnumerable<T> ResolveCollection<T>()
-            where T : class
+        public IEnumerable<TService> ResolveCollection<TService>()
+            where TService : class
         {
-            return _container.GetAllInstances<T>();
+            return _container.GetAllInstances<TService>();
         }
 
         /// <inheritdoc />

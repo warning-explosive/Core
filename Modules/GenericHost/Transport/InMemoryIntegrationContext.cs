@@ -38,10 +38,10 @@ namespace SpaceEngineers.Core.GenericHost.Transport
 
         public EndpointIdentity EndpointIdentity => _endpointIdentity.EnsureNotNull(EndpointContextRequired);
 
-        public void Initialize(IntegrationMessage message, EndpointIdentity endpointIdentity)
+        public void Initialize(EndpointRuntimeInfo info)
         {
-            _message = message;
-            _endpointIdentity = endpointIdentity;
+            _message = info.Message;
+            _endpointIdentity = info.EndpointIdentity;
             _deliverImmediately = false;
         }
 

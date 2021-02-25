@@ -14,30 +14,40 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <summary>
         /// Resolve service implementation
         /// </summary>
-        /// <typeparam name="T">IResolvable</typeparam>
+        /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>Service implementation</returns>
-        T Resolve<T>()
-            where T : class;
+        TService Resolve<TService>()
+            where TService : class;
+
+        /// <summary>
+        /// Resolve service implementation and initialize it with runtime information
+        /// </summary>
+        /// <param name="runtimeInfo">Runtime information</param>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <typeparam name="TRuntimeInfo">TRuntimeInfo type-argument</typeparam>
+        /// <returns>Service implementation</returns>
+        TService Resolve<TService, TRuntimeInfo>(TRuntimeInfo runtimeInfo)
+            where TService : class, IInitializable<TRuntimeInfo>;
 
         /// <summary>
         /// Resolve untyped service implementation
         /// </summary>
-        /// <param name="serviceType">IResolvable</param>
+        /// <param name="serviceType">Service type</param>
         /// <returns>Untyped service implementation</returns>
         object Resolve(Type serviceType);
 
         /// <summary>
         /// Resolve service implementations collection
         /// </summary>
-        /// <typeparam name="T">IResolvable</typeparam>
+        /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>Service implementation</returns>
-        IEnumerable<T> ResolveCollection<T>()
-            where T : class;
+        IEnumerable<TService> ResolveCollection<TService>()
+            where TService : class;
 
         /// <summary>
         /// Resolve untyped service implementations collection
         /// </summary>
-        /// <param name="serviceType">IResolvable</param>
+        /// <param name="serviceType">Service type</param>
         /// <returns>Untyped service implementation</returns>
         IEnumerable<object> ResolveCollection(Type serviceType);
     }

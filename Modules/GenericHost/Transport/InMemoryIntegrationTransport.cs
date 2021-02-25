@@ -146,13 +146,11 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private async Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
         {
             var messageCopy = message.DeepCopy();
+            var runtimeInfo = new EndpointRuntimeInfo(endpoint.Identity, messageCopy);
 
             await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = DependencyContainer.Resolve<IExtendedIntegrationContext>();
-
-                // TODO: Add IResolvable with initialization for services with runtime information as dependency
-                exclusiveContext.Initialize(messageCopy, endpoint.Identity);
+                var exclusiveContext = DependencyContainer.Resolve<IExtendedIntegrationContext, EndpointRuntimeInfo>(runtimeInfo);
 
                 await ((IExecutableEndpoint)endpoint).InvokeMessageHandler(exclusiveContext).ConfigureAwait(false);
             }

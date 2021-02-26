@@ -469,6 +469,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                   .GetCurrentRegistrations()
                   .OrderByComplexityDepth()
                   .Select(producer => producer.ServiceType)
+                  .Where(serviceType => !serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                   .VersionedComponents(container);
         }
 

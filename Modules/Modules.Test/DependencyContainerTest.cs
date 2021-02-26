@@ -163,7 +163,8 @@ namespace SpaceEngineers.Core.Modules.Test
                    .AllLoadedTypes
                    .Where(t => typeof(IResolvable).IsAssignableFrom(t)
                                && t != typeof(IResolvable)
-                               && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>)))
+                               && !t.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
+                               && !t.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                    .Each(service =>
                          {
                              Type versioned;

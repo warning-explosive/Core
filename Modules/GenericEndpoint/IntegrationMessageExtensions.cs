@@ -40,6 +40,11 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// <exception cref="InvalidOperationException">Replied header already set</exception>
         public static void SetReplied(this IntegrationMessage message)
         {
+            if (!message.IsQuery())
+            {
+                throw new InvalidOperationException($"{message.ReflectedType} is not a query. You can reply only on queries.");
+            }
+
             if (message.HandlerReplied())
             {
                 throw new InvalidOperationException("Message handler already replied to integration query");

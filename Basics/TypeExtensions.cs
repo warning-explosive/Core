@@ -217,6 +217,21 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Unwrap type parameter is possible
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <param name="typeArgumentAt">Type argument position</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type UnwrapTypeParameter(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        {
+            return typeToUnwrap
+                       .ExtractGenericArgumentsAt(openGeneric, typeArgumentAt)
+                       .SingleOrDefault()
+                   ?? typeToUnwrap;
+        }
+
+        /// <summary>
         /// Types included in source type
         /// - source
         /// - base types

@@ -15,6 +15,16 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>ITypeInfo</returns>
-        public static ITypeInfo Get(Type type) => Cache.GetOrAdd(type.FullName, _ => new TypeInfo(type));
+        public static ITypeInfo Get(Type type) => Cache.GetOrAdd(GetKey(type), _ => new TypeInfo(type));
+
+        private static string GetKey(Type type)
+        {
+            if (type.IsGenericParameter)
+            {
+                throw new InvalidOperationException("Type cache doesn't support generic parameters");
+            }
+
+            return type.FullName;
+        }
     }
 }

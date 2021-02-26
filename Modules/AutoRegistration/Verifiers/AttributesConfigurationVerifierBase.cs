@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using System.Linq;
     using AutoWiringApi.Abstractions;
     using Basics;
+    using Extensions;
     using SimpleInjector;
 
     internal abstract class AttributesConfigurationVerifierBase : IConfigurationVerifier
@@ -18,19 +19,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 
         public void Verify()
         {
-            VerifyInternal(Registered().ToList());
+            VerifyInternal(_container.RegisteredComponents().ToList());
         }
 
         protected abstract void VerifyInternal(ICollection<Type> registered);
-
-        protected IEnumerable<Type> Registered()
-        {
-            return _container
-                  .GetCurrentRegistrations()
-                  .Select(producer => producer.Registration.ImplementationType)
-                  .Select(impl => impl.GenericTypeDefinitionOrSelf())
-                  .Distinct();
-        }
 
         protected static IEnumerable<Type> ExtractAutoWiringServices(Type type)
         {

@@ -266,6 +266,8 @@ namespace SpaceEngineers.Core.AutoRegistration
         public TService Resolve<TService>()
             where TService : class
         {
+            VerifyService(typeof(TService));
+
             return _container.GetInstance<TService>();
         }
 
@@ -283,6 +285,8 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <inheritdoc />
         public object Resolve(Type serviceType)
         {
+            VerifyService(serviceType);
+
             return _container.GetInstance(serviceType);
         }
 
@@ -405,6 +409,14 @@ namespace SpaceEngineers.Core.AutoRegistration
             container.RegisterInstance<ITypeProvider>(typeProvider);
             container.RegisterInstance(servicesProvider.GetType(), servicesProvider);
             container.RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
+        }
+
+        private static void VerifyService(Type serviceType)
+        {
+            if (serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
+            {
+                throw new InvalidOperationException($"Use overload with additional parameter to resolve initializable service {serviceType.FullName}");
+            }
         }
 
         private static IEnumerable<ServiceRegistrationInfo> Resolvable(

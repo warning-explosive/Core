@@ -57,20 +57,20 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             return Gather(integrationEvent, token);
         }
 
-        public Task Request<TQuery, TResponse>(TQuery query, CancellationToken token)
-            where TQuery : IIntegrationQuery<TResponse>
-            where TResponse : IIntegrationMessage
+        public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationMessage
         {
             return Gather(query, token);
         }
 
-        public Task Reply<TQuery, TResponse>(TQuery query, TResponse response, CancellationToken token)
-            where TQuery : IIntegrationQuery<TResponse>
-            where TResponse : IIntegrationMessage
+        public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationMessage
         {
             Message.SetReplied();
 
-            return Gather(response, token);
+            return Gather(reply, token);
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)

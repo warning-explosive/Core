@@ -7,9 +7,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions
     ///     - has multiple senders
     ///     - message handler must reply to query initiator endpoint
     /// </summary>
-    /// <typeparam name="TResponse">TResponse type-argument</typeparam>
-    public interface IIntegrationQuery<TResponse> : IIntegrationMessage
-        where TResponse : IIntegrationMessage
+    /// <typeparam name="TReply">TReply type-argument</typeparam>
+    public interface IIntegrationQuery<TReply> : IIntegrationMessage
+        where TReply : IIntegrationMessage
     {
     }
 }

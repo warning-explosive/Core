@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
+    using GenericEndpoint.TestExtensions;
     using GenericHost;
     using GenericHost.Abstractions;
     using Microsoft.Extensions.Hosting;
@@ -38,6 +39,47 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output)
         {
             _fixture = fixture;
+        }
+
+        [Fact]
+        internal void TestExtensionTest()
+        {
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new DelegatesRegistration(),
+                new VersionedOpenGenericRegistration(),
+                new GenericEndpointRegistration(),
+                GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions()).Registration
+            };
+
+            var dependencyContainer = _fixture
+                .GetDependencyContainer(
+                    GetType().Assembly,
+                    new[] { typeof(GenericHost).Assembly },
+                    manualRegistrations);
+
+            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestCommand>>().OnMessage(new TestCommand(42))).Invoke();
+            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestEvent>>().OnMessage(new TestEvent(42))).Invoke();
+            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestQuery>>().OnMessage(new TestQuery(42))).Invoke();
+
+            dependencyContainer
+                .Resolve<IMessageHandler<TestQuery>>()
+                .OnMessage(new TestQuery(43)).ShouldNotSend<IIntegrationCommand>()
+                .ShouldNotPublish<IIntegrationEvent>()
+                .ShouldNotRequest<TestQuery, TestQueryReply>()
+                .Replied<TestQueryReply>(reply => reply.Id == 43)
+                .Invoke();
+
+            MessageHandlerTestBuilder<T> ShouldNotProduceMessages<T>(MessageHandlerTestBuilder<T> builder)
+                where T : IIntegrationMessage
+            {
+                return builder
+                    .ShouldProduceNothing()
+                    .ShouldNotSend<IIntegrationCommand>()
+                    .ShouldNotPublish<IIntegrationEvent>()
+                    .ShouldNotRequest<TestQuery, TestQueryReply>()
+                    .ShouldNotReply<IIntegrationMessage>();
+            }
         }
 
         [Fact]
@@ -148,7 +190,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     }
                     else
                     {
-                        await ctx.Request<TestQuery, TestQueryResponse>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
+                        await ctx.Request<TestQuery, TestQueryReply>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
                     }
 
                     await Task.Delay(TimeSpan.FromMilliseconds(10)).ConfigureAwait(false);
@@ -173,7 +215,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 return message.Id % 6 == 0
                     ? Task.CompletedTask
-                    : context.Reply(message, new TestQueryResponse(), token);
+                    : context.Reply(message, new TestQueryReply(message.Id), token);
             }
         }
 
@@ -194,7 +236,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [OwnedBy(Endpoint1)]
-        private class TestQuery : IIntegrationQuery<TestQueryResponse>
+        private class TestQuery : IIntegrationQuery<TestQueryReply>
         {
             public TestQuery(int id)
             {
@@ -209,8 +251,14 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TestQueryResponse : IIntegrationMessage
+        private class TestQueryReply : IIntegrationMessage
         {
+            public TestQueryReply(int id)
+            {
+                Id = id;
+            }
+
+            internal int Id { get; }
         }
 
         [OwnedBy(Endpoint2)]

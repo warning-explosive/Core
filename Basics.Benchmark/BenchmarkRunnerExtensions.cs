@@ -32,7 +32,21 @@ namespace Basics.Benchmark
             return summary;
         }
 
-        internal static IDictionary<string, decimal> Measures(this Summary summary, string measureColumnName, Action<string> output)
+        internal static IDictionary<string, decimal> MillisecondMeasures(this Summary summary, string measureColumnName, Action<string> output)
+        {
+            return summary.Measures(measureColumnName, output, TimeUnit.Millisecond);
+        }
+
+        internal static IDictionary<string, decimal> NanosecondMeasures(this Summary summary, string measureColumnName, Action<string> output)
+        {
+            return summary.Measures(measureColumnName, output, TimeUnit.Nanosecond);
+        }
+
+        private static IDictionary<string, decimal> Measures(
+            this Summary summary,
+            string measureColumnName,
+            Action<string> output,
+            TimeUnit timeUnit)
         {
             var methodColumn = summary.Column("Method");
             var measureColumn = summary.Column(measureColumnName);
@@ -45,7 +59,7 @@ namespace Basics.Benchmark
             var style = new SummaryStyle(CultureInfo.InvariantCulture,
                                          false,
                                          SizeUnit.B,
-                                         TimeUnit.Nanosecond,
+                                         timeUnit,
                                          false,
                                          true);
 
@@ -56,7 +70,7 @@ namespace Basics.Benchmark
                                 {
                                     var measure = measureColumn.GetValue(summary, benchmarksCase, style);
 
-                                    output($"{methodColumn.GetValue(summary, benchmarksCase)} -> {measureColumnName} -> {measure} {TimeUnit.Nanosecond.Name}");
+                                    output($"{methodColumn.GetValue(summary, benchmarksCase)} -> {measureColumnName} -> {measure} {timeUnit.Name}");
 
                                     return decimal.Parse(measure, CultureInfo.InvariantCulture);
                                 });

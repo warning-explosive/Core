@@ -5,14 +5,14 @@ namespace Basics.Benchmark
     using Xunit.Abstractions;
 
     /// <summary>
-    /// Benchmark runner
+    /// Benchmarks
     /// </summary>
     // TODO: remove magic numbers and use adaptive approach -> store test artifacts in DB and search performance change points
-    public class Runner
+    public class Benchmarks
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public Runner(ITestOutputHelper output)
+        public Benchmarks(ITestOutputHelper output)
         {
             Output = output;
         }
@@ -23,7 +23,7 @@ namespace Basics.Benchmark
         internal void DeepCopyBenchmark()
         {
             var summary = BenchmarkRunnerExtensions.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
-            var measures = summary.Measures("Mean", Output.WriteLine);
+            var measures = summary.NanosecondMeasures("Mean", Output.WriteLine);
 
             var bySerialization = measures[nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization)];
             var byReflection = measures[nameof(DeepCopyBenchmarkSource.DeepCopyByReflection)];
@@ -41,10 +41,10 @@ namespace Basics.Benchmark
         {
             var summary = BenchmarkRunnerExtensions.Run<AssembliesExtensionsBelowSource>(Output.WriteLine);
 
-            var measures = summary.Measures("Mean", Output.WriteLine);
-            var measure = measures[nameof(AssembliesExtensionsBelowSource.Below)] / 1000m;
+            var measures = summary.MillisecondMeasures("Mean", Output.WriteLine);
+            var measure = measures[nameof(AssembliesExtensionsBelowSource.Below)];
 
-            Assert.True(measure <= 100m);
+            Assert.True(measure <= 25m);
         }
     }
 }

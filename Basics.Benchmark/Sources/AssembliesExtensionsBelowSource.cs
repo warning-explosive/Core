@@ -1,5 +1,6 @@
 namespace Basics.Benchmark.Sources
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
@@ -11,11 +12,19 @@ namespace Basics.Benchmark.Sources
     [SimpleJob(RunStrategy.Throughput)]
     public class AssembliesExtensionsBelowSource
     {
-        private readonly Assembly[] _allAssemblies;
-        private readonly Assembly _belowAssembly;
+        [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
+        private Assembly[]? _allAssemblies;
+        private Assembly? _belowAssembly;
 
-        /// <summary> .cctor </summary>
-        public AssembliesExtensionsBelowSource()
+        private Assembly[] AllAssemblies => _allAssemblies.EnsureNotNull(nameof(_allAssemblies));
+
+        private Assembly BelowAssembly => _belowAssembly.EnsureNotNull(nameof(_belowAssembly));
+
+        /// <summary>
+        /// GlobalSetup
+        /// </summary>
+        [GlobalSetup]
+        public void GlobalSetup()
         {
             _allAssemblies = AssembliesExtensions.AllFromCurrentDomain();
             _belowAssembly = GetType().Assembly;
@@ -24,6 +33,6 @@ namespace Basics.Benchmark.Sources
         /// <summary> DeepCopyBySerialization </summary>
         /// <returns>Copy</returns>
         [Benchmark(Description = nameof(Below), Baseline = true)]
-        public Assembly[] Below() => _allAssemblies.Below(_belowAssembly);
+        public Assembly[] Below() => AllAssemblies.Below(BelowAssembly);
     }
 }

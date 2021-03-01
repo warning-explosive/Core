@@ -11,10 +11,15 @@ namespace Basics.Benchmark.Sources
     [SimpleJob(RunStrategy.Throughput)]
     public class DeepCopyBenchmarkSource
     {
-        private readonly TestReferenceWithoutSystemTypes _original;
+        private TestReferenceWithoutSystemTypes? _original;
 
-        /// <summary> .cctor </summary>
-        public DeepCopyBenchmarkSource()
+        private TestReferenceWithoutSystemTypes Original => _original.EnsureNotNull(nameof(_original));
+
+        /// <summary>
+        /// GlobalSetup
+        /// </summary>
+        [GlobalSetup]
+        public void GlobalSetup()
         {
             _original = TestReferenceWithoutSystemTypes.CreateOrInit();
         }
@@ -22,11 +27,11 @@ namespace Basics.Benchmark.Sources
         /// <summary> DeepCopyBySerialization </summary>
         /// <returns>Copy</returns>
         [Benchmark(Description = nameof(DeepCopyBySerialization), Baseline = true)]
-        public TestReferenceWithoutSystemTypes DeepCopyBySerialization() => _original.DeepCopyBySerialization();
+        public TestReferenceWithoutSystemTypes DeepCopyBySerialization() => Original.DeepCopyBySerialization();
 
         /// <summary> DeepCopyByReflection </summary>
         /// <returns>Copy</returns>
         [Benchmark(Description = nameof(DeepCopyByReflection))]
-        public TestReferenceWithoutSystemTypes DeepCopyByReflection() => _original.DeepCopy();
+        public TestReferenceWithoutSystemTypes DeepCopyByReflection() => Original.DeepCopy();
     }
 }

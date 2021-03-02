@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericHost
     using AutoRegistration.Extensions;
     using AutoWiring.Api.Enumerations;
     using Basics;
+    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,16 @@ namespace SpaceEngineers.Core.GenericHost
     public static class GenericHost
     {
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
+
+        /// <summary>
+        /// Generates manual registration for generic endpoint
+        /// </summary>
+        /// <param name="endpointIdentity">Endpoint identity</param>
+        /// <returns>Generic endpoint manual registration</returns>
+        public static IManualRegistration GenericEndpointRegistration(EndpointIdentity endpointIdentity)
+        {
+            return new Endpoint.GenericEndpointManualRegistration(endpointIdentity);
+        }
 
         /// <summary>
         /// Builds in-memory integration transport implementation

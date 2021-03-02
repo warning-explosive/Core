@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Xml.Linq;
 
     /// <summary>
@@ -88,12 +87,9 @@ namespace SpaceEngineers.Core.Basics
 
         private static FileInfo FindFile(string pattern)
         {
-            var assembly = Assembly.GetExecutingAssembly()
-                                   .EnsureNotNull("ExecutingAssembly must exists")
-                                   .Location
-                                   .EnsureNotNull($"ExecutingAssembly must have {nameof(Assembly.Location)}");
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory.AsDirectoryInfo();
 
-            var directory = assembly.AsFileInfo().Directory;
+            var directory = baseDirectory;
 
             for (var i = 0;
                  !FileExist(directory, out _) && i < 42;

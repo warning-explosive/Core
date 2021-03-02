@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 : DependencyContainer.Create(containerOptions);
         }
 
-        private class GenericEndpointManualRegistration : IManualRegistration
+        internal class GenericEndpointManualRegistration : IManualRegistration
         {
             private readonly EndpointIdentity _endpointIdentity;
 

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
     internal class CollectionResolvableConditionDecorableServiceDecorator1 : ICollectionResolvableConditionDecorableService,

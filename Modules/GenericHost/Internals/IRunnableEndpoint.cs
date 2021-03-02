@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     internal interface IRunnableEndpoint : IAsyncDisposable, IResolvable
     {

@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
 
     /// <summary>
     /// RegisteredByDelegateImpl

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Defaults
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 

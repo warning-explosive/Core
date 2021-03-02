@@ -38,9 +38,6 @@
       </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
-    </ItemGroup>
-    <ItemGroup>
       <Compile Update="Abstractions\IValidationResult.cs">
         <DependentUpon>IValidatable.cs</DependentUpon>
       </Compile>
@@ -56,5 +53,8 @@
       <Compile Update="Abstractions\IValueObject.cs">
         <DependentUpon>IDomainObject.cs</DependentUpon>
       </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     </ItemGroup>
 </Project>

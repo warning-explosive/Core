@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Diagnostics;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using Extensions;
     using SimpleInjector;

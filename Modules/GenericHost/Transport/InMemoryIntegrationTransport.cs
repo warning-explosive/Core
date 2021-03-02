@@ -9,8 +9,8 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using Basics.Async;
     using Basics.Exceptions;

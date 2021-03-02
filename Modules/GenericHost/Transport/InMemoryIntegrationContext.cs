@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using Basics;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;

@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     <ProjectReference Include="..\Newtonsoft.Json\Newtonsoft.Json.csproj" />
   </ItemGroup>
   <ItemGroup>

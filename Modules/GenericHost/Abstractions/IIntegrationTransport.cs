@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 

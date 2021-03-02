@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using AutoWiringApi.Contexts;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Contexts;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using Extensions;
     using SimpleInjector;

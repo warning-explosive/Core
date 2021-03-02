@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using AutoWiringTest;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;

@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// ITestService

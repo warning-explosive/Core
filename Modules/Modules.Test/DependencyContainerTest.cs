@@ -7,16 +7,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Contexts;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Contexts;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
     using Basics.Test;
-    using ClassFixtures;
     using Core.SettingsManager.Abstractions;
+    using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;
@@ -535,7 +535,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                     {
                                         typeof(Container).Assembly,                 // SimpleInjector assembly,
                                         typeof(TypeExtensions).Assembly,            // Basics assembly
-                                        typeof(LifestyleAttribute).Assembly,        // AutoWiringApi assembly
+                                        typeof(LifestyleAttribute).Assembly,        // AutoWiring.Api assembly
                                         typeof(IDependencyContainer).Assembly,      // AutoRegistration assembly
                                         typeof(ISettingsManager<>).Assembly,        // SettingsManager assembly
                                         typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly

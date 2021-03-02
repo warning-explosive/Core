@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
     using Basics;
     using SimpleInjector;
 

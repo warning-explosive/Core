@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// Abstraction for dependency container that supports scopes

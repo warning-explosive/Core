@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Contract.Abstractions;
     using GenericEndpoint;
 

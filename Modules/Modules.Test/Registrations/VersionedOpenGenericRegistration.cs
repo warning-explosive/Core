@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using System.Collections.Generic;
     using System.Linq;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Contexts;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Contexts;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
 

@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Enumerations;
 
     /// <summary>
     /// Registration container abstraction

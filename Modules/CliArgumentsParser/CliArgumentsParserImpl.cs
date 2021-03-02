@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
 
     /// <summary>

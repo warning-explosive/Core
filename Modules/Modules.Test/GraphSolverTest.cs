@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Basics.Exceptions;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;

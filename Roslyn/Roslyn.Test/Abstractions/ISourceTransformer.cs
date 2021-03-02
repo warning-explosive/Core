@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Microsoft.CodeAnalysis.Text;
 
     /// <summary>

@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using AutoRegistration.Abstractions;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using NewtonSoft.Json.Abstractions;
     using NewtonSoft.Json.ObjectTree;
     using Xunit;

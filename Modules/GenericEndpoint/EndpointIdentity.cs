@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.GenericEndpoint
 {
     using System;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
 
     /// <summary>
     /// Endpoint identity

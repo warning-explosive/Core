@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.SettingsManager.Internals
 {
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using NewtonSoft.Json.Abstractions;
 
     [Lifestyle(EnLifestyle.Singleton)]

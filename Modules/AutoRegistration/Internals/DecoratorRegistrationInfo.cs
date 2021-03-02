@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Enumerations;
 
     internal class DecoratorRegistrationInfo : ServiceRegistrationInfo, IEquatable<DecoratorRegistrationInfo>
     {

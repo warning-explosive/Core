@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>

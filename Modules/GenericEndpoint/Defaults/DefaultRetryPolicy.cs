@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     /// <summary>
     /// Default IRetryPolicy implementation

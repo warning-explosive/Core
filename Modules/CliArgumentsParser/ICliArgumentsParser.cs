@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.CliArgumentsParser
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// Cli arguments parser service

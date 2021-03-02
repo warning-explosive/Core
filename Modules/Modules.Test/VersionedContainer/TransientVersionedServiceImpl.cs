@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
 {
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     [Lifestyle(EnLifestyle.Transient)]
     internal class TransientVersionedServiceImpl : ITransientVersionedService

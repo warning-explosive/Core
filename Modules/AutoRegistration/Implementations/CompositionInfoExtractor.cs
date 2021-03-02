@@ -3,10 +3,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Contexts;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Contexts;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Basics.EqualityComparers;
     using Internals;

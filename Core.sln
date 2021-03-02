@@ -19,13 +19,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.Benchmark", "Basics.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{765D12D8-3CE5-4292-B159-81A6DF3869C7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoWiringApi.Analyzers", "Roslyn\AutoWiringApi.Analyzers\AutoWiringApi.Analyzers.csproj", "{1F6E165F-5C5A-4B1E-AFF4-5824EB0A2E29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoWiring.Api.Analyzers", "Roslyn\AutoWiring.Api.Analyzers\AutoWiring.Api.Analyzers.csproj", "{1F6E165F-5C5A-4B1E-AFF4-5824EB0A2E29}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roslyn.Test", "Roslyn\Roslyn.Test\Roslyn.Test.csproj", "{33D10043-5F94-4A0A-9C11-6DA21FF8310F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{C01667ED-90ED-4F1E-9356-18F76E16BDFE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoWiringApi", "Modules\AutoWiringApi\AutoWiringApi.csproj", "{39A32FDC-5846-46AF-92AC-03E1340DE7B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoWiring.Api", "Modules\AutoWiring.Api\AutoWiring.Api.csproj", "{39A32FDC-5846-46AF-92AC-03E1340DE7B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoRegistration", "Modules\AutoRegistration\AutoRegistration.csproj", "{96C860FA-1B1E-4D1D-A6F2-EF08E8674920}"
 EndProject
@@ -52,6 +52,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Contract", "Modules\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj", "{96093DD9-5D07-44B3-9BF5-BE099E8EAF91}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.TestExtensions", "Modules\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj", "{8B3D2F61-04BF-422F-B466-FD74590412A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Api", "Modules\Test.Api\Test.Api.csproj", "{837A1770-BBBD-4B8B-ABC5-912928C4B645}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -139,6 +141,10 @@ Global
 		{8B3D2F61-04BF-422F-B466-FD74590412A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B3D2F61-04BF-422F-B466-FD74590412A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B3D2F61-04BF-422F-B466-FD74590412A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{837A1770-BBBD-4B8B-ABC5-912928C4B645}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{837A1770-BBBD-4B8B-ABC5-912928C4B645}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{837A1770-BBBD-4B8B-ABC5-912928C4B645}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{837A1770-BBBD-4B8B-ABC5-912928C4B645}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -164,6 +170,7 @@ Global
 		{A2C1EE02-85B4-402D-B9FC-7108D78505DC} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{96093DD9-5D07-44B3-9BF5-BE099E8EAF91} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{8B3D2F61-04BF-422F-B466-FD74590412A0} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{837A1770-BBBD-4B8B-ABC5-912928C4B645} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

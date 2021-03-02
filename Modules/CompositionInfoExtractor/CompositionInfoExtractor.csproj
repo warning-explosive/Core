@@ -37,6 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
   </ItemGroup>
 </Project>

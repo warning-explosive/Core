@@ -54,8 +54,8 @@
     <ProjectReference Include="..\..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\..\Modules\AutoRegistration\AutoRegistration.csproj" />
-    <ProjectReference Include="..\..\Modules\AutoWiringApi\AutoWiringApi.csproj" />
-    <ProjectReference Include="..\AutoWiringApi.Analyzers\AutoWiringApi.Analyzers.csproj" />
+    <ProjectReference Include="..\..\Modules\AutoWiring.Api\AutoWiring.Api.csproj" />
+    <ProjectReference Include="..\AutoWiring.Api.Analyzers\AutoWiring.Api.Analyzers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Tests\Analysis.cs">

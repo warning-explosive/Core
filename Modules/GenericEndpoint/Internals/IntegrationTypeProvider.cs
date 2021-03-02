@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Contract.Abstractions;
     using Contract.Attributes;

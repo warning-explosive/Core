@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Services;
     using Basics;
 
     /// <inheritdoc />

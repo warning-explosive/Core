@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer
 {
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     [LifestyleAttribute(EnLifestyle.Transient)]
     [Unregistered]

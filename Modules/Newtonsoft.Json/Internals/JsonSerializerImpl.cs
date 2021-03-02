@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Newtonsoft.Json;
 

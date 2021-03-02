@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using System.Diagnostics.CodeAnalysis;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
 
     [ManualRegistration]
     [SuppressMessage("Analysis", "CR1", Justification = "Manually registered by delegate for test reasons")]

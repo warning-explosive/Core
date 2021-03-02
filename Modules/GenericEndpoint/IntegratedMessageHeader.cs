@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.GenericEndpoint
 {
     using System.Collections.Generic;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     /// <summary>
     /// Integrated message headers

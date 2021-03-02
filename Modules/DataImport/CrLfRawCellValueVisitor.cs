@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.DataImport.Internals
 {
     using System;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     /// <inheritdoc />
     [Lifestyle(EnLifestyle.Singleton)]

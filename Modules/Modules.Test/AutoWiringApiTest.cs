@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using AutoWiringTest;
     using Basics;
     using Basics.Test;
@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// AutoWiringApi assembly tests
+    /// AutoWiring.Api assembly tests
     /// </summary>
     public class AutoWiringApiTest : BasicsTestBase
     {

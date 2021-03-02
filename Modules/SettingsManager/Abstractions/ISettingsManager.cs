@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.SettingsManager.Abstractions
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// Settings manager

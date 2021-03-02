@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
     [Lifestyle(EnLifestyle.Singleton)]

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using Contract.Abstractions;
 
     [Unregistered]

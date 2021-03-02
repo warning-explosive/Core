@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// Integration types provider

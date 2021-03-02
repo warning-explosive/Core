@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Basics;
     using GenericEndpoint;
 

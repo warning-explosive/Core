@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using System.Threading.Tasks;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     internal interface IScopedLifestyleService : IResolvable
     {

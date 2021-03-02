@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
 {
     using System;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Services;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 

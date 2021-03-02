@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Basics.Roslyn
 {
     using System.Collections.Immutable;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;

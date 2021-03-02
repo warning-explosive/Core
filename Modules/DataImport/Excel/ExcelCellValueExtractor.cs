@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Globalization;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <inheritdoc />

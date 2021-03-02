@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     internal interface IWithInjectedDependencyContainer : IResolvable
     {

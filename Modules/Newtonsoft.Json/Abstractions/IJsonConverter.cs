@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.Abstractions
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Newtonsoft.Json;
 
     /// <summary>

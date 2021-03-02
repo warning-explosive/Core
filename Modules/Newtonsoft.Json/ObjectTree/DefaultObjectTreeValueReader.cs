@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
 {
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Newtonsoft.Json;
 
     /// <summary>

@@ -2,10 +2,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 {
     using System;
     using System.Linq;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
 
     [Lifestyle(EnLifestyle.Singleton)]

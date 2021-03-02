@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
     using System.Threading.Tasks;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     [Lifestyle(EnLifestyle.Scoped)]
     internal class ScopedLifestyleServiceImpl : IScopedLifestyleService

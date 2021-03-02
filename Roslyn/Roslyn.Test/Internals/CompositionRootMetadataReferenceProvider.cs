@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using System.Collections.Generic;
     using Abstractions;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Extensions;
     using Microsoft.CodeAnalysis;
 

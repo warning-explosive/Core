@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using System.Linq;
     using System.Text;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics.Roslyn;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.Diagnostics;

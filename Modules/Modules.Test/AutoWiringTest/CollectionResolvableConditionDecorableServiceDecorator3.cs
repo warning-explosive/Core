@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 {
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
     [Lifestyle(EnLifestyle.Transient)]

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.NewtonSoft.Json.Abstractions
 {
     using System;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// IJsonSerializer abstraction

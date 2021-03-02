@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using GenericEndpoint.Abstractions;
     using GenericHost;

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Core.GenericEndpoint.Abstractions;
 
     internal interface IExecutableEndpoint : IResolvable

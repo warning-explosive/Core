@@ -1,0 +1,13 @@
+namespace SpaceEngineers.Core.AutoWiring.Api.Attributes
+{
+    using System;
+
+    /// <summary>
+    /// Unregistered attribute
+    /// For components that shouldn't be registered
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    public sealed class UnregisteredAttribute : Attribute
+    {
+    }
+}

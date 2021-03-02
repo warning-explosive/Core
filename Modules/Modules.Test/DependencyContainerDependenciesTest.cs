@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Reflection;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Services;
     using Basics;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using Registrations;
     using Xunit;
     using Xunit.Abstractions;

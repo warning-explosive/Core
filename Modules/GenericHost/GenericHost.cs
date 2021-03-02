@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericHost
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoRegistration.Extensions;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using GenericEndpoint.Abstractions;
     using Internals;

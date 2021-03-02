@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
   </ItemGroup>
 </Project>

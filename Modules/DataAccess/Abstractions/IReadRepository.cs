@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Abstractions
 {
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
 
     /// <summary>

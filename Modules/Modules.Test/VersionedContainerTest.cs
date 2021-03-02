@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Basics;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;

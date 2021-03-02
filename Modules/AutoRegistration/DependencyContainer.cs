@@ -7,10 +7,10 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Linq;
     using System.Reflection;
     using Abstractions;
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Extensions;
     using Implementations;
@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         /// <summary>
         /// Creates default dependency container without assembly limitations
-        /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoWiringApi assembly as root assembly
+        /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoWiring.Api assembly as root assembly
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
         /// <returns>DependencyContainer</returns>
@@ -360,7 +360,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             var regularRootAssemblies = new[]
             {
                 typeof(DependencyContainer).Assembly, // AutoRegistration
-                typeof(LifestyleAttribute).Assembly, // AutoWiringAPI
+                typeof(LifestyleAttribute).Assembly, // AutoWiring.Api
                 typeof(TypeExtensions).Assembly // Basics
             };
 

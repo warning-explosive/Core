@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using Basics;
     using Basics.Async;
     using Core.GenericEndpoint;

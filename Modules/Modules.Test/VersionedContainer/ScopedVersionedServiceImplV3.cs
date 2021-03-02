@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.VersionedContainer
 {
-    using AutoWiringApi.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     [Lifestyle(EnLifestyle.Scoped)]
     internal class ScopedVersionedServiceImplV3 : IScopedVersionedService,

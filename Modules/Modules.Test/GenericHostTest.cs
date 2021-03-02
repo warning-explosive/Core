@@ -6,10 +6,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics.Test;
-    using ClassFixtures;
+    using Core.Test.Api.ClassFixtures;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;

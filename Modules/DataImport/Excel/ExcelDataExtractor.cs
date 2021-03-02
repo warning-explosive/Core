@@ -5,7 +5,7 @@
     using System.Data;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
+    using AutoWiring.Api.Attributes;
     using Basics;
     using DocumentFormat.OpenXml.Packaging;
     using DocumentFormat.OpenXml.Spreadsheet;

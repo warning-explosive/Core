@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System.Collections.Immutable;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using Basics.Roslyn;
     using ValueObjects;
 

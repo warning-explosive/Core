@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     internal static class Extensions
     {

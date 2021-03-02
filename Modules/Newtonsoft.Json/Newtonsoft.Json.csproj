@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\AutoWiringApi\AutoWiringApi.csproj" />
+    <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

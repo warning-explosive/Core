@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Services;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Services;
     using Basics.EqualityComparers;
 
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]

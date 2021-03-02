@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Test;
-    using ClassFixtures;
     using CliArgumentsParser;
+    using Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 

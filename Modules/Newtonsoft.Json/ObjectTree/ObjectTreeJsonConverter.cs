@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree
     using System;
     using System.Linq;
     using Abstractions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Internals;
     using Newtonsoft.Json;
 

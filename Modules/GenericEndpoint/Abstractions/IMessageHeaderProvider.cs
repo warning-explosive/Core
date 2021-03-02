@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiringApi.Abstractions;
+    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// IMessageHeaderProvider abstraction

@@ -158,13 +158,13 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal async Task SimpleHostTest()
         {
-            using var cts = new CancellationTokenSource();
+            var expectedCount = 1000;
+            var actualCount = 0;
 
             var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
-            var totalCount = 0;
-            transport.OnMessage += (_, args) =>
+            transport.OnMessage += (_, _) =>
             {
-                Output.WriteLine($"{Interlocked.Increment(ref totalCount)}: {args.GeneralMessage}");
+                Interlocked.Increment(ref actualCount);
             };
 
             var assembly = GetType().Assembly;
@@ -192,20 +192,21 @@ namespace SpaceEngineers.Core.Modules.Test
                 .ConfigureHost(transport, options10, options11, options20)
                 .Build();
 
-            var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
-            var messagesCount = 1000;
-            var backgroundInitiatorTask = SendAndPublish(transport, messagesCount);
+            using var cts = new CancellationTokenSource();
 
-            await backgroundInitiatorTask.ConfigureAwait(false);
+            var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
+
+            await SendAndPublishInBackground(transport, expectedCount).ConfigureAwait(false);
 
             cts.Cancel();
+
             await runningHost.ConfigureAwait(false);
 
-            Output.WriteLine($"{nameof(totalCount)}: {totalCount}");
-            Assert.Equal(messagesCount, totalCount);
+            Output.WriteLine($"{nameof(actualCount)}: {actualCount}");
+            Assert.Equal(expectedCount, actualCount);
         }
 
-        private static Task SendAndPublish(IIntegrationTransport transport, int messagesCount)
+        private static Task SendAndPublishInBackground(IIntegrationTransport transport, int messagesCount)
         {
             return Task.Run(async () =>
             {
@@ -221,8 +222,6 @@ namespace SpaceEngineers.Core.Modules.Test
                     {
                         await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
                     }
-
-                    await Task.Delay(TimeSpan.FromMilliseconds(10)).ConfigureAwait(false);
                 }
             });
         }

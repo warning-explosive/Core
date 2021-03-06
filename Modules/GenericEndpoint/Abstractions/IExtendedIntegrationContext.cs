@@ -8,9 +8,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using GenericEndpoint;
 
     /// <summary>
-    /// IExtendedIntegrationContext abstraction
+    /// Extended integration context
+    /// Use to pass it in message processing pipeline
     /// </summary>
-    public interface IExtendedIntegrationContext : IIntegrationContext, IInitializable<EndpointRuntimeInfo>
+    public interface IExtendedIntegrationContext : IUbiquitousIntegrationContext,
+                                                   IIntegrationContext,
+                                                   IInitializable<EndpointRuntimeInfo>
     {
         /// <summary>
         /// Integration message, processing initiator

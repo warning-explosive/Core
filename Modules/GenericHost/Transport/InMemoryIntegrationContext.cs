@@ -14,15 +14,11 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     [ManualRegistration]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
-        private const string EndpointContextRequired = "Method must be executed within endpoint context (in message handler)";
-
         private readonly InMemoryIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;
         private readonly ICollection<IntegrationMessage> _messages;
 
-        private bool _deliverImmediately;
-        private IntegrationMessage? _message;
-        private EndpointIdentity? _endpointIdentity;
+        private bool _immediateDelivery;
 
         public InMemoryIntegrationContext(
             InMemoryIntegrationTransport transport,
@@ -31,18 +27,18 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             _transport = transport;
             _factory = factory;
             _messages = new List<IntegrationMessage>();
-            _deliverImmediately = true;
+            _immediateDelivery = true;
         }
 
-        public IntegrationMessage Message => _message.EnsureNotNull(EndpointContextRequired);
+        public IntegrationMessage Message { get; private set; } = null!;
 
-        public EndpointIdentity EndpointIdentity => _endpointIdentity.EnsureNotNull(EndpointContextRequired);
+        public EndpointIdentity EndpointIdentity { get; private set; } = null!;
 
         public void Initialize(EndpointRuntimeInfo info)
         {
-            _message = info.Message;
-            _endpointIdentity = info.EndpointIdentity;
-            _deliverImmediately = false;
+            Message = info.Message;
+            EndpointIdentity = info.EndpointIdentity;
+            _immediateDelivery = false;
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
@@ -68,16 +64,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            Message.SetReplied();
-
             return Gather(reply, token);
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
             /* TODO: use due time between retries */
-
-            Message.IncrementRetryCounter();
 
             return Deliver(Message, token);
         }
@@ -91,9 +83,9 @@ namespace SpaceEngineers.Core.GenericHost.Transport
         private Task Gather<TMessage>(TMessage message, CancellationToken token)
             where TMessage : IIntegrationMessage
         {
-            var integrationMessage = _factory.CreateGeneralMessage(message, _endpointIdentity, _message);
+            var integrationMessage = _factory.CreateGeneralMessage(message, EndpointIdentity, Message);
 
-            if (_deliverImmediately)
+            if (_immediateDelivery)
             {
                 return Deliver(integrationMessage, token);
             }

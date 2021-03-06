@@ -53,9 +53,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
                 container.RegisterInstance<IIntegrationTransport>(this);
                 container.RegisterInstance<InMemoryIntegrationTransport>(this);
 
-                container.Register<IIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+                container.Register<IUbiquitousIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
                 container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
                 container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
+
+                container.RegisterDecorator<IExtendedIntegrationContext, ExtendedIntegrationContextHeadersMaintenanceDecorator>(EnLifestyle.Scoped);
+                container.RegisterDecorator<IExtendedIntegrationContext, ExtendedIntegrationContextRequirementsDecorator>(EnLifestyle.Scoped);
 
                 container.RegisterInstance<IEndpointInstanceSelectionBehavior>(_selectionBehavior);
                 container.RegisterInstance(_selectionBehavior.GetType(), _selectionBehavior);

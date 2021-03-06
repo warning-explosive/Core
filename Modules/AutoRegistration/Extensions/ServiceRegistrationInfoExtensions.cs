@@ -13,16 +13,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
     internal static class ServiceRegistrationInfoExtensions
     {
-        internal static IEnumerable<ServiceRegistrationInfo> ExternalComponents(Type serviceType, Type implementationType, EnLifestyle lifestyle)
-        {
-            yield return new ServiceRegistrationInfo(serviceType, implementationType, lifestyle);
-
-            if (serviceType != implementationType)
-            {
-                yield return new ServiceRegistrationInfo(implementationType, implementationType, lifestyle);
-            }
-        }
-
         internal static IEnumerable<ServiceRegistrationInfo> VersionedComponents(this IEnumerable<Type> servicesWithVersions, Container container)
         {
             foreach (var serviceType in servicesWithVersions)

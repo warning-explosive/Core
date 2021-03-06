@@ -5,18 +5,23 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System.Linq;
     using System.Reflection;
     using Basics;
+    using Internals;
     using SimpleInjector;
 
     internal static class VerifiersExtensions
     {
-        internal static IEnumerable<Type> RegisteredComponents(this Container container)
+        private const string SimpleInjectorAssemblyName = "SimpleInjector";
+        private const string IsDecoratorMethodName = "IsDecorator";
+        private static readonly string SimpleInjectorTypesTypeFullName = AssembliesExtensions.BuildName(SimpleInjectorAssemblyName, "Types");
+
+        private static readonly MethodInfo IsDecoratorMethod = AssembliesExtensions
+            .FindRequiredType(SimpleInjectorAssemblyName, SimpleInjectorTypesTypeFullName)
+            .GetMethod(IsDecoratorMethodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+            .EnsureNotNull($"{IsDecoratorMethodName} should be found in {SimpleInjectorTypesTypeFullName} type");
+
+        internal static bool IsDecorator(this ConstructorInfo constructorInfo, Type serviceType)
         {
-            return container
-                .GetCurrentRegistrations()
-                .Select(producer => producer.Registration.ImplementationType)
-                .Where(type => !type.IsInterface && !type.IsAbstract)
-                .Select(type => type.UnwrapTypeParameter(typeof(IEnumerable<>)))
-                .Distinct();
+            return (bool)IsDecoratorMethod.Invoke(null, new object[] { serviceType, constructorInfo });
         }
 
         internal static ConstructorInfo ResolutionConstructor(this Container container, Type component)
@@ -29,6 +34,16 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             return constructor != null
                 ? constructor
                 : throw new InvalidOperationException(errorMessage);
+        }
+
+        internal static IEnumerable<Type> RegisteredComponents(this Container container)
+        {
+            return container
+                .GetCurrentRegistrations()
+                .Select(DependencyInfo.RetrieveDependencyGraph)
+                .SelectMany(info => info.ExtractFromGraph(dependency => dependency.ImplementationType))
+                .Where(type => !type.IsAbstract)
+                .Distinct();
         }
     }
 }

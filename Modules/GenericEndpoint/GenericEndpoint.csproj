@@ -47,6 +47,9 @@
     <Compile Update="Abstractions\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
+    <Compile Update="Abstractions\IUbiquitousIntegrationContext.cs">
+      <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />

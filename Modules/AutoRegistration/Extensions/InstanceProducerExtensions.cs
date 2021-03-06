@@ -9,12 +9,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     {
         internal static IOrderedEnumerable<InstanceProducer> OrderByComplexityDepth(this IEnumerable<InstanceProducer> source)
         {
-            return source
-               .OrderBy(producer =>
-                        {
-                            var dependencyInfo = DependencyInfo.RetrieveDependencyGraph(producer, new Dictionary<InstanceProducer, DependencyInfo>(), 0);
-                            return dependencyInfo.ComplexityDepth;
-                        });
+            return source.OrderBy(producer => DependencyInfo.RetrieveDependencyGraph(producer).ComplexityDepth);
         }
     }
 }

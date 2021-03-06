@@ -55,9 +55,22 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Contexts
         bool IsUnregistered { get; }
 
         /// <summary>
+        /// Parent
+        /// </summary>
+        public IDependencyInfo? Parent { get; }
+
+        /// <summary>
         /// Execute action on IDependencyInfo and on his dependencies recursively
         /// </summary>
         /// <param name="action">action</param>
         void TraverseByGraph(Action<IDependencyInfo> action);
+
+        /// <summary>
+        /// Extract information from IDependencyInfo and from his dependencies recursively
+        /// </summary>
+        /// <param name="extractor">Extractor function</param>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Extracted information collection</returns>
+        IEnumerable<TResult> ExtractFromGraph<TResult>(Func<IDependencyInfo, TResult> extractor);
     }
 }

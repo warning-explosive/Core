@@ -55,6 +55,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <returns>IRegistrationContainer</returns>
         IRegistrationContainer RegisterInstance(Type serviceType, object singletonInstance);
 
+        /// <summary> Register decorator </summary>
+        /// <param name="lifestyle">Instance lifestyle</param>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <typeparam name="TDecorator">TDecorator type-argument</typeparam>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterDecorator<TService, TDecorator>(EnLifestyle lifestyle)
+            where TService : class
+            where TDecorator : class, TService;
+
+        /// <summary> Register decorator </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <param name="decoratorType">Decorator type</param>
+        /// <param name="lifestyle">Instance lifestyle</param>
+        /// <returns>IRegistrationContainer</returns>
+        IRegistrationContainer RegisterDecorator(Type serviceType, Type decoratorType, EnLifestyle lifestyle);
+
         /// <summary> Register collection of services </summary>
         /// <param name="implementations">Collection of implementation types</param>
         /// <param name="lifestyle">Instance lifestyle</param>

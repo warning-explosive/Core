@@ -2,12 +2,14 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Globalization;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
     using Basics.Test;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint;
@@ -39,6 +41,36 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output)
         {
             _fixture = fixture;
+        }
+
+        [Fact]
+        internal void IntegrationContextDecoratorTest()
+        {
+            var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
+
+            var endpointIdentity = new EndpointIdentity(nameof(IntegrationContextDecoratorTest), 0);
+            var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand));
+            var endpointRuntimeInfo = new EndpointRuntimeInfo(endpointIdentity, integrationMessage);
+
+            Assert.Throws<InvalidOperationException>(() => transport.DependencyContainer.Resolve<IExtendedIntegrationContext>());
+            var extendedIntegrationContext = transport.DependencyContainer.Resolve<IExtendedIntegrationContext, EndpointRuntimeInfo>(endpointRuntimeInfo);
+            Assert.Throws<SimpleInjector.ActivationException>(() => transport.DependencyContainer.Resolve<IIntegrationContext>());
+            var ubiquitousIntegrationContext = transport.DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
+
+            Assert.NotNull(extendedIntegrationContext);
+            Assert.NotNull(ubiquitousIntegrationContext);
+
+            var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericHost));
+            var requirementsDecoratorTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "ExtendedIntegrationContextRequirementsDecorator");
+            var headersMaintenanceDecoratorTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "ExtendedIntegrationContextHeadersMaintenanceDecorator");
+            var requirementsDecoratorType = AssembliesExtensions.FindRequiredType(assemblyName, requirementsDecoratorTypeFullName);
+            var headersMaintenanceDecoratorType = AssembliesExtensions.FindRequiredType(assemblyName, headersMaintenanceDecoratorTypeFullName);
+            var inMemoryIntegrationContextTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Transport", "InMemoryIntegrationContext");
+            var integrationsContextType = AssembliesExtensions.FindRequiredType(assemblyName, inMemoryIntegrationContextTypeFullName);
+            var expected = new[] { requirementsDecoratorType, headersMaintenanceDecoratorType, integrationsContextType };
+
+            Assert.True(expected.SequenceEqual(extendedIntegrationContext.ExtractDecorators().ShowTypes(nameof(IExtendedIntegrationContext), Output.WriteLine)));
+            Assert.Equal(integrationsContextType, ubiquitousIntegrationContext.ExtractDecorators().Single());
         }
 
         [Fact]
@@ -161,7 +193,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Build();
 
             var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
-            var backgroundInitiatorTask = SendAndPublish(transport);
+            var messagesCount = 1000;
+            var backgroundInitiatorTask = SendAndPublish(transport, messagesCount);
 
             await backgroundInitiatorTask.ConfigureAwait(false);
 
@@ -169,28 +202,24 @@ namespace SpaceEngineers.Core.Modules.Test
             await runningHost.ConfigureAwait(false);
 
             Output.WriteLine($"{nameof(totalCount)}: {totalCount}");
-            Assert.True(totalCount > 300);
+            Assert.Equal(messagesCount, totalCount);
         }
 
-        private static Task SendAndPublish(IIntegrationTransport transport)
+        private static Task SendAndPublish(IIntegrationTransport transport, int messagesCount)
         {
             return Task.Run(async () =>
             {
-                var ctx = transport.DependencyContainer.Resolve<IIntegrationContext>();
+                var ctx = transport.DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
 
-                for (var i = 0; i < 100; ++i)
+                for (var i = 0; i < messagesCount; ++i)
                 {
-                    if (i % 3 == 2)
+                    if (i % 2 == 0)
                     {
                         await ctx.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
                     }
-                    else if (i % 3 == 1)
-                    {
-                        await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
-                    }
                     else
                     {
-                        await ctx.Request<TestQuery, TestQueryReply>(new TestQuery(i), CancellationToken.None).ConfigureAwait(false);
+                        await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
                     }
 
                     await Task.Delay(TimeSpan.FromMilliseconds(10)).ConfigureAwait(false);
@@ -213,7 +242,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             public Task Handle(TestQuery message, IIntegrationContext context, CancellationToken token)
             {
-                return message.Id % 6 == 0
+                return message.Id % 2 == 0
                     ? Task.CompletedTask
                     : context.Reply(message, new TestQueryReply(message.Id), token);
             }

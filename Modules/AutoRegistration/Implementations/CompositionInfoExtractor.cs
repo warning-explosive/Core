@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
-    using Basics.EqualityComparers;
     using Internals;
     using SimpleInjector;
 
@@ -43,23 +42,15 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
                               {
                                   var producer = _container.GetRegistration(t, false);
 
-                                  if (producer == null)
-                                  {
-                                      return DependencyInfo.UnregisteredDependencyInfo(t);
-                                  }
-
-                                  var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
-                                  return DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
+                                  return producer == null
+                                      ? DependencyInfo.UnregisteredDependencyInfo(t)
+                                      : DependencyInfo.RetrieveDependencyGraph(producer);
                               })
                       .ToArray();
             }
 
             return _container.GetCurrentRegistrations()
-                             .Select(producer =>
-                                     {
-                                         var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
-                                         return DependencyInfo.RetrieveDependencyGraph(producer, visited, 0);
-                                     })
+                             .Select(DependencyInfo.RetrieveDependencyGraph)
                              .ToArray();
         }
 

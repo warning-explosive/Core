@@ -182,6 +182,22 @@ namespace SpaceEngineers.Core.AutoRegistration
         }
 
         /// <inheritdoc />
+        public IRegistrationContainer RegisterDecorator<TService, TDecorator>(EnLifestyle lifestyle)
+            where TService : class
+            where TDecorator : class, TService
+        {
+            _container.RegisterDecorator<TService, TDecorator>(lifestyle.MapLifestyle());
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IRegistrationContainer RegisterDecorator(Type serviceType, Type decoratorType, EnLifestyle lifestyle)
+        {
+            _container.RegisterDecorator(serviceType, decoratorType, lifestyle.MapLifestyle());
+            return this;
+        }
+
+        /// <inheritdoc />
         public IRegistrationContainer RegisterCollection<TService>(IEnumerable<Type> implementations, EnLifestyle lifestyle)
             where TService : class
         {

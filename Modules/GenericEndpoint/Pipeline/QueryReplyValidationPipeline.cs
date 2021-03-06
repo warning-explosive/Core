@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             if (context.Message.IsQuery()
                 && !context.Message.HandlerReplied())
             {
-                throw new InvalidOperationException("Message handler must reply to the query");
+                throw new InvalidOperationException("Message handler should reply to the query");
             }
         }
     }

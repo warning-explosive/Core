@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using AutoWiring.Api.Contexts;
     using AutoWiring.Api.Enumerations;
     using Basics;
+    using Basics.EqualityComparers;
     using Extensions;
     using SimpleInjector;
 
@@ -59,6 +60,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         public bool IsUnregistered { get; private set; }
 
         /// <inheritdoc />
+        public IDependencyInfo? Parent { get; private set; }
+
+        /// <inheritdoc />
         public void TraverseByGraph(Action<IDependencyInfo> action)
         {
             action(this);
@@ -66,16 +70,40 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             Dependencies.Each(dependency => dependency.TraverseByGraph(action));
         }
 
+        /// <inheritdoc />
+        public IEnumerable<T> ExtractFromGraph<T>(Func<IDependencyInfo, T> extractor)
+        {
+            return new[] { extractor(this) }.Concat(Dependencies.SelectMany(dependency => dependency.ExtractFromGraph(extractor)));
+        }
+
+        /// <summary>
+        /// Retrieve unregistered dependency info
+        /// </summary>
+        /// <param name="serviceType">Service type</param>
+        /// <returns>DependencyInfo object</returns>
+        internal static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
+        {
+            return new DependencyInfo(serviceType, serviceType, 0)
+            {
+                IsUnregistered = true
+            };
+        }
+
         /// <summary>
         /// Retrieve dependency graph from container producer
         /// </summary>
-        /// <param name="dependency">Dependency</param>
-        /// <param name="visited">Visited nodes</param>
-        /// <param name="depth">Current dependency depth in objects graph</param>
+        /// <param name="producer">InstanceProducer</param>
         /// <returns>DependencyInfo object</returns>
-        internal static DependencyInfo RetrieveDependencyGraph(
+        internal static DependencyInfo RetrieveDependencyGraph(InstanceProducer producer)
+        {
+            var visited = new Dictionary<InstanceProducer, DependencyInfo>(new ReferenceEqualityComparer<InstanceProducer>());
+            return RetrieveDependencyGraph(producer, visited, null, 0);
+        }
+
+        private static DependencyInfo RetrieveDependencyGraph(
             InstanceProducer dependency,
             IDictionary<InstanceProducer, DependencyInfo> visited,
+            IDependencyInfo? parent,
             uint depth)
         {
             if (visited.TryGetValue(dependency, out var nodeInfo))
@@ -93,30 +121,18 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                                                  dependency.Registration.ImplementationType,
                                                  depth)
                               {
-                                  Lifestyle = lifestyle
+                                  Lifestyle = lifestyle,
+                                  Parent = parent
                               };
 
             visited.Add(dependency, newNodeInfo);
 
             newNodeInfo.Dependencies = dependency
                                       .GetRelationships()
-                                      .Select(r => RetrieveDependencyGraph(r.Dependency, visited, depth + 1))
+                                      .Select(r => RetrieveDependencyGraph(r.Dependency, visited, newNodeInfo, depth + 1))
                                       .ToList();
 
             return newNodeInfo;
-        }
-
-        /// <summary>
-        /// Retrieve unregistered dependency info
-        /// </summary>
-        /// <param name="serviceType">Service type</param>
-        /// <returns>DependencyInfo object</returns>
-        internal static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
-        {
-            return new DependencyInfo(serviceType, serviceType, 0)
-                   {
-                       IsUnregistered = true
-                   };
         }
 
         private static bool CollectionResolvable(Type serviceType)

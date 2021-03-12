@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using Basics;
     using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericEndpoint.Contract.Abstractions;
@@ -25,9 +24,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public EndpointIdentity EndpointIdentity => Decoratee.EndpointIdentity;
 
-        public void Initialize(EndpointRuntimeInfo info)
+        public IIntegrationUnitOfWork UnitOfWork => Decoratee.UnitOfWork;
+
+        public void Initialize(IntegrationMessage message)
         {
-            Decoratee.Initialize(info);
+            Decoratee.Initialize(message);
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
@@ -65,9 +66,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return Decoratee.Retry(dueTime, token);
         }
 
-        public IAsyncDisposable WithinEndpointScope(AsyncUnitOfWorkBuilder<EndpointIdentity> unitOfWorkBuilder)
+        public Task DeliverAll(CancellationToken token)
         {
-            return Decoratee.WithinEndpointScope(unitOfWorkBuilder);
+            return Decoratee.DeliverAll(token);
         }
     }
 }

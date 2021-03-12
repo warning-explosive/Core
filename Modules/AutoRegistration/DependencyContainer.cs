@@ -482,11 +482,14 @@ namespace SpaceEngineers.Core.AutoRegistration
         private static IEnumerable<ServiceRegistrationInfo> Versioned(Container container)
         {
             return container
-                  .GetCurrentRegistrations()
-                  .OrderByComplexityDepth()
-                  .Select(producer => producer.ServiceType)
-                  .Where(serviceType => !serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
-                  .VersionedComponents(container);
+                .GetCurrentRegistrations()
+                .Select(DependencyInfo.RetrieveDependencyGraph)
+                .SelectMany(info => info.ExtractFromGraph(i => i))
+                .OrderBy(info => info.ComplexityDepth)
+                .Select(info => info.ServiceType)
+                .Where(serviceType => !serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
+                .Distinct()
+                .VersionedComponents(container);
         }
 
         private static IEnumerable<ServiceRegistrationInfo> Versions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)

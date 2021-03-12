@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             foreach (var serviceType in servicesWithVersions)
             {
                 var lifestyle = container.GetRegistration(serviceType)
-                                         .EnsureNotNull($"Container must has registration of {serviceType.FullName}")
+                                         .EnsureNotNull($"Container should have registration of {serviceType.FullName} type")
                                          .Lifestyle
                                          .MapLifestyle();
 
@@ -38,10 +38,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                                            ITypeProvider typeProvider,
                                                                            bool versions)
         {
-            return serviceTypes.SelectMany(serviceType => serviceType.GetTypesToRegister(container, typeProvider)
-                                                                     .Select(implementationType => (serviceType, implementationType)))
-                               .GetComponents(versions)
-                               .Distinct();
+            return serviceTypes
+                .SelectMany(serviceType => serviceType
+                    .GetTypesToRegister(container, typeProvider)
+                    .Select(implementationType => (serviceType, implementationType)))
+                .GetComponents(versions)
+                .Distinct();
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs, bool versions)

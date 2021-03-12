@@ -46,17 +46,17 @@ namespace SpaceEngineers.Core.Basics
                 _finallyAction = finallyAction;
             }
 
-            public ValueTask DisposeAsync()
+            public async ValueTask DisposeAsync()
             {
-                return new ValueTask(_finallyAction.Invoke(_state));
+                await _finallyAction.Invoke(_state).ConfigureAwait(false);
             }
         }
 
         private class EmptyAsyncDisposable : IAsyncDisposable
         {
-            public ValueTask DisposeAsync()
+            public async ValueTask DisposeAsync()
             {
-                return new ValueTask(Task.CompletedTask);
+                await Task.CompletedTask.ConfigureAwait(false);
             }
         }
     }

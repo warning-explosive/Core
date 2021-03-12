@@ -47,30 +47,25 @@ namespace SpaceEngineers.Core.Modules.Test
         internal void IntegrationContextDecoratorTest()
         {
             var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
-
-            var endpointIdentity = new EndpointIdentity(nameof(IntegrationContextDecoratorTest), 0);
             var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand));
-            var endpointRuntimeInfo = new EndpointRuntimeInfo(endpointIdentity, integrationMessage);
 
-            Assert.Throws<InvalidOperationException>(() => transport.DependencyContainer.Resolve<IExtendedIntegrationContext>());
-            var extendedIntegrationContext = transport.DependencyContainer.Resolve<IExtendedIntegrationContext, EndpointRuntimeInfo>(endpointRuntimeInfo);
-            Assert.Throws<SimpleInjector.ActivationException>(() => transport.DependencyContainer.Resolve<IIntegrationContext>());
-            var ubiquitousIntegrationContext = transport.DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
+            Assert.Throws<InvalidOperationException>(() => GetDependencyContainer().Resolve<IExtendedIntegrationContext>());
+            Assert.Throws<SimpleInjector.ActivationException>(() => GetDependencyContainer().Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage));
+            Assert.Throws<SimpleInjector.ActivationException>(() => GetDependencyContainer().Resolve<IIntegrationContext>());
+            var ubiquitousIntegrationContext = GetDependencyContainer().Resolve<IUbiquitousIntegrationContext>();
 
-            Assert.NotNull(extendedIntegrationContext);
             Assert.NotNull(ubiquitousIntegrationContext);
 
             var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericHost));
-            var requirementsDecoratorTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "ExtendedIntegrationContextRequirementsDecorator");
-            var headersMaintenanceDecoratorTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "ExtendedIntegrationContextHeadersMaintenanceDecorator");
-            var requirementsDecoratorType = AssembliesExtensions.FindRequiredType(assemblyName, requirementsDecoratorTypeFullName);
-            var headersMaintenanceDecoratorType = AssembliesExtensions.FindRequiredType(assemblyName, headersMaintenanceDecoratorTypeFullName);
-            var inMemoryIntegrationContextTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Transport", "InMemoryIntegrationContext");
-            var integrationsContextType = AssembliesExtensions.FindRequiredType(assemblyName, inMemoryIntegrationContextTypeFullName);
-            var expected = new[] { requirementsDecoratorType, headersMaintenanceDecoratorType, integrationsContextType };
+            var inMemoryUbiquitousIntegrationContextTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Transport", "InMemoryUbiquitousIntegrationContext");
+            var integrationContextType = AssembliesExtensions.FindRequiredType(assemblyName, inMemoryUbiquitousIntegrationContextTypeFullName);
 
-            Assert.True(expected.SequenceEqual(extendedIntegrationContext.ExtractDecorators().ShowTypes(nameof(IExtendedIntegrationContext), Output.WriteLine)));
-            Assert.Equal(integrationsContextType, ubiquitousIntegrationContext.ExtractDecorators().Single());
+            Assert.Equal(integrationContextType, ubiquitousIntegrationContext.ExtractDecorators().Single());
+
+            IDependencyContainer GetDependencyContainer()
+            {
+                return transport.GetFieldValue<IDependencyContainer>("_dependencyContainer");
+            }
         }
 
         [Fact]
@@ -210,17 +205,15 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             return Task.Run(async () =>
             {
-                var ctx = transport.DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
-
                 for (var i = 0; i < messagesCount; ++i)
                 {
                     if (i % 2 == 0)
                     {
-                        await ctx.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
+                        await transport.IntegrationContext.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
                     }
                     else
                     {
-                        await ctx.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
+                        await transport.IntegrationContext.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             });

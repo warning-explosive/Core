@@ -1,10 +1,8 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using Basics;
@@ -16,7 +14,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     [ManualRegistration]
     internal class GenericEndpoint : IGenericEndpoint, IRunnableEndpoint, IExecutableEndpoint, IMessagePipeline
     {
-        private readonly IReadOnlyCollection<IEndpointInitializer> _initializers;
+        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IEnumerable<IEndpointInitializer> _initializers;
 
         private readonly AsyncManualResetEvent _ready;
         private readonly AsyncCountdownEvent _runningHandlers;
@@ -27,15 +26,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             EndpointIdentity endpointIdentity,
             IDependencyContainer dependencyContainer,
             IIntegrationTypeProvider integrationTypeProvider,
-            IIntegrationTransport integrationTransport,
             IEnumerable<IEndpointInitializer> initializers)
         {
             Identity = endpointIdentity;
-            DependencyContainer = dependencyContainer;
+            _dependencyContainer = dependencyContainer;
             IntegrationTypeProvider = integrationTypeProvider;
-            Transport = integrationTransport;
 
-            _initializers = initializers.ToList();
+            _initializers = initializers;
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new AsyncCountdownEvent(0);
@@ -43,26 +40,25 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public EndpointIdentity Identity { get; }
 
-        public IDependencyContainer DependencyContainer { get; }
-
-        public IIntegrationTransport Transport { get; }
-
         public IIntegrationTypeProvider IntegrationTypeProvider { get; }
-
-        private IMessagePipeline Pipeline => DependencyContainer.Resolve<IMessagePipeline>();
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            return new ValueTask(StopAsync());
+            await StopAsync().ConfigureAwait(false);
         }
 
-        public async Task InvokeMessageHandler(IExtendedIntegrationContext context)
+        public async Task InvokeMessageHandler(IntegrationMessage message)
         {
-            await using (DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+            await using (_dependencyContainer.OpenScopeAsync())
             {
-                await Pipeline.Process(context, Token).ConfigureAwait(false);
+                var exclusiveContext = _dependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(message);
+
+                await _dependencyContainer
+                    .Resolve<IMessagePipeline>()
+                    .Process(exclusiveContext, Token)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -71,11 +67,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
             _runningHandlers.Increment();
-            using (Disposable.Create(_runningHandlers, @event => @event.Decrement()))
+            using (Disposable.Create(_runningHandlers, e => e.Decrement()))
             {
                 var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(context.Message.ReflectedType);
 
-                await DependencyContainer
+                await _dependencyContainer
                     .Resolve(handlerServiceType)
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
                     .WithArguments(context.Message.Payload, context, Token)

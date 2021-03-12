@@ -1,17 +1,11 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Threading.Tasks;
-    using Abstractions;
-    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
-    using Core.GenericEndpoint.Abstractions;
+    using Core.GenericEndpoint;
 
     internal interface IExecutableEndpoint : IResolvable
     {
-        IDependencyContainer DependencyContainer { get; }
-
-        IIntegrationTransport Transport { get; }
-
-        Task InvokeMessageHandler(IExtendedIntegrationContext context);
+        Task InvokeMessageHandler(IntegrationMessage message);
     }
 }

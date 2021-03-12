@@ -4,53 +4,105 @@ namespace SpaceEngineers.Core.Basics
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
+    /// <inheritdoc />
+    public class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
     {
-        private readonly CancellationToken _token;
-        private readonly Func<TContext, CancellationToken, Task> _onCommitAction;
-        private readonly Func<TContext, CancellationToken, Task> _onRollbackAction;
+        private TContext? _context;
+        private CancellationTokenSource? _cts;
 
         private int _saveChanges;
+        private int _started;
+        private int _disposed;
 
-        internal AsyncUnitOfWork(
-            TContext context,
-            Func<TContext, CancellationToken, Task> onCommitAction,
-            Func<TContext, CancellationToken, Task> onRollbackAction,
-            CancellationToken token)
-        {
-            Context = context;
-            _onCommitAction = onCommitAction;
-            _onRollbackAction = onRollbackAction;
-            _token = token;
-        }
+        /// <inheritdoc />
+        public TContext Context => _context.EnsureNotNull<TContext>("You should start transaction before");
 
-        public TContext Context { get; }
+        private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
+        /// <inheritdoc />
         public void SaveChanges()
         {
             if (Interlocked.Exchange(ref _saveChanges, 1) != default)
             {
-                throw new InvalidOperationException("You already mark this logical transaction as committed");
+                throw new InvalidOperationException("You have already marked this logical transaction as committed");
             }
         }
 
-        public ValueTask DisposeAsync()
+        /// <inheritdoc />
+        public async Task<IAsyncDisposable> StartTransaction(TContext context, CancellationToken token)
         {
-            var operation = Interlocked.CompareExchange(ref _saveChanges, 0, 0) == default
-                ? Rollback()
-                : Commit();
+            _context = context;
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            return new ValueTask(operation);
+            if (Interlocked.Exchange(ref _started, 1) != default)
+            {
+                throw new InvalidOperationException("You have already started this logical transaction");
+            }
+
+            await OnStart(context, Token).ConfigureAwait(false);
+
+            return this;
         }
 
-        private Task Rollback()
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
         {
-            return _onRollbackAction.Invoke(Context, _token);
+            if (Interlocked.Exchange(ref _started, default) == default)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref _disposed, 1) != default)
+            {
+                throw new InvalidOperationException("You have already disposed this logical transaction");
+            }
+
+            var operation = Interlocked.CompareExchange(ref _saveChanges, default, default) == default
+                ? Rollback(Context, Token)
+                : Commit(Context, Token);
+
+            await operation.ConfigureAwait(false);
+
+            _cts?.Dispose();
         }
 
-        private Task Commit()
+        /// <inheritdoc />
+        public void Dispose()
         {
-            return _onCommitAction.Invoke(Context, _token);
+            DisposeAsync().AsTask().Wait(Token);
+        }
+
+        /// <summary>
+        /// Runs on start operations
+        /// </summary>
+        /// <param name="context">Context</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing on start operations</returns>
+        protected virtual Task OnStart(TContext context, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Rollback logical transaction
+        /// </summary>
+        /// <param name="context">Context</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing rollback operation</returns>
+        protected virtual Task Rollback(TContext context, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Commit logical transaction
+        /// </summary>
+        /// <param name="context">Context</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing commit operation</returns>
+        protected virtual Task Commit(TContext context, CancellationToken token)
+        {
+            return Task.CompletedTask;
         }
     }
 }

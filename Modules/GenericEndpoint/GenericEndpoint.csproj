@@ -50,6 +50,12 @@
     <Compile Update="Abstractions\IUbiquitousIntegrationContext.cs">
       <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
     </Compile>
+    <Compile Update="Internals\IntegrationContextUnitOfWorkSubscriber.cs">
+      <DependentUpon>IntegrationUnitOfWork.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IUnitOfWorkSubscriber.cs">
+      <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />

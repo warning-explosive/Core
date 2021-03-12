@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Contexts;
     using AutoWiring.Api.Enumerations;
     using Basics;
@@ -16,17 +17,23 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     [DebuggerDisplay("{ServiceType}")]
     internal class DependencyInfo : IDependencyInfo
     {
-        private DependencyInfo(Type serviceType,
-                               Type implementationType,
-                               uint depth)
+        private DependencyInfo(
+            InstanceProducer? instanceProducer,
+            Type serviceType,
+            Type implementationType,
+            uint depth)
         {
-            IsCollectionResolvable = CollectionResolvable(serviceType);
-            ServiceType = ExtractType(serviceType, IsCollectionResolvable);
-            ImplementationType = ExtractType(implementationType, IsCollectionResolvable);
+            InstanceProducer = instanceProducer;
+            ServiceType = UnwrapType(serviceType, out var isCollectionResolvable, out var isVersioned);
+            ImplementationType = UnwrapType(implementationType, out _, out _);
+
+            IsCollectionResolvable = isCollectionResolvable;
+            IsVersioned = isVersioned;
+            IsCyclic = false;
+            IsUnregistered = instanceProducer == null;
 
             Dependencies = new List<DependencyInfo>();
             Depth = depth;
-            IsCyclic = false;
         }
 
         /// <inheritdoc />
@@ -54,13 +61,18 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         public bool IsCollectionResolvable { get; }
 
         /// <inheritdoc />
+        public bool IsVersioned { get; }
+
+        /// <inheritdoc />
         public bool IsCyclic { get; private set; }
 
         /// <inheritdoc />
-        public bool IsUnregistered { get; private set; }
+        public bool IsUnregistered { get; }
 
         /// <inheritdoc />
         public IDependencyInfo? Parent { get; private set; }
+
+        internal InstanceProducer? InstanceProducer { get; }
 
         /// <inheritdoc />
         public void TraverseByGraph(Action<IDependencyInfo> action)
@@ -83,10 +95,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         /// <returns>DependencyInfo object</returns>
         internal static DependencyInfo UnregisteredDependencyInfo(Type serviceType)
         {
-            return new DependencyInfo(serviceType, serviceType, 0)
-            {
-                IsUnregistered = true
-            };
+            return new DependencyInfo(null, serviceType, serviceType, 0);
         }
 
         /// <summary>
@@ -117,13 +126,15 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                            .Catch<NotSupportedException>()
                            .Invoke();
 
-            var newNodeInfo = new DependencyInfo(dependency.ServiceType,
-                                                 dependency.Registration.ImplementationType,
-                                                 depth)
-                              {
-                                  Lifestyle = lifestyle,
-                                  Parent = parent
-                              };
+            var newNodeInfo = new DependencyInfo(
+                dependency,
+                dependency.ServiceType,
+                dependency.Registration.ImplementationType,
+                depth)
+            {
+                Lifestyle = lifestyle,
+                Parent = parent
+            };
 
             visited.Add(dependency, newNodeInfo);
 
@@ -135,16 +146,17 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return newNodeInfo;
         }
 
-        private static bool CollectionResolvable(Type serviceType)
+        private static Type UnwrapType(Type type, out bool isCollectionResolvable, out bool isVersioned)
         {
-            return serviceType.GetInterfaces().Contains(typeof(IEnumerable));
-        }
+            isCollectionResolvable = type.GetInterfaces().Contains(typeof(IEnumerable));
 
-        private static Type ExtractType(Type type, bool isCollectionResolvable)
-        {
-            return isCollectionResolvable && type.IsGenericType
-                       ? type.GetGenericArguments()[0]
-                       : type;
+            var unwrappedCollection = isCollectionResolvable && type.IsGenericType
+                ? type.GetGenericArguments()[0]
+                : type;
+
+            isVersioned = unwrappedCollection.IsSubclassOfOpenGeneric(typeof(IVersioned<>));
+
+            return unwrappedCollection;
         }
     }
 }

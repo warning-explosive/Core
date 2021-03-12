@@ -92,7 +92,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         private InstanceProducer<TService> InstanceProducer(Func<TService> factory)
         {
             return _container.GetRegistration(typeof(TService))
-                             .EnsureNotNull($"{typeof(TService)} must be registered in the container")
+                             .EnsureNotNull($"{typeof(TService)} should be registered in the container")
                              .Lifestyle
                              .CreateProducer(factory, _container);
         }

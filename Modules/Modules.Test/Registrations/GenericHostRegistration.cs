@@ -7,8 +7,10 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     {
         public void Register(IRegistrationContainer container)
         {
-            var options = new InMemoryIntegrationTransportOptions();
-            GenericHost.InMemoryIntegrationTransport(options).Registration.Register(container);
+            GenericHost
+                .InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions())
+                .Registration
+                .Register(container);
         }
     }
 }

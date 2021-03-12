@@ -44,8 +44,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
-            var endpoints = await Task
-                .WhenAll(_endpointOptions.Select(options => Endpoint.StartAsync(options, Token)))
+            var endpoints = await _endpointOptions
+                .Select(options => Endpoint.StartAsync(options, Token))
+                .WhenAll()
                 .ConfigureAwait(false);
 
             await _transport.Initialize(endpoints, Token).ConfigureAwait(false);

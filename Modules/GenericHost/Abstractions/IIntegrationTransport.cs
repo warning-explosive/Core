@@ -21,14 +21,14 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         event EventHandler<IntegrationMessageEventArgs> OnMessage;
 
         /// <summary>
-        /// Dependency container
-        /// </summary>
-        IDependencyContainer DependencyContainer { get; }
-
-        /// <summary>
         /// Manual registration for endpoints
         /// </summary>
         IManualRegistration Registration { get; }
+
+        /// <summary>
+        /// Gets ubiquitous integration context
+        /// </summary>
+        IUbiquitousIntegrationContext IntegrationContext { get; }
 
         /// <summary>
         /// Initialize transport (topology, state, etc...)

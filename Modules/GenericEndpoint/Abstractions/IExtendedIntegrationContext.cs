@@ -4,16 +4,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
-    using Basics;
     using GenericEndpoint;
 
     /// <summary>
     /// Extended integration context
     /// Use to pass it in message processing pipeline
     /// </summary>
-    public interface IExtendedIntegrationContext : IUbiquitousIntegrationContext,
-                                                   IIntegrationContext,
-                                                   IInitializable<EndpointRuntimeInfo>
+    public interface IExtendedIntegrationContext : IIntegrationContext,
+                                                   IInitializable<IntegrationMessage>,
+                                                   IResolvable
     {
         /// <summary>
         /// Integration message, processing initiator
@@ -26,8 +25,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         EndpointIdentity EndpointIdentity { get; }
 
         /// <summary>
-        /// Retry integration message processing
-        /// Must be called within endpoint scope (in message handler)
+        /// Unit of work
+        /// </summary>
+        IIntegrationUnitOfWork UnitOfWork { get; }
+
+        /// <summary>
+        /// Produces message to transport again and retries integration message processing using specified retry policy
+        /// Should be called within endpoint scope (in message handler)
         /// </summary>
         /// <param name="dueTime">Time that transport waits before deliver message again</param>
         /// <param name="token">Cancellation token</param>
@@ -35,10 +39,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         Task Retry(TimeSpan dueTime, CancellationToken token);
 
         /// <summary>
-        /// Subscribe current integration context to logical transaction callbacks
+        /// Delivers all messages which have buffered during message processing
         /// </summary>
-        /// <param name="unitOfWorkBuilder">Unit of work builder</param>
-        /// <returns>Opened context scope</returns>
-        IAsyncDisposable WithinEndpointScope(AsyncUnitOfWorkBuilder<EndpointIdentity> unitOfWorkBuilder);
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing delivery</returns>
+        Task DeliverAll(CancellationToken token);
     }
 }

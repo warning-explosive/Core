@@ -45,6 +45,11 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Contexts
         bool IsCollectionResolvable { get; }
 
         /// <summary>
+        /// IsVersioned attribute of service
+        /// </summary>
+        public bool IsVersioned { get; }
+
+        /// <summary>
         /// Cyclic dependency attribute
         /// </summary>
         bool IsCyclic { get; }

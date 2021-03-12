@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 
     /// <summary>
     /// Ubiquitous integration context
-    /// Use to produce integration messages outside and within the endpoint scope
+    /// Use to produce integration messages outside or within the endpoint scope
     /// </summary>
     public interface IUbiquitousIntegrationContext : IResolvable
     {

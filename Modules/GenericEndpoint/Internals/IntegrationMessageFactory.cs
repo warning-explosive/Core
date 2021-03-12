@@ -12,11 +12,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     [Lifestyle(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory
     {
-        private readonly IReadOnlyCollection<IMessageHeaderProvider> _providers;
+        private readonly IEnumerable<IMessageHeaderProvider> _providers;
 
         public IntegrationMessageFactory(IEnumerable<IMessageHeaderProvider> providers)
         {
-            _providers = providers.ToList();
+            _providers = providers;
         }
 
         public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)

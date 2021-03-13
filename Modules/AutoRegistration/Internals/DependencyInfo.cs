@@ -85,7 +85,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         /// <inheritdoc />
         public IEnumerable<T> ExtractFromGraph<T>(Func<IDependencyInfo, T> extractor)
         {
-            return new[] { extractor(this) }.Concat(Dependencies.SelectMany(dependency => dependency.ExtractFromGraph(extractor)));
+            return ((IDependencyInfo)this)
+                .Flatten(info => info.Dependencies)
+                .Select(extractor);
         }
 
         /// <summary>

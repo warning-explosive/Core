@@ -47,9 +47,23 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="unfold">Unfold function</param>
         /// <typeparam name="T">Element type-argument</typeparam>
         /// <returns> Flatten source </returns>
+        public static IEnumerable<T> Flatten<T>(
+            this T source,
+            Func<T, IEnumerable<T>> unfold)
+        {
+            return new[] { source }.Concat(unfold(source).SelectMany(z => Flatten(z, unfold)));
+        }
+
+        /// <summary>
+        /// Flatten source stream
+        /// </summary>
+        /// <param name="source">Source stream</param>
+        /// <param name="unfold">Unfold function</param>
+        /// <typeparam name="T">Element type-argument</typeparam>
+        /// <returns> Flatten source </returns>
         public static IEnumerable<T> Flatten<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> unfold)
         {
-            return source.SelectMany(item => Flatten(unfold(item), unfold).Concat(new[] { item }));
+            return source.SelectMany(item => item.Flatten(unfold));
         }
 
         /// <summary> Produce cartesian product of source columns </summary>

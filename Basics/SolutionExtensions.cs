@@ -75,8 +75,9 @@ namespace SpaceEngineers.Core.Basics
 
             IEnumerable<XElement> ExtractAssemblyNames(XElement element)
             {
-                return element.Elements().Where(e => e.Name == "AssemblyName")
-                              .Concat(element.Elements().SelectMany(ExtractAssemblyNames));
+                return element
+                    .Flatten(e => e.Elements())
+                    .Where(e => e.Name == "AssemblyName");
             }
 
             string Amb(IEnumerable<XElement> source)

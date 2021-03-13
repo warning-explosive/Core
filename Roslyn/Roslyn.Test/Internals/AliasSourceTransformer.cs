@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Xml.Linq;
     using Abstractions;
@@ -41,20 +40,21 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
         private static bool TryGetReplacement(SourceText source, out (string, TextSpan) replacement)
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
-            var replacements = Flatten(syntaxTree.GetRoot(), node => node.ChildNodesAndTokens())
-                              .SelectMany(node => node.GetLeadingTrivia().Concat(node.GetTrailingTrivia()))
-                              .Where(trivia => trivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
-                              .Select(trivia =>
-                                      {
-                                          if (TryGetAlias(trivia.ToFullString(), out var content))
-                                          {
-                                              return (content, trivia.Span);
-                                          }
+            var replacements = ((SyntaxNodeOrToken)syntaxTree.GetRoot())
+                .Flatten(node => node.ChildNodesAndTokens())
+                .SelectMany(node => node.GetLeadingTrivia().Concat(node.GetTrailingTrivia()))
+                .Where(trivia => trivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
+                .Select(trivia =>
+                {
+                    if (TryGetAlias(trivia.ToFullString(), out var content))
+                    {
+                        return (content, trivia.Span);
+                    }
 
-                                          return default;
-                                      })
-                              .Where(pair => pair != default)
-                              .ToList();
+                    return default;
+                })
+                .Where(pair => pair != default)
+                .ToList();
 
             if (replacements.Any())
             {
@@ -64,11 +64,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 
             replacement = default;
             return false;
-        }
-
-        private static IEnumerable<SyntaxNodeOrToken> Flatten(SyntaxNodeOrToken nodeOrToken, Func<SyntaxNodeOrToken, IEnumerable<SyntaxNodeOrToken>> unfold)
-        {
-            return new[] { nodeOrToken }.Concat(unfold(nodeOrToken).Flatten(unfold));
         }
 
         private static bool TryGetAlias(string comment, out string content)

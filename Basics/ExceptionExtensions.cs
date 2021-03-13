@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -21,6 +23,35 @@ namespace SpaceEngineers.Core.Basics
             }
 
             return exception;
+        }
+
+        /// <summary>
+        /// Gets flatten exception object hierarchy
+        /// </summary>
+        /// <param name="exception">Source exception</param>
+        /// <returns>Flatten exception object hierarchy</returns>
+        public static IEnumerable<Exception> Flatten(this Exception exception)
+        {
+            switch (exception)
+            {
+                case AggregateException a: return new[] { a }.Concat(a.Flatten().InnerExceptions.SelectMany(Flatten));
+                default: return exception.InnerException != null
+                    ? new[] { exception }.Concat(Flatten(exception.InnerException))
+                    : new[] { exception };
+            }
+        }
+
+        /// <summary>
+        /// Unwraps exception
+        /// </summary>
+        /// <param name="exception">Source exception</param>
+        /// <returns>Unwrapped exceptions</returns>
+        public static IEnumerable<Exception> Unwrap(this Exception exception)
+        {
+            return exception
+                .Flatten()
+                .Select(ex => ex.RealException())
+                .Where(ex => !(ex is AggregateException));
         }
     }
 }

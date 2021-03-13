@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             _subscribers = subscribers;
         }
 
-        protected override Task OnStart(IExtendedIntegrationContext context, CancellationToken token)
+        protected override Task Start(IExtendedIntegrationContext context, CancellationToken token)
         {
             return ExecuteSubscribers(s => s.OnStart(context, token));
         }

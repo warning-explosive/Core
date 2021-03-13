@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Basics
     /// Represents logical transaction that tracks different kinds of resources and maintains consistency
     /// </summary>
     /// <typeparam name="TContext">TContext type-argument</typeparam>
-    public interface IAsyncUnitOfWork<TContext> : IAsyncDisposable, IDisposable
+    public interface IAsyncUnitOfWork<TContext>
     {
         /// <summary>
         /// Context data container

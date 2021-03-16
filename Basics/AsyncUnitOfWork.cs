@@ -7,46 +7,33 @@ namespace SpaceEngineers.Core.Basics
     /// <inheritdoc />
     public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
     {
-        private TContext? _context;
-        private CancellationTokenSource? _cts;
-
-        private int _saveChanges;
         private int _started;
-        private int _disposed;
 
         /// <inheritdoc />
-        public TContext Context => _context.EnsureNotNull<TContext>("You should start transaction before");
-
-        private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
-
-        /// <inheritdoc />
-        public void SaveChanges()
+        public async Task StartTransaction(
+            TContext context,
+            Func<TContext, CancellationToken, Task> producer,
+            bool saveChanges,
+            CancellationToken token)
         {
-            if (Interlocked.CompareExchange(ref _started, 0, 0) == default)
+            var startError = await ExecutionExtensions
+                .TryAsync(() => StartTransactionUnsafe(context, producer, token))
+                .Catch<Exception>()
+                .Invoke(Task.FromResult<Exception?>)
+                .ConfigureAwait(false);
+
+            var finishError = await ExecutionExtensions
+                .TryAsync(() => FinishTransactionUnsafe(context, saveChanges, startError, token))
+                .Catch<Exception>()
+                .Invoke(Task.FromResult<Exception?>)
+                .ConfigureAwait(false);
+
+            var exception = startError ?? finishError;
+
+            if (exception != null)
             {
-                throw new InvalidOperationException("You should start transaction before");
+                throw exception;
             }
-
-            if (Interlocked.Exchange(ref _saveChanges, 1) != default)
-            {
-                throw new InvalidOperationException("You have already marked this logical transaction as committed");
-            }
-        }
-
-        /// <inheritdoc />
-        public async Task<IAsyncDisposable> StartTransaction(TContext context, CancellationToken token)
-        {
-            _context = context;
-            _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-
-            if (Interlocked.Exchange(ref _started, 1) != default)
-            {
-                throw new InvalidOperationException("You have already started this logical transaction");
-            }
-
-            await Start(context, Token).ConfigureAwait(false);
-
-            return AsyncDisposable.Create(this, unitOfWork => unitOfWork.DisposeAsync());
         }
 
         /// <summary>
@@ -64,9 +51,10 @@ namespace SpaceEngineers.Core.Basics
         /// Rollback logical transaction
         /// </summary>
         /// <param name="context">Context</param>
+        /// <param name="exception">Producers exception (optional)</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing rollback operation</returns>
-        protected virtual Task Rollback(TContext context, CancellationToken token)
+        protected virtual Task Rollback(TContext context, Exception? exception, CancellationToken token)
         {
             return Task.CompletedTask;
         }
@@ -82,25 +70,29 @@ namespace SpaceEngineers.Core.Basics
             return Task.CompletedTask;
         }
 
-        private async Task DisposeAsync()
+        private async Task<Exception?> StartTransactionUnsafe(TContext context, Func<TContext, CancellationToken, Task> producer, CancellationToken token)
         {
-            if (Interlocked.Exchange(ref _started, default) == default)
+            if (Interlocked.Exchange(ref _started, 1) != default)
             {
-                return;
+                throw new InvalidOperationException("You have already started this logical transaction");
             }
 
-            if (Interlocked.Exchange(ref _disposed, 1) != default)
-            {
-                throw new InvalidOperationException("You have already disposed this logical transaction");
-            }
+            await Start(context, token).ConfigureAwait(false);
 
-            var operation = Interlocked.CompareExchange(ref _saveChanges, default, default) == default
-                ? Rollback(Context, Token)
-                : Commit(Context, Token);
+            await producer.Invoke(context, token).ConfigureAwait(false);
 
-            await operation.ConfigureAwait(false);
+            return null;
+        }
 
-            _cts?.Dispose();
+        private async Task<Exception?> FinishTransactionUnsafe(TContext context, bool saveChanges, Exception? exception, CancellationToken token)
+        {
+            var finishOperation = saveChanges && exception == null
+                ? Commit(context, token)
+                : Rollback(context, exception, token);
+
+            await finishOperation.ConfigureAwait(false);
+
+            return null;
         }
     }
 }

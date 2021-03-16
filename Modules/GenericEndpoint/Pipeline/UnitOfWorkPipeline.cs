@@ -18,14 +18,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public async Task Process(IExtendedIntegrationContext context, CancellationToken token)
+        public Task Process(IExtendedIntegrationContext context, CancellationToken token)
         {
-            await using (await context.UnitOfWork.StartTransaction(context, token).ConfigureAwait(false))
-            {
-                await Decoratee.Process(context, token).ConfigureAwait(false);
+            return context.UnitOfWork.StartTransaction(context, ExecuteWithinTransaction, true, token);
+        }
 
-                context.UnitOfWork.SaveChanges();
-            }
+        private Task ExecuteWithinTransaction(IExtendedIntegrationContext context, CancellationToken token)
+        {
+            return Decoratee.Process(context, token);
         }
     }
 }

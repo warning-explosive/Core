@@ -6,12 +6,16 @@ namespace SpaceEngineers.Core.Basics.Test
     using System.Threading.Tasks;
     using Xunit;
     using Xunit.Abstractions;
+    using Xunit.Sdk;
 
     /// <summary>
     /// AsyncUnitOfWorkTest
     /// </summary>
     public class AsyncUnitOfWorkTest : BasicsTestBase
     {
+        private static readonly Func<object, CancellationToken, Task> EmptyProducer = (_, _) => Task.CompletedTask;
+        private static readonly Func<object, CancellationToken, Task> ErrorProducer = (_, _) => throw new TrueException(nameof(TrueException), null);
+
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         public AsyncUnitOfWorkTest(ITestOutputHelper output)
@@ -20,110 +24,66 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
-        internal void SeveralStartsTest()
+        internal void CommitTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            Assert.Throws<InvalidOperationException>(() => UnwrapError(() => Run(unitOfWork).Wait()));
-
-            Assert.True(unitOfWork.Started);
-            Assert.False(unitOfWork.Committed);
-            Assert.True(unitOfWork.RolledBack);
-
-            async Task Run(IAsyncUnitOfWork<object> uow)
-            {
-                await using (StartTransaction(uow))
-                {
-                    await using (StartTransaction(uow))
-                    {
-                    }
-                }
-            }
-        }
-
-        [Fact]
-        internal async Task AccessBeforeStartTest()
-        {
-            var unitOfWork = new TestAsyncUnitOfWork();
-            Assert.Throws<InvalidOperationException>(() => unitOfWork.Context);
-            Assert.Throws<InvalidOperationException>(() => unitOfWork.SaveChanges());
-
-            Assert.False(unitOfWork.Started);
-            Assert.False(unitOfWork.Committed);
-            Assert.False(unitOfWork.RolledBack);
-
-            await using (StartTransaction(unitOfWork))
-            {
-                _ = unitOfWork.Context;
-                unitOfWork.SaveChanges();
-            }
+            ExecuteTransaction(unitOfWork, true, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
             Assert.True(unitOfWork.Committed);
             Assert.False(unitOfWork.RolledBack);
+            Assert.False(unitOfWork.RolledBackByException);
         }
 
         [Fact]
-        internal async Task CommitTest()
+        internal void RollbackTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            await using (StartTransaction(unitOfWork))
-            {
-                unitOfWork.SaveChanges();
-            }
-
-            Assert.True(unitOfWork.Started);
-            Assert.True(unitOfWork.Committed);
-            Assert.False(unitOfWork.RolledBack);
-        }
-
-        [Fact]
-        internal async Task RollbackTest()
-        {
-            var unitOfWork = new TestAsyncUnitOfWork();
-            await using (StartTransaction(unitOfWork))
-            {
-            }
+            ExecuteTransaction(unitOfWork, false, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
             Assert.True(unitOfWork.RolledBack);
+            Assert.False(unitOfWork.RolledBackByException);
         }
 
         [Fact]
         internal void RollbackByExceptionTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            Assert.Throws<InvalidOperationException>(() => UnwrapError(() => Run(unitOfWork).Wait()));
+            Assert.Throws<TrueException>(() => ExecuteTransaction(unitOfWork, true, ErrorProducer));
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
             Assert.True(unitOfWork.RolledBack);
+            Assert.True(unitOfWork.RolledBackByException);
+        }
 
-            static void Throw()
+        [Fact]
+        internal void SeveralStartsTest()
+        {
+            var unitOfWork = new TestAsyncUnitOfWork();
+            Assert.Throws<InvalidOperationException>(() => ExecuteTransaction(unitOfWork, true, OuterProducer));
+
+            Assert.True(unitOfWork.Started);
+            Assert.False(unitOfWork.Committed);
+            Assert.True(unitOfWork.RolledBack);
+            Assert.True(unitOfWork.RolledBackByException);
+
+            Task OuterProducer(object context, CancellationToken token)
             {
-                throw new InvalidOperationException();
-            }
-
-            static async Task Run(IAsyncUnitOfWork<object> uow)
-            {
-                await using (StartTransaction(uow))
-                {
-                    Throw();
-
-                    uow.SaveChanges();
-                }
+                ExecuteTransaction(unitOfWork, true, EmptyProducer);
+                return Task.CompletedTask;
             }
         }
 
-        private static IAsyncDisposable StartTransaction(IAsyncUnitOfWork<object> unitOfWork)
+        private static void ExecuteTransaction(
+            IAsyncUnitOfWork<object> unitOfWork,
+            bool saveChanges,
+            Func<object, CancellationToken, Task> producer)
         {
-             return unitOfWork.StartTransaction(new object(), CancellationToken.None).Result;
-        }
-
-        private static void UnwrapError(Action action)
-        {
-            action
-                .Try()
+            ExecutionExtensions
+                .Try(() => unitOfWork.StartTransaction(new object(), producer, saveChanges, CancellationToken.None).Wait())
                 .Catch<AggregateException>(ex => throw ex.Unwrap().First())
                 .Invoke();
         }
@@ -135,6 +95,8 @@ namespace SpaceEngineers.Core.Basics.Test
             internal bool Committed { get; private set; }
 
             internal bool RolledBack { get; private set; }
+
+            internal bool RolledBackByException { get; private set; }
 
             protected override Task Start(object context, CancellationToken token)
             {
@@ -148,9 +110,10 @@ namespace SpaceEngineers.Core.Basics.Test
                 return Task.CompletedTask;
             }
 
-            protected override Task Rollback(object context, CancellationToken token)
+            protected override Task Rollback(object context, Exception? exception, CancellationToken token)
             {
                 RolledBack = true;
+                RolledBackByException = exception != null;
                 return Task.CompletedTask;
             }
         }

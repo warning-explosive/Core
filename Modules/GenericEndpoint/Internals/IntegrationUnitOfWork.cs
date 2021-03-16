@@ -23,22 +23,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         protected override Task Start(IExtendedIntegrationContext context, CancellationToken token)
         {
-            return ExecuteSubscribers(s => s.OnStart(context, token));
+            return ExecuteSubscribers(_subscribers, s => s.OnStart(context, token));
         }
 
         protected override Task Commit(IExtendedIntegrationContext context, CancellationToken token)
         {
-            return ExecuteSubscribers(s => s.OnCommit(context, token));
+            return ExecuteSubscribers(_subscribers.Reverse(), s => s.OnCommit(context, token));
         }
 
-        protected override Task Rollback(IExtendedIntegrationContext context, CancellationToken token)
+        protected override Task Rollback(IExtendedIntegrationContext context, Exception? exception, CancellationToken token)
         {
-            return ExecuteSubscribers(s => s.OnRollback(context, token));
+            return ExecuteSubscribers(_subscribers.Reverse(), s => s.OnRollback(context, token));
         }
 
-        private Task ExecuteSubscribers(Func<IUnitOfWorkSubscriber<IExtendedIntegrationContext>, Task> accessor)
+        private static Task ExecuteSubscribers(
+            IEnumerable<IUnitOfWorkSubscriber<IExtendedIntegrationContext>> subscribers,
+            Func<IUnitOfWorkSubscriber<IExtendedIntegrationContext>, Task> accessor)
         {
-            return ExecutionExtensions.TryAsync(() => _subscribers.Select(accessor).WhenAll()).Invoke();
+            return subscribers.Select(accessor).WhenAll();
         }
     }
 }

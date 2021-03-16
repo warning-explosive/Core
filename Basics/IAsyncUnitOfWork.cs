@@ -11,22 +11,17 @@ namespace SpaceEngineers.Core.Basics
     public interface IAsyncUnitOfWork<TContext>
     {
         /// <summary>
-        /// Context data container
-        /// </summary>
-        TContext Context { get; }
-
-        /// <summary>
-        /// Save changes
-        /// By default changes are going to be rolled back
-        /// </summary>
-        void SaveChanges();
-
-        /// <summary>
-        /// Starts logical transaction
+        /// Starts logical transaction and invokes producer
         /// </summary>
         /// <param name="context">Context data container</param>
+        /// <param name="producer">Producer</param>
+        /// <param name="saveChanges">Save changes. By default changes are going to be rolled back</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing start operation</returns>
-        Task<IAsyncDisposable> StartTransaction(TContext context, CancellationToken token);
+        Task StartTransaction(
+            TContext context,
+            Func<TContext, CancellationToken, Task> producer,
+            bool saveChanges,
+            CancellationToken token);
     }
 }

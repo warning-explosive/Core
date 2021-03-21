@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericDomain
+namespace SpaceEngineers.Core.GenericDomain.Internals
 {
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;

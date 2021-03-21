@@ -3,13 +3,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.DataAccess</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.DataAccess</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.DataAccess.EntityFramework</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DataAccess.EntityFramework</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.DataAccess</Title>
+        <Title>SpaceEngineers.Core.DataAccess.EntityFramework</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.DataAccess</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.DataAccess.EntityFramework</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -27,6 +27,13 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericDomain\GenericDomain.csproj" />
+      <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.4">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Abstractions
     /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
     /// <typeparam name="TSpecification">TSpecification type-argument</typeparam>
     public interface IReadRepository<TAggregate, TSpecification> : IResolvable
-        where TAggregate : IAggregate
+        where TAggregate : class, IAggregate
         where TSpecification : IReadRepositorySpecification
     {
         /// <summary>

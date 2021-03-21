@@ -13,7 +13,6 @@ namespace SpaceEngineers.Core.GenericDomain
         /// </summary>
         protected EntityBase()
         {
-            Id = Guid.NewGuid();
         }
 
         /// <summary>
@@ -21,10 +20,15 @@ namespace SpaceEngineers.Core.GenericDomain
         /// </summary>
         public Guid Id { get; private set; }
 
+        /// <summary>
+        /// Entity identifier
+        /// </summary>
+        public ulong Version { get; private set; }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return HashCode.Combine(Id, Version);
         }
 
         /// <inheritdoc />
@@ -56,7 +60,8 @@ namespace SpaceEngineers.Core.GenericDomain
 
         private bool Equals(IUniqueIdentified other)
         {
-            return Id.Equals(other.Id);
+            return Id.Equals(other.Id)
+                && Version.Equals(other.Version);
         }
     }
 }

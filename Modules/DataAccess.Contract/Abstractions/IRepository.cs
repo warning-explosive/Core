@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Abstractions
     /// </summary>
     /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
     public interface IRepository<TAggregate> : IResolvable
-        where TAggregate : IAggregate
+        where TAggregate : class, IAggregate
     {
         /// <summary>
         /// Create aggregate in the persistence layer

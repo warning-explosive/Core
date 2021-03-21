@@ -11,5 +11,10 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
         /// Identifier
         /// </summary>
         Guid Id { get; }
+
+        /// <summary>
+        /// Version
+        /// </summary>
+        ulong Version { get; }
     }
 }

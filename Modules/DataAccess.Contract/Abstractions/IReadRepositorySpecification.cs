@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     /// <summary>
     /// IReadRepositorySpecification

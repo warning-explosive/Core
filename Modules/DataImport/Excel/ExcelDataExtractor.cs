@@ -5,6 +5,7 @@
     using System.Data;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using Basics;
@@ -34,7 +35,7 @@
         }
 
         /// <inheritdoc />
-        public ICollection<TElement> ExtractData(ExcelDataExtractorSpecification specification)
+        public IAsyncEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification)
         {
             using (var stream = File.OpenRead(specification.FileInfo.FullName))
             using (var document = SpreadsheetDocument.Open(stream, false))
@@ -64,7 +65,7 @@
                    ?? new Dictionary<int, string>();
         }
 
-        private ICollection<TElement> ProcessWorksheet(
+        private async IAsyncEnumerable<TElement> ProcessWorksheet(
             Worksheet worksheet,
             IReadOnlyDictionary<int, string> sharedStrings,
             ExcelDataExtractorSpecification specification)
@@ -80,7 +81,8 @@
                         rows = rows.Where(row => (row.RowIndex.Value - 1).BetweenInclude(specification.Range));
                     }
 
-                    var columns = _columnsSelectionBehavior.ExtractColumns(rows, sharedStrings, _dataTableReader.PropertyToColumnCaption);
+                    var columns = _columnsSelectionBehavior
+                        .ExtractColumns(rows, sharedStrings, _dataTableReader.PropertyToColumnCaption);
 
                     dataTable.Columns.AddRange(columns);
 
@@ -97,11 +99,12 @@
 
                 var propertyToColumn = MergeColumns(dataTable);
 
-                var elements = ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ToList();
+                await foreach (var element in ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ConfigureAwait(false))
+                {
+                    yield return element;
+                }
 
-                _dataTableReader.AfterTableRead();
-
-                return elements;
+                await _dataTableReader.AfterTableRead().ConfigureAwait(false);
             }
         }
 
@@ -138,7 +141,7 @@
                     column => column.dataColumnName);
         }
 
-        private IEnumerable<TElement> ReadTable(
+        private async IAsyncEnumerable<TElement> ReadTable(
             DataTable dataTable,
             IReadOnlyDictionary<string, string> propertyToColumn,
             ExcelTableMetadata tableMetadata)
@@ -147,10 +150,11 @@
             {
                 var row = dataTable.Rows[i];
 
-                var element = new Func<TElement?>(() => _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata))
-                    .Try()
+                var element = await ExecutionExtensions
+                    .TryAsync(() => _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata))
                     .Catch<Exception>(ex => throw new InvalidOperationException($"Error in row {i}", ex))
-                    .Invoke();
+                    .Invoke()
+                    .ConfigureAwait(false);
 
                 if (element != null)
                 {

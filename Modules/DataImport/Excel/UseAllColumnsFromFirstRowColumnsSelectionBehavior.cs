@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
-    /// Use all columns header row behavior
+    /// Use all columns from first row columns selection behavior
     /// </summary>
     [Unregistered]
     public class UseAllColumnsFromFirstRowColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
         }
 
         /// <inheritdoc />
-        public bool FirstRowIsHeader { get; } = false;
+        public bool FirstRowIsHeader { get; } = true;
 
         /// <inheritdoc />
         public DataColumn[] ExtractColumns(

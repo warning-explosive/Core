@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataImport
     using System.Data;
     using System.Globalization;
     using System.Linq;
+    using System.Threading.Tasks;
     using Abstractions;
     using Basics;
 
@@ -34,14 +35,14 @@ namespace SpaceEngineers.Core.DataImport
                     : null;
 
         /// <inheritdoc />
-        public abstract TElement? ReadRow(
+        public abstract Task<TElement?> ReadRow(
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
             TTableMeta tableMeta);
 
         /// <inheritdoc />
-        public abstract void AfterTableRead();
+        public abstract Task AfterTableRead();
 
         /// <summary>
         /// DataRow is empty (each column has no value)

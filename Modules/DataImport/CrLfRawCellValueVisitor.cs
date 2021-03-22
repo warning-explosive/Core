@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataImport.Internals
+namespace SpaceEngineers.Core.DataImport
 {
     using System;
     using Abstractions;

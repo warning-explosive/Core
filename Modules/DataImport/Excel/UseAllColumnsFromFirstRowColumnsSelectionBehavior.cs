@@ -10,13 +10,13 @@ namespace SpaceEngineers.Core.DataImport.Excel
     /// Use all columns header row behavior
     /// </summary>
     [Unregistered]
-    public class UseAllColumnsColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
+    public class UseAllColumnsFromFirstRowColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
 
         /// <summary> .cctor </summary>
         /// <param name="cellValueExtractor">IExcelCellValueExtractor</param>
-        public UseAllColumnsColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
+        public UseAllColumnsFromFirstRowColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
         {
             _cellValueExtractor = cellValueExtractor;
         }

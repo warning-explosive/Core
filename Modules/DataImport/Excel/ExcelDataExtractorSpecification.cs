@@ -10,26 +10,26 @@ namespace SpaceEngineers.Core.DataImport.Excel
     public class ExcelDataExtractorSpecification : IDataExtractorSpecification
     {
         /// <summary> .cctor </summary>
-        /// <param name="dataStream">Data stream</param>
+        /// <param name="fileInfo">File info</param>
         /// <param name="sheetName">Sheet name</param>
         /// <param name="range">Rows range for import</param>
         /// <param name="tableMetadata">Excel table metadata</param>
         public ExcelDataExtractorSpecification(
-            Stream dataStream,
+            FileInfo fileInfo,
             string sheetName,
             Range range,
             ExcelTableMetadata tableMetadata)
         {
-            DataStream = dataStream;
+            FileInfo = fileInfo;
             SheetName = sheetName;
             Range = range;
             TableMetadata = tableMetadata;
         }
 
         /// <summary>
-        /// Data stream
+        /// File info
         /// </summary>
-        public Stream DataStream { get; }
+        public FileInfo FileInfo { get; }
 
         /// <summary>
         /// Sheet name

@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.IO;
     using System.Linq;
     using Abstractions;
     using AutoWiring.Api.Attributes;
@@ -35,7 +36,8 @@
         /// <inheritdoc />
         public ICollection<TElement> ExtractData(ExcelDataExtractorSpecification specification)
         {
-            using (var document = SpreadsheetDocument.Open(specification.DataStream, false))
+            using (var stream = File.OpenRead(specification.FileInfo.FullName))
+            using (var document = SpreadsheetDocument.Open(stream, false))
             {
                 var worksheet = document
                     .WorkbookPart

@@ -42,7 +42,10 @@ namespace SpaceEngineers.Core.DataImport
             TTableMeta tableMeta);
 
         /// <inheritdoc />
-        public abstract Task AfterTableRead();
+        public virtual Task AfterTableRead()
+        {
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// DataRow is empty (each column has no value)

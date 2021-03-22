@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
 {
     using System.Linq;
+    using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
@@ -21,9 +22,9 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
             _predicateFactory = predicateFactory;
         }
         
-        public TAggregate Read(TSpecification spec)
+        public async Task<TAggregate> Read(TSpecification spec)
         {
-            var predicate = _predicateFactory.Build(spec);
+            var predicate = await _predicateFactory.Build(spec).ConfigureAwait(false);
 
             return _databaseContext.Set<TAggregate>().Single(predicate);
         }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
 {
+    using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
@@ -16,19 +17,23 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
             _databaseContext = databaseContext;
         }
         
-        public void Create(TAggregate aggregate)
+        public Task Create(TAggregate aggregate)
         {
-            _databaseContext.Set<TAggregate>().Add(aggregate);
+            return _databaseContext.Set<TAggregate>().AddAsync(aggregate).AsTask();
         }
 
-        public void Update(TAggregate aggregate)
+        public Task Update(TAggregate aggregate)
         {
             _databaseContext.Set<TAggregate>().Update(aggregate);
+
+            return Task.CompletedTask;
         }
 
-        public void Delete(TAggregate aggregate)
+        public Task Delete(TAggregate aggregate)
         {
             _databaseContext.Set<TAggregate>().Remove(aggregate);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
+    using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
 
@@ -17,6 +18,6 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// </summary>
         /// <param name="spec">Specification</param>
         /// <returns>Ongoing read operation</returns>
-        TAggregate Read(TSpecification spec);
+        Task<TAggregate> Read(TSpecification spec);
     }
 }

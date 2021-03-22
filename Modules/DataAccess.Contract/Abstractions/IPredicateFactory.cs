@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using System;
     using System.Linq.Expressions;
+    using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
 
@@ -19,6 +20,6 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// </summary>
         /// <param name="specification">Query specification</param>
         /// <returns>Built predicate</returns>
-        Expression<Func<TAggregate, bool>> Build(TSpecification specification);
+        Task<Expression<Func<TAggregate, bool>>> Build(TSpecification specification);
     }
 }

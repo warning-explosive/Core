@@ -49,7 +49,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var registrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration()
             };
 
@@ -146,7 +145,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var registrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new GenericEndpointRegistration(),
                 new GenericHostRegistration(),
                 versionedOpenGenericRegistration
@@ -223,11 +221,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(ReferenceEquals(versionedContainer, DependencyContainer));
             Assert.True(versionedContainer.Equals(DependencyContainer));
 
-            var registrationContainer = DependencyContainer.Resolve<IRegistrationContainer>();
-
-            Assert.True(ReferenceEquals(registrationContainer, DependencyContainer));
-            Assert.True(registrationContainer.Equals(DependencyContainer));
-
             var scopedContainer = DependencyContainer.Resolve<IScopedContainer>();
 
             Assert.True(ReferenceEquals(scopedContainer, DependencyContainer));
@@ -242,11 +235,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Assert.True(ReferenceEquals(versionedContainer, DependencyContainer));
             Assert.True(versionedContainer.Equals(DependencyContainer));
-
-            registrationContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().RegistrationContainer;
-
-            Assert.True(ReferenceEquals(registrationContainer, DependencyContainer));
-            Assert.True(registrationContainer.Equals(DependencyContainer));
 
             scopedContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().ScopedContainer;
 
@@ -420,15 +408,14 @@ namespace SpaceEngineers.Core.Modules.Test
             var registration = DependencyContainerOptions.DelegateRegistration(
                 container =>
                 {
-                    container.Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient);
-                    container.Register<WiredTestServiceImpl, WiredTestServiceImpl>(EnLifestyle.Transient);
-                    container.Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Transient);
-                    container.Register<IndependentTestServiceImpl, IndependentTestServiceImpl>(EnLifestyle.Transient);
-                    container.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient);
-                    container.Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Transient);
-                    container.RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient);
-                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                    container.Register<IRegisteredByDelegate>(() => new RegisteredByDelegateImpl(), EnLifestyle.Transient);
+                    container.Register<IWiredTestService, WiredTestServiceImpl>();
+                    container.Register<WiredTestServiceImpl, WiredTestServiceImpl>();
+                    container.Register<IIndependentTestService, IndependentTestServiceImpl>();
+                    container.Register<IndependentTestServiceImpl, IndependentTestServiceImpl>();
+                    container.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>();
+                    container.Register<ConcreteImplementationService, ConcreteImplementationService>();
+                    container.RegisterCollection<ICollectionResolvableTestService>(expectedCollection);
+                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>();
                 });
 
             var options = new DependencyContainerOptions
@@ -465,14 +452,11 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Throws<ActivationException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
             Assert.Throws<ActivationException>(() => localContainer.Resolve<IVersioned<IOpenGenericTestService<string>>>());
 
-            localContainer.Resolve<IRegisteredByDelegate>();
-            localContainer.Resolve<IVersioned<IRegisteredByDelegate>>();
-
             registration = DependencyContainerOptions
                 .DelegateRegistration(container =>
                 {
-                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
-                    container.Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>();
+                    container.Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
                 });
 
             options = new DependencyContainerOptions

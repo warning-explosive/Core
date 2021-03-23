@@ -9,8 +9,6 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
 
         IVersionedContainer VersionedContainer { get; }
 
-        IRegistrationContainer RegistrationContainer { get; }
-
         IScopedContainer ScopedContainer { get; }
     }
 }

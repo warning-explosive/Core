@@ -49,15 +49,15 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 _endpointIdentity = endpointIdentity;
             }
 
-            public void Register(IRegistrationContainer container)
+            public void Register(IManualRegistrationsContainer container)
             {
                 container.RegisterInstance(_endpointIdentity);
 
-                container.Register<IGenericEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
-                container.Register<IRunnableEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
-                container.Register<IExecutableEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
-                container.Register<IMessagePipeline, GenericEndpoint>(EnLifestyle.Singleton);
-                container.Register<GenericEndpoint, GenericEndpoint>(EnLifestyle.Singleton);
+                container.Register<IGenericEndpoint, GenericEndpoint>();
+                container.Register<IRunnableEndpoint, GenericEndpoint>();
+                container.Register<IExecutableEndpoint, GenericEndpoint>();
+                container.Register<IMessagePipeline, GenericEndpoint>();
+                container.Register<GenericEndpoint, GenericEndpoint>();
             }
         }
     }

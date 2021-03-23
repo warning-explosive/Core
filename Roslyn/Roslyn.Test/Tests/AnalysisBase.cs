@@ -1,6 +1,9 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Tests
 {
+    using System;
     using System.Collections.Immutable;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Microsoft.Build.Locator;
@@ -11,9 +14,19 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     /// </summary>
     public abstract class AnalysisBase
     {
+        private static Version? _version;
+
+        [SuppressMessage("Analysis", "CA1810", Justification = "Analysis test")]
         static AnalysisBase()
         {
-            MSBuildLocator.RegisterDefaults();
+            var instance = MSBuildLocator
+                .QueryVisualStudioInstances()
+                .OrderByDescending(it => it.Version)
+                .First();
+
+            MSBuildLocator.RegisterInstance(instance);
+
+            _version = instance.Version;
         }
 
         /// <summary> .cctor </summary>
@@ -21,6 +34,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         protected AnalysisBase(ITestOutputHelper output)
         {
             Output = output;
+
+            Output.WriteLine($"Used framework version: {_version}");
 
             DependencyContainer = AutoRegistration
                 .DependencyContainer

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
     internal class GenericEndpointRegistration : IManualRegistration
     {
-        public void Register(IRegistrationContainer container)
+        public void Register(IManualRegistrationsContainer container)
         {
             var endpointIdentity = new EndpointIdentity("mock_endpoint", 0);
 

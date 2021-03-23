@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
     internal class GenericHostRegistration : IManualRegistration
     {
-        public void Register(IRegistrationContainer container)
+        public void Register(IManualRegistrationsContainer container)
         {
             GenericHost
                 .InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions())

@@ -3,10 +3,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
     [ManualRegistration]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal class InMemoryUbiquitousIntegrationContext : IUbiquitousIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

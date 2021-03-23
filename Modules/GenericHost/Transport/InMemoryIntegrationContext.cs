@@ -6,12 +6,14 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
     [ManualRegistration]
+    [Lifestyle(EnLifestyle.Scoped)]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

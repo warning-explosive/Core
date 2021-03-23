@@ -20,6 +20,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using Internals;
 
     [ManualRegistration]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal class InMemoryIntegrationTransport : IIntegrationTransport, IAsyncDisposable
     {
         private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap
@@ -48,12 +49,12 @@ namespace SpaceEngineers.Core.GenericHost.Transport
                 container.RegisterInstance<IIntegrationTransport>(this);
                 container.RegisterInstance<InMemoryIntegrationTransport>(this);
 
-                container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>(EnLifestyle.Singleton);
-                container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>(EnLifestyle.Singleton);
+                container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
+                container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
 
-                container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
-                container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>(EnLifestyle.Scoped);
-                container.RegisterDecorator<IExtendedIntegrationContext, ExtendedIntegrationContextHeadersMaintenanceDecorator>(EnLifestyle.Scoped);
+                container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>();
+                container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>();
+                container.RegisterDecorator<IExtendedIntegrationContext, ExtendedIntegrationContextHeadersMaintenanceDecorator>();
 
                 container.RegisterInstance<IEndpointInstanceSelectionBehavior>(_selectionBehavior);
                 container.RegisterInstance(_selectionBehavior.GetType(), _selectionBehavior);

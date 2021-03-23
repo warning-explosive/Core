@@ -41,7 +41,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var registrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration()
             };
 
@@ -60,7 +59,6 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var registrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration(),
                 new RegisterVersionedOpenGenerics()
             };
@@ -230,7 +228,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private class RegisterVersionedOpenGenerics : IManualRegistration
         {
-            public void Register(IRegistrationContainer container)
+            public void Register(IManualRegistrationsContainer container)
             {
                 container.RegisterVersioned<IOpenGenericDecorableService<object>>(EnLifestyle.Transient);
                 container.RegisterVersioned<OpenGenericDecorableServiceImpl<object>>(EnLifestyle.Transient);

@@ -73,7 +73,6 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var manualRegistrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration(),
                 new GenericEndpointRegistration(),
                 GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions()).Registration
@@ -137,8 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     {
                         ManualRegistrations = new IManualRegistration[]
                         {
-                            new DelegatesRegistration(),
-                            new VersionedOpenGenericRegistration(),
+                            new VersionedOpenGenericRegistration()
                         }
                     }
                 };
@@ -150,7 +148,7 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal async Task SimpleHostTest()
         {
             var expectedCount = 1000;
@@ -168,8 +166,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var registrations = new IManualRegistration[]
                 {
-                    new DelegatesRegistration(),
-                    new VersionedOpenGenericRegistration(),
+                    new VersionedOpenGenericRegistration()
                 };
 
                 return new DependencyContainerOptions

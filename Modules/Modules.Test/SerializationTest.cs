@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
     /// <summary>
     /// SerializationTest
-    ///     Newtonsoft.Json module
+    ///     Json module
     /// </summary>
     public class SerializationTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {

@@ -11,19 +11,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using Internals;
     using SimpleInjector;
 
-    /// <summary>
-    /// Registration extensions
-    /// </summary>
-    public static class RegistrationExtensions
+    internal static class RegistrationExtensions
     {
-        /// <summary>
-        /// Components types to register
-        /// </summary>
-        /// <param name="serviceType">Service type</param>
-        /// <param name="container">SimpleInjector container</param>
-        /// <param name="assemblies">Assemblies to search</param>
-        /// <returns>Types to register</returns>
-        public static IEnumerable<Type> GetTypesToRegister(
+        internal static IEnumerable<Type> GetTypesToRegister(
             this Type serviceType,
             Container container,
             Assembly[] assemblies)
@@ -109,6 +99,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             infos.OrderByDependencyAttribute(z => z.ImplementationType)
                  .GroupBy(k => k.ServiceType, v => v.ImplementationType)
                  .Each(info => container.Collection.Register(info.Key, info));
+        }
+
+        internal static void RegisterSingletons(this IEnumerable<(Type, object)> singletons, Container container)
+        {
+            foreach (var (service, instance) in singletons)
+            {
+                container.RegisterInstance(service, instance);
+            }
         }
 
         internal static void RegisterVersioned(this ICollection<ServiceRegistrationInfo> infos, Container container)

@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using Basics.Async;
     using Core.GenericEndpoint;
@@ -12,6 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Core.GenericEndpoint.Contract.Abstractions;
 
     [ManualRegistration]
+    [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericEndpoint : IGenericEndpoint, IRunnableEndpoint, IExecutableEndpoint, IMessagePipeline
     {
         private readonly IDependencyContainer _dependencyContainer;

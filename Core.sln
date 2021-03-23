@@ -39,7 +39,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modules.Test", "Modules\Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint", "Modules\GenericEndpoint\GenericEndpoint.csproj", "{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Newtonsoft.Json", "Modules\Newtonsoft.Json\Newtonsoft.Json.csproj", "{04956563-F049-4503-974D-7EC8DB246E84}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Json", "Modules\Json\Json.csproj", "{04956563-F049-4503-974D-7EC8DB246E84}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataImport", "Modules\DataImport\DataImport.csproj", "{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}"
 EndProject

@@ -49,5 +49,8 @@
     <Compile Update="Verifiers\UnregisteredTypesMustBeUnregistered.cs">
       <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="Internals\ManualDelegateRegistration.cs">
+      <DependentUpon>IExtendedManualRegistrationsContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

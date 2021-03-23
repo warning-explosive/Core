@@ -41,7 +41,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
-    <ProjectReference Include="..\Newtonsoft.Json\Newtonsoft.Json.csproj" />
+    <ProjectReference Include="..\Json\Json.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Abstractions\IJsonSettings.cs">

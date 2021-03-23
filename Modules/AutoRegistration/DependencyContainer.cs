@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
     using Extensions;
@@ -26,19 +25,11 @@ namespace SpaceEngineers.Core.AutoRegistration
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [ManualRegistration]
-    public class DependencyContainer : IRegistrationContainer
+    public class DependencyContainer : IDependencyContainer
     {
         private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
-
         private readonly Container _container;
-
-        private readonly ICollection<ServiceRegistrationInfo> _external = new List<ServiceRegistrationInfo>();
-
-        private readonly ICollection<ServiceRegistrationInfo> _externalCollections = new List<ServiceRegistrationInfo>();
-
-        private readonly ICollection<Type> _emptyExternalCollections = new List<Type>();
-
-        private readonly ICollection<ServiceRegistrationInfo> _externalVersioned = new List<ServiceRegistrationInfo>();
+        private readonly IExtendedManualRegistrationsContainer _manualRegistrationsContainer;
 
         /// <summary> .cctor </summary>
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
@@ -51,15 +42,22 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
             _container = CreateContainer();
+            _manualRegistrationsContainer = new ManualRegistrationsContainer();
 
-            options.ManualRegistrations.Each(manual => manual.Register(this));
+            options
+                .ManualRegistrations
+                .Concat(new[] { ManualRegistration(this, typeProvider, servicesProvider) })
+                .Each(manual => manual.Register(_manualRegistrationsContainer));
 
-            RegisterSingletons(_container, this, typeProvider, servicesProvider);
-            Resolvable(_container, typeProvider, servicesProvider).Concat(_external).ToList().RegisterServicesWithOpenGenericFallBack(_container);
-            Collections(_container, typeProvider, servicesProvider).Concat(_externalCollections).ToList().RegisterCollections(_container);
-            _emptyExternalCollections.Each(collection => _container.RegisterEmptyCollection(collection));
-            Decorators(servicesProvider).RegisterDecorators(_container);
-            Versioned(_container).Concat(_externalVersioned).ToList().RegisterVersioned(_container);
+            _manualRegistrationsContainer.Singletons().RegisterSingletons(_container);
+
+            Resolvable(_container, typeProvider, servicesProvider).Concat(_manualRegistrationsContainer.Resolvable()).RegisterServicesWithOpenGenericFallBack(_container);
+            Collections(_container, typeProvider, servicesProvider).Concat(_manualRegistrationsContainer.Collections()).ToList().RegisterCollections(_container);
+
+            _manualRegistrationsContainer.EmptyCollections().Each(collection => _container.RegisterEmptyCollection(collection));
+
+            Decorators(servicesProvider).Concat(_manualRegistrationsContainer.Decorators()).RegisterDecorators(_container);
+            Versioned(_container).Concat(_manualRegistrationsContainer.Versioned()).ToList().RegisterVersioned(_container);
             Versions(_container, typeProvider, servicesProvider).ToList().RegisterVersions(_container);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
@@ -129,129 +127,6 @@ namespace SpaceEngineers.Core.AutoRegistration
 #pragma warning disable 618
             return new DependencyContainer(typeProvider, servicesProvider, options);
 #pragma warning restore 618
-        }
-
-        #endregion
-
-        #region IRegistrationContainer
-
-        /// <inheritdoc />
-        public IRegistrationContainer Register(Type serviceType, Type implementationType, EnLifestyle lifestyle)
-        {
-            _container.Register(serviceType, implementationType, lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer Register<TService, TImplementation>(EnLifestyle lifestyle)
-            where TService : class
-            where TImplementation : class, TService
-        {
-            _container.Register<TService, TImplementation>(lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer Register(Type serviceType, Func<object> factory, EnLifestyle lifestyle)
-        {
-            _container.Register(serviceType, factory.Invoke, lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer Register<TService>(Func<TService> factory, EnLifestyle lifestyle)
-            where TService : class
-        {
-            _container.Register<TService>(factory.Invoke, lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterInstance<TService>(TService singletonInstance)
-            where TService : class
-        {
-            _container.RegisterInstance<TService>(singletonInstance);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterInstance(Type serviceType, object singletonInstance)
-        {
-            _container.RegisterInstance(serviceType, singletonInstance);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterDecorator<TService, TDecorator>(EnLifestyle lifestyle)
-            where TService : class
-            where TDecorator : class, TService
-        {
-            _container.RegisterDecorator<TService, TDecorator>(lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterDecorator(Type serviceType, Type decoratorType, EnLifestyle lifestyle)
-        {
-            _container.RegisterDecorator(serviceType, decoratorType, lifestyle.MapLifestyle());
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterCollection<TService>(IEnumerable<Type> implementations, EnLifestyle lifestyle)
-            where TService : class
-        {
-            return RegisterCollection(typeof(TService), implementations, lifestyle);
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations, EnLifestyle lifestyle)
-        {
-            implementations.Select(implementation => new ServiceRegistrationInfo(serviceType, implementation, lifestyle))
-                           .Each(_externalCollections.Add);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterEmptyCollection<TService>()
-            where TService : class
-        {
-            return RegisterEmptyCollection(typeof(TService));
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterEmptyCollection(Type serviceType)
-        {
-            _emptyExternalCollections.Add(serviceType);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterVersioned<TService>(EnLifestyle lifestyle)
-            where TService : class
-        {
-            return RegisterVersioned(typeof(TService), lifestyle);
-        }
-
-        /// <inheritdoc />
-        public IRegistrationContainer RegisterVersioned(Type serviceType, EnLifestyle lifestyle)
-        {
-            _externalVersioned.Add(serviceType.VersionedComponent(lifestyle));
-            return this;
-        }
-
-        /// <inheritdoc />
-        public bool HasRegistration<TService>()
-            where TService : class
-        {
-            return HasRegistration(typeof(TService));
-        }
-
-        /// <inheritdoc />
-        public bool HasRegistration(Type serviceType)
-        {
-            return _container.GetCurrentRegistrations()
-                             .Any(z => z.ServiceType == serviceType);
         }
 
         #endregion
@@ -411,20 +286,24 @@ namespace SpaceEngineers.Core.AutoRegistration
                    };
         }
 
-        private static void RegisterSingletons(Container container,
-                                               DependencyContainer dependencyContainer,
-                                               ITypeProvider typeProvider,
-                                               IAutoWiringServicesProvider servicesProvider)
+        private static IManualRegistration ManualRegistration(
+            DependencyContainer dependencyContainer,
+            ITypeProvider typeProvider,
+            IAutoWiringServicesProvider servicesProvider)
         {
-            container.RegisterInstance<DependencyContainer>(dependencyContainer);
-            container.RegisterInstance<IRegistrationContainer>(dependencyContainer);
-            container.RegisterInstance<IDependencyContainer>(dependencyContainer);
-            container.RegisterInstance<IScopedContainer>(dependencyContainer);
-            container.RegisterInstance<IVersionedContainer>(dependencyContainer);
-            container.RegisterInstance(typeProvider.GetType(), typeProvider);
-            container.RegisterInstance<ITypeProvider>(typeProvider);
-            container.RegisterInstance(servicesProvider.GetType(), servicesProvider);
-            container.RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
+            return DependencyContainerOptions
+                .DelegateRegistration(container =>
+                {
+                    container
+                        .RegisterInstance<DependencyContainer>(dependencyContainer)
+                        .RegisterInstance<IDependencyContainer>(dependencyContainer)
+                        .RegisterInstance<IScopedContainer>(dependencyContainer)
+                        .RegisterInstance<IVersionedContainer>(dependencyContainer)
+                        .RegisterInstance(typeProvider.GetType(), typeProvider)
+                        .RegisterInstance<ITypeProvider>(typeProvider)
+                        .RegisterInstance(servicesProvider.GetType(), servicesProvider)
+                        .RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
+                });
         }
 
         private static void VerifyService(Type serviceType)

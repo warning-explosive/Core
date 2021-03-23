@@ -7,18 +7,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using Basics.Exceptions;
     using SimpleInjector;
 
-    /// <summary>
-    /// Lifestyle extensions
-    /// </summary>
-    public static class LifestyleExtensions
+    internal static class LifestyleExtensions
     {
-        /// <summary>
-        /// Extracts lifestyle of the component
-        /// </summary>
-        /// <param name="type">Component type</param>
-        /// <returns>Component's lifestyle</returns>
-        /// <exception cref="AttributeRequiredException">Component doesn't marked with LifestyleAttribute</exception>
-        public static EnLifestyle Lifestyle(this Type type)
+        internal static EnLifestyle Lifestyle(this Type type)
         {
             var lifestyle = type.GetAttribute<LifestyleAttribute>()?.Lifestyle;
 

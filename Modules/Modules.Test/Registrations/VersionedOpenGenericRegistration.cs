@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
     internal class VersionedOpenGenericRegistration : IManualRegistration
     {
-        public void Register(IRegistrationContainer container)
+        public void Register(IManualRegistrationsContainer container)
         {
             container.RegisterVersioned(typeof(ConcreteImplementationGenericService<object>), EnLifestyle.Transient);
             container.RegisterVersioned(typeof(IComparable<ExternalResolvableImpl>), EnLifestyle.Transient);
@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
         internal static ICollection<Type> RegisterVersionedForOpenGenerics(
             IDependencyContainer donorContainer,
-            IRegistrationContainer registrationContainer)
+            IManualRegistrationsContainer registrationContainer)
         {
             var typeProvider = donorContainer.Resolve<ITypeProvider>();
             var genericTypeProvider = donorContainer.Resolve<IGenericTypeProvider>();
@@ -36,12 +36,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
                   .Select(service =>
                           {
                               var closed = genericTypeProvider.CloseByConstraints(service, HybridTypeArgumentSelector(donorContainer));
-                              var versionedService = typeof(IVersioned<>).MakeGenericType(closed);
-
-                              if (!registrationContainer.HasRegistration(versionedService))
-                              {
-                                  registrationContainer.RegisterVersioned(closed, EnLifestyle.Transient);
-                              }
+                              registrationContainer.RegisterVersioned(closed, EnLifestyle.Transient);
 
                               return closed;
                           })

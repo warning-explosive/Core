@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <summary>
         /// Register dependencies manually
         /// </summary>
-        /// <param name="container">IRegistrationContainer</param>
-        public void Register(IRegistrationContainer container);
+        /// <param name="container">IManualRegistrationsContainer</param>
+        public void Register(IManualRegistrationsContainer container);
     }
 }

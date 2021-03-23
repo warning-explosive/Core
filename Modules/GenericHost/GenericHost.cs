@@ -116,23 +116,14 @@ namespace SpaceEngineers.Core.GenericHost
 
         private static IManualRegistration InMemoryIntegrationTransportRegistration(InMemoryIntegrationTransportOptions transportOptions)
         {
-            Type[] headerProviders;
-
-            using (var templateContainer = new Container())
-            {
-                headerProviders = typeof(IMessageHeaderProvider)
-                    .GetTypesToRegister(templateContainer, AssembliesExtensions.AllFromCurrentDomain())
-                    .ToArray();
-            }
-
             return DependencyContainerOptions
                 .DelegateRegistration(container =>
                 {
-                    container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
-                    container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
+                    container.Register<IIntegrationTransport, InMemoryIntegrationTransport>();
+                    container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>();
 
-                    container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>(EnLifestyle.Singleton);
-                    container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>(EnLifestyle.Singleton);
+                    container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
+                    container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
 
                     var behavior = transportOptions.EndpointInstanceSelectionBehavior;
                     container.RegisterInstance(behavior);
@@ -141,11 +132,10 @@ namespace SpaceEngineers.Core.GenericHost
                     var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(SpaceEngineers.Core.GenericEndpoint));
                     var typeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "IntegrationMessageFactory");
                     var messageFactoryType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
-                    var messageFactoryLifestyle = messageFactoryType.Lifestyle();
-                    container.Register(typeof(IIntegrationMessageFactory), messageFactoryType, messageFactoryLifestyle);
-                    container.Register(messageFactoryType, messageFactoryType, messageFactoryLifestyle);
+                    container.Register(typeof(IIntegrationMessageFactory), messageFactoryType);
+                    container.Register(messageFactoryType, messageFactoryType);
 
-                    container.RegisterCollection<IMessageHeaderProvider>(headerProviders, messageFactoryLifestyle);
+                    container.RegisterCollection<IMessageHeaderProvider>(new[] { typeof(IntegratedMessageHeader) });
                 });
         }
     }

@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// </summary>
         /// <param name="registrationAction">Action with IRegistrationContainer instance</param>
         /// <returns>IManualRegistration instance</returns>
-        public static IManualRegistration DelegateRegistration(Action<IRegistrationContainer> registrationAction)
+        public static IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)
         {
             return new ManualDelegateRegistration(registrationAction);
         }

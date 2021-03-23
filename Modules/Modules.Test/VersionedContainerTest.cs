@@ -38,7 +38,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var registrations = new IManualRegistration[]
             {
-                new DelegatesRegistration(),
                 new VersionedOpenGenericRegistration()
             };
 

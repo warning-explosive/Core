@@ -5,11 +5,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericEndpoint.Contract.Abstractions;
 
     [ManualRegistration]
+    [Lifestyle(EnLifestyle.Scoped)]
     internal class ExtendedIntegrationContextHeadersMaintenanceDecorator : IExtendedIntegrationContext,
                                                                            IDecorator<IExtendedIntegrationContext>
     {

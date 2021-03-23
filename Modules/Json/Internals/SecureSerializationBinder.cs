@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.NewtonSoft.Json.Internals
+namespace SpaceEngineers.Core.Json.Internals
 {
     using System;
     using AutoWiring.Api.Services;

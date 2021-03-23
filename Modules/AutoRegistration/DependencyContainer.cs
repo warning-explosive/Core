@@ -29,7 +29,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     {
         private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
         private readonly Container _container;
-        private readonly IExtendedManualRegistrationsContainer _manualRegistrationsContainer;
 
         /// <summary> .cctor </summary>
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
@@ -41,24 +40,11 @@ namespace SpaceEngineers.Core.AutoRegistration
                                    DependencyContainerOptions options)
         {
             _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
-            _container = CreateContainer();
-            _manualRegistrationsContainer = new ManualRegistrationsContainer();
 
-            options
-                .ManualRegistrations
-                .Concat(new[] { ManualRegistration(this, typeProvider, servicesProvider) })
-                .Each(manual => manual.Register(_manualRegistrationsContainer));
+            var manualRegistration = ManualRegistration(this, typeProvider, servicesProvider);
+            options.ManualRegistrations = options.ManualRegistrations.Concat(new[] { manualRegistration }).ToList();
 
-            _manualRegistrationsContainer.Singletons().RegisterSingletons(_container);
-
-            Resolvable(_container, typeProvider, servicesProvider).Concat(_manualRegistrationsContainer.Resolvable()).RegisterServicesWithOpenGenericFallBack(_container);
-            Collections(_container, typeProvider, servicesProvider).Concat(_manualRegistrationsContainer.Collections()).ToList().RegisterCollections(_container);
-
-            _manualRegistrationsContainer.EmptyCollections().Each(collection => _container.RegisterEmptyCollection(collection));
-
-            Decorators(servicesProvider).Concat(_manualRegistrationsContainer.Decorators()).RegisterDecorators(_container);
-            Versioned(_container).Concat(_manualRegistrationsContainer.Versioned()).ToList().RegisterVersioned(_container);
-            Versions(_container, typeProvider, servicesProvider).ToList().RegisterVersions(_container);
+            _container = BuildContainer(typeProvider, servicesProvider, options);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
             _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
@@ -196,54 +182,6 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         #endregion
 
-        #region IVersionedContainer
-
-        /// <inheritdoc />
-        public IDisposable UseVersion<TService, TVersion>()
-            where TService : class
-            where TVersion : class, TService, IVersionFor<TService>
-        {
-            return UseVersionInternal(typeof(TService), typeof(TVersion), null);
-        }
-
-        /// <inheritdoc />
-        public IDisposable UseVersion<TService>(Func<IVersionFor<TService>> versionFactory)
-            where TService : class
-        {
-            return UseVersionInternal(typeof(TService), null, versionFactory);
-        }
-
-        /// <inheritdoc />
-        public VersionInfo? AppliedVersion<TService>()
-            where TService : class
-        {
-            _versions.TryGetValue(typeof(TService), out var stack);
-
-            return stack?.Peek();
-        }
-
-        private IDisposable UseVersionInternal(Type serviceType, Type? versionType, Func<object>? versionInstanceFactory)
-        {
-            var stack = _versions.GetOrAdd(serviceType, _ => new Stack<VersionInfo>());
-            stack.Push(new VersionInfo(serviceType, versionType, versionInstanceFactory));
-
-            return Disposable.Create(_versions,
-                                     state =>
-                                     {
-                                         if (state.TryGetValue(serviceType, out var s))
-                                         {
-                                             s.Pop();
-
-                                             if (!s.Any())
-                                             {
-                                                 state.TryRemove(serviceType, out _);
-                                             }
-                                         }
-                                     });
-        }
-
-        #endregion
-
         #region Internals
 
         private static Assembly[] RootAssemblies()
@@ -266,6 +204,25 @@ namespace SpaceEngineers.Core.AutoRegistration
             return genericEndpointContract != null
                 ? new[] { genericEndpointContract }
                 : Array.Empty<Assembly>();
+        }
+
+        private static Container BuildContainer(
+            ITypeProvider typeProvider,
+            IAutoWiringServicesProvider servicesProvider,
+            DependencyContainerOptions options)
+        {
+            var container = CreateContainer();
+
+            var manualRegistrationsContainer = new ManualRegistrationsContainer();
+
+            options.ManualRegistrations.Each(manual => manual.Register(manualRegistrationsContainer));
+
+            manualRegistrationsContainer.Singletons().RegisterSingletons(container);
+            Resolvable(container, typeProvider, servicesProvider).Concat(manualRegistrationsContainer.Resolvable()).RegisterServicesWithOpenGenericFallBack(container);
+            Collections(container, typeProvider, servicesProvider).Concat(manualRegistrationsContainer.Collections()).ToList().RegisterCollections(container);
+            Decorators(servicesProvider).Concat(manualRegistrationsContainer.Decorators()).RegisterDecorators(container);
+
+            return container;
         }
 
         private static Container CreateContainer()
@@ -298,7 +255,6 @@ namespace SpaceEngineers.Core.AutoRegistration
                         .RegisterInstance<DependencyContainer>(dependencyContainer)
                         .RegisterInstance<IDependencyContainer>(dependencyContainer)
                         .RegisterInstance<IScopedContainer>(dependencyContainer)
-                        .RegisterInstance<IVersionedContainer>(dependencyContainer)
                         .RegisterInstance(typeProvider.GetType(), typeProvider)
                         .RegisterInstance<ITypeProvider>(typeProvider)
                         .RegisterInstance(servicesProvider.GetType(), servicesProvider)
@@ -319,8 +275,10 @@ namespace SpaceEngineers.Core.AutoRegistration
             ITypeProvider typeProvider,
             IAutoWiringServicesProvider servicesProvider)
         {
-            return servicesProvider.Resolvable().Concat(servicesProvider.External())
-                                   .GetComponents(container, typeProvider, false);
+            return servicesProvider
+                .Resolvable()
+                .Concat(servicesProvider.External())
+                .GetComponents(container, typeProvider);
         }
 
         private static IEnumerable<ServiceRegistrationInfo> Collections(
@@ -328,55 +286,36 @@ namespace SpaceEngineers.Core.AutoRegistration
             ITypeProvider typeProvider,
             IAutoWiringServicesProvider servicesProvider)
         {
-            return servicesProvider.Collections().GetComponents(container, typeProvider, false);
+            return servicesProvider
+                .Collections()
+                .GetComponents(container, typeProvider);
         }
 
         private static IEnumerable<DecoratorRegistrationInfo> Decorators(IAutoWiringServicesProvider servicesProvider)
         {
             var decorators = servicesProvider
-                            .Decorators()
-                            .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
-                            .GetDecoratorInfo(typeof(IDecorator<>));
+                .Decorators()
+                .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
+                .GetDecoratorInfo(typeof(IDecorator<>));
 
             var conditionalDecorators = servicesProvider
-                                       .Decorators()
-                                       .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
-                                       .GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
+                .Decorators()
+                .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
+                .GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
 
             var collectionDecorators = servicesProvider
-                                      .CollectionDecorators()
-                                      .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
-                                      .GetDecoratorInfo(typeof(ICollectionDecorator<>));
+                .CollectionDecorators()
+                .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
+                .GetDecoratorInfo(typeof(ICollectionDecorator<>));
 
             var collectionConditionalDecorators = servicesProvider
-                                                 .CollectionDecorators()
-                                                 .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
-                                                 .GetConditionalDecoratorInfo(typeof(IConditionalCollectionDecorator<,>));
+                .CollectionDecorators()
+                .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
+                .GetConditionalDecoratorInfo(typeof(IConditionalCollectionDecorator<,>));
 
             var simple = decorators.Concat(collectionDecorators);
             var conditional = conditionalDecorators.Concat(collectionConditionalDecorators);
             return simple.Concat(conditional);
-        }
-
-        private static IEnumerable<ServiceRegistrationInfo> Versioned(Container container)
-        {
-            return container
-                .GetCurrentRegistrations()
-                .Select(DependencyInfo.RetrieveDependencyGraph)
-                .SelectMany(info => info.ExtractFromGraph(i => i))
-                .OrderBy(info => info.ComplexityDepth)
-                .Select(info => info.ServiceType)
-                .Where(serviceType => !serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
-                .Distinct()
-                .VersionedComponents(container);
-        }
-
-        private static IEnumerable<ServiceRegistrationInfo> Versions(Container container, ITypeProvider typeProvider, IAutoWiringServicesProvider servicesProvider)
-        {
-            return servicesProvider
-                  .Versions()
-                  .Select(service => typeof(IVersionFor<>).MakeGenericType(service))
-                  .GetComponents(container, typeProvider, true);
         }
 
         #endregion

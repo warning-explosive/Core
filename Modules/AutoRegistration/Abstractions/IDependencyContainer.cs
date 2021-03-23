@@ -7,9 +7,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
     /// <summary>
     /// Dependency container abstraction
     /// </summary>
-    public interface IDependencyContainer : IScopedContainer,
-                                            IVersionedContainer,
-                                            IResolvable
+    public interface IDependencyContainer : IScopedContainer, IResolvable
     {
         /// <summary>
         /// Resolve service implementation

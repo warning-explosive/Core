@@ -7,8 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     {
         IDependencyContainer DependencyContainer { get; }
 
-        IVersionedContainer VersionedContainer { get; }
-
         IScopedContainer ScopedContainer { get; }
     }
 }

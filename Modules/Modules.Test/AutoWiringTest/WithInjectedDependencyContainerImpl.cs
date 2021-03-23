@@ -8,17 +8,13 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     internal class WithInjectedDependencyContainerImpl : IWithInjectedDependencyContainer
     {
         public WithInjectedDependencyContainerImpl(IDependencyContainer dependencyContainer,
-                                                   IVersionedContainer versionedContainer,
                                                    IScopedContainer scopedContainer)
         {
             DependencyContainer = dependencyContainer;
-            VersionedContainer = versionedContainer;
             ScopedContainer = scopedContainer;
         }
 
         public IDependencyContainer DependencyContainer { get; }
-
-        public IVersionedContainer VersionedContainer { get; }
 
         public IScopedContainer ScopedContainer { get; }
     }

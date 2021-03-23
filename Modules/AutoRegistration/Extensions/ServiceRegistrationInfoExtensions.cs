@@ -13,40 +13,21 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
     internal static class ServiceRegistrationInfoExtensions
     {
-        internal static IEnumerable<ServiceRegistrationInfo> VersionedComponents(this IEnumerable<Type> servicesWithVersions, Container container)
-        {
-            foreach (var serviceType in servicesWithVersions)
-            {
-                var lifestyle = container.GetRegistration(serviceType)
-                                         .EnsureNotNull($"Container should have registration of {serviceType.FullName} type")
-                                         .Lifestyle
-                                         .MapLifestyle();
-
-                yield return VersionedComponent(serviceType, lifestyle);
-            }
-        }
-
-        internal static ServiceRegistrationInfo VersionedComponent(this Type serviceType, EnLifestyle lifestyle)
-        {
-            var versionedServiceType = typeof(IVersioned<>).MakeGenericType(serviceType);
-            var versionedImplementationType = typeof(Versioned<>).MakeGenericType(serviceType);
-            return new ServiceRegistrationInfo(versionedServiceType, versionedImplementationType, lifestyle);
-        }
-
-        internal static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<Type> serviceTypes,
-                                                                           Container container,
-                                                                           ITypeProvider typeProvider,
-                                                                           bool versions)
+        internal static IEnumerable<ServiceRegistrationInfo> GetComponents(
+            this IEnumerable<Type> serviceTypes,
+            Container container,
+            ITypeProvider typeProvider)
         {
             return serviceTypes
                 .SelectMany(serviceType => serviceType
                     .GetTypesToRegister(container, typeProvider)
                     .Select(implementationType => (serviceType, implementationType)))
-                .GetComponents(versions)
+                .GetComponents()
                 .Distinct();
         }
 
-        private static IEnumerable<ServiceRegistrationInfo> GetComponents(this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs, bool versions)
+        private static IEnumerable<ServiceRegistrationInfo> GetComponents(
+            this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs)
         {
             return pairs
                   .Where(pair => pair.ServiceType.ForAutoRegistration()
@@ -55,14 +36,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                   .Select(pair => new
                                   {
                                       pair.ServiceType,
-                                      pair.ImplementationType,
-                                      IsVersion = pair.ImplementationType.IsVersion()
+                                      pair.ImplementationType
                                   })
-                  .Where(info => versions ? info.IsVersion : !info.IsVersion)
                   .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ImplementationType, pair.ImplementationType.Lifestyle()));
         }
 
-        private static IEnumerable<(Type ImplementationType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(Type serviceType, Type componentType)
+        private static IEnumerable<(Type ImplementationType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(
+            Type serviceType,
+            Type componentType)
         {
             if (serviceType.IsGenericType
              && serviceType.IsGenericTypeDefinition

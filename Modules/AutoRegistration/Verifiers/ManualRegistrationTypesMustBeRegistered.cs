@@ -25,16 +25,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
         {
             _typeProvider
                .OurTypes
-               .Where(SkipBypassTypes)
                .Where(type => type.HasAttribute<ManualRegistrationAttribute>())
                .SelectMany(implementation => ExtractAutoWiringServices(implementation).Select(service => (service, implementation)))
                .Where(pair => !registered.Contains(pair.implementation))
                .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} marked with the {nameof(ManualRegistrationAttribute)}. You must register it yourself as {pair.service.FullName}."));
-        }
-
-        private static bool SkipBypassTypes(Type type)
-        {
-            return type != typeof(Versioned<>);
         }
     }
 }

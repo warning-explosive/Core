@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Basics.Test;
     using Core.Test.Api.ClassFixtures;
-    using NewtonSoft.Json.Abstractions;
-    using NewtonSoft.Json.ObjectTree;
+    using Json.Abstractions;
+    using Json.ObjectTree;
     using Xunit;
     using Xunit.Abstractions;
 

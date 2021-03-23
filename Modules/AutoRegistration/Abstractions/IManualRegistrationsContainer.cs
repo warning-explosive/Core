@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoWiring.Api.Enumerations;
 
     /// <summary>
     /// Manual registrations container abstraction
@@ -62,35 +61,5 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
         /// <param name="implementations">Collection of implementation types</param>
         /// <returns>IManualRegistrationsContainer</returns>
         IManualRegistrationsContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations);
-
-        /// <summary> Register empty collection of services </summary>
-        /// <typeparam name="TService">TService type-argument</typeparam>
-        /// <returns>IManualRegistrationsContainer</returns>
-        IManualRegistrationsContainer RegisterEmptyCollection<TService>()
-            where TService : class;
-
-        /// <summary> Register empty collection of services </summary>
-        /// <param name="serviceType">Service type</param>
-        /// <returns>IManualRegistrationsContainer</returns>
-        IManualRegistrationsContainer RegisterEmptyCollection(Type serviceType);
-
-        /// <summary>
-        /// Register versioned service
-        /// Use this method only to register closed version of open-generic service
-        /// </summary>
-        /// <param name="lifestyle">Instance lifestyle</param>
-        /// <typeparam name="TService">TService type-argument</typeparam>
-        /// <returns>IManualRegistrationsContainer</returns>
-        IManualRegistrationsContainer RegisterVersioned<TService>(EnLifestyle lifestyle)
-            where TService : class;
-
-        /// <summary>
-        /// Register versioned service
-        /// Use this method only to register closed version of open-generic service
-        /// </summary>
-        /// <param name="serviceType">Service type</param>
-        /// <param name="lifestyle">Instance lifestyle</param>
-        /// <returns>IManualRegistrationsContainer</returns>
-        IManualRegistrationsContainer RegisterVersioned(Type serviceType, EnLifestyle lifestyle);
     }
 }

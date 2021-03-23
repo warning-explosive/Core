@@ -28,12 +28,6 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Services
         IEnumerable<Type> External();
 
         /// <summary>
-        /// Gets services which has explicitly defined versions and registered in container by AutoWiring.API include Unregistered and ManualRegistered types
-        /// </summary>
-        /// <returns>External services registered in container by AutoWiring.API</returns>
-        IEnumerable<Type> Versions();
-
-        /// <summary>
         /// Gets decorators registered in container by AutoWiring.API include conditional decorators, Unregistered and ManualRegistered types
         /// </summary>
         /// <returns>Decorators registered by AutoWiring.API include conditional decorators</returns>

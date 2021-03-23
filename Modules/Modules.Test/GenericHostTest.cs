@@ -73,7 +73,6 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var manualRegistrations = new IManualRegistration[]
             {
-                new VersionedOpenGenericRegistration(),
                 new GenericEndpointRegistration(),
                 GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions()).Registration
             };
@@ -131,14 +130,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport)
                 {
-                    Assembly = GetType().Assembly,
-                    ContainerOptions = new DependencyContainerOptions
-                    {
-                        ManualRegistrations = new IManualRegistration[]
-                        {
-                            new VersionedOpenGenericRegistration()
-                        }
-                    }
+                    Assembly = GetType().Assembly
                 };
 
                 return Host
@@ -162,22 +154,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var assembly = GetType().Assembly;
 
-            DependencyContainerOptions ContainerOptions()
-            {
-                var registrations = new IManualRegistration[]
-                {
-                    new VersionedOpenGenericRegistration()
-                };
-
-                return new DependencyContainerOptions
-                {
-                    ManualRegistrations = registrations
-                };
-            }
-
-            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
-            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
-            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), transport) { Assembly = assembly, ContainerOptions = ContainerOptions() };
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport) { Assembly = assembly };
+            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), transport) { Assembly = assembly };
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), transport) { Assembly = assembly };
 
             using var host = Host
                 .CreateDefaultBuilder()

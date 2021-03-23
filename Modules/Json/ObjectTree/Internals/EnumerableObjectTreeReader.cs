@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.NewtonSoft.Json.ObjectTree.Internals
+namespace SpaceEngineers.Core.Json.ObjectTree.Internals
 {
     using System.Collections;
     using System.Collections.Generic;

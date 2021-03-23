@@ -14,9 +14,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     [Lifestyle(EnLifestyle.Singleton)]
     internal class GenericTypeProvider : IGenericTypeProvider
     {
-        private readonly IVersioned<ITypeProvider> _typeProvider;
+        private readonly ITypeProvider _typeProvider;
 
-        public GenericTypeProvider(IVersioned<ITypeProvider> typeProvider)
+        public GenericTypeProvider(ITypeProvider typeProvider)
         {
             _typeProvider = typeProvider;
         }
@@ -36,9 +36,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
             var typeArgument = openGeneric.GetGenericArguments()[typeArgumentAt];
 
-            return _typeProvider.Current
-                                .AllLoadedTypes
-                                .Where(t => t.FitsForTypeArgument(typeArgument));
+            return _typeProvider.AllLoadedTypes.Where(t => t.FitsForTypeArgument(typeArgument));
         }
 
         /// <inheritdoc />

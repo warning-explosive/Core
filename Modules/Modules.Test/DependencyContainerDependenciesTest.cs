@@ -26,7 +26,6 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var registrations = new IManualRegistration[]
             {
-                new VersionedOpenGenericRegistration(),
                 new GenericEndpointRegistration(),
                 new GenericHostRegistration()
             };
@@ -90,24 +89,40 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void IsOurTypeTest()
         {
+            var excludedAssemblies = new[]
+            {
+                nameof(System),
+                nameof(Microsoft),
+                "Windows"
+            };
+
+            var assemblies = AssembliesExtensions
+                .AllFromCurrentDomain()
+                .Where(assembly =>
+                {
+                    var assemblyName = assembly.GetName().FullName;
+                    return excludedAssemblies.All(excluded => !assemblyName.StartsWith(excluded, StringComparison.OrdinalIgnoreCase));
+                })
+                .ToArray();
+
             var provider = DependencyContainer.Resolve<ITypeProvider>();
             var ourTypes = provider.OurTypes;
 
             // #1 - ITypeProvider
             var wrongOurTypes = ourTypes
-                               .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
-                               .ShowTypes("#1 - ITypeProvider", Output.WriteLine)
-                               .ToArray();
+                .Where(t => !t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
+                .ShowTypes("#1 - ITypeProvider", Output.WriteLine)
+                .ToArray();
 
             Assert.False(wrongOurTypes.Any());
 
             // #2 - missing
-            wrongOurTypes = AssembliesExtensions.AllFromCurrentDomain()
-                                                .SelectMany(asm => asm.GetTypes())
-                                                .Except(ourTypes)
-                                                .Where(type => provider.IsOurType(type))
-                                                .ShowTypes("#2 - missing", Output.WriteLine)
-                                                .ToArray();
+            wrongOurTypes = assemblies
+                .SelectMany(asm => asm.GetTypes())
+                .Except(ourTypes)
+                .Where(type => provider.IsOurType(type))
+                .ShowTypes("#2 - missing", Output.WriteLine)
+                .ToArray();
 
             Assert.False(wrongOurTypes.Any());
 
@@ -124,21 +139,22 @@ namespace SpaceEngineers.Core.Modules.Test
                 "Microsoft.CodeAnalysis"
             };
 
-            wrongOurTypes = AssembliesExtensions.AllFromCurrentDomain()
-                                                .SelectMany(asm => asm.GetTypes())
-                                                .Where(t => (t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
-                                                         && !provider.IsOurType(t)
-                                                         && excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)))
-                                                .ShowTypes("#3 - missing", Output.WriteLine)
-                                                .ToArray();
+            wrongOurTypes = assemblies
+                .SelectMany(asm => asm.GetTypes())
+                .Where(t => (t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
+                            && !provider.IsOurType(t)
+                            && excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)))
+                .ShowTypes("#3 - missing", Output.WriteLine)
+                .ToArray();
 
             Assert.False(wrongOurTypes.Any());
 
             // #4 - uniqueness
-            var notUniqueTypes = ourTypes.GroupBy(it => it)
-                                         .Where(grp => grp.Count() > 1)
-                                         .Select(grp => grp.Key.FullName)
-                                         .ToList();
+            var notUniqueTypes = ourTypes
+                .GroupBy(it => it)
+                .Where(grp => grp.Count() > 1)
+                .Select(grp => grp.Key.FullName)
+                .ToList();
 
             if (notUniqueTypes.Any())
             {

@@ -24,11 +24,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             uint depth)
         {
             InstanceProducer = instanceProducer;
-            ServiceType = UnwrapType(serviceType, out var isCollectionResolvable, out var isVersioned);
-            ImplementationType = UnwrapType(implementationType, out _, out _);
+            ServiceType = UnwrapType(serviceType, out var isCollectionResolvable);
+            ImplementationType = UnwrapType(implementationType, out _);
 
             IsCollectionResolvable = isCollectionResolvable;
-            IsVersioned = isVersioned;
             IsCyclic = false;
             IsUnregistered = instanceProducer == null;
 
@@ -59,9 +58,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         /// <inheritdoc />
         public bool IsCollectionResolvable { get; }
-
-        /// <inheritdoc />
-        public bool IsVersioned { get; }
 
         /// <inheritdoc />
         public bool IsCyclic { get; private set; }
@@ -148,15 +144,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return newNodeInfo;
         }
 
-        private static Type UnwrapType(Type type, out bool isCollectionResolvable, out bool isVersioned)
+        private static Type UnwrapType(Type type, out bool isCollectionResolvable)
         {
             isCollectionResolvable = type.GetInterfaces().Contains(typeof(IEnumerable));
 
             var unwrappedCollection = isCollectionResolvable && type.IsGenericType
                 ? type.GetGenericArguments()[0]
                 : type;
-
-            isVersioned = unwrappedCollection.IsSubclassOfOpenGeneric(typeof(IVersioned<>));
 
             return unwrappedCollection;
         }

@@ -42,17 +42,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                 && !implementationType.HasAttribute<ManualRegistrationAttribute>();
         }
 
-        internal static bool IsVersion(this Type implementationType)
-        {
-            if (implementationType.IsSubclassOfOpenGeneric(typeof(IVersionFor<>)))
-            {
-                return implementationType.ExtractGenericArgumentsAt(typeof(IVersionFor<>), 0)
-                                         .Any(serviceType => serviceType.IsAssignableFrom(implementationType));
-            }
-
-            return false;
-        }
-
         internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, Container container)
         {
             infos.OrderByDependencyAttribute(z => z.ImplementationType)
@@ -74,23 +63,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                        });
         }
 
-        internal static void RegisterVersions(this ICollection<ServiceRegistrationInfo> infos, Container container)
-        {
-            if (infos.Any())
-            {
-                infos.RegisterCollections(container);
-            }
-            else
-            {
-                container.RegisterEmptyCollection(typeof(IVersionFor<>));
-            }
-        }
-
-        internal static void RegisterEmptyCollection(this Container container, Type service)
-        {
-            container.Collection.Register(service, Enumerable.Empty<Type>());
-        }
-
         internal static void RegisterCollections(this ICollection<ServiceRegistrationInfo> infos, Container container)
         {
             // register each element of collection as implementation to provide lifestyle for container
@@ -107,12 +79,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             {
                 container.RegisterInstance(service, instance);
             }
-        }
-
-        internal static void RegisterVersioned(this ICollection<ServiceRegistrationInfo> infos, Container container)
-        {
-            infos.RegisterServicesWithOpenGenericFallBack(container);
-            infos.RegisterImplementationsWithOpenGenericFallBack(container);
         }
 
         internal static void RegisterServicesWithOpenGenericFallBack(this IEnumerable<ServiceRegistrationInfo> infos, Container container)

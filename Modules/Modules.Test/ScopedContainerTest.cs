@@ -31,12 +31,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(GenericHost).Assembly // GenericHost
             };
 
-            var registrations = new IManualRegistration[]
-            {
-                new VersionedOpenGenericRegistration()
-            };
-
-            DependencyContainer = fixture.GetDependencyContainer(typeof(ScopedContainerTest).Assembly, excludedAssemblies, registrations);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(ScopedContainerTest).Assembly, excludedAssemblies);
         }
 
         /// <summary>

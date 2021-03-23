@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System.Linq;
     using Abstractions;
     using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Enumerations;
     using Basics;
     using Extensions;
 
@@ -17,17 +16,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         private readonly List<ServiceRegistrationInfo> _registrations;
         private readonly List<ServiceRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
-        private readonly List<Type> _emptyCollections;
-        private readonly List<ServiceRegistrationInfo> _versioned;
 
         internal ManualRegistrationsContainer()
         {
             _singletons = new List<(Type, object)>();
             _registrations = new List<ServiceRegistrationInfo>();
             _collections = new List<ServiceRegistrationInfo>();
-            _emptyCollections = new List<Type>();
             _decorators = new List<DecoratorRegistrationInfo>();
-            _versioned = new List<ServiceRegistrationInfo>();
         }
 
         #region IExtendedManualRegistrationsContainer
@@ -47,19 +42,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return _collections;
         }
 
-        public IReadOnlyCollection<Type> EmptyCollections()
-        {
-            return _emptyCollections;
-        }
-
         public IReadOnlyCollection<DecoratorRegistrationInfo> Decorators()
         {
             return _decorators;
-        }
-
-        public IReadOnlyCollection<ServiceRegistrationInfo> Versioned()
-        {
-            return _versioned;
         }
 
         #endregion
@@ -143,30 +128,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 .Select(implementation => new ServiceRegistrationInfo(serviceType, implementation, weakestLifestyle))
                 .Each(_collections.Add);
 
-            return this;
-        }
-
-        public IManualRegistrationsContainer RegisterEmptyCollection<TService>()
-            where TService : class
-        {
-            return RegisterEmptyCollection(typeof(TService));
-        }
-
-        public IManualRegistrationsContainer RegisterEmptyCollection(Type serviceType)
-        {
-            _emptyCollections.Add(serviceType);
-            return this;
-        }
-
-        public IManualRegistrationsContainer RegisterVersioned<TService>(EnLifestyle lifestyle)
-            where TService : class
-        {
-            return RegisterVersioned(typeof(TService), lifestyle);
-        }
-
-        public IManualRegistrationsContainer RegisterVersioned(Type serviceType, EnLifestyle lifestyle)
-        {
-            _versioned.Add(serviceType.VersionedComponent(lifestyle));
             return this;
         }
 

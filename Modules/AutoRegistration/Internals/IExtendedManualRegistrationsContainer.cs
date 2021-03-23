@@ -12,10 +12,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         IReadOnlyCollection<ServiceRegistrationInfo> Collections();
 
-        IReadOnlyCollection<Type> EmptyCollections();
-
         IReadOnlyCollection<DecoratorRegistrationInfo> Decorators();
-
-        IReadOnlyCollection<ServiceRegistrationInfo> Versioned();
     }
 }

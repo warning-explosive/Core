@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.NewtonSoft.Json.Abstractions
+namespace SpaceEngineers.Core.Json.Abstractions
 {
     using System;
     using AutoWiring.Api.Abstractions;

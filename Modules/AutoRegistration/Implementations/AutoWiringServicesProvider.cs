@@ -45,12 +45,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         }
 
         /// <inheritdoc />
-        public IEnumerable<Type> Versions()
-        {
-            return ExtractGeneric(_typeProvider.OurTypes, typeof(IVersionFor<>));
-        }
-
-        /// <inheritdoc />
         public IEnumerable<Type> Decorators()
         {
             return ExtractDecorators(typeof(IDecorator<>));

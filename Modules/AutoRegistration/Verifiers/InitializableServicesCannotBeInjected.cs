@@ -46,7 +46,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
                     .GetParameters()
                     .Select(parameter => parameter.ParameterType)
                     .Select(t => t.UnwrapTypeParameter(typeof(IEnumerable<>)))
-                    .Select(t => t.UnwrapTypeParameter(typeof(IVersioned<>)))
                     .Select(t => t.GenericTypeDefinitionOrSelf())
                     .Any(parameter => WrongParameter(type, cctor, parameter));
             }

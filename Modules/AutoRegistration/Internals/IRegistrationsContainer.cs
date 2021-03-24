@@ -2,9 +2,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Collections.Generic;
-    using Abstractions;
 
-    internal interface IExtendedManualRegistrationsContainer : IManualRegistrationsContainer
+    internal interface IRegistrationsContainer
     {
         IReadOnlyCollection<(Type, object)> Singletons();
 

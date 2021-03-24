@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
@@ -63,13 +62,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
             Assembly[] excludedAssemblies,
             params IManualRegistration[] registrations)
         {
-            var aboveAssemblyKey = aboveAssembly.GetName().FullName;
-            var excludedAssembliesKey = string.Join(string.Empty, excludedAssemblies.Select(asm => asm.GetName().FullName).OrderBy(name => name));
-            var registrationsKey = string.Join(string.Empty, registrations.Select(r => r.GetType().FullName!).OrderBy(name => name));
-
-            return string
-                .Join(string.Empty, aboveAssemblyKey, excludedAssembliesKey, registrationsKey)
-                .GetHashCode(StringComparison.Ordinal);
+            return HashCode.Combine(aboveAssembly, HashCode.Combine(excludedAssemblies), HashCode.Combine(registrations));
         }
 
         private static IDependencyContainer CreateDependencyContainer(

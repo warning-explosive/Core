@@ -32,8 +32,6 @@ namespace SpaceEngineers.Core.Modules.Test
     /// </summary>
     public class DependencyContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
-        private readonly ModulesTestFixture _fixture;
-
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
@@ -48,8 +46,6 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerTest).Assembly, excludedAssemblies);
-
-            _fixture = fixture;
         }
 
         /// <summary>
@@ -361,60 +357,58 @@ namespace SpaceEngineers.Core.Modules.Test
             static Container SimpleInjector(IDependencyContainer container) => container.GetFieldValue<Container>("_container");
         }
 
-        /* TODO: recode without versions
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        [SuppressMessage("Using IDisposables", "CA1508", Justification = "False positive")]
         internal void BoundedContainerTest(bool mode)
         {
-            var settingsContainer = AutoRegistration.DependencyContainer
-                                                    .CreateExactlyBounded(new[]
-                                                                   {
-                                                                       typeof(ISettingsManager<>).Assembly,
-                                                                       typeof(ICompositionInfoExtractor).Assembly
-                                                                   },
-                                                                   new DependencyContainerOptions());
-
-            var versionFactory = new Func<IVersionFor<ITypeProvider>>(
-                () =>
-                {
-                    var mock = new Mock<IVersionFor<ITypeProvider>>(MockBehavior.Loose);
-                    mock.Setup(z => z.Version.AllLoadedTypes)
-                        .Returns(() => settingsContainer
-                                      .Resolve<ITypeProvider>()
-                                      .AllLoadedTypes
-                                      .Concat(new[]
-                                              {
-                                                  typeof(TestYamlSettings),
-                                                  typeof(TestJsonSettings)
-                                              })
-                                      .ToList());
-                    return mock.Object;
-                });
-
-            IReadOnlyCollection<IDependencyInfo> compositionInfo;
-
-            using (settingsContainer.UseVersion<ITypeProvider>(versionFactory))
+            var assemblies = new[]
             {
-                compositionInfo = settingsContainer.Resolve<ICompositionInfoExtractor>()
-                                                   .GetCompositionInfo(mode);
+                typeof(ISettingsManager<>).Assembly,
+                typeof(ICompositionInfoExtractor).Assembly
+            };
+
+            var boundedContainer = AutoRegistration.DependencyContainer.CreateExactlyBounded(assemblies, new DependencyContainerOptions());
+
+            if (mode)
+            {
+                Assert.Throws<InvalidOperationException>(() => GetCompositionInfo(boundedContainer, mode));
+            }
+            else
+            {
+                _ = GetCompositionInfo(boundedContainer, mode);
             }
 
-            Output.WriteLine($"Total: {compositionInfo.Count}\n");
+            var extendedTypeProvider = ExtendTypeProvider(boundedContainer);
+            var overrides = DependencyContainerOptions
+                .DelegateRegistration(container =>
+                {
+                    container.RegisterInstance(typeof(ITypeProvider), extendedTypeProvider);
+                    container.RegisterInstance(extendedTypeProvider.GetType(), extendedTypeProvider);
+                });
 
-            Output.WriteLine(settingsContainer.Resolve<ICompositionInfoInterpreter<string>>()
-                                              .Visualize(compositionInfo));
+            var extendedBoundedContainer = AutoRegistration.DependencyContainer
+                .CreateExactlyBounded(
+                    assemblies,
+                    new DependencyContainerOptions
+                    {
+                        Overrides = new[] { overrides }
+                    });
+
+            var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
+
+            Output.WriteLine($"Total: {compositionInfo.Count}\n");
+            Output.WriteLine(boundedContainer.Resolve<ICompositionInfoInterpreter<string>>().Visualize(compositionInfo));
 
             var allowedAssemblies = new[]
-                                    {
-                                        typeof(Container).Assembly,                 // SimpleInjector assembly,
-                                        typeof(TypeExtensions).Assembly,            // Basics assembly
-                                        typeof(LifestyleAttribute).Assembly,        // AutoWiring.Api assembly
-                                        typeof(IDependencyContainer).Assembly,      // AutoRegistration assembly
-                                        typeof(ISettingsManager<>).Assembly,        // SettingsManager assembly
-                                        typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
-                                    };
+            {
+                typeof(Container).Assembly, // SimpleInjector assembly,
+                typeof(TypeExtensions).Assembly, // Basics assembly
+                typeof(LifestyleAttribute).Assembly, // AutoWiring.Api assembly
+                typeof(IDependencyContainer).Assembly, // AutoRegistration assembly
+                typeof(ISettingsManager<>).Assembly, // SettingsManager assembly
+                typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
+            };
 
             Assert.True(compositionInfo.All(Satisfies));
 
@@ -427,17 +421,45 @@ namespace SpaceEngineers.Core.Modules.Test
 
             bool TypeSatisfies(Type type)
             {
-                var condition = allowedAssemblies.Contains(type.Assembly);
+                var satisfies = allowedAssemblies.Contains(type.Assembly)
+                                || type == extendedTypeProvider.GetType();
 
-                if (!condition)
+                if (!satisfies)
                 {
                     Output.WriteLine(type.FullName);
                 }
 
-                return condition;
+                return satisfies;
+            }
+
+            static ITypeProvider ExtendTypeProvider(IDependencyContainer container)
+            {
+                var mock = new Mock<ITypeProvider>(MockBehavior.Loose);
+
+                var originalTypeProvider = container.Resolve<ITypeProvider>();
+                var extraTypes = new[] { typeof(TestYamlSettings), typeof(TestJsonSettings) };
+
+                mock.Setup(z => z.AllLoadedAssemblies)
+                    .Returns(() => originalTypeProvider.AllLoadedAssemblies);
+                mock.Setup(z => z.AllLoadedTypes)
+                    .Returns(() => originalTypeProvider.AllLoadedTypes.Concat(extraTypes).ToList());
+                mock.Setup(z => z.OurAssemblies)
+                    .Returns(() => originalTypeProvider.OurAssemblies);
+                mock.Setup(z => z.OurTypes)
+                    .Returns(() => originalTypeProvider.OurTypes);
+                mock.Setup(z => z.TypeCache)
+                    .Returns(() => originalTypeProvider.TypeCache);
+                mock.Setup(z => z.IsOurType(It.IsAny<Type>()))
+                    .Returns<Type>(type => originalTypeProvider.IsOurType(type));
+
+                return mock.Object;
+            }
+
+            static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer container, bool mode)
+            {
+                return container.Resolve<ICompositionInfoExtractor>().GetCompositionInfo(mode);
             }
         }
-        */
 
         internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
         {

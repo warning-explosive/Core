@@ -31,6 +31,11 @@ namespace SpaceEngineers.Core.AutoRegistration
         public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; set; } = Array.Empty<IManualRegistration>();
 
         /// <summary>
+        /// Overrides
+        /// </summary>
+        public IReadOnlyCollection<IManualRegistration> Overrides { get; set; } = Array.Empty<IManualRegistration>();
+
+        /// <summary>
         /// Generates IManualRegistration object with specified delegate
         /// </summary>
         /// <param name="registrationAction">Action with IRegistrationContainer instance</param>

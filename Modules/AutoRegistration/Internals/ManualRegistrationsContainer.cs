@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Extensions;
 
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
-    internal class ManualRegistrationsContainer : IExtendedManualRegistrationsContainer
+    internal class ManualRegistrationsContainer : IRegistrationsContainer, IManualRegistrationsContainer
     {
         private readonly List<(Type, object)> _singletons;
         private readonly List<ServiceRegistrationInfo> _registrations;
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             _decorators = new List<DecoratorRegistrationInfo>();
         }
 
-        #region IExtendedManualRegistrationsContainer
+        #region IRegistrationsContainer
 
         public IReadOnlyCollection<(Type, object)> Singletons()
         {

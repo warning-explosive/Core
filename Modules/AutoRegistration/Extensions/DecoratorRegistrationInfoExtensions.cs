@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
         internal static IEnumerable<DecoratorRegistrationInfo> GetDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
         {
             return decorators
-                  .Where(RegistrationExtensions.ForAutoRegistration)
+                  .Where(ContainerExtensions.ForAutoRegistration)
                   .SelectMany(type => type.ExtractGenericArgumentsAt(decoratorType, 0)
                                           .Select(service => new DecoratorRegistrationInfo(service, type, type.Lifestyle())));
         }
@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
         internal static IEnumerable<DecoratorRegistrationInfo> GetConditionalDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
         {
             return decorators
-                  .Where(RegistrationExtensions.ForAutoRegistration)
+                  .Where(ContainerExtensions.ForAutoRegistration)
                   .SelectMany(type => type.ExtractGenericArguments(decoratorType)
                                           .Select(args => new DecoratorRegistrationInfo(args[0], type, type.Lifestyle())
                                                           {

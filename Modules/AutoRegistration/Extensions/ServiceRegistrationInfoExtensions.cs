@@ -3,11 +3,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
-    using Implementations;
     using Internals;
     using SimpleInjector;
 
@@ -19,8 +16,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             ITypeProvider typeProvider)
         {
             return serviceTypes
-                .SelectMany(serviceType => serviceType
-                    .GetTypesToRegister(container, typeProvider)
+                .SelectMany(serviceType => container
+                    .GetTypesToRegister(serviceType, typeProvider)
                     .Select(implementationType => (serviceType, implementationType)))
                 .GetComponents()
                 .Distinct();

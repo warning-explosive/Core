@@ -21,25 +21,20 @@ namespace SpaceEngineers.Core.Modules.Test
     /// </summary>
     public class DependencyContainerDecoratorsTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
     {
-        private readonly ModulesTestFixture _fixture;
-        private readonly Assembly[] _excludedAssemblies;
-
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public DependencyContainerDecoratorsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            _excludedAssemblies = new[]
+            var excludedAssemblies = new[]
             {
                 typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
                 typeof(IGenericEndpoint).Assembly, // GenericEndpoint
                 typeof(GenericHost).Assembly // GenericHost
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDecoratorsTest).Assembly, _excludedAssemblies);
-
-            _fixture = fixture;
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDecoratorsTest).Assembly, excludedAssemblies);
         }
 
         /// <summary>

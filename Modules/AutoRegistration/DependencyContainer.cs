@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -27,7 +26,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     [ManualRegistration]
     public class DependencyContainer : IDependencyContainer
     {
-        private readonly ConcurrentDictionary<Type, Stack<VersionInfo>> _versions;
         private readonly Container _container;
 
         /// <summary> .cctor </summary>
@@ -39,11 +37,6 @@ namespace SpaceEngineers.Core.AutoRegistration
                                    IAutoWiringServicesProvider servicesProvider,
                                    DependencyContainerOptions options)
         {
-            _versions = new ConcurrentDictionary<Type, Stack<VersionInfo>>();
-
-            var manualRegistration = ManualRegistration(this, typeProvider, servicesProvider);
-            options.ManualRegistrations = options.ManualRegistrations.Concat(new[] { manualRegistration }).ToList();
-
             _container = BuildContainer(typeProvider, servicesProvider, options);
 
             _container.Verify(VerificationOption.VerifyAndDiagnose);
@@ -206,41 +199,90 @@ namespace SpaceEngineers.Core.AutoRegistration
                 : Array.Empty<Assembly>();
         }
 
-        private static Container BuildContainer(
+        private static Container BuildSimpleInjector()
+        {
+            return new Container
+            {
+                Options =
+                {
+                    DefaultLifestyle = Lifestyle.Transient,
+                    DefaultScopedLifestyle = new AsyncScopedLifestyle(),
+                    UseFullyQualifiedTypeNames = true,
+                    ResolveUnregisteredConcreteTypes = false,
+                    AllowOverridingRegistrations = false,
+                    SuppressLifestyleMismatchVerification = false,
+                    UseStrictLifestyleMismatchBehavior = true,
+                    EnableAutoVerification = true,
+                }
+            };
+        }
+
+        private Container BuildContainer(
             ITypeProvider typeProvider,
             IAutoWiringServicesProvider servicesProvider,
             DependencyContainerOptions options)
         {
-            var container = CreateContainer();
+            var container = BuildSimpleInjector();
 
-            var manualRegistrationsContainer = new ManualRegistrationsContainer();
+            var registrationsContainer = CollectRegistrations(container, typeProvider, servicesProvider, options);
+            var overridesContainer = CollectOverrides(options);
 
-            options.ManualRegistrations.Each(manual => manual.Register(manualRegistrationsContainer));
-
-            manualRegistrationsContainer.Singletons().RegisterSingletons(container);
-            Resolvable(container, typeProvider, servicesProvider).Concat(manualRegistrationsContainer.Resolvable()).RegisterServicesWithOpenGenericFallBack(container);
-            Collections(container, typeProvider, servicesProvider).Concat(manualRegistrationsContainer.Collections()).ToList().RegisterCollections(container);
-            Decorators(servicesProvider).Concat(manualRegistrationsContainer.Decorators()).RegisterDecorators(container);
+            ApplyRegistrations(container, registrationsContainer);
+            ApplyOverrides(container, overridesContainer);
 
             return container;
         }
 
-        private static Container CreateContainer()
+        private IRegistrationsContainer CollectRegistrations(
+            Container container,
+            ITypeProvider typeProvider,
+            IAutoWiringServicesProvider servicesProvider,
+            DependencyContainerOptions options)
         {
-            return new Container
-                   {
-                       Options =
-                       {
-                           DefaultLifestyle = Lifestyle.Transient,
-                           DefaultScopedLifestyle = new AsyncScopedLifestyle(),
-                           UseFullyQualifiedTypeNames = true,
-                           ResolveUnregisteredConcreteTypes = false,
-                           AllowOverridingRegistrations = false,
-                           SuppressLifestyleMismatchVerification = false,
-                           UseStrictLifestyleMismatchBehavior = true,
-                           EnableAutoVerification = true
-                       }
-                   };
+            var manualRegistrationsContainer = new ManualRegistrationsContainer();
+            var manualRegistration = ManualRegistration(this, typeProvider, servicesProvider);
+
+            options.ManualRegistrations = options.ManualRegistrations.Concat(new[] { manualRegistration }).ToList();
+            options.ManualRegistrations.Each(manual => manual.Register(manualRegistrationsContainer));
+
+            return new CompositeRegistrationsContainer(container, typeProvider, servicesProvider, manualRegistrationsContainer);
+        }
+
+        private static ManualRegistrationsContainer CollectOverrides(DependencyContainerOptions options)
+        {
+            var overridesContainer = new ManualRegistrationsContainer();
+            options.Overrides.Each(manual => manual.Register(overridesContainer));
+
+            return overridesContainer;
+        }
+
+        private static void ApplyRegistrations(Container container, IRegistrationsContainer registrationsContainer)
+        {
+            Register(container, registrationsContainer);
+        }
+
+        private static void ApplyOverrides(Container container, IRegistrationsContainer overridesContainer)
+        {
+            using (Disposable.Create(Allow(), Forbid))
+            {
+                Register(container, overridesContainer);
+            }
+
+            Container Allow()
+            {
+                container.Options.AllowOverridingRegistrations = true;
+                return container;
+            }
+
+            void Forbid(Container c) => c.Options.AllowOverridingRegistrations = false;
+        }
+
+        private static void Register(Container container, IRegistrationsContainer registrationsContainer)
+        {
+            registrationsContainer.Singletons().RegisterSingletons(container);
+            registrationsContainer.Resolvable().RegisterServicesWithOpenGenericFallBack(container);
+            registrationsContainer.Collections().RegisterCollections(container);
+            registrationsContainer.Decorators().RegisterDecorators(container);
         }
 
         private static IManualRegistration ManualRegistration(
@@ -268,54 +310,6 @@ namespace SpaceEngineers.Core.AutoRegistration
             {
                 throw new InvalidOperationException($"Use overload with additional parameter to resolve initializable service {serviceType.FullName}");
             }
-        }
-
-        private static IEnumerable<ServiceRegistrationInfo> Resolvable(
-            Container container,
-            ITypeProvider typeProvider,
-            IAutoWiringServicesProvider servicesProvider)
-        {
-            return servicesProvider
-                .Resolvable()
-                .Concat(servicesProvider.External())
-                .GetComponents(container, typeProvider);
-        }
-
-        private static IEnumerable<ServiceRegistrationInfo> Collections(
-            Container container,
-            ITypeProvider typeProvider,
-            IAutoWiringServicesProvider servicesProvider)
-        {
-            return servicesProvider
-                .Collections()
-                .GetComponents(container, typeProvider);
-        }
-
-        private static IEnumerable<DecoratorRegistrationInfo> Decorators(IAutoWiringServicesProvider servicesProvider)
-        {
-            var decorators = servicesProvider
-                .Decorators()
-                .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
-                .GetDecoratorInfo(typeof(IDecorator<>));
-
-            var conditionalDecorators = servicesProvider
-                .Decorators()
-                .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalDecorator<,>)))
-                .GetConditionalDecoratorInfo(typeof(IConditionalDecorator<,>));
-
-            var collectionDecorators = servicesProvider
-                .CollectionDecorators()
-                .Where(decorator => !decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
-                .GetDecoratorInfo(typeof(ICollectionDecorator<>));
-
-            var collectionConditionalDecorators = servicesProvider
-                .CollectionDecorators()
-                .Where(decorator => decorator.IsSubclassOfOpenGeneric(typeof(IConditionalCollectionDecorator<,>)))
-                .GetConditionalDecoratorInfo(typeof(IConditionalCollectionDecorator<,>));
-
-            var simple = decorators.Concat(collectionDecorators);
-            var conditional = conditionalDecorators.Concat(collectionConditionalDecorators);
-            return simple.Concat(conditional);
         }
 
         #endregion

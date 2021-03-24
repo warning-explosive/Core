@@ -3,45 +3,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
-    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Services;
     using Basics;
     using Internals;
     using SimpleInjector;
 
     internal static class RegistrationExtensions
     {
-        internal static IEnumerable<Type> GetTypesToRegister(
-            this Type serviceType,
-            Container container,
-            Assembly[] assemblies)
-        {
-            return container.GetTypesToRegister(serviceType,
-                assemblies,
-                new TypesToRegisterOptions
-                {
-                    IncludeComposites = false,
-                    IncludeDecorators = false,
-                    IncludeGenericTypeDefinitions = true
-                });
-        }
-
-        internal static IEnumerable<Type> GetTypesToRegister(
-            this Type serviceType,
-            Container container,
-            ITypeProvider typeProvider)
-        {
-            return serviceType.GetTypesToRegister(container, typeProvider.OurAssemblies.ToArray());
-        }
-
-        internal static bool ForAutoRegistration(this Type implementationType)
-        {
-            return !implementationType.HasAttribute<UnregisteredAttribute>()
-                && !implementationType.HasAttribute<ManualRegistrationAttribute>();
-        }
-
         internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, Container container)
         {
             infos.OrderByDependencyAttribute(z => z.ImplementationType)
@@ -63,7 +31,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                        });
         }
 
-        internal static void RegisterCollections(this ICollection<ServiceRegistrationInfo> infos, Container container)
+        internal static void RegisterCollections(this IReadOnlyCollection<ServiceRegistrationInfo> infos, Container container)
         {
             // register each element of collection as implementation to provide lifestyle for container
             infos.RegisterImplementationsWithOpenGenericFallBack(container);

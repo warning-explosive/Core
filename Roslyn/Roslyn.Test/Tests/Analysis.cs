@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected");
 
         [SuppressMessage("xUnit.Analyzers", "xUnit1004", Justification = "appveyor environment")]
-        [Fact(Skip = "aka.ms/RegisterMSBuildLocator")]
+        [Fact]
         internal async Task AnalysisTest()
         {
             var analyzers = DependencyContainer

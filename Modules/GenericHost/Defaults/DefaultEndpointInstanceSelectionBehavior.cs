@@ -6,12 +6,14 @@ namespace SpaceEngineers.Core.GenericHost.Defaults
     using System.Linq;
     using Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// DefaultEndpointInstanceSelectionBehavior
     /// </summary>
+    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {

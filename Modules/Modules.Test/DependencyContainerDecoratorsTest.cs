@@ -3,10 +3,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Enumerations;
     using AutoWiringTest;
     using Basics.Test;
     using Core.Test.Api.ClassFixtures;

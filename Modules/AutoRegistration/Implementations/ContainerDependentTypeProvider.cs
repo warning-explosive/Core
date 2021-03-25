@@ -6,10 +6,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Linq;
     using System.Reflection;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics.EqualityComparers;
 
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
+    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     internal class ContainerDependentTypeProvider : ITypeProvider
     {

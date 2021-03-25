@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
-    using Implementations;
     using SimpleInjector;
 
     [Lifestyle(EnLifestyle.Singleton)]

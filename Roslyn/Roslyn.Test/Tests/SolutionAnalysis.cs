@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Basics;
     using Basics.Roslyn;
@@ -40,7 +41,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected");
 
         [SuppressMessage("xUnit.Analyzers", "xUnit1004", Justification = "appveyor environment")]
-        [Fact(Skip = "aka.ms/RegisterMSBuildLocator")]
+        [Fact]
         internal async Task SolutionAnalysisTest()
         {
             var analyzers = DependencyContainer
@@ -48,7 +49,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                            .OfType<DiagnosticAnalyzer>()
                            .ToImmutableArray();
 
-            var totalErrorsCount = 0;
+            var diagnosticsCount = 0;
 
             var configuration = new Dictionary<string, string>
                                 {
@@ -58,10 +59,11 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                 };
             using (var workspace = MSBuildWorkspace.Create(configuration))
             {
-                workspace.WorkspaceFailed += (sender, workspaceFailedArgs) =>
-                                             {
-                                                 Output.WriteLine(workspaceFailedArgs.Diagnostic.Message);
-                                             };
+                workspace.WorkspaceFailed += (_, workspaceFailedArgs) =>
+                {
+                    Output.WriteLine(workspaceFailedArgs.Diagnostic.Message);
+                };
+
                 await workspace.OpenSolutionAsync(SolutionExtensions.SolutionFile().FullName)
                                .ConfigureAwait(false);
 
@@ -69,13 +71,14 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 {
                     foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
                     {
-                        totalErrorsCount++;
-                        Output.WriteLine(diagnostic.ToString());
+                        Interlocked.Increment(ref diagnosticsCount);
+                        Output.WriteLine($"[{diagnosticsCount}] " + diagnostic);
+                        Output.WriteLine(diagnostic.Location.SourceTree.FilePath + ":" + diagnostic.Location.GetLineSpan().Span.Start.Line + 1);
                     }
                 }
             }
 
-            Assert.Equal(0, totalErrorsCount);
+            Assert.Equal(0, diagnosticsCount);
         }
     }
 }

@@ -6,8 +6,6 @@ namespace SpaceEngineers.Core.GenericHost
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoRegistration.Extensions;
-    using AutoWiring.Api.Enumerations;
     using Basics;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
@@ -15,7 +13,6 @@ namespace SpaceEngineers.Core.GenericHost
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using SimpleInjector;
     using Transport;
 
     /// <summary>

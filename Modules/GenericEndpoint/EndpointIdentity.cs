@@ -3,10 +3,12 @@ namespace SpaceEngineers.Core.GenericEndpoint
     using System;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
 
     /// <summary>
     /// Endpoint identity
     /// </summary>
+    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     public class EndpointIdentity : IResolvable,
                                     IEquatable<EndpointIdentity>

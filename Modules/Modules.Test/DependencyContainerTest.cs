@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
@@ -10,7 +9,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Contexts;
-    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
@@ -21,7 +19,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;
     using Moq;
-    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;

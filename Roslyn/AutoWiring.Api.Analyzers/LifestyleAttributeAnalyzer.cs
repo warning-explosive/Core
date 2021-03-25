@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Linq;
     using Abstractions;
     using Attributes;
@@ -26,12 +25,6 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
         public string MarkWithLifestyleAttribute { get; } =
             $"Mark component with {nameof(LifestyleAttribute)} and select lifestyle";
 
-        /// <summary>
-        /// RemoveLifestyleAttribute message
-        /// </summary>
-        public string RemoveLifestyleAttribute { get; } =
-            $"Remove {nameof(LifestyleAttribute)} from component marked with {{0}}";
-
         /// <inheritdoc />
         public override string Identifier { get; } = "CR1";
 
@@ -53,9 +46,12 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
-            var isAbstract = classDeclarationSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.AbstractKeyword));
+            var isAbstractOrStatic = classDeclarationSyntax
+                .Modifiers
+                .Any(z => z.IsKind(SyntaxKind.AbstractKeyword)
+                          || z.IsKind(SyntaxKind.StaticKeyword));
 
-            if (isAbstract)
+            if (isAbstractOrStatic)
             {
                 return;
             }
@@ -65,38 +61,21 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
                 return;
             }
 
-            if (IsContainsAttribute<LifestyleAttribute>(context, classDeclarationSyntax))
+            if (!IsContainsAttribute<LifestyleAttribute>(context, classDeclarationSyntax))
             {
-                if (IsContainsAttribute<UnregisteredAttribute>(context, classDeclarationSyntax))
-                {
-                    var args = string.Format(CultureInfo.InvariantCulture, RemoveLifestyleAttribute, nameof(UnregisteredAttribute));
-                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), args);
-                }
-
-                if (IsContainsAttribute<ManualRegistrationAttribute>(context, classDeclarationSyntax))
-                {
-                    var args = string.Format(CultureInfo.InvariantCulture, RemoveLifestyleAttribute, nameof(ManualRegistrationAttribute));
-                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), args);
-                }
-            }
-            else
-            {
-                if (!IsContainsAttribute<UnregisteredAttribute>(context, classDeclarationSyntax)
-                    && !IsContainsAttribute<ManualRegistrationAttribute>(context, classDeclarationSyntax))
-                {
-                    ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithLifestyleAttribute);
-                }
+                ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithLifestyleAttribute);
             }
         }
 
         [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
         private static bool IsComponent(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
         {
-            var baseTypes = classDeclarationSyntax.ChildNodes()
-                                                  .OfType<BaseListSyntax>()
-                                                  .SingleOrDefault()
-                                                 ?.Types
-                                                  .ToArray() ?? Array.Empty<BaseTypeSyntax>();
+            var baseTypes = classDeclarationSyntax
+                .ChildNodes()
+                .OfType<BaseListSyntax>()
+                .SingleOrDefault()
+                ?.Types
+                .ToArray() ?? Array.Empty<BaseTypeSyntax>();
 
             if (!baseTypes.Any())
             {

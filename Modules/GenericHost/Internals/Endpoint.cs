@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Enumerations;
     using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
 

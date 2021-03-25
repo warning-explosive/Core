@@ -13,7 +13,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Settings;
     using GenericHost;
-    using Registrations;
     using Settings;
     using SettingsManager;
     using Xunit;

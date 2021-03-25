@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
     using Extensions;
@@ -23,6 +24,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
+    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     public class DependencyContainer : IDependencyContainer
     {

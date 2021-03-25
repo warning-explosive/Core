@@ -6,11 +6,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Linq;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
 
     /// <inheritdoc />
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
+    [Lifestyle(EnLifestyle.Singleton)]
     [ManualRegistration]
     internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {

@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;
-    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;

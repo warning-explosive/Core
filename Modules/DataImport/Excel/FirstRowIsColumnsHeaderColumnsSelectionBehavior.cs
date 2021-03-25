@@ -5,11 +5,13 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Data;
     using System.Linq;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
     /// First row is columns header columns selection behavior
     /// </summary>
+    [Lifestyle(EnLifestyle.Singleton)]
     [Unregistered]
     public class FirstRowIsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {

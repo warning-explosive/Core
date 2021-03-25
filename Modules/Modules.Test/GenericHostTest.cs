@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;

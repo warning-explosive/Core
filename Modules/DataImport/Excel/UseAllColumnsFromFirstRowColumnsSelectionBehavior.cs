@@ -4,11 +4,13 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Data;
     using System.Linq;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
     /// Use all columns from first row columns selection behavior
     /// </summary>
+    [Lifestyle(EnLifestyle.Singleton)]
     [Unregistered]
     public class UseAllColumnsFromFirstRowColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataImport.Excel
 {
+    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
@@ -8,16 +9,16 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
-    /// Use all columns from first row columns selection behavior
+    /// First row as columns header columns selection behavior
     /// </summary>
-    [Component(EnLifestyle.Singleton, EnComponentKind.Unregistered)]
-    public class UseAllColumnsFromFirstRowColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
+    [Component(EnLifestyle.Singleton)]
+    public class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
 
         /// <summary> .cctor </summary>
         /// <param name="cellValueExtractor">IExcelCellValueExtractor</param>
-        public UseAllColumnsFromFirstRowColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
+        public FirstRowAsColumnsHeaderColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
         {
             _cellValueExtractor = cellValueExtractor;
         }
@@ -31,11 +32,13 @@ namespace SpaceEngineers.Core.DataImport.Excel
             IReadOnlyDictionary<int, string> sharedStrings,
             IReadOnlyDictionary<string, string> propertyToColumnCaption)
         {
-            var row = rows.Take(1).Single();
+            var headerRow = rows.Take(1).Single();
 
-            return row
+            return headerRow
                 .Elements<Cell>()
-                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, row.RowIndex, (uint)index, sharedStrings))
+                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, headerRow.RowIndex, (uint)index, sharedStrings))
+                .Where(cell => cell.Value != null
+                               && propertyToColumnCaption.Values.Contains(cell.Value, StringComparer.Ordinal))
                 .Select(cell => new DataColumn(cell.ColumnName)
                 {
                     Caption = cell.Value

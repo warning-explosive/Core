@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -76,11 +77,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions()).Registration
             };
 
-            var dependencyContainer = _fixture
-                .GetDependencyContainer(
-                    GetType().Assembly,
-                    new[] { typeof(GenericHost).Assembly },
-                    manualRegistrations);
+            var options = new DependencyContainerOptions
+            {
+                ExcludedAssemblies = new[] { typeof(GenericHost).Assembly },
+                ManualRegistrations = manualRegistrations
+            };
+
+            var dependencyContainer = _fixture.GetDependencyContainer(GetType().Assembly, options);
 
             ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestCommand>>().OnMessage(new TestCommand(42))).Invoke();
             ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestEvent>>().OnMessage(new TestEvent(42))).Invoke();

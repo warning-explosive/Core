@@ -16,5 +16,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             _registrationAction(container);
         }
+
+        public override int GetHashCode()
+        {
+            return _registrationAction.GetHashCode();
+        }
     }
 }

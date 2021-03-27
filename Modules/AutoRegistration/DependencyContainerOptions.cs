@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using Abstractions;
     using Internals;
@@ -43,6 +44,23 @@ namespace SpaceEngineers.Core.AutoRegistration
         public static IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)
         {
             return new ManualDelegateRegistration(registrationAction);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(
+                CombineHashCode(ExcludedAssemblies),
+                CombineHashCode(ExcludedNamespaces),
+                CombineHashCode(ManualRegistrations),
+                CombineHashCode(Overrides));
+
+            static int CombineHashCode<T>(IReadOnlyCollection<T> source)
+            {
+                return source.Any()
+                    ? source.Aggregate(int.MaxValue, HashCode.Combine)
+                    : int.MaxValue;
+            }
         }
     }
 }

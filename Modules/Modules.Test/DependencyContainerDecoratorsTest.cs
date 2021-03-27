@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiringTest;
@@ -25,14 +26,17 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDecoratorsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            var excludedAssemblies = new[]
+            var options = new DependencyContainerOptions
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                typeof(GenericHost).Assembly // GenericHost
+                ExcludedAssemblies = new[]
+                {
+                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
+                    typeof(GenericHost).Assembly // GenericHost
+                }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDecoratorsTest).Assembly, excludedAssemblies);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDecoratorsTest).Assembly, options);
         }
 
         /// <summary>

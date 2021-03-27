@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Services;
     using Basics;
@@ -24,13 +25,16 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            var registrations = new IManualRegistration[]
+            var options = new DependencyContainerOptions
             {
-                new GenericEndpointRegistration(),
-                new GenericHostRegistration()
+                ManualRegistrations = new IManualRegistration[]
+                {
+                    new GenericEndpointRegistration(),
+                    new GenericHostRegistration()
+                }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDependenciesTest).Assembly, Array.Empty<Assembly>(), registrations);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDependenciesTest).Assembly, options);
         }
 
         /// <summary>

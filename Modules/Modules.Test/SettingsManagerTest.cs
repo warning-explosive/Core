@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Reflection;
     using System.Threading.Tasks;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Test;
@@ -29,14 +30,17 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            var excludedAssemblies = new[]
+            var options = new DependencyContainerOptions
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                typeof(GenericHost).Assembly // GenericHost
+                ExcludedAssemblies = new[]
+                {
+                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
+                    typeof(GenericHost).Assembly // GenericHost
+                }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(SettingsManagerTest).Assembly, excludedAssemblies);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(SettingsManagerTest).Assembly, options);
         }
 
         /// <summary>

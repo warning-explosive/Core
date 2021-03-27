@@ -34,23 +34,23 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         /// Setup DependencyContainer
         /// </summary>
         /// <param name="aboveAssembly">Assembly that limits assembly loading in dependency container</param>
-        /// <param name="excludedAssemblies">Assemblies excluded from loading in dependency container</param>
-        /// <param name="registrations">Custom registrations classes</param>
+        /// <param name="options">Dependency container options</param>
         /// <returns>IDependencyContainer</returns>
         [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
         public IDependencyContainer GetDependencyContainer(
             Assembly aboveAssembly,
-            Assembly[] excludedAssemblies,
-            params IManualRegistration[] registrations)
+            DependencyContainerOptions? options = null)
         {
-            var hash = DependencyContainerHash(aboveAssembly, excludedAssemblies, registrations);
+            options ??= new DependencyContainerOptions();
+
+            var hash = DependencyContainerHash(aboveAssembly, options);
 
             if (Cache.TryGetValue(hash, out var container))
             {
                 return container;
             }
 
-            container = CreateDependencyContainer(aboveAssembly, excludedAssemblies, registrations);
+            container = DependencyContainer.CreateBoundedAbove(aboveAssembly, options);
 
             Cache.AddOrUpdate(hash, _ => container, (_, _) => container);
 
@@ -59,31 +59,9 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
 
         private static int DependencyContainerHash(
             Assembly aboveAssembly,
-            Assembly[] excludedAssemblies,
-            params IManualRegistration[] registrations)
+            DependencyContainerOptions options)
         {
-            return HashCode.Combine(aboveAssembly, HashCode.Combine(excludedAssemblies), HashCode.Combine(registrations));
-        }
-
-        private static IDependencyContainer CreateDependencyContainer(
-            Assembly assembly,
-            Assembly[] excludedAssemblies,
-            IManualRegistration[] registrations)
-        {
-            var options = CreateDependencyContainerOptions(excludedAssemblies, registrations);
-
-            return DependencyContainer.CreateBoundedAbove(assembly, options);
-        }
-
-        private static DependencyContainerOptions CreateDependencyContainerOptions(
-            Assembly[] excludedAssemblies,
-            IManualRegistration[] registrations)
-        {
-            return new DependencyContainerOptions
-            {
-                ExcludedAssemblies = excludedAssemblies,
-                ManualRegistrations = registrations
-            };
+            return HashCode.Combine(aboveAssembly, options);
         }
     }
 }

@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public GraphSolverTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly, Array.Empty<Assembly>());
+            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly);
         }
 
         /// <summary>

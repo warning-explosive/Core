@@ -35,14 +35,17 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            var excludedAssemblies = new[]
+            var options = new DependencyContainerOptions
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                typeof(GenericHost).Assembly // GenericHost
+                ExcludedAssemblies = new[]
+                {
+                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
+                    typeof(GenericHost).Assembly // GenericHost
+                }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerTest).Assembly, excludedAssemblies);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerTest).Assembly, options);
         }
 
         /// <summary>

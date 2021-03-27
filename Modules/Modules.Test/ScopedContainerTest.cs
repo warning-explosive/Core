@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringTest;
     using Basics.Test;
@@ -23,14 +24,17 @@ namespace SpaceEngineers.Core.Modules.Test
         public ScopedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output)
         {
-            var excludedAssemblies = new[]
+            var options = new DependencyContainerOptions
             {
-                typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                typeof(GenericHost).Assembly // GenericHost
+                ExcludedAssemblies = new[]
+                {
+                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
+                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
+                    typeof(GenericHost).Assembly // GenericHost
+                }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(ScopedContainerTest).Assembly, excludedAssemblies);
+            DependencyContainer = fixture.GetDependencyContainer(typeof(ScopedContainerTest).Assembly, options);
         }
 
         /// <summary>

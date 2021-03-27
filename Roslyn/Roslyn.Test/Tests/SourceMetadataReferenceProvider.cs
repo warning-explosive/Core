@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using Microsoft.CodeAnalysis;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class SourceMetadataReferenceProvider : IMetadataReferenceProvider
     {
         /// <inheritdoc />

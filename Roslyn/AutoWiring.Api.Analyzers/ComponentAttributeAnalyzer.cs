@@ -13,23 +13,23 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// Component must be marked with LifestyleAttribute
+    /// Component should be marked with ComponentAttribute
     /// </summary>
-    [Lifestyle(EnLifestyle.Transient)]
+    [Component(EnLifestyle.Transient)]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class LifestyleAttributeAnalyzer : SyntaxAnalyzerBase
+    public class ComponentAttributeAnalyzer : SyntaxAnalyzerBase
     {
         /// <summary>
-        /// MarkWithLifestyleAttribute message
+        /// Mark with component attribute message
         /// </summary>
-        public string MarkWithLifestyleAttribute { get; } =
-            $"Mark component with {nameof(LifestyleAttribute)} and select lifestyle";
+        public string MarkWithComponentAttribute { get; } =
+            $"Mark component with {nameof(ComponentAttribute)} and select his lifestyle";
 
         /// <inheritdoc />
         public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override string Title { get; } = $"Component must be marked with {nameof(LifestyleAttribute)}";
+        public override string Title { get; } = $"Component should be marked with {nameof(ComponentAttribute)}";
 
         /// <inheritdoc />
         public override string Message { get; } = "{0}";
@@ -61,9 +61,9 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
                 return;
             }
 
-            if (!IsContainsAttribute<LifestyleAttribute>(context, classDeclarationSyntax))
+            if (!IsContainsAttribute<ComponentAttribute>(context, classDeclarationSyntax))
             {
-                ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithLifestyleAttribute);
+                ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithComponentAttribute);
             }
         }
 

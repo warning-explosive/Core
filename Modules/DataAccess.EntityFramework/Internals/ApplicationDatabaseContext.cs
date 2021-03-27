@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Storage;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class ApplicationDatabaseContext : DbContext,
                                                 IDatabaseTransactionProvider
     {

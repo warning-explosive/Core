@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     /// <summary>
     /// ConventionalProvider
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class ConventionalProvider : IConventionalProvider
     {
         private readonly IDependencyContainer _container;

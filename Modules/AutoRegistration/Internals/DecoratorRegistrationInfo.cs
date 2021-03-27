@@ -1,16 +1,15 @@
 namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
-    using AutoWiring.Api.Enumerations;
 
     internal class DecoratorRegistrationInfo : ServiceRegistrationInfo, IEquatable<DecoratorRegistrationInfo>
     {
-        internal DecoratorRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)
-            : base(serviceType, implementationType, lifestyle)
+        internal DecoratorRegistrationInfo(Type serviceType, Type implementationType)
+            : base(serviceType, implementationType)
         {
         }
 
-        internal Type? Attribute { get; set; }
+        internal Type? ConditionAttribute { get; set; }
 
         public bool Equals(DecoratorRegistrationInfo? other)
         {
@@ -24,8 +23,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 return true;
             }
 
-            return base.Equals(other)
-                   && Attribute == other.Attribute;
+            return base.Equals(other) && ConditionAttribute == other.ConditionAttribute;
         }
 
         public override bool Equals(object? obj)
@@ -46,7 +44,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Attribute);
+            return HashCode.Combine(base.GetHashCode(), ConditionAttribute);
         }
     }
 }

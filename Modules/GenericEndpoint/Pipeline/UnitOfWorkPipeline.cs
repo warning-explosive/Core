@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(QueryReplyValidationPipeline))]
     internal class UnitOfWorkPipeline : IMessagePipelineStep, IMessagePipeline
     {

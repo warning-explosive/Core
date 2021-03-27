@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoWiring.Api.Enumerations;
     using Basics;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IExtendedIntegrationContext>,
                                            IIntegrationUnitOfWork
     {

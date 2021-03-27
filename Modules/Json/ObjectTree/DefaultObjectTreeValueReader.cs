@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Json.ObjectTree
     /// <summary>
     /// DefaultObjectTreeValueReader
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public sealed class DefaultObjectTreeValueReader : IObjectTreeValueReader
     {
         /// <inheritdoc />

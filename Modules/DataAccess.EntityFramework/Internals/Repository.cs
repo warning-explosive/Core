@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class Repository<TAggregate> : IRepository<TAggregate>
         where TAggregate : class, IAggregate
     {

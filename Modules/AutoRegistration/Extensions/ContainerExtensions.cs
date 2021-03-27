@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
-    using Basics;
+    using Internals;
     using SimpleInjector;
 
     internal static class ContainerExtensions
@@ -26,10 +26,15 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                 });
         }
 
-        internal static bool ForAutoRegistration(this Type implementationType)
+        internal static bool ForAutoRegistration(this ServiceRegistrationInfo info)
         {
-            return !implementationType.HasAttribute<UnregisteredAttribute>()
-                   && !implementationType.HasAttribute<ManualRegistrationAttribute>();
+            return ForAutoRegistration(info.ComponentKind);
+        }
+
+        private static bool ForAutoRegistration(EnComponentKind kind)
+        {
+            return kind == EnComponentKind.Regular
+                   || kind == EnComponentKind.OpenGenericFallback;
         }
     }
 }

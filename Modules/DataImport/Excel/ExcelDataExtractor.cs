@@ -7,14 +7,12 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
     using Basics;
     using DocumentFormat.OpenXml.Packaging;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <inheritdoc />
-    [Unregistered]
-    public class ExcelDataExtractor<TElement> : IDataExtractor<TElement, ExcelDataExtractorSpecification>
+    public abstract class ExcelDataExtractor<TElement> : IDataExtractor<TElement, ExcelDataExtractorSpecification>
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
         private readonly IExcelColumnsSelectionBehavior _columnsSelectionBehavior;
@@ -24,7 +22,7 @@
         /// <param name="cellValueExtractor">IExcelCellValueExtractor</param>
         /// <param name="columnsSelectionBehavior">IExcelColumnsSelectionBehavior</param>
         /// <param name="dataTableReader">IDataTableReader</param>
-        public ExcelDataExtractor(
+        protected ExcelDataExtractor(
             IExcelCellValueExtractor cellValueExtractor,
             IExcelColumnsSelectionBehavior columnsSelectionBehavior,
             IDataTableReader<TElement, ExcelTableMetadata> dataTableReader)

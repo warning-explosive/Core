@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Lifestyle(EnLifestyle.Transient)]
+    [Component(EnLifestyle.Transient)]
     internal class ConditionalDecorableServiceDecorator3 : IConditionalDecorableService,
                                                            IDecorator<IConditionalDecorableService>
     {

@@ -1,26 +1,11 @@
 namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
-    using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Basics;
-    using Basics.Exceptions;
     using SimpleInjector;
 
     internal static class LifestyleExtensions
     {
-        internal static EnLifestyle Lifestyle(this Type type)
-        {
-            var lifestyle = type.GetAttribute<LifestyleAttribute>()?.Lifestyle;
-
-            if (lifestyle == null)
-            {
-                throw new AttributeRequiredException(typeof(LifestyleAttribute), type);
-            }
-
-            return lifestyle.Value;
-        }
-
         internal static Lifestyle MapLifestyle(this EnLifestyle lifestyle)
         {
             return lifestyle switch

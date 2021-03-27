@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IExtendedIntegrationContext>
     {
         public Task OnStart(IExtendedIntegrationContext context, CancellationToken token)

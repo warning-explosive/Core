@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
     /// <summary>
     /// Integrated message headers
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public class IntegratedMessageHeader : IMessageHeaderProvider
     {
         /// <summary>

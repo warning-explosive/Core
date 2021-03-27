@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using YamlDotNet.Serialization.NamingConventions;
     using YamlDotNet.Serialization.TypeResolvers;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class YamlSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
         where TSettings : class, IYamlSettings
     {

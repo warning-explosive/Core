@@ -11,8 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using Basics.EqualityComparers;
 
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [Lifestyle(EnLifestyle.Singleton)]
-    [ManualRegistration]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     internal class ContainerDependentTypeProvider : ITypeProvider
     {
         private static readonly string[] ExcludedAssemblies =

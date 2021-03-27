@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using Basics;
     using SimpleInjector;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class ManualRegistrationTypesMustBeRegistered : AttributesConfigurationVerifierBase
     {
         private readonly ITypeProvider _typeProvider;
@@ -24,10 +24,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
         {
             _typeProvider
                .OurTypes
-               .Where(type => type.HasAttribute<ManualRegistrationAttribute>())
-               .SelectMany(implementation => ExtractAutoWiringServices(implementation).Select(service => (service, implementation)))
+               .Select(type => (type, type.GetAttribute<ComponentAttribute>()?.Kind))
+               .Where(info => info.Kind == EnComponentKind.ManuallyRegistered)
+               .Select(info => info.type)
+               .SelectMany(implementation => ExtractAutoWiringServices(implementation)
+                   .Select(service => (service, implementation)))
                .Where(pair => !registered.Contains(pair.implementation))
-               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} marked with the {nameof(ManualRegistrationAttribute)}. You must register it yourself as {pair.service.FullName}."));
+               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} should be registered manually in the dependency container as {pair.service.FullName}"));
         }
     }
 }

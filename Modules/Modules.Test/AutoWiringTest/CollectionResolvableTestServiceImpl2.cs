@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
-    [Lifestyle(EnLifestyle.Transient)]
+    [Component(EnLifestyle.Transient)]
     [Dependency(typeof(CollectionResolvableTestServiceImpl3))]
     internal class CollectionResolvableTestServiceImpl2 : ICollectionResolvableTestService
     {

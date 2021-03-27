@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
     /// <summary>
     /// Verifies domain configuration
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class DomainConfigurationVerifier : IConfigurationVerifier
     {
         /// <inheritdoc />

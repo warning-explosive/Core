@@ -8,8 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
     /// <summary>
     /// Endpoint identity
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
-    [ManualRegistration]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     public class EndpointIdentity : IResolvable,
                                     IEquatable<EndpointIdentity>
     {

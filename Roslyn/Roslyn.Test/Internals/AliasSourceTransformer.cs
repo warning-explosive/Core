@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using Microsoft.CodeAnalysis.Text;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class AliasSourceTransformer : ISourceTransformer
     {
         /// <summary> .cctor </summary>

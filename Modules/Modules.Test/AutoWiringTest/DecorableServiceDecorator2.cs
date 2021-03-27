@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
-    [Lifestyle(EnLifestyle.Transient)]
+    [Component(EnLifestyle.Transient)]
     [Dependency(typeof(DecorableServiceDecorator3))]
     internal class DecorableServiceDecorator2 : IDecorableService,
                                                 IDecorableServiceDecorator

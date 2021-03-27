@@ -10,8 +10,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     /// <summary>
     /// Use all columns from first row columns selection behavior
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
-    [Unregistered]
+    [Component(EnLifestyle.Singleton, EnComponentKind.Unregistered)]
     public class UseAllColumnsFromFirstRowColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;

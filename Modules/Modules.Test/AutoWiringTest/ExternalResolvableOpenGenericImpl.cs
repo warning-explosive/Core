@@ -5,8 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Lifestyle(EnLifestyle.Transient)]
-    [OpenGenericFallBack]
+    [Component(EnLifestyle.Transient, EnComponentKind.OpenGenericFallback)]
     internal class ExternalResolvableOpenGenericImpl<T> : IComparable<T>,
                                                           IExternalResolvable<IComparable<T>>
         where T : class

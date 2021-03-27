@@ -13,8 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Defaults
     /// <summary>
     /// DefaultEndpointInstanceSelectionBehavior
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
-    [ManualRegistration]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap

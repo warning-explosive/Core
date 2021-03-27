@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using Basics;
     using SimpleInjector;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class UnregisteredTypesMustBeUnregistered : AttributesConfigurationVerifierBase
     {
         private readonly ITypeProvider _typeProvider;
@@ -24,11 +24,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
         {
             _typeProvider
                .OurTypes
-               .Where(type => type.HasAttribute<UnregisteredAttribute>())
-               .SelectMany(implementation => ExtractAutoWiringServices(implementation).Select(service => (service, implementation)))
+               .Select(type => (type, type.GetAttribute<ComponentAttribute>()?.Kind))
+               .Where(info => info.Kind == EnComponentKind.Unregistered)
+               .Select(info => info.type)
+               .SelectMany(implementation => ExtractAutoWiringServices(implementation)
+                   .Select(service => (service, implementation)))
                .Where(pair => registered.Contains(pair.implementation)
-                           || registered.Contains(pair.service))
-               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} marked with the {nameof(UnregisteredAttribute)} but represented in container as {pair.service.FullName}"));
+                              || registered.Contains(pair.service))
+               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} shouldn't be registered but represented in the dependency container as {pair.service.FullName}"));
         }
     }
 }

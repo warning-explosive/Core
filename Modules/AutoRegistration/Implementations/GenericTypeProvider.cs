@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using Basics;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class GenericTypeProvider : IGenericTypeProvider
     {
         private readonly ITypeProvider _typeProvider;

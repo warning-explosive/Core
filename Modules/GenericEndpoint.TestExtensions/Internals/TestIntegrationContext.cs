@@ -6,9 +6,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
 
-    [Unregistered]
+    [Component(EnLifestyle.Scoped, EnComponentKind.Unregistered)]
     internal class TestIntegrationContext : IIntegrationContext
     {
         private List<IIntegrationMessage> _messages;

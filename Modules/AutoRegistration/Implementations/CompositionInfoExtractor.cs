@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using SimpleInjector;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class CompositionInfoExtractor : ICompositionInfoExtractor
     {
         private readonly Container _container;

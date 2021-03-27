@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using AutoWiring.Api.Enumerations;
     using Json.Abstractions;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class JsonSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
         where TSettings : class, IJsonSettings
     {

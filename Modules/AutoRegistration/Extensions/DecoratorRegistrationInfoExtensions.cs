@@ -8,23 +8,29 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
     internal static class DecoratorRegistrationInfoExtensions
     {
-        internal static IEnumerable<DecoratorRegistrationInfo> GetDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
+        internal static IEnumerable<DecoratorRegistrationInfo> GetDecoratorInfo(
+            this IEnumerable<Type> decorators,
+            Type decoratorType)
         {
             return decorators
-                  .Where(ContainerExtensions.ForAutoRegistration)
-                  .SelectMany(type => type.ExtractGenericArgumentsAt(decoratorType, 0)
-                                          .Select(service => new DecoratorRegistrationInfo(service, type, type.Lifestyle())));
+                .SelectMany(decorator => decorator
+                    .ExtractGenericArgumentsAt(decoratorType)
+                    .Select(service => new DecoratorRegistrationInfo(service, decorator))
+                    .Where(info => info.ForAutoRegistration()));
         }
 
-        internal static IEnumerable<DecoratorRegistrationInfo> GetConditionalDecoratorInfo(this IEnumerable<Type> decorators, Type decoratorType)
+        internal static IEnumerable<DecoratorRegistrationInfo> GetConditionalDecoratorInfo(
+            this IEnumerable<Type> decorators,
+            Type decoratorType)
         {
             return decorators
-                  .Where(ContainerExtensions.ForAutoRegistration)
-                  .SelectMany(type => type.ExtractGenericArguments(decoratorType)
-                                          .Select(args => new DecoratorRegistrationInfo(args[0], type, type.Lifestyle())
-                                                          {
-                                                              Attribute = args[1]
-                                                          }));
+                .SelectMany(decorator => decorator
+                    .ExtractGenericArguments(decoratorType)
+                    .Select(args => new DecoratorRegistrationInfo(args[0], decorator)
+                    {
+                        ConditionAttribute = args[1]
+                    })
+                    .Where(info => info.ForAutoRegistration()));
         }
     }
 }

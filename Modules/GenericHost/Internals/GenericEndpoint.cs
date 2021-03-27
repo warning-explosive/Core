@@ -12,8 +12,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericEndpoint.Contract.Abstractions;
 
-    [ManualRegistration]
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     internal class GenericEndpoint : IGenericEndpoint, IRunnableEndpoint, IExecutableEndpoint, IMessagePipeline
     {
         private readonly IDependencyContainer _dependencyContainer;

@@ -12,8 +12,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
-    [ManualRegistration]
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

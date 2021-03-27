@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using Extensions;
     using SimpleInjector;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class InitializableServicesCannotBeInjected : IConfigurationVerifier
     {
         private readonly ITypeProvider _typeProvider;

@@ -11,8 +11,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     /// <summary>
     /// First row is columns header columns selection behavior
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
-    [Unregistered]
+    [Component(EnLifestyle.Singleton, EnComponentKind.Unregistered)]
     public class FirstRowIsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;

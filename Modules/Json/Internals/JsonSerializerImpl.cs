@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Json.Internals
     using Basics;
     using Newtonsoft.Json;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class JsonSerializerImpl : IJsonSerializer
     {
         private readonly JsonSerializerSettings _settings;

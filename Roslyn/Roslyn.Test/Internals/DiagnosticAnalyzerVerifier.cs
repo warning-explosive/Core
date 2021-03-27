@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using Xunit;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class DiagnosticAnalyzerVerifier : IDiagnosticAnalyzerVerifier
     {
         /// <inheritdoc />

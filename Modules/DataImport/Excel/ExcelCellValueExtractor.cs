@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public class ExcelCellValueExtractor : IExcelCellValueExtractor
     {
         private readonly IReadOnlyCollection<IRawCellValueVisitor> _cellValueVisitors;

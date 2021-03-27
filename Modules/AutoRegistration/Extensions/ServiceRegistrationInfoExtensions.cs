@@ -24,27 +24,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetComponents(
-            this IEnumerable<(Type ServiceType, Type ImplementationType)> pairs)
+            this IEnumerable<(Type ServiceType, Type ImplementationType)> infos)
         {
-            return pairs
-                  .Where(pair => pair.ServiceType.ForAutoRegistration()
-                                 && pair.ImplementationType.ForAutoRegistration())
-                  .SelectMany(pair => GetClosedGenericImplForOpenGenericService(pair.ServiceType, pair.ImplementationType))
-                  .Select(pair => new
-                                  {
-                                      pair.ServiceType,
-                                      pair.ImplementationType
-                                  })
-                  .Select(pair => new ServiceRegistrationInfo(pair.ServiceType, pair.ImplementationType, pair.ImplementationType.Lifestyle()));
+            return infos
+                .SelectMany(info => GetClosedGenericImplForOpenGenericService(info.ServiceType, info.ImplementationType)
+                    .Select(innerInfo => (innerInfo.ServiceType, innerInfo.ImplementationType)))
+                .Select(info => new ServiceRegistrationInfo(info.ServiceType, info.ImplementationType))
+                .Where(info => info.ForAutoRegistration());
         }
 
         private static IEnumerable<(Type ImplementationType, Type ServiceType)> GetClosedGenericImplForOpenGenericService(
             Type serviceType,
-            Type componentType)
+            Type implementationType)
         {
             if (serviceType.IsGenericType
              && serviceType.IsGenericTypeDefinition
-             && !componentType.IsGenericType)
+             && !implementationType.IsGenericType)
             {
                 var length = serviceType.GetGenericArguments().Length;
 
@@ -52,18 +47,18 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
                 for (var i = 0; i < length; ++i)
                 {
-                    argsColumnStore[i] = componentType.ExtractGenericArgumentsAt(serviceType, i).ToList();
+                    argsColumnStore[i] = implementationType.ExtractGenericArgumentsAt(serviceType, i).ToList();
                 }
 
                 foreach (var typeArguments in argsColumnStore.Values.ColumnsCartesianProduct())
                 {
                     var closedService = serviceType.MakeGenericType(typeArguments.ToArray());
-                    yield return (componentType, closedService);
+                    yield return (implementationType, closedService);
                 }
             }
             else
             {
-                yield return (componentType, serviceType);
+                yield return (implementationType, serviceType);
             }
         }
     }

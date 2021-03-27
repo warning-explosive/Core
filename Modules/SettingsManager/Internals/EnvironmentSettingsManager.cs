@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using AutoWiring.Api.Enumerations;
     using Basics;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class EnvironmentSettingsManager : ISettingsManager<EnvironmentSettings>
     {
         /// <inheritdoc />

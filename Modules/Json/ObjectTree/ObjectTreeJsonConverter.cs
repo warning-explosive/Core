@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Json.ObjectTree
     /// <summary>
     /// ObjectTreeJsonConverter
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public sealed class ObjectTreeJsonConverter : JsonConverter,
                                                   IJsonConverter
     {

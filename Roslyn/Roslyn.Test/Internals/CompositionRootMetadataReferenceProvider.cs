@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using Microsoft.CodeAnalysis;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class CompositionRootMetadataReferenceProvider : IMetadataReferenceProvider
     {
         /// <inheritdoc />
@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
             return new[]
                    {
                        typeof(IDependencyContainer).Assembly.AsMetadataReference(),
-                       typeof(LifestyleAttribute).Assembly.AsMetadataReference()
+                       typeof(ComponentAttribute).Assembly.AsMetadataReference()
                    };
         }
     }

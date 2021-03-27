@@ -24,7 +24,9 @@ namespace SpaceEngineers.Core.Basics
                 throw new InvalidOperationException("Type cache doesn't support generic parameters");
             }
 
-            return type.FullName;
+            return !type.IsGenericTypeDefinition && type.ContainsGenericParameters
+                ? type.ToString()
+                : type.FullName ?? throw new InvalidOperationException($"Type cache doesn't support types without {nameof(Type.FullName)}: {type}");
         }
     }
 }

@@ -6,8 +6,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using System.Linq;
     using Abstractions;
     using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
-    using Extensions;
 
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
     internal class ManualRegistrationsContainer : IRegistrationsContainer, IManualRegistrationsContainer
@@ -53,7 +54,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public IManualRegistrationsContainer Register(Type serviceType, Type implementationType)
         {
-            var info = new ServiceRegistrationInfo(serviceType, implementationType, implementationType.Lifestyle());
+            var info = new ServiceRegistrationInfo(serviceType, implementationType);
             _registrations.Add(info);
             return this;
         }
@@ -75,6 +76,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public IManualRegistrationsContainer RegisterInstance(Type serviceType, object singletonInstance)
         {
+            var realType = singletonInstance.GetType();
+            var componentAttribute = realType.GetRequiredAttribute<ComponentAttribute>();
+
+            if (componentAttribute.Lifestyle != EnLifestyle.Singleton)
+            {
+                throw new InvalidOperationException($"Instance of type {realType} should be marked with {nameof(EnLifestyle.Singleton)} lifestyle");
+            }
+
             _singletons.Add((serviceType, singletonInstance));
             return this;
         }
@@ -93,15 +102,15 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             {
                 decoratorType
                     .ExtractGenericArgumentsAt(typeof(IConditionalDecorator<,>), 1)
-                    .Select(attribute => new DecoratorRegistrationInfo(serviceType, decoratorType, decoratorType.Lifestyle())
+                    .Select(attribute => new DecoratorRegistrationInfo(serviceType, decoratorType)
                     {
-                        Attribute = attribute
+                        ConditionAttribute = attribute
                     })
                     .Each(_decorators.Add);
             }
             else
             {
-                var info = new DecoratorRegistrationInfo(serviceType, decoratorType, decoratorType.Lifestyle());
+                var info = new DecoratorRegistrationInfo(serviceType, decoratorType);
                 _decorators.Add(info);
             }
 
@@ -116,16 +125,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public IManualRegistrationsContainer RegisterCollection(Type serviceType, IEnumerable<Type> implementations)
         {
-            var materialized = implementations.ToList();
-
-            var weakestLifestyle = materialized
-                .Select(implementation => implementation.Lifestyle())
-                .Distinct()
-                .OrderBy(it => it)
-                .First();
-
-            materialized
-                .Select(implementation => new ServiceRegistrationInfo(serviceType, implementation, weakestLifestyle))
+            implementations
+                .Select(implementation => new ServiceRegistrationInfo(serviceType, implementation))
                 .Each(_collections.Add);
 
             return this;

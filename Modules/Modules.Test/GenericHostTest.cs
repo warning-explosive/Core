@@ -194,7 +194,7 @@ namespace SpaceEngineers.Core.Modules.Test
             });
         }
 
-        [Lifestyle(EnLifestyle.Transient)]
+        [Component(EnLifestyle.Transient)]
         private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>, IMessageHandler<TestQuery>
         {
             public Task Handle(TestCommand message, IIntegrationContext context, CancellationToken token)

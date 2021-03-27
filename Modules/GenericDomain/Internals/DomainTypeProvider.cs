@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
     using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class DomainTypeProvider : IDomainTypeProvider
     {
         private readonly ITypeProvider _typeProvider;

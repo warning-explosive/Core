@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected
+namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected
 {
     using SpaceEngineers.Core.AutoWiring.Api.Attributes;
     using SpaceEngineers.Core.AutoWiring.Api.Enumerations;
 
-    /*<Analyzer Name="LifestyleAttributeAnalyzer">[Lifestyle(EnLifestyle.ChooseLifestyle)]</Analyzer>*/
+    /*<Analyzer Name="ComponentAttributeAnalyzer">[Component(EnLifestyle.ChooseLifestyle)]</Analyzer>*/
     internal class FixWithoutLeadingTriviaSourceExpected : ITestService
     {
     }

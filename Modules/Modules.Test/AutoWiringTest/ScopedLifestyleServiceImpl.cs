@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class ScopedLifestyleServiceImpl : IScopedLifestyleService
     {
         public Task DoSmth()

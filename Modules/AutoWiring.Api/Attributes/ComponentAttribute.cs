@@ -4,21 +4,28 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Attributes
     using Enumerations;
 
     /// <summary>
-    /// Component lifestyle attribute
+    /// Component attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public sealed class LifestyleAttribute : Attribute
+    public sealed class ComponentAttribute : Attribute
     {
         /// <summary> .ctor </summary>
         /// <param name="lifestyle">Lifestyle</param>
-        public LifestyleAttribute(EnLifestyle lifestyle)
+        /// <param name="kind">Component kind</param>
+        public ComponentAttribute(EnLifestyle lifestyle, EnComponentKind kind = EnComponentKind.Regular)
         {
             Lifestyle = lifestyle;
+            Kind = kind;
         }
 
         /// <summary>
         /// Service lifestyle
         /// </summary>
         public EnLifestyle Lifestyle { get; }
+
+        /// <summary>
+        /// Component kind
+        /// </summary>
+        public EnComponentKind Kind { get; }
     }
 }

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Basics;
     using Basics.Attributes;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(UnitOfWorkPipeline))]
     internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
     {

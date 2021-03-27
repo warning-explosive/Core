@@ -7,8 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
-    [ManualRegistration]
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     internal class InMemoryUbiquitousIntegrationContext : IUbiquitousIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

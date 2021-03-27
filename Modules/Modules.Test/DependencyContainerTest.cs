@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Contexts;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
@@ -18,7 +19,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericHost;
-    using Moq;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -74,16 +74,20 @@ namespace SpaceEngineers.Core.Modules.Test
 
             IEnumerable<Type> SingleResolvable(IEnumerable<Type> source)
             {
-                return source.Where(t => typeof(IResolvable).IsAssignableFrom(t) && typeof(IResolvable) != t);
+                return source
+                    .Where(type => typeof(IResolvable).IsAssignableFrom(type)
+                                   && typeof(IResolvable) != type
+                                   && type.HasAttribute<ComponentAttribute>());
             }
 
             IEnumerable<Type> Collections(IEnumerable<Type> source)
             {
-                return source.Where(t => t.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
-                             .SelectMany(t => t.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))
-                             .Where(type => !type.IsGenericParameter)
-                             .Select(type => type.GenericTypeDefinitionOrSelf())
-                             .Distinct();
+                return source
+                    .Where(t => t.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
+                    .SelectMany(t => t.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>)))
+                    .Where(type => !type.IsGenericParameter && type.HasAttribute<ComponentAttribute>())
+                    .Select(type => type.GenericTypeDefinitionOrSelf())
+                    .Distinct();
             }
         }
 
@@ -100,22 +104,28 @@ namespace SpaceEngineers.Core.Modules.Test
             using (DependencyContainer.OpenScope())
             {
                 selector(DependencyContainer.Resolve<ITypeProvider>().OurTypes)
-                   .Each(type =>
-                         {
-                             var service = type.IsGenericType
-                                        && !type.IsConstructedGenericType
-                                               ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))
-                                               : type;
+                    .Each(type =>
+                    {
+                        var service = type.IsGenericType
+                                      && !type.IsConstructedGenericType
+                            ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))
+                            : type;
 
-                             if (type.HasAttribute<UnregisteredAttribute>())
-                             {
-                                 Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
-                             }
-                             else
-                             {
-                                 resolve(DependencyContainer, service);
-                             }
-                         });
+                        Output.WriteLine(service.FullName);
+
+                        var componentKind = type.GetRequiredAttribute<ComponentAttribute>().Kind;
+
+                        if (componentKind == EnComponentKind.Regular
+                            || componentKind == EnComponentKind.ManuallyRegistered
+                            || componentKind == EnComponentKind.OpenGenericFallback)
+                        {
+                            resolve(DependencyContainer, service);
+                        }
+                        else
+                        {
+                            Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
+                        }
+                    });
             }
         }
 
@@ -254,11 +264,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredServiceResolveTest()
         {
-            Assert.NotNull(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.Null(typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
-
-            Assert.Null(typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.NotNull(typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+            Assert.Equal(EnComponentKind.Unregistered, typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
+            Assert.Equal(EnComponentKind.Regular, typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
 
             Assert.True(typeof(DerivedFromUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
             Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredServiceImpl)));
@@ -270,11 +277,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredExternalServiceResolveTest()
         {
-            Assert.NotNull(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.Null(typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
-
-            Assert.Null(typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<UnregisteredAttribute>(false));
-            Assert.NotNull(typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<LifestyleAttribute>(false));
+            Assert.Equal(EnComponentKind.Unregistered, typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
+            Assert.Equal(EnComponentKind.Regular, typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
 
             Assert.True(typeof(DerivedFromUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedFromUnregisteredExternalServiceImpl)));
@@ -376,7 +380,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 _ = GetCompositionInfo(boundedContainer, mode);
             }
 
-            var extendedTypeProvider = ExtendTypeProvider(boundedContainer);
+            var additionalTypes = new[]
+            {
+                typeof(TestJsonSettings),
+                typeof(TestYamlSettings)
+            };
+
+            var extendedTypeProvider = new ExtendedTestTypeProvider(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var overrides = DependencyContainerOptions
                 .DelegateRegistration(container =>
                 {
@@ -401,7 +411,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(Container).Assembly, // SimpleInjector assembly,
                 typeof(TypeExtensions).Assembly, // Basics assembly
-                typeof(LifestyleAttribute).Assembly, // AutoWiring.Api assembly
+                typeof(ComponentAttribute).Assembly, // AutoWiring.Api assembly
                 typeof(IDependencyContainer).Assembly, // AutoRegistration assembly
                 typeof(ISettingsManager<>).Assembly, // SettingsManager assembly
                 typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
@@ -427,29 +437,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
 
                 return satisfies;
-            }
-
-            static ITypeProvider ExtendTypeProvider(IDependencyContainer container)
-            {
-                var mock = new Mock<ITypeProvider>(MockBehavior.Loose);
-
-                var originalTypeProvider = container.Resolve<ITypeProvider>();
-                var extraTypes = new[] { typeof(TestYamlSettings), typeof(TestJsonSettings) };
-
-                mock.Setup(z => z.AllLoadedAssemblies)
-                    .Returns(() => originalTypeProvider.AllLoadedAssemblies);
-                mock.Setup(z => z.AllLoadedTypes)
-                    .Returns(() => originalTypeProvider.AllLoadedTypes.Concat(extraTypes).ToList());
-                mock.Setup(z => z.OurAssemblies)
-                    .Returns(() => originalTypeProvider.OurAssemblies);
-                mock.Setup(z => z.OurTypes)
-                    .Returns(() => originalTypeProvider.OurTypes);
-                mock.Setup(z => z.TypeCache)
-                    .Returns(() => originalTypeProvider.TypeCache);
-                mock.Setup(z => z.IsOurType(It.IsAny<Type>()))
-                    .Returns<Type>(type => originalTypeProvider.IsOurType(type));
-
-                return mock.Object;
             }
 
             static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer container, bool mode)
@@ -484,6 +471,33 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private class TestJsonSettings : IJsonSettings
         {
+        }
+
+        [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
+        private class ExtendedTestTypeProvider : ITypeProvider
+        {
+            private readonly ITypeProvider _decoratee;
+            private readonly IReadOnlyCollection<Type> _additionalTypes;
+
+            public ExtendedTestTypeProvider(
+                ITypeProvider decoratee,
+                IReadOnlyCollection<Type> additionalTypes)
+            {
+                _decoratee = decoratee;
+                _additionalTypes = additionalTypes;
+            }
+
+            public IReadOnlyCollection<Assembly> AllLoadedAssemblies => _decoratee.AllLoadedAssemblies;
+
+            public IReadOnlyCollection<Type> AllLoadedTypes => _decoratee.AllLoadedTypes.Concat(_additionalTypes).ToList();
+
+            public IReadOnlyCollection<Assembly> OurAssemblies => _decoratee.OurAssemblies;
+
+            public IReadOnlyCollection<Type> OurTypes => _decoratee.OurTypes;
+
+            public IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TypeCache => _decoratee.TypeCache;
+
+            public bool IsOurType(Type type) => _decoratee.IsOurType(type);
         }
     }
 }

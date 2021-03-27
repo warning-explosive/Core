@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using Contract.Abstractions;
     using Contract.Attributes;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class IntegrationTypeProvider : IIntegrationTypeProvider
     {
         private readonly ITypeProvider _typeProvider;
@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                 .OurTypes
                 .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
                                && typeof(IIntegrationCommand) != type
-                               && type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
         }
 
         public IEnumerable<Type> EndpointQueries()
@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                 .OurTypes
                 .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
                                && typeof(IIntegrationQuery<>) != type.GenericTypeDefinitionOrSelf()
-                               && type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
         }
 
         public IEnumerable<Type> EndpointEvents()
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                 .OurTypes
                 .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
                                && typeof(IIntegrationEvent) != type
-                               && type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
         }
 
         public IEnumerable<Type> EndpointSubscriptions()
@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                                && type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                 .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IMessageHandler<>), 0))
                 .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
-                               && !type.GetAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
+                               && !type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
                 .Distinct();
         }
     }

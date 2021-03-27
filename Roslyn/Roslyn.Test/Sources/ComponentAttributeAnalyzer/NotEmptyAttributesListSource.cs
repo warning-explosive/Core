@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer
+namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer
 {
     using System;
     using AutoWiring.Api.Abstractions;

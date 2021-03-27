@@ -19,6 +19,30 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Attribute</returns>
         /// <exception cref="NotFoundException">Throws if source is empty</exception>
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static TAttribute GetRequiredAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage
+                       .Get(type)
+                       .Attributes
+                       .OfType<TAttribute>()
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new AttributeRequiredException(typeof(TAttribute), type);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static TAttribute? GetAttribute<TAttribute>(this Type type)
             where TAttribute : Attribute
         {

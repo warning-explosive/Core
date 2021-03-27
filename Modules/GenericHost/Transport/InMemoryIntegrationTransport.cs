@@ -19,8 +19,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint.Abstractions;
     using Internals;
 
-    [ManualRegistration]
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     internal class InMemoryIntegrationTransport : IIntegrationTransport, IAsyncDisposable
     {
         private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap

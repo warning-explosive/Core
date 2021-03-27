@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using System;
     using System.Diagnostics;
+    using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
     using Extensions;
@@ -10,11 +11,18 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle}")]
     internal class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>
     {
-        internal ServiceRegistrationInfo(Type serviceType, Type implementationType, EnLifestyle lifestyle)
+        internal ServiceRegistrationInfo(Type serviceType, Type implementationType)
         {
             ServiceType = serviceType.GenericTypeDefinitionOrSelf();
             ImplementationType = implementationType;
-            Lifestyle = lifestyle.MapLifestyle();
+
+            var implementationComponentAttribute = implementationType.GetRequiredAttribute<ComponentAttribute>();
+            var serviceComponentAttribute = serviceType.GetAttribute<ComponentAttribute>();
+
+            Lifestyle = implementationComponentAttribute.Lifestyle.MapLifestyle();
+            ComponentKind = serviceComponentAttribute?.Kind == EnComponentKind.Unregistered
+                ? EnComponentKind.Unregistered
+                : implementationComponentAttribute.Kind;
         }
 
         internal Type ImplementationType { get; }
@@ -22,6 +30,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         internal Type ServiceType { get; }
 
         internal Lifestyle Lifestyle { get; }
+
+        internal EnComponentKind ComponentKind { get; }
 
         public bool Equals(ServiceRegistrationInfo? other)
         {
@@ -37,7 +47,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
             return ServiceType == other.ServiceType
                    && ImplementationType == other.ImplementationType
-                   && Lifestyle.Equals(other.Lifestyle);
+                   && Lifestyle.Equals(other.Lifestyle)
+                   && ComponentKind == other.ComponentKind;
         }
 
         public override bool Equals(object? obj)
@@ -58,7 +69,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ImplementationType, ServiceType, Lifestyle);
+            return HashCode.Combine(ImplementationType, ServiceType, Lifestyle, ComponentKind);
         }
     }
 }

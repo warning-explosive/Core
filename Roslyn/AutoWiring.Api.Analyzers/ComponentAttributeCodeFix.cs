@@ -15,20 +15,20 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
     using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     /// <summary>
-    /// CodeFixProvider that inserts LifestyleAttribute on components (component - service implementation)
+    /// CodeFixProvider that inserts ComponentAttribute on components (component - service implementation)
     /// </summary>
-    [Lifestyle(EnLifestyle.Transient)]
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LifestyleAttributeCodeFix))]
-    public class LifestyleAttributeCodeFix : CodeFixProvider,
+    [Component(EnLifestyle.Transient)]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ComponentAttributeCodeFix))]
+    public class ComponentAttributeCodeFix : CodeFixProvider,
                                              IIdentifiedCodeFix,
                                              ICollectionResolvable<IIdentifiedCodeFix>
     {
-        private const string Title = "Mark with " + nameof(LifestyleAttribute);
+        private const string Title = "Mark with " + nameof(ComponentAttribute);
         private const string EnLifestyleValue = "ChooseLifestyle";
 
         /// <inheritdoc />
         public sealed override ImmutableArray<string> FixableDiagnosticIds
-            => ImmutableArray.Create(new LifestyleAttributeAnalyzer().Identifier);
+            => ImmutableArray.Create(new ComponentAttributeAnalyzer().Identifier);
 
         /// <inheritdoc />
         public sealed override FixAllProvider GetFixAllProvider()
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
             root = InsertAttribute(root, FindMarked<TypeDeclarationSyntax>(root, syntaxAnnotation));
 
             /*
-             * Register a code action that will invoke the fix.
+             * Register a code action that will invoke the fix
              */
             var codeAction = CodeAction.Create(Title,
                                                c => Task.FromResult(context.Document.WithSyntaxRoot(root).Project.Solution),
@@ -124,7 +124,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
             }
 
             var trailingTrivia = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed);
-            var attributeDirective = GetUsingDirective(typeof(LifestyleAttribute), leadingTrivia, trailingTrivia);
+            var attributeDirective = GetUsingDirective(typeof(ComponentAttribute), leadingTrivia, trailingTrivia);
 
             trailingTrivia = SyntaxFactory.TriviaList(Enumerable.Repeat(SyntaxFactory.CarriageReturnLineFeed, repeat));
             var enumerationDirective = GetUsingDirective(typeof(EnLifestyle), leadingTrivia, trailingTrivia);
@@ -156,7 +156,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
 
             var argumentList = SyntaxFactory.SeparatedList(new[] { argument });
 
-            var name = nameof(LifestyleAttribute).Substring(0, nameof(LifestyleAttribute).Length - nameof(Attribute).Length);
+            var name = nameof(ComponentAttribute).Substring(0, nameof(ComponentAttribute).Length - nameof(Attribute).Length);
 
             var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name))
                                          .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList));

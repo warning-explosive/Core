@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using Contract.Abstractions;
     using GenericEndpoint;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory
     {
         private readonly IEnumerable<IMessageHeaderProvider> _providers;

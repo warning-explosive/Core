@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.PathResolver
     using Basics.Exceptions;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>

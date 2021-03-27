@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract
     using AutoWiring.Api.Enumerations;
     using GenericEndpoint.Abstractions;
 
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped)]
     internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IExtendedIntegrationContext>
     {
         private readonly IDatabaseTransactionProvider _databaseTransactionProvider;

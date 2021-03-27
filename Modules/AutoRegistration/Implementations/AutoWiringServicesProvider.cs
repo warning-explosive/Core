@@ -12,8 +12,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
 
     /// <inheritdoc />
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [Lifestyle(EnLifestyle.Singleton)]
-    [ManualRegistration]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     internal class AutoWiringServicesProvider : IAutoWiringServicesProvider
     {
         private readonly ITypeProvider _typeProvider;

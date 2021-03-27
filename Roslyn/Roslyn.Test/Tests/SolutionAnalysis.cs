@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 {
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,10 +36,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         /// <inheritdoc />
         protected override ImmutableArray<string> IgnoredNamespaces =>
             ImmutableArray.Create("SpaceEngineers.Core.Roslyn.Test.Sources",
-                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzer",
-                                  "SpaceEngineers.Core.Roslyn.Test.Sources.LifestyleAttributeAnalyzerExpected");
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer",
+                                  "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected");
 
-        [SuppressMessage("xUnit.Analyzers", "xUnit1004", Justification = "appveyor environment")]
         [Fact]
         internal async Task SolutionAnalysisTest()
         {

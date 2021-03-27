@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using Basics;
     using Internals;
     using SimpleInjector;
@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             infos.OrderByDependencyAttribute(z => z.ImplementationType)
                  .Each(info =>
                        {
-                           if (info.Attribute == null)
+                           if (info.ConditionAttribute == null)
                            {
                                container.RegisterDecorator(info.ServiceType,
                                                            info.ImplementationType,
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                container.RegisterDecorator(info.ServiceType,
                                                            info.ImplementationType,
                                                            info.Lifestyle,
-                                                           c => c.ImplementationType.HasAttribute(info.Attribute));
+                                                           c => c.ImplementationType.HasAttribute(info.ConditionAttribute));
                            }
                        });
         }
@@ -63,30 +63,28 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                             IEnumerable<ServiceRegistrationInfo> infos,
                                                             Func<ServiceRegistrationInfo, Type> serviceSelector)
         {
-            infos.Select(info => new
-                                 {
-                                     Info = info,
-                                     FallBackFor = info.ImplementationType.GetAttribute<OpenGenericFallBackAttribute>()
-                                 })
-                 .OrderBy(pair => pair.FallBackFor != null) // fallback must be registered after all exact registrations
-                 .Each(pair =>
-                       {
-                           var service = serviceSelector(pair.Info);
+            infos // open-generic fallback should be registered after all exact registrations
+                .OrderBy(info => info.ComponentKind == EnComponentKind.OpenGenericFallback)
+                .Each(info =>
+                {
+                    var service = serviceSelector(info);
 
-                           if (pair.FallBackFor != null)
-                           {
-                               container.RegisterConditional(service,
-                                                             pair.Info.ImplementationType,
-                                                             pair.Info.Lifestyle,
-                                                             ctx => !ctx.Handled);
-                           }
-                           else
-                           {
-                               container.Register(service,
-                                                  pair.Info.ImplementationType,
-                                                  pair.Info.Lifestyle);
-                           }
-                       });
+                    if (info.ComponentKind == EnComponentKind.OpenGenericFallback)
+                    {
+                        container.RegisterConditional(
+                            service,
+                            info.ImplementationType,
+                            info.Lifestyle,
+                            ctx => !ctx.Handled);
+                    }
+                    else
+                    {
+                        container.Register(
+                            service,
+                            info.ImplementationType,
+                            info.Lifestyle);
+                    }
+                });
         }
     }
 }

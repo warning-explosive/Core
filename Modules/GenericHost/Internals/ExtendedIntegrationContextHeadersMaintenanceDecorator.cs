@@ -10,8 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Core.GenericEndpoint.Abstractions;
     using Core.GenericEndpoint.Contract.Abstractions;
 
-    [ManualRegistration]
-    [Lifestyle(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
     internal class ExtendedIntegrationContextHeadersMaintenanceDecorator : IExtendedIntegrationContext,
                                                                            IDecorator<IExtendedIntegrationContext>
     {

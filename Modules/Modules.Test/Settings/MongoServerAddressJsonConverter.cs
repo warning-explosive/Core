@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     using MongoDB.Driver;
     using Newtonsoft.Json;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class MongoServerAddressJsonConverter : JsonConverter,
                                                      IJsonConverter
     {

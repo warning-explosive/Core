@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class QueryReplyValidationPipeline : IMessagePipelineStep, IMessagePipeline
     {
         public QueryReplyValidationPipeline(IMessagePipeline decoratee)

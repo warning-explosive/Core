@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Enumerations;
     using Basics.Attributes;
 
-    [Lifestyle(EnLifestyle.Transient)]
+    [Component(EnLifestyle.Transient)]
     [Dependency(typeof(CollectionResolvableConditionDecorableServiceDecorator1), typeof(CollectionResolvableConditionDecorableServiceDecorator2))]
     internal class CollectionResolvableConditionDecorableServiceDecorator3 : ICollectionResolvableConditionDecorableService,
                                                                              ICollectionDecorator<ICollectionResolvableConditionDecorableService>

@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using Contract.Abstractions;
     using Contract.Attributes;
 
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier
     {
         private readonly IIntegrationTypeProvider _integrationTypeProvider;

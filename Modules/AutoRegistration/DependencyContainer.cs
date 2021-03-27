@@ -24,8 +24,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [Lifestyle(EnLifestyle.Singleton)]
-    [ManualRegistration]
+    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     public class DependencyContainer : IDependencyContainer
     {
         private readonly Container _container;
@@ -184,7 +183,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             var regularRootAssemblies = new[]
             {
                 typeof(DependencyContainer).Assembly, // AutoRegistration
-                typeof(LifestyleAttribute).Assembly, // AutoWiring.Api
+                typeof(ComponentAttribute).Assembly, // AutoWiring.Api
                 typeof(TypeExtensions).Assembly // Basics
             };
 
@@ -310,7 +309,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             if (serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
             {
-                throw new InvalidOperationException($"Use overload with additional parameter to resolve initializable service {serviceType.FullName}");
+                throw new InvalidOperationException($"Use overload of {nameof(IDependencyContainer.Resolve)} method with additional parameter to resolve initializable service {serviceType.FullName}");
             }
         }
 

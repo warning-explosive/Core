@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataImport
     using AutoWiring.Api.Enumerations;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public class CrLfRawCellValueVisitor : IRawCellValueVisitor
     {
         /// <inheritdoc />

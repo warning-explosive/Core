@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
     /// <summary>
     /// Default IRetryPolicy implementation
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     public class DefaultRetryPolicy : IRetryPolicy
     {
         private static readonly int[] Scale = new[] { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };

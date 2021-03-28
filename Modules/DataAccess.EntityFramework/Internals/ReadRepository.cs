@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
             _databaseContext = databaseContext;
             _predicateFactory = predicateFactory;
         }
-        
+
         public async Task<TAggregate> Read(TSpecification spec)
         {
             var predicate = await _predicateFactory.Build(spec).ConfigureAwait(false);

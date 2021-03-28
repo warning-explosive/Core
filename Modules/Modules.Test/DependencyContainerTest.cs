@@ -13,8 +13,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
-    using Basics.Test;
-    using Core.SettingsManager.Abstractions;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
@@ -22,18 +21,17 @@ namespace SpaceEngineers.Core.Modules.Test
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
-    using TypeExtensions = Basics.TypeExtensions;
 
     /// <summary>
     /// IDependencyContainer class tests
     /// </summary>
-    public class DependencyContainerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class DependencyContainerTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
             var options = new DependencyContainerOptions
             {
@@ -45,7 +43,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerTest).Assembly, options);
+            var assembly = GetType().Assembly; // Modules.Test
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
         /// <summary>
@@ -333,8 +333,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 ManualRegistrations = new[] { registration }
             };
 
-            var empty = Array.Empty<Assembly>();
-            var localContainer = SpaceEngineers.Core.AutoRegistration.DependencyContainer.CreateExactlyBounded(empty, options);
+            var localContainer = Fixture.ExactlyBoundedContainer(options);
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<WiredTestServiceImpl>();
@@ -361,93 +360,6 @@ namespace SpaceEngineers.Core.Modules.Test
             static Container SimpleInjector(IDependencyContainer container) => container.GetFieldValue<Container>("_container");
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        internal void BoundedContainerTest(bool mode)
-        {
-            var assemblies = new[]
-            {
-                typeof(ISettingsManager<>).Assembly,
-                typeof(ICompositionInfoExtractor).Assembly
-            };
-
-            var boundedContainer = AutoRegistration.DependencyContainer.CreateExactlyBounded(assemblies, new DependencyContainerOptions());
-
-            if (mode)
-            {
-                Assert.Throws<InvalidOperationException>(() => GetCompositionInfo(boundedContainer, mode));
-            }
-            else
-            {
-                _ = GetCompositionInfo(boundedContainer, mode);
-            }
-
-            var additionalTypes = new[]
-            {
-                typeof(TestJsonSettings),
-                typeof(TestYamlSettings)
-            };
-
-            var extendedTypeProvider = new ExtendedTestTypeProvider(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
-            var overrides = DependencyContainerOptions
-                .DelegateRegistration(container =>
-                {
-                    container.RegisterInstance(typeof(ITypeProvider), extendedTypeProvider);
-                    container.RegisterInstance(extendedTypeProvider.GetType(), extendedTypeProvider);
-                });
-
-            var extendedBoundedContainer = AutoRegistration.DependencyContainer
-                .CreateExactlyBounded(
-                    assemblies,
-                    new DependencyContainerOptions
-                    {
-                        Overrides = new[] { overrides }
-                    });
-
-            var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
-
-            Output.WriteLine($"Total: {compositionInfo.Count}\n");
-            Output.WriteLine(boundedContainer.Resolve<ICompositionInfoInterpreter<string>>().Visualize(compositionInfo));
-
-            var allowedAssemblies = new[]
-            {
-                typeof(Container).Assembly, // SimpleInjector assembly,
-                typeof(TypeExtensions).Assembly, // Basics assembly
-                typeof(ComponentAttribute).Assembly, // AutoWiring.Api assembly
-                typeof(IDependencyContainer).Assembly, // AutoRegistration assembly
-                typeof(ISettingsManager<>).Assembly, // SettingsManager assembly
-                typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
-            };
-
-            Assert.True(compositionInfo.All(Satisfies));
-
-            bool Satisfies(IDependencyInfo info)
-            {
-                return TypeSatisfies(info.ServiceType)
-                    && TypeSatisfies(info.ImplementationType)
-                    && info.Dependencies.All(Satisfies);
-            }
-
-            bool TypeSatisfies(Type type)
-            {
-                var satisfies = allowedAssemblies.Contains(type.Assembly)
-                                || type == extendedTypeProvider.GetType();
-
-                if (!satisfies)
-                {
-                    Output.WriteLine(type.FullName);
-                }
-
-                return satisfies;
-            }
-
-            static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer container, bool mode)
-            {
-                return container.Resolve<ICompositionInfoExtractor>().GetCompositionInfo(mode);
-            }
-        }
-
         internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
         {
             return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
@@ -466,41 +378,6 @@ namespace SpaceEngineers.Core.Modules.Test
             return ctx.Matches.Contains(typeof(object))
                 ? typeof(object)
                 : ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault();
-        }
-
-        private class TestYamlSettings : IYamlSettings
-        {
-        }
-
-        private class TestJsonSettings : IJsonSettings
-        {
-        }
-
-        [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
-        private class ExtendedTestTypeProvider : ITypeProvider
-        {
-            private readonly ITypeProvider _decoratee;
-            private readonly IReadOnlyCollection<Type> _additionalTypes;
-
-            public ExtendedTestTypeProvider(
-                ITypeProvider decoratee,
-                IReadOnlyCollection<Type> additionalTypes)
-            {
-                _decoratee = decoratee;
-                _additionalTypes = additionalTypes;
-            }
-
-            public IReadOnlyCollection<Assembly> AllLoadedAssemblies => _decoratee.AllLoadedAssemblies;
-
-            public IReadOnlyCollection<Type> AllLoadedTypes => _decoratee.AllLoadedTypes.Concat(_additionalTypes).ToList();
-
-            public IReadOnlyCollection<Assembly> OurAssemblies => _decoratee.OurAssemblies;
-
-            public IReadOnlyCollection<Type> OurTypes => _decoratee.OurTypes;
-
-            public IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TypeCache => _decoratee.TypeCache;
-
-            public bool IsOurType(Type type) => _decoratee.IsOurType(type);
         }
     }
 }

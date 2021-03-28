@@ -4,8 +4,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using Basics.Test;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Json.Abstractions;
     using Json.ObjectTree;
@@ -16,15 +17,17 @@ namespace SpaceEngineers.Core.Modules.Test
     /// SerializationTest
     ///     Json module
     /// </summary>
-    public class SerializationTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class SerializationTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IJsonSerializer).Assembly);
+            var assembly = typeof(IJsonSerializer).Assembly; // Json
+
+            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }
 
         /// <summary>

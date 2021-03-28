@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
@@ -31,37 +32,65 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <summary>
-        /// Setup DependencyContainer
+        /// Setup bounded above dependency container
         /// </summary>
-        /// <param name="aboveAssembly">Assembly that limits assembly loading in dependency container</param>
         /// <param name="options">Dependency container options</param>
+        /// <param name="aboveAssemblies">Assemblies that limits assembly loading in dependency container</param>
         /// <returns>IDependencyContainer</returns>
         [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
-        public IDependencyContainer GetDependencyContainer(
-            Assembly aboveAssembly,
-            DependencyContainerOptions? options = null)
+        public IDependencyContainer BoundedAboveContainer(
+            DependencyContainerOptions options,
+            params Assembly[] aboveAssemblies)
         {
-            options ??= new DependencyContainerOptions();
+            return CreateDependencyContainer(options, DependencyContainer.CreateBoundedAbove, aboveAssemblies);
+        }
 
-            var hash = DependencyContainerHash(aboveAssembly, options);
+        /// <summary>
+        /// Setup exactly bounded dependency container
+        /// </summary>
+        /// <param name="options">Dependency container options</param>
+        /// <param name="exactAssemblies">Assemblies that limits assembly loading in dependency container</param>
+        /// <returns>IDependencyContainer</returns>
+        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
+        public IDependencyContainer ExactlyBoundedContainer(
+            DependencyContainerOptions options,
+            params Assembly[] exactAssemblies)
+        {
+            return CreateDependencyContainer(options, DependencyContainer.CreateExactlyBounded, exactAssemblies);
+        }
+
+        /// <summary>
+        /// Setup dependency container without assembly limitations
+        /// </summary>
+        /// <param name="options">Dependency container options</param>
+        /// <returns>IDependencyContainer</returns>
+        public IDependencyContainer CreateContainer(DependencyContainerOptions options)
+        {
+            return CreateDependencyContainer(options, (containerOptions, _) => DependencyContainer.Create(containerOptions));
+        }
+
+        private IDependencyContainer CreateDependencyContainer(
+            DependencyContainerOptions options,
+            Func<DependencyContainerOptions, Assembly[], IDependencyContainer> factory,
+            params Assembly[] assemblies)
+        {
+            var hash = DependencyContainerHash(options, assemblies);
 
             if (Cache.TryGetValue(hash, out var container))
             {
                 return container;
             }
 
-            container = DependencyContainer.CreateBoundedAbove(aboveAssembly, options);
+            container = factory(options, assemblies);
 
-            Cache.AddOrUpdate(hash, _ => container, (_, _) => container);
-
-            return container;
+            return Cache.AddOrUpdate(hash, _ => container, (_, _) => container);
         }
 
         private static int DependencyContainerHash(
-            Assembly aboveAssembly,
-            DependencyContainerOptions options)
+            DependencyContainerOptions options,
+            params Assembly[] aboveAssembly)
         {
-            return HashCode.Combine(aboveAssembly, options);
+            return HashCode.Combine(aboveAssembly.Aggregate(int.MaxValue, HashCode.Combine), options);
         }
     }
 }

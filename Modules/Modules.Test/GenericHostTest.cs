@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using Basics.Test;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
@@ -27,20 +27,17 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// GenericHost assembly tests
     /// </summary>
-    public class GenericHostTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class GenericHostTest : TestBase
     {
         private const string Endpoint1 = nameof(Endpoint1);
         private const string Endpoint2 = nameof(Endpoint2);
-
-        private readonly ModulesTestFixture _fixture;
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public GenericHostTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
-            _fixture = fixture;
         }
 
         [Fact]
@@ -60,7 +57,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var inMemoryUbiquitousIntegrationContextTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Transport", "InMemoryUbiquitousIntegrationContext");
             var integrationContextType = AssembliesExtensions.FindRequiredType(assemblyName, inMemoryUbiquitousIntegrationContextTypeFullName);
 
-            Assert.Equal(integrationContextType, ubiquitousIntegrationContext.ExtractDecorators().Single());
+            var actual = ubiquitousIntegrationContext
+                .ExtractDecorators()
+                .ShowTypes("decorators:", Output.WriteLine)
+                .Single();
+
+            Assert.Equal(integrationContextType, actual);
 
             IDependencyContainer GetDependencyContainer()
             {
@@ -83,7 +85,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 ManualRegistrations = manualRegistrations
             };
 
-            var dependencyContainer = _fixture.GetDependencyContainer(GetType().Assembly, options);
+            var assembly = GetType().Assembly; // Modules.Test
+
+            var dependencyContainer = Fixture.BoundedAboveContainer(options, assembly);
 
             ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestCommand>>().OnMessage(new TestCommand(42))).Invoke();
             ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestEvent>>().OnMessage(new TestEvent(42))).Invoke();
@@ -130,10 +134,10 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var transport = GenericHost.InMemoryIntegrationTransport(new InMemoryIntegrationTransportOptions());
 
-                var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport)
-                {
-                    Assembly = GetType().Assembly
-                };
+                var endpointOptions = new EndpointOptions(
+                    new EndpointIdentity(Endpoint1, 0),
+                    transport,
+                    GetType().Assembly);
 
                 return Host
                     .CreateDefaultBuilder()
@@ -156,9 +160,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var assembly = GetType().Assembly;
 
-            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport) { Assembly = assembly };
-            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), transport) { Assembly = assembly };
-            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), transport) { Assembly = assembly };
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), transport, assembly);
+            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), transport, assembly);
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), transport, assembly);
 
             using var host = Host
                 .CreateDefaultBuilder()

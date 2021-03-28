@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericHost
 {
     using System;
     using System.Linq;
-    using System.Reflection;
     using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
@@ -52,7 +51,7 @@ namespace SpaceEngineers.Core.GenericHost
             };
 
             return DependencyContainer
-                .CreateExactlyBounded(Array.Empty<Assembly>(), containerOptions)
+                .CreateExactlyBounded(containerOptions)
                 .Resolve<InMemoryIntegrationTransport>();
         }
 

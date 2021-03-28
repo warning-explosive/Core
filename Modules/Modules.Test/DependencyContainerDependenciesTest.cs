@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Services;
     using Basics;
-    using Basics.Test;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;
     using Xunit;
@@ -17,13 +17,13 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// IDependencyContainer dependencies tests
     /// </summary>
-    public class DependencyContainerDependenciesTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class DependencyContainerDependenciesTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
             var options = new DependencyContainerOptions
             {
@@ -34,7 +34,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(DependencyContainerDependenciesTest).Assembly, options);
+            var assembly = GetType().Assembly; // Modules.Test
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
         /// <summary>

@@ -5,10 +5,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Exceptions;
-    using Basics.Test;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using PathResolver;
     using Xunit;
@@ -17,7 +18,7 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// GraphSolver class tests
     /// </summary>
-    public class GraphSolverTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class GraphSolverTest : TestBase
     {
         private const char A = 'A';
         private const char B = 'B';
@@ -52,16 +53,18 @@ namespace SpaceEngineers.Core.Modules.Test
             [Ea] = new GenericGraphEdge<char, string>(E, A, "EA")
         };
 
-        private static readonly ICollection<GenericGraphEdge<char, string>> EdgesHeap = Edges.Select(pair => pair.Value)
-                                                                                             .ToList();
+        private static readonly ICollection<GenericGraphEdge<char, string>> EdgesHeap
+            = Edges.Select(pair => pair.Value).ToList();
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public GraphSolverTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IPathResolver<,>).Assembly);
+            var assembly = typeof(IPathResolver<,>).Assembly; // PathResolver
+
+            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }
 
         /// <summary>

@@ -3,10 +3,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Basics.Test;
     using CliArgumentsParser;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
@@ -14,15 +15,17 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// CliArgumentsParser class tests
     /// </summary>
-    public class CliArgumentsParserTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class CliArgumentsParserTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public CliArgumentsParserTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(ICliArgumentsParser).Assembly);
+            var assembly = typeof(ICliArgumentsParser).Assembly; // CliArgumentsParser
+
+            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }
 
         /// <summary>

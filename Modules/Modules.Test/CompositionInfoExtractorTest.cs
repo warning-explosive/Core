@@ -1,9 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Linq;
+    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Services;
-    using Basics.Test;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
@@ -11,15 +12,17 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// CompositionInfoExtractor class tests
     /// </summary>
-    public class CompositionInfoExtractorTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class CompositionInfoExtractorTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
-            DependencyContainer = fixture.GetDependencyContainer(typeof(IDependencyContainer).Assembly);
+            var assembly = typeof(IDependencyContainer).Assembly; // AutoRegistration
+
+            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }
 
         /// <summary>

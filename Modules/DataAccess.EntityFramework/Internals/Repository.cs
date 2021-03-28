@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
         {
             _databaseContext = databaseContext;
         }
-        
+
         public Task Create(TAggregate aggregate)
         {
             return _databaseContext.Set<TAggregate>().AddAsync(aggregate).AsTask();

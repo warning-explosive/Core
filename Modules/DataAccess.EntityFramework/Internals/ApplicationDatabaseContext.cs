@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
                                                 IDatabaseTransactionProvider
     {
         private readonly IEnumerable<IDatabaseModelBuilder> _databaseModelBuilders;
-        
+
         private IDbContextTransaction? _transaction;
 
         public ApplicationDatabaseContext(DbContextOptions<ApplicationDatabaseContext> options,
@@ -26,11 +26,6 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
             _databaseModelBuilders = databaseModelBuilders;
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            _databaseModelBuilders.Each(it => it.Build(modelBuilder));
-        }
-        
         public async Task OpenTransaction(CancellationToken token)
         {
             _transaction = await Database.BeginTransactionAsync(token).ConfigureAwait(false);
@@ -44,6 +39,11 @@ namespace SpaceEngineers.Core.DataAccess.EntityFramework.Internals
         public Task Rollback(CancellationToken token)
         {
             return _transaction.RollbackAsync(token);
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            _databaseModelBuilders.Each(it => it.Build(modelBuilder));
         }
     }
 }

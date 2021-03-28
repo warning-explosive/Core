@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration;
@@ -34,9 +35,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             containerOptions.ManualRegistrations = registrations;
 
-            return endpointOptions.Assembly != null
-                ? DependencyContainer.CreateBoundedAbove(endpointOptions.Assembly, containerOptions)
-                : DependencyContainer.Create(containerOptions);
+            return DependencyContainer.CreateBoundedAbove(containerOptions, endpointOptions.AboveAssemblies.ToArray());
         }
 
         internal class GenericEndpointManualRegistration : IManualRegistration

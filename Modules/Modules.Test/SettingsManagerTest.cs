@@ -7,8 +7,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Basics.Test;
     using Core.SettingsManager.Abstractions;
+    using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
@@ -22,13 +22,13 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// SettingsManager class tests
     /// </summary>
-    public class SettingsManagerTest : BasicsTestBase, IClassFixture<ModulesTestFixture>
+    public class SettingsManagerTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
         public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
-            : base(output)
+            : base(output, fixture)
         {
             var options = new DependencyContainerOptions
             {
@@ -40,7 +40,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
             };
 
-            DependencyContainer = fixture.GetDependencyContainer(typeof(SettingsManagerTest).Assembly, options);
+            var assembly = GetType().Assembly; // Modules.Test
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
         /// <summary>

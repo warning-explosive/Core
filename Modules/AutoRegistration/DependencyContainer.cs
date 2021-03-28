@@ -70,10 +70,10 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// Creates dependency container exactly bounded by specified assemblies
         /// </summary>
-        /// <param name="assemblies">Assemblies for container configuration</param>
         /// <param name="options">DependencyContainer creation options</param>
+        /// <param name="assemblies">Assemblies for container configuration</param>
         /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateExactlyBounded(Assembly[] assemblies, DependencyContainerOptions options)
+        public static IDependencyContainer CreateExactlyBounded(DependencyContainerOptions options, params Assembly[] assemblies)
         {
             var typeProvider = new ContainerDependentTypeProvider(
                 assemblies,
@@ -91,13 +91,18 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// Creates dependency container bounded above by specified assembly (project)
         /// </summary>
-        /// <param name="assembly">Assembly for container configuration</param>
         /// <param name="options">DependencyContainer creation options</param>
+        /// <param name="assemblies">Assembly for container configuration</param>
         /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateBoundedAbove(Assembly assembly, DependencyContainerOptions options)
+        public static IDependencyContainer CreateBoundedAbove(DependencyContainerOptions options, params Assembly[] assemblies)
         {
+            var belowAssemblies = assemblies
+                .SelectMany(assembly => AssembliesExtensions.AllFromCurrentDomain().Below(assembly))
+                .Distinct()
+                .ToArray();
+
             var typeProvider = new ContainerDependentTypeProvider(
-                AssembliesExtensions.AllFromCurrentDomain().Below(assembly),
+                belowAssemblies,
                 RootAssemblies(),
                 options.ExcludedAssemblies,
                 options.ExcludedNamespaces);

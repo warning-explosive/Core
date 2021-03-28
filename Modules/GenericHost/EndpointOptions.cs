@@ -1,5 +1,8 @@
 namespace SpaceEngineers.Core.GenericHost
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using Abstractions;
     using AutoRegistration;
@@ -13,10 +16,21 @@ namespace SpaceEngineers.Core.GenericHost
         /// <summary> .cctor </summary>
         /// <param name="identity">Endpoint identity</param>
         /// <param name="transport">Integration transport</param>
-        public EndpointOptions(EndpointIdentity identity, IIntegrationTransport transport)
+        /// <param name="aboveAssemblies">Assemblies that limits assembly loading for endpoint's dependency container</param>
+        public EndpointOptions(
+            EndpointIdentity identity,
+            IIntegrationTransport transport,
+            params Assembly[] aboveAssemblies)
         {
             Identity = identity;
             Transport = transport;
+
+            if (!aboveAssemblies.Any())
+            {
+                throw new InvalidOperationException($"Endpoint {identity} should be limited at least by one above assembly");
+            }
+
+            AboveAssemblies = aboveAssemblies;
         }
 
         /// <summary>
@@ -25,9 +39,9 @@ namespace SpaceEngineers.Core.GenericHost
         public EndpointIdentity Identity { get; }
 
         /// <summary>
-        /// Endpoint assembly that limits assembly loading for endpoint's dependency container
+        /// Assemblies that limits assembly loading for endpoint's dependency container
         /// </summary>
-        public Assembly? Assembly { get; set; }
+        public IReadOnlyCollection<Assembly> AboveAssemblies { get; set; }
 
         /// <summary>
         /// Dependency container options

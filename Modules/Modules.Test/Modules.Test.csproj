@@ -44,7 +44,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
     <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />

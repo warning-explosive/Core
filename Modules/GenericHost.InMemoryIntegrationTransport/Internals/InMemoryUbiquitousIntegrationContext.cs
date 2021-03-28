@@ -1,13 +1,14 @@
-namespace SpaceEngineers.Core.GenericHost.Transport
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using GenericEndpoint.Abstractions;
+    using Core.GenericHost.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Singleton)]
     internal class InMemoryUbiquitousIntegrationContext : IUbiquitousIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

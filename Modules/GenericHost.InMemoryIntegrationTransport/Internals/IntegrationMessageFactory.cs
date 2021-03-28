@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Internals
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 {
     using System;
     using System.Collections.Generic;
@@ -6,8 +6,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Contract.Abstractions;
     using GenericEndpoint;
+    using GenericEndpoint.Abstractions;
+    using GenericEndpoint.Contract.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory

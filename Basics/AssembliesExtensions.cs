@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.Basics
         public static Type FindRequiredType(string assemblyName, string typeFullName)
         {
             return FindType(assemblyName, typeFullName)
-                .EnsureNotNull($"Type {typeFullName} must be found in current AppDomain");
+                .EnsureNotNull($"Type {typeFullName} should be found in current AppDomain");
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.Basics
         public static Assembly FindRequiredAssembly(string assemblyName)
         {
             return FindAssembly(assemblyName)
-                .EnsureNotNull($"Assembly {assemblyName} must be found in current AppDomain");
+                .EnsureNotNull($"Assembly {assemblyName} should be found in current AppDomain");
         }
 
         /// <summary>

@@ -204,12 +204,12 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+                throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
             }
 
             if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
             {
-                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
+                throw new ArgumentException("Should be in bounds of generic arguments count", nameof(typeArgumentAt));
             }
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)
@@ -230,7 +230,7 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+                throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
             }
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)

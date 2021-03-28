@@ -2,12 +2,12 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
+    using Internals;
     using SettingsManager.Extensions;
 
     /// <summary>
@@ -32,12 +32,21 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <summary>
+        /// Generates IManualRegistration object with specified delegate
+        /// </summary>
+        /// <param name="registrationAction">Action with IRegistrationContainer instance</param>
+        /// <returns>IManualRegistration instance</returns>
+        public IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)
+        {
+            return new ManualDelegateRegistration(registrationAction);
+        }
+
+        /// <summary>
         /// Setup bounded above dependency container
         /// </summary>
         /// <param name="options">Dependency container options</param>
         /// <param name="aboveAssemblies">Assemblies that limits assembly loading in dependency container</param>
         /// <returns>IDependencyContainer</returns>
-        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
         public IDependencyContainer BoundedAboveContainer(
             DependencyContainerOptions options,
             params Assembly[] aboveAssemblies)
@@ -51,7 +60,6 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         /// <param name="options">Dependency container options</param>
         /// <param name="exactAssemblies">Assemblies that limits assembly loading in dependency container</param>
         /// <returns>IDependencyContainer</returns>
-        [SuppressMessage("Analyzers", "CA1822", Justification = "xunit test fixture")]
         public IDependencyContainer ExactlyBoundedContainer(
             DependencyContainerOptions options,
             params Assembly[] exactAssemblies)

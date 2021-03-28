@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.InMemoryIntegrationTransport</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.InMemoryIntegrationTransport</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Executable</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Executable</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.InMemoryIntegrationTransport</Title>
+        <Title>SpaceEngineers.Core.GenericEndpoint.Executable</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.InMemoryIntegrationTransport</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Executable</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -25,12 +25,15 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <TieredCompilation>true</TieredCompilation>
-        <OutputType>Exe</OutputType>
+        <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
+      <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+      <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Remove="TestCommand.cs" />
+      <Compile Update="Internals\GenericEndpoint.cs">
+        <DependentUpon>IRunnableEndpoint.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

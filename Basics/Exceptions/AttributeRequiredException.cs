@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Basics.Exceptions
 
     /// <summary>
     /// AttributeRequiredException
-    /// Type must be marked by attribute
+    /// Type should be marked by attribute
     /// </summary>
     public class AttributeRequiredException : Exception
     {

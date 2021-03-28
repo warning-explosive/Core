@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         public void Verify()
         {
             /*
-             * 1. Messages must be marked with OwnedByAttribute
+             * 1. Messages should be marked with OwnedByAttribute
              */
             Owned(_integrationTypeProvider.EndpointCommands());
             Owned(_integrationTypeProvider.EndpointQueries());

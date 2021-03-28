@@ -1,15 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.DataAccess.Contract</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.DataAccess.Contract</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.DataAccess.Contract</Title>
+        <Title>SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.DataAccess.Contract</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -27,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericDomain\GenericDomain.csproj" />
+      <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
 </Project>

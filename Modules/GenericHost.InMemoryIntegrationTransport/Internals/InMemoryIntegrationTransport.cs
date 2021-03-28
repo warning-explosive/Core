@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Transport
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 {
     using System;
     using System.Collections.Concurrent;
@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -15,12 +14,14 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using Basics.Async;
     using Basics.Exceptions;
     using Core.GenericHost;
+    using Core.GenericHost.Abstractions;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
-    using Internals;
+    using GenericEndpoint.Executable.Abstractions;
+    using Registrations;
 
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
-    internal class InMemoryIntegrationTransport : IIntegrationTransport, IAsyncDisposable
+    [Component(EnLifestyle.Singleton)]
+    internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
         private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap
             = new ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
@@ -38,34 +39,16 @@ namespace SpaceEngineers.Core.GenericHost.Transport
             _selectionBehavior = selectionBehavior;
 
             _manualResetEvent = new AsyncManualResetEvent(false);
+
+            EndpointInjection = new EndpointInjectionRegistration(this);
         }
 
         public event EventHandler<IntegrationMessageEventArgs>? OnMessage;
 
-        public IManualRegistration Registration => DependencyContainerOptions
-            .DelegateRegistration(container =>
-            {
-                container.RegisterInstance<IIntegrationTransport>(this);
-                container.RegisterInstance<InMemoryIntegrationTransport>(this);
-
-                container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
-                container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
-
-                container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>();
-                container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>();
-                container.RegisterDecorator<IExtendedIntegrationContext, ExtendedIntegrationContextHeadersMaintenanceDecorator>();
-
-                container.RegisterInstance<IEndpointInstanceSelectionBehavior>(_selectionBehavior);
-                container.RegisterInstance(_selectionBehavior.GetType(), _selectionBehavior);
-            });
+        public IManualRegistration EndpointInjection { get; }
 
         public IUbiquitousIntegrationContext IntegrationContext =>
             _dependencyContainer.Resolve<IUbiquitousIntegrationContext>();
-
-        public async ValueTask DisposeAsync()
-        {
-            await Task.CompletedTask.ConfigureAwait(false);
-        }
 
         public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)
         {

@@ -47,9 +47,6 @@
     <Compile Update="Abstractions\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
-    <Compile Update="Abstractions\IUbiquitousIntegrationContext.cs">
-      <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
-    </Compile>
     <Compile Update="Internals\IntegrationContextUnitOfWorkSubscriber.cs">
       <DependentUpon>IntegrationUnitOfWork.cs</DependentUpon>
     </Compile>

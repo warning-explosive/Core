@@ -59,12 +59,12 @@ namespace SpaceEngineers.Core.Basics
         {
             if (start < 0)
             {
-                throw new ArgumentException($"{start} boundary must be greater than zero", nameof(start));
+                throw new ArgumentException($"{start} boundary should be greater than zero", nameof(start));
             }
 
             if (end < 0)
             {
-                throw new ArgumentException($"{end} boundary must be greater than zero", nameof(end));
+                throw new ArgumentException($"{end} boundary should be greater than zero", nameof(end));
             }
         }
     }

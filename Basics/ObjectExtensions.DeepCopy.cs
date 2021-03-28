@@ -39,7 +39,7 @@
         {
             return original
                 .DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                .EnsureNotNull<T>("Not nullable input must be copied into not nullable output");
+                .EnsureNotNull<T>("Not nullable input should be copied into not nullable output");
         }
 
         /// <summary>

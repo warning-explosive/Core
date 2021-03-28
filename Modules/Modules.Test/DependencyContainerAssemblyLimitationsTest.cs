@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
@@ -112,12 +111,12 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var extendedTypeProvider = new ExtendedTestTypeProvider(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
-            var overrides = DependencyContainerOptions
-                .DelegateRegistration(container =>
-                {
-                    container.RegisterInstance(typeof(ITypeProvider), extendedTypeProvider);
-                    container.RegisterInstance(extendedTypeProvider.GetType(), extendedTypeProvider);
-                });
+            var overrides = Fixture.DelegateRegistration(container =>
+            {
+                container
+                    .RegisterInstance(typeof(ITypeProvider), extendedTypeProvider)
+                    .RegisterInstance(extendedTypeProvider.GetType(), extendedTypeProvider);
+            });
 
             var options = new DependencyContainerOptions
             {

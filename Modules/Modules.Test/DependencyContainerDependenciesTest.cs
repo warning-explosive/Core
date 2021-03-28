@@ -29,8 +29,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 ManualRegistrations = new IManualRegistration[]
                 {
-                    new GenericEndpointRegistration(),
-                    new GenericHostRegistration()
+                    new GenericEndpointTestRegistration()
                 }
             };
 

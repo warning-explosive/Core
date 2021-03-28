@@ -17,6 +17,20 @@ namespace SpaceEngineers.Core.Basics
         /// Custom disposable with state
         /// </summary>
         /// <param name="state">state</param>
+        /// <param name="openScopeAction">openScopeAction</param>
+        /// <param name="finallyAction">finallyAction</param>
+        /// <typeparam name="TState">TState</typeparam>
+        /// <returns>IDisposable</returns>
+        public static IDisposable Create<TState>(TState state, Action<TState> openScopeAction, Action<TState> finallyAction)
+        {
+            openScopeAction(state);
+            return new DisposableAction<TState>(state, finallyAction);
+        }
+
+        /// <summary>
+        /// Custom disposable with state
+        /// </summary>
+        /// <param name="state">state</param>
         /// <param name="finallyAction">finallyAction</param>
         /// <typeparam name="TState">TState</typeparam>
         /// <returns>IDisposable</returns>

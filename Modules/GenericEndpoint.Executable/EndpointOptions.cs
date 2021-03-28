@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.GenericHost
+namespace SpaceEngineers.Core.GenericEndpoint.Executable
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
     using AutoRegistration;
     using GenericEndpoint;
 
@@ -15,15 +14,10 @@ namespace SpaceEngineers.Core.GenericHost
     {
         /// <summary> .cctor </summary>
         /// <param name="identity">Endpoint identity</param>
-        /// <param name="transport">Integration transport</param>
         /// <param name="aboveAssemblies">Assemblies that limits assembly loading for endpoint's dependency container</param>
-        public EndpointOptions(
-            EndpointIdentity identity,
-            IIntegrationTransport transport,
-            params Assembly[] aboveAssemblies)
+        public EndpointOptions(EndpointIdentity identity, params Assembly[] aboveAssemblies)
         {
             Identity = identity;
-            Transport = transport;
 
             if (!aboveAssemblies.Any())
             {
@@ -47,10 +41,5 @@ namespace SpaceEngineers.Core.GenericHost
         /// Dependency container options
         /// </summary>
         public DependencyContainerOptions? ContainerOptions { get; set; }
-
-        /// <summary>
-        /// Integration transport instance
-        /// </summary>
-        public IIntegrationTransport Transport { get; }
     }
 }

@@ -7,8 +7,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Async;
+    using GenericEndpoint.Executable;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -45,7 +48,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
             var endpoints = await _endpointOptions
-                .Select(options => Endpoint.StartAsync(options, Token))
+                .Select(options => Endpoint.StartAsync(InjectTransport(options, _transport), Token))
                 .WhenAll()
                 .ConfigureAwait(false);
 
@@ -122,6 +125,19 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             _queue.Enqueue(args);
             _autoResetEvent.Set();
+        }
+
+        private static EndpointOptions InjectTransport(EndpointOptions options, IIntegrationTransport transport)
+        {
+            options.ContainerOptions ??= new DependencyContainerOptions();
+
+            options.ContainerOptions.ManualRegistrations =
+                new List<IManualRegistration>(options.ContainerOptions.ManualRegistrations)
+                {
+                    transport.EndpointInjection
+                };
+
+            return options;
         }
     }
 }

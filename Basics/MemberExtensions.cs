@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class MemberExtensions
     {
-        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         /// <summary>
         /// Check that object has property

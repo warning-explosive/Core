@@ -38,13 +38,13 @@ namespace SpaceEngineers.Core.Json.Internals
         public object DeserializeObject(string serialized, Type type)
         {
             return JsonConvert.DeserializeObject(serialized, type, _settings)
-                              .EnsureNotNull("Object must be serializable");
+                              .EnsureNotNull("Object should be serializable");
         }
 
         public T DeserializeObject<T>(string serialized)
         {
             return JsonConvert.DeserializeObject<T>(serialized, _settings)
-                              .EnsureNotNull<T>("Object must be serializable");
+                              .EnsureNotNull<T>("Object should be serializable");
         }
     }
 }

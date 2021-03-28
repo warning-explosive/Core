@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 
         /// <summary>
         /// Reply to initiator endpoint
-        /// Must be called within endpoint scope (in message handler)
+        /// Should be called within endpoint scope (in message handler)
         /// </summary>
         /// <param name="query">Integration query</param>
         /// <param name="reply">Integration reply</param>

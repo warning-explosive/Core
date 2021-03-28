@@ -1,7 +1,7 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.Test.Api.Internals
 {
     using System;
-    using Abstractions;
+    using AutoRegistration.Abstractions;
 
     internal class ManualDelegateRegistration : IManualRegistration
     {

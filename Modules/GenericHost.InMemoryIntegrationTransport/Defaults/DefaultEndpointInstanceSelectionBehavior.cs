@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Defaults
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Defaults
 {
     using System;
     using System.Collections.Concurrent;
@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Defaults
     /// <summary>
     /// DefaultEndpointInstanceSelectionBehavior
     /// </summary>
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Singleton)]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap

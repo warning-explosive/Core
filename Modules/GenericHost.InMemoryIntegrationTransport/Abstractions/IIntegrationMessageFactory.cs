@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Abstractions
 {
     using AutoWiring.Api.Abstractions;
-    using Contract.Abstractions;
     using GenericEndpoint;
+    using GenericEndpoint.Contract.Abstractions;
 
     /// <summary>
     /// IIntegrationMessageFactory abstraction

@@ -25,12 +25,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+                throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
             }
 
             if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
             {
-                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
+                throw new ArgumentException("Should be in bounds of generic arguments count", nameof(typeArgumentAt));
             }
 
             var typeArgument = openGeneric.GetGenericArguments()[typeArgumentAt];

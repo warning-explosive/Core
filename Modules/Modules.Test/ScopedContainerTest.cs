@@ -6,9 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericHost;
+    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -26,11 +24,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions
             {
-                ExcludedAssemblies = new[]
+                ManualRegistrations = new[]
                 {
-                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                    typeof(GenericHost).Assembly // GenericHost
+                    new GenericEndpointTestRegistration()
                 }
             };
 

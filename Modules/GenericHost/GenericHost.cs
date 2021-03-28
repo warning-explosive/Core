@@ -3,16 +3,11 @@ namespace SpaceEngineers.Core.GenericHost
     using System;
     using System.Linq;
     using Abstractions;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using Basics;
-    using GenericEndpoint;
-    using GenericEndpoint.Abstractions;
+    using GenericEndpoint.Executable;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Transport;
 
     /// <summary>
     /// Generic host entry point
@@ -20,40 +15,6 @@ namespace SpaceEngineers.Core.GenericHost
     public static class GenericHost
     {
         private const string HostAlreadyConfigured = nameof(HostAlreadyConfigured);
-
-        /// <summary>
-        /// Generates manual registration for generic endpoint
-        /// </summary>
-        /// <param name="endpointIdentity">Endpoint identity</param>
-        /// <returns>Generic endpoint manual registration</returns>
-        public static IManualRegistration GenericEndpointRegistration(EndpointIdentity endpointIdentity)
-        {
-            return new Endpoint.GenericEndpointManualRegistration(endpointIdentity);
-        }
-
-        /// <summary>
-        /// Builds in-memory integration transport implementation
-        /// </summary>
-        /// <param name="transportOptions">In-memory integration transport options</param>
-        /// <returns>IIntegrationTransport instance</returns>
-        public static IIntegrationTransport InMemoryIntegrationTransport(InMemoryIntegrationTransportOptions transportOptions)
-        {
-            var registration = InMemoryIntegrationTransportRegistration(transportOptions);
-
-            var registrations = transportOptions
-                .AdditionalRegistrations
-                .Concat(new[] { registration })
-                .ToArray();
-
-            var containerOptions = new DependencyContainerOptions
-            {
-                ManualRegistrations = registrations
-            };
-
-            return DependencyContainer
-                .CreateExactlyBounded(containerOptions)
-                .Resolve<InMemoryIntegrationTransport>();
-        }
 
         /// <summary>
         /// Configure host
@@ -108,31 +69,6 @@ namespace SpaceEngineers.Core.GenericHost
             }
 
             ctx.Properties[HostAlreadyConfigured] = null;
-        }
-
-        private static IManualRegistration InMemoryIntegrationTransportRegistration(InMemoryIntegrationTransportOptions transportOptions)
-        {
-            return DependencyContainerOptions
-                .DelegateRegistration(container =>
-                {
-                    container.Register<IIntegrationTransport, InMemoryIntegrationTransport>();
-                    container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>();
-
-                    container.Register<IUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
-                    container.Register<InMemoryUbiquitousIntegrationContext, InMemoryUbiquitousIntegrationContext>();
-
-                    var behavior = transportOptions.EndpointInstanceSelectionBehavior;
-                    container.RegisterInstance(behavior);
-                    container.RegisterInstance(behavior.GetType(), behavior);
-
-                    var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(SpaceEngineers.Core.GenericEndpoint));
-                    var typeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "IntegrationMessageFactory");
-                    var messageFactoryType = AssembliesExtensions.FindRequiredType(assemblyName, typeFullName);
-                    container.Register(typeof(IIntegrationMessageFactory), messageFactoryType);
-                    container.Register(messageFactoryType, messageFactoryType);
-
-                    container.RegisterCollection<IMessageHeaderProvider>(new[] { typeof(IntegratedMessageHeader) });
-                });
         }
     }
 }

@@ -21,9 +21,9 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         event EventHandler<IntegrationMessageEventArgs> OnMessage;
 
         /// <summary>
-        /// Manual registration for endpoints
+        /// Manual registration with transport dependencies for endpoints
         /// </summary>
-        IManualRegistration Registration { get; }
+        IManualRegistration EndpointInjection { get; }
 
         /// <summary>
         /// Gets ubiquitous integration context

@@ -1,16 +1,16 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Core.GenericEndpoint;
-    using Core.GenericEndpoint.Abstractions;
-    using Core.GenericEndpoint.Contract.Abstractions;
+    using Contract.Abstractions;
+    using GenericEndpoint;
 
-    [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Scoped)]
     internal class ExtendedIntegrationContextHeadersMaintenanceDecorator : IExtendedIntegrationContext,
                                                                            IDecorator<IExtendedIntegrationContext>
     {

@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using System.Linq;
     using System.Reflection;
     using Abstractions;
-    using Internals;
 
     /// <summary>
     /// DependencyContainer creation options
@@ -35,16 +34,6 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Overrides
         /// </summary>
         public IReadOnlyCollection<IManualRegistration> Overrides { get; set; } = Array.Empty<IManualRegistration>();
-
-        /// <summary>
-        /// Generates IManualRegistration object with specified delegate
-        /// </summary>
-        /// <param name="registrationAction">Action with IRegistrationContainer instance</param>
-        /// <returns>IManualRegistration instance</returns>
-        public static IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)
-        {
-            return new ManualDelegateRegistration(registrationAction);
-        }
 
         /// <inheritdoc />
         public override int GetHashCode()

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Abstractions
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Abstractions
 {
     using System.Collections.Generic;
     using AutoWiring.Api.Abstractions;

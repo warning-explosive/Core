@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
+namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
-    using Contract.Abstractions;
+    using GenericEndpoint.Contract.Abstractions;
 
     /// <summary>
     /// Ubiquitous integration context

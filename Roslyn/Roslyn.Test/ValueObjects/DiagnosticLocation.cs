@@ -11,17 +11,17 @@ namespace SpaceEngineers.Core.Roslyn.Test.ValueObjects
         /// <param name="sourceFile">Name of source file (without extension)</param>
         /// <param name="line">Line</param>
         /// <param name="column">Column</param>
-        /// <exception cref="ArgumentOutOfRangeException">Line/Column must be >= -1</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Line/Column should be >= -1</exception>
         public DiagnosticLocation(string sourceFile, int line, int column)
         {
             if (line < -1)
             {
-                throw new ArgumentOutOfRangeException(nameof(line), "line must be >= -1");
+                throw new ArgumentOutOfRangeException(nameof(line), "line should be >= -1");
             }
 
             if (column < -1)
             {
-                throw new ArgumentOutOfRangeException(nameof(column), "column must be >= -1");
+                throw new ArgumentOutOfRangeException(nameof(column), "column should be >= -1");
             }
 
             SourceFile = sourceFile;

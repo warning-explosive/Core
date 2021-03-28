@@ -1,11 +1,11 @@
-namespace SpaceEngineers.Core.DataAccess.Contract
+namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
 {
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using GenericEndpoint.Abstractions;
+    using Core.DataAccess.Contract.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IExtendedIntegrationContext>
@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract
         {
             _databaseTransactionProvider = databaseTransactionProvider;
         }
-        
+
         public Task OnStart(IExtendedIntegrationContext context, CancellationToken token)
         {
             return _databaseTransactionProvider.OpenTransaction(token);

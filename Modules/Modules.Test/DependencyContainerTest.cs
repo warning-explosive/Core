@@ -15,9 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericHost;
+    using Registrations;
     using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
@@ -35,11 +33,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions
             {
-                ExcludedAssemblies = new[]
+                ManualRegistrations = new[]
                 {
-                    typeof(IIntegrationMessage).Assembly, // GenericEndpoint.Contract
-                    typeof(IGenericEndpoint).Assembly, // GenericEndpoint
-                    typeof(GenericHost).Assembly // GenericHost
+                    new GenericEndpointTestRegistration()
                 }
             };
 
@@ -118,9 +114,13 @@ namespace SpaceEngineers.Core.Modules.Test
 
                         var componentKind = type.GetRequiredAttribute<ComponentAttribute>().Kind;
 
-                        if (componentKind == EnComponentKind.Regular
-                            || componentKind == EnComponentKind.ManuallyRegistered
-                            || componentKind == EnComponentKind.OpenGenericFallback)
+                        if (service.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
+                        {
+                            Assert.Throws<InvalidOperationException>(() => resolve(DependencyContainer, service));
+                        }
+                        else if (componentKind == EnComponentKind.Regular
+                                 || componentKind == EnComponentKind.ManuallyRegistered
+                                 || componentKind == EnComponentKind.OpenGenericFallback)
                         {
                             resolve(DependencyContainer, service);
                         }
@@ -314,19 +314,19 @@ namespace SpaceEngineers.Core.Modules.Test
                                          typeof(CollectionResolvableTestServiceImpl2)
                                      };
 
-            var registration = DependencyContainerOptions.DelegateRegistration(
-                container =>
-                {
-                    container.Register<IWiredTestService, WiredTestServiceImpl>();
-                    container.Register<WiredTestServiceImpl, WiredTestServiceImpl>();
-                    container.Register<IIndependentTestService, IndependentTestServiceImpl>();
-                    container.Register<IndependentTestServiceImpl, IndependentTestServiceImpl>();
-                    container.Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>();
-                    container.Register<ConcreteImplementationService, ConcreteImplementationService>();
-                    container.RegisterCollection<ICollectionResolvableTestService>(expectedCollection);
-                    container.Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>();
-                    container.Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
-                });
+            var registration = Fixture.DelegateRegistration(container =>
+            {
+                container
+                    .Register<IWiredTestService, WiredTestServiceImpl>()
+                    .Register<WiredTestServiceImpl, WiredTestServiceImpl>()
+                    .Register<IIndependentTestService, IndependentTestServiceImpl>()
+                    .Register<IndependentTestServiceImpl, IndependentTestServiceImpl>()
+                    .Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>()
+                    .Register<ConcreteImplementationService, ConcreteImplementationService>()
+                    .RegisterCollection<ICollectionResolvableTestService>(expectedCollection)
+                    .Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>()
+                    .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
+            });
 
             var options = new DependencyContainerOptions
             {

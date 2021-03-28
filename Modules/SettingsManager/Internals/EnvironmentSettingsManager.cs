@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
         {
             var entryValue = Environment
                             .GetEnvironmentVariable(entryKey, EnvironmentVariableTarget.Process)
-                            .EnsureNotNull($"Environment settings with key '{entryKey}' must be represented in process environment block");
+                            .EnsureNotNull($"Environment settings with key '{entryKey}' should be represented in process environment block");
 
             return new EnvironmentSettingsEntry(entryKey, entryValue);
         }

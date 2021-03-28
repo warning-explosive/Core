@@ -246,7 +246,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             DependencyContainerOptions options)
         {
             var manualRegistrationsContainer = new ManualRegistrationsContainer();
-            var manualRegistration = ManualRegistration(this, typeProvider, servicesProvider);
+            var manualRegistration = new DependencyContainerManualRegistration(this, typeProvider, servicesProvider);
 
             options.ManualRegistrations = options.ManualRegistrations.Concat(new[] { manualRegistration }).ToList();
             options.ManualRegistrations.Each(manual => manual.Register(manualRegistrationsContainer));
@@ -289,25 +289,6 @@ namespace SpaceEngineers.Core.AutoRegistration
             registrationsContainer.Resolvable().RegisterServicesWithOpenGenericFallBack(container);
             registrationsContainer.Collections().RegisterCollections(container);
             registrationsContainer.Decorators().RegisterDecorators(container);
-        }
-
-        private static IManualRegistration ManualRegistration(
-            DependencyContainer dependencyContainer,
-            ITypeProvider typeProvider,
-            IAutoWiringServicesProvider servicesProvider)
-        {
-            return DependencyContainerOptions
-                .DelegateRegistration(container =>
-                {
-                    container
-                        .RegisterInstance<DependencyContainer>(dependencyContainer)
-                        .RegisterInstance<IDependencyContainer>(dependencyContainer)
-                        .RegisterInstance<IScopedContainer>(dependencyContainer)
-                        .RegisterInstance(typeProvider.GetType(), typeProvider)
-                        .RegisterInstance<ITypeProvider>(typeProvider)
-                        .RegisterInstance(servicesProvider.GetType(), servicesProvider)
-                        .RegisterInstance<IAutoWiringServicesProvider>(servicesProvider);
-                });
         }
 
         private static void VerifyService(Type serviceType)

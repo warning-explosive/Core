@@ -1,10 +1,11 @@
-namespace SpaceEngineers.Core.GenericHost.Transport
+namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
@@ -12,7 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Transport
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
-    [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Scoped, EnComponentKind.Unregistered)]
     internal class InMemoryIntegrationContext : IExtendedIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;

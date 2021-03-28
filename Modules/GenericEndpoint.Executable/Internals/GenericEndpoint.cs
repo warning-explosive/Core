@@ -1,19 +1,23 @@
-namespace SpaceEngineers.Core.GenericHost.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
 {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
     using Basics.Async;
+    using Contract.Abstractions;
     using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;
-    using Core.GenericEndpoint.Contract.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
-    internal class GenericEndpoint : IGenericEndpoint, IRunnableEndpoint, IExecutableEndpoint, IMessagePipeline
+    [Component(EnLifestyle.Singleton)]
+    internal class GenericEndpoint : IGenericEndpoint,
+                                     IRunnableEndpoint,
+                                     IExecutableEndpoint,
+                                     IMessagePipeline
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IEnumerable<IEndpointInitializer> _initializers;
@@ -45,11 +49,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
-        public async ValueTask DisposeAsync()
-        {
-            await StopAsync().ConfigureAwait(false);
-        }
-
         public async Task InvokeMessageHandler(IntegrationMessage message)
         {
             await using (_dependencyContainer.OpenScopeAsync())
@@ -67,8 +66,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            _runningHandlers.Increment();
-            using (Disposable.Create(_runningHandlers, e => e.Decrement()))
+            using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
             {
                 var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(context.Message.ReflectedType);
 

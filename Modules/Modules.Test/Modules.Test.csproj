@@ -47,7 +47,6 @@
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
     <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
-    <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
     <ProjectReference Include="..\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
     <ProjectReference Include="..\GenericHost.InMemoryIntegrationTransport\GenericHost.InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\GenericHost\GenericHost.csproj" />

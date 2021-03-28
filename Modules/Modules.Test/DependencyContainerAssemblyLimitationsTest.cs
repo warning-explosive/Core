@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.SettingsManager.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using GenericEndpoint.Contract.Abstractions;
     using Json.Abstractions;
     using PathResolver;
     using Xunit;
@@ -39,17 +40,26 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly1 = typeof(IJsonSerializer).Assembly; // Json
             var assembly2 = typeof(IPathResolver<,>).Assembly; // PathResolver
+            var assembly3 = typeof(IIntegrationCommand).Assembly; // GenericEndpoint.Contract
 
             var below1 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly1);
             var below2 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly2);
+            var below3 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly3);
+
+            Assert.DoesNotContain(assembly1, below2);
+            Assert.DoesNotContain(assembly1, below3);
 
             Assert.DoesNotContain(assembly2, below1);
-            Assert.DoesNotContain(assembly1, below2);
+            Assert.DoesNotContain(assembly2, below3);
+
+            Assert.DoesNotContain(assembly3, below1);
+            Assert.DoesNotContain(assembly3, below2);
 
             var allowedAssemblies = new[]
             {
                 assembly1,
                 assembly2,
+                assembly3,
 
                 typeof(AssembliesExtensions).Assembly, // Basics
                 typeof(ComponentAttribute).Assembly, // AutoWiring.Api
@@ -59,7 +69,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var aboveAssemblies = new[]
             {
                 assembly1,
-                assembly2
+                assembly2,
+                assembly3
             };
 
             var ourTypes = Fixture

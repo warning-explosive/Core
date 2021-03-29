@@ -11,18 +11,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Async;
+    using GenericEndpoint.Abstractions;
     using GenericEndpoint.Executable;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
     internal class TransportHostedService : IHostedService, IDisposable
     {
-        private readonly ILogger<TransportHostedService> _logger;
-        private readonly IIntegrationTransport _transport;
-        private readonly IReadOnlyCollection<EndpointOptions> _endpointOptions;
-
         private readonly AsyncAutoResetEvent _autoResetEvent;
         private readonly ConcurrentQueue<IntegrationMessageEventArgs> _queue;
+
         private Task? _messageProcessingTask;
         private CancellationTokenSource? _cts;
         private IDisposable? _registration;
@@ -32,13 +30,22 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             IIntegrationTransport transport,
             IReadOnlyCollection<EndpointOptions> endpointOptions)
         {
-            _logger = logger;
-            _transport = transport;
-            _endpointOptions = endpointOptions;
+            Logger = logger;
+            Transport = transport;
+            EndpointOptions = endpointOptions;
+            Endpoints = Array.Empty<IGenericEndpoint>();
 
             _autoResetEvent = new AsyncAutoResetEvent(false);
             _queue = new ConcurrentQueue<IntegrationMessageEventArgs>();
         }
+
+        private ILogger<TransportHostedService> Logger { get; }
+
+        private IIntegrationTransport Transport { get; }
+
+        private IReadOnlyCollection<EndpointOptions> EndpointOptions { get; }
+
+        private IReadOnlyCollection<IGenericEndpoint> Endpoints { get; set; }
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
@@ -47,17 +54,17 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
-            var endpoints = await _endpointOptions
-                .Select(options => Endpoint.StartAsync(InjectTransport(options, _transport), Token))
+            Endpoints = await EndpointOptions
+                .Select(options => Endpoint.StartAsync(InjectTransport(options, Transport), Token))
                 .WhenAll()
                 .ConfigureAwait(false);
 
-            await _transport.Initialize(endpoints, Token).ConfigureAwait(false);
+            await Transport.Initialize(Endpoints, Token).ConfigureAwait(false);
 
-            _logger.Information(Resources.StartedSuccessfully, _transport);
-            _logger.Information(Resources.WaitingForIncomingMessages, _transport);
+            Logger.Information(Resources.StartedSuccessfully, Transport);
+            Logger.Information(Resources.WaitingForIncomingMessages, Transport);
 
-            _transport.OnMessage += OnMessage;
+            Transport.OnMessage += OnMessage;
             _messageProcessingTask = StartMessageProcessing();
         }
 
@@ -72,7 +79,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             try
             {
                 // Unsubscribe from transport event
-                _transport.OnMessage -= OnMessage;
+                Transport.OnMessage -= OnMessage;
 
                 // Signal cancellation to the executing method
                 _cts.Cancel();
@@ -103,7 +110,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 if (_queue.TryDequeue(out var args))
                 {
                     await ExecutionExtensions
-                        .TryAsync(() => _transport.DispatchToEndpoint(args.GeneralMessage))
+                        .TryAsync(() => Transport.DispatchToEndpoint(args.GeneralMessage))
                         .Invoke(ex => OnError(ex, args))
                         .ConfigureAwait(false);
                 }
@@ -112,7 +119,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private Task OnError(Exception exception, IntegrationMessageEventArgs args)
         {
-            _logger.Error(
+            Logger.Error(
                 exception,
                 "Transport error on message: {0} {1}",
                 args.GeneralMessage.ReflectedType,

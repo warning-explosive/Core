@@ -26,17 +26,14 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
         private static readonly ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> TopologyMap
             = new ConcurrentDictionary<Type, IDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
 
-        private readonly IDependencyContainer _dependencyContainer;
-        private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
-
         private readonly AsyncManualResetEvent _manualResetEvent;
 
         public InMemoryIntegrationTransport(
             IDependencyContainer dependencyContainer,
             IEndpointInstanceSelectionBehavior selectionBehavior)
         {
-            _dependencyContainer = dependencyContainer;
-            _selectionBehavior = selectionBehavior;
+            DependencyContainer = dependencyContainer;
+            SelectionBehavior = selectionBehavior;
 
             _manualResetEvent = new AsyncManualResetEvent(false);
 
@@ -47,8 +44,11 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 
         public IManualRegistration EndpointInjection { get; }
 
-        public IUbiquitousIntegrationContext IntegrationContext =>
-            _dependencyContainer.Resolve<IUbiquitousIntegrationContext>();
+        public IUbiquitousIntegrationContext IntegrationContext => DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
+
+        private IDependencyContainer DependencyContainer { get; }
+
+        private IEndpointInstanceSelectionBehavior SelectionBehavior { get; }
 
         public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)
         {
@@ -121,7 +121,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 
         private IGenericEndpoint SelectEndpointInstance(IntegrationMessage message, IReadOnlyCollection<IGenericEndpoint> endpoints)
         {
-            return _selectionBehavior.SelectInstance(message, endpoints);
+            return SelectionBehavior.SelectInstance(message, endpoints);
         }
 
         private Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)

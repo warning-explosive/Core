@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
@@ -21,7 +23,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.TestExtensions;
     using GenericHost;
     using GenericHost.Abstractions;
-    using GenericHost.InMemoryIntegrationTransport;
     using Microsoft.Extensions.Hosting;
     using Xunit;
     using Xunit.Abstractions;
@@ -29,6 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
     /// <summary>
     /// GenericHost assembly tests
     /// </summary>
+    [SuppressMessage("Analysis", "CA1506", Justification = "For test reasons")]
     public class GenericHostTest : TestBase
     {
         private const string Endpoint1 = nameof(Endpoint1);
@@ -42,51 +44,81 @@ namespace SpaceEngineers.Core.Modules.Test
         {
         }
 
-        [Fact]
-        internal async Task IntegrationContextDecoratorTest()
+        /// <summary> TransportTestData member </summary>
+        /// <returns>Test data</returns>
+        public static IEnumerable<object[]> TransportTestData()
         {
-            var transport = Transport.InMemoryIntegrationTransport();
-            var dependencyContainer = transport.GetFieldValue<IDependencyContainer>("_dependencyContainer");
+            yield return new object[] { Core.GenericHost.InMemoryIntegrationTransport.Transport.InMemoryIntegrationTransport() };
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task IntegrationContextCheckAppliedDecoratorTest(IIntegrationTransport transport)
+        {
+            var transportDependencyContainer = transport.GetPropertyValue<IDependencyContainer>("DependencyContainer");
             var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand));
 
             // 1 - IUbiquitousIntegrationContext
-            Assert.Throws<InvalidOperationException>(() => dependencyContainer.Resolve<IExtendedIntegrationContext>());
-            Assert.Throws<SimpleInjector.ActivationException>(() => dependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage));
-            Assert.Throws<SimpleInjector.ActivationException>(() => dependencyContainer.Resolve<IIntegrationContext>());
-            var ubiquitousIntegrationContext = dependencyContainer.Resolve<IUbiquitousIntegrationContext>();
+            Assert.Throws<InvalidOperationException>(() => transportDependencyContainer.Resolve<IExtendedIntegrationContext>());
+            Assert.Throws<SimpleInjector.ActivationException>(() => transportDependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage));
+            Assert.Throws<SimpleInjector.ActivationException>(() => transportDependencyContainer.Resolve<IIntegrationContext>());
+            var ubiquitousIntegrationContext = transportDependencyContainer.Resolve<IUbiquitousIntegrationContext>();
 
             Assert.NotNull(ubiquitousIntegrationContext);
 
-            var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericHost), nameof(Core.GenericHost.InMemoryIntegrationTransport));
-            var inMemoryUbiquitousIntegrationContextTypeFullName = AssembliesExtensions.BuildName(assemblyName, "Internals", "InMemoryUbiquitousIntegrationContext");
-            var integrationContextType = AssembliesExtensions.FindRequiredType(assemblyName, inMemoryUbiquitousIntegrationContextTypeFullName);
+            var inMemoryTransportAssemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericHost), nameof(Core.GenericHost.InMemoryIntegrationTransport));
+            var inMemoryUbiquitousIntegrationContextTypeFullName = AssembliesExtensions.BuildName(inMemoryTransportAssemblyName, "Internals", "InMemoryUbiquitousIntegrationContext");
+            var integrationContextType = AssembliesExtensions.FindRequiredType(inMemoryTransportAssemblyName, inMemoryUbiquitousIntegrationContextTypeFullName);
 
             var decorators = ubiquitousIntegrationContext.ExtractDecorators().ToList();
             Assert.Single(decorators);
 
-            var actual = decorators.ShowTypes(nameof(IUbiquitousIntegrationContext), Output.WriteLine).Single();
+            var actual = decorators.ShowTypes("#ubiquitous integration context", Output.WriteLine).Single();
             Assert.Equal(integrationContextType, actual);
 
             // 2 - IExtendedIntegrationContext
             var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
-            var endpointOptions = new EndpointOptions(endpointIdentity, typeof(IExecutableEndpoint).Assembly);
+            var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
+            var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
 
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, endpointOptions).Build())
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                /* TODO: assert running endpoint and check IExtendedIntegrationContext */
+                var hostedService = (IHostedService?)host.Services.GetService(typeof(IHostedService));
+                Assert.NotNull(hostedService);
+                var endpoints = hostedService!.GetPropertyValue<IReadOnlyCollection<IGenericEndpoint>>("Endpoints");
+                Assert.Single(endpoints);
+                var endpoint = endpoints.Single();
+                var endpointDependencyContainer = endpoint.GetPropertyValue<IDependencyContainer>("DependencyContainer");
+                Assert.NotNull(endpointDependencyContainer);
+
+                using (endpointDependencyContainer.OpenScope())
+                {
+                    Assert.Throws<InvalidOperationException>(() => endpointDependencyContainer.Resolve<IExtendedIntegrationContext>());
+                    var extendedIntegrationContext = endpointDependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage);
+                    decorators = extendedIntegrationContext.ExtractDecorators().ShowTypes("#extended integration context", Output.WriteLine).ToList();
+
+                    var genericEndpointAssemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint));
+                    var decoratorTypeName = AssembliesExtensions.BuildName(genericEndpointAssemblyName, "Internals", "ExtendedIntegrationContextHeadersMaintenanceDecorator");
+                    var decoratorType = AssembliesExtensions.FindRequiredType(genericEndpointAssemblyName, decoratorTypeName);
+
+                    var contextTypeName = AssembliesExtensions.BuildName(inMemoryTransportAssemblyName, "Internals", "InMemoryIntegrationContext");
+                    var contextType = AssembliesExtensions.FindRequiredType(inMemoryTransportAssemblyName, contextTypeName);
+
+                    var expected = new Type[] { decoratorType, contextType };
+                    Assert.Equal(expected, decorators);
+                }
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
         }
 
-        [Fact]
-        internal void TestExtensionTest()
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal void TestExtensionTest(IIntegrationTransport transport)
         {
-            var transport = Transport.InMemoryIntegrationTransport();
-
             var endpointIdentityRegistration = Fixture.DelegateRegistration(container =>
             {
                 var endpointIdentity = new EndpointIdentity(nameof(TestExtensionTest), 0);
@@ -139,29 +171,21 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        [Fact]
-        internal async Task StartStopRunTest()
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task RunTest(IIntegrationTransport transport)
         {
-            var noneToken = CancellationToken.None;
-
-            using (var startStopHost = BuildHost())
-            {
-                await startStopHost.StartAsync(noneToken).ConfigureAwait(false);
-                await startStopHost.StopAsync(noneToken).ConfigureAwait(false);
-            }
-
-            using (var runHost = BuildHost())
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var runnableHost = BuildHost())
             {
-                await runHost.RunAsync(cts.Token).ConfigureAwait(false);
+                await runnableHost.RunAsync(cts.Token).ConfigureAwait(false);
             }
 
             IHost BuildHost()
             {
-                var transport = Transport.InMemoryIntegrationTransport();
-
                 var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
-                var endpointOptions = new EndpointOptions(endpointIdentity, typeof(IExecutableEndpoint).Assembly);
+                var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
+                var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
 
                 return Host
                     .CreateDefaultBuilder()
@@ -170,29 +194,53 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        [Fact]
-        internal void InMemoryIntegrationTransportBuildTest()
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task StartStopRunTest(IIntegrationTransport transport)
         {
-            var transport = Transport.InMemoryIntegrationTransport();
-            var dependencyContainer = transport.GetFieldValue<IDependencyContainer>("_dependencyContainer");
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var startStopHost = BuildHost())
+            {
+                await startStopHost.StartAsync(cts.Token).ConfigureAwait(false);
+                await startStopHost.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            IHost BuildHost()
+            {
+                var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+                var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
+                var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
+
+                return Host
+                    .CreateDefaultBuilder()
+                    .ConfigureHost(transport, endpointOptions)
+                    .Build();
+            }
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal void InMemoryIntegrationTransportBuildTest(IIntegrationTransport transport)
+        {
+            var dependencyContainer = transport.GetPropertyValue<IDependencyContainer>("DependencyContainer");
             Assert.NotNull(dependencyContainer);
             Assert.Same(transport, dependencyContainer.Resolve<IIntegrationTransport>());
             Assert.Same(transport.IntegrationContext, dependencyContainer.Resolve<IUbiquitousIntegrationContext>());
         }
 
-        [Fact(Timeout = 300_000)]
-        internal async Task SimpleHostTest()
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task SimpleHostTest(IIntegrationTransport transport)
         {
             var expectedCount = 1000;
             var actualCount = 0;
 
-            var transport = Transport.InMemoryIntegrationTransport();
             transport.OnMessage += (_, _) =>
             {
                 Interlocked.Increment(ref actualCount);
             };
 
-            var assembly = typeof(IExecutableEndpoint).Assembly;
+            var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
 
             var handlersRegistration = Fixture.DelegateRegistration(container =>
             {
@@ -214,43 +262,44 @@ namespace SpaceEngineers.Core.Modules.Test
             var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), assembly) { ContainerOptions = getContainerOptions() };
             var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly) { ContainerOptions = getContainerOptions() };
 
-            using var host = Host
-                .CreateDefaultBuilder()
-                .ConfigureHost(transport, options10, options11, options20)
-                .Build();
+            using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, options10, options11, options20).Build())
+            using (var cts = new CancellationTokenSource())
+            {
+                var runningHost = InBackground(token => RunHost(host, token), cts.Token);
 
-            using var cts = new CancellationTokenSource();
+                await InBackground(token => SendInitiationMessages(transport, expectedCount, token), cts.Token).ConfigureAwait(false);
 
-            var runningHost = Task.Run(async () => await host.RunAsync(cts.Token).ConfigureAwait(false), cts.Token);
+                cts.Cancel();
 
-            await SendAndPublishInBackground(transport, expectedCount).ConfigureAwait(false);
-
-            cts.Cancel();
-
-            await runningHost.ConfigureAwait(false);
+                await runningHost.ConfigureAwait(false);
+            }
 
             Output.WriteLine($"{nameof(actualCount)}: {actualCount}");
             Assert.Equal(expectedCount, actualCount);
 
             /* TODO: assert successful delivery to endpoints */
-        }
 
-        private static Task SendAndPublishInBackground(IIntegrationTransport transport, int messagesCount)
-        {
-            return Task.Run(async () =>
+            static Task InBackground(Func<CancellationToken, Task> func, CancellationToken token)
             {
-                for (var i = 0; i < messagesCount; ++i)
+                return Task.Run(() => func(token), token);
+            }
+
+            Task RunHost(IHost host, CancellationToken token)
+            {
+                return host.RunAsync(token);
+            }
+
+            async Task SendInitiationMessages(IIntegrationTransport integrationTransport, int count, CancellationToken token)
+            {
+                for (var i = 0; i < count; i++)
                 {
-                    if (i % 2 == 0)
-                    {
-                        await transport.IntegrationContext.Send(new TestCommand(i), CancellationToken.None).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await transport.IntegrationContext.Publish(new TestEvent(i), CancellationToken.None).ConfigureAwait(false);
-                    }
+                    var operation = i % 2 == 0
+                        ? integrationTransport.IntegrationContext.Send(new TestCommand(i), token)
+                        : integrationTransport.IntegrationContext.Publish(new TestEvent(i), token);
+
+                    await operation.ConfigureAwait(false);
                 }
-            });
+            }
         }
 
         [Component(EnLifestyle.Transient)]

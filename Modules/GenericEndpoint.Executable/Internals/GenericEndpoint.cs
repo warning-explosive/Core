@@ -19,12 +19,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
                                      IExecutableEndpoint,
                                      IMessagePipeline
     {
-        private readonly IDependencyContainer _dependencyContainer;
-        private readonly IEnumerable<IEndpointInitializer> _initializers;
-
         private readonly AsyncManualResetEvent _ready;
         private readonly AsyncCountdownEvent _runningHandlers;
-
         private CancellationTokenSource? _cts;
 
         public GenericEndpoint(
@@ -34,10 +30,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
             IEnumerable<IEndpointInitializer> initializers)
         {
             Identity = endpointIdentity;
-            _dependencyContainer = dependencyContainer;
             IntegrationTypeProvider = integrationTypeProvider;
 
-            _initializers = initializers;
+            DependencyContainer = dependencyContainer;
+            Initializers = initializers;
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new AsyncCountdownEvent(0);
@@ -47,15 +43,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
 
         public IIntegrationTypeProvider IntegrationTypeProvider { get; }
 
+        private IDependencyContainer DependencyContainer { get; }
+
+        private IEnumerable<IEndpointInitializer> Initializers { get; }
+
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
         public async Task InvokeMessageHandler(IntegrationMessage message)
         {
-            await using (_dependencyContainer.OpenScopeAsync())
+            await using (DependencyContainer.OpenScopeAsync())
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(message);
+                var exclusiveContext = DependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(message);
 
-                await _dependencyContainer
+                await DependencyContainer
                     .Resolve<IMessagePipeline>()
                     .Process(exclusiveContext, Token)
                     .ConfigureAwait(false);
@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
             {
                 var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(context.Message.ReflectedType);
 
-                await _dependencyContainer
+                await DependencyContainer
                     .Resolve(handlerServiceType)
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
                     .WithArguments(context.Message.Payload, context, Token)
@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            foreach (var initializer in _initializers)
+            foreach (var initializer in Initializers)
             {
                 await initializer.Initialize(token).ConfigureAwait(false);
             }

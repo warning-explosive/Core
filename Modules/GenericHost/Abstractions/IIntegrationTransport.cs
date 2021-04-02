@@ -1,13 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
-    using GenericEndpoint;
-    using GenericEndpoint.Abstractions;
 
     /// <summary>
     /// Abstraction for integration transport
@@ -21,29 +15,8 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         event EventHandler<IntegrationMessageEventArgs> OnMessage;
 
         /// <summary>
-        /// Manual registration with transport dependencies for endpoints
-        /// </summary>
-        IManualRegistration EndpointInjection { get; }
-
-        /// <summary>
         /// Gets ubiquitous integration context
         /// </summary>
         IUbiquitousIntegrationContext IntegrationContext { get; }
-
-        /// <summary>
-        /// Initialize transport (topology, state, etc...)
-        /// Invokes multiple times for each in-process endpoint
-        /// </summary>
-        /// <param name="endpoints">Generic endpoints</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing initialization operation</returns>
-        Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token);
-
-        /// <summary>
-        /// Dispatch incoming message to endpoint
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <returns>Running operation</returns>
-        Task DispatchToEndpoint(IntegrationMessage message);
     }
 }

@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public async Task Process(IExtendedIntegrationContext context, CancellationToken token)
+        public async Task Process(IAdvancedIntegrationContext context, CancellationToken token)
         {
             await Decoratee.Process(context, token).ConfigureAwait(false);
 

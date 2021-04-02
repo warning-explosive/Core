@@ -7,10 +7,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using GenericEndpoint;
 
     /// <summary>
-    /// Extended integration context
+    /// Advanced integration context
     /// Use to pass it in message processing pipeline
     /// </summary>
-    public interface IExtendedIntegrationContext : IIntegrationContext,
+    public interface IAdvancedIntegrationContext : IIntegrationContext,
                                                    IInitializable<IntegrationMessage>,
                                                    IResolvable
     {

@@ -11,34 +11,34 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using Basics;
 
     [Component(EnLifestyle.Scoped)]
-    internal class IntegrationUnitOfWork : AsyncUnitOfWork<IExtendedIntegrationContext>,
+    internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
                                            IIntegrationUnitOfWork
     {
-        private IEnumerable<IUnitOfWorkSubscriber<IExtendedIntegrationContext>> _subscribers;
+        private IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> _subscribers;
 
-        public IntegrationUnitOfWork(IEnumerable<IUnitOfWorkSubscriber<IExtendedIntegrationContext>> subscribers)
+        public IntegrationUnitOfWork(IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> subscribers)
         {
             _subscribers = subscribers;
         }
 
-        protected override Task Start(IExtendedIntegrationContext context, CancellationToken token)
+        protected override Task Start(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return ExecuteSubscribers(_subscribers, s => s.OnStart(context, token));
         }
 
-        protected override Task Commit(IExtendedIntegrationContext context, CancellationToken token)
+        protected override Task Commit(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return ExecuteSubscribers(_subscribers.Reverse(), s => s.OnCommit(context, token));
         }
 
-        protected override Task Rollback(IExtendedIntegrationContext context, Exception? exception, CancellationToken token)
+        protected override Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
         {
             return ExecuteSubscribers(_subscribers.Reverse(), s => s.OnRollback(context, token));
         }
 
         private static Task ExecuteSubscribers(
-            IEnumerable<IUnitOfWorkSubscriber<IExtendedIntegrationContext>> subscribers,
-            Func<IUnitOfWorkSubscriber<IExtendedIntegrationContext>, Task> accessor)
+            IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> subscribers,
+            Func<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>, Task> accessor)
         {
             return subscribers.Select(accessor).WhenAll();
         }

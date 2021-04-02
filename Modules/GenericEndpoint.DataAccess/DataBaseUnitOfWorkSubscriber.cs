@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
     using Core.DataAccess.Contract.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IExtendedIntegrationContext>
+    internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>
     {
         private readonly IDatabaseTransactionProvider _databaseTransactionProvider;
 
@@ -17,17 +17,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
             _databaseTransactionProvider = databaseTransactionProvider;
         }
 
-        public Task OnStart(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnStart(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return _databaseTransactionProvider.OpenTransaction(token);
         }
 
-        public Task OnCommit(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnCommit(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return _databaseTransactionProvider.Commit(token);
         }
 
-        public Task OnRollback(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return _databaseTransactionProvider.Rollback(token);
         }

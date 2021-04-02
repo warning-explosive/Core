@@ -23,6 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.TestExtensions;
     using GenericHost;
     using GenericHost.Abstractions;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Xunit;
     using Xunit.Abstractions;
@@ -59,8 +60,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand));
 
             // 1 - IUbiquitousIntegrationContext
-            Assert.Throws<InvalidOperationException>(() => transportDependencyContainer.Resolve<IExtendedIntegrationContext>());
-            Assert.Throws<SimpleInjector.ActivationException>(() => transportDependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage));
+            Assert.Throws<InvalidOperationException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+            Assert.Throws<SimpleInjector.ActivationException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
             Assert.Throws<SimpleInjector.ActivationException>(() => transportDependencyContainer.Resolve<IIntegrationContext>());
             var ubiquitousIntegrationContext = transportDependencyContainer.Resolve<IUbiquitousIntegrationContext>();
 
@@ -76,7 +77,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var actual = decorators.ShowTypes("#ubiquitous integration context", Output.WriteLine).Single();
             Assert.Equal(integrationContextType, actual);
 
-            // 2 - IExtendedIntegrationContext
+            // 2 - IAdvancedIntegrationContext
             var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
             var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
@@ -96,12 +97,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 using (endpointDependencyContainer.OpenScope())
                 {
-                    Assert.Throws<InvalidOperationException>(() => endpointDependencyContainer.Resolve<IExtendedIntegrationContext>());
-                    var extendedIntegrationContext = endpointDependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(integrationMessage);
-                    decorators = extendedIntegrationContext.ExtractDecorators().ShowTypes("#extended integration context", Output.WriteLine).ToList();
+                    Assert.Throws<InvalidOperationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
+                    decorators = advancedIntegrationContext.ExtractDecorators().ShowTypes("#extended integration context", Output.WriteLine).ToList();
 
                     var genericEndpointAssemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint));
-                    var decoratorTypeName = AssembliesExtensions.BuildName(genericEndpointAssemblyName, "Internals", "ExtendedIntegrationContextHeadersMaintenanceDecorator");
+                    var decoratorTypeName = AssembliesExtensions.BuildName(genericEndpointAssemblyName, "Internals", "AdvancedIntegrationContextHeadersMaintenanceDecorator");
                     var decoratorType = AssembliesExtensions.FindRequiredType(genericEndpointAssemblyName, decoratorTypeName);
 
                     var contextTypeName = AssembliesExtensions.BuildName(inMemoryTransportAssemblyName, "Internals", "InMemoryIntegrationContext");
@@ -132,7 +133,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var manualRegistrations = new IManualRegistration[]
             {
-                transport.EndpointInjection,
+                ((IAdvancedIntegrationTransport)transport).Injection,
                 endpointIdentityRegistration,
                 handlersRegistration
             };
@@ -232,12 +233,12 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(TransportTestData))]
         internal async Task SimpleHostTest(IIntegrationTransport transport)
         {
-            var expectedCount = 1000;
-            var actualCount = 0;
+            var expectedMessagesCount = 1000;
+            var actualMessagesCount = 0;
 
             transport.OnMessage += (_, _) =>
             {
-                Interlocked.Increment(ref actualCount);
+                Interlocked.Increment(ref actualMessagesCount);
             };
 
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
@@ -262,22 +263,30 @@ namespace SpaceEngineers.Core.Modules.Test
             var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), assembly) { ContainerOptions = getContainerOptions() };
             var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly) { ContainerOptions = getContainerOptions() };
 
+            IReadOnlyCollection<Exception> dispatchingErrors;
+
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, options10, options11, options20).Build())
             using (var cts = new CancellationTokenSource())
             {
                 var runningHost = InBackground(token => RunHost(host, token), cts.Token);
 
-                await InBackground(token => SendInitiationMessages(transport, expectedCount, token), cts.Token).ConfigureAwait(false);
+                await InBackground(token => SendInitiationMessages(transport, expectedMessagesCount, token), cts.Token).ConfigureAwait(false);
+
+                dispatchingErrors = host.Services.GetRequiredService<IHostStatistics>().DispatchingErrors;
 
                 cts.Cancel();
 
                 await runningHost.ConfigureAwait(false);
             }
 
-            Output.WriteLine($"{nameof(actualCount)}: {actualCount}");
-            Assert.Equal(expectedCount, actualCount);
+            Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
+            Assert.Equal(expectedMessagesCount, actualMessagesCount);
 
-            /* TODO: assert successful delivery to endpoints */
+            Output.WriteLine($"{nameof(IHostStatistics.DispatchingErrors)}Count: {dispatchingErrors.Count}");
+            if (dispatchingErrors.Count > 0) { Output.WriteLine(dispatchingErrors.First().ToString()); }
+            Assert.Equal(0, dispatchingErrors.Count);
+
+            /* TODO: assert error queue */
 
             static Task InBackground(Func<CancellationToken, Task> func, CancellationToken token)
             {

@@ -11,15 +11,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using GenericEndpoint;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ExtendedIntegrationContextHeadersMaintenanceDecorator : IExtendedIntegrationContext,
-                                                                           IDecorator<IExtendedIntegrationContext>
+    internal class AdvancedIntegrationContextHeadersMaintenanceDecorator : IAdvancedIntegrationContext,
+                                                                           IDecorator<IAdvancedIntegrationContext>
     {
-        public ExtendedIntegrationContextHeadersMaintenanceDecorator(IExtendedIntegrationContext decoratee)
+        public AdvancedIntegrationContextHeadersMaintenanceDecorator(IAdvancedIntegrationContext decoratee)
         {
             Decoratee = decoratee;
         }
 
-        public IExtendedIntegrationContext Decoratee { get; }
+        public IAdvancedIntegrationContext Decoratee { get; }
 
         public IntegrationMessage Message => Decoratee.Message;
 

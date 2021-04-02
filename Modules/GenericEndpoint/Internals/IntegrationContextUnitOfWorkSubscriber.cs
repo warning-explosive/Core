@@ -7,19 +7,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoWiring.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IExtendedIntegrationContext>
+    internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>
     {
-        public Task OnStart(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnStart(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }
 
-        public Task OnCommit(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnCommit(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return context.DeliverAll(token);
         }
 
-        public Task OnRollback(IExtendedIntegrationContext context, CancellationToken token)
+        public Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }

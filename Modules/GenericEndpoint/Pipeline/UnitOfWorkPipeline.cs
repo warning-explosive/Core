@@ -18,12 +18,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(IExtendedIntegrationContext context, CancellationToken token)
+        public Task Process(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return context.UnitOfWork.StartTransaction(context, ExecuteWithinTransaction, true, token);
         }
 
-        private Task ExecuteWithinTransaction(IExtendedIntegrationContext context, CancellationToken token)
+        private Task ExecuteWithinTransaction(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return Decoratee.Process(context, token);
         }

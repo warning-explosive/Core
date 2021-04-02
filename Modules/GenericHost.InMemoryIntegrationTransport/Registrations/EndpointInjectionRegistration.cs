@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Registrat
             container.RegisterInstance<IIntegrationTransport>(_transport);
             container.RegisterInstance<InMemoryIntegrationTransport>(_transport);
 
-            container.Register<IExtendedIntegrationContext, InMemoryIntegrationContext>();
+            container.Register<IAdvancedIntegrationContext, InMemoryIntegrationContext>();
             container.Register<InMemoryIntegrationContext, InMemoryIntegrationContext>();
 
             container.Register<IIntegrationMessageFactory, IntegrationMessageFactory>();

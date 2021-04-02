@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
         {
             await using (DependencyContainer.OpenScopeAsync())
             {
-                var exclusiveContext = DependencyContainer.Resolve<IExtendedIntegrationContext, IntegrationMessage>(message);
+                var exclusiveContext = DependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
 
                 await DependencyContainer
                     .Resolve<IMessagePipeline>()
@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
             }
         }
 
-        public async Task Process(IExtendedIntegrationContext context, CancellationToken token)
+        public async Task Process(IAdvancedIntegrationContext context, CancellationToken token)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 

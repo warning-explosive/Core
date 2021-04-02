@@ -41,9 +41,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Abstractions\IIntegrationContext.cs">
-      <DependentUpon>IExtendedIntegrationContext.cs</DependentUpon>
-    </Compile>
     <Compile Update="Abstractions\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
@@ -52,6 +49,9 @@
     </Compile>
     <Compile Update="Abstractions\IUnitOfWorkSubscriber.cs">
       <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IAdvancedIntegrationContext.cs">
+      <DependentUpon>IIntegrationContext.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     /// <summary>
     /// IIntegrationUnitOfWork abstraction
     /// </summary>
-    public interface IIntegrationUnitOfWork : IAsyncUnitOfWork<IExtendedIntegrationContext>,
+    public interface IIntegrationUnitOfWork : IAsyncUnitOfWork<IAdvancedIntegrationContext>,
                                               IResolvable
     {
     }

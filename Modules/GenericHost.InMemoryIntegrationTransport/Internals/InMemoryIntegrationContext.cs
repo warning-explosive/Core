@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
     using GenericEndpoint.Contract.Abstractions;
 
     [Component(EnLifestyle.Scoped, EnComponentKind.Unregistered)]
-    internal class InMemoryIntegrationContext : IExtendedIntegrationContext
+    internal class InMemoryIntegrationContext : IAdvancedIntegrationContext
     {
         private readonly InMemoryIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;

@@ -29,12 +29,15 @@ namespace SpaceEngineers.Core.GenericHost
             params EndpointOptions[] endpointOptions)
         {
             ValidateEndpoints(endpointOptions);
+            var advancedTransport = ValidateTransport(transport);
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
                 ValidateConfiguration(ctx);
 
-                serviceCollection.AddSingleton(_ => transport);
+                serviceCollection.AddSingleton<IAdvancedIntegrationTransport>(_ => advancedTransport);
+                serviceCollection.AddSingleton<IEndpointInstanceSelectionBehavior>(_ => new EndpointInstanceSelectionBehavior());
+                serviceCollection.AddSingleton<IHostStatistics>(_ => new HostStatistics());
                 serviceCollection.AddHostedService(BuildHostedService);
             });
 
@@ -42,9 +45,21 @@ namespace SpaceEngineers.Core.GenericHost
             {
                 return new TransportHostedService(
                     serviceProvider.GetRequiredService<ILogger<TransportHostedService>>(),
-                    serviceProvider.GetRequiredService<IIntegrationTransport>(),
+                    serviceProvider.GetRequiredService<IAdvancedIntegrationTransport>(),
+                    serviceProvider.GetRequiredService<IEndpointInstanceSelectionBehavior>(),
+                    serviceProvider.GetRequiredService<IHostStatistics>(),
                     endpointOptions);
             }
+        }
+
+        private static IAdvancedIntegrationTransport ValidateTransport(IIntegrationTransport transport)
+        {
+            if (transport is IAdvancedIntegrationTransport advancedTransport)
+            {
+                return advancedTransport;
+            }
+
+            throw new InvalidOperationException($"Integration transport should implement {nameof(IAdvancedIntegrationTransport)} abstraction");
         }
 
         private static void ValidateEndpoints(EndpointOptions[] endpointOptions)

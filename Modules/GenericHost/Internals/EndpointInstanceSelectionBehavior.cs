@@ -1,25 +1,18 @@
-namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Defaults
+namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
-    /// <summary>
-    /// DefaultEndpointInstanceSelectionBehavior
-    /// </summary>
-    [Component(EnLifestyle.Singleton)]
-    public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
+    internal class EndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        /// <inheritdoc />
         public IGenericEndpoint SelectInstance(
             IntegrationMessage message,
             IReadOnlyCollection<IGenericEndpoint> endpoints)

@@ -36,4 +36,9 @@
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Abstractions\IAdvancedIntegrationTransport.cs">
+        <DependentUpon>IIntegrationTransport.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

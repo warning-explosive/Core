@@ -17,16 +17,16 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
             var endpointIdentity = new EndpointIdentity("mock_endpoint", 0);
             container.RegisterInstance(endpointIdentity);
 
-            container.Register<IExtendedIntegrationContext, ExtendedIntegrationContextMock>();
-            container.Register<ExtendedIntegrationContextMock, ExtendedIntegrationContextMock>();
+            container.Register<IAdvancedIntegrationContext, AdvancedIntegrationContextMock>();
+            container.Register<AdvancedIntegrationContextMock, AdvancedIntegrationContextMock>();
         }
 
         [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
-        private class ExtendedIntegrationContextMock : IExtendedIntegrationContext
+        private class AdvancedIntegrationContextMock : IAdvancedIntegrationContext
         {
             private IntegrationMessage? _message;
 
-            public ExtendedIntegrationContextMock(
+            public AdvancedIntegrationContextMock(
                 EndpointIdentity endpointIdentity,
                 IIntegrationUnitOfWork unitOfWork)
             {

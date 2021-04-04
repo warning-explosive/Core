@@ -56,6 +56,36 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 120_000)]
         [MemberData(nameof(TransportTestData))]
+        internal async Task SameTransportTest(IIntegrationTransport transport)
+        {
+            var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
+
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), assembly);
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly);
+
+            var transportIsSame = false;
+
+            using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, options10, options20).Build())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                transportIsSame = host.Services
+                    .GetRequiredService<IHostedService>()
+                    .GetPropertyValue<IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>("Endpoints")
+                    .SelectMany(logicalGroup => logicalGroup.Value)
+                    .Select(endpoint => endpoint.GetPropertyValue<IDependencyContainer>("DependencyContainer"))
+                    .Select(container => container.Resolve<IIntegrationTransport>())
+                    .All(endpointTransport => ReferenceEquals(transport, endpointTransport));
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            Assert.True(transportIsSame);
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
         internal async Task IntegrationContextCheckAppliedDecoratorTest(IIntegrationTransport transport)
         {
             var transportDependencyContainer = transport.GetPropertyValue<IDependencyContainer>("DependencyContainer");

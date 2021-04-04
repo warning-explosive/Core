@@ -30,7 +30,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return _typeProvider
                 .OurTypes
                 .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
-                               && typeof(IIntegrationMessage) != type);
+                               && typeof(IIntegrationMessage) != type
+                               && typeof(IIntegrationCommand) != type
+                               && typeof(IIntegrationEvent) != type
+                               && typeof(IIntegrationQuery<>) != type.GenericTypeDefinitionOrSelf());
         }
 
         public IEnumerable<Type> EndpointCommands()

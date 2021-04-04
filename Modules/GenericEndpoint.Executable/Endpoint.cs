@@ -34,16 +34,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
 
         private static IDependencyContainer DependencyContainerPerEndpoint(EndpointOptions endpointOptions)
         {
-            var containerOptions = endpointOptions.ContainerOptions ?? new DependencyContainerOptions();
+            endpointOptions.ContainerOptions ??= new DependencyContainerOptions();
 
-            var registrations = new List<IManualRegistration>(containerOptions.ManualRegistrations)
-            {
-                new GenericEndpointIdentityManualRegistration(endpointOptions.Identity)
-            };
+            endpointOptions.ContainerOptions.ManualRegistrations
+                = new List<IManualRegistration>(endpointOptions.ContainerOptions.ManualRegistrations)
+                {
+                    new GenericEndpointIdentityManualRegistration(endpointOptions.Identity)
+                };
 
-            containerOptions.ManualRegistrations = registrations;
-
-            return DependencyContainer.CreateBoundedAbove(containerOptions, endpointOptions.AboveAssemblies.ToArray());
+            return DependencyContainer.CreateBoundedAbove(endpointOptions.ContainerOptions, endpointOptions.AboveAssemblies.ToArray());
         }
     }
 }

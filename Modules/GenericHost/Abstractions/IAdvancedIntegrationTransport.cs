@@ -27,6 +27,6 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         /// <param name="endpoints">Generic endpoints</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing initialization operation</returns>
-        Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token);
+        Task Initialize(IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> endpoints, CancellationToken token);
     }
 }

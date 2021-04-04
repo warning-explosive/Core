@@ -3,12 +3,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Contexts;
-    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Basics;
     using Core.SettingsManager.Abstractions;
@@ -16,6 +14,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Contract.Abstractions;
     using Json.Abstractions;
+    using Mocks;
     using PathResolver;
     using Xunit;
     using Xunit.Abstractions;
@@ -118,15 +117,16 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalTypes = new[]
             {
                 typeof(TestJsonSettings),
-                typeof(TestYamlSettings)
+                typeof(TestYamlSettings),
+                typeof(OurTypesTypeProviderDecorator)
             };
 
-            var extendedTypeProvider = new ExtendedTestTypeProvider(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
+            var typeProvider = new OurTypesTypeProviderDecorator(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var overrides = Fixture.DelegateRegistration(container =>
             {
                 container
-                    .RegisterInstance(typeof(ITypeProvider), extendedTypeProvider)
-                    .RegisterInstance(extendedTypeProvider.GetType(), extendedTypeProvider);
+                    .RegisterInstance(typeof(ITypeProvider), typeProvider)
+                    .RegisterInstance(typeProvider.GetType(), typeProvider);
             });
 
             var options = new DependencyContainerOptions
@@ -163,7 +163,7 @@ namespace SpaceEngineers.Core.Modules.Test
             bool TypeSatisfies(Type type)
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
-                                || type == extendedTypeProvider.GetType();
+                                || type == typeof(OurTypesTypeProviderDecorator);
 
                 if (!satisfies)
                 {
@@ -185,33 +185,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private class TestJsonSettings : IJsonSettings
         {
-        }
-
-        [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
-        private class ExtendedTestTypeProvider : ITypeProvider
-        {
-            private readonly ITypeProvider _decoratee;
-            private readonly IReadOnlyCollection<Type> _additionalTypes;
-
-            public ExtendedTestTypeProvider(
-                ITypeProvider decoratee,
-                IReadOnlyCollection<Type> additionalTypes)
-            {
-                _decoratee = decoratee;
-                _additionalTypes = additionalTypes;
-            }
-
-            public IReadOnlyCollection<Assembly> AllLoadedAssemblies => _decoratee.AllLoadedAssemblies;
-
-            public IReadOnlyCollection<Type> AllLoadedTypes => _decoratee.AllLoadedTypes.Concat(_additionalTypes).ToList();
-
-            public IReadOnlyCollection<Assembly> OurAssemblies => _decoratee.OurAssemblies;
-
-            public IReadOnlyCollection<Type> OurTypes => _decoratee.OurTypes;
-
-            public IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TypeCache => _decoratee.TypeCache;
-
-            public bool IsOurType(Type type) => _decoratee.IsOurType(type);
         }
     }
 }

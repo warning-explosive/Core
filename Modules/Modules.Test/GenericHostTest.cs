@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
@@ -25,6 +26,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericHost.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Mocks;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -78,18 +80,21 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Equal(integrationContextType, actual);
 
             // 2 - IAdvancedIntegrationContext
-            var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+            var endpointIdentity = new EndpointIdentity(nameof(IntegrationContextCheckAppliedDecoratorTest), 0);
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
             var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
 
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, endpointOptions).Build())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 var hostedService = (IHostedService?)host.Services.GetService(typeof(IHostedService));
                 Assert.NotNull(hostedService);
-                var endpoints = hostedService!.GetPropertyValue<IReadOnlyCollection<IGenericEndpoint>>("Endpoints");
+                var endpoints = hostedService!
+                    .GetPropertyValue<IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>("Endpoints")
+                    .SelectMany(grp => grp.Value)
+                    .ToList();
                 Assert.Single(endpoints);
                 var endpoint = endpoints.Single();
                 var endpointDependencyContainer = endpoint.GetPropertyValue<IDependencyContainer>("DependencyContainer");
@@ -156,8 +161,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .OnMessage(new TestQuery(43))
                 .ShouldNotSend<IIntegrationCommand>()
                 .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<TestQuery, TestQueryReply>()
-                .Replied<TestQueryReply>(reply => reply.Id == 43)
+                .ShouldNotRequest<TestQuery, TestReply>()
+                .Replied<TestReply>(reply => reply.Id == 43)
                 .Invoke();
 
             MessageHandlerTestBuilder<T> ShouldNotProduceMessages<T>(MessageHandlerTestBuilder<T> builder)
@@ -167,7 +172,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .ShouldProduceNothing()
                     .ShouldNotSend<IIntegrationCommand>()
                     .ShouldNotPublish<IIntegrationEvent>()
-                    .ShouldNotRequest<TestQuery, TestQueryReply>()
+                    .ShouldNotRequest<TestQuery, TestReply>()
                     .ShouldNotReply<IIntegrationMessage>();
             }
         }
@@ -176,15 +181,15 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(TransportTestData))]
         internal async Task RunTest(IIntegrationTransport transport)
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             using (var runnableHost = BuildHost())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 await runnableHost.RunAsync(cts.Token).ConfigureAwait(false);
             }
 
             IHost BuildHost()
             {
-                var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+                var endpointIdentity = new EndpointIdentity(nameof(RunTest), 0);
                 var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
                 var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
 
@@ -199,8 +204,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(TransportTestData))]
         internal async Task StartStopRunTest(IIntegrationTransport transport)
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             using (var startStopHost = BuildHost())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
                 await startStopHost.StartAsync(cts.Token).ConfigureAwait(false);
                 await startStopHost.StopAsync(cts.Token).ConfigureAwait(false);
@@ -208,7 +213,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             IHost BuildHost()
             {
-                var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+                var endpointIdentity = new EndpointIdentity(nameof(StartStopRunTest), 0);
                 var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
                 var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
 
@@ -243,6 +248,37 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
 
+            var additionalTypes = new[]
+            {
+                typeof(TestCommand),
+                typeof(TestEvent),
+                typeof(TestQuery),
+                typeof(TestReply),
+                typeof(TestMessageHandler)
+            };
+
+            var endpointIdentity = new EndpointIdentity(nameof(SimpleHostTest), nameof(SimpleHostTest));
+            var identityRegistration = Fixture.DelegateRegistration(container =>
+            {
+                container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity);
+            });
+            var options = new DependencyContainerOptions
+            {
+                ManualRegistrations = new[]
+                {
+                    identityRegistration,
+                    ((IAdvancedIntegrationTransport)transport).Injection
+                }
+            };
+            var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
+            var typeProvider = new OurTypesTypeProviderDecorator(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
+            var overrides = Fixture.DelegateRegistration(container =>
+            {
+                container
+                    .RegisterInstance(typeof(ITypeProvider), typeProvider)
+                    .RegisterInstance(typeProvider.GetType(), typeProvider);
+            });
+
             var handlersRegistration = Fixture.DelegateRegistration(container =>
             {
                 container.Register(typeof(IMessageHandler<>), typeof(TestMessageHandler));
@@ -252,10 +288,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 return new DependencyContainerOptions
                 {
-                    ManualRegistrations = new[]
-                    {
-                        handlersRegistration
-                    }
+                    ManualRegistrations = new[] { handlersRegistration },
+                    Overrides = new[] { overrides }
                 };
             });
 
@@ -266,37 +300,27 @@ namespace SpaceEngineers.Core.Modules.Test
             IReadOnlyCollection<Exception> dispatchingErrors;
 
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, options10, options11, options20).Build())
-            using (var cts = new CancellationTokenSource())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                var runningHost = InBackground(token => RunHost(host, token), cts.Token);
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                await InBackground(token => SendInitiationMessages(transport, expectedMessagesCount, token), cts.Token).ConfigureAwait(false);
+                await SendInitiationMessages(transport, expectedMessagesCount, cts.Token).ConfigureAwait(false);
 
                 dispatchingErrors = host.Services.GetRequiredService<IHostStatistics>().DispatchingErrors;
 
-                cts.Cancel();
+                await Task.Delay(3000, cts.Token).ConfigureAwait(false);
 
-                await runningHost.ConfigureAwait(false);
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
 
             Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
             Assert.Equal(expectedMessagesCount, actualMessagesCount);
 
             Output.WriteLine($"{nameof(IHostStatistics.DispatchingErrors)}Count: {dispatchingErrors.Count}");
-            if (dispatchingErrors.Count > 0) { Output.WriteLine(dispatchingErrors.First().ToString()); }
+            if (dispatchingErrors.Count > 0) { dispatchingErrors.Each(ex => Output.WriteLine(ex.ToString())); }
             Assert.Equal(0, dispatchingErrors.Count);
 
             /* TODO: assert error queue */
-
-            static Task InBackground(Func<CancellationToken, Task> func, CancellationToken token)
-            {
-                return Task.Run(() => func(token), token);
-            }
-
-            Task RunHost(IHost host, CancellationToken token)
-            {
-                return host.RunAsync(token);
-            }
 
             async Task SendInitiationMessages(IIntegrationTransport integrationTransport, int count, CancellationToken token)
             {
@@ -328,7 +352,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 return message.Id % 2 == 0
                     ? Task.CompletedTask
-                    : context.Reply(message, new TestQueryReply(message.Id), token);
+                    : context.Reply(message, new TestReply(message.Id), token);
             }
         }
 
@@ -349,7 +373,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [OwnedBy(Endpoint1)]
-        private class TestQuery : IIntegrationQuery<TestQueryReply>
+        private class TestQuery : IIntegrationQuery<TestReply>
         {
             public TestQuery(int id)
             {
@@ -364,9 +388,9 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TestQueryReply : IIntegrationMessage
+        private class TestReply : IIntegrationMessage
         {
-            public TestQueryReply(int id)
+            public TestReply(int id)
             {
                 Id = id;
             }

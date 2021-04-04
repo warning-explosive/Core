@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 
         public IUbiquitousIntegrationContext IntegrationContext => DependencyContainer.Resolve<IUbiquitousIntegrationContext>();
 
-        public Task Initialize(IEnumerable<IGenericEndpoint> endpoints, CancellationToken token)
+        public Task Initialize(IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> endpoints, CancellationToken token)
         {
             _manualResetEvent.Set();
 

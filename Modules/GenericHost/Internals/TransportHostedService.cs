@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             SelectionBehavior = selectionBehavior;
             Statistics = statistics;
             EndpointOptions = endpointOptions;
-            Endpoints = Array.Empty<IGenericEndpoint>();
+            Endpoints = new Dictionary<string, IReadOnlyCollection<IGenericEndpoint>>();
 
             _topologyMap = new Dictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
             _autoResetEvent = new AsyncAutoResetEvent(false);
@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private IReadOnlyCollection<EndpointOptions> EndpointOptions { get; }
 
-        private IReadOnlyCollection<IGenericEndpoint> Endpoints { get; set; }
+        private IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> Endpoints { get; set; }
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
@@ -67,10 +67,14 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
-            Endpoints = await EndpointOptions
-                .Select(options => Endpoint.StartAsync(InjectTransport(options, Transport), Token))
-                .WhenAll()
-                .ConfigureAwait(false);
+            Endpoints = (await EndpointOptions
+                    .Select(options => Endpoint.StartAsync(InjectTransport(options, Transport), Token))
+                    .WhenAll()
+                    .ConfigureAwait(false))
+                .GroupBy(endpoint => endpoint.Identity.LogicalName)
+                .ToDictionary(grp => grp.Key,
+                    grp => grp.ToList() as IReadOnlyCollection<IGenericEndpoint>,
+                    StringComparer.OrdinalIgnoreCase);
 
             _topologyMap = InitializeTopologyMap(Endpoints);
 
@@ -128,9 +132,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return options;
         }
 
-        private static IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> InitializeTopologyMap(IEnumerable<IGenericEndpoint> endpoints)
+        private static IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> InitializeTopologyMap(
+            IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> endpoints)
         {
             return endpoints
+                .SelectMany(grp => grp.Value)
                 .SelectMany(Messages)
                 .GroupBy(pair => pair.MessageType)
                 .ToDictionary(grp => grp.Key,

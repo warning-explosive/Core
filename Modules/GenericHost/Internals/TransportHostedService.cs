@@ -84,6 +84,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Logger.Information(Resources.WaitingForIncomingMessages, Transport);
 
             Transport.OnMessage += OnMessage;
+            Transport.OnError += OnError;
             _messageProcessingTask = StartMessageProcessing();
         }
 
@@ -99,6 +100,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 // Unsubscribe from transport event
                 Transport.OnMessage -= OnMessage;
+                Transport.OnError -= OnError;
 
                 // Signal cancellation to the executing method
                 _cts.Cancel();
@@ -165,7 +167,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 {
                     await ExecutionExtensions
                         .TryAsync(() => DispatchToEndpoint(args.GeneralMessage))
-                        .Invoke(ex => OnError(ex, args.GeneralMessage))
+                        .Invoke(ex => OnError(args.GeneralMessage, ex))
                         .ConfigureAwait(false);
                 }
             }
@@ -195,19 +197,24 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(message.DeepCopy());
         }
 
-        private Task OnError(Exception exception, IntegrationMessage message)
-        {
-            Statistics.Register(exception);
-
-            Logger.Error(exception, "Transport error on message: {0} {1}", message.ReflectedType, message.Payload);
-
-            return Task.CompletedTask;
-        }
-
         private void OnMessage(object? sender, IntegrationMessageEventArgs args)
         {
             _queue.Enqueue(args);
             _autoResetEvent.Set();
+        }
+
+        private void OnError(object? sender, FailedIntegrationMessageEventArgs args)
+        {
+            OnError(args.GeneralMessage, args.Exception);
+        }
+
+        private Task OnError(IntegrationMessage message, Exception exception)
+        {
+            Statistics.RegisterFailure(message, exception);
+
+            Logger.Error(exception, "An error occurred while processing message: {0} {1}", message.ReflectedType, message.Payload);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
@@ -28,13 +29,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         {
             return ExecutionExtensions
                 .TryAsync(() => Decoratee.Process(context, token))
-                .Invoke(_ => OnError(context, token));
+                .Invoke(ex => OnError(context, ex, token));
         }
 
-        private Task OnError(IAdvancedIntegrationContext context, CancellationToken token)
+        private Task OnError(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
         {
             // TODO: log error
-            return _retryPolicy.Apply(context, token);
+            return _retryPolicy.Apply(context, exception, token);
         }
     }
 }

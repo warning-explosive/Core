@@ -67,6 +67,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return Decoratee.Retry(dueTime, token);
         }
 
+        public Task Refuse(Exception exception, CancellationToken token)
+        {
+            return Decoratee.Refuse(exception, token);
+        }
+
         public Task DeliverAll(CancellationToken token)
         {
             return Decoratee.DeliverAll(token);

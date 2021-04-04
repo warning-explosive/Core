@@ -39,6 +39,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         Task Retry(TimeSpan dueTime, CancellationToken token);
 
         /// <summary>
+        /// Refuses further message processing and moves message to errors
+        /// </summary>
+        /// <param name="exception">Processing error</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing reject operation</returns>
+        Task Refuse(Exception exception, CancellationToken token);
+
+        /// <summary>
         /// Delivers all messages which have buffered during message processing
         /// </summary>
         /// <param name="token">Cancellation token</param>

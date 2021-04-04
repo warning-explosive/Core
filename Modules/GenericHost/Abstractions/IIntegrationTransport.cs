@@ -15,6 +15,12 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
         event EventHandler<IntegrationMessageEventArgs> OnMessage;
 
         /// <summary>
+        /// OnError event
+        /// Fires when message processing eventually fails after all retry attempts
+        /// </summary>
+        event EventHandler<FailedIntegrationMessageEventArgs> OnError;
+
+        /// <summary>
         /// Gets ubiquitous integration context
         /// </summary>
         IUbiquitousIntegrationContext IntegrationContext { get; }

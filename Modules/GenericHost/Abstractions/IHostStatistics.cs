@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
 {
     using System;
     using System.Collections.Generic;
+    using GenericEndpoint;
 
     /// <summary>
     /// ITransportStatistics abstraction
@@ -9,15 +10,16 @@ namespace SpaceEngineers.Core.GenericHost.Abstractions
     public interface IHostStatistics
     {
         /// <summary>
-        /// Dispatching errors
+        /// Failed messages
         /// </summary>
-        IReadOnlyCollection<Exception> DispatchingErrors { get; }
+        IReadOnlyCollection<FailedMessage> FailedMessages { get; }
 
         /// <summary>
-        /// Registers dispatching exception
+        /// Registers failed message
         /// </summary>
-        /// <param name="exception">Dispatching exception</param>
+        /// <param name="message">Integration message that caused the error</param>
+        /// <param name="exception">Processing error</param>
         /// <returns>IHostStatistics</returns>
-        public IHostStatistics Register(Exception exception);
+        public IHostStatistics RegisterFailure(IntegrationMessage message, Exception exception);
     }
 }

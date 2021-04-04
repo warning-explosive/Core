@@ -270,10 +270,16 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var expectedMessagesCount = 1000;
             var actualMessagesCount = 0;
+            var actualRefusedMessagesCount = 0;
 
             transport.OnMessage += (_, _) =>
             {
                 Interlocked.Increment(ref actualMessagesCount);
+            };
+
+            transport.OnError += (_, _) =>
+            {
+                Interlocked.Increment(ref actualRefusedMessagesCount);
             };
 
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
@@ -301,7 +307,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
             };
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
-            var typeProvider = new OurTypesTypeProviderDecorator(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
+            var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var overrides = Fixture.DelegateRegistration(container =>
             {
                 container
@@ -327,7 +333,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), assembly) { ContainerOptions = getContainerOptions() };
             var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly) { ContainerOptions = getContainerOptions() };
 
-            IReadOnlyCollection<Exception> dispatchingErrors;
+            IReadOnlyCollection<FailedMessage> failedMessages;
 
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, options10, options11, options20).Build())
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
@@ -336,7 +342,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await SendInitiationMessages(transport, expectedMessagesCount, cts.Token).ConfigureAwait(false);
 
-                dispatchingErrors = host.Services.GetRequiredService<IHostStatistics>().DispatchingErrors;
+                failedMessages = host.Services.GetRequiredService<IHostStatistics>().FailedMessages;
 
                 await Task.Delay(3000, cts.Token).ConfigureAwait(false);
 
@@ -346,11 +352,12 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
             Assert.Equal(expectedMessagesCount, actualMessagesCount);
 
-            Output.WriteLine($"{nameof(IHostStatistics.DispatchingErrors)}Count: {dispatchingErrors.Count}");
-            if (dispatchingErrors.Count > 0) { dispatchingErrors.Each(ex => Output.WriteLine(ex.ToString())); }
-            Assert.Equal(0, dispatchingErrors.Count);
+            Output.WriteLine($"{nameof(actualRefusedMessagesCount)}: {actualRefusedMessagesCount}");
+            Assert.Equal(0, actualRefusedMessagesCount);
 
-            /* TODO: assert error queue */
+            Output.WriteLine($"{nameof(IHostStatistics.FailedMessages)}Count: {failedMessages.Count}");
+            if (failedMessages.Count > 0) { failedMessages.Each(failedMessage => Output.WriteLine(failedMessage.ToString())); }
+            Assert.Equal(0, failedMessages.Count);
 
             async Task SendInitiationMessages(IIntegrationTransport integrationTransport, int count, CancellationToken token)
             {

@@ -80,6 +80,11 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
             return Deliver(Message, token);
         }
 
+        public Task Refuse(Exception exception, CancellationToken token)
+        {
+            return _transport.NotifyOnError(new FailedMessage(Message, exception), token);
+        }
+
         public async Task DeliverAll(CancellationToken token)
         {
             ICollection<IntegrationMessage> forDelivery;

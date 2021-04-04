@@ -10,12 +10,12 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using AutoWiring.Api.Services;
 
     [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
-    internal class OurTypesTypeProviderDecorator : ITypeProvider, IDecorator<ITypeProvider>
+    internal class TypeProviderMock : ITypeProvider, IDecorator<ITypeProvider>
     {
         private readonly ITypeProvider _decoratee;
         private readonly IReadOnlyCollection<Type> _additionalOurTypes;
 
-        public OurTypesTypeProviderDecorator(ITypeProvider decoratee, IReadOnlyCollection<Type> additionalOurOurTypes)
+        public TypeProviderMock(ITypeProvider decoratee, IReadOnlyCollection<Type> additionalOurOurTypes)
         {
             _decoratee = decoratee;
             _additionalOurTypes = additionalOurOurTypes;

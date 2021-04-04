@@ -17,17 +17,19 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
     [Component(EnLifestyle.Singleton)]
     internal class InMemoryIntegrationTransport : IAdvancedIntegrationTransport
     {
-        private readonly AsyncManualResetEvent _manualResetEvent;
+        private readonly AsyncManualResetEvent _ready;
 
         public InMemoryIntegrationTransport(IDependencyContainer dependencyContainer)
         {
             DependencyContainer = dependencyContainer;
             Injection = new EndpointInjectionRegistration(this);
 
-            _manualResetEvent = new AsyncManualResetEvent(false);
+            _ready = new AsyncManualResetEvent(false);
         }
 
         public event EventHandler<IntegrationMessageEventArgs>? OnMessage;
+
+        public event EventHandler<FailedIntegrationMessageEventArgs>? OnError;
 
         public IManualRegistration Injection { get; }
 
@@ -37,16 +39,23 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 
         public Task Initialize(IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> endpoints, CancellationToken token)
         {
-            _manualResetEvent.Set();
+            _ready.Set();
 
             return Task.CompletedTask;
         }
 
         internal async Task NotifyOnMessage(IntegrationMessage message, CancellationToken token)
         {
-            await _manualResetEvent.WaitAsync(token).ConfigureAwait(false);
+            await _ready.WaitAsync(token).ConfigureAwait(false);
 
             OnMessage?.Invoke(this, new IntegrationMessageEventArgs(message));
+        }
+
+        internal async Task NotifyOnError(FailedMessage failedMessage, CancellationToken token)
+        {
+            await _ready.WaitAsync(token).ConfigureAwait(false);
+
+            OnError?.Invoke(this, new FailedIntegrationMessageEventArgs(failedMessage));
         }
     }
 }

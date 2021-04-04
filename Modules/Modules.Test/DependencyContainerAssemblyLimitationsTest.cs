@@ -118,10 +118,10 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(TestJsonSettings),
                 typeof(TestYamlSettings),
-                typeof(OurTypesTypeProviderDecorator)
+                typeof(TypeProviderMock)
             };
 
-            var typeProvider = new OurTypesTypeProviderDecorator(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
+            var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var overrides = Fixture.DelegateRegistration(container =>
             {
                 container
@@ -163,7 +163,7 @@ namespace SpaceEngineers.Core.Modules.Test
             bool TypeSatisfies(Type type)
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
-                                || type == typeof(OurTypesTypeProviderDecorator);
+                                || type == typeof(TypeProviderMock);
 
                 if (!satisfies)
                 {

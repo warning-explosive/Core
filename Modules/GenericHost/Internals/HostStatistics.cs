@@ -4,21 +4,22 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using Abstractions;
+    using GenericEndpoint;
 
     internal class HostStatistics : IHostStatistics
     {
-        private readonly ConcurrentBag<Exception> _dispatchingErrors;
+        private readonly ConcurrentBag<FailedMessage> _failures;
 
         public HostStatistics()
         {
-            _dispatchingErrors = new ConcurrentBag<Exception>();
+            _failures = new ConcurrentBag<FailedMessage>();
         }
 
-        public IReadOnlyCollection<Exception> DispatchingErrors => _dispatchingErrors;
+        public IReadOnlyCollection<FailedMessage> FailedMessages => _failures;
 
-        public IHostStatistics Register(Exception exception)
+        public IHostStatistics RegisterFailure(IntegrationMessage message, Exception exception)
         {
-            _dispatchingErrors.Add(exception);
+            _failures.Add(new FailedMessage(message, exception));
             return this;
         }
     }

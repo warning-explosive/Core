@@ -40,5 +40,8 @@
       <Compile Update="Abstractions\IAdvancedIntegrationTransport.cs">
         <DependentUpon>IIntegrationTransport.cs</DependentUpon>
       </Compile>
+      <Compile Update="FailedIntegrationMessageEventArgs.cs">
+        <DependentUpon>IntegrationMessageEventArgs.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

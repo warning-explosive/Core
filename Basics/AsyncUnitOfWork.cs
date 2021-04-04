@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.Basics
 
             if (exception != null)
             {
+                exception.Rethrow();
                 throw exception;
             }
         }

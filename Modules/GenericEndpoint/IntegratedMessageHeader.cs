@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
         public const string HandlerRepliedToTheQuery = "HANDLER_REPLIED_TO_THE_QUERY";
 
         /// <summary>
-        /// Deferred until specified date (system time) - datetime, nullable
+        /// Deferred until specified date (system time) - datetime, notnull
         /// </summary>
         public const string DeferredUntil = "DEFERRED_UNTIL";
 

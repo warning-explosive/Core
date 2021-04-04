@@ -4,12 +4,22 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.ExceptionServices;
 
     /// <summary>
     /// Exception extension methods
     /// </summary>
     public static class ExceptionExtensions
     {
+        /// <summary>
+        /// Rethrows exception and keeps original stack trace
+        /// </summary>
+        /// <param name="exception">Original exception</param>
+        public static void Rethrow(this Exception exception)
+        {
+            ExceptionDispatchInfo.Capture(exception).Throw();
+        }
+
         /// <summary>
         /// Unwrap TargetInvocationException
         /// </summary>

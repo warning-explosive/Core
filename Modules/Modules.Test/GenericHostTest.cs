@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
@@ -372,6 +373,121 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task ThrowingMessageHandlerTest(IIntegrationTransport transport)
+        {
+            var incomingMessages = new ConcurrentBag<IntegrationMessage>();
+            var actualRefusedMessagesCount = 0;
+
+            transport.OnMessage += (_, args) =>
+            {
+                incomingMessages.Add(args.GeneralMessage);
+            };
+
+            transport.OnError += (_, _) =>
+            {
+                Interlocked.Increment(ref actualRefusedMessagesCount);
+            };
+
+            var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
+
+            var additionalTypes = new[]
+            {
+                typeof(TestCommand),
+                typeof(ThrowingMessageHandler)
+            };
+
+            var endpointIdentity = new EndpointIdentity(nameof(ThrowingMessageHandlerTest), nameof(ThrowingMessageHandlerTest));
+            var identityRegistration = Fixture.DelegateRegistration(container =>
+            {
+                container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity);
+            });
+            var options = new DependencyContainerOptions
+            {
+                ManualRegistrations = new[]
+                {
+                    identityRegistration,
+                    ((IAdvancedIntegrationTransport)transport).Injection
+                }
+            };
+            var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
+            var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
+            var retryPolicy = new RetryPolicyMock();
+            var overrides = Fixture.DelegateRegistration(container =>
+            {
+                container
+                    .RegisterInstance(typeof(ITypeProvider), typeProvider)
+                    .RegisterInstance(typeProvider.GetType(), typeProvider)
+                    .RegisterInstance(typeof(IRetryPolicy), retryPolicy)
+                    .RegisterInstance(retryPolicy.GetType(), retryPolicy);
+            });
+
+            var handlersRegistration = Fixture.DelegateRegistration(container =>
+            {
+                container.Register(typeof(IMessageHandler<>), typeof(ThrowingMessageHandler));
+            });
+
+            var containerOptions = new DependencyContainerOptions
+            {
+                ManualRegistrations = new[] { handlersRegistration },
+                Overrides = new[] { overrides }
+            };
+
+            var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), assembly)
+            {
+                ContainerOptions = containerOptions
+            };
+
+            IReadOnlyCollection<FailedMessage> failedMessages;
+
+            using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, endpointOptions).Build())
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await transport.IntegrationContext.Send(new TestCommand(42), cts.Token).ConfigureAwait(false);
+
+                await Task.Delay(3000, cts.Token).ConfigureAwait(false);
+
+                failedMessages = host.Services.GetRequiredService<IHostStatistics>().FailedMessages;
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            Output.WriteLine($"{nameof(incomingMessages)}Count: {incomingMessages.Count}");
+            Assert.Equal(4, incomingMessages.Count);
+            Assert.Single(incomingMessages.Select(it => it.ReflectedType).Distinct());
+            Assert.Single(incomingMessages.Select(it => it.Payload.ToString()).Distinct());
+            Assert.Single(incomingMessages.Select(it => it.Headers[IntegratedMessageHeader.ConversationId]).Distinct());
+            var actualRetryIndexes = incomingMessages
+                .Select(it => it.Headers.TryGetValue(IntegratedMessageHeader.MessageRetryCounter, out var value) ? (int)value : 0)
+                .OrderBy(it => it)
+                .ToList();
+            Assert.Equal(new List<int> { 0, 1, 2, 3 }, actualRetryIndexes);
+
+            Output.WriteLine($"{nameof(actualRefusedMessagesCount)}: {actualRefusedMessagesCount}");
+            Assert.Equal(1, actualRefusedMessagesCount);
+
+            Output.WriteLine($"{nameof(IHostStatistics.FailedMessages)}Count: {failedMessages.Count}");
+            Assert.Single(failedMessages);
+            var failedMessage = failedMessages.Single();
+            Output.WriteLine(failedMessage.ToString());
+            var exception = failedMessage.Exception;
+            Assert.IsType<InvalidOperationException>(exception);
+            Assert.Equal("42", exception.Message);
+            Assert.Equal("42", failedMessage.Message.Payload.ToString());
+        }
+
+        [Component(EnLifestyle.Transient)]
+        private class ThrowingMessageHandler : IMessageHandler<TestCommand>
+        {
+            public Task Handle(TestCommand message, IIntegrationContext context, CancellationToken token)
+            {
+                throw new InvalidOperationException(message.Id.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
         [Component(EnLifestyle.Transient)]
         private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>, IMessageHandler<TestQuery>
         {
@@ -401,7 +517,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Id = id;
             }
 
-            private int Id { get; }
+            internal int Id { get; }
 
             public override string ToString()
             {
@@ -417,7 +533,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Id = id;
             }
 
-            public int Id { get; }
+            internal int Id { get; }
 
             public override string ToString()
             {
@@ -433,6 +549,11 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             internal int Id { get; }
+
+            public override string ToString()
+            {
+                return Id.ToString(CultureInfo.InvariantCulture);
+            }
         }
 
         [OwnedBy(Endpoint2)]
@@ -443,7 +564,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Id = id;
             }
 
-            private int Id { get; }
+            internal int Id { get; }
 
             public override string ToString()
             {

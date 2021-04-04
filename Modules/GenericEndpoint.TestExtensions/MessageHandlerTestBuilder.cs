@@ -48,7 +48,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
             switch (errors.Count)
             {
                 case > 1: throw new AggregateException(errors);
-                case 1: throw errors.Single();
+                case 1:
+                {
+                    var exception = errors.Single();
+                    exception.Rethrow();
+                    throw exception;
+                }
             }
         }
 

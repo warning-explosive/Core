@@ -88,6 +88,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
+                    realException.Rethrow();
                     throw realException;
                 }
 
@@ -130,6 +131,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
+                    realException.Rethrow();
                     throw realException;
                 }
 

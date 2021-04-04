@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using AutoWiring.Api.Abstractions;
-    using Basics;
+    using Basics.Primitives;
 
     /// <summary>
     /// IIntegrationUnitOfWork abstraction

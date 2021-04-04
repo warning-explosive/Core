@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Basics.Test
     using System;
     using System.Linq;
     using System.Threading.Tasks;
-    using Async;
+    using Primitives;
     using Xunit;
     using Xunit.Abstractions;
 

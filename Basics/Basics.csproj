@@ -46,17 +46,11 @@
     <Compile Update="TypeInfo.cs">
       <DependentUpon>ITypeInfo.cs</DependentUpon>
     </Compile>
-    <Compile Update="ICompositeDisposable.cs">
-      <DependentUpon>Disposable.cs</DependentUpon>
-    </Compile>
     <Compile Update="AsyncOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
     <Compile Update="AsyncGenericOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AsyncUnitOfWork.cs">
-      <DependentUpon>IAsyncUnitOfWork.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

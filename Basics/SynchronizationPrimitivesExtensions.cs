@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Threading;
+    using Primitives;
 
     /// <summary>
     /// Synchronization primitives extensions

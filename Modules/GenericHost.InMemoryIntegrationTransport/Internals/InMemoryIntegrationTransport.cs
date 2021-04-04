@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Basics.Async;
+    using Basics.Primitives;
     using Core.GenericHost;
     using Core.GenericHost.Abstractions;
     using GenericEndpoint;

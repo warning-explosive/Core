@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Async;
+    using Primitives;
 
     /// <summary>
     /// Task class extensions

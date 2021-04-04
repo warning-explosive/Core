@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Basics
+namespace SpaceEngineers.Core.Basics.Primitives
 {
     using System;
     using System.Threading;

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using Basics.Async;
+    using Basics.Primitives;
     using Contract.Abstractions;
     using Core.GenericEndpoint;
     using Core.GenericEndpoint.Abstractions;

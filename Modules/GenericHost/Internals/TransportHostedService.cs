@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -10,8 +9,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Basics.Async;
     using Basics.Exceptions;
+    using Basics.Primitives;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Executable;
@@ -21,13 +20,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class TransportHostedService : IHostedService, IDisposable
     {
-        private readonly AsyncAutoResetEvent _autoResetEvent;
-        private readonly ConcurrentQueue<IntegrationMessageEventArgs> _queue;
+        private readonly AsyncTaskQueue<IntegrationMessageEventArgs> _inputQueue;
 
         private IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> _topologyMap;
         private Task? _messageProcessingTask;
         private CancellationTokenSource? _cts;
-        private IDisposable? _registration;
 
         public TransportHostedService(
             ILogger<TransportHostedService> logger,
@@ -44,8 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Endpoints = new Dictionary<string, IReadOnlyCollection<IGenericEndpoint>>();
 
             _topologyMap = new Dictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
-            _autoResetEvent = new AsyncAutoResetEvent(false);
-            _queue = new ConcurrentQueue<IntegrationMessageEventArgs>();
+            _inputQueue = new AsyncTaskQueue<IntegrationMessageEventArgs>();
         }
 
         private ILogger<TransportHostedService> Logger { get; }
@@ -65,7 +61,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public async Task StartAsync(CancellationToken token)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-            _registration = _cts.Token.Register(() => _autoResetEvent.Set());
 
             Endpoints = (await EndpointOptions
                     .Select(options => Endpoint.StartAsync(InjectTransport(options, Transport), Token))
@@ -117,7 +112,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         public void Dispose()
         {
             _messageProcessingTask?.Dispose();
-            _registration?.Dispose();
             _cts?.Dispose();
         }
 
@@ -160,10 +154,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             while (!Token.IsCancellationRequested)
             {
-                await _autoResetEvent.WaitAsync().ConfigureAwait(false);
+                var args = await _inputQueue.Dequeue(Token).ConfigureAwait(false);
 
-                // TODO: use async queue
-                if (_queue.TryDequeue(out var args))
+                if (args != null)
                 {
                     await ExecutionExtensions
                         .TryAsync(() => DispatchToEndpoint(args.GeneralMessage))
@@ -199,8 +192,12 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private void OnMessage(object? sender, IntegrationMessageEventArgs args)
         {
-            _queue.Enqueue(args);
-            _autoResetEvent.Set();
+            /*
+             * TODO: support delayed delivery
+             * 1. if (args.GeneralMessage.Headers.ContainsKey(IntegratedMessageHeader.DeferredUntil)) { _delayedDeliveryQueue.Enqueue(args); }
+             * 2. register callback with delivery to input queue
+             */
+            _inputQueue.Enqueue(args);
         }
 
         private void OnError(object? sender, FailedIntegrationMessageEventArgs args)

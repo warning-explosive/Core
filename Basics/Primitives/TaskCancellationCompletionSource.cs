@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Basics.Async
+namespace SpaceEngineers.Core.Basics.Primitives
 {
     using System;
     using System.Threading;

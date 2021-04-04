@@ -31,6 +31,11 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// </summary>
         public const string HandlerRepliedToTheQuery = "HANDLER_REPLIED_TO_THE_QUERY";
 
+        /// <summary>
+        /// Deferred until specified date (system time) - datetime, nullable
+        /// </summary>
+        public const string DeferredUntil = "DEFERRED_UNTIL";
+
         /// <inheritdoc />
         public IEnumerable<string> ForAutomaticForwarding { get; }
             = new[]

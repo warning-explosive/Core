@@ -63,6 +63,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
             Message.IncrementRetryCounter();
+            Message.SetDeliveryDate(dueTime);
 
             return Decoratee.Retry(dueTime, token);
         }

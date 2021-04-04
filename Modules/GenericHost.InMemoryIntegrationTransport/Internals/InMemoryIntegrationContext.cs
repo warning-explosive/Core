@@ -75,8 +75,6 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
-            /* TODO: use due time between retries */
-
             return Deliver(Message, token);
         }
 

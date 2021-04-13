@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.Json.Internals
     {
         private readonly JsonSerializerSettings _settings;
 
-        [SuppressMessage("Microsoft.Security", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
+        [SuppressMessage("Analysis", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
         public JsonSerializerImpl(ITypeProvider typeProvider,
                                   IEnumerable<IJsonConverter> converters)
         {

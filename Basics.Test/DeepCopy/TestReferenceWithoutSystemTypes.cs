@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Basics.Test.DeepCopy
     /// <summary>
     /// TestReferenceWithoutSystemTypes
     /// </summary>
-    [SuppressMessage("Microsoft.NetCore.Analyzers", "CA5362", Justification = "For test reasons")]
+    [SuppressMessage("Analysis", "CA5362", Justification = "For test reasons")]
     [Serializable]
     public class TestReferenceWithoutSystemTypes
     {

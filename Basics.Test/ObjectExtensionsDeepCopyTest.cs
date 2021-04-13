@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Basics.Test
     /// <summary>
     /// DeepCopy test
     /// </summary>
-    [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
+    [SuppressMessage("Analysis", "SA1201", Justification = "For test reasons")]
     public class ObjectExtensionsDeepCopyTest : BasicsTestBase
     {
         /// <summary> .ctor </summary>
@@ -185,7 +185,7 @@ namespace SpaceEngineers.Core.Basics.Test
             return true;
         }
 
-        [SuppressMessage("Microsoft.CodeQuality.Analyzers", "CA1508", Justification = "Analyzer error")]
+        [SuppressMessage("Analysis", "CA1508", Justification = "Analyzer error")]
         private static bool CheckValueArraySequentially<T>(Array? array, Array? compareWith)
             where T : struct
         {

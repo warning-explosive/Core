@@ -369,7 +369,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         #pragma warning restore xUnit2000 // Constants and literals should be the expected argument
 
-        [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "SA1201", Justification = "For test reasons")]
         private enum TestEnum
         {
             Default,

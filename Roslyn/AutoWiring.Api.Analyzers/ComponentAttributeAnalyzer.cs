@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
         protected override SyntaxKind SyntaxKind { get; } = SyntaxKind.ClassDeclaration;
 
         /// <inheritdoc />
-        [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
+        [SuppressMessage("Analysis", "RS1024", Justification = "Error in SymbolEqualityComparer")]
         protected override void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
@@ -67,7 +67,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
             }
         }
 
-        [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
+        [SuppressMessage("Analysis", "RS1024", Justification = "Error in SymbolEqualityComparer")]
         private static bool IsComponent(SyntaxNodeAnalysisContext context, ClassDeclarationSyntax classDeclarationSyntax)
         {
             var baseTypes = classDeclarationSyntax
@@ -119,7 +119,7 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Analyzers
             return isComponent;
         }
 
-        [SuppressMessage("Microsoft.CodeAnalysis.Analyzers", "RS1024", Justification = "Error in SymbolEqualityComparer")]
+        [SuppressMessage("Analysis", "RS1024", Justification = "Error in SymbolEqualityComparer")]
         private static bool IsContainsAttribute<TAttribute>(
             SyntaxNodeAnalysisContext context,
             ClassDeclarationSyntax classDeclarationSyntax)

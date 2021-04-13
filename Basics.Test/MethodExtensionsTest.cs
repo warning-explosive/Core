@@ -146,8 +146,8 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.Throws<TrueException>(() => derivedTarget.CallMethod("VirtualMethod").Invoke());
         }
 
-        [SuppressMessage("StyleCop.Analyzers", "SA1202", Justification = "For test reasons")]
-        [SuppressMessage("Microsoft.CodeAnalysis.CSharp.Features", "IDE0051", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "SA1202", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "IDE0051", Justification = "For test reasons")]
         private class StaticTestClass
         {
             internal static bool PublicStaticMethod() => true;
@@ -189,9 +189,9 @@ namespace SpaceEngineers.Core.Basics.Test
             private static T PrivateStaticGenericMethod<T>(T flag) => flag;
         }
 
-        [SuppressMessage("StyleCop.Analyzers", "SA1202", Justification = "For test reasons")]
-        [SuppressMessage("Microsoft.CodeAnalysis.CSharp.Features", "IDE0051", Justification = "For test reasons")]
-        [SuppressMessage("StaticMethods", "CA1822", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "SA1202", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "IDE0051", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1822", Justification = "For test reasons")]
         private class InstanceTestClass
         {
             internal bool PublicMethod() => true;
@@ -233,7 +233,7 @@ namespace SpaceEngineers.Core.Basics.Test
             private T PrivateGenericMethod<T>(T input) => input;
         }
 
-        [SuppressMessage("StaticMethods", "CA1822", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1822", Justification = "For test reasons")]
         private class NullableTestClass
         {
             public void MethodWithNullArgs(object? arg)
@@ -253,7 +253,7 @@ namespace SpaceEngineers.Core.Basics.Test
             }
         }
 
-        [SuppressMessage("StaticMethods", "CA1822", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1822", Justification = "For test reasons")]
         private class TestClassBase
         {
             public void BaseMethod()
@@ -267,7 +267,7 @@ namespace SpaceEngineers.Core.Basics.Test
             }
         }
 
-        [SuppressMessage("StaticMethods", "CA1822", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1822", Justification = "For test reasons")]
         private class DerivedClass : TestClassBase
         {
             public void DerivedMethod()

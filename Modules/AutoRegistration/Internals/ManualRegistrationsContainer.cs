@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using AutoWiring.Api.Enumerations;
     using Basics;
 
-    [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     internal class ManualRegistrationsContainer : IRegistrationsContainer, IManualRegistrationsContainer
     {
         private readonly List<(Type, object)> _singletons;

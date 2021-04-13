@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// Resolve dependencies by 'Dependency Injection' patterns
     /// Don't use it like ServiceLocator!
     /// </summary>
-    [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     public class DependencyContainer : IDependencyContainer

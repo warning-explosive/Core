@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Basics.Test
     /// <summary>
     /// TypeExtensions class tests
     /// </summary>
-    [SuppressMessage("StyleCop.Analyzers", "SA1201", Justification = "For test reasons")]
+    [SuppressMessage("Analysis", "SA1201", Justification = "For test reasons")]
     public class TypeExtensionsTest : BasicsTestBase
     {
         /// <summary> .ctor </summary>
@@ -214,13 +214,13 @@ namespace SpaceEngineers.Core.Basics.Test
         private interface IDefaultCtorConstrained<T>
             where T : new() { }
 
-        [SuppressMessage("Useless parameter", "CA1801", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1801", Justification = "For test reasons")]
         private class ClassWithParameter
         {
             public ClassWithParameter(object param) { }
         }
 
-        [SuppressMessage("Useless parameter", "CA1801", Justification = "For test reasons")]
+        [SuppressMessage("Analysis", "CA1801", Justification = "For test reasons")]
         private struct StructWithParameter
         {
             public StructWithParameter(object param) { }

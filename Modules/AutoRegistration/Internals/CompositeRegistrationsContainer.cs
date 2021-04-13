@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Extensions;
     using SimpleInjector;
 
-    [SuppressMessage("Regions", "SA1124", Justification = "Readability")]
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     internal class CompositeRegistrationsContainer : IRegistrationsContainer
     {
         private readonly Container _container;

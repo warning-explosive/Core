@@ -8,6 +8,44 @@ namespace SpaceEngineers.Core.Basics
     public static class IntegerExtensions
     {
         /// <summary>
+        /// Log with custom basis
+        /// </summary>
+        /// <param name="result">Result</param>
+        /// <param name="basis">Basis</param>
+        /// <returns>Exponent</returns>
+        public static uint Log(this int result, uint basis)
+        {
+            return (uint)Math.Log(result, basis);
+        }
+
+        /// <summary>
+        /// Powers integer with an positive exponent
+        /// </summary>
+        /// <param name="basis">Basis</param>
+        /// <param name="exp">Exponent</param>
+        /// <returns>Result</returns>
+        public static int Pow(this int basis, uint exp)
+        {
+            var result = 1;
+
+            checked
+            {
+                while (exp != 0)
+                {
+                    if ((exp & 1) == 1)
+                    {
+                        result *= basis;
+                    }
+
+                    basis *= basis;
+                    exp >>= 1;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Between include bounds
         /// </summary>
         /// <param name="index">Index</param>

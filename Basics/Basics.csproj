@@ -52,6 +52,9 @@
     <Compile Update="AsyncGenericOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
+    <Compile Update="Primitives\BinaryHeap.cs">
+      <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

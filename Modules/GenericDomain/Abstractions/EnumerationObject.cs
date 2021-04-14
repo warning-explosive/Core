@@ -4,11 +4,13 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Basics;
 
     /// <summary>
     /// Enumeration object
     /// </summary>
-    public abstract class EnumerationObject : IEquatable<EnumerationObject>
+    public abstract class EnumerationObject : IEquatable<EnumerationObject>,
+                                              ISafelyEquatable<EnumerationObject>
     {
         /// <summary> .cctor </summary>
         /// <param name="id">Identifier</param>
@@ -35,9 +37,9 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
         /// <param name="left">Left EnumerationObject</param>
         /// <param name="right">Right EnumerationObject</param>
         /// <returns>equals</returns>
-        public static bool operator ==(EnumerationObject left, EnumerationObject right)
+        public static bool operator ==(EnumerationObject? left, EnumerationObject? right)
         {
-            return left.Equals(right);
+            return Equatable.Equals(left, right);
         }
 
         /// <summary>
@@ -46,9 +48,9 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
         /// <param name="left">Left EnumerationObject</param>
         /// <param name="right">Right EnumerationObject</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(EnumerationObject left, EnumerationObject right)
+        public static bool operator !=(EnumerationObject? left, EnumerationObject? right)
         {
-            return !left.Equals(right);
+            return !Equatable.Equals(left, right);
         }
 
         /// <summary> All </summary>
@@ -77,27 +79,19 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            return obj is EnumerationObject otherValue
-                   && Equals(otherValue);
+            return Equatable.Equals(this, obj);
         }
 
         /// <inheritdoc />
         public bool Equals(EnumerationObject? other)
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
+            return Equatable.Equals(this, other);
+        }
 
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            var typeMatches = GetType() == other.GetType();
-            var valueMatches = Id.Equals(other.Id);
-
-            return typeMatches && valueMatches;
+        /// <inheritdoc />
+        public bool SafeEquals(EnumerationObject? other)
+        {
+            return Id.Equals(other.Id);
         }
     }
 }

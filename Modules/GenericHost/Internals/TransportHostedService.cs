@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
+    using Basics.Enumerations;
     using Basics.Exceptions;
     using Basics.Primitives;
     using GenericEndpoint;
@@ -20,7 +21,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class TransportHostedService : IHostedService, IDisposable
     {
-        private readonly AsyncTaskQueue<IntegrationMessageEventArgs> _inputQueue;
+        private readonly MessageQueue<IntegrationMessageEventArgs> _inputQueue;
+        private readonly DeferredQueue<IntegrationMessageEventArgs> _delayedDeliveryQueue;
 
         private IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> _topologyMap;
         private Task? _messageProcessingTask;
@@ -41,7 +43,10 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Endpoints = new Dictionary<string, IReadOnlyCollection<IGenericEndpoint>>();
 
             _topologyMap = new Dictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
-            _inputQueue = new AsyncTaskQueue<IntegrationMessageEventArgs>();
+
+            var heap = new BinaryHeap<HeapEntry<IntegrationMessageEventArgs, DateTime>>(EnOrderingKind.Asc);
+            _delayedDeliveryQueue = new DeferredQueue<IntegrationMessageEventArgs>(heap, PrioritySelector);
+            _inputQueue = new MessageQueue<IntegrationMessageEventArgs>();
         }
 
         private ILogger<TransportHostedService> Logger { get; }
@@ -80,7 +85,10 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             Transport.OnMessage += OnMessage;
             Transport.OnError += OnError;
-            _messageProcessingTask = StartMessageProcessing();
+
+            _messageProcessingTask = Task.WhenAll(
+                _delayedDeliveryQueue.Run(DelayedDeliveryCallback, Token),
+                _inputQueue.Run(MessageProcessingCallback, Token));
         }
 
         public async Task StopAsync(CancellationToken token)
@@ -104,14 +112,21 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 // Wait until the task completes or the stop token triggers
                 await Task
-                    .WhenAny(_messageProcessingTask, Task.Delay(Timeout.Infinite, token))
+                    .WhenAny(_messageProcessingTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
                     .ConfigureAwait(false);
             }
         }
 
         public void Dispose()
         {
-            _messageProcessingTask?.Dispose();
+            try
+            {
+                _messageProcessingTask?.Wait(Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
             _cts?.Dispose();
         }
 
@@ -150,20 +165,37 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
         }
 
-        private async Task StartMessageProcessing()
+        private void OnMessage(object? sender, IntegrationMessageEventArgs args)
         {
-            while (!Token.IsCancellationRequested)
+            if (args.GeneralMessage.Headers.ContainsKey(IntegratedMessageHeader.DeferredUntil))
             {
-                var args = await _inputQueue.Dequeue(Token).ConfigureAwait(false);
-
-                if (args != null)
-                {
-                    await ExecutionExtensions
-                        .TryAsync(() => DispatchToEndpoint(args.GeneralMessage))
-                        .Invoke(ex => OnError(args.GeneralMessage, ex))
-                        .ConfigureAwait(false);
-                }
+                _delayedDeliveryQueue.Enqueue(args);
             }
+            else
+            {
+                _inputQueue.Enqueue(args);
+            }
+        }
+
+        private void OnError(object? sender, FailedIntegrationMessageEventArgs args)
+        {
+            OnError(args.GeneralMessage, args.Exception);
+        }
+
+        private Task OnError(IntegrationMessage message, Exception exception)
+        {
+            Statistics.RegisterFailure(message, exception);
+
+            Logger.Error(exception, "An error occurred while processing message: {0} {1}", message.ReflectedType, message.Payload);
+
+            return Task.CompletedTask;
+        }
+
+        private Task MessageProcessingCallback(IntegrationMessageEventArgs args)
+        {
+            return ExecutionExtensions
+                .TryAsync(() => DispatchToEndpoint(args.GeneralMessage))
+                .Invoke(ex => OnError(args.GeneralMessage, ex));
         }
 
         private Task DispatchToEndpoint(IntegrationMessage message)
@@ -190,28 +222,15 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(message.DeepCopy());
         }
 
-        private void OnMessage(object? sender, IntegrationMessageEventArgs args)
+        private Task DelayedDeliveryCallback(IntegrationMessageEventArgs arg)
         {
-            /*
-             * TODO: support delayed delivery
-             * 1. if (args.GeneralMessage.Headers.ContainsKey(IntegratedMessageHeader.DeferredUntil)) { _delayedDeliveryQueue.Enqueue(args); }
-             * 2. register callback with delivery to input queue
-             */
-            _inputQueue.Enqueue(args);
-        }
-
-        private void OnError(object? sender, FailedIntegrationMessageEventArgs args)
-        {
-            OnError(args.GeneralMessage, args.Exception);
-        }
-
-        private Task OnError(IntegrationMessage message, Exception exception)
-        {
-            Statistics.RegisterFailure(message, exception);
-
-            Logger.Error(exception, "An error occurred while processing message: {0} {1}", message.ReflectedType, message.Payload);
-
+            _inputQueue.Enqueue(arg);
             return Task.CompletedTask;
+        }
+
+        private static DateTime PrioritySelector(IntegrationMessageEventArgs arg)
+        {
+            return (DateTime)arg.GeneralMessage.Headers[IntegratedMessageHeader.DeferredUntil];
         }
     }
 }

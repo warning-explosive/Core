@@ -4,12 +4,14 @@ namespace SpaceEngineers.Core.GenericEndpoint
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
 
     /// <summary>
     /// Endpoint identity
     /// </summary>
     [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
     public class EndpointIdentity : IResolvable,
+                                    ISafelyEquatable<EndpointIdentity>,
                                     IEquatable<EndpointIdentity>
     {
         /// <summary> .cctor </summary>
@@ -38,37 +40,22 @@ namespace SpaceEngineers.Core.GenericEndpoint
         }
 
         /// <inheritdoc />
+        public bool SafeEquals(EndpointIdentity other)
+        {
+            return LogicalName.Equals(other.LogicalName, StringComparison.OrdinalIgnoreCase)
+                    && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <inheritdoc />
         public bool Equals(EndpointIdentity? other)
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return LogicalName.Equals(other.LogicalName, StringComparison.OrdinalIgnoreCase)
-                   && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase);
+            return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            return obj.GetType() == GetType()
-                   && Equals((EndpointIdentity)obj);
+            return Equatable.Equals(this, obj);
         }
 
         /// <inheritdoc />

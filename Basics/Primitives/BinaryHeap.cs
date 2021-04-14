@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
     public class BinaryHeap<TElement> : IHeap<TElement>
-        where TElement : IComparable<TElement>
+        where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
     {
         private const int Root = 0;
 
@@ -134,6 +134,20 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 AddLast(element);
                 HeapifyUp(_last);
                 NotifyChanged();
+            }
+        }
+
+        /// <inheritdoc />
+        public TElement Peek()
+        {
+            lock (_sync)
+            {
+                if (_last < 0)
+                {
+                    throw new InvalidOperationException($"{nameof(BinaryHeap<TElement>)} is empty");
+                }
+
+                return _array[Root];
             }
         }
 
@@ -290,7 +304,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         private class BinaryHeapEnumerator<T> : IEnumerator<T>
-            where T : IComparable<T>
+            where T : IEquatable<T>, IComparable<T>, IComparable
         {
             private readonly BinaryHeap<T> _heap;
 

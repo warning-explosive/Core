@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
     public interface IHeap<TElement> : IEnumerable<TElement>
-        where TElement : IComparable<TElement>
+        where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
     {
         /// <summary>
         /// Gets the number of elements contained in the heap
@@ -25,6 +25,12 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// </summary>
         /// <param name="element">Element</param>
         void Insert(TElement element);
+
+        /// <summary>
+        /// Gets the highest-priority element but doesn't modify the heap
+        /// </summary>
+        /// <returns>The highest-priority element</returns>
+        TElement Peek();
 
         /// <summary>
         /// Gets the highest-priority element and removes it from the heap

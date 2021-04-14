@@ -104,7 +104,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable.Internals
             {
                 // Wait until completes all running handlers or the stop token triggers
                 await Task
-                    .WhenAny(_runningHandlers.WaitAsync(Token), Task.Delay(Timeout.Infinite, Token))
+                    .WhenAny(_runningHandlers.WaitAsync(Token), Task.Delay(Timeout.InfiniteTimeSpan, Token))
                     .ConfigureAwait(false);
             }
         }

@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using SimpleInjector;
 
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle}")]
-    internal class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>
+    internal class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
+                                             ISafelyEquatable<ServiceRegistrationInfo>
     {
         internal ServiceRegistrationInfo(Type serviceType, Type implementationType)
         {
@@ -33,38 +34,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         internal EnComponentKind ComponentKind { get; }
 
+        public bool SafeEquals(ServiceRegistrationInfo other)
+        {
+            return ServiceType == other.ServiceType
+                    && ImplementationType == other.ImplementationType
+                    && Lifestyle.Equals(other.Lifestyle)
+                    && ComponentKind == other.ComponentKind;
+        }
+
         public bool Equals(ServiceRegistrationInfo? other)
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return ServiceType == other.ServiceType
-                   && ImplementationType == other.ImplementationType
-                   && Lifestyle.Equals(other.Lifestyle)
-                   && ComponentKind == other.ComponentKind;
+            return Equatable.Equals(this, other);
         }
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            return obj.GetType() == GetType()
-                   && Equals((ServiceRegistrationInfo)obj);
+            return Equatable.Equals(this, obj);
         }
 
         public override int GetHashCode()

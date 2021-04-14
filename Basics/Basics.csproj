@@ -55,6 +55,33 @@
     <Compile Update="Primitives\BinaryHeap.cs">
       <DependentUpon>IHeap.cs</DependentUpon>
     </Compile>
+    <Compile Update="Primitives\HeapEntry.cs">
+      <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\PriorityQueue.cs">
+      <DependentUpon>IQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\DeferredQueue.cs">
+      <DependentUpon>IAsyncQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\MessageQueue.cs">
+      <DependentUpon>IAsyncQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\IAsyncQueue.cs">
+      <DependentUpon>IQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\ICompositeDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\AsyncDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ISafelyComparable.cs">
+      <DependentUpon>Comparable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ISafelyEquatable.cs">
+      <DependentUpon>Equatable.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

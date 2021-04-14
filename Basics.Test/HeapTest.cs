@@ -96,6 +96,7 @@ namespace SpaceEngineers.Core.Basics.Test
             {
                 _ = heap.Count;
                 _ = heap.IsEmpty;
+                _ = heap.Peek();
             }
 
             void Write()

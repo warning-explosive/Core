@@ -260,8 +260,8 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ExternalResolvableTest()
         {
-            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.Resolve<IComparable<ExternalResolvableImpl>>().GetType());
-            Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.Resolve<IComparable<object>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.Resolve<IProgress<ExternalResolvableImpl>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.Resolve<IProgress<object>>().GetType());
         }
 
         [Fact]

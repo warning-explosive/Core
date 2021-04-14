@@ -6,13 +6,13 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Enumerations;
 
     [Component(EnLifestyle.Transient, EnComponentKind.OpenGenericFallback)]
-    internal class ExternalResolvableOpenGenericImpl<T> : IComparable<T>,
-                                                          IExternalResolvable<IComparable<T>>
+    internal class ExternalResolvableOpenGenericImpl<T> : IProgress<T>,
+                                                          IExternalResolvable<IProgress<T>>
         where T : class
     {
-        public int CompareTo(T? other)
+        public void Report(T value)
         {
-            throw new ArgumentException(nameof(ExternalResolvableImpl), nameof(other));
+            throw new ArgumentException(nameof(ExternalResolvableImpl), nameof(value));
         }
     }
 }

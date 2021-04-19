@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics.Primitives
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// IQueue abstraction
@@ -11,31 +12,47 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <summary>
         /// Gets the number of elements contained in the queue
         /// </summary>
-        public int Count { get; }
+        int Count { get; }
 
         /// <summary>
         /// Gets a value that indicates whether the queue is empty
         /// </summary>
-        public bool IsEmpty { get; }
+        bool IsEmpty { get; }
 
         /// <summary>
         /// Adds an element to the queue
         /// </summary>
         /// <param name="element">Element</param>
-        public void Enqueue(TElement element);
+        void Enqueue(TElement element);
 
         /// <summary>
         /// Returns the first element and removes it from the queue
         /// </summary>
         /// <returns>The first element</returns>
         /// <exception cref="InvalidOperationException">Queue is empty</exception>
-        public TElement Dequeue();
+        TElement Dequeue();
+
+        /// <summary>
+        /// Returns the first element and removes it from the queue if queue is not empty
+        /// </summary>
+        /// <param name="element">The first element of default value</param>
+        /// <returns>The first element</returns>
+        /// <exception cref="InvalidOperationException">Queue is empty</exception>
+        bool TryDequeue([NotNullWhen(true)] out TElement? element);
 
         /// <summary>
         /// Returns the first element but doesn't modify the queue
         /// </summary>
         /// <returns>The first element</returns>
         /// <exception cref="InvalidOperationException">Queue is empty</exception>
-        public TElement Peek();
+        TElement Peek();
+
+        /// <summary>
+        /// Returns the first element but doesn't modify the queue if queue is not empty
+        /// </summary>
+        /// <param name="element">The first element of default value</param>
+        /// <returns>The first element</returns>
+        /// <exception cref="InvalidOperationException">Queue is empty</exception>
+        bool TryPeek([NotNullWhen(true)] out TElement? element);
     }
 }

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -9,16 +10,20 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// MessageQueue
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
-    public class MessageQueue<TElement> : IQueue<TElement>, IAsyncQueue<TElement>
+    public class MessageQueue<TElement> : IQueue<TElement>,
+                                          IAsyncQueue<TElement>
     {
         private readonly AsyncAutoResetEvent _autoResetEvent;
         private readonly ConcurrentQueue<TElement> _queue;
+        private readonly State _state;
 
         /// <summary> .cctor </summary>
         public MessageQueue()
         {
             _autoResetEvent = new AsyncAutoResetEvent(false);
             _queue = new ConcurrentQueue<TElement>();
+
+            _state = new State();
         }
 
         /// <inheritdoc />
@@ -41,22 +46,37 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <inheritdoc />
+        public bool TryDequeue([NotNullWhen(true)] out TElement? element)
+        {
+            throw new NotSupportedException(nameof(TryDequeue));
+        }
+
+        /// <inheritdoc />
         public TElement Peek()
         {
             throw new NotSupportedException(nameof(Peek));
         }
 
         /// <inheritdoc />
+        public bool TryPeek([NotNullWhen(true)] out TElement? element)
+        {
+            throw new NotSupportedException(nameof(TryPeek));
+        }
+
+        /// <inheritdoc />
         public async Task Run(Func<TElement, Task> callback, CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            using (_state.StartExclusiveOperation())
             {
-                // TODO: dequeue several messages
-                var element = await Dequeue(token).ConfigureAwait(false);
-
-                if (element != null)
+                while (!token.IsCancellationRequested)
                 {
-                    await callback(element).ConfigureAwait(false);
+                    // TODO: dequeue several messages
+                    var element = await Dequeue(token).ConfigureAwait(false);
+
+                    if (element != null)
+                    {
+                        await callback(element).ConfigureAwait(false);
+                    }
                 }
             }
         }

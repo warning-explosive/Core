@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Enumerations;
 
@@ -10,6 +11,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// Binary-heap
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class BinaryHeap<TElement> : IHeap<TElement>
         where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
     {
@@ -46,10 +48,10 @@ namespace SpaceEngineers.Core.Basics.Primitives
             }
         }
 
-        /// <summary>
-        /// Changed event
-        /// </summary>
-        public event EventHandler? Changed;
+        /// <inheritdoc />
+        public event EventHandler<RootNodeChangedEventArgs<TElement>>? RootNodeChanged;
+
+        private event EventHandler? Changed;
 
         /// <inheritdoc />
         public int Count
@@ -58,7 +60,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             {
                 lock (_sync)
                 {
-                    return _last + 1;
+                    return Length();
                 }
             }
         }
@@ -70,7 +72,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             {
                 lock (_sync)
                 {
-                    return _last < 0;
+                    return IsEmptyHeap();
                 }
             }
         }
@@ -110,11 +112,11 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             lock (_sync)
             {
-                var result = new TElement[_last + 1];
+                var result = new TElement[Length()];
 
                 for (var i = 0; i < result.Length; i++)
                 {
-                    result[i] = Extract();
+                    result[i] = ExtractFromHeap();
                 }
 
                 return result;
@@ -131,9 +133,13 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
             lock (_sync)
             {
+                var originalRoot = GetRoot();
+
                 AddLast(element);
                 HeapifyUp(_last);
+
                 NotifyChanged();
+                NotifyRootNodeChanged(originalRoot);
             }
         }
 
@@ -142,39 +148,85 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             lock (_sync)
             {
-                if (_last < 0)
+                return PeekHeap();
+            }
+        }
+
+        /// <inheritdoc />
+        public bool TryPeek([NotNullWhen(true)] out TElement? element)
+        {
+            lock (_sync)
+            {
+                if (IsEmptyHeap())
                 {
-                    throw new InvalidOperationException($"{nameof(BinaryHeap<TElement>)} is empty");
+                    element = default;
+                    return false;
                 }
 
-                return _array[Root];
+                element = PeekHeap();
+                return true;
             }
         }
 
         /// <inheritdoc />
         public TElement Extract()
         {
+            lock (_sync)
+            {
+                return ExtractFromHeap();
+            }
+        }
+
+        /// <inheritdoc />
+        public bool TryExtract([NotNullWhen(true)] out TElement? element)
+        {
+            lock (_sync)
+            {
+                if (IsEmptyHeap())
+                {
+                    element = default;
+                    return false;
+                }
+
+                element = ExtractFromHeap();
+                return true;
+            }
+        }
+
+        #region thread_unsafe
+
+        private TElement PeekHeap()
+        {
+            return GetRequiredRoot();
+        }
+
+        private TElement ExtractFromHeap()
+        {
             /*
              * 1. Replace the root of the heap with the last element
              * 2. Heapify-down starting from the root element
              */
 
-            lock (_sync)
-            {
-                if (_last < 0)
-                {
-                    throw new InvalidOperationException($"{nameof(BinaryHeap<TElement>)} is empty");
-                }
+            var originalRoot = GetRequiredRoot();
 
-                var result = _array[Root];
-                Swap(Root, _last);
-                RemoveLast();
-                HeapifyDown(Root);
+            Swap(Root, _last);
+            RemoveLast();
+            HeapifyDown(Root);
 
-                NotifyChanged();
+            NotifyChanged();
+            NotifyRootNodeChanged(originalRoot);
 
-                return result;
-            }
+            return originalRoot;
+        }
+
+        private bool IsEmptyHeap()
+        {
+            return _last < 0;
+        }
+
+        private int Length()
+        {
+            return _last + 1;
         }
 
         private void HeapifyUp(int child)
@@ -237,6 +289,23 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 : result > 0;
         }
 
+        private TElement? GetRoot()
+        {
+            return !IsEmptyHeap()
+                ? _array[Root]
+                : default;
+        }
+
+        private TElement GetRequiredRoot()
+        {
+            if (IsEmptyHeap())
+            {
+                throw new InvalidOperationException($"{nameof(BinaryHeap<TElement>)} is empty");
+            }
+
+            return _array[Root];
+        }
+
         private void AddLast(TElement element)
         {
             Expand();
@@ -255,12 +324,12 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
         private void Expand()
         {
-            if (_last + 1 < _array.Length)
+            if (Length() < _array.Length)
             {
                 return;
             }
 
-            _array = Resize(_array, ++_height, _last + 1);
+            _array = Resize(_array, ++_height, Length());
         }
 
         private void Contract()
@@ -270,7 +339,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             if (limitedCapacity > _last
                 && limitedCapacity < _array.Length)
             {
-                _array = Resize(_array, --_height, _last + 1);
+                _array = Resize(_array, --_height, Length());
             }
         }
 
@@ -283,6 +352,11 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
         private void Swap(int left, int right)
         {
+            if (left == right)
+            {
+                return;
+            }
+
             var tmp = _array[left];
             _array[left] = _array[right];
             _array[right] = tmp;
@@ -302,6 +376,15 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             Changed?.Invoke(this, new EventArgs());
         }
+
+        private void NotifyRootNodeChanged(TElement? originalRoot)
+        {
+            var currentRoot = GetRoot();
+
+            RootNodeChanged?.Invoke(this, new RootNodeChangedEventArgs<TElement>(originalRoot, currentRoot));
+        }
+
+        #endregion
 
         private class BinaryHeapEnumerator<T> : IEnumerator<T>
             where T : IEquatable<T>, IComparable<T>, IComparable
@@ -356,7 +439,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             {
                 if (_changed)
                 {
-                    throw new InvalidOperationException("Collection was modified during enumeration.");
+                    throw new InvalidOperationException("Collection was modified during enumeration");
                 }
             }
         }

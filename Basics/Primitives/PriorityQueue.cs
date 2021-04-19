@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics.Primitives
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// PriorityQueue
@@ -42,9 +43,35 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <inheritdoc />
+        public bool TryDequeue([NotNullWhen(true)] out TElement? element)
+        {
+            if (_heap.TryExtract(out var entry))
+            {
+                element = entry.Element !;
+                return true;
+            }
+
+            element = default;
+            return false;
+        }
+
+        /// <inheritdoc />
         public TElement Peek()
         {
             return _heap.Peek().Element;
+        }
+
+        /// <inheritdoc />
+        public bool TryPeek([NotNullWhen(true)] out TElement? element)
+        {
+            if (_heap.TryPeek(out var entry))
+            {
+                element = entry.Element !;
+                return true;
+            }
+
+            element = default;
+            return false;
         }
     }
 }

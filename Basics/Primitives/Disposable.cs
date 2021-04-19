@@ -9,12 +9,12 @@ namespace SpaceEngineers.Core.Basics.Primitives
     public static class Disposable
     {
         /// <summary>
-        /// Empty disposable
+        /// Gets empty disposable object
         /// </summary>
         public static IDisposable Empty { get; } = new EmptyDisposable();
 
         /// <summary>
-        /// Custom disposable with state
+        /// Creates disposable object
         /// </summary>
         /// <param name="state">state</param>
         /// <param name="openScopeAction">openScopeAction</param>
@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <summary>
-        /// Custom disposable with state
+        /// Creates disposable object
         /// </summary>
         /// <param name="state">state</param>
         /// <param name="finallyAction">finallyAction</param>
@@ -40,7 +40,19 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <summary>
-        /// Custom disposable without state
+        /// Creates disposable object
+        /// </summary>
+        /// <param name="openScopeAction">openScopeAction</param>
+        /// <param name="finallyAction">finallyAction</param>
+        /// <returns>IDisposable</returns>
+        public static IDisposable Create(Action openScopeAction, Action finallyAction)
+        {
+            openScopeAction();
+            return new DisposableAction(finallyAction);
+        }
+
+        /// <summary>
+        /// Creates disposable object
         /// </summary>
         /// <param name="finallyAction">finallyAction</param>
         /// <returns>IDisposable</returns>

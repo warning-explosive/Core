@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// <inheritdoc />
     public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
     {
-        private int _started;
+        private readonly State _state = new State();
 
         /// <inheritdoc />
         public async Task StartTransaction(
@@ -16,24 +16,27 @@ namespace SpaceEngineers.Core.Basics.Primitives
             bool saveChanges,
             CancellationToken token)
         {
-            var startError = await ExecutionExtensions
-                .TryAsync(() => StartTransactionUnsafe(context, producer, token))
-                .Catch<Exception>()
-                .Invoke(Task.FromResult<Exception?>)
-                .ConfigureAwait(false);
-
-            var finishError = await ExecutionExtensions
-                .TryAsync(() => FinishTransactionUnsafe(context, saveChanges, startError, token))
-                .Catch<Exception>()
-                .Invoke(Task.FromResult<Exception?>)
-                .ConfigureAwait(false);
-
-            var exception = startError ?? finishError;
-
-            if (exception != null)
+            using (_state.StartExclusiveOperation())
             {
-                exception.Rethrow();
-                throw exception;
+                var startError = await ExecutionExtensions
+                    .TryAsync(() => StartTransactionUnsafe(context, producer, token))
+                    .Catch<Exception>()
+                    .Invoke(Task.FromResult<Exception?>)
+                    .ConfigureAwait(false);
+
+                var finishError = await ExecutionExtensions
+                    .TryAsync(() => FinishTransactionUnsafe(context, saveChanges, startError, token))
+                    .Catch<Exception>()
+                    .Invoke(Task.FromResult<Exception?>)
+                    .ConfigureAwait(false);
+
+                var exception = startError ?? finishError;
+
+                if (exception != null)
+                {
+                    exception.Rethrow();
+                    throw exception;
+                }
             }
         }
 
@@ -73,11 +76,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
         private async Task<Exception?> StartTransactionUnsafe(TContext context, Func<TContext, CancellationToken, Task> producer, CancellationToken token)
         {
-            if (Interlocked.Exchange(ref _started, 1) != default)
-            {
-                throw new InvalidOperationException("You have already started this logical transaction");
-            }
-
             await Start(context, token).ConfigureAwait(false);
 
             await producer.Invoke(context, token).ConfigureAwait(false);

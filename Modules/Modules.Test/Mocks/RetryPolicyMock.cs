@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
         /// <inheritdoc />
         public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
         {
-            var actualCounter = context.Message.ReadRetryCounter();
+            var actualCounter = context.Message.ReadHeader<int>(IntegratedMessageHeader.RetryCounter);
 
             if (actualCounter < Scale.Length)
             {

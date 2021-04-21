@@ -345,7 +345,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 failedMessages = host.Services.GetRequiredService<IHostStatistics>().FailedMessages;
 
-                await Task.Delay(3000, cts.Token).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
@@ -459,9 +459,10 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Equal(4, incomingMessages.Count);
             Assert.Single(incomingMessages.Select(it => it.ReflectedType).Distinct());
             Assert.Single(incomingMessages.Select(it => it.Payload.ToString()).Distinct());
-            Assert.Single(incomingMessages.Select(it => it.Headers[IntegratedMessageHeader.ConversationId]).Distinct());
+            Assert.Single(incomingMessages.Select(it => it.ReadRequiredHeader<Guid>(IntegratedMessageHeader.ConversationId)).Distinct());
+
             var actualRetryIndexes = incomingMessages
-                .Select(it => it.Headers.TryGetValue(IntegratedMessageHeader.MessageRetryCounter, out var value) ? (int)value : 0)
+                .Select(it => it.ReadHeader<int>(IntegratedMessageHeader.RetryCounter))
                 .OrderBy(it => it)
                 .ToList();
             Assert.Equal(new List<int> { 0, 1, 2, 3 }, actualRetryIndexes);

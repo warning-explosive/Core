@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             await Decoratee.Process(context, token).ConfigureAwait(false);
 
             if (context.Message.IsQuery()
-                && !context.Message.HandlerReplied())
+                && !context.Message.DidHandlerReply())
             {
                 throw new InvalidOperationException("Message handler should reply to the query");
             }

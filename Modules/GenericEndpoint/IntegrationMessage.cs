@@ -163,8 +163,8 @@ namespace SpaceEngineers.Core.GenericEndpoint
         {
             var dict = new Dictionary<string, object>
             {
-                ["Type"] = ReflectedType.Name,
-                ["Payload"] = Payload
+                [nameof(ReflectedType)] = ReflectedType.Name,
+                [nameof(Payload)] = Payload
             };
 
             return string.Join(" ", dict.Concat(Headers));

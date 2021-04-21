@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Transport.OnError += OnError;
 
             _messageProcessingTask = Task.WhenAll(
-                _delayedDeliveryQueue.Run(DelayedDeliveryCallback, Token),
+                _delayedDeliveryQueue.Run(Enqueue, Token),
                 _inputQueue.Run(MessageProcessingCallback, Token));
         }
 
@@ -165,21 +165,28 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
         }
 
-        private void OnMessage(object? sender, IntegrationMessageEventArgs args)
+        private async void OnMessage(object? sender, IntegrationMessageEventArgs args)
         {
-            if (args.GeneralMessage.Headers.ContainsKey(IntegratedMessageHeader.DeferredUntil))
+            if (args.GeneralMessage.IsDeferred())
             {
                 _delayedDeliveryQueue.Enqueue(args);
             }
             else
             {
-                _inputQueue.Enqueue(args);
+                await Enqueue(args).ConfigureAwait(false);
             }
         }
 
-        private void OnError(object? sender, FailedIntegrationMessageEventArgs args)
+        private Task Enqueue(IntegrationMessageEventArgs arg)
         {
-            OnError(args.GeneralMessage, args.Exception);
+            arg.GeneralMessage.SetActualDeliveryDate(DateTime.Now);
+            _inputQueue.Enqueue(arg);
+            return Task.CompletedTask;
+        }
+
+        private async void OnError(object? sender, FailedIntegrationMessageEventArgs args)
+        {
+            await OnError(args.GeneralMessage, args.Exception).ConfigureAwait(false);
         }
 
         private Task OnError(IntegrationMessage message, Exception exception)
@@ -222,15 +229,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(message.DeepCopy());
         }
 
-        private Task DelayedDeliveryCallback(IntegrationMessageEventArgs arg)
-        {
-            _inputQueue.Enqueue(arg);
-            return Task.CompletedTask;
-        }
-
         private static DateTime PrioritySelector(IntegrationMessageEventArgs arg)
         {
-            return (DateTime)arg.GeneralMessage.Headers[IntegratedMessageHeader.DeferredUntil];
+            return arg.GeneralMessage.ReadRequiredHeader<DateTime>(IntegratedMessageHeader.DeferredUntil);
         }
     }
 }

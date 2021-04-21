@@ -12,36 +12,41 @@ namespace SpaceEngineers.Core.GenericEndpoint
     public class IntegratedMessageHeader : IMessageHeaderProvider
     {
         /// <summary>
-        /// ConversationId - guid, notnull
+        /// ConversationId - Guid, NotNull
         /// </summary>
         public const string ConversationId = "CONVERSATION_ID";
 
         /// <summary>
-        /// Sent from - EndpointIdentity, notnull
+        /// Sent from - EndpointIdentity, CanBeNull
         /// </summary>
         public const string SentFrom = "SENT_FROM";
 
         /// <summary>
-        /// Message retry counter - integer, notnull
+        /// Retry counter - Int32, CanBeNull
         /// </summary>
-        public const string MessageRetryCounter = "MESSAGE_RETRY_COUNTER";
+        public const string RetryCounter = "RETRY_COUNTER";
 
         /// <summary>
-        /// Handler replied to the query - boolean, notnull
+        /// Did handler replied to the query - Boolean, CanBeNull
         /// </summary>
-        public const string HandlerRepliedToTheQuery = "HANDLER_REPLIED_TO_THE_QUERY";
+        public const string DidHandlerReplyToTheQuery = "DID_HANDLER_REPLY_TO_THE_QUERY";
 
         /// <summary>
-        /// Deferred until specified date (system time) - datetime, notnull
+        /// Deferred until specified date (system time) - DateTime, CanBeNull
         /// </summary>
         public const string DeferredUntil = "DEFERRED_UNTIL";
+
+        /// <summary>
+        /// Actual delivery date to the input queue (system time) - DateTime, NotNull
+        /// </summary>
+        public const string ActualDeliveryDate = "ACTUAL_DELIVERY_DATE";
 
         /// <inheritdoc />
         public IEnumerable<string> ForAutomaticForwarding { get; }
             = new[]
             {
                 ConversationId,
-                MessageRetryCounter
+                RetryCounter
             };
     }
 }

@@ -45,10 +45,13 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.Throws<NotSupportedException>(() => queue.TryPeek(out _));
 
             Assert.True(queue.IsEmpty);
-            var shifted = DateTime.Now.AddMilliseconds(300);
-            queue.Enqueue(new Entry(0, shifted.AddMilliseconds(100)));
-            queue.Enqueue(new Entry(1, shifted.AddMilliseconds(300)));
-            queue.Enqueue(new Entry(3, shifted.AddMilliseconds(700)));
+
+            var step = TimeSpan.FromMilliseconds(200);
+            var shifted = DateTime.Now.Add(step);
+
+            queue.Enqueue(new Entry(0, shifted));
+            queue.Enqueue(new Entry(2, shifted.Add(2 * step)));
+            queue.Enqueue(new Entry(4, shifted.Add(4 * step)));
 
             var entries = new List<Entry>();
             var started = DateTime.Now;
@@ -57,15 +60,16 @@ namespace SpaceEngineers.Core.Basics.Test
             {
                 var backgroundPublisher = Task.Run(async () =>
                     {
-                        var delay = shifted.AddMilliseconds(400) - DateTime.Now;
-                        Output.WriteLine($"Background delay: {delay}");
-                        await Task.Delay(delay, cts.Token).ConfigureAwait(false);
-                        Assert.True(DateTime.Now >= shifted.AddMilliseconds(400));
-                        Assert.True(DateTime.Now <= shifted.AddMilliseconds(600));
+                        var corrected = shifted.Add(step / 2) - DateTime.Now;
 
-                        queue.Enqueue(new Entry(2, shifted.AddMilliseconds(500)));
-                        queue.Enqueue(new Entry(4, shifted.AddMilliseconds(900)));
-                        queue.Enqueue(new Entry(5, shifted.AddMilliseconds(1100)));
+                        await Task.Delay(corrected, cts.Token).ConfigureAwait(false);
+                        queue.Enqueue(new Entry(1, shifted.Add(1 * step)));
+
+                        await Task.Delay(step, cts.Token).ConfigureAwait(false);
+                        queue.Enqueue(new Entry(3, shifted.Add(3 * step)));
+
+                        await Task.Delay(step, cts.Token).ConfigureAwait(false);
+                        queue.Enqueue(new Entry(5, shifted.Add(5 * step)));
                     },
                     cts.Token);
 

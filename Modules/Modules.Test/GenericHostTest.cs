@@ -448,7 +448,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await transport.IntegrationContext.Send(new TestCommand(42), cts.Token).ConfigureAwait(false);
 
-                await Task.Delay(3000, cts.Token).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(4), cts.Token).ConfigureAwait(false);
 
                 failedMessages = host.Services.GetRequiredService<IHostStatistics>().FailedMessages;
 
@@ -456,6 +456,18 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             Output.WriteLine($"{nameof(incomingMessages)}Count: {incomingMessages.Count}");
+            Output.WriteLine(incomingMessages.Select((message, index) => $"[{index}] - {message}").ToString(Environment.NewLine));
+
+            var deliveredInTime = incomingMessages
+                .Select(msg => new
+                {
+                    ActualDeliveryDate = msg.ReadRequiredHeader<DateTime>(IntegratedMessageHeader.ActualDeliveryDate),
+                    DeferredUntil = msg.ReadHeader<DateTime>(IntegratedMessageHeader.DeferredUntil)
+                })
+                .Where(header => header.DeferredUntil != default)
+                .All(header => header.DeferredUntil <= header.ActualDeliveryDate);
+            Assert.True(deliveredInTime);
+
             Assert.Equal(4, incomingMessages.Count);
             Assert.Single(incomingMessages.Select(it => it.ReflectedType).Distinct());
             Assert.Single(incomingMessages.Select(it => it.Payload.ToString()).Distinct());

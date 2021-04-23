@@ -78,21 +78,13 @@ namespace SpaceEngineers.Core.Basics.Primitives
             CancellationTokenSource? cts = null;
 
             using (_state.StartExclusiveOperation())
-            using (Disposable.Create(() => _heap.RootNodeChanged += LocalOnRootNodeChanged,
-                () => _heap.RootNodeChanged -= LocalOnRootNodeChanged))
+            using (Disposable.Create(() => _heap.RootNodeChanged += ScheduleOnRootNodeChanged,
+                () => _heap.RootNodeChanged -= ScheduleOnRootNodeChanged))
             {
                 while (!token.IsCancellationRequested)
                 {
-                    var info = _state.Exchange<(Task, CancellationTokenSource?)>(Scheduled, _ => default);
-
-                    if (info == default)
-                    {
-                        _priorityQueue.TryPeek(out var element);
-                        info = ScheduleElement(element, token, out _);
-                    }
-
                     Task delay;
-                    (delay, cts) = info;
+                    (delay, cts) = ScheduleNext(token);
 
                     try
                     {
@@ -123,30 +115,63 @@ namespace SpaceEngineers.Core.Basics.Primitives
             cts?.Cancel();
             cts?.Dispose();
 
-            void LocalOnRootNodeChanged(object sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
+            void ScheduleOnRootNodeChanged(object sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
             {
                 var element = args.CurrentValue == default
                     ? default
                     : args.CurrentValue.Element;
 
-                ScheduleElement(element, token, out var originalSchedule);
-
-                var (_, originalCts) = originalSchedule;
-
-                originalCts?.Cancel();
-                originalCts?.Dispose();
+                ReScheduleNext(element, token);
             }
         }
 
-        private (Task, CancellationTokenSource?) ScheduleElement(TElement? element, CancellationToken token, out (Task, CancellationTokenSource?) originalSchedule)
+        private (Task, CancellationTokenSource?) ScheduleNext(CancellationToken token)
         {
-            var info = element == null
+            (Task, CancellationTokenSource?) schedule = default;
+
+            /* TODO: wrong lock order -> dead lock -> 1. lock _state -> 2. lock heap */
+
+            _ = _state.Exchange<(Task, CancellationTokenSource?), CancellationToken>(
+                Scheduled,
+                token,
+                (original, cancellationToken) =>
+                {
+                    if (original != default)
+                    {
+                        schedule = original;
+                    }
+                    else
+                    {
+                        _priorityQueue.TryPeek(out var element);
+                        schedule = ScheduleElement(element, cancellationToken);
+                    }
+
+                    return schedule;
+                });
+
+            return schedule;
+        }
+
+        private void ReScheduleNext(TElement? element, CancellationToken token)
+        {
+            /* TODO: wrong lock order -> dead lock -> 1. lock heap -> 2. lock _state */
+
+            var originalSchedule = _state.Exchange<(Task, CancellationTokenSource?), (TElement? Element, CancellationToken Token)>(
+                Scheduled,
+                (element, token),
+                (_, context) => ScheduleElement(context.Element, context.Token));
+
+            var (_, originalCts) = originalSchedule;
+
+            originalCts?.Cancel();
+            originalCts?.Dispose();
+        }
+
+        private (Task, CancellationTokenSource?) ScheduleElement(TElement? element, CancellationToken token)
+        {
+            return element == null
                 ? InfiniteDelay(token)
                 : ElementDelay(element, token);
-
-            originalSchedule = _state.Exchange<(Task, CancellationTokenSource? Cts)>(Scheduled, _ => info);
-
-            return info;
         }
 
         private static (Task, CancellationTokenSource?) InfiniteDelay(CancellationToken token)

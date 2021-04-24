@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
 
-    [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
+    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Override)]
     internal class TypeProviderMock : ITypeProvider, IDecorator<ITypeProvider>
     {
         private readonly ITypeProvider _decoratee;

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoWiringTest
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Component(EnLifestyle.Transient, EnComponentKind.OpenGenericFallback)]
+    [Component(EnLifestyle.Transient)]
     internal class ExternalResolvableOpenGenericImpl<T> : IProgress<T>,
                                                           IExternalResolvable<IProgress<T>>
         where T : class

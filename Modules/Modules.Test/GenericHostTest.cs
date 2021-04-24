@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns;
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
@@ -90,7 +91,7 @@ namespace SpaceEngineers.Core.Modules.Test
         internal async Task IntegrationContextCheckAppliedDecoratorTest(IIntegrationTransport transport)
         {
             var transportDependencyContainer = transport.GetPropertyValue<IDependencyContainer>("DependencyContainer");
-            var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand));
+            var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand), new StringFormatterMock());
 
             // 1 - IUbiquitousIntegrationContext
             Assert.Throws<InvalidOperationException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
@@ -169,9 +170,10 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var manualRegistrations = new IManualRegistration[]
             {
-                ((IAdvancedIntegrationTransport)transport).Injection,
+                handlersRegistration,
                 endpointIdentityRegistration,
-                handlersRegistration
+                ((IAdvancedIntegrationTransport)transport).Injection,
+                new CrossCuttingConcernsManualRegistration()
             };
 
             var options = new DependencyContainerOptions
@@ -304,7 +306,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 ManualRegistrations = new[]
                 {
                     identityRegistration,
-                    ((IAdvancedIntegrationTransport)transport).Injection
+                    ((IAdvancedIntegrationTransport)transport).Injection,
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
@@ -408,7 +411,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 ManualRegistrations = new[]
                 {
                     identityRegistration,
-                    ((IAdvancedIntegrationTransport)transport).Injection
+                    ((IAdvancedIntegrationTransport)transport).Injection,
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);

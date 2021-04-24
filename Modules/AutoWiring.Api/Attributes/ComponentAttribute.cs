@@ -11,11 +11,13 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Attributes
     {
         /// <summary> .ctor </summary>
         /// <param name="lifestyle">Lifestyle</param>
-        /// <param name="kind">Component kind</param>
-        public ComponentAttribute(EnLifestyle lifestyle, EnComponentKind kind = EnComponentKind.Regular)
+        /// <param name="registrationKind">Component registration kind</param>
+        public ComponentAttribute(
+            EnLifestyle lifestyle,
+            EnComponentRegistrationKind registrationKind = EnComponentRegistrationKind.AutomaticallyRegistered)
         {
             Lifestyle = lifestyle;
-            Kind = kind;
+            RegistrationKind = registrationKind;
         }
 
         /// <summary>
@@ -24,8 +26,8 @@ namespace SpaceEngineers.Core.AutoWiring.Api.Attributes
         public EnLifestyle Lifestyle { get; }
 
         /// <summary>
-        /// Component kind
+        /// Component registration kind
         /// </summary>
-        public EnComponentKind Kind { get; }
+        public EnComponentRegistrationKind RegistrationKind { get; }
     }
 }

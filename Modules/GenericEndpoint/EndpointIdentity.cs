@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
     /// <summary>
     /// Endpoint identity
     /// </summary>
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
     public class EndpointIdentity : IResolvable,
                                     ISafelyEquatable<EndpointIdentity>,
                                     IEquatable<EndpointIdentity>

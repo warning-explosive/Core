@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiring.Api.Enumerations;
     using Basics;
     using Internals;
     using SimpleInjector;
@@ -63,13 +62,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                                                             IEnumerable<ServiceRegistrationInfo> infos,
                                                             Func<ServiceRegistrationInfo, Type> serviceSelector)
         {
-            infos // open-generic fallback should be registered after all exact registrations
-                .OrderBy(info => info.ComponentKind == EnComponentKind.OpenGenericFallback)
+            infos // open-generic fallback should be registered after all exactly registered components
+                .OrderBy(info => info.IsOpenGenericFallback())
                 .Each(info =>
                 {
                     var service = serviceSelector(info);
 
-                    if (info.ComponentKind == EnComponentKind.OpenGenericFallback)
+                    if (info.IsOpenGenericFallback())
                     {
                         container.RegisterConditional(
                             service,

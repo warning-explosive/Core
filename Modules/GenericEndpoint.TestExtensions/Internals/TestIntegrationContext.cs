@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
 
-    [Component(EnLifestyle.Scoped, EnComponentKind.Unregistered)]
+    [Component(EnLifestyle.Scoped, EnComponentRegistrationKind.Unregistered)]
     internal class TestIntegrationContext : IIntegrationContext
     {
         private List<IIntegrationMessage> _messages;

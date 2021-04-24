@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using CrossCuttingConcerns;
     using GenericEndpoint.Abstractions;
     using Internals;
 
@@ -39,7 +40,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
             endpointOptions.ContainerOptions.ManualRegistrations
                 = new List<IManualRegistration>(endpointOptions.ContainerOptions.ManualRegistrations)
                 {
-                    new GenericEndpointIdentityManualRegistration(endpointOptions.Identity)
+                    new GenericEndpointIdentityManualRegistration(endpointOptions.Identity),
+                    new CrossCuttingConcernsManualRegistration()
                 };
 
             return DependencyContainer.CreateBoundedAbove(endpointOptions.ContainerOptions, endpointOptions.AboveAssemblies.ToArray());

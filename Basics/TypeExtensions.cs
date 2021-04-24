@@ -249,9 +249,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Unwrapped type</returns>
         public static Type UnwrapTypeParameter(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
         {
-            return typeToUnwrap
-                       .ExtractGenericArgumentsAt(openGeneric, typeArgumentAt)
-                       .SingleOrDefault()
+            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault()
                    ?? typeToUnwrap;
         }
 

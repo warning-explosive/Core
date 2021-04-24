@@ -226,7 +226,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private Task DispatchToEndpointInstance(IntegrationMessage message, IGenericEndpoint endpoint)
         {
-            return ((IExecutableEndpoint)endpoint).InvokeMessageHandler(message.DeepCopy());
+            return ((IExecutableEndpoint)endpoint).InvokeMessageHandler((IntegrationMessage)message.Clone());
         }
 
         private static DateTime PrioritySelector(IntegrationMessageEventArgs arg)

@@ -1,11 +1,8 @@
 namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
     using Basics;
-    using Internals;
     using SimpleInjector;
 
     internal static class VerifiersExtensions
@@ -34,16 +31,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             return constructor != null
                 ? constructor
                 : throw new InvalidOperationException(errorMessage);
-        }
-
-        internal static IEnumerable<Type> RegisteredComponents(this Container container)
-        {
-            return container
-                .GetCurrentRegistrations()
-                .Select(DependencyInfo.RetrieveDependencyGraph)
-                .SelectMany(info => info.ExtractFromGraph(dependency => dependency.ImplementationType))
-                .Where(type => !type.IsAbstract)
-                .Distinct();
         }
     }
 }

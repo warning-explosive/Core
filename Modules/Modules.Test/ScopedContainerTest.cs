@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns;
     using Registrations;
     using SimpleInjector;
     using Xunit;
@@ -24,9 +25,10 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions
             {
-                ManualRegistrations = new[]
+                ManualRegistrations = new IManualRegistration[]
                 {
-                    new GenericEndpointTestRegistration()
+                    new GenericEndpointTestRegistration(),
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
 

@@ -24,13 +24,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
         {
             _typeProvider
                .OurTypes
-               .Select(type => (type, type.GetAttribute<ComponentAttribute>()?.Kind))
-               .Where(info => info.Kind == EnComponentKind.Unregistered)
+               .Select(type => (type, type.GetAttribute<ComponentAttribute>()?.RegistrationKind))
+               .Where(info => info.RegistrationKind == EnComponentRegistrationKind.Unregistered)
                .Select(info => info.type)
-               .SelectMany(implementation => ExtractAutoWiringServices(implementation)
-                   .Select(service => (service, implementation)))
-               .Where(pair => registered.Contains(pair.implementation)
-                              || registered.Contains(pair.service))
+               .SelectMany(implementation => ExtractAutoWiringServices(implementation).Select(service => (service, implementation)))
+               .Where(pair => registered.Contains(pair.implementation) || registered.Contains(pair.service))
                .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} shouldn't be registered but represented in the dependency container as {pair.service.FullName}"));
         }
     }

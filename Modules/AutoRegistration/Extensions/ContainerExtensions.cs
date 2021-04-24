@@ -1,10 +1,12 @@
 namespace SpaceEngineers.Core.AutoRegistration.Extensions
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
+    using Basics;
     using Internals;
     using SimpleInjector;
 
@@ -26,15 +28,38 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                 });
         }
 
-        internal static bool ForAutoRegistration(this ServiceRegistrationInfo info)
+        internal static IEnumerable<Type> RegisteredComponents(this Container container)
         {
-            return ForAutoRegistration(info.ComponentKind);
+            var explicitRegistrations = container
+                .GetFieldValue<IDictionary>("explicitRegistrations")
+                .Keys
+                .OfType<Type>();
+
+            var graph = container
+                .GetCurrentRegistrations()
+                .Select(DependencyInfo.RetrieveDependencyGraph)
+                .SelectMany(info => info.ExtractFromGraph(dependency => dependency.ImplementationType));
+
+            return explicitRegistrations
+                .Concat(graph)
+                .Distinct()
+                .Where(type => !type.IsAbstract);
         }
 
-        private static bool ForAutoRegistration(EnComponentKind kind)
+        internal static bool IsOpenGenericFallback(this ServiceRegistrationInfo info)
         {
-            return kind == EnComponentKind.Regular
-                   || kind == EnComponentKind.OpenGenericFallback;
+            return info.ImplementationType.IsGenericType
+                   && !info.ImplementationType.IsConstructedGenericType;
+        }
+
+        internal static bool ForAutoRegistration(this ServiceRegistrationInfo info)
+        {
+            return ForAutoRegistration(info.RegistrationKind);
+        }
+
+        private static bool ForAutoRegistration(EnComponentRegistrationKind kind)
+        {
+            return kind == EnComponentRegistrationKind.AutomaticallyRegistered;
         }
     }
 }

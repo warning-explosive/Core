@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
-    [Component(EnLifestyle.Scoped, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Scoped, EnComponentRegistrationKind.ManuallyRegistered)]
     internal class AdvancedIntegrationContextMock : IAdvancedIntegrationContext
     {
         private IntegrationMessage? _message;

@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
 
         protected static IEnumerable<Type> ExtractAutoWiringServices(Type type)
         {
-            return type.IncludedTypes().Where(i => typeof(IResolvable).IsAssignableFrom(i))
+            return type.IncludedTypes().Where(t => typeof(IResolvable).IsAssignableFrom(t))
                        .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))
                        .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
                        .Distinct();

@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport
 {
     using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using Core.GenericHost.Abstractions;
+    using CrossCuttingConcerns;
     using Internals;
     using Registrations;
 
@@ -18,9 +20,10 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport
         {
             var containerOptions = new DependencyContainerOptions
             {
-                ManualRegistrations = new[]
+                ManualRegistrations = new IManualRegistration[]
                 {
-                    new InMemoryIntegrationTransportRegistration()
+                    new InMemoryIntegrationTransportRegistration(),
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
 

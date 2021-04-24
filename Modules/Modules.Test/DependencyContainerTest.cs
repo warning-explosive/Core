@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns;
     using Registrations;
     using SimpleInjector;
     using Xunit;
@@ -33,9 +34,10 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions
             {
-                ManualRegistrations = new[]
+                ManualRegistrations = new IManualRegistration[]
                 {
-                    new GenericEndpointTestRegistration()
+                    new GenericEndpointTestRegistration(),
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
 
@@ -112,15 +114,14 @@ namespace SpaceEngineers.Core.Modules.Test
 
                         Output.WriteLine(service.FullName);
 
-                        var componentKind = type.GetRequiredAttribute<ComponentAttribute>().Kind;
+                        var component = type.GetRequiredAttribute<ComponentAttribute>();
 
                         if (service.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                         {
                             Assert.Throws<InvalidOperationException>(() => resolve(DependencyContainer, service));
                         }
-                        else if (componentKind == EnComponentKind.Regular
-                                 || componentKind == EnComponentKind.ManuallyRegistered
-                                 || componentKind == EnComponentKind.OpenGenericFallback)
+                        else if (component.RegistrationKind == EnComponentRegistrationKind.AutomaticallyRegistered
+                                 || component.RegistrationKind == EnComponentRegistrationKind.ManuallyRegistered)
                         {
                             resolve(DependencyContainer, service);
                         }
@@ -267,8 +268,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredServiceResolveTest()
         {
-            Assert.Equal(EnComponentKind.Unregistered, typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
-            Assert.Equal(EnComponentKind.Regular, typeof(DerivedFromUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
+            Assert.Equal(EnComponentRegistrationKind.Unregistered, typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).RegistrationKind);
 
             Assert.True(typeof(DerivedFromUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
             Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredServiceImpl)));
@@ -280,8 +280,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredExternalServiceResolveTest()
         {
-            Assert.Equal(EnComponentKind.Unregistered, typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
-            Assert.Equal(EnComponentKind.Regular, typeof(DerivedFromUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).Kind);
+            Assert.Equal(EnComponentRegistrationKind.Unregistered, typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).RegistrationKind);
 
             Assert.True(typeof(DerivedFromUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedFromUnregisteredExternalServiceImpl)));

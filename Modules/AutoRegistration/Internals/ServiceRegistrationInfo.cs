@@ -21,9 +21,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             var serviceComponentAttribute = serviceType.GetAttribute<ComponentAttribute>();
 
             Lifestyle = implementationComponentAttribute.Lifestyle.MapLifestyle();
-            ComponentKind = serviceComponentAttribute?.Kind == EnComponentKind.Unregistered
-                ? EnComponentKind.Unregistered
-                : implementationComponentAttribute.Kind;
+
+            RegistrationKind = serviceComponentAttribute?.RegistrationKind == EnComponentRegistrationKind.Unregistered
+                ? EnComponentRegistrationKind.Unregistered
+                : implementationComponentAttribute.RegistrationKind;
         }
 
         internal Type ImplementationType { get; }
@@ -32,14 +33,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         internal Lifestyle Lifestyle { get; }
 
-        internal EnComponentKind ComponentKind { get; }
+        internal EnComponentRegistrationKind RegistrationKind { get; }
 
         public bool SafeEquals(ServiceRegistrationInfo other)
         {
             return ServiceType == other.ServiceType
                     && ImplementationType == other.ImplementationType
                     && Lifestyle.Equals(other.Lifestyle)
-                    && ComponentKind == other.ComponentKind;
+                    && RegistrationKind == other.RegistrationKind;
         }
 
         public bool Equals(ServiceRegistrationInfo? other)
@@ -54,7 +55,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ImplementationType, ServiceType, Lifestyle, ComponentKind);
+            return HashCode.Combine(ImplementationType, ServiceType, Lifestyle, RegistrationKind);
         }
     }
 }

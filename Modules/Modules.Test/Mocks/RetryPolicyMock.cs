@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using GenericEndpoint;
     using GenericEndpoint.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentKind.Override)]
+    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Override)]
     internal class RetryPolicyMock : IRetryPolicy
     {
         private static readonly int[] Scale = new[] { 0, 1, 2 };

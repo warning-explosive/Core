@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
     using System.Linq;
     using Basics;
     using Contract.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     /// <summary>
     /// Integration message
@@ -14,12 +15,19 @@ namespace SpaceEngineers.Core.GenericEndpoint
                                       ISafelyEquatable<IntegrationMessage>,
                                       ISafelyComparable<IntegrationMessage>,
                                       IComparable<IntegrationMessage>,
-                                      IComparable
+                                      IComparable,
+                                      ICloneable
     {
+        private readonly IStringFormatter _formatter;
+
         /// <summary> .cctor </summary>
         /// <param name="payload">User-defined payload message</param>
         /// <param name="reflectedType">Message reflected type</param>
-        public IntegrationMessage(IIntegrationMessage payload, Type reflectedType)
+        /// <param name="formatter">IStringFormatter</param>
+        public IntegrationMessage(
+            IIntegrationMessage payload,
+            Type reflectedType,
+            IStringFormatter formatter)
         {
             Id = Guid.NewGuid();
             Payload = payload;
@@ -28,6 +36,31 @@ namespace SpaceEngineers.Core.GenericEndpoint
             {
                 [IntegratedMessageHeader.ConversationId] = Guid.NewGuid()
             };
+
+            _formatter = formatter;
+        }
+
+        /// <summary>
+        /// Copy .cctor
+        /// </summary>
+        /// <param name="id">Identifier</param>
+        /// <param name="payload">Payload</param>
+        /// <param name="reflectedType">Reflected type</param>
+        /// <param name="headers">Headers</param>
+        /// <param name="formatter">To string formatter</param>
+        private IntegrationMessage(
+            Guid id,
+            IIntegrationMessage payload,
+            Type reflectedType,
+            IDictionary<string, object> headers,
+            IStringFormatter formatter)
+        {
+            Id = id;
+            Payload = payload;
+            ReflectedType = reflectedType;
+            Headers = headers;
+
+            _formatter = formatter;
         }
 
         /// <summary>
@@ -161,13 +194,26 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// <inheritdoc />
         public override string ToString()
         {
-            var dict = new Dictionary<string, object>
+            var headers = new Dictionary<string, object>(Headers)
             {
                 [nameof(ReflectedType)] = ReflectedType.Name,
                 [nameof(Payload)] = Payload
             };
 
-            return string.Join(" ", dict.Concat(Headers));
+            return headers
+                .Select(pair => new
+                {
+                    pair.Key,
+                    Value = _formatter.Format(pair.Value)
+                })
+                .Select(pair => $"[{pair.Key}, {pair.Value}]")
+                .ToString(" ");
+        }
+
+        /// <inheritdoc />
+        public object Clone()
+        {
+            return new IntegrationMessage(Id, Payload.DeepCopy(), ReflectedType, Headers.DeepCopy(), _formatter);
         }
     }
 }

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns;
     using Registrations;
     using Xunit;
     using Xunit.Abstractions;
@@ -29,7 +30,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 ManualRegistrations = new IManualRegistration[]
                 {
-                    new GenericEndpointTestRegistration()
+                    new GenericEndpointTestRegistration(),
+                    new CrossCuttingConcernsManualRegistration()
                 }
             };
 

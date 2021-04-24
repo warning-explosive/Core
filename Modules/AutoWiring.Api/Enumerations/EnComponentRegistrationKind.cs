@@ -1,19 +1,14 @@
 namespace SpaceEngineers.Core.AutoWiring.Api.Enumerations
 {
     /// <summary>
-    /// Component kind
+    /// Component registration kind
     /// </summary>
-    public enum EnComponentKind
+    public enum EnComponentRegistrationKind
     {
         /// <summary>
-        /// Regular automatically registered component
+        /// Component that should be registered automatically
         /// </summary>
-        Regular,
-
-        /// <summary>
-        /// Component that should be registered as open-generic fallback
-        /// </summary>
-        OpenGenericFallback,
+        AutomaticallyRegistered,
 
         /// <summary>
         /// Component that should be registered by hand

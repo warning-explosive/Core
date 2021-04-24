@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [Component(EnLifestyle.Singleton, EnComponentKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
     public class DependencyContainer : IDependencyContainer
     {
         private readonly Container _container;

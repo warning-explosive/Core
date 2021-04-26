@@ -94,14 +94,26 @@ namespace SpaceEngineers.Core.Basics.Test
 
             void Read()
             {
-                _ = heap.Count;
-                _ = heap.IsEmpty;
-                _ = heap.Peek();
+                lock (heap)
+                {
+                    _ = heap.Count;
+                    _ = heap.IsEmpty;
+                    _ = heap.Peek();
+                    _ = heap.TryPeek(out _);
+                }
             }
 
             void Write()
             {
-                heap.Insert(heap.Extract());
+                lock (heap)
+                {
+                    heap.Insert(heap.Extract());
+
+                    if (heap.TryExtract(out var element))
+                    {
+                        heap.Insert(element);
+                    }
+                }
             }
         }
     }

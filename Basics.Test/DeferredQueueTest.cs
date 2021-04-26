@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.Basics.Test
         /// OnRootNodeChangedTestData
         /// </summary>
         /// <returns>TestData</returns>
-        public static IEnumerable<object> OnRootNodeChangedTestData()
+        public static IEnumerable<object> DeferredQueueTestData()
         {
             var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingKind.Asc), PrioritySelector);
 
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Theory]
-        [MemberData(nameof(OnRootNodeChangedTestData))]
+        [MemberData(nameof(DeferredQueueTestData))]
         internal async Task OnRootNodeChangedTest(DeferredQueue<Entry> queue)
         {
             Assert.Throws<NotSupportedException>(queue.Dequeue);
@@ -46,12 +46,12 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.True(queue.IsEmpty);
 
-            var step = TimeSpan.FromMilliseconds(200);
-            var shifted = DateTime.Now.Add(step);
+            var step = TimeSpan.FromMilliseconds(100);
+            var startFrom = DateTime.Now.Add(step);
 
-            queue.Enqueue(new Entry(0, shifted));
-            queue.Enqueue(new Entry(2, shifted.Add(2 * step)));
-            queue.Enqueue(new Entry(4, shifted.Add(4 * step)));
+            queue.Enqueue(new Entry(0, startFrom));
+            queue.Enqueue(new Entry(2, startFrom.Add(2 * step)));
+            queue.Enqueue(new Entry(4, startFrom.Add(4 * step)));
 
             var entries = new List<Entry>();
             var started = DateTime.Now;
@@ -60,16 +60,16 @@ namespace SpaceEngineers.Core.Basics.Test
             {
                 var backgroundPublisher = Task.Run(async () =>
                     {
-                        var corrected = shifted.Add(step / 2) - DateTime.Now;
+                        var corrected = startFrom.Add(step / 2) - DateTime.Now;
 
                         await Task.Delay(corrected, cts.Token).ConfigureAwait(false);
-                        queue.Enqueue(new Entry(1, shifted.Add(1 * step)));
+                        queue.Enqueue(new Entry(1, startFrom.Add(1 * step)));
 
                         await Task.Delay(step, cts.Token).ConfigureAwait(false);
-                        queue.Enqueue(new Entry(3, shifted.Add(3 * step)));
+                        queue.Enqueue(new Entry(3, startFrom.Add(3 * step)));
 
                         await Task.Delay(step, cts.Token).ConfigureAwait(false);
-                        queue.Enqueue(new Entry(5, shifted.Add(5 * step)));
+                        queue.Enqueue(new Entry(5, startFrom.Add(5 * step)));
                     },
                     cts.Token);
 
@@ -103,6 +103,65 @@ namespace SpaceEngineers.Core.Basics.Test
                 entry.Actual = now;
 
                 return Task.CompletedTask;
+            }
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(DeferredQueueTestData))]
+        internal async Task IntensiveReadWriteTest(DeferredQueue<Entry> queue)
+        {
+            Assert.True(queue.IsEmpty);
+
+            var publishersCount = 2;
+            var count = 500;
+            var actualCount = 0;
+            var timeout = TimeSpan.FromSeconds(10);
+            var step = TimeSpan.FromMilliseconds(1);
+            var startFrom = DateTime.Now.Add(TimeSpan.FromMilliseconds(100));
+
+            var started = DateTime.Now;
+
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                var token = cts.Token;
+
+                var firstBackgroundPublisher = Task.Run(() => StartPublishing(queue, count, startFrom, step, token), token);
+                var secondBackgroundPublisher = Task.Run(() => StartPublishing(queue, count, startFrom.Add(step / publishersCount), step, token), token);
+                var deferredDeliveryOperation = queue.Run(Callback, token);
+
+                await Task.WhenAll(firstBackgroundPublisher, secondBackgroundPublisher).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(100), token).ConfigureAwait(false);
+
+                cts.Cancel();
+
+                await deferredDeliveryOperation.ConfigureAwait(false);
+            }
+
+            var finished = DateTime.Now;
+            var duration = finished - started;
+            Output.WriteLine(duration.ToString());
+
+            Assert.True(queue.IsEmpty);
+            Assert.Equal(publishersCount * count, actualCount);
+
+            Task Callback(Entry entry)
+            {
+                Interlocked.Increment(ref actualCount);
+                return Task.CompletedTask;
+            }
+        }
+
+        private static async Task StartPublishing(
+            DeferredQueue<Entry> queue,
+            int count,
+            DateTime startFrom,
+            TimeSpan step,
+            CancellationToken token)
+        {
+            for (var i = 1; i <= count; i++)
+            {
+                await Task.Delay(step, token).ConfigureAwait(false);
+                queue.Enqueue(new Entry(i, startFrom.Add(i * step)));
             }
         }
 

@@ -37,15 +37,36 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <inheritdoc />
-        public int Count => _priorityQueue.Count;
+        public int Count
+        {
+            get
+            {
+                lock (_priorityQueue)
+                {
+                    return _priorityQueue.Count;
+                }
+            }
+        }
 
         /// <inheritdoc />
-        public bool IsEmpty => _priorityQueue.IsEmpty;
+        public bool IsEmpty
+        {
+            get
+            {
+                lock (_priorityQueue)
+                {
+                    return _priorityQueue.IsEmpty;
+                }
+            }
+        }
 
         /// <inheritdoc />
         public void Enqueue(TElement element)
         {
-            _priorityQueue.Enqueue(element);
+            lock (_priorityQueue)
+            {
+                _priorityQueue.Enqueue(element);
+            }
         }
 
         /// <inheritdoc />
@@ -95,7 +116,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
                         continue;
                     }
 
-                    if (!_priorityQueue.TryDequeue(out var args))
+                    if (!TryDequeueSync(out var args))
                     {
                         continue;
                     }
@@ -125,46 +146,56 @@ namespace SpaceEngineers.Core.Basics.Primitives
             }
         }
 
+        private bool TryDequeueSync([NotNullWhen(true)] out TElement? element)
+        {
+            lock (_priorityQueue)
+            {
+                return _priorityQueue.TryDequeue(out element);
+            }
+        }
+
         private (Task, CancellationTokenSource?) ScheduleNext(CancellationToken token)
         {
-            (Task, CancellationTokenSource?) schedule = default;
+            lock (_priorityQueue)
+            {
+                (Task, CancellationTokenSource?) schedule = default;
 
-            /* TODO: wrong lock order -> dead lock -> 1. lock _state -> 2. lock heap */
-
-            _ = _state.Exchange<(Task, CancellationTokenSource?), CancellationToken>(
-                Scheduled,
-                token,
-                (original, cancellationToken) =>
-                {
-                    if (original != default)
+                _ = _state.Exchange<(Task, CancellationTokenSource?), CancellationToken>(
+                    Scheduled,
+                    token,
+                    (original, cancellationToken) =>
                     {
-                        schedule = original;
-                    }
-                    else
-                    {
-                        _priorityQueue.TryPeek(out var element);
-                        schedule = ScheduleElement(element, cancellationToken);
-                    }
+                        if (original != default)
+                        {
+                            schedule = original;
+                        }
+                        else
+                        {
+                            _priorityQueue.TryPeek(out var element);
+                            schedule = ScheduleElement(element, cancellationToken);
+                        }
 
-                    return schedule;
-                });
+                        return schedule;
+                    });
 
-            return schedule;
+                return schedule;
+            }
         }
 
         private void ReScheduleNext(TElement? element, CancellationToken token)
         {
-            /* TODO: wrong lock order -> dead lock -> 1. lock heap -> 2. lock _state */
+            lock (_priorityQueue)
+            {
+                var originalSchedule = _state.Exchange<(Task, CancellationTokenSource?), (TElement? Element, CancellationToken Token)>(
+                    Scheduled,
+                    (element, token),
+                    (_, context) => ScheduleElement(context.Element, context.Token));
 
-            var originalSchedule = _state.Exchange<(Task, CancellationTokenSource?), (TElement? Element, CancellationToken Token)>(
-                Scheduled,
-                (element, token),
-                (_, context) => ScheduleElement(context.Element, context.Token));
+                var (_, originalCts) = originalSchedule;
 
-            var (_, originalCts) = originalSchedule;
-
-            originalCts?.Cancel();
-            originalCts?.Dispose();
+                originalCts?.Cancel();
+                originalCts?.Dispose();
+            }
         }
 
         private (Task, CancellationTokenSource?) ScheduleElement(TElement? element, CancellationToken token)

@@ -18,7 +18,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
         private const int Root = 0;
 
         private readonly EnOrderingKind _orderingKind;
-        private readonly object _sync;
 
         private int _last;
         private int _height;
@@ -29,7 +28,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
         public BinaryHeap(EnOrderingKind orderingKind)
         {
             _orderingKind = orderingKind;
-            _sync = new object();
 
             _last = -1;
             _height = 0;
@@ -54,28 +52,10 @@ namespace SpaceEngineers.Core.Basics.Primitives
         private event EventHandler? Changed;
 
         /// <inheritdoc />
-        public int Count
-        {
-            get
-            {
-                lock (_sync)
-                {
-                    return Length();
-                }
-            }
-        }
+        public int Count => Length();
 
         /// <inheritdoc />
-        public bool IsEmpty
-        {
-            get
-            {
-                lock (_sync)
-                {
-                    return IsEmptyHeap();
-                }
-            }
-        }
+        public bool IsEmpty => IsEmptyHeap();
 
         /// <inheritdoc />
         public IEnumerator<TElement> GetEnumerator()
@@ -92,35 +72,29 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <inheritdoc />
         public override string ToString()
         {
-            lock (_sync)
-            {
-                return _array
-                    .Select((element, i) =>
-                    {
-                        var height = Height(i);
-                        return (element, height);
-                    })
-                    .GroupBy(pair => pair.height)
-                    .Select(pair => pair.Select(it => it.element))
-                    .Select(pair => pair.ToString(" "))
-                    .ToString(Environment.NewLine);
-            }
+            return _array
+                .Select((element, i) =>
+                {
+                    var height = Height(i);
+                    return (element, height);
+                })
+                .GroupBy(pair => pair.height)
+                .Select(pair => pair.Select(it => it.element))
+                .Select(pair => pair.ToString(" "))
+                .ToString(Environment.NewLine);
         }
 
         /// <inheritdoc />
         public TElement[] ExtractArray()
         {
-            lock (_sync)
+            var result = new TElement[Length()];
+
+            for (var i = 0; i < result.Length; i++)
             {
-                var result = new TElement[Length()];
-
-                for (var i = 0; i < result.Length; i++)
-                {
-                    result[i] = ExtractFromHeap();
-                }
-
-                return result;
+                result[i] = ExtractFromHeap();
             }
+
+            return result;
         }
 
         /// <inheritdoc />
@@ -131,69 +105,52 @@ namespace SpaceEngineers.Core.Basics.Primitives
              * 2. Heapify-up starting from the last element
              */
 
-            lock (_sync)
-            {
-                var originalRoot = GetRoot();
+            var originalRoot = GetRoot();
 
-                AddLast(element);
-                HeapifyUp(_last);
+            AddLast(element);
+            HeapifyUp(_last);
 
-                NotifyChanged();
-                NotifyRootNodeChanged(originalRoot);
-            }
+            NotifyChanged();
+            NotifyRootNodeChanged(originalRoot);
         }
 
         /// <inheritdoc />
         public TElement Peek()
         {
-            lock (_sync)
-            {
-                return PeekHeap();
-            }
+            return PeekHeap();
         }
 
         /// <inheritdoc />
         public bool TryPeek([NotNullWhen(true)] out TElement? element)
         {
-            lock (_sync)
-            {
-                if (IsEmptyHeap())
-                {
-                    element = default;
-                    return false;
-                }
-
-                element = PeekHeap();
-                return true;
-            }
+            return Try(PeekHeap, out element);
         }
 
         /// <inheritdoc />
         public TElement Extract()
         {
-            lock (_sync)
-            {
-                return ExtractFromHeap();
-            }
+            return ExtractFromHeap();
         }
 
         /// <inheritdoc />
         public bool TryExtract([NotNullWhen(true)] out TElement? element)
         {
-            lock (_sync)
-            {
-                if (IsEmptyHeap())
-                {
-                    element = default;
-                    return false;
-                }
-
-                element = ExtractFromHeap();
-                return true;
-            }
+            return Try(ExtractFromHeap, out element);
         }
 
-        #region thread_unsafe
+        #region internals
+
+        private bool Try(Func<TElement> accessor, [NotNullWhen(true)] out TElement? element)
+        {
+            if (IsEmptyHeap())
+            {
+                element = default;
+                return false;
+            }
+
+            element = accessor();
+            return true;
+        }
 
         private TElement PeekHeap()
         {

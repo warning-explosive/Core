@@ -36,14 +36,14 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{LogicalName}_{InstanceName}";
+            return $"{LogicalName} - {InstanceName}";
         }
 
         /// <inheritdoc />
         public bool SafeEquals(EndpointIdentity other)
         {
             return LogicalName.Equals(other.LogicalName, StringComparison.OrdinalIgnoreCase)
-                    && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase);
+                   && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />

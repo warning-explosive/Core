@@ -246,13 +246,15 @@ namespace SpaceEngineers.Core.AutoRegistration
             IAutoWiringServicesProvider servicesProvider,
             DependencyContainerOptions options)
         {
+            var autoRegistrationsContainer = new AutoRegistrationsContainer(container, typeProvider, servicesProvider);
+
             var manualRegistrationsContainer = new ManualRegistrationsContainer();
             var manualRegistration = new DependencyContainerManualRegistration(this, typeProvider, servicesProvider);
 
             options.ManualRegistrations = options.ManualRegistrations.Concat(new[] { manualRegistration }).ToList();
             options.ManualRegistrations.Each(manual => manual.Register(manualRegistrationsContainer));
 
-            return new CompositeRegistrationsContainer(container, typeProvider, servicesProvider, manualRegistrationsContainer);
+            return new CompositeRegistrationsContainer(autoRegistrationsContainer, manualRegistrationsContainer);
         }
 
         private static ManualRegistrationsContainer CollectOverrides(DependencyContainerOptions options)

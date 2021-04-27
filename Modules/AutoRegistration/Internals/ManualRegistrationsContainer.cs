@@ -28,22 +28,22 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         #region IRegistrationsContainer
 
-        public IReadOnlyCollection<(Type, object)> Singletons()
+        public IEnumerable<(Type, object)> Singletons()
         {
             return _singletons;
         }
 
-        public IReadOnlyCollection<ServiceRegistrationInfo> Resolvable()
+        public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
             return _registrations;
         }
 
-        public IReadOnlyCollection<ServiceRegistrationInfo> Collections()
+        public IEnumerable<ServiceRegistrationInfo> Collections()
         {
             return _collections;
         }
 
-        public IReadOnlyCollection<DecoratorRegistrationInfo> Decorators()
+        public IEnumerable<DecoratorRegistrationInfo> Decorators()
         {
             return _decorators;
         }

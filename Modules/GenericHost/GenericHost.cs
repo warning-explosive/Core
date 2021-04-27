@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.GenericHost
             TransportHostedService BuildHostedService(IServiceProvider serviceProvider)
             {
                 return new TransportHostedService(
-                    serviceProvider.GetRequiredService<ILogger<TransportHostedService>>(),
+                    serviceProvider.GetRequiredService<ILoggerFactory>(),
                     serviceProvider.GetRequiredService<IAdvancedIntegrationTransport>(),
                     serviceProvider.GetRequiredService<IEndpointInstanceSelectionBehavior>(),
                     serviceProvider.GetRequiredService<IHostStatistics>(),

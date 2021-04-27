@@ -30,12 +30,17 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
                        });
         }
 
-        internal static void RegisterCollections(this IReadOnlyCollection<ServiceRegistrationInfo> infos, Container container)
+        internal static void RegisterCollections(this IEnumerable<ServiceRegistrationInfo> infos, Container container)
         {
-            // register each element of collection as implementation to provide lifestyle for container
-            infos.RegisterImplementationsWithOpenGenericFallBack(container);
+            /*
+             * Register each element of collection as implementation to provide lifestyle for container
+             */
 
-            infos.OrderByDependencyAttribute(z => z.ImplementationType)
+            var materialized = infos.ToList();
+
+            materialized.RegisterImplementationsWithOpenGenericFallBack(container);
+
+            materialized.OrderByDependencyAttribute(z => z.ImplementationType)
                  .GroupBy(k => k.ServiceType, v => v.ImplementationType)
                  .Each(info => container.Collection.Register(info.Key, info));
         }

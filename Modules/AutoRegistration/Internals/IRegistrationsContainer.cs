@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
     internal interface IRegistrationsContainer
     {
-        IReadOnlyCollection<(Type, object)> Singletons();
+        IEnumerable<(Type, object)> Singletons();
 
-        IReadOnlyCollection<ServiceRegistrationInfo> Resolvable();
+        IEnumerable<ServiceRegistrationInfo> Resolvable();
 
-        IReadOnlyCollection<ServiceRegistrationInfo> Collections();
+        IEnumerable<ServiceRegistrationInfo> Collections();
 
-        IReadOnlyCollection<DecoratorRegistrationInfo> Decorators();
+        IEnumerable<DecoratorRegistrationInfo> Decorators();
     }
 }

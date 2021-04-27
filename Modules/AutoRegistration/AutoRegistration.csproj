@@ -55,5 +55,8 @@
     <Compile Update="Internals\CompositeRegistrationsContainer.cs">
       <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
     </Compile>
+    <Compile Update="Internals\AutoRegistrationsContainer.cs">
+      <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

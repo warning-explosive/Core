@@ -6,8 +6,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Enumerations;
     using Basics.Exceptions;
@@ -21,21 +19,19 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class TransportHostedService : IHostedService, IDisposable
     {
-        private readonly MessageQueue<IntegrationMessageEventArgs> _inputQueue;
-        private readonly DeferredQueue<IntegrationMessageEventArgs> _delayedDeliveryQueue;
-
         private IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> _topologyMap;
         private Task? _messageProcessingTask;
         private CancellationTokenSource? _cts;
 
         public TransportHostedService(
-            ILogger<TransportHostedService> logger,
+            ILoggerFactory loggerFactory,
             IAdvancedIntegrationTransport transport,
             IEndpointInstanceSelectionBehavior selectionBehavior,
             IHostStatistics statistics,
             IReadOnlyCollection<EndpointOptions> endpointOptions)
         {
-            Logger = logger;
+            LoggerFactory = loggerFactory;
+            Logger = LoggerFactory.CreateLogger<TransportHostedService>();
             Transport = transport;
             SelectionBehavior = selectionBehavior;
             Statistics = statistics;
@@ -45,9 +41,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _topologyMap = new Dictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>>();
 
             var heap = new BinaryHeap<HeapEntry<IntegrationMessageEventArgs, DateTime>>(EnOrderingKind.Asc);
-            _delayedDeliveryQueue = new DeferredQueue<IntegrationMessageEventArgs>(heap, PrioritySelector);
-            _inputQueue = new MessageQueue<IntegrationMessageEventArgs>();
+            DelayedDeliveryQueue = new DeferredQueue<IntegrationMessageEventArgs>(heap, PrioritySelector);
+            InputQueue = new MessageQueue<IntegrationMessageEventArgs>();
         }
+
+        private ILoggerFactory LoggerFactory { get; }
 
         private ILogger<TransportHostedService> Logger { get; }
 
@@ -63,14 +61,21 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
+        private MessageQueue<IntegrationMessageEventArgs> InputQueue { get; }
+
+        private DeferredQueue<IntegrationMessageEventArgs> DelayedDeliveryQueue { get; }
+
         public async Task StartAsync(CancellationToken token)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            Endpoints = (await EndpointOptions
-                    .Select(options => Endpoint.StartAsync(InjectTransport(options, Transport), Token))
-                    .WhenAll()
-                    .ConfigureAwait(false))
+            var endpoints = await EndpointOptions
+                .Select(options => options.UseTransport(Transport).UseLogger(LoggerFactory))
+                .Select(options => Endpoint.StartAsync(options, Token))
+                .WhenAll()
+                .ConfigureAwait(false);
+
+            Endpoints = endpoints
                 .GroupBy(endpoint => endpoint.Identity.LogicalName)
                 .ToDictionary(grp => grp.Key,
                     grp => grp.ToList() as IReadOnlyCollection<IGenericEndpoint>,
@@ -87,8 +92,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Transport.OnError += OnError;
 
             _messageProcessingTask = Task.WhenAll(
-                _delayedDeliveryQueue.Run(Enqueue, Token),
-                _inputQueue.Run(MessageProcessingCallback, Token));
+                DelayedDeliveryQueue.Run(Enqueue, Token),
+                InputQueue.Run(MessageProcessingCallback, Token));
         }
 
         public async Task StopAsync(CancellationToken token)
@@ -130,19 +135,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts?.Dispose();
         }
 
-        private static EndpointOptions InjectTransport(EndpointOptions options, IAdvancedIntegrationTransport transport)
-        {
-            options.ContainerOptions ??= new DependencyContainerOptions();
-
-            options.ContainerOptions.ManualRegistrations =
-                new List<IManualRegistration>(options.ContainerOptions.ManualRegistrations)
-                {
-                    transport.Injection
-                };
-
-            return options;
-        }
-
         private static IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> InitializeTopologyMap(
             IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>> endpoints)
         {
@@ -169,7 +161,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             if (args.GeneralMessage.IsDeferred())
             {
-                _delayedDeliveryQueue.Enqueue(args);
+                DelayedDeliveryQueue.Enqueue(args);
             }
             else
             {
@@ -180,7 +172,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         private Task Enqueue(IntegrationMessageEventArgs arg)
         {
             arg.GeneralMessage.SetActualDeliveryDate(DateTime.Now);
-            _inputQueue.Enqueue(arg);
+            InputQueue.Enqueue(arg);
             return Task.CompletedTask;
         }
 

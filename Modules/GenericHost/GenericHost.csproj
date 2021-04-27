@@ -43,5 +43,16 @@
       <Compile Update="FailedIntegrationMessageEventArgs.cs">
         <DependentUpon>IntegrationMessageEventArgs.cs</DependentUpon>
       </Compile>
+      <Compile Update="Internals\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Update="Internals\Resources.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
     </ItemGroup>
 </Project>

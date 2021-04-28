@@ -28,7 +28,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var options = new DependencyContainerOptions()
                 .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration())
+                .WithManualRegistration(new LoggerTestRegistration());
 
             var assembly = GetType().Assembly; // Modules.Test
 

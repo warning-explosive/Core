@@ -29,6 +29,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Mocks;
+    using Registrations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -172,7 +173,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .WithManualRegistration(handlersRegistration)
                 .WithManualRegistration(endpointIdentityRegistration)
                 .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
-                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration())
+                .WithManualRegistration(new LoggerTestRegistration());
 
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
 
@@ -294,7 +296,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var options = new DependencyContainerOptions()
                 .WithManualRegistration(identityRegistration)
                 .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
-                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration())
+                .WithManualRegistration(new LoggerTestRegistration());
 
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
             var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
@@ -388,7 +391,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var options = new DependencyContainerOptions()
                 .WithManualRegistration(identityRegistration)
                 .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
-                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration())
+                .WithManualRegistration(new LoggerTestRegistration());
 
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
             var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);

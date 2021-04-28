@@ -129,10 +129,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .RegisterInstance(typeProvider.GetType(), typeProvider);
             });
 
-            var options = new DependencyContainerOptions
-            {
-                Overrides = new[] { overrides }
-            };
+            var options = new DependencyContainerOptions().WithOverride(overrides);
 
             var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
 

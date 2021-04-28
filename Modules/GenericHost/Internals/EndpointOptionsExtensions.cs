@@ -1,9 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
-    using System.Collections.Generic;
     using Abstractions;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using GenericEndpoint.Executable;
     using Microsoft.Extensions.Logging;
 
@@ -11,29 +8,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     {
         internal static EndpointOptions UseTransport(this EndpointOptions options, IAdvancedIntegrationTransport transport)
         {
-            options.ContainerOptions ??= new DependencyContainerOptions();
-
-            options.ContainerOptions.ManualRegistrations =
-                new List<IManualRegistration>(options.ContainerOptions.ManualRegistrations)
-                {
-                    transport.Injection
-                };
-
+            options.ContainerOptions.WithManualRegistration(transport.Injection);
             return options;
         }
 
         internal static EndpointOptions UseLogger(this EndpointOptions options, ILoggerFactory loggerFactory)
         {
-            var logger = loggerFactory.CreateLogger(options.Identity.ToString());
-
-            options.ContainerOptions ??= new DependencyContainerOptions();
-
-            options.ContainerOptions.ManualRegistrations =
-                new List<IManualRegistration>(options.ContainerOptions.ManualRegistrations)
-                {
-                    new LoggerManualRegistration(logger)
-                };
-
+            options.ContainerOptions.WithManualRegistration(new LoggerManualRegistration(options.Identity, loggerFactory));
             return options;
         }
     }

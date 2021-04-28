@@ -1,20 +1,25 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using AutoRegistration.Abstractions;
+    using GenericEndpoint;
     using Microsoft.Extensions.Logging;
 
     internal class LoggerManualRegistration : IManualRegistration
     {
-        private readonly ILogger _logger;
+        private readonly EndpointIdentity _endpointIdentity;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public LoggerManualRegistration(ILogger logger)
+        public LoggerManualRegistration(EndpointIdentity endpointIdentity, ILoggerFactory loggerFactory)
         {
-            _logger = logger;
+            _endpointIdentity = endpointIdentity;
+            _loggerFactory = loggerFactory;
         }
 
         public void Register(IManualRegistrationsContainer container)
         {
-            container.RegisterInstance<ILogger>(_logger);
+            var logger = _loggerFactory.CreateLogger(_endpointIdentity.ToString());
+
+            container.RegisterInstance<ILogger>(logger);
         }
     }
 }

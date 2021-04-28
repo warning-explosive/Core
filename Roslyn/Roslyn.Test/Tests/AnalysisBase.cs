@@ -14,13 +14,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     /// </summary>
     public abstract class AnalysisBase
     {
-        private static Version[] _availableVersions;
-        private static Version? _version;
+        private static readonly Version[] AvailableVersions;
+        private static readonly Version? Version;
 
         [SuppressMessage("Analysis", "CA1810", Justification = "Analysis test")]
         static AnalysisBase()
         {
-            _availableVersions = MSBuildLocator
+            AvailableVersions = MSBuildLocator
                 .QueryVisualStudioInstances()
                 .Select(it => it.Version)
                 .OrderByDescending(it => it)
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
             MSBuildLocator.RegisterInstance(instance);
 
-            _version = instance.Version;
+            Version = instance.Version;
         }
 
         /// <summary> .cctor </summary>
@@ -42,15 +42,15 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         {
             Output = output;
 
-            Output.WriteLine($"Used framework version: {_version}");
-            Output.WriteLine($"Available versions: {string.Join(", ", _availableVersions.Select(v => v.ToString()))}");
+            Output.WriteLine($"Used framework version: {Version}");
+            Output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
-            DependencyContainer = AutoRegistration
-                .DependencyContainer
-                .Create(new DependencyContainerOptions
-                {
-                    ExcludedNamespaces = IgnoredNamespaces
-                });
+            var options = new DependencyContainerOptions
+            {
+                ExcludedNamespaces = IgnoredNamespaces
+            };
+
+            DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
         }
 
         /// <summary>

@@ -13,11 +13,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
     public class EndpointOptions
     {
         /// <summary> .cctor </summary>
-        /// <param name="identity">Endpoint identity</param>
+        /// <param name="identity">EndpointIdentity</param>
+        /// <param name="containerOptions">DependencyContainerOptions</param>
         /// <param name="aboveAssemblies">Assemblies that limits assembly loading for endpoint's dependency container</param>
-        public EndpointOptions(EndpointIdentity identity, params Assembly[] aboveAssemblies)
+        public EndpointOptions(EndpointIdentity identity, DependencyContainerOptions containerOptions, params Assembly[] aboveAssemblies)
         {
             Identity = identity;
+            ContainerOptions = containerOptions;
 
             if (!aboveAssemblies.Any())
             {
@@ -33,13 +35,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
         public EndpointIdentity Identity { get; }
 
         /// <summary>
-        /// Assemblies that limits assembly loading for endpoint's dependency container
-        /// </summary>
-        public IReadOnlyCollection<Assembly> AboveAssemblies { get; set; }
-
-        /// <summary>
         /// Dependency container options
         /// </summary>
-        public DependencyContainerOptions? ContainerOptions { get; set; }
+        public DependencyContainerOptions ContainerOptions { get; }
+
+        /// <summary>
+        /// Assemblies that limits assembly loading for endpoint's dependency container
+        /// </summary>
+        public IReadOnlyCollection<Assembly> AboveAssemblies { get; }
     }
 }

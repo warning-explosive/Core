@@ -62,8 +62,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
 
-            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), assembly);
-            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly);
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), new DependencyContainerOptions(), assembly);
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), new DependencyContainerOptions(), assembly);
 
             var transportIsSame = false;
 
@@ -114,7 +114,7 @@ namespace SpaceEngineers.Core.Modules.Test
             // 2 - IAdvancedIntegrationContext
             var endpointIdentity = new EndpointIdentity(nameof(IntegrationContextCheckAppliedDecoratorTest), 0);
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
-            var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
+            var endpointOptions = new EndpointOptions(endpointIdentity, new DependencyContainerOptions(), assembly);
 
             using (var host = Host.CreateDefaultBuilder().ConfigureHost(transport, endpointOptions).Build())
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
@@ -168,18 +168,11 @@ namespace SpaceEngineers.Core.Modules.Test
                 container.Register(typeof(IMessageHandler<>), typeof(TestMessageHandler));
             });
 
-            var manualRegistrations = new IManualRegistration[]
-            {
-                handlersRegistration,
-                endpointIdentityRegistration,
-                ((IAdvancedIntegrationTransport)transport).Injection,
-                new CrossCuttingConcernsManualRegistration()
-            };
-
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = manualRegistrations
-            };
+            var options = new DependencyContainerOptions()
+                .WithManualRegistration(handlersRegistration)
+                .WithManualRegistration(endpointIdentityRegistration)
+                .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
 
             var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
 
@@ -224,7 +217,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var endpointIdentity = new EndpointIdentity(nameof(RunTest), 0);
                 var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
-                var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
+                var endpointOptions = new EndpointOptions(endpointIdentity, new DependencyContainerOptions(), assembly);
 
                 return Host
                     .CreateDefaultBuilder()
@@ -248,7 +241,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var endpointIdentity = new EndpointIdentity(nameof(StartStopRunTest), 0);
                 var assembly = typeof(IExecutableEndpoint).Assembly; // GenericEndpoint.Executable
-                var endpointOptions = new EndpointOptions(endpointIdentity, assembly);
+                var endpointOptions = new EndpointOptions(endpointIdentity, new DependencyContainerOptions(), assembly);
 
                 return Host
                     .CreateDefaultBuilder()
@@ -297,19 +290,12 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var endpointIdentity = new EndpointIdentity(nameof(SimpleHostTest), nameof(SimpleHostTest));
-            var identityRegistration = Fixture.DelegateRegistration(container =>
-            {
-                container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity);
-            });
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = new[]
-                {
-                    identityRegistration,
-                    ((IAdvancedIntegrationTransport)transport).Injection,
-                    new CrossCuttingConcernsManualRegistration()
-                }
-            };
+            var identityRegistration = Fixture.DelegateRegistration(container => container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity));
+            var options = new DependencyContainerOptions()
+                .WithManualRegistration(identityRegistration)
+                .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
             var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var overrides = Fixture.DelegateRegistration(container =>
@@ -324,18 +310,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 container.Register(typeof(IMessageHandler<>), typeof(TestMessageHandler));
             });
 
-            var getContainerOptions = new Func<DependencyContainerOptions>(() =>
-            {
-                return new DependencyContainerOptions
-                {
-                    ManualRegistrations = new[] { handlersRegistration },
-                    Overrides = new[] { overrides }
-                };
-            });
+            var getContainerOptions = new Func<DependencyContainerOptions>(()
+                => new DependencyContainerOptions()
+                    .WithManualRegistration(handlersRegistration)
+                    .WithOverride(overrides));
 
-            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), assembly) { ContainerOptions = getContainerOptions() };
-            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), assembly) { ContainerOptions = getContainerOptions() };
-            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), assembly) { ContainerOptions = getContainerOptions() };
+            var options10 = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), getContainerOptions(), assembly);
+            var options11 = new EndpointOptions(new EndpointIdentity(Endpoint1, 1), getContainerOptions(), assembly);
+            var options20 = new EndpointOptions(new EndpointIdentity(Endpoint2, 0), getContainerOptions(), assembly);
 
             IReadOnlyCollection<FailedMessage> failedMessages;
 
@@ -402,19 +384,12 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var endpointIdentity = new EndpointIdentity(nameof(ThrowingMessageHandlerTest), nameof(ThrowingMessageHandlerTest));
-            var identityRegistration = Fixture.DelegateRegistration(container =>
-            {
-                container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity);
-            });
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = new[]
-                {
-                    identityRegistration,
-                    ((IAdvancedIntegrationTransport)transport).Injection,
-                    new CrossCuttingConcernsManualRegistration()
-                }
-            };
+            var identityRegistration = Fixture.DelegateRegistration(container => container.RegisterInstance(typeof(EndpointIdentity), endpointIdentity));
+            var options = new DependencyContainerOptions()
+                .WithManualRegistration(identityRegistration)
+                .WithManualRegistration(((IAdvancedIntegrationTransport)transport).Injection)
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+
             var boundedContainer = Fixture.BoundedAboveContainer(options, assembly);
             var typeProvider = new TypeProviderMock(boundedContainer.Resolve<ITypeProvider>(), additionalTypes);
             var retryPolicy = new RetryPolicyMock();
@@ -432,16 +407,11 @@ namespace SpaceEngineers.Core.Modules.Test
                 container.Register(typeof(IMessageHandler<>), typeof(ThrowingMessageHandler));
             });
 
-            var containerOptions = new DependencyContainerOptions
-            {
-                ManualRegistrations = new[] { handlersRegistration },
-                Overrides = new[] { overrides }
-            };
+            var containerOptions = new DependencyContainerOptions()
+                .WithManualRegistration(handlersRegistration)
+                .WithOverride(overrides);
 
-            var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), assembly)
-            {
-                ContainerOptions = containerOptions
-            };
+            var endpointOptions = new EndpointOptions(new EndpointIdentity(Endpoint1, 0), containerOptions,  assembly);
 
             IReadOnlyCollection<FailedMessage> failedMessages;
 

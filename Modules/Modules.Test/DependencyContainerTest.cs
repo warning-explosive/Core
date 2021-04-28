@@ -32,14 +32,9 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = new IManualRegistration[]
-                {
-                    new GenericEndpointTestRegistration(),
-                    new CrossCuttingConcernsManualRegistration()
-                }
-            };
+            var options = new DependencyContainerOptions()
+                .WithManualRegistration(new GenericEndpointTestRegistration())
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
 
             var assembly = GetType().Assembly; // Modules.Test
 
@@ -327,10 +322,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
             });
 
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = new[] { registration }
-            };
+            var options = new DependencyContainerOptions().WithManualRegistration(registration);
 
             var localContainer = Fixture.ExactlyBoundedContainer(options);
 

@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Executable
 {
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,14 +34,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
 
         private static IDependencyContainer DependencyContainerPerEndpoint(EndpointOptions endpointOptions)
         {
-            endpointOptions.ContainerOptions ??= new DependencyContainerOptions();
-
-            endpointOptions.ContainerOptions.ManualRegistrations
-                = new List<IManualRegistration>(endpointOptions.ContainerOptions.ManualRegistrations)
-                {
-                    new GenericEndpointIdentityManualRegistration(endpointOptions.Identity),
-                    new CrossCuttingConcernsManualRegistration()
-                };
+            endpointOptions
+                .ContainerOptions
+                .WithManualRegistration(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
 
             return DependencyContainer.CreateBoundedAbove(endpointOptions.ContainerOptions, endpointOptions.AboveAssemblies.ToArray());
         }

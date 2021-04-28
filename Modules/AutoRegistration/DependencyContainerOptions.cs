@@ -11,6 +11,16 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     public class DependencyContainerOptions
     {
+        private readonly List<IManualRegistration> _manualRegistrations;
+        private readonly List<IManualRegistration> _overrides;
+
+        /// <summary> .cctor </summary>
+        public DependencyContainerOptions()
+        {
+            _manualRegistrations = new List<IManualRegistration>();
+            _overrides = new List<IManualRegistration>();
+        }
+
         /// <summary>
         /// Excluded assemblies
         /// Assemblies excluded from type loading
@@ -28,12 +38,12 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// Manual registrations
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; set; } = Array.Empty<IManualRegistration>();
+        public IReadOnlyCollection<IManualRegistration> ManualRegistrations => _manualRegistrations;
 
         /// <summary>
         /// Overrides
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> Overrides { get; set; } = Array.Empty<IManualRegistration>();
+        public IReadOnlyCollection<IManualRegistration> Overrides => _overrides;
 
         /// <inheritdoc />
         public override int GetHashCode()
@@ -50,6 +60,24 @@ namespace SpaceEngineers.Core.AutoRegistration
                     ? source.Aggregate(int.MaxValue, HashCode.Combine)
                     : int.MaxValue;
             }
+        }
+
+        /// <summary> With manual registration </summary>
+        /// <param name="manualRegistration">IManualRegistration</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithManualRegistration(IManualRegistration manualRegistration)
+        {
+            _manualRegistrations.Add(manualRegistration);
+            return this;
+        }
+
+        /// <summary> With override </summary>
+        /// <param name="manualRegistration">IManualRegistration</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithOverride(IManualRegistration manualRegistration)
+        {
+            _overrides.Add(manualRegistration);
+            return this;
         }
     }
 }

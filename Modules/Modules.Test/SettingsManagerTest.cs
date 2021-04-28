@@ -29,14 +29,9 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions
-            {
-                ManualRegistrations = new IManualRegistration[]
-                {
-                    new GenericEndpointTestRegistration(),
-                    new CrossCuttingConcernsManualRegistration()
-                }
-            };
+            var options = new DependencyContainerOptions()
+                .WithManualRegistration(new GenericEndpointTestRegistration())
+                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
 
             var assembly = GetType().Assembly; // Modules.Test
 

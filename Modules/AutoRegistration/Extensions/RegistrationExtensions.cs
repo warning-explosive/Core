@@ -53,6 +53,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
             }
         }
 
+        internal static void RegisterDelegates(this IEnumerable<DelegateRegistrationInfo> infos, Container container)
+        {
+            foreach (var info in infos)
+            {
+                container.Register(info.ServiceType, info.Factory, info.Lifestyle);
+            }
+        }
+
         internal static void RegisterServicesWithOpenGenericFallBack(this IEnumerable<ServiceRegistrationInfo> infos, Container container)
         {
             RegisterWithOpenGenericFallBack(container, infos, info => info.ServiceType);

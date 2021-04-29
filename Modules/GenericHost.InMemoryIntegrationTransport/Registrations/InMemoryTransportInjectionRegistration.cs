@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Registrat
     using GenericEndpoint.Abstractions;
     using Internals;
 
-    internal class EndpointInjectionRegistration : IManualRegistration
+    internal class InMemoryTransportInjectionRegistration : IManualRegistration
     {
         private readonly InMemoryIntegrationTransport _transport;
 
-        public EndpointInjectionRegistration(InMemoryIntegrationTransport transport)
+        public InMemoryTransportInjectionRegistration(InMemoryIntegrationTransport transport)
         {
             _transport = transport;
         }

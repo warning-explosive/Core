@@ -9,6 +9,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         IEnumerable<ServiceRegistrationInfo> Resolvable();
 
+        IEnumerable<DelegateRegistrationInfo> Delegates();
+
         IEnumerable<ServiceRegistrationInfo> Collections();
 
         IEnumerable<DecoratorRegistrationInfo> Decorators();

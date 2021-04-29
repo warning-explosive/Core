@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.GenericHost.InMemoryIntegrationTransport.Internals
         public InMemoryIntegrationTransport(IDependencyContainer dependencyContainer)
         {
             DependencyContainer = dependencyContainer;
-            Injection = new EndpointInjectionRegistration(this);
+            Injection = new InMemoryTransportInjectionRegistration(this);
 
             _ready = new AsyncManualResetEvent(false);
         }

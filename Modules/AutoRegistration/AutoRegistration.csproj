@@ -58,5 +58,17 @@
     <Compile Update="Internals\AutoRegistrationsContainer.cs">
       <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
     </Compile>
+    <Compile Update="Internals\DelegateRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\DecoratorRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\ServiceRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IAdvancedManualRegistrationsContainer.cs">
+      <DependentUpon>IManualRegistrationsContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

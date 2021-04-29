@@ -8,6 +8,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Abstractions
     /// </summary>
     public interface IManualRegistrationsContainer
     {
+        /// <summary>
+        /// IAdvancedManualRegistrationsContainer
+        /// </summary>
+        IAdvancedManualRegistrationsContainer Advanced { get; }
+
         /// <summary> Register implementation of service </summary>
         /// <param name="serviceType">Service type</param>
         /// <param name="implementationType">Implementation type</param>

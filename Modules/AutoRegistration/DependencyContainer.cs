@@ -292,6 +292,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             registrationsContainer.Singletons().RegisterSingletons(container);
             registrationsContainer.Resolvable().RegisterServicesWithOpenGenericFallBack(container);
+            registrationsContainer.Delegates().RegisterDelegates(container);
             registrationsContainer.Collections().RegisterCollections(container);
             registrationsContainer.Decorators().RegisterDecorators(container);
         }

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Internals
 {
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api.Enumerations;
     using GenericEndpoint;
     using Microsoft.Extensions.Logging;
 
@@ -17,9 +18,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public void Register(IManualRegistrationsContainer container)
         {
-            var logger = _loggerFactory.CreateLogger(_endpointIdentity.ToString());
-
-            container.RegisterInstance<ILogger>(logger);
+            container.Advanced.RegisterFactory<ILogger>(() => _loggerFactory.CreateLogger(_endpointIdentity.ToString()), EnLifestyle.Singleton);
         }
     }
 }

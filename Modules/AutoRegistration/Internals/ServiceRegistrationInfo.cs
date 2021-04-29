@@ -10,7 +10,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
     [DebuggerDisplay("{ImplementationType.FullName} - {ServiceType.FullName} - {Lifestyle}")]
     internal class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
-                                             ISafelyEquatable<ServiceRegistrationInfo>
+                                             ISafelyEquatable<ServiceRegistrationInfo>,
+                                             IRegistrationInfo
     {
         internal ServiceRegistrationInfo(Type serviceType, Type implementationType)
         {
@@ -18,22 +19,20 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             ImplementationType = implementationType;
 
             var implementationComponentAttribute = implementationType.GetRequiredAttribute<ComponentAttribute>();
-            var serviceComponentAttribute = serviceType.GetAttribute<ComponentAttribute>();
-
             Lifestyle = implementationComponentAttribute.Lifestyle.MapLifestyle();
 
-            RegistrationKind = serviceComponentAttribute?.RegistrationKind == EnComponentRegistrationKind.Unregistered
+            RegistrationKind = serviceType.GetAttribute<ComponentAttribute>()?.RegistrationKind == EnComponentRegistrationKind.Unregistered
                 ? EnComponentRegistrationKind.Unregistered
                 : implementationComponentAttribute.RegistrationKind;
         }
 
-        internal Type ImplementationType { get; }
+        public Type ServiceType { get; }
 
-        internal Type ServiceType { get; }
+        public Lifestyle Lifestyle { get; }
 
-        internal Lifestyle Lifestyle { get; }
+        public Type ImplementationType { get; }
 
-        internal EnComponentRegistrationKind RegistrationKind { get; }
+        public EnComponentRegistrationKind RegistrationKind { get; }
 
         public bool SafeEquals(ServiceRegistrationInfo other)
         {

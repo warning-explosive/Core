@@ -23,6 +23,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return Aggregate(container => container.Resolvable());
         }
 
+        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        {
+            return Aggregate(container => container.Delegates());
+        }
+
         public IEnumerable<ServiceRegistrationInfo> Collections()
         {
             return Aggregate(container => container.Collections());

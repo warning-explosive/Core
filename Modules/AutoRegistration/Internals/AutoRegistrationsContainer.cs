@@ -37,6 +37,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
                 .GetComponents(_container, _typeProvider);
         }
 
+        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        {
+            return Enumerable.Empty<DelegateRegistrationInfo>();
+        }
+
         public IEnumerable<ServiceRegistrationInfo> Collections()
         {
             return _servicesProvider

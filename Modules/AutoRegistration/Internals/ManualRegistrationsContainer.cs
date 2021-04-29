@@ -11,10 +11,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
     using Basics;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    internal class ManualRegistrationsContainer : IRegistrationsContainer, IManualRegistrationsContainer
+    internal class ManualRegistrationsContainer : IRegistrationsContainer, IAdvancedManualRegistrationsContainer
     {
         private readonly List<(Type, object)> _singletons;
         private readonly List<ServiceRegistrationInfo> _registrations;
+        private readonly List<DelegateRegistrationInfo> _delegates;
         private readonly List<ServiceRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
@@ -22,11 +23,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             _singletons = new List<(Type, object)>();
             _registrations = new List<ServiceRegistrationInfo>();
+            _delegates = new List<DelegateRegistrationInfo>();
             _collections = new List<ServiceRegistrationInfo>();
             _decorators = new List<DecoratorRegistrationInfo>();
         }
 
         #region IRegistrationsContainer
+
+        public IAdvancedManualRegistrationsContainer Advanced => this;
 
         public IEnumerable<(Type, object)> Singletons()
         {
@@ -36,6 +40,11 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
             return _registrations;
+        }
+
+        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        {
+            return _delegates;
         }
 
         public IEnumerable<ServiceRegistrationInfo> Collections()
@@ -63,15 +72,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             where TService : class
             where TImplementation : class, TService
         {
-            Register(typeof(TService), typeof(TImplementation));
-            return this;
+            return Register(typeof(TService), typeof(TImplementation));
         }
 
         public IManualRegistrationsContainer RegisterInstance<TService>(TService singletonInstance)
             where TService : class
         {
-            RegisterInstance(typeof(TService), singletonInstance);
-            return this;
+            return RegisterInstance(typeof(TService), singletonInstance);
         }
 
         public IManualRegistrationsContainer RegisterInstance(Type serviceType, object singletonInstance)
@@ -88,12 +95,24 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
             return this;
         }
 
+        public IManualRegistrationsContainer RegisterFactory<TService>(Func<TService> factory, EnLifestyle lifestyle)
+            where TService : class
+        {
+            return RegisterFactory(typeof(TService), factory, lifestyle);
+        }
+
+        public IManualRegistrationsContainer RegisterFactory(Type serviceType, Func<object> factory, EnLifestyle lifestyle)
+        {
+            var info = new DelegateRegistrationInfo(serviceType, factory, lifestyle);
+            _delegates.Add(info);
+            return this;
+        }
+
         public IManualRegistrationsContainer RegisterDecorator<TService, TDecorator>()
             where TService : class
             where TDecorator : class, TService
         {
-            RegisterDecorator(typeof(TService), typeof(TDecorator));
-            return this;
+            return RegisterDecorator(typeof(TService), typeof(TDecorator));
         }
 
         public IManualRegistrationsContainer RegisterDecorator(Type serviceType, Type decoratorType)

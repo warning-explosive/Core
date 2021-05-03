@@ -103,12 +103,8 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Task Callback(Entry entry)
             {
-                var now = DateTime.Now;
-
-                Assert.True(entry.Planned <= now);
-
+                entry.Actual = DateTime.Now;
                 entries.Add(entry);
-                entry.Actual = now;
 
                 return Task.CompletedTask;
             }

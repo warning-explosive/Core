@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
                          IComparable<TElement>,
                          IComparable
     {
-        private readonly TimeSpan _high = TimeSpan.FromMilliseconds(5);
+        private readonly TimeSpan _high = TimeSpan.FromMilliseconds(42);
         private readonly TimeSpan _low = TimeSpan.FromMilliseconds(1);
 
         private readonly IHeap<HeapEntry<TElement, DateTime>> _heap;

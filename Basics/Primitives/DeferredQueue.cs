@@ -15,12 +15,16 @@ namespace SpaceEngineers.Core.Basics.Primitives
                          IComparable<TElement>,
                          IComparable
     {
-        private const string Scheduled = nameof(Scheduled);
+        private readonly TimeSpan _high = TimeSpan.FromMilliseconds(5);
+        private readonly TimeSpan _low = TimeSpan.FromMilliseconds(1);
 
         private readonly IHeap<HeapEntry<TElement, DateTime>> _heap;
         private readonly PriorityQueue<TElement, DateTime> _priorityQueue;
         private readonly Func<TElement, DateTime> _prioritySelector;
         private readonly State _state;
+
+        private Task? _delay;
+        private CancellationTokenSource? _cts;
 
         /// <summary> .cctor </summary>
         /// <param name="heap">Heap implementation</param>
@@ -30,9 +34,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
             Func<TElement, DateTime> prioritySelector)
         {
             _heap = heap;
-            _priorityQueue = new PriorityQueue<TElement, DateTime>(heap, prioritySelector);
             _prioritySelector = prioritySelector;
-
+            _priorityQueue = new PriorityQueue<TElement, DateTime>(heap, prioritySelector);
             _state = new State();
         }
 
@@ -96,113 +99,58 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <inheritdoc />
         public async Task Run(Func<TElement, Task> callback, CancellationToken token)
         {
-            CancellationTokenSource? cts = null;
-
             using (_state.StartExclusiveOperation())
-            using (Disposable.Create(() => _heap.RootNodeChanged += ScheduleOnRootNodeChanged,
-                () => _heap.RootNodeChanged -= ScheduleOnRootNodeChanged))
+            using (Disposable.Create(() => _heap.RootNodeChanged += CancelScheduleOnRootNodeChanged,
+                () => _heap.RootNodeChanged -= CancelScheduleOnRootNodeChanged))
             {
                 while (!token.IsCancellationRequested)
                 {
-                    Task delay;
-                    (delay, cts) = ScheduleNext(token);
+                    (_delay, _cts) = Schedule(token);
 
                     try
                     {
-                        await delay.ConfigureAwait(false);
+                        await _delay.ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
                         continue;
                     }
 
-                    if (!TryDequeueSync(out var args))
-                    {
-                        continue;
-                    }
-
-                    var now = DateTime.Now;
+                    var args = DequeueSync();
                     var planned = _prioritySelector(args);
 
-                    if (planned > now)
-                    {
-                        throw new InvalidOperationException($"Operation was started earlier than planned: planned: {planned:O}; now: {now:O};");
-                    }
-
+                    await WaitForBreadcrumbs(planned, token).ConfigureAwait(false);
                     await callback(args).WaitAsync(token).ConfigureAwait(false);
                 }
             }
 
-            cts?.Cancel();
-            cts?.Dispose();
+            await CancelSchedule().ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
 
-            void ScheduleOnRootNodeChanged(object sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
+            async void CancelScheduleOnRootNodeChanged(object sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
             {
-                var element = args.CurrentValue == default
-                    ? default
-                    : args.CurrentValue.Element;
-
-                ReScheduleNext(element, token);
+                await CancelSchedule().ConfigureAwait(false);
             }
         }
 
-        private bool TryDequeueSync([NotNullWhen(true)] out TElement? element)
+        private TElement DequeueSync()
         {
             lock (_priorityQueue)
             {
-                return _priorityQueue.TryDequeue(out element);
+                return _priorityQueue.Dequeue();
             }
         }
 
-        private (Task, CancellationTokenSource?) ScheduleNext(CancellationToken token)
+        private (Task, CancellationTokenSource?) Schedule(CancellationToken token)
         {
             lock (_priorityQueue)
             {
-                (Task, CancellationTokenSource?) schedule = default;
+                _ = _priorityQueue.TryPeek(out var element);
 
-                _ = _state.Exchange<(Task, CancellationTokenSource?), CancellationToken>(
-                    Scheduled,
-                    token,
-                    (original, cancellationToken) =>
-                    {
-                        if (original != default)
-                        {
-                            schedule = original;
-                        }
-                        else
-                        {
-                            _priorityQueue.TryPeek(out var element);
-                            schedule = ScheduleElement(element, cancellationToken);
-                        }
-
-                        return schedule;
-                    });
-
-                return schedule;
+                return element == null
+                    ? InfiniteDelay(token)
+                    : ElementDelay(element, token);
             }
-        }
-
-        private void ReScheduleNext(TElement? element, CancellationToken token)
-        {
-            lock (_priorityQueue)
-            {
-                var originalSchedule = _state.Exchange<(Task, CancellationTokenSource?), (TElement? Element, CancellationToken Token)>(
-                    Scheduled,
-                    (element, token),
-                    (_, context) => ScheduleElement(context.Element, context.Token));
-
-                var (_, originalCts) = originalSchedule;
-
-                originalCts?.Cancel();
-                originalCts?.Dispose();
-            }
-        }
-
-        private (Task, CancellationTokenSource?) ScheduleElement(TElement? element, CancellationToken token)
-        {
-            return element == null
-                ? InfiniteDelay(token)
-                : ElementDelay(element, token);
         }
 
         private static (Task, CancellationTokenSource?) InfiniteDelay(CancellationToken token)
@@ -218,8 +166,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
             Task delay;
             CancellationTokenSource? cts;
 
-            var planned = _prioritySelector(element);
             var now = DateTime.Now;
+            var planned = _prioritySelector(element);
 
             if (planned <= now)
             {
@@ -233,6 +181,56 @@ namespace SpaceEngineers.Core.Basics.Primitives
             }
 
             return (delay, cts);
+        }
+
+        private async Task CancelSchedule()
+        {
+            var cts = Interlocked.Exchange(ref _cts, null);
+
+            if (cts == null
+                || typeof(CancellationTokenSource).GetFieldValue<bool>(cts, "_disposed"))
+            {
+                return;
+            }
+
+            using (cts)
+            {
+                cts.Cancel();
+
+                try
+                {
+                    await _delay.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+            }
+        }
+
+        private async Task WaitForBreadcrumbs(DateTime planned, CancellationToken token)
+        {
+            var now = DateTime.Now;
+
+            if (planned <= now)
+            {
+                return;
+            }
+
+            var delta = planned - now;
+
+            if (delta < _low)
+            {
+                return;
+            }
+
+            if (_low <= delta && delta <= _high)
+            {
+                await Task.Delay(delta, token).ConfigureAwait(false);
+                await WaitForBreadcrumbs(planned, token).ConfigureAwait(false);
+                return;
+            }
+
+            throw new InvalidOperationException($"Operation was started earlier than planned in {delta.TotalMilliseconds} ms: planned: {planned:O}; now: {now:O};");
         }
     }
 }

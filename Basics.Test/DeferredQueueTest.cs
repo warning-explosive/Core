@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.Basics.Test
             static DateTime PrioritySelector(Entry entry) => entry.Planned;
         }
 
-        [Theory]
+        [Theory(Timeout = 60_000)]
         [MemberData(nameof(DeferredQueueTestData))]
         internal async Task OnRootNodeChangedTest(DeferredQueue<Entry> queue)
         {
@@ -75,7 +75,15 @@ namespace SpaceEngineers.Core.Basics.Test
 
                 var deferredDeliveryOperation = queue.Run(Callback, cts.Token);
 
-                await Task.WhenAll(backgroundPublisher, deferredDeliveryOperation).ConfigureAwait(false);
+                await backgroundPublisher.ConfigureAwait(false);
+
+                try
+                {
+                    await deferredDeliveryOperation.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                }
             }
 
             entries.Each(entry => Output.WriteLine(entry.ToString()));
@@ -112,29 +120,35 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Assert.True(queue.IsEmpty);
 
-            var publishersCount = 2;
-            var count = 500;
+            var publishersCount = 10;
+            var count = 100;
             var actualCount = 0;
-            var timeout = TimeSpan.FromSeconds(10);
             var step = TimeSpan.FromMilliseconds(1);
             var startFrom = DateTime.Now.Add(TimeSpan.FromMilliseconds(100));
 
             var started = DateTime.Now;
 
-            using (var cts = new CancellationTokenSource(timeout))
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 var token = cts.Token;
 
-                var firstBackgroundPublisher = Task.Run(() => StartPublishing(queue, count, startFrom, step, token), token);
-                var secondBackgroundPublisher = Task.Run(() => StartPublishing(queue, count, startFrom.Add(step / publishersCount), step, token), token);
                 var deferredDeliveryOperation = queue.Run(Callback, token);
+                var publishers = Enumerable.Range(0, publishersCount)
+                    .Select(i => Task.Run(() => StartPublishing(queue, count, startFrom.Add(i * step / publishersCount), step, token), token))
+                    .ToList();
 
-                await Task.WhenAll(firstBackgroundPublisher, secondBackgroundPublisher).ConfigureAwait(false);
+                await Task.WhenAll(publishers).ConfigureAwait(false);
                 await Task.Delay(TimeSpan.FromMilliseconds(100), token).ConfigureAwait(false);
 
                 cts.Cancel();
 
-                await deferredDeliveryOperation.ConfigureAwait(false);
+                try
+                {
+                    await deferredDeliveryOperation.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                }
             }
 
             var finished = DateTime.Now;
@@ -191,7 +205,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
             public override string ToString()
             {
-                return $"[{Index}] - {Planned:O} - {Actual:O}";
+                return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
             }
 
             public override int GetHashCode()

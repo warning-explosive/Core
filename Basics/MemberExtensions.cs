@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -58,9 +59,18 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Field value</returns>
         public static bool HasField(this object target, string fieldName)
         {
-            return target
-                  .GetType()
-                  .GetField(fieldName, Flags) != null;
+            return HasField(target.GetType(), fieldName);
+        }
+
+        /// <summary>
+        /// Check that object has field
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <returns>Field value</returns>
+        public static bool HasField(this Type type, string fieldName)
+        {
+            return type.GetField(fieldName, Flags) != null;
         }
 
         /// <summary>
@@ -71,10 +81,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Field value</returns>
         public static object GetFieldValue(this object target, string fieldName)
         {
-            return target
-                  .GetType()
-                  .GetField(fieldName, Flags)
-                  .GetValue(target);
+            return GetFieldValue(target.GetType(), target, fieldName);
         }
 
         /// <summary>
@@ -87,6 +94,33 @@ namespace SpaceEngineers.Core.Basics
         public static TField GetFieldValue<TField>(this object target, string fieldName)
         {
             return (TField)target.GetFieldValue(fieldName);
+        }
+
+        /// <summary>
+        /// Get field value from target object
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <returns>Field value</returns>
+        public static object GetFieldValue(this Type type, object target, string fieldName)
+        {
+            return type.HasField(fieldName)
+                ? type.GetField(fieldName, Flags).GetValue(target)
+                : throw new InvalidOperationException($"Type '{type}' doesn't contain field '{fieldName}'");
+        }
+
+        /// <summary>
+        /// Get field value from target object
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <typeparam name="TField">TField type-argument</typeparam>
+        /// <returns>Field value</returns>
+        public static TField GetFieldValue<TField>(this Type type, object target, string fieldName)
+        {
+            return (TField)type.GetFieldValue(target, fieldName);
         }
 
         /// <summary>

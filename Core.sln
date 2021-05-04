@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basics.Test", "Basics.Test\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.Benchmark", "Basics.Benchmark\Basics.Benchmark.csproj", "{0A093994-A3E6-479C-BDB0-0560D318D424}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCuttingConcerns", "Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj", "{DA27E3A0-6B1F-4EBE-94B3-396C3079CDB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCuttingConcerns.Api", "Modules\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj", "{99BF9DAE-B3F1-4210-9FD5-65C1CCA8E9A8}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{765D12D8-3CE5-4292-B159-81A6DF3869C7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roslyn.Test", "Roslyn\Roslyn.Test\Roslyn.Test.csproj", "{33D10043-5F94-4A0A-9C11-6DA21FF8310F}"
@@ -39,11 +43,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Json", "Modules\Json\Json.c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataImport", "Modules\DataImport\DataImport.csproj", "{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericDomain", "Modules\GenericDomain\GenericDomain.csproj", "{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Contract", "Modules\DataAccess.Contract\DataAccess.Contract.csproj", "{A2C1EE02-85B4-402D-B9FC-7108D78505DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.EntityFramework", "Modules\DataAccess.EntityFramework\DataAccess.EntityFramework.csproj", "{649C195C-64ED-45F7-9C52-C43E629785FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Orm", "Modules\DataAccess.Orm\DataAccess.Orm.csproj", "{649C195C-64ED-45F7-9C52-C43E629785FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericDomain", "Modules\GenericDomain\GenericDomain.csproj", "{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint", "Modules\GenericEndpoint\GenericEndpoint.csproj", "{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}"
 EndProject
@@ -62,10 +66,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Api", "Modules\Test.Api\Test.Api.csproj", "{837A1770-BBBD-4B8B-ABC5-912928C4B645}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modules.Test", "Modules\Modules.Test\Modules.Test.csproj", "{E5845FF6-CBAD-433A-A739-EA800F37BC7F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCuttingConcerns", "Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj", "{DA27E3A0-6B1F-4EBE-94B3-396C3079CDB4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCuttingConcerns.Api", "Modules\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj", "{99BF9DAE-B3F1-4210-9FD5-65C1CCA8E9A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

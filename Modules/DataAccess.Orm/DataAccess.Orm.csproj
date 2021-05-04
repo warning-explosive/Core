@@ -3,13 +3,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.DataAccess.EntityFramework</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.DataAccess.EntityFramework</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.DataAccess.Orm</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DataAccess.Orm</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.DataAccess.EntityFramework</Title>
+        <Title>SpaceEngineers.Core.DataAccess.Orm</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.DataAccess.EntityFramework</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.DataAccess.Orm</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -28,13 +28,11 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+      <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.4">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+      <PackageReference Include="Dapper" Version="2.0.90" />
     </ItemGroup>
 </Project>

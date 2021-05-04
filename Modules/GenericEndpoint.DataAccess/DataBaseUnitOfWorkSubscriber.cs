@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
@@ -10,26 +11,38 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
     [Component(EnLifestyle.Scoped)]
     internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>
     {
-        private readonly IDatabaseTransactionProvider _databaseTransactionProvider;
+        private readonly IDatabaseTransaction _databaseTransaction;
 
-        public DataBaseUnitOfWorkSubscriber(IDatabaseTransactionProvider databaseTransactionProvider)
+        public DataBaseUnitOfWorkSubscriber(IDatabaseTransaction databaseTransaction)
         {
-            _databaseTransactionProvider = databaseTransactionProvider;
+            _databaseTransaction = databaseTransaction;
         }
 
         public Task OnStart(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            return _databaseTransactionProvider.OpenTransaction(token);
+            return Task.CompletedTask;
         }
 
-        public Task OnCommit(IAdvancedIntegrationContext context, CancellationToken token)
+        public async Task OnCommit(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            return _databaseTransactionProvider.Commit(token);
+            var isCommand = context.Message.IsCommand();
+
+            if (_databaseTransaction.HasChanges
+                && !isCommand)
+            {
+                throw new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
+            }
+
+            await _databaseTransaction
+                .Close(isCommand)
+                .ConfigureAwait(false);
         }
 
-        public Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
+        public async Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            return _databaseTransactionProvider.Rollback(token);
+            await _databaseTransaction
+                .Close(false)
+                .ConfigureAwait(false);
         }
     }
 }

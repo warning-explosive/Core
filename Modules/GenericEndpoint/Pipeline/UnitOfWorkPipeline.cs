@@ -20,10 +20,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public Task Process(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            return context.UnitOfWork.StartTransaction(context, ExecuteWithinTransaction, true, token);
+            return context.UnitOfWork.StartTransaction(context,
+                ProcessWithinTransaction,
+                true,
+                token);
         }
 
-        private Task ExecuteWithinTransaction(IAdvancedIntegrationContext context, CancellationToken token)
+        private Task ProcessWithinTransaction(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return Decoratee.Process(context, token);
         }

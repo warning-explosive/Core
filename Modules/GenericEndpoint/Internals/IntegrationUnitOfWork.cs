@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
                                            IIntegrationUnitOfWork
     {
-        private IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> _subscribers;
+        private readonly IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> _subscribers;
 
         public IntegrationUnitOfWork(IEnumerable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>> subscribers)
         {

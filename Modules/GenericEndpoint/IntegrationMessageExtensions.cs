@@ -113,17 +113,32 @@ namespace SpaceEngineers.Core.GenericEndpoint
                    && handlerReplied;
         }
 
-        internal static bool IsCommand(this IntegrationMessage message)
+        /// <summary>
+        /// Is the IntegrationMessage a command
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <returns>IntegrationMessage is a command or not</returns>
+        public static bool IsCommand(this IntegrationMessage message)
         {
             return typeof(IIntegrationCommand).IsAssignableFrom(message.ReflectedType);
         }
 
-        internal static bool IsQuery(this IntegrationMessage message)
+        /// <summary>
+        /// Is the IntegrationMessage a query
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <returns>IntegrationMessage is a query or not</returns>
+        public static bool IsQuery(this IntegrationMessage message)
         {
             return message.ReflectedType.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>));
         }
 
-        internal static bool IsEvent(this IntegrationMessage message)
+        /// <summary>
+        /// Is the IntegrationMessage a event
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <returns>IntegrationMessage is a event or not</returns>
+        public static bool IsEvent(this IntegrationMessage message)
         {
             return typeof(IIntegrationEvent).IsAssignableFrom(message.ReflectedType);
         }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using GenericDomain.Abstractions;
@@ -15,18 +16,24 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// Create aggregate in the persistence layer
         /// </summary>
         /// <param name="aggregate">Aggregate object instance</param>
-        Task Create(TAggregate aggregate);
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing create operation</returns>
+        Task Create(TAggregate aggregate, CancellationToken token);
 
         /// <summary>
         /// Update aggregate in the persistence layer
         /// </summary>
         /// <param name="aggregate">Aggregate object instance</param>
-        Task Update(TAggregate aggregate);
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing update operation</returns>
+        Task Update(TAggregate aggregate, CancellationToken token);
 
         /// <summary>
         /// Delete aggregate from the persistence layer
         /// </summary>
         /// <param name="aggregate">Aggregate object instance</param>
-        Task Delete(TAggregate aggregate);
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing delete operation</returns>
+        Task Delete(TAggregate aggregate, CancellationToken token);
     }
 }

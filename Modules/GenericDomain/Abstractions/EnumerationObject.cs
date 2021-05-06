@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
     /// <summary>
     /// Enumeration object
     /// </summary>
-    public abstract class EnumerationObject : IEquatable<EnumerationObject>,
+    public abstract class EnumerationObject : IDomainObject,
+                                              IEquatable<EnumerationObject>,
                                               ISafelyEquatable<EnumerationObject>
     {
         /// <summary> .cctor </summary>

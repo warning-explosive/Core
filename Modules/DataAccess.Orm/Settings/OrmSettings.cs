@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Settings
 {
     using System;
-    using System.Data;
     using SettingsManager.Abstractions;
 
     /// <summary>
@@ -13,18 +12,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Settings
         public OrmSettings()
         {
             QuerySecondsTimeout = 60;
-            IsolationLevel = IsolationLevel.ReadCommitted;
         }
 
         /// <summary>
         /// Query timeout (seconds)
         /// </summary>
         public uint QuerySecondsTimeout { get; set; }
-
-        /// <summary>
-        /// Isolation level
-        /// </summary>
-        public IsolationLevel IsolationLevel { get; set; }
 
         /// <summary>
         /// Query timeout

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericDomain
 {
     using System;
     using Abstractions;
+    using Basics;
 
     /// <summary>
     /// Base class for entities
@@ -22,6 +23,7 @@ namespace SpaceEngineers.Core.GenericDomain
 
         /// <summary>
         /// Entity identifier
+        /// TODO: Versions / optimistic concurrency / historical entities
         /// </summary>
         public ulong Version { get; private set; }
 
@@ -34,34 +36,20 @@ namespace SpaceEngineers.Core.GenericDomain
         /// <inheritdoc />
         public bool Equals(IEntity? other)
         {
-            return Equals((object?)other);
+            return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((IUniqueIdentified)obj);
+            return Equatable.Equals<IEntity>(this, obj);
         }
 
-        private bool Equals(IUniqueIdentified other)
+        /// <inheritdoc />
+        public bool SafeEquals(IEntity other)
         {
             return Id.Equals(other.Id)
-                && Version.Equals(other.Version);
+                   && Version.Equals(other.Version);
         }
     }
 }

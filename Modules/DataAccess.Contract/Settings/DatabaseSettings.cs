@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Settings
+namespace SpaceEngineers.Core.DataAccess.Contract.Settings
 {
     using Basics;
     using SettingsManager.Abstractions;
@@ -47,21 +47,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Settings
         /// </summary>
         public string Password { get; set; }
 
-        /// <summary>
-        /// Gets connection string
-        /// </summary>
-        /// <returns>Connection string</returns>
-        public string GetConnectionString()
+        /// <inheritdoc />
+        public override string ToString()
         {
             return this
                 .ToPropertyDictionary()
                 .ToString(";", pair => string.Format(Format, pair.Key, pair.Value));
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return GetConnectionString();
         }
     }
 }

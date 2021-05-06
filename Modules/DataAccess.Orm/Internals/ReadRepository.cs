@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using AutoWiring.Api.Attributes;
@@ -10,13 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
-    using GenericDomain.Abstractions;
     using Settings;
     using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class ReadRepository<TAggregate> : IReadRepository<TAggregate>
-        where TAggregate : class, IAggregate
     {
         private readonly IDatabaseTransaction _transaction;
         private readonly IQueryBuilder<TAggregate> _queryBuilder;
@@ -35,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
             _ormSettingsProvider = ormSettingsProvider;
         }
 
-        public async Task<IEnumerable<TAggregate>> ReadAll(IQueryable<TAggregate> query)
+        public async Task<IEnumerable<TAggregate>> Read(IQueryable<TAggregate> query, CancellationToken token)
         {
             var (databaseQuery, parameters) = _queryBuilder.BuildQuery(query);
 
@@ -44,7 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
                 .ConfigureAwait(false);
 
             var transaction = await _transaction
-                .Open()
+                .Open(token)
                 .ConfigureAwait(false);
 
             var dynamicResult = await transaction

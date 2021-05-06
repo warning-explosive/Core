@@ -34,14 +34,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
             }
 
             await _databaseTransaction
-                .Close(isCommand)
+                .Close(isCommand, token)
                 .ConfigureAwait(false);
         }
 
         public async Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
         {
             await _databaseTransaction
-                .Close(false)
+                .Close(false, token)
                 .ConfigureAwait(false);
         }
     }

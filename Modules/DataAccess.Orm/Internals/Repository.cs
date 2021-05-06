@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Internals
 {
-    using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -11,19 +11,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     internal class Repository<TAggregate> : IRepository<TAggregate>
         where TAggregate : class, IAggregate
     {
-        public Task Create(TAggregate aggregate)
+        private readonly IBulkRepository<TAggregate> _bulkRepository;
+
+        public Repository(IBulkRepository<TAggregate> bulkRepository)
         {
-            throw new NotImplementedException();
+            _bulkRepository = bulkRepository;
         }
 
-        public Task Update(TAggregate aggregate)
+        public Task Create(TAggregate aggregate, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return _bulkRepository.Create(new[] { aggregate }, token);
         }
 
-        public Task Delete(TAggregate aggregate)
+        public Task Update(TAggregate aggregate, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return _bulkRepository.Update(new[] { aggregate }, token);
+        }
+
+        public Task Delete(TAggregate aggregate, CancellationToken token)
+        {
+            return _bulkRepository.Delete(new[] { aggregate }, token);
         }
     }
 }

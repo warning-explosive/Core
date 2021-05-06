@@ -53,6 +53,9 @@
       <Compile Update="Abstractions\IValueObject.cs">
         <DependentUpon>IDomainObject.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\EnumerationObject.cs">
+        <DependentUpon>IDomainObject.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />

@@ -1,8 +1,10 @@
 namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using System.Data;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
+    using GenericDomain.Abstractions;
 
     /// <summary>
     /// IDatabaseTransaction
@@ -17,13 +19,24 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// <summary>
         /// Opens database transaction
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<IDbTransaction> Open();
+        Task<IDbTransaction> Open(CancellationToken token);
 
         /// <summary>
         /// Closes database transaction
         /// </summary>
+        /// <param name="commit">Commit transaction or not</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Close(bool commit);
+        Task Close(bool commit, CancellationToken token);
+
+        /// <summary>
+        /// Start tracking specified aggregate root
+        /// </summary>
+        /// <param name="aggregate">Aggregate root</param>
+        /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+        void Track<TAggregate>(TAggregate aggregate)
+            where TAggregate : class, IAggregate;
     }
 }

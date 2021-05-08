@@ -1,10 +1,10 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
 {
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
+    [Component(EnLifestyle.Singleton)]
     internal class ObjectStringFormatter<T> : IStringFormatter<T>
     {
         private const string Null = "null";

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
 {
     using System;
     using Api.Abstractions;
@@ -7,20 +7,16 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns
     using AutoWiring.Api.Enumerations;
     using Basics;
 
-    /// <inheritdoc />
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
-    public class StringFormatter : IStringFormatter
+    [Component(EnLifestyle.Singleton)]
+    internal class StringFormatter : IStringFormatter
     {
         private readonly IDependencyContainer _dependencyContainer;
 
-        /// <summary> .cctor </summary>
-        /// <param name="dependencyContainer">IDependencyContainer</param>
         public StringFormatter(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
         }
 
-        /// <inheritdoc />
         public string Format(object? value)
         {
             var type = (value?.GetType() ?? typeof(object)).UnwrapTypeParameter(typeof(Nullable<>));

@@ -12,6 +12,18 @@ namespace SpaceEngineers.Core.Basics
     public static class TypeExtensions
     {
         /// <summary>
+        /// Gets default value of the specified system type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Default value</returns>
+        public static object? DefaultValue(this Type type)
+        {
+            return type.IsValueType
+                ? Activator.CreateInstance(type)
+                : null;
+        }
+
+        /// <summary>
         /// Get specified attribute from type
         /// </summary>
         /// <param name="type">Type</param>

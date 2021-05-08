@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns
 {
     using Api.Abstractions;
     using AutoRegistration.Abstractions;
+    using Internals;
 
     /// <inheritdoc />
     public class CrossCuttingConcernsManualRegistration : IManualRegistration
@@ -17,6 +18,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns
 
             container.Register(typeof(IStringFormatter<>), typeof(ObjectStringFormatter<>));
             container.Register(typeof(ObjectStringFormatter<>), typeof(ObjectStringFormatter<>));
+
+            container.Register(typeof(IObjectBuilder<>), typeof(ObjectBuilder<>));
+            container.Register(typeof(ObjectBuilder<>), typeof(ObjectBuilder<>));
+
+            container.Register(typeof(IObjectTransformer<,>), typeof(CharArrayToStringTransformer));
+            container.Register(typeof(CharArrayToStringTransformer), typeof(CharArrayToStringTransformer));
+
+            container.Register(typeof(IObjectTransformer<,>), typeof(StringToCharArrayTransformer));
+            container.Register(typeof(StringToCharArrayTransformer), typeof(StringToCharArrayTransformer));
         }
     }
 }

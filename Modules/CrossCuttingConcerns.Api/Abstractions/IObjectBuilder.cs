@@ -8,12 +8,13 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
     public interface IObjectBuilder<out T> : IResolvable
+        where T : class
     {
         /// <summary>
         /// Builds object from values
         /// </summary>
-        /// <param name="propertyValues">Property values</param>
+        /// <param name="values">Property values</param>
         /// <returns>Created and filled instance</returns>
-        T Build(IDictionary<string, object> propertyValues);
+        T Build(IDictionary<string, object>? values = null);
     }
 }

@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
             var endpoints = await EndpointOptions
-                .Select(options => options.UseTransport(Transport).UseLogger(LoggerFactory))
+                .Select(ConfigureOptions)
                 .Select(options => Endpoint.StartAsync(options, Token))
                 .WhenAll()
                 .ConfigureAwait(false);
@@ -133,6 +133,14 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
 
             _cts?.Dispose();
+        }
+
+        private EndpointOptions ConfigureOptions(EndpointOptions options)
+        {
+            return options
+                .UseTransport(Transport)
+                .UseLogger(LoggerFactory)
+                .UseCrossCuttingConcerns();
         }
 
         private static IReadOnlyDictionary<Type, IReadOnlyDictionary<string, IReadOnlyCollection<IGenericEndpoint>>> InitializeTopologyMap(

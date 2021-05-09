@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
-      <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
     <ItemGroup>

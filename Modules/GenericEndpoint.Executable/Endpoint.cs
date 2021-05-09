@@ -36,8 +36,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
         {
             endpointOptions
                 .ContainerOptions
-                .WithManualRegistration(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
-                .WithManualRegistration(new CrossCuttingConcernsManualRegistration());
+                .WithManualRegistration(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity));
 
             return DependencyContainer.CreateBoundedAbove(endpointOptions.ContainerOptions, endpointOptions.AboveAssemblies.ToArray());
         }

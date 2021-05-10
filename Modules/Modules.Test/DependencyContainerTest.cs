@@ -15,7 +15,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns;
     using Registrations;
     using SimpleInjector;
     using Xunit;

@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiringTest;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns;
     using Registrations;
     using Xunit;
     using Xunit.Abstractions;

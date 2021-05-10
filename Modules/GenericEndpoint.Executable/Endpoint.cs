@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Executable
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
-    using CrossCuttingConcerns;
     using GenericEndpoint.Abstractions;
     using Internals;
 

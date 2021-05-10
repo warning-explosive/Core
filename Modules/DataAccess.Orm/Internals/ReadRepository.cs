@@ -1,59 +1,39 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Internals
 {
-    using System.Collections.Generic;
-    using System.Data;
+    using System;
     using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
-    using Settings;
-    using SettingsManager.Abstractions;
+    using GenericDomain.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ReadRepository<TAggregate> : IReadRepository<TAggregate>
+    internal class ReadRepository<TEntity> : IReadRepository<TEntity>
+        where TEntity : class, IEntity
     {
-        private readonly IDatabaseTransaction _transaction;
-        private readonly IQueryBuilder<TAggregate> _queryBuilder;
-        private readonly IObjectBuilder<TAggregate> _objectBuilder;
-        private readonly ISettingsManager<OrmSettings> _ormSettingsProvider;
+        private readonly IAsyncQueryProvider<TEntity> _queryProvider;
 
-        public ReadRepository(
-            IDatabaseTransaction transaction,
-            IQueryBuilder<TAggregate> queryBuilder,
-            IObjectBuilder<TAggregate> objectBuilder,
-            ISettingsManager<OrmSettings> ormSettingsProvider)
+        public ReadRepository(IAsyncQueryProvider<TEntity> queryProvider)
         {
-            _transaction = transaction;
-            _queryBuilder = queryBuilder;
-            _objectBuilder = objectBuilder;
-            _ormSettingsProvider = ormSettingsProvider;
+            _queryProvider = queryProvider;
         }
 
-        public async Task<IEnumerable<TAggregate>> Read(IQueryable<TAggregate> query, CancellationToken token)
+        public IQueryable<TEntity> All()
         {
-            var (databaseQuery, parameters) = _queryBuilder.BuildQuery(query);
+            var expresion = RootQueries.QueryAll(typeof(TEntity));
+            return _queryProvider.CreateQuery(expresion);
+        }
 
-            var ormSettings = await _ormSettingsProvider
-                .Get()
-                .ConfigureAwait(false);
+        public TEntity Single(Guid key)
+        {
+            var expression = RootQueries.QuerySingle(typeof(TEntity), key);
+            return _queryProvider.CreateQuery(expression).Single();
+        }
 
-            var transaction = await _transaction
-                .Open(token)
-                .ConfigureAwait(false);
-
-            var dynamicResult = await transaction
-                .Connection
-                .QueryAsync(databaseQuery, parameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
-                .ConfigureAwait(false);
-
-            return dynamicResult
-                .Select(row => (row as IDictionary<string, object>) !)
-                .Select(_objectBuilder.Build);
+        public TEntity? SingleOrDefault(Guid key)
+        {
+            var expression = RootQueries.QuerySingleOrDefault(typeof(TEntity), key);
+            return _queryProvider.CreateQuery(expression).SingleOrDefault();
         }
     }
 }

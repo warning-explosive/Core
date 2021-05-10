@@ -28,5 +28,23 @@ namespace SpaceEngineers.Core.Basics
         {
             return Task.WhenAll(source);
         }
+
+        /// <summary>
+        /// Converts Enumerable source to IAsyncEnumerable source
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>AsyncEnumerable source</returns>
+        public static async Task<IEnumerable<T>> AsEnumerable<T>(this IAsyncEnumerable<T> source)
+        {
+            var list = new List<T>();
+
+            await foreach (var element in source.ConfigureAwait(false))
+            {
+                list.Add(element);
+            }
+
+            return list;
+        }
     }
 }

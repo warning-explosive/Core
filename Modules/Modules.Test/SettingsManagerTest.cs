@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.SettingsManager.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns;
     using GenericEndpoint.Settings;
     using Registrations;
     using Settings;

@@ -179,6 +179,8 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(typeof(StructWithParameter).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
             Assert.True(typeof(object).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
             Assert.False(typeof(ClassWithParameter).FitsForTypeArgument(typeof(IDefaultCtorConstrained<>).GetGenericArguments()[0]));
+
+            Assert.True(typeof(HalfOpenedImplementation<Guid>).FitsForTypeArgument(typeof(ITestInterface<Guid, object>)));
         }
 
         private interface ITestInterface { }

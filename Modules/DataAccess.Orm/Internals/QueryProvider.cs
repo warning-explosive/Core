@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
@@ -12,82 +13,73 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     using AutoWiring.Api.Enumerations;
     using Basics;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
     using Settings;
     using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class QueryProvider<T> : IAsyncQueryProvider<T>,
-                                      IQueryProvider,
-                                      IExternalResolvable<IQueryProvider>
+    internal class QueryProvider : IAsyncQueryProvider,
+                                   IExternalResolvable<IQueryProvider>
     {
         private readonly ISettingsManager<OrmSettings> _ormSettingsProvider;
         private readonly IQueryTranslator _translator;
         private readonly IDatabaseTransaction _transaction;
-        private readonly IObjectBuilder<T> _objectBuilder;
 
         public QueryProvider(
             ISettingsManager<OrmSettings> ormSettingsProvider,
             IQueryTranslator translator,
-            IDatabaseTransaction transaction,
-            IObjectBuilder<T> objectBuilder)
+            IDatabaseTransaction transaction)
         {
             _ormSettingsProvider = ormSettingsProvider;
             _translator = translator;
             _transaction = transaction;
-            _objectBuilder = objectBuilder;
-        }
-
-        public IQueryProvider AsQueryProvider()
-        {
-            return this;
-        }
-
-        public IQueryable<T> CreateQuery(Expression expression)
-        {
-            return new Queryable<T>(this, expression);
         }
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
         {
-            return CreateQuery(expression);
+            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+
+            return (IQueryable)Activator.CreateInstance(
+                typeof(Queryable<>).MakeGenericType(itemType),
+                this,
+                expression);
         }
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
-            return (IQueryable<TElement>)CreateQuery(expression);
+            return (IQueryable<TElement>)((IQueryProvider)this).CreateQuery(expression);
         }
 
         public object Execute(Expression expression)
         {
-            return GetType()
+            return this
                 .CallMethod(nameof(Execute))
                 .WithTypeArgument(expression.Type)
                 .WithArgument(expression)
-                .ForInstance(this)
                 .Invoke<object>();
         }
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var enumerableResult = GetType()
+            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+
+            var asyncEnumerable = this
                 .CallMethod(nameof(ExecuteAsync))
+                .WithTypeArgument(itemType)
                 .WithArgument(expression)
                 .WithArgument(CancellationToken.None)
-                .ForInstance(this)
-                .Invoke<IAsyncEnumerable<object>>()
-                .AsEnumerable()
-                .Result;
+                .Invoke<object>();
 
-            var itemType = typeof(TResult).UnwrapTypeParameter(typeof(IEnumerable<>));
+            var enumerable = GetType()
+                .CallMethod(nameof(AsEnumerable))
+                .WithTypeArgument(itemType)
+                .WithArgument(asyncEnumerable)
+                .Invoke<object>();
 
-            return itemType == typeof(TResult)
-                ? (TResult)enumerableResult.Single()
-                : (TResult)enumerableResult;
+            return (TResult)enumerable;
         }
 
-        public async IAsyncEnumerable<T> ExecuteAsync(
+        public async IAsyncEnumerable<T> ExecuteAsync<T>(
             Expression expression,
             [EnumeratorCancellation] CancellationToken token)
         {
@@ -108,8 +100,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
 
             foreach (var values in dynamicResult)
             {
-                yield return _objectBuilder.Build(values as IDictionary<string, object>);
+                /* TODO: yield return objectBuilder.Build(values as IDictionary<string, object>);*/
+                yield return default !;
             }
+        }
+
+        private static IEnumerable<T> AsEnumerable<T>(IAsyncEnumerable<T> asyncEnumerable)
+        {
+            return asyncEnumerable.AsEnumerable().Result;
         }
     }
 }

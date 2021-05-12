@@ -13,10 +13,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     /// <typeparam name="T">T type-argument</typeparam>
     internal class Queryable<T> : IQueryable<T>, IAsyncEnumerable<T>
     {
-        private readonly IAsyncQueryProvider<T> _queryProvider;
+        private readonly IAsyncQueryProvider _queryProvider;
         private readonly Expression _expression;
 
-        internal Queryable(IAsyncQueryProvider<T> queryProvider, Expression expression)
+        /// <summary> .cctor </summary>
+        /// <param name="queryProvider">IAsyncQueryProvider</param>
+        /// <param name="expression">Expression</param>
+        public Queryable(IAsyncQueryProvider queryProvider, Expression expression)
         {
             _queryProvider = queryProvider;
             _expression = expression;
@@ -26,7 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
         public Type ElementType => typeof(T);
 
         /// <inheritdoc />
-        public IQueryProvider Provider => _queryProvider.AsQueryProvider();
+        public IQueryProvider Provider => _queryProvider;
 
         /// <inheritdoc />
         public Expression Expression => _expression;
@@ -35,7 +38,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
         public IEnumerator<T> GetEnumerator()
         {
             return _queryProvider
-                .AsQueryProvider()
                 .Execute<IEnumerable<T>>(_expression)
                 .GetEnumerator();
         }
@@ -50,7 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
         public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token)
         {
             return _queryProvider
-                .ExecuteAsync(_expression, token)
+                .ExecuteAsync<T>(_expression, token)
                 .GetAsyncEnumerator(token);
         }
     }

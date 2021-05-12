@@ -3,44 +3,56 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     using System;
     using System.Linq.Expressions;
     using System.Reflection;
+    using Contract.Abstractions;
     using GenericDomain.Abstractions;
 
     internal static class RootQueries
     {
-        internal static Expression QueryAll(Type type)
+        internal static Expression QueryAll<T>(this IReadRepository<T> readRepository)
+            where T : class, IEntity
         {
-            return Expression.Call(All(type));
+            return Expression.Call(
+                Expression.Constant(readRepository),
+                All<T>());
         }
 
-        internal static Expression QuerySingle(Type type, Guid key)
+        internal static Expression QuerySingle<T>(this IReadRepository<T> readRepository, Guid key)
+            where T : class, IEntity
         {
-            return Expression.Call(Single(type));
+            return Expression.Call(
+                Expression.Constant(readRepository),
+                Single<T>(),
+                Expression.Constant(key));
         }
 
-        internal static Expression QuerySingleOrDefault(Type type, Guid key)
+        internal static Expression QuerySingleOrDefault<T>(this IReadRepository<T> readRepository, Guid key)
+            where T : class, IEntity
         {
-            return Expression.Call(SingleOrDefault(type));
+            return Expression.Call(
+                Expression.Constant(readRepository),
+                SingleOrDefault<T>(),
+                Expression.Constant(key));
         }
 
-        private static MethodInfo All(Type type)
+        private static MethodInfo All<T>()
+            where T : class, IEntity
         {
-            return typeof(ReadRepository<>)
-                .MakeGenericType(type)
-                .GetRuntimeMethod(nameof(ReadRepository<IEntity>.All), Array.Empty<Type>());
+            return typeof(IReadRepository<T>)
+                .GetRuntimeMethod(nameof(IReadRepository<IEntity>.All), Array.Empty<Type>());
         }
 
-        private static MethodInfo Single(Type type)
+        private static MethodInfo Single<T>()
+            where T : class, IEntity
         {
-            return typeof(ReadRepository<>)
-                .MakeGenericType(type)
-                .GetRuntimeMethod(nameof(ReadRepository<IEntity>.Single), new[] { typeof(Guid) });
+            return typeof(IReadRepository<T>)
+                .GetRuntimeMethod(nameof(IReadRepository<IEntity>.Single), new[] { typeof(Guid) });
         }
 
-        private static MethodInfo SingleOrDefault(Type type)
+        private static MethodInfo SingleOrDefault<T>()
+            where T : class, IEntity
         {
-            return typeof(ReadRepository<>)
-                .MakeGenericType(type)
-                .GetRuntimeMethod(nameof(ReadRepository<IEntity>.SingleOrDefault), new[] { typeof(Guid) });
+            return typeof(IReadRepository<T>)
+                .GetRuntimeMethod(nameof(IReadRepository<IEntity>.SingleOrDefault), new[] { typeof(Guid) });
         }
     }
 }

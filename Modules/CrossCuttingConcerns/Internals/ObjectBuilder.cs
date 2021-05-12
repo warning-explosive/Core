@@ -136,12 +136,11 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
 
         private object? Transform(object value, Type targetType)
         {
-            return typeof(ObjectBuilder<T>)
+            return this
                 .CallMethod(nameof(Transform))
                 .WithTypeArgument(value.GetType())
                 .WithTypeArgument(targetType)
                 .WithArgument(value)
-                .ForInstance(this)
                 .Invoke();
         }
 

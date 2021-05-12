@@ -9,28 +9,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     /// <summary>
     /// IAsyncQueryProvider
     /// </summary>
-    /// <typeparam name="T">T type-argument</typeparam>
-    internal interface IAsyncQueryProvider<T> : IResolvable
+    internal interface IAsyncQueryProvider : IQueryProvider, IResolvable
     {
-        /// <summary>
-        /// Creates linq query object
-        /// </summary>
-        /// <param name="expression">Linq query expression</param>
-        /// <returns>Linq query object</returns>
-        IQueryable<T> CreateQuery(Expression expression);
-
         /// <summary>
         /// Execute linq query asynchronously
         /// </summary>
         /// <param name="expression">Linq query expression</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing execute operation</returns>
-        IAsyncEnumerable<T> ExecuteAsync(Expression expression, CancellationToken token);
-
-        /// <summary>
-        /// Converts to IQueryProvider
-        /// </summary>
-        /// <returns>IQueryProvider</returns>
-        IQueryProvider AsQueryProvider();
+        IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, CancellationToken token);
     }
 }

@@ -21,11 +21,10 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
         {
             var type = (value?.GetType() ?? typeof(object)).UnwrapTypeParameter(typeof(Nullable<>));
 
-            return GetType()
+            return this
                 .CallMethod(nameof(Format))
                 .WithTypeArgument(type)
                 .WithArgument(value)
-                .ForInstance(this)
                 .Invoke<string>();
         }
 

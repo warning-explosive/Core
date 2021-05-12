@@ -48,6 +48,10 @@
     <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
     <ProjectReference Include="..\CliArgumentsParser\CliArgumentsParser.csproj" />
     <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+    <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+    <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
+    <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
+    <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
     <ProjectReference Include="..\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
     <ProjectReference Include="..\GenericHost.InMemoryIntegrationTransport\GenericHost.InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\GenericHost\GenericHost.csproj" />

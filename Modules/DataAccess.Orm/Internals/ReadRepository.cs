@@ -11,29 +11,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     internal class ReadRepository<TEntity> : IReadRepository<TEntity>
         where TEntity : class, IEntity
     {
-        private readonly IAsyncQueryProvider<TEntity> _queryProvider;
+        private readonly IAsyncQueryProvider _queryProvider;
 
-        public ReadRepository(IAsyncQueryProvider<TEntity> queryProvider)
+        public ReadRepository(IAsyncQueryProvider queryProvider)
         {
             _queryProvider = queryProvider;
         }
 
         public IQueryable<TEntity> All()
         {
-            var expresion = RootQueries.QueryAll(typeof(TEntity));
-            return _queryProvider.CreateQuery(expresion);
+            return _queryProvider
+                .CreateQuery<TEntity>(this.QueryAll());
         }
 
         public TEntity Single(Guid key)
         {
-            var expression = RootQueries.QuerySingle(typeof(TEntity), key);
-            return _queryProvider.CreateQuery(expression).Single();
+            return _queryProvider
+                .CreateQuery<TEntity>(this.QuerySingle(key))
+                .Single();
         }
 
         public TEntity? SingleOrDefault(Guid key)
         {
-            var expression = RootQueries.QuerySingleOrDefault(typeof(TEntity), key);
-            return _queryProvider.CreateQuery(expression).SingleOrDefault();
+            return _queryProvider
+                .CreateQuery<TEntity>(this.QuerySingleOrDefault(key))
+                .SingleOrDefault();
         }
     }
 }

@@ -312,21 +312,33 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!typeArgument.IsGenericParameter)
             {
-                return typeArgument.IsAssignableFrom(typeForCheck);
+                if (!typeArgument.IsGenericType)
+                {
+                    return typeArgument.IsAssignableFrom(typeForCheck);
+                }
+
+                var genericParameters = typeArgument.GetGenericArguments();
+
+                return typeForCheck
+                    .ExtractGenericArguments(typeArgument.GetGenericTypeDefinition())
+                    .Any(set => set
+                            .Zip(genericParameters, (arg, param) => (arg, param))
+                            .All(pair => pair.arg.FitsForTypeArgument(pair.param)));
             }
 
-            bool CheckConstraint(Type constraint) =>
-                constraint.IsGenericType
-                    ? IsSubclassOfOpenGeneric(typeForCheck, constraint.GetGenericTypeDefinition())
-                    : constraint.IsAssignableFrom(typeForCheck);
-
-            var byConstraints = typeArgument.GetGenericParameterConstraints()
-                                            .All(CheckConstraint);
+            var byConstraints = typeArgument
+                .GetGenericParameterConstraints()
+                .All(CheckConstraint);
 
             var filters = GetFiltersByTypeParameterAttributes(typeArgument.GenericParameterAttributes);
             var byGenericParameterAttributes = filters.All(filter => filter(typeForCheck));
 
             return byConstraints && byGenericParameterAttributes;
+
+            bool CheckConstraint(Type constraint) =>
+                constraint.IsGenericType
+                    ? IsSubclassOfOpenGeneric(typeForCheck, constraint.GetGenericTypeDefinition())
+                    : constraint.IsAssignableFrom(typeForCheck);
         }
 
         private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Abstractions
 {
     using System.Linq.Expressions;
     using AutoWiring.Api.Abstractions;
+    using ValueObjects;
 
     /// <summary>
     /// IQueryTranslator
@@ -13,6 +14,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Abstractions
         /// </summary>
         /// <param name="expression">Linq query expression</param>
         /// <returns>Translated query</returns>
-        ITranslatedQuery Translate(Expression expression);
+        TranslatedQuery Translate(Expression expression);
     }
 }

@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Basics
     /// <summary>
     /// Method finder
     /// </summary>
-    internal class MethodFinder
+    public class MethodFinder
     {
         private static readonly ConcurrentDictionary<string, MethodInfo?> Cache
             = new ConcurrentDictionary<string, MethodInfo?>(StringComparer.OrdinalIgnoreCase);
@@ -28,19 +28,19 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary> Type that declare method </summary>
-        internal Type DeclaringType { get; }
+        public Type DeclaringType { get; }
 
         /// <summary> Method name </summary>
-        internal string MethodName { get; }
+        public string MethodName { get; }
 
         /// <summary> BindingFlags </summary>
-        internal BindingFlags BindingFlags { get; }
+        public BindingFlags BindingFlags { get; }
 
         /// <summary> TypeArguments </summary>
-        internal IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
+        public IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
 
         /// <summary> ArgumentTypes </summary>
-        internal IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
+        public IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
 
         /// <inheritdoc />
         public override string ToString()
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.Basics
 
         /// <summary> Find method </summary>
         /// <returns>MethodInfo</returns>
-        internal MethodInfo? FindMethod()
+        public MethodInfo? FindMethod()
         {
             var key = string.Intern(ToString());
 

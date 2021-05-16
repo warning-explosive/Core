@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected");
 
         [SuppressMessage("Analysis", "xUnit1004", Justification = "appveyor")]
-        [Fact(Skip = "MSBuildWorkspace loader")]
+        [Fact]
         internal async Task SolutionAnalysisTest()
         {
             var analyzers = DependencyContainer
@@ -73,7 +73,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                     {
                         Interlocked.Increment(ref diagnosticsCount);
                         Output.WriteLine($"[{diagnosticsCount}] " + diagnostic);
-                        Output.WriteLine(diagnostic.Location.SourceTree.FilePath + ":" + diagnostic.Location.GetLineSpan().Span.Start.Line + 1);
+                        Output.WriteLine(diagnostic.Location.SourceTree.FilePath + ":" + (diagnostic.Location.GetLineSpan().Span.Start.Line + 1));
                     }
                 }
             }

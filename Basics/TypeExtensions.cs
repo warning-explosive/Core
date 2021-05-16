@@ -11,6 +11,18 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
+        private const string AnonymousType = nameof(AnonymousType);
+
+        /// <summary>
+        /// Returns an attribute that type is anonymous or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Whether type is anonymous or not</returns>
+        public static bool IsAnonymous(this Type type)
+        {
+            return type.Name.Contains(AnonymousType, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// Gets default value of the specified system type
         /// </summary>

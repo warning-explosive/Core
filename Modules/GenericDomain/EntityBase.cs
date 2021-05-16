@@ -1,13 +1,17 @@
 namespace SpaceEngineers.Core.GenericDomain
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using Abstractions;
     using Basics;
 
     /// <summary>
     /// Base class for entities
     /// </summary>
-    public abstract class EntityBase : IEntity
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    public abstract class EntityBase : IEntity,
+                                       IEquatable<EntityBase>,
+                                       ISafelyEquatable<EntityBase>
     {
         /// <summary>
         /// .cctor
@@ -27,29 +31,68 @@ namespace SpaceEngineers.Core.GenericDomain
         /// </summary>
         public ulong Version { get; private set; }
 
-        /// <inheritdoc />
-        public override int GetHashCode()
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left EntityBase</param>
+        /// <param name="right">Right EntityBase</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(EntityBase? left, EntityBase? right)
         {
-            return HashCode.Combine(Id, Version);
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left EntityBase</param>
+        /// <param name="right">Right EntityBase</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(EntityBase? left, EntityBase? right)
+        {
+            return !Equatable.Equals(left, right);
         }
 
         /// <inheritdoc />
-        public bool Equals(IEntity? other)
+        public override int GetHashCode()
         {
-            return Equatable.Equals(this, other);
+            return HashCode.Combine(Id, Version, GetType());
         }
 
         /// <inheritdoc />
         public override bool Equals(object? obj)
         {
-            return Equatable.Equals<IEntity>(this, obj);
+            return Equatable.Equals(this, obj);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(EntityBase? other)
+        {
+            return Equatable.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(IEntity? other)
+        {
+            return Equatable.Equals((IEntity)this, other);
+        }
+
+        /// <inheritdoc />
+        public bool SafeEquals(EntityBase other)
+        {
+            return ((IEntity)this).SafeEquals(other);
         }
 
         /// <inheritdoc />
         public bool SafeEquals(IEntity other)
         {
             return Id.Equals(other.Id)
-                   && Version.Equals(other.Version);
+                   && Version.Equals(other.Version)
+                   && GetType() == other.GetType();
         }
+
+        #endregion
     }
 }

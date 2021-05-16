@@ -1,25 +1,42 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
 {
     using System.Collections.Generic;
-    using System.Linq.Expressions;
     using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Internals;
+    using Linq;
     using ValueObjects;
 
+    /// <summary>
+    /// QueryTranslator
+    /// </summary>
     [Component(EnLifestyle.Scoped)]
-    internal class QueryTranslator : QueryTranslatorBase
+    public class QueryTranslator : QueryTranslatorBase
     {
-        public QueryTranslator(IEnumerable<IQueryVisitor> visitors)
-            : base(visitors)
+        private readonly IDependencyContainer _dependencyContainer;
+
+        /// <summary>
+        /// .cctor
+        /// </summary>
+        /// <param name="dependencyContainer">IDependencyContainer</param>
+        /// <param name="queryVisitors">IQueryVisitor stream</param>
+        /// <param name="translator">IIntermediateTranslator</param>
+        public QueryTranslator(
+            IDependencyContainer dependencyContainer,
+            IEnumerable<IQueryVisitor> queryVisitors,
+            IIntermediateTranslator translator)
+            : base(queryVisitors, translator)
         {
+            _dependencyContainer = dependencyContainer;
         }
 
-        protected override TranslatedQuery TranslateVisited(Expression visitedExpression)
+        /// <inheritdoc />
+        protected override TranslatedQuery TranslateVisited(IIntermediateExpression expression)
         {
-            _ = visitedExpression;
-
-            throw new System.NotImplementedException();
+            var query = expression.Translate(_dependencyContainer, 0);
+            return new TranslatedQuery(query);
         }
     }
 }

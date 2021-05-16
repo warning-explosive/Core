@@ -78,7 +78,7 @@ namespace SpaceEngineers.Core.GenericDomain.Abstractions
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equatable.Equals(this, obj);
         }

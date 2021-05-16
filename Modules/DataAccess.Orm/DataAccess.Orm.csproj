@@ -34,11 +34,32 @@
       <PackageReference Include="Dapper" Version="2.0.90" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Internals\Queryable.cs">
+      <Compile Update="Linq\QueryProvider.cs">
+        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Queryable.cs">
         <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Internals\QueryProvider.cs">
-        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
+      <Compile Update="ValueObjects\NamedBindingExpression.cs">
+        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ValueObjects\SimpleBindingExpression.cs">
+        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ValueObjects\ParameterExpression.cs">
+        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ValueObjects\ProjectionExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ValueObjects\FilterExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ChangeParameterVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ValueObjects\NamedSourceExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

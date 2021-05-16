@@ -67,7 +67,7 @@ namespace SpaceEngineers.Core.Basics
         public MethodExecutionInfo WithArgument<TArgument>(object? argument)
         {
             _args.Add(argument);
-            _argumentTypes.Add(argument.GetType());
+            _argumentTypes.Add(argument?.GetType() ?? typeof(TArgument));
 
             return this;
         }

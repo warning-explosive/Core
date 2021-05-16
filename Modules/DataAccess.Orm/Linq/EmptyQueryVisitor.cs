@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System.Linq.Expressions;
     using Abstractions;

@@ -4,17 +4,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using DataAccess.PostgreSql.Settings;
+    using SettingsManager.Abstractions;
     using ValueObjects;
 
     [Component(EnLifestyle.Singleton)]
     internal class QuerySourceExpressionTranslator : IExpressionTranslator<QuerySourceExpression>
     {
+        private readonly ISettingsManager<PostgreSqlDatabaseSettings> _postgreSqlSettingsProvider;
+
+        public QuerySourceExpressionTranslator(ISettingsManager<PostgreSqlDatabaseSettings> postgreSqlSettingsProvider)
+        {
+            _postgreSqlSettingsProvider = postgreSqlSettingsProvider;
+        }
+
         public string Translate(QuerySourceExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.Append("todo_database.todo_schema.");
+            sb.Append(_postgreSqlSettingsProvider.Get().Result.Schema);
+            sb.Append('.');
+            sb.Append('\"');
             sb.Append(expression.ItemType.Name);
+            sb.Append('\"');
 
             return sb.ToString();
         }

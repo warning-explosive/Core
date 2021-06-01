@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
+    using System.Text;
     using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -13,6 +14,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
     {
+        private static readonly IReadOnlyDictionary<string, string> FunctionalOperators
+            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [nameof(ExpressionType.Coalesce)] = "COALESCE"
+            };
+
         private static readonly IReadOnlyDictionary<string, string> Operators
             = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -43,8 +50,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
 
         public string Translate(BinaryExpression expression, int depth)
         {
-            var map = IsNullConstant(expression.Left)
-                      || IsNullConstant(expression.Right)
+            if (FunctionalOperators.ContainsKey(expression.Operator))
+            {
+                var sb = new StringBuilder();
+
+                sb.Append(FunctionalOperators[expression.Operator]);
+                sb.Append('(');
+                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
+                sb.Append(", ");
+                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
+                sb.Append(')');
+
+                return sb.ToString();
+            }
+
+            var map = (IsNullConstant(expression.Left) || IsNullConstant(expression.Right))
+                      && AltOperators.ContainsKey(expression.Operator)
                 ? AltOperators
                 : Operators;
 

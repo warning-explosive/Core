@@ -2,13 +2,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using Abstractions;
     using Basics;
 
     /// <summary>
     /// ParameterExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ParameterExpression : INamedIntermediateExpression,
+    public class ParameterExpression : IIntermediateExpression,
                                        IEquatable<ParameterExpression>,
                                        ISafelyEquatable<ParameterExpression>
     {
@@ -24,8 +25,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <inheritdoc />
         public Type ItemType { get; }
 
-        /// <inheritdoc />
-        public string Name { get; private set; }
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; }
 
         #region IEquatable
 

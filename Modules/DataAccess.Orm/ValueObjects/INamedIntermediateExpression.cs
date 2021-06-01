@@ -11,5 +11,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// Name
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// Expression
+        /// </summary>
+        public IIntermediateExpression Expression { get; }
     }
 }

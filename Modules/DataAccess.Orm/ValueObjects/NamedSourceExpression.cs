@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         public NamedSourceExpression(
             Type itemType,
             IIntermediateExpression source,
-            ParameterExpression parameter)
+            IIntermediateExpression parameter)
         {
             ItemType = itemType;
             Source = source;
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary>
         /// Parameter expression
         /// </summary>
-        public ParameterExpression Parameter { get; }
+        public IIntermediateExpression Parameter { get; }
 
         #region IEquatable
 

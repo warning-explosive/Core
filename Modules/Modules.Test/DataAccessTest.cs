@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Reflection;
     using AutoRegistration;
+    using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns;
@@ -37,7 +38,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var assemblies = new[]
             {
                 typeof(DataAccess.Orm.PostgreSql.QueryTranslator).Assembly, // DataAccess.Orm.PostgreSql
-                typeof(DataAccess.PostgreSql.Settings.PostgreSqlSettings).Assembly, // DataAccess.PostgreSql
+                typeof(DataAccess.PostgreSql.Settings.PostgreSqlDatabaseSettings).Assembly, // DataAccess.PostgreSql
                 typeof(CrossCuttingConcernsManualRegistration).Assembly, // CrossCuttingConcerns
             };
 
@@ -47,7 +48,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All()),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)}"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\""
             };
             yield return new object[]
             {
@@ -55,7 +56,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.Id)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.Id)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.Id)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -63,7 +64,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.BooleanField)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.BooleanField)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -71,7 +72,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.StringField)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.StringField)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -79,7 +80,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.IntField)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.IntField)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -87,7 +88,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.BooleanField)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.BooleanField)}"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.BooleanField)}\""
             };
             yield return new object[]
             {
@@ -95,7 +96,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.BooleanField, e.StringField }).Where(a => a.BooleanField)),
-                $"SELECT{Environment.NewLine}\ta.{nameof(TestAggregate.BooleanField)},{Environment.NewLine}\ta.{nameof(TestAggregate.StringField)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} a{Environment.NewLine}WHERE{Environment.NewLine}\ta.{nameof(TestAggregate.BooleanField)}"
+                $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\""
             };
             yield return new object[]
             {
@@ -103,7 +104,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.StringField.Length)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.StringField)}.{nameof(string.Length)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                $"SELECT{Environment.NewLine}\tlength(e.\"{nameof(TestAggregate.StringField)}\"){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -111,15 +112,23 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField).Where(str => str != null)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.NullableStringField)} AS str{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\tstr IS NOT NULL"
+                $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL"
+            };
+            yield return new object[]
+            {
+                "Coalesce projection",
+                nameof(DataAccess.Orm.PostgreSql),
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField ?? string.Empty)),
+                $"SELECT{Environment.NewLine}\tCOALESCE(e.\"{nameof(TestAggregate.NullableStringField)}\", ''){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
                 "Ternary projection",
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField != null ? e.NullableStringField.Length : 0)),
-                $"SELECT{Environment.NewLine}\tCASE e.{nameof(TestAggregate.NullableStringField)} IS NOT NULL THEN e.{nameof(TestAggregate.NullableStringField)}.{nameof(string.Length)} ELSE 0{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e"
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField != null ? e.NullableStringField : string.Empty)),
+                $"SELECT{Environment.NewLine}\tCASE WHEN e.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN e.\"{nameof(TestAggregate.NullableStringField)}\" ELSE '' END{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e"
             };
             yield return new object[]
             {
@@ -127,7 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.NullableStringField != null ? true : false)),
-                $"SELECT{Environment.NewLine}\te.{nameof(TestAggregate.BooleanField)},{Environment.NewLine}\te.{nameof(TestAggregate.Id)},{Environment.NewLine}\te.{nameof(TestAggregate.IntField)},{Environment.NewLine}\te.{nameof(TestAggregate.NullableStringField)},{Environment.NewLine}\te.{nameof(TestAggregate.StringField)},{Environment.NewLine}\te.{nameof(TestAggregate.Version)},{Environment.NewLine}\t(CASE e.{nameof(TestAggregate.NullableStringField)} IS NOT NULL THEN True ELSE False) AS todo_alias_name{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.todo_alias_name"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN e.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN True ELSE False END"
             };
             yield return new object[]
             {
@@ -135,7 +144,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.StringField, e.NullableStringField }).Where(p => p.NullableStringField != null ? true : false)),
-                $"SELECT{Environment.NewLine}\tp.{nameof(TestAggregate.StringField)},{Environment.NewLine}\tp.{nameof(TestAggregate.NullableStringField)},{Environment.NewLine}\t(CASE p.{nameof(TestAggregate.NullableStringField)} IS NOT NULL THEN True ELSE False) AS todo_alias_name{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} p{Environment.NewLine}WHERE{Environment.NewLine}\tp.todo_alias_name"
+                $"SELECT{Environment.NewLine}\tp.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tp.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" p{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN p.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN True ELSE False END"
             };
             yield return new object[]
             {
@@ -143,7 +152,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.StringField, Filter = e.NullableStringField }).Where(p => p.Filter != null ? true : false)),
-                $"SELECT{Environment.NewLine}\tp.{nameof(TestAggregate.StringField)},{Environment.NewLine}\tp.{nameof(TestAggregate.NullableStringField)} AS Filter,{Environment.NewLine}\t(CASE p.{nameof(TestAggregate.NullableStringField)} IS NOT NULL THEN True ELSE False) AS todo_alias_name{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} p{Environment.NewLine}WHERE{Environment.NewLine}\tp.todo_alias_name"
+                $"SELECT{Environment.NewLine}\tp.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tp.\"{nameof(TestAggregate.NullableStringField)}\" AS Filter{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" p{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN p.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN True ELSE False END"
             };
             yield return new object[]
             {
@@ -151,7 +160,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField == 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} = 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" = 0"
             };
             yield return new object[]
             {
@@ -159,7 +168,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField != 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} != 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" != 0"
             };
             yield return new object[]
             {
@@ -167,7 +176,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField >= 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} >= 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" >= 0"
             };
             yield return new object[]
             {
@@ -175,7 +184,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField > 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} > 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" > 0"
             };
             yield return new object[]
             {
@@ -183,7 +192,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField < 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} < 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" < 0"
             };
             yield return new object[]
             {
@@ -191,7 +200,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField <= 0)),
-                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} e{Environment.NewLine}WHERE{Environment.NewLine}\te.{nameof(TestAggregate.IntField)} <= 0"
+                $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" <= 0"
             };
             yield return new object[]
             {
@@ -199,7 +208,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.NullableStringField, e.StringField }).Where(a => a.NullableStringField != null)),
-                $"SELECT{Environment.NewLine}\ta.{nameof(TestAggregate.NullableStringField)},{Environment.NewLine}\ta.{nameof(TestAggregate.StringField)}{Environment.NewLine}FROM{Environment.NewLine}\ttodo_database.todo_schema.{nameof(TestAggregate)} a{Environment.NewLine}WHERE{Environment.NewLine}\ta.{nameof(TestAggregate.NullableStringField)} IS NOT NULL"
+                $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL"
             };
             yield return new object[]
             {
@@ -207,13 +216,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 nameof(DataAccess.Orm.PostgreSql),
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(a => new { a.NullableStringField, a.StringField, a.IntField }).Select(b => new { b.NullableStringField, b.IntField }).Where(c => c.NullableStringField != null).Select(d => new { d.IntField }).Where(e => e.IntField > 0).Where(f => f.IntField < 42).Select(g => g.IntField)),
-                $"SELECT{Environment.NewLine}\tg.{nameof(TestAggregate.IntField)}{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tf.{nameof(TestAggregate.IntField)}{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tc.{nameof(TestAggregate.NullableStringField)},{Environment.NewLine}\t\t\tc.{nameof(TestAggregate.IntField)}{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.{nameof(TestAggregate.NullableStringField)},{Environment.NewLine}\t\t\t\ta.{nameof(TestAggregate.StringField)},{Environment.NewLine}\t\t\t\ta.{nameof(TestAggregate.IntField)}{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\ttodo_database.todo_schema.TestEntity a) c{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tc.{nameof(TestAggregate.NullableStringField)} IS NOT NULL) f{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tf.{nameof(TestAggregate.IntField)} > 0 AND f.{nameof(TestAggregate.IntField)} < 42) g"
+                $"SELECT{Environment.NewLine}\tg.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tf.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\tpublic.\"{nameof(TestAggregate)}\" a) c{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL) f{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tf.\"{nameof(TestAggregate.IntField)}\" > 0 AND f.\"{nameof(TestAggregate.IntField)}\" < 42) g"
             };
         }
 
         [Theory]
         [MemberData(nameof(DataAccessTestData))]
-        internal void ReadRepositoryQueryAllTest(
+        internal void ReadRepositoryTest(
             string section,
             string databaseName,
             Assembly[] assemblies,
@@ -239,14 +248,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 Output.WriteLine(expectedQuery);
                 Output.WriteLine($"{Environment.NewLine}Actual query:");
                 Output.WriteLine(translatedQuery.Query);
-                Assert.Equal(expectedQuery, translatedQuery.Query);
+                Assert.Equal(expectedQuery, translatedQuery.Query, StringComparer.Ordinal);
 
-                /* TODO: Read from real database
+                /* TODO: Prepare and assert queried data */
                 _ = queryProducer(readRepository)
                     .GetEnumerator()
                     .ToObjectEnumerable()
                     .ToList();
-                */
 
                 /* TODO: IAsyncQueryable extensions
                 _ = await readRepository
@@ -260,15 +268,15 @@ namespace SpaceEngineers.Core.Modules.Test
 
         internal class TestAggregate : EntityBase, IAggregate
         {
-            internal TestAggregate(bool booleanField, string stringField)
+            public TestAggregate(bool booleanField, string stringField)
             {
                 BooleanField = booleanField;
                 StringField = stringField;
             }
 
-            public bool BooleanField { get; }
+            public bool BooleanField { get; private set; }
 
-            public string StringField { get; }
+            public string StringField { get; private set; }
 
             public string? NullableStringField { get; set; }
 

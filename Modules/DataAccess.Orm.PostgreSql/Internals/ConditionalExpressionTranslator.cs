@@ -21,12 +21,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
         {
             var sb = new StringBuilder();
 
-            sb.Append("CASE ");
+            sb.Append("CASE WHEN ");
             sb.Append(expression.When.Translate(_dependencyContainer, depth));
             sb.Append(" THEN ");
             sb.Append(expression.Then.Translate(_dependencyContainer, depth));
             sb.Append(" ELSE ");
             sb.Append(expression.Else.Translate(_dependencyContainer, depth));
+            sb.Append(" END");
 
             return sb.ToString();
         }

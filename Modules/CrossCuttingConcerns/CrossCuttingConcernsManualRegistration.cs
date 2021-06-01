@@ -19,8 +19,11 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns
             container.Register(typeof(IStringFormatter<>), typeof(ObjectStringFormatter<>));
             container.Register(typeof(ObjectStringFormatter<>), typeof(ObjectStringFormatter<>));
 
-            container.Register(typeof(IObjectBuilder<>), typeof(ObjectBuilder<>));
-            container.Register(typeof(ObjectBuilder<>), typeof(ObjectBuilder<>));
+            container.Register(typeof(IObjectBuilder), typeof(ObjectBuilder));
+            container.Register(typeof(ObjectBuilder), typeof(ObjectBuilder));
+
+            container.Register(typeof(IObjectBuilder<>), typeof(GenericObjectBuilder<>));
+            container.Register(typeof(GenericObjectBuilder<>), typeof(GenericObjectBuilder<>));
 
             container.Register(typeof(IObjectTransformer<,>), typeof(CharArrayToStringTransformer));
             container.Register(typeof(CharArrayToStringTransformer), typeof(CharArrayToStringTransformer));

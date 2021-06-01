@@ -18,6 +18,8 @@ namespace SpaceEngineers.Core.GenericDomain
         /// </summary>
         protected EntityBase()
         {
+            Id = Guid.NewGuid();
+            Version = 0;
         }
 
         /// <summary>

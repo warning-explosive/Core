@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary>
         /// Expression
         /// </summary>
-        public IIntermediateExpression Expression { get; private set; }
+        public IIntermediateExpression Expression { get; }
 
         #region IEquatable
 
@@ -84,5 +84,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         }
 
         #endregion
+
+        /// <summary>
+        /// Unwrap NamedBindingExpression
+        /// </summary>
+        /// <param name="expression">Expression</param>
+        /// <returns>Unwrapped expression</returns>
+        public static IIntermediateExpression Unwrap(IIntermediateExpression expression)
+        {
+            return expression is NamedBindingExpression namedBinding
+                ? namedBinding.Expression
+                : expression;
+        }
     }
 }

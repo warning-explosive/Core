@@ -1,25 +1,29 @@
-namespace SpaceEngineers.Core.DataAccess.Contract.Settings
+namespace SpaceEngineers.Core.DataAccess.PostgreSql.Settings
 {
+    using System.Data;
     using Basics;
     using SettingsManager.Abstractions;
 
     /// <summary>
-    /// Database settings
+    /// Postgre sql settings
     /// </summary>
-    public class DatabaseSettings : IYamlSettings
+    public class PostgreSqlDatabaseSettings : IYamlSettings
     {
         private const string Format = "{0}={1}";
 
         /// <summary> .cctor </summary>
-        public DatabaseSettings()
+        public PostgreSqlDatabaseSettings()
         {
             Host = "localhost";
             Port = 5432;
             Database = "SpaceEngineersDatabase";
+            Schema = "public";
 
             /* TODO: use credentials vault */
             Username = "SpaceEngineer";
             Password = "1234";
+
+            IsolationLevel = IsolationLevel.ReadCommitted;
         }
 
         /// <summary>
@@ -38,6 +42,11 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Settings
         public string Database { get; set; }
 
         /// <summary>
+        /// Schema
+        /// </summary>
+        public string Schema { get; set; }
+
+        /// <summary>
         /// Username
         /// </summary>
         public string Username { get; set; }
@@ -46,6 +55,11 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Settings
         /// Password
         /// </summary>
         public string Password { get; set; }
+
+        /// <summary>
+        /// Isolation level
+        /// </summary>
+        public IsolationLevel IsolationLevel { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

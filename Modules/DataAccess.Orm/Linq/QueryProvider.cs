@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using AutoWiring.Api.Enumerations;
     using Basics;
     using Contract.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
     using Settings;
     using SettingsManager.Abstractions;
@@ -22,17 +23,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                                    IExternalResolvable<IQueryProvider>
     {
         private readonly ISettingsManager<OrmSettings> _ormSettingsProvider;
-        private readonly IQueryTranslator _translator;
         private readonly IDatabaseTransaction _transaction;
+        private readonly IQueryTranslator _translator;
+        private readonly IObjectBuilder _objectBuilder;
 
         public QueryProvider(
             ISettingsManager<OrmSettings> ormSettingsProvider,
+            IDatabaseTransaction transaction,
             IQueryTranslator translator,
-            IDatabaseTransaction transaction)
+            IObjectBuilder objectBuilder)
         {
             _ormSettingsProvider = ormSettingsProvider;
-            _translator = translator;
             _transaction = transaction;
+            _translator = translator;
+            _objectBuilder = objectBuilder;
         }
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -98,10 +102,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .QueryAsync(query.Query, query.Parameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
                 .ConfigureAwait(false);
 
-            foreach (var values in dynamicResult)
+            foreach (var dynamicValues in dynamicResult)
             {
-                /* TODO: yield return objectBuilder.Build(values as IDictionary<string, object>);*/
-                yield return default !;
+                var values = dynamicValues as IDictionary<string, object>;
+                var built = _objectBuilder.Build(typeof(T), values);
+
+                if (built != null)
+                {
+                    yield return (T)built;
+                }
             }
         }
 

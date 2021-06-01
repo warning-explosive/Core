@@ -16,15 +16,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
         /// <param name="name">Name</param>
-        /// <param name="source">IIntermediateExpression</param>
+        /// <param name="expression">IIntermediateExpression</param>
         public SimpleBindingExpression(
             Type itemType,
             string name,
-            IIntermediateExpression source)
+            IIntermediateExpression expression)
         {
             ItemType = itemType;
             Name = name;
-            Source = source;
+            Expression = expression;
         }
 
         internal SimpleBindingExpression(Type itemType, string name)
@@ -40,9 +40,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         public string Name { get; }
 
         /// <summary>
-        /// Source expression
+        /// Expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; } = null!;
+        public IIntermediateExpression Expression { get; private set; } = null!;
 
         #region IEquatable
 
@@ -71,7 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name, Source);
+            return HashCode.Combine(ItemType, Name, Expression);
         }
 
         /// <inheritdoc />
@@ -91,19 +91,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         {
             return ItemType == other.ItemType
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Source.Equals(other.Source);
+                   && Expression.Equals(other.Expression);
         }
 
         #endregion
 
         internal void Apply(SimpleBindingExpression binding)
         {
-            Source = binding;
+            Expression = binding;
         }
 
         internal void Apply(ParameterExpression parameter)
         {
-            Source = parameter;
+            Expression = parameter;
         }
     }
 }

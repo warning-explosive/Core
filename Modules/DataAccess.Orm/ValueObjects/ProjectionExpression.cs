@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using Abstractions;
     using Basics;
     using Linq;
@@ -155,9 +154,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
             _bindings.Add(conditional);
         }
 
+        internal void Apply(BinaryExpression binary)
+        {
+            _bindings.Add(binary);
+        }
+
+        internal void Apply(MethodCallExpression methodCall)
+        {
+            _bindings.Add(methodCall);
+        }
+
         internal void Apply(ParameterExpression parameter)
         {
-            var visitor = new ChangeParameterVisitor(parameter);
+            var visitor = new ReplaceParameterVisitor(parameter);
 
             if (IsProjectionToClass)
             {
@@ -177,16 +186,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
                     Source,
                     parameter);
             }
-        }
-
-        internal static IEnumerable<PropertyInfo> PossibleToSelect(Type type)
-        {
-            return type
-                .GetProperties(BindingFlags.Instance
-                               | BindingFlags.Public
-                               | BindingFlags.NonPublic
-                               | BindingFlags.GetProperty)
-                .OrderBy(info => info.Name);
         }
     }
 }

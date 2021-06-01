@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api.Enumerations;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns;
@@ -41,12 +42,21 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var objectValues = new Dictionary<string, object> { ["value"] = new object() };
             Assert.Throws<InvalidOperationException>(() => DependencyContainer.Resolve<IObjectBuilder<object>>().Build(objectValues));
-            var stringValues = new Dictionary<string, object> { ["value"] = string.Empty };
-            Assert.NotNull(DependencyContainer.Resolve<IObjectBuilder<string>>().Build(stringValues));
+
+            var str = "qwerty";
+            var stringValues = new Dictionary<string, object> { ["value"] = str };
+            Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<string>>().Build(stringValues));
+
+            var enumValues = new Dictionary<string, object> { ["value"] = EnComponentRegistrationKind.AutomaticallyRegistered.ToString() };
+            Assert.Equal(EnComponentRegistrationKind.AutomaticallyRegistered, DependencyContainer.Resolve<IObjectBuilder<EnComponentRegistrationKind>>().Build(enumValues));
+
+            var guid = Guid.NewGuid();
+            var guidValues = new Dictionary<string, object> { ["value"] = guid };
+            Assert.Equal(guid, DependencyContainer.Resolve<IObjectBuilder<Guid>>().Build(guidValues));
 
             Assert.Equal(string.Empty, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build().Value);
-            var testStructValues = new Dictionary<string, object> { [nameof(TestClass.Value)] = string.Empty };
-            Assert.Equal(string.Empty, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build(testStructValues).Value);
+            var testStructValues = new Dictionary<string, object> { [nameof(TestClass.Value)] = str };
+            Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build(testStructValues).Value);
         }
 
         private class TestClass

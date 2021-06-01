@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
+    // TODO: Remove
     [Component(EnLifestyle.Singleton)]
     internal class EmptyEndpointInitializer : IEndpointInitializer
     {

@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return new SimpleBindingExpression(
                 simpleBindingExpression.ItemType,
                 simpleBindingExpression.Name,
-                Visit(simpleBindingExpression.Source));
+                Visit(simpleBindingExpression.Expression));
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return new NamedSourceExpression(
                 namedSourceExpression.ItemType,
                 Visit(namedSourceExpression.Source),
-                VisitParameter(namedSourceExpression.Parameter));
+                Visit(namedSourceExpression.Parameter));
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// </summary>
         /// <param name="parameterExpression">ParameterExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual ParameterExpression VisitParameter(ParameterExpression parameterExpression)
+        protected virtual IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
         {
             return parameterExpression;
         }

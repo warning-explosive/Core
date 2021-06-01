@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -16,11 +17,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using ConstantExpression = System.Linq.Expressions.ConstantExpression;
+    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
     using NewExpression = System.Linq.Expressions.NewExpression;
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
 
     [Component(EnLifestyle.Scoped)]
-    internal class IntermediateTranslator : IIntermediateTranslator
+    internal class SqlIntermediateTranslator : IIntermediateTranslator
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
         private const string UnableToTranslateFormat = "Unable to translate {0}";
@@ -28,9 +30,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         private static readonly MethodInfo Select = QueryableSelect();
         private static readonly MethodInfo Where = QueryableWhere();
 
+        private readonly IEnumerable<ISqlExpressionProvider> _sqlFunctionProviders;
+
+        public SqlIntermediateTranslator(IEnumerable<ISqlExpressionProvider> sqlFunctionProviders)
+        {
+            _sqlFunctionProviders = sqlFunctionProviders;
+        }
+
         public IIntermediateExpression Translate(Expression expression)
         {
-            var visitor = new IntermediateExpressionVisitor(this);
+            var visitor = new IntermediateExpressionVisitor(this, _sqlFunctionProviders);
 
             _ = visitor.Visit(expression);
 
@@ -50,7 +59,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private static MethodInfo QueryableSelect()
         {
-            return new MethodFinder(typeof(System.Linq.Queryable),
+            return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Select),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
@@ -63,7 +72,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private static MethodInfo QueryableWhere()
         {
-            return new MethodFinder(typeof(System.Linq.Queryable),
+            return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Where),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
@@ -76,12 +85,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private sealed class IntermediateExpressionVisitor : ExpressionVisitor
         {
-            private readonly IntermediateTranslator _translator;
+            private readonly SqlIntermediateTranslator _translator;
+            private readonly IEnumerable<ISqlExpressionProvider> _sqlFunctionProviders;
+
             private readonly Stack<IIntermediateExpression> _stack;
 
-            public IntermediateExpressionVisitor(IntermediateTranslator translator)
+            public IntermediateExpressionVisitor(
+                SqlIntermediateTranslator translator,
+                IEnumerable<ISqlExpressionProvider> sqlFunctionProviders)
             {
                 _translator = translator;
+                _sqlFunctionProviders = sqlFunctionProviders;
+
                 _stack = new Stack<IIntermediateExpression>();
             }
 
@@ -122,13 +137,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                         () => base.VisitMethodCall(node));
                 }
 
+                if (TryRecognizeSqlExpression(node.Method, out var recognized))
+                {
+                    return WithScopeOpening(recognized, () => base.VisitMethodCall(node));
+                }
+
                 throw new NotSupportedException(string.Format(UnableToTranslateFormat, $"method: {node.Method}"));
             }
 
             protected override Expression VisitMember(MemberExpression node)
             {
-                return WithScopeOpening(new SimpleBindingExpression(node.Type, node.Member.Name),
-                    () => base.VisitMember(node));
+                IIntermediateExpression expression = TryRecognizeSqlExpression(node.Member, out var recognized)
+                    ? recognized
+                    : new SimpleBindingExpression(node.Type, node.Member.Name);
+
+                return WithScopeOpening(expression, () => base.VisitMember(node));
             }
 
             protected override Expression VisitNew(NewExpression node)
@@ -261,6 +284,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 }
 
                 return produced;
+            }
+
+            private bool TryRecognizeSqlExpression(MemberInfo memberInfo, [NotNullWhen(true)] out IIntermediateExpression? expression)
+            {
+                expression = _sqlFunctionProviders
+                    .Select(provider =>
+                    {
+                        var success = provider.TryRecognize(memberInfo, out var info);
+                        return (success, info);
+                    })
+                    .Where(pair => pair.success)
+                    .Select(pair => pair.info)
+                    .InformativeSingleOrDefault(Amb);
+
+                return expression != null;
+
+                string Amb(IEnumerable<IIntermediateExpression?> infos)
+                {
+                    throw new InvalidOperationException($"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member");
+                }
             }
         }
     }

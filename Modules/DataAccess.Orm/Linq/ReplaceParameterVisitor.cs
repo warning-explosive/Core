@@ -4,18 +4,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using Abstractions;
     using ValueObjects;
 
-    internal class ChangeParameterVisitor : IntermediateExpressionVisitorBase
+    internal class ReplaceParameterVisitor : IntermediateExpressionVisitorBase
     {
-        private readonly ParameterExpression _parameter;
+        private readonly IIntermediateExpression _expression;
 
-        public ChangeParameterVisitor(ParameterExpression parameter)
+        public ReplaceParameterVisitor(IIntermediateExpression expression)
         {
-            _parameter = parameter;
+            _expression = expression;
         }
 
-        protected override ParameterExpression VisitParameter(ParameterExpression parameterExpression)
+        protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
         {
-            return _parameter;
+            return _expression;
         }
 
         protected override IIntermediateExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return new NamedSourceExpression(
                 namedSourceExpression.ItemType,
                 namedSourceExpression.Source,
-                VisitParameter(namedSourceExpression.Parameter));
+                Visit(namedSourceExpression.Parameter));
         }
 
         protected override IIntermediateExpression VisitProjection(ProjectionExpression projectionExpression)

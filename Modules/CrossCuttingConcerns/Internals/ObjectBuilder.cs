@@ -13,8 +13,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ObjectBuilder<T> : IObjectBuilder<T>
-        where T : class
+    internal class ObjectBuilder : IObjectBuilder
     {
         private readonly IDependencyContainer _dependencyContainer;
 
@@ -23,13 +22,18 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
             _dependencyContainer = dependencyContainer;
         }
 
-        public T Build(IDictionary<string, object>? values = null)
+        public object? Build(Type type, IDictionary<string, object>? values = null)
         {
+            if (values?.Count == 1 && IsPrimitive(type))
+            {
+                return ConvertTo(values.Single().Value, type);
+            }
+
             values = values?.ToDictionary(it => it.Key, it => it.Value, StringComparer.OrdinalIgnoreCase)
                      ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             // 1. find .cctor (should have public constructor .cctor)
-            var cctor = typeof(T)
+            var cctor = type
                 .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance)
                 .Select(info =>
                 {
@@ -41,7 +45,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
                 .OrderByDescending(info => info.parameters.Length)
                 .Select(info => info.constructorInfo)
                 .FirstOrDefault()
-                .EnsureNotNull($"{typeof(T).FullName} should have the default public constructor or a constructor that takes additional parameters");
+                .EnsureNotNull($"{type.FullName} should have the default public constructor or a constructor that takes additional parameters");
 
             // 2. convert .cctor parameters
             var cctorParameters = cctor.GetParameters();
@@ -61,25 +65,45 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
             }
 
             // 3. build instance
-            var instance = (T)cctor.Invoke(cctorArguments);
+            var instance = cctor.Invoke(cctorArguments);
 
             // 4. fill instance with the leftover properties
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty);
-
-            foreach (var property in properties)
+            var curr = type;
+            while (curr != null)
             {
-                if (values.Remove(property.Name, out var value))
+                var properties = curr
+                    .GetProperties(BindingFlags.Public
+                                   | BindingFlags.NonPublic
+                                   | BindingFlags.Instance
+                                   | BindingFlags.SetProperty)
+                    .Where(info => info.SetMethod != null);
+
+                foreach (var property in properties)
                 {
-                    property.SetValue(instance, ConvertTo(value, property.PropertyType));
+                    if (values.Remove(property.Name, out var value))
+                    {
+                        property.SetValue(instance, ConvertTo(value, property.PropertyType));
+                    }
                 }
+
+                curr = curr.BaseType;
             }
 
             if (values.Any())
             {
-                throw new InvalidOperationException($"Don't specify excessive properties: {values.Keys.ToString(", ")}");
+                throw new InvalidOperationException($"Couldn't set value: {values.ToString(", ", pair => $"[{pair.Key}] - {pair.Value}")}");
             }
 
             return instance;
+        }
+
+        private bool IsPrimitive(Type type)
+        {
+            return type.IsPrimitive
+                   || type.IsEnum
+                   || type == typeof(Guid)
+                   || type == typeof(string)
+                   || type == typeof(Type);
         }
 
         private object? ConvertTo(object? value, Type targetType)

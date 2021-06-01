@@ -33,6 +33,15 @@
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
+      <Compile Update="Internals\GenericObjectBuilder.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\ObjectStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\DateTimeStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
       <Compile Update="Internals\StringToCharArrayTransformer.cs">
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
       </Compile>

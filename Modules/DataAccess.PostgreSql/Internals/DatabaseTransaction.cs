@@ -16,14 +16,14 @@
     internal class DatabaseTransaction : IDatabaseTransaction, IDisposable
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly ISettingsManager<PostgreSqlSettings> _postgreSqlSettingsProvider;
+        private readonly ISettingsManager<PostgreSqlDatabaseSettings> _postgreSqlSettingsProvider;
 
         private NpgsqlConnection? _connection;
         private NpgsqlTransaction? _transaction;
 
         public DatabaseTransaction(
             IConnectionFactory connectionFactory,
-            ISettingsManager<PostgreSqlSettings> postgreSqlSettingsProvider)
+            ISettingsManager<PostgreSqlDatabaseSettings> postgreSqlSettingsProvider)
         {
             _connectionFactory = connectionFactory;
             _postgreSqlSettingsProvider = postgreSqlSettingsProvider;

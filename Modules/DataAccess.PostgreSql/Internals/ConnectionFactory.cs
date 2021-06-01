@@ -3,16 +3,16 @@ namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Contract.Settings;
     using Npgsql;
+    using Settings;
     using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ConnectionFactory : IConnectionFactory
     {
-        private readonly ISettingsManager<DatabaseSettings> _databaseSettingsProvider;
+        private readonly ISettingsManager<PostgreSqlDatabaseSettings> _databaseSettingsProvider;
 
-        public ConnectionFactory(ISettingsManager<DatabaseSettings> databaseSettingsProvider)
+        public ConnectionFactory(ISettingsManager<PostgreSqlDatabaseSettings> databaseSettingsProvider)
         {
             _databaseSettingsProvider = databaseSettingsProvider;
         }

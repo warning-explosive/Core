@@ -112,9 +112,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
 
         internal void Apply(ParameterExpression parameter)
         {
-            var visitor = new ChangeParameterVisitor(parameter);
-
-            Expression = visitor.Visit(Expression);
+            Expression = new ReplaceParameterVisitor(parameter).Visit(Expression);
 
             if (Source is ProjectionExpression projection)
             {
@@ -125,9 +123,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
                 else
                 {
                     var binding = projection.Bindings.Single();
-                    var namedBinding = new NamedBindingExpression(binding, parameter.Name);
-
-                    Source = new ProjectionExpression(projection.ItemType, projection.Source, new[] { namedBinding });
+                    Expression = new ReplaceParameterVisitor(NamedBindingExpression.Unwrap(binding)).Visit(Expression);
                 }
             }
             else
@@ -141,38 +137,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
 
         internal void Apply(ConditionalExpression conditional)
         {
-            var aliasName = "todo_alias_name";
-            var namedConditional = new NamedBindingExpression(conditional, aliasName);
-            var parameter = new ParameterExpression(Source.ItemType, "e");
-
-            if (Source is ProjectionExpression projection)
-            {
-                if (!projection.Bindings.Any())
-                {
-                    ProjectionExpression
-                        .PossibleToSelect(projection.ItemType)
-                        .Select(info => new SimpleBindingExpression(info.PropertyType, info.Name, parameter))
-                        .Each(binding => projection.Apply(binding));
-                }
-
-                projection.Apply(namedConditional);
-            }
-
-            ApplyInternal(new SimpleBindingExpression(conditional.ItemType, aliasName, parameter));
+            ApplyExpression(conditional);
         }
 
         internal void Apply(SimpleBindingExpression binding)
         {
-            ApplyInternal(binding);
+            ApplyExpression(binding);
         }
 
         internal void Apply(BinaryExpression binary)
         {
-            ApplyInternal(binary);
+            ApplyExpression(binary);
         }
 
-        private void ApplyInternal(IIntermediateExpression expression)
+        private void ApplyExpression(IIntermediateExpression expression)
         {
+            if (Source is ProjectionExpression { IsProjectionToClass: true } projection)
+            {
+                expression = new ReplaceFilterExpressionVisitor(projection).Visit(expression);
+            }
+
             Expression = Expression != null
                 ? new BinaryExpression(typeof(bool), ExpressionType.AndAlso.ToString(), Expression, expression)
                 : expression;

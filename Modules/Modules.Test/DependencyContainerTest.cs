@@ -101,6 +101,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 selector(DependencyContainer.Resolve<ITypeProvider>().OurTypes)
                     .Each(type =>
                     {
+                        Output.WriteLine(type.FullName);
+
                         var service = type.IsGenericType
                                       && !type.IsConstructedGenericType
                             ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))

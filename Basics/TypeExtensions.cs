@@ -347,10 +347,31 @@ namespace SpaceEngineers.Core.Basics
 
             return byConstraints && byGenericParameterAttributes;
 
-            bool CheckConstraint(Type constraint) =>
-                constraint.IsGenericType
-                    ? IsSubclassOfOpenGeneric(typeForCheck, constraint.GetGenericTypeDefinition())
-                    : constraint.IsAssignableFrom(typeForCheck);
+            bool CheckConstraint(Type constraint)
+            {
+                if (!constraint.IsGenericType)
+                {
+                    return constraint.IsAssignableFrom(typeForCheck);
+                }
+
+                var constraintGenericTypeDefinition = constraint.GetGenericTypeDefinition();
+
+                return IsSubclassOfOpenGeneric(typeForCheck, constraintGenericTypeDefinition)
+                       && HasSuitableTypeArguments();
+
+                bool HasSuitableTypeArguments()
+                {
+                    var typeArgumentsForCheck = ExtractGenericArguments(typeForCheck, constraintGenericTypeDefinition).ToArray();
+
+                    return constraint
+                        .GetGenericArguments()
+                        .Select((constraintGenericArgument, position) => (constraintGenericArgument, position))
+                        .All(info => typeArgumentsForCheck
+                            .Any(typeArgumentForCheck => info.constraintGenericArgument == typeArgument
+                                                         ? typeForCheck == typeArgumentForCheck[info.position] // T : IService<T>
+                                                         : FitsForTypeArgument(typeArgumentForCheck[info.position], info.constraintGenericArgument)));
+                }
+            }
         }
 
         private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)

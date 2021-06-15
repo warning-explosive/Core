@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using ValueObjects;
+    using Expressions;
 
     internal class ReplaceFilterExpressionVisitor : IntermediateExpressionVisitorBase
     {

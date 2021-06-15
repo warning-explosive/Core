@@ -12,14 +12,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     public abstract class QueryTranslatorBase : IQueryTranslator
     {
         private readonly IEnumerable<IQueryVisitor> _queryVisitors;
-        private readonly IIntermediateTranslator _translator;
+        private readonly IExpressionTranslator _translator;
 
         /// <summary> .cctor </summary>
         /// <param name="queryVisitors">Query visitors</param>
         /// <param name="translator">IIntermediateTranslator</param>
         protected QueryTranslatorBase(
             IEnumerable<IQueryVisitor> queryVisitors,
-            IIntermediateTranslator translator)
+            IExpressionTranslator translator)
         {
             _queryVisitors = queryVisitors;
             _translator = translator;

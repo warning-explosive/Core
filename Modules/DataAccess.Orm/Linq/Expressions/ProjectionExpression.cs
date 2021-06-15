@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Collections.Generic;

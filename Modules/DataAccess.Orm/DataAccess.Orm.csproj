@@ -40,23 +40,8 @@
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="ValueObjects\NamedBindingExpression.cs">
-        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ValueObjects\SimpleBindingExpression.cs">
-        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ValueObjects\ProjectionExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ValueObjects\FilterExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\ReplaceParameterVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ValueObjects\NamedSourceExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\ReplaceFilterExpressionVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>

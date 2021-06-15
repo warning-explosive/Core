@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using ValueObjects;
+    using Linq.Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ConditionalExpressionTranslator : IExpressionTranslator<ConditionalExpression>

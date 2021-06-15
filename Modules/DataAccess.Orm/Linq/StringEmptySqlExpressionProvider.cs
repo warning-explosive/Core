@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using ValueObjects;
+    using Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class StringEmptySqlExpressionProvider : ISqlExpressionProvider

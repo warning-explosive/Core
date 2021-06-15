@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System;
     using System.Linq;
     using Abstractions;
-    using ValueObjects;
+    using Expressions;
 
     /// <summary>
     /// IntermediateExpressionVisitorBase
@@ -26,6 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 NamedSourceExpression namedSourceExpression => VisitNamedSource(namedSourceExpression),
                 NewExpression newExpression => VisitNew(newExpression),
                 QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
+                MethodCallExpression methodCallExpression => VisitMethodCall(methodCallExpression),
                 _ => throw new NotSupportedException(expression.GetType().FullName)
             };
         }
@@ -158,6 +159,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         protected virtual IIntermediateExpression VisitQuerySource(QuerySourceExpression querySourceExpression)
         {
             return querySourceExpression;
+        }
+
+        /// <summary>
+        /// Visit MethodCallExpression
+        /// </summary>
+        /// <param name="methodCallExpression">MethodCallExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitMethodCall(MethodCallExpression methodCallExpression)
+        {
+            return new MethodCallExpression(
+                methodCallExpression.ItemType,
+                methodCallExpression.Name,
+                methodCallExpression.Arguments.Select(Visit).ToList());
         }
     }
 }

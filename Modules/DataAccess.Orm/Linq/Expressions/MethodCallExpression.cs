@@ -1,8 +1,9 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using Abstractions;
     using Basics;
 
@@ -19,12 +20,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
         /// <param name="name">Name</param>
-        public MethodCallExpression(Type itemType, string name)
+        /// <param name="arguments">Arguments</param>
+        public MethodCallExpression(
+            Type itemType,
+            string name,
+            IEnumerable<IIntermediateExpression> arguments)
         {
-            _arguments = new List<IIntermediateExpression>();
-
             ItemType = itemType;
             Name = name;
+            _arguments = arguments.ToList();
         }
 
         /// <inheritdoc />

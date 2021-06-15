@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
         public QueryTranslator(
             IDependencyContainer dependencyContainer,
             IEnumerable<IQueryVisitor> queryVisitors,
-            IIntermediateTranslator translator)
+            IExpressionTranslator translator)
             : base(queryVisitors, translator)
         {
             _dependencyContainer = dependencyContainer;

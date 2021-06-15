@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using BinaryExpression = ValueObjects.BinaryExpression;
-    using ConstantExpression = ValueObjects.ConstantExpression;
+    using BinaryExpression = Linq.Expressions.BinaryExpression;
+    using ConstantExpression = Linq.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>

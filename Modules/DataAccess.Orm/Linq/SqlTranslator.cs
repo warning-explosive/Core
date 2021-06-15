@@ -12,8 +12,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using Basics;
     using Basics.Primitives;
     using Contract.Abstractions;
+    using Expressions;
     using GenericDomain.Abstractions;
-    using ValueObjects;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using ConstantExpression = System.Linq.Expressions.ConstantExpression;
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
 
     [Component(EnLifestyle.Scoped)]
-    internal class SqlIntermediateTranslator : IIntermediateTranslator
+    internal class SqlTranslator : IExpressionTranslator
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
         private const string UnableToTranslateFormat = "Unable to translate {0}";
@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private readonly IEnumerable<ISqlExpressionProvider> _sqlFunctionProviders;
 
-        public SqlIntermediateTranslator(IEnumerable<ISqlExpressionProvider> sqlFunctionProviders)
+        public SqlTranslator(IEnumerable<ISqlExpressionProvider> sqlFunctionProviders)
         {
             _sqlFunctionProviders = sqlFunctionProviders;
         }
@@ -85,13 +85,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private sealed class IntermediateExpressionVisitor : ExpressionVisitor
         {
-            private readonly SqlIntermediateTranslator _translator;
+            private readonly SqlTranslator _translator;
             private readonly IEnumerable<ISqlExpressionProvider> _sqlFunctionProviders;
 
             private readonly Stack<IIntermediateExpression> _stack;
 
             public IntermediateExpressionVisitor(
-                SqlIntermediateTranslator translator,
+                SqlTranslator translator,
                 IEnumerable<ISqlExpressionProvider> sqlFunctionProviders)
             {
                 _translator = translator;
@@ -156,7 +156,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             protected override Expression VisitNew(NewExpression node)
             {
-                return WithoutScopeOpening(() => new Orm.ValueObjects.NewExpression(node.Type),
+                return WithoutScopeOpening(() => new Expressions.NewExpression(node.Type),
                     () =>
                     {
                         node.Members
@@ -184,19 +184,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             protected override Expression VisitConditional(ConditionalExpression node)
             {
-                return WithScopeOpening(new Orm.ValueObjects.ConditionalExpression(node.Type),
+                return WithScopeOpening(new Expressions.ConditionalExpression(node.Type),
                     () => base.VisitConditional(node));
             }
 
             protected override Expression VisitBinary(BinaryExpression node)
             {
-                return WithScopeOpening(new Orm.ValueObjects.BinaryExpression(node.Type, node.NodeType.ToString()),
+                return WithScopeOpening(new Expressions.BinaryExpression(node.Type, node.NodeType.ToString()),
                     () => base.VisitBinary(node));
             }
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                return WithScopeOpening(new Orm.ValueObjects.ParameterExpression(node.Type, node.Name),
+                return WithScopeOpening(new Expressions.ParameterExpression(node.Type, node.Name),
                     () => base.VisitParameter(node));
             }
 
@@ -207,7 +207,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     return base.VisitConstant(node);
                 }
 
-                return WithScopeOpening(new Orm.ValueObjects.ConstantExpression(node.Type, node.Value),
+                return WithScopeOpening(new Expressions.ConstantExpression(node.Type, node.Value),
                     () => base.VisitConstant(node));
             }
 

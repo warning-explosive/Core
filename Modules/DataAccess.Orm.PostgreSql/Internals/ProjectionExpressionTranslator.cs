@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using ValueObjects;
+    using Linq.Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ProjectionExpressionTranslator : IExpressionTranslator<ProjectionExpression>

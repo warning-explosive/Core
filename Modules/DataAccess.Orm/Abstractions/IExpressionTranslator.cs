@@ -1,6 +1,18 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Abstractions
 {
+    using System.Linq.Expressions;
     using AutoWiring.Api.Abstractions;
+
+    /// <summary>
+    /// IExpressionTranslator
+    /// </summary>
+    public interface IExpressionTranslator : IResolvable
+    {
+        /// <summary> Translate </summary>
+        /// <param name="expression">Expression</param>
+        /// <returns>Intermediate expression</returns>
+        IIntermediateExpression Translate(Expression expression);
+    }
 
     /// <summary>
     /// IExpressionTranslator

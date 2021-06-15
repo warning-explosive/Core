@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -6,39 +6,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
     using Basics;
 
     /// <summary>
-    /// ParameterExpression
+    /// ConstantExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ParameterExpression : IIntermediateExpression,
-                                       IEquatable<ParameterExpression>,
-                                       ISafelyEquatable<ParameterExpression>
+    public class ConstantExpression : IIntermediateExpression,
+                                      IEquatable<ConstantExpression>,
+                                      ISafelyEquatable<ConstantExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
-        /// <param name="name">Name</param>
-        public ParameterExpression(Type itemType, string name)
+        /// <param name="value">Constant value</param>
+        public ConstantExpression(Type itemType, object? value)
         {
             ItemType = itemType;
-            Name = name;
+            Value = value;
         }
 
         /// <inheritdoc />
         public Type ItemType { get; }
 
         /// <summary>
-        /// Name
+        /// Constant value
         /// </summary>
-        public string Name { get; }
+        public object? Value { get; }
 
         #region IEquatable
 
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
+        /// <param name="left">Left ConstantExpression</param>
+        /// <param name="right">Right ConstantExpression</param>
         /// <returns>equals</returns>
-        public static bool operator ==(ParameterExpression? left, ParameterExpression? right)
+        public static bool operator ==(ConstantExpression? left, ConstantExpression? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -46,10 +46,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
+        /// <param name="left">Left ConstantExpression</param>
+        /// <param name="right">Right ConstantExpression</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(ParameterExpression? left, ParameterExpression? right)
+        public static bool operator !=(ConstantExpression? left, ConstantExpression? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name);
+            return HashCode.Combine(ItemType, Value);
         }
 
         /// <inheritdoc />
@@ -67,16 +67,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(ParameterExpression? other)
+        public bool Equals(ConstantExpression? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(ParameterExpression other)
+        public bool SafeEquals(ConstantExpression other)
         {
             return ItemType == other.ItemType
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
+                   && Value?.Equals(other.Value) == true;
         }
 
         #endregion

@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using DataAccess.PostgreSql.Settings;
+    using Linq.Expressions;
     using SettingsManager.Abstractions;
-    using ValueObjects;
 
     [Component(EnLifestyle.Singleton)]
     internal class QuerySourceExpressionTranslator : IExpressionTranslator<QuerySourceExpression>

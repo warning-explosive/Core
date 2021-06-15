@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -6,16 +6,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
     using Basics;
 
     /// <summary>
-    /// QuerySourceExpression
+    /// NewExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class QuerySourceExpression : IIntermediateExpression,
-                                         IEquatable<QuerySourceExpression>,
-                                         ISafelyEquatable<QuerySourceExpression>
+    public class NewExpression : IIntermediateExpression,
+                                 IEquatable<NewExpression>,
+                                 ISafelyEquatable<NewExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
-        public QuerySourceExpression(Type itemType)
+        public NewExpression(Type itemType)
         {
             ItemType = itemType;
         }
@@ -28,10 +28,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left QuerySourceExpression</param>
-        /// <param name="right">Right QuerySourceExpression</param>
+        /// <param name="left">Left NewExpression</param>
+        /// <param name="right">Right NewExpression</param>
         /// <returns>equals</returns>
-        public static bool operator ==(QuerySourceExpression? left, QuerySourceExpression? right)
+        public static bool operator ==(NewExpression? left, NewExpression? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -39,10 +39,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left QuerySourceExpression</param>
-        /// <param name="right">Right QuerySourceExpression</param>
+        /// <param name="left">Left NewExpression</param>
+        /// <param name="right">Right NewExpression</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(QuerySourceExpression? left, QuerySourceExpression? right)
+        public static bool operator !=(NewExpression? left, NewExpression? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -60,13 +60,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ValueObjects
         }
 
         /// <inheritdoc />
-        public bool Equals(QuerySourceExpression? other)
+        public bool Equals(NewExpression? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(QuerySourceExpression other)
+        public bool SafeEquals(NewExpression other)
         {
             return ItemType == other.ItemType;
         }

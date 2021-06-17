@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
 
         public object? Build(Type type, IDictionary<string, object>? values = null)
         {
-            if (values?.Count == 1 && IsPrimitive(type))
+            if (values?.Count == 1 && type.IsPrimitive())
             {
                 return ConvertTo(values.Single().Value, type);
             }
@@ -95,15 +95,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Internals
             }
 
             return instance;
-        }
-
-        private bool IsPrimitive(Type type)
-        {
-            return type.IsPrimitive
-                   || type.IsEnum
-                   || type == typeof(Guid)
-                   || type == typeof(string)
-                   || type == typeof(Type);
         }
 
         private object? ConvertTo(object? value, Type targetType)

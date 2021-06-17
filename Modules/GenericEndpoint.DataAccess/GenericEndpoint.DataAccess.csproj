@@ -31,4 +31,9 @@
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="DataBaseModelBuilder.cs">
+        <DependentUpon>IDataBaseModelBuilder.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

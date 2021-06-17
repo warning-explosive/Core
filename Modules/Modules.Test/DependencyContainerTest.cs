@@ -361,7 +361,7 @@ namespace SpaceEngineers.Core.Modules.Test
         private static Type? FromExistedClosedTypesTypeArgumentSelector(IEnumerable<Type> source, TypeArgumentSelectionContext ctx)
             => source
                 .OrderBy(t => t.IsGenericType)
-                .FirstOrDefault(t => t.IsConstructedOrSimpleType() && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
+                .FirstOrDefault(t => t.IsConstructedOrNonGenericType() && t.IsSubclassOfOpenGeneric(ctx.OpenGeneric))
                ?.ExtractGenericArgumentsAt(ctx.OpenGeneric, ctx.TypeArgument.GenericParameterPosition)
                 .FirstOrDefault();
 

@@ -101,7 +101,7 @@
                 return visited[original];
             }
 
-            if (typeToReflect.IsPrimitive())
+            if (IsPrimitive(typeToReflect))
             {
                 return original;
             }
@@ -118,15 +118,12 @@
             return clone;
         }
 
-        private static bool IsPrimitive(this Type type)
+        private static bool IsPrimitive(Type type)
         {
-            return type.IsPrimitive
-                   || type.IsEnum
-                   || type == typeof(Type)
+            return type.IsPrimitive()
 
                    // ReSharper disable once PossibleMistakenCallToGetType.2
-                   || type == typeof(Type).GetType() // reviewed
-                   || type == typeof(string);
+                   || type == typeof(Type).GetType(); // reviewed
         }
 
         private static void ProcessClone(this object? clone, object original, Type typeToReflect, IDictionary<object, object> visited)
@@ -163,7 +160,7 @@
                                                               | BindingFlags.DeclaredOnly))
             {
                 fieldInfo.SetValue(clone,
-                                   fieldInfo.FieldType.IsPrimitive()
+                                   IsPrimitive(fieldInfo.FieldType)
                                        ? fieldInfo.GetValue(original)
                                        : fieldInfo.GetValue(original).DeepCopyInternal(visited));
             }

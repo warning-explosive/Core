@@ -36,6 +36,20 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Is type primitive or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is type can be interpreted as primitive</returns>
+        public static bool IsPrimitive(this Type type)
+        {
+            return type.IsPrimitive
+                   || type.IsEnum
+                   || type == typeof(Guid)
+                   || type == typeof(string)
+                   || type == typeof(Type);
+        }
+
+        /// <summary>
         /// Get specified attribute from type
         /// </summary>
         /// <param name="type">Type</param>
@@ -309,7 +323,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Is constructed or simple type</returns>
-        public static bool IsConstructedOrSimpleType(this Type type)
+        public static bool IsConstructedOrNonGenericType(this Type type)
         {
             return !type.IsGenericType || type.IsConstructedGenericType;
         }

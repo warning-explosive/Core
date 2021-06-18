@@ -76,5 +76,11 @@
     <Compile Update="AsyncUnitOfWorkTest.cs">
       <DependentUpon>BasicsTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="DeferredQueueTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="HeapTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -5,15 +5,15 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Contexts;
-    using AutoWiring.Api.Services;
     using Basics;
     using Core.SettingsManager.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
-    using Json.Abstractions;
     using Mocks;
     using PathResolver;
     using Xunit;
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void BoundedAboveContainerTest()
         {
-            var assembly1 = typeof(IJsonSerializer).Assembly; // Json
+            var assembly1 = typeof(IJsonSerializer).Assembly; // CrossCuttingConcerns
             var assembly2 = typeof(IPathResolver<,>).Assembly; // PathResolver
             var assembly3 = typeof(IIntegrationCommand).Assembly; // GenericEndpoint.Contract
 

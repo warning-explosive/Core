@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Globalization;
     using System.Linq;
     using System.Text;
+    using AutoWiring.Api;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Contexts;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
 
     /// <inheritdoc />

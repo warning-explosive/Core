@@ -28,6 +28,5 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\GenericDomain\GenericDomain.csproj" />
-      <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     </ItemGroup>
 </Project>

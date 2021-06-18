@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.AutoRegistration
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
     using Basics.Primitives;
     using Extensions;
@@ -55,7 +54,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer Create(DependencyContainerOptions options)
         {
-            var typeProvider = new ContainerDependentTypeProvider(
+            var typeProvider = new TypeProvider(
                 AssembliesExtensions.AllFromCurrentDomain(),
                 RootAssemblies(),
                 options.ExcludedAssemblies,
@@ -76,7 +75,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateExactlyBounded(DependencyContainerOptions options, params Assembly[] assemblies)
         {
-            var typeProvider = new ContainerDependentTypeProvider(
+            var typeProvider = new TypeProvider(
                 assemblies,
                 RootAssemblies(),
                 options.ExcludedAssemblies,
@@ -102,7 +101,7 @@ namespace SpaceEngineers.Core.AutoRegistration
                 .Distinct()
                 .ToArray();
 
-            var typeProvider = new ContainerDependentTypeProvider(
+            var typeProvider = new TypeProvider(
                 belowAssemblies,
                 RootAssemblies(),
                 options.ExcludedAssemblies,

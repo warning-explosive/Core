@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     using System.Collections.Generic;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Json.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
     using MongoDB.Driver;
     using Newtonsoft.Json;
 

@@ -6,11 +6,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Contexts;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using AutoWiringTest;
     using Basics;
     using Core.Test.Api;

@@ -10,9 +10,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading.Tasks;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;

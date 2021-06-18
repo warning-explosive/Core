@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
     using Contract.Abstractions;
     using Contract.Attributes;

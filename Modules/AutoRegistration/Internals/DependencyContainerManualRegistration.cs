@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using Abstractions;
-    using AutoWiring.Api.Services;
+    using AutoWiring.Api.Abstractions;
 
     internal class DependencyContainerManualRegistration : IManualRegistration
     {

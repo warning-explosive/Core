@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using Abstractions;
-    using ValueObjects;
 
     /// <summary>
     /// QueryTranslatorBase

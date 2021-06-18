@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
 
     [Component(EnLifestyle.Singleton)]
     internal class DomainTypeProvider : IDomainTypeProvider

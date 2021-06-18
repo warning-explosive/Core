@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Json.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class JsonSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>

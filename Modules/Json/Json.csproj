@@ -45,24 +45,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="ObjectTree\DefaultObjectTreeValueReader.cs">
-      <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectTree\ValueNode.cs">
-      <DependentUpon>NodeBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectTree\RootNode.cs">
-      <DependentUpon>NodeBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectTree\ArrayNode.cs">
-      <DependentUpon>NodeBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectTree\ObjectNode.cs">
-      <DependentUpon>NodeBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ObjectTree\NodeBase.cs">
-      <DependentUpon>IObjectTreeNode.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

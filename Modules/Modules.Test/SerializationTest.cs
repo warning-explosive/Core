@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using Json.Abstractions;
-    using Json.ObjectTree;
+    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = typeof(IJsonSerializer).Assembly; // Json
+            var assembly = typeof(IJsonSerializer).Assembly; // CrossCuttingConcerns
 
             DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }

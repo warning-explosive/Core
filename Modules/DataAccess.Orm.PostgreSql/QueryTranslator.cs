@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
     using AutoWiring.Api.Enumerations;
     using Internals;
     using Linq;
-    using ValueObjects;
 
     /// <summary>
     /// QueryTranslator

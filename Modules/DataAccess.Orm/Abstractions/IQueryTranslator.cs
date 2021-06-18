@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Abstractions
 {
     using System.Linq.Expressions;
     using AutoWiring.Api.Abstractions;
-    using ValueObjects;
 
     /// <summary>
     /// IQueryTranslator

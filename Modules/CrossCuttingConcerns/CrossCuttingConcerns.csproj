@@ -48,5 +48,26 @@
       <Compile Update="Internals\CharArrayToStringTransformer.cs">
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Json\ObjectTreeJsonEnumerator.cs">
+        <DependentUpon>EnumerableObjectTreeReader.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\SecureSerializationBinder.cs">
+        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\TypeNode.cs">
+        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\DefaultObjectTreeValueReader.cs">
+        <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\GenericObjectBuilder.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\StringToCharArrayTransformer.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

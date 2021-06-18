@@ -31,7 +31,6 @@
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
       <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Executable\GenericEndpoint.Executable.csproj" />
-      <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />

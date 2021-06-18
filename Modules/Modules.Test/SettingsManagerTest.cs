@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using Basics;
     using Core.SettingsManager.Abstractions;
+    using Core.SettingsManager.Internals;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Settings;

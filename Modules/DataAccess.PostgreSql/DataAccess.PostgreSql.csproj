@@ -28,6 +28,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Npgsql" Version="5.0.4" />

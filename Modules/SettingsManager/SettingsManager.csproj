@@ -41,7 +41,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
-    <ProjectReference Include="..\Json\Json.csproj" />
+    <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Abstractions\IJsonSettings.cs">
@@ -54,13 +54,16 @@
       <DependentUpon>ISettings.cs</DependentUpon>
     </Compile>
     <Compile Update="Internals\YamlSettingsManager.cs">
-      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+      <DependentUpon>FileSystemSettingsManagerBase.cs</DependentUpon>
     </Compile>
     <Compile Update="Internals\JsonSettingsManager.cs">
-      <DependentUpon>FileSystemFormatterBase.cs</DependentUpon>
+      <DependentUpon>FileSystemSettingsManagerBase.cs</DependentUpon>
     </Compile>
-    <Compile Update="Abstractions\EnvironmentSettings.cs">
-      <DependentUpon>ISettings.cs</DependentUpon>
+    <Compile Update="Internals\EnvironmentSettings.cs">
+      <DependentUpon>EnvironmentSettingsManager.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internals\EnvironmentSettingsEntry.cs">
+      <DependentUpon>EnvironmentSettingsManager.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

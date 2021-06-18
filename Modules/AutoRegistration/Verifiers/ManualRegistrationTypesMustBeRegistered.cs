@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
     using SimpleInjector;
 

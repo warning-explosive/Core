@@ -16,6 +16,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <param name="callback">Callback function for future message</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing scheduler operation</returns>
-        public Task Run(Func<TElement, Task> callback, CancellationToken token);
+        public Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token);
     }
 }

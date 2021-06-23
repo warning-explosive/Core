@@ -300,7 +300,7 @@ namespace SpaceEngineers.Core.AutoRegistration
         {
             if (serviceType.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
             {
-                throw new InvalidOperationException($"Use overload of {nameof(IDependencyContainer.Resolve)} method with additional parameter to resolve initializable service {serviceType.FullName}");
+                throw new ActivationException($"Use overload of {nameof(IDependencyContainer.Resolve)} method with additional parameter to resolve initializable service {serviceType.FullName}");
             }
         }
 

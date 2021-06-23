@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using GenericDomain.Abstractions;
-    using GenericEndpoint.Abstractions;
 
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Unregistered)]
     internal class DatabaseModelInitializer : IEndpointInitializer

@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <inheritdoc />
-        public async Task Run(Func<TElement, Task> callback, CancellationToken token)
+        public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
             using (_state.StartExclusiveOperation())
             {
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
                     if (element != null)
                     {
-                        await callback(element).ConfigureAwait(false);
+                        await callback(element, token).ConfigureAwait(false);
                     }
                 }
             }

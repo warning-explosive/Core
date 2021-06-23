@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using AutoRegistration.Abstractions;
-    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
+    using GenericEndpoint.Contract;
     using Mocks;
 
     internal class GenericEndpointTestRegistration : IManualRegistration

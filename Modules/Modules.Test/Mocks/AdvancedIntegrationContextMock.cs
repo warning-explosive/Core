@@ -5,9 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using GenericEndpoint;
     using GenericEndpoint.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Messaging;
 
     [Component(EnLifestyle.Scoped, EnComponentRegistrationKind.ManuallyRegistered)]
     internal class AdvancedIntegrationContextMock : IAdvancedIntegrationContext

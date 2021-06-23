@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
         {
             var sb = new StringBuilder();
 
-            var parenthesis = !(expression.Source is QuerySourceExpression);
+            var parenthesis = expression.Source is not QuerySourceExpression;
 
             if (parenthesis)
             {

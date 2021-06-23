@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
 
     /// <summary>
@@ -30,6 +31,19 @@ namespace SpaceEngineers.Core.Basics
             value = producer(key);
             dictionary[key] = value;
             return value;
+        }
+
+        /// <summary>
+        /// Add entry into ConcurrentDictionary
+        /// </summary>
+        /// <param name="dictionary">ConcurrentDictionary</param>
+        /// <param name="key">Key</param>
+        /// <param name="value">Value</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        public static void Add<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            (dictionary as IDictionary<TKey, TValue>).Add(key, value);
         }
     }
 }

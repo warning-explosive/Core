@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using AutoWiring.Api.Enumerations;
     using Core.DataAccess.Contract.Abstractions;
     using GenericEndpoint.Abstractions;
+    using Messaging;
 
     [Component(EnLifestyle.Scoped)]
     internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>

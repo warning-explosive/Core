@@ -14,19 +14,19 @@ namespace SpaceEngineers.Core.Basics.Primitives
         private readonly IDisposable? _registration;
 
         /// <summary> .cctor </summary>
-        /// <param name="cancellationToken">CancellationToken</param>
-        public TaskCancellationCompletionSource(CancellationToken cancellationToken)
+        /// <param name="token">Cancellation token</param>
+        public TaskCancellationCompletionSource(CancellationToken token)
         {
             _tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            if (cancellationToken.IsCancellationRequested)
+            if (token.IsCancellationRequested)
             {
                 _tcs.SetCanceled();
                 return;
             }
 
-            _registration = cancellationToken
-                .Register(() => _tcs.TrySetCanceled(cancellationToken), useSynchronizationContext: false);
+            _registration = token
+                .Register(() => _tcs.TrySetCanceled(token), useSynchronizationContext: false);
         }
 
         /// <summary>

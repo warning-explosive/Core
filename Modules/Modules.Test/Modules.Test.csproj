@@ -52,9 +52,12 @@
     <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
     <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
     <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
+    <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     <ProjectReference Include="..\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
-    <ProjectReference Include="..\GenericHost.InMemoryIntegrationTransport\GenericHost.InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
+    <ProjectReference Include="..\InMemoryIntegrationTransport.Endpoint\InMemoryIntegrationTransport.Endpoint.csproj" />
+    <ProjectReference Include="..\InMemoryIntegrationTransport.Host\InMemoryIntegrationTransport.Host.csproj" />
+    <ProjectReference Include="..\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     <ProjectReference Include="..\Test.Api\Test.Api.csproj" />
@@ -173,6 +176,9 @@
     </Compile>
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
       <DependentUpon>PersistenceSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Mocks\TypeProviderExtension.cs">
+      <DependentUpon>ExtendedTypeProviderDecorator.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

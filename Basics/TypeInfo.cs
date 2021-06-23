@@ -4,8 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
-    using Attributes;
 
     [DebuggerDisplay("{OriginalType}")]
     internal class TypeInfo : ITypeInfo
@@ -13,7 +11,7 @@ namespace SpaceEngineers.Core.Basics
         internal TypeInfo(Type type)
         {
             OriginalType = type;
-            Dependencies = type.GetCustomAttribute<DependencyAttribute>()?.Dependencies ?? new List<Type>();
+            Dependencies = TypeInfoStorage.ExtractDependencies(type);
             BaseTypes = ExtractBaseTypes(type).ToList();
             GenericTypeDefinitions = ExtractGenericTypeDefinitions(type).ToList();
             DeclaredInterfaces = ExtractDeclaredInterfaces(type).ToList();
@@ -35,8 +33,10 @@ namespace SpaceEngineers.Core.Basics
 
         public IReadOnlyCollection<Attribute> Attributes { get; }
 
-        private static IEnumerable<Type> ExtractBaseTypes(Type currentType)
+        private static IEnumerable<Type> ExtractBaseTypes(Type type)
         {
+            var currentType = type;
+
             while (currentType.BaseType != null)
             {
                 yield return currentType.BaseType;
@@ -45,8 +45,10 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        private static IEnumerable<Type> ExtractGenericTypeDefinitions(Type currentType)
+        private static IEnumerable<Type> ExtractGenericTypeDefinitions(Type type)
         {
+            var currentType = type;
+
             while (currentType != null)
             {
                 if (currentType.IsGenericType)

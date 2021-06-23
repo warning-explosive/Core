@@ -11,14 +11,14 @@ namespace SpaceEngineers.Core.AutoRegistration
     /// </summary>
     public class DependencyContainerOptions
     {
-        private readonly List<IManualRegistration> _manualRegistrations;
-        private readonly List<IManualRegistration> _overrides;
-
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
         {
-            _manualRegistrations = new List<IManualRegistration>();
-            _overrides = new List<IManualRegistration>();
+            ManualRegistrations = new List<IManualRegistration>();
+            Overrides = new List<IManualRegistration>();
+
+            ExcludedAssemblies = Array.Empty<Assembly>();
+            ExcludedNamespaces = Array.Empty<string>();
         }
 
         /// <summary>
@@ -26,24 +26,24 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// Assemblies excluded from type loading
         /// These assemblies and their types will be identified as third party and won't participate in the container registrations
         /// </summary>
-        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; set; } = Array.Empty<Assembly>();
+        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; private set; }
 
         /// <summary>
         /// Excluded namespaces
         /// Namespaces excluded from type loading
         /// These types will be identified as third party and won't participate in the container registrations
         /// </summary>
-        public IReadOnlyCollection<string> ExcludedNamespaces { get; set; } = Array.Empty<string>();
+        public IReadOnlyCollection<string> ExcludedNamespaces { get; private set; }
 
         /// <summary>
         /// Manual registrations
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> ManualRegistrations => _manualRegistrations;
+        public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; private set; }
 
         /// <summary>
         /// Overrides
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> Overrides => _overrides;
+        public IReadOnlyCollection<IManualRegistration> Overrides { get; private set; }
 
         /// <inheritdoc />
         public override int GetHashCode()
@@ -62,22 +62,68 @@ namespace SpaceEngineers.Core.AutoRegistration
             }
         }
 
-        /// <summary> With manual registration </summary>
-        /// <param name="manualRegistration">IManualRegistration</param>
+        /// <summary>
+        /// With manual registrations
+        /// </summary>
+        /// <param name="manualRegistrations">Manual registrations</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithManualRegistration(IManualRegistration manualRegistration)
+        public DependencyContainerOptions WithManualRegistration(params IManualRegistration[] manualRegistrations)
         {
-            _manualRegistrations.Add(manualRegistration);
-            return this;
+            return new DependencyContainerOptions()
+            {
+                ManualRegistrations = ManualRegistrations.Concat(manualRegistrations).ToList(),
+                Overrides = Overrides,
+                ExcludedAssemblies = ExcludedAssemblies,
+                ExcludedNamespaces = ExcludedNamespaces,
+            };
         }
 
-        /// <summary> With override </summary>
-        /// <param name="manualRegistration">IManualRegistration</param>
+        /// <summary>
+        /// With overrides
+        /// </summary>
+        /// <param name="overrides">Overrides</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithOverride(IManualRegistration manualRegistration)
+        public DependencyContainerOptions WithOverride(params IManualRegistration[] overrides)
         {
-            _overrides.Add(manualRegistration);
-            return this;
+            return new DependencyContainerOptions()
+            {
+                ManualRegistrations = ManualRegistrations,
+                Overrides = Overrides.Concat(overrides).ToList(),
+                ExcludedAssemblies = ExcludedAssemblies,
+                ExcludedNamespaces = ExcludedNamespaces,
+            };
+        }
+
+        /// <summary>
+        /// With excluded assemblies
+        /// </summary>
+        /// <param name="assemblies">Excluded assemblies</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithExcludedAssembly(params Assembly[] assemblies)
+        {
+            return new DependencyContainerOptions()
+            {
+                ManualRegistrations = ManualRegistrations,
+                Overrides = Overrides,
+                ExcludedAssemblies = ExcludedAssemblies.Concat(assemblies).ToList(),
+                ExcludedNamespaces = ExcludedNamespaces,
+            };
+        }
+
+        /// <summary>
+        /// With excluded namespaces
+        /// </summary>
+        /// <param name="namespaces">Excluded namespaces</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithExcludedNamespace(params string[] namespaces)
+        {
+            return new DependencyContainerOptions()
+            {
+                ManualRegistrations = ManualRegistrations,
+                Overrides = Overrides,
+                ExcludedAssemblies = ExcludedAssemblies,
+                ExcludedNamespaces = ExcludedNamespaces.Concat(namespaces).ToList(),
+            };
         }
     }
 }

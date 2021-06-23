@@ -50,14 +50,10 @@
     <Compile Update="Abstractions\IUnitOfWorkSubscriber.cs">
       <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
     </Compile>
-    <Compile Update="Abstractions\IAdvancedIntegrationContext.cs">
-      <DependentUpon>IIntegrationContext.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
-    <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
-    <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
+    <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
+    <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
+    <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
   </ItemGroup>
 </Project>

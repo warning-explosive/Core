@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Basics
             return exception
                 .Flatten()
                 .Select(ex => ex.RealException())
-                .Where(ex => !(ex is AggregateException));
+                .Where(ex => ex is not AggregateException);
         }
     }
 }

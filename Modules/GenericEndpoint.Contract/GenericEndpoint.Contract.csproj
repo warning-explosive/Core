@@ -38,4 +38,8 @@
         <DependentUpon>IIntegrationMessage.cs</DependentUpon>
       </Compile>
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
+    </ItemGroup>
 </Project>

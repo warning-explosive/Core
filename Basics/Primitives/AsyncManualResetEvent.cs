@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <summary>
         /// Wait signaled state asynchronously
         /// </summary>
-        /// <param name="cancellationToken">CancellationToken</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Waiting operation</returns>
         public Task WaitAsync(CancellationToken? cancellationToken = null)
         {

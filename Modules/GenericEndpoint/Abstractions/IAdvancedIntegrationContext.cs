@@ -3,8 +3,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using AutoWiring.Api.Abstractions;
-    using GenericEndpoint;
+    using Messaging;
 
     /// <summary>
     /// Advanced integration context
@@ -18,11 +19,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// Integration message, processing initiator
         /// </summary>
         IntegrationMessage Message { get; }
-
-        /// <summary>
-        /// Current endpoint identity
-        /// </summary>
-        EndpointIdentity EndpointIdentity { get; }
 
         /// <summary>
         /// Unit of work

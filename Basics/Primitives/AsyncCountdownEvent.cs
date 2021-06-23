@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// Wait signaled state asynchronously
         /// Signaled state is state when inner counter has reached zero
         /// </summary>
-        /// <param name="cancellationToken">CancellationToken</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Waiting operation</returns>
         public Task WaitAsync(CancellationToken? cancellationToken = null)
         {

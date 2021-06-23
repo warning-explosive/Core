@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
-    using GenericEndpoint;
+    using Messaging;
 
     [Component(EnLifestyle.Scoped)]
     internal class AdvancedIntegrationContextHeadersMaintenanceDecorator : IAdvancedIntegrationContext,
@@ -22,8 +22,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         public IAdvancedIntegrationContext Decoratee { get; }
 
         public IntegrationMessage Message => Decoratee.Message;
-
-        public EndpointIdentity EndpointIdentity => Decoratee.EndpointIdentity;
 
         public IIntegrationUnitOfWork UnitOfWork => Decoratee.UnitOfWork;
 

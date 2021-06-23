@@ -13,22 +13,22 @@ namespace SpaceEngineers.Core.Basics
         /// Wait task asynchronously with cancellation
         /// </summary>
         /// <param name="task">Task</param>
-        /// <param name="cancellationToken">Optional cancellation token</param>
+        /// <param name="token">Optional cancellation token</param>
         /// <returns>Task wrapped in cancellation callback</returns>
-        public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
+        public static Task WaitAsync(this Task task, CancellationToken token)
         {
-            if (!cancellationToken.CanBeCanceled)
+            if (!token.CanBeCanceled)
             {
                 return task;
             }
 
-            return cancellationToken.IsCancellationRequested
-                ? Task.FromCanceled(cancellationToken)
-                : WaitAsyncInternal(task, cancellationToken);
+            return token.IsCancellationRequested
+                ? Task.FromCanceled(token)
+                : WaitAsyncInternal(task, token);
 
-            static async Task WaitAsyncInternal(Task task, CancellationToken cancellationToken)
+            static async Task WaitAsyncInternal(Task task, CancellationToken token)
             {
-                using var cancelCompletionSource = new TaskCancellationCompletionSource<object>(cancellationToken);
+                using var cancelCompletionSource = new TaskCancellationCompletionSource<object>(token);
 
                 await Task.WhenAny(task, cancelCompletionSource.Task).ConfigureAwait(false);
             }

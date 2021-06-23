@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.Basics.Test
             deltas.Each(delta => Output.WriteLine(delta.ToString()));
             Assert.Equal(Enumerable.Range(0, 6).ToArray(), entries.Select(entry => entry.Index).ToArray());
 
-            Task Callback(Entry entry)
+            Task Callback(Entry entry, CancellationToken token)
             {
                 entry.Actual = DateTime.Now;
                 entries.Add(entry);
@@ -154,7 +154,7 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(queue.IsEmpty);
             Assert.Equal(publishersCount * count, actualCount);
 
-            Task Callback(Entry entry)
+            Task Callback(Entry entry, CancellationToken token)
             {
                 Interlocked.Increment(ref actualCount);
                 return Task.CompletedTask;

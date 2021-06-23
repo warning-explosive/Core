@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
             {
                 var syntaxTree = analyzedDocument.Document.GetSyntaxTreeAsync().Result;
 
-                if (!(syntaxTree?.GetRoot() is CompilationUnitSyntax cus))
+                if (syntaxTree?.GetRoot() is not CompilationUnitSyntax cus)
                 {
                     return true;
                 }

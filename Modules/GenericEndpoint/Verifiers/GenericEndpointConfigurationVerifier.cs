@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -43,6 +44,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
                 .IntegrationMessageTypes()
                 .Where(ImplementsSeveralSpecializedInterfaces)
                 .Each(type => throw new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, query, event or just message)"));
+
+            /*
+             * TODO: message handler should have got transient lifestyle
+             */
         }
 
         private void Verify(IEnumerable<Type> messageTypes)

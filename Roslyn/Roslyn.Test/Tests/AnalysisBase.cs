@@ -45,10 +45,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             Output.WriteLine($"Used framework version: {Version}");
             Output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
-            var options = new DependencyContainerOptions
-            {
-                ExcludedNamespaces = IgnoredNamespaces
-            };
+            var options = new DependencyContainerOptions().WithExcludedNamespace(IgnoredNamespaces.ToArray());
 
             DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
         }

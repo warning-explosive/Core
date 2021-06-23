@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Host</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.GenericEndpoint.Host</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Host</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+        <HintPath>..\..\packages\microsoft.extensions.dependencyinjection.abstractions\5.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.Hosting.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+        <HintPath>..\..\packages\microsoft.extensions.hosting.abstractions\5.0.0\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\GenericEndpoint.Statistics\GenericEndpoint.Statistics.csproj" />
+      <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
+      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
+      <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
+    </ItemGroup>
+</Project>

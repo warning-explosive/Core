@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         }
 
         /// <inheritdoc />
-        public async Task Run(Func<TElement, Task> callback, CancellationToken token)
+        public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
             using (_state.StartExclusiveOperation())
             using (Disposable.Create(() => _heap.RootNodeChanged += CancelScheduleOnRootNodeChanged,
@@ -120,7 +120,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
                     var planned = _prioritySelector(args);
 
                     await WaitForBreadcrumbs(planned, token).ConfigureAwait(false);
-                    await callback(args).WaitAsync(token).ConfigureAwait(false);
+                    await callback(args, token).ConfigureAwait(false);
                 }
             }
 

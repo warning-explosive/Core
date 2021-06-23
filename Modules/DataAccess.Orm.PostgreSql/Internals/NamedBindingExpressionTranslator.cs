@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
         {
             var sb = new StringBuilder();
 
-            var parentheses = !(expression.Expression is SimpleBindingExpression);
+            var parentheses = expression.Expression is not SimpleBindingExpression;
 
             if (parentheses)
             {

@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Test.Api
         /// <param name="service">Service implementation</param>
         /// <typeparam name="TService">TService type argument</typeparam>
         /// <returns>Applied decorators</returns>
-        public static IEnumerable<Type> ExtractDecorators<TService>(this TService service)
+        public static IEnumerable<Type> UnwrapDecorators<TService>(this TService service)
             where TService : class
         {
             while (service is IDecorator<TService> decorator)

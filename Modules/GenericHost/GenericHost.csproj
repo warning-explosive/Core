@@ -29,30 +29,11 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
-      <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Executable\GenericEndpoint.Executable.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
+      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Abstractions\IAdvancedIntegrationTransport.cs">
-        <DependentUpon>IIntegrationTransport.cs</DependentUpon>
-      </Compile>
-      <Compile Update="FailedIntegrationMessageEventArgs.cs">
-        <DependentUpon>IntegrationMessageEventArgs.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Internals\Resources.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Resources.resx</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Update="Internals\Resources.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
     </ItemGroup>
 </Project>

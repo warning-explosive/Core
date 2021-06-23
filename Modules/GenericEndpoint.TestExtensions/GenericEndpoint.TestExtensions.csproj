@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
 </Project>

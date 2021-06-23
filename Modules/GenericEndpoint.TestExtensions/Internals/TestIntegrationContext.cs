@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     [Component(EnLifestyle.Scoped, EnComponentRegistrationKind.Unregistered)]
     internal class TestIntegrationContext : IIntegrationContext
     {
-        private List<IIntegrationMessage> _messages;
+        private readonly List<IIntegrationMessage> _messages;
 
         public TestIntegrationContext()
         {
@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         {
             lock (_messages)
             {
-                _messages.Add(message);                
+                _messages.Add(message);
             }
 
             return Task.CompletedTask;

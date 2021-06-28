@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using Basics;
@@ -25,13 +24,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new LoggerTestRegistration());
-
-            var assembly = GetType().Assembly; // Modules.Test
-
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
         }
 
         /// <summary>
@@ -52,24 +45,16 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Select(p => p.AssemblyName())
                 .ToHashSet();
 
-            ourAssembliesNames.Each(Output.WriteLine);
-
             var provider = DependencyContainer.Resolve<ITypeProvider>();
 
             var ourAssemblies = provider
-                               .AllLoadedAssemblies
-                               .Where(assembly => ourAssembliesNames.Contains(assembly.GetName().Name!))
-                               .ToList();
+                .AllLoadedAssemblies
+                .Where(assembly => ourAssembliesNames.Contains(assembly.GetName().Name!))
+                .ToList();
 
-            var otherAssemblies = provider.AllLoadedAssemblies.Except(ourAssemblies).ToList();
+            ourAssemblies.Select(assembly => assembly.GetName().Name).Each(Output.WriteLine);
 
-            Assert.True(otherAssemblies.All(other => !provider.OurAssemblies.Contains(other)));
-            Assert.True(OrderByName(ourAssemblies).SequenceEqual(OrderByName(provider.OurAssemblies)));
-
-            IOrderedEnumerable<Assembly> OrderByName(IEnumerable<Assembly> assemblies)
-            {
-                return assemblies.OrderBy(assembly => assembly.GetName().Name);
-            }
+            Assert.True(provider.OurAssemblies.All(assembly => ourAssemblies.Contains(assembly)));
         }
 
         [Fact]

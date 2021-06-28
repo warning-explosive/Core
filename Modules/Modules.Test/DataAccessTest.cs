@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns;
     using DataAccess.Contract.Abstractions;
     using DataAccess.Orm.Abstractions;
     using GenericDomain;
@@ -37,9 +36,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assemblies = new[]
             {
-                typeof(DataAccess.Orm.PostgreSql.QueryTranslator).Assembly, // DataAccess.Orm.PostgreSql
-                typeof(DataAccess.PostgreSql.Settings.PostgreSqlDatabaseSettings).Assembly, // DataAccess.PostgreSql
-                typeof(CrossCuttingConcernsManualRegistration).Assembly, // CrossCuttingConcerns
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.PostgreSql))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
             };
 
             yield return new object[]

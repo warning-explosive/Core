@@ -7,19 +7,13 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Abstractions;
     using AutoWiring.Api;
     using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
     using Basics;
     using Core.SettingsManager.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using GenericEndpoint.Contract.Abstractions;
     using Mocks;
-    using PathResolver;
     using Xunit;
     using Xunit.Abstractions;
-    using Container = SimpleInjector.Container;
-    using TypeExtensions = System.Reflection.TypeExtensions;
 
     /// <summary>
     /// IDependencyContainer and assembly limitations test
@@ -37,9 +31,9 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void BoundedAboveContainerTest()
         {
-            var assembly1 = typeof(IJsonSerializer).Assembly; // CrossCuttingConcerns
-            var assembly2 = typeof(IPathResolver<,>).Assembly; // PathResolver
-            var assembly3 = typeof(IIntegrationCommand).Assembly; // GenericEndpoint.Contract
+            var assembly1 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
+            var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
+            var assembly3 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Contract)));
 
             var below1 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly1);
             var below2 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly2);
@@ -60,9 +54,10 @@ namespace SpaceEngineers.Core.Modules.Test
                 assembly2,
                 assembly3,
 
-                typeof(AssembliesExtensions).Assembly, // Basics
-                typeof(ComponentAttribute).Assembly, // AutoWiring.Api
-                typeof(DependencyContainer).Assembly, // AutoRegistration
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api)))
             };
 
             var aboveAssemblies = new[]
@@ -121,17 +116,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(ExtendedTypeProviderDecorator)
             };
 
-            var extension = new TypeProviderExtension(additionalTypes);
-
-            var typeProvider = new ExtendedTypeProviderDecorator(boundedContainer.Resolve<ITypeProvider>(), extension);
-            var overrides = Fixture.DelegateRegistration(container =>
-            {
-                container
-                    .RegisterInstance(typeof(ITypeProvider), typeProvider)
-                    .RegisterInstance(typeProvider.GetType(), typeProvider);
-            });
-
-            var options = new DependencyContainerOptions().WithOverride(overrides);
+            var options = ExtendedTypeProviderDecorator.ExtendTypeProvider(new DependencyContainerOptions(), additionalTypes);
 
             var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
 
@@ -142,12 +127,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var allowedAssemblies = new[]
             {
-                typeof(Container).Assembly, // SimpleInjector assembly,
-                typeof(TypeExtensions).Assembly, // Basics assembly
-                typeof(ComponentAttribute).Assembly, // AutoWiring.Api assembly
-                typeof(IDependencyContainer).Assembly, // AutoRegistration assembly
-                typeof(ISettingsManager<>).Assembly, // SettingsManager assembly
-                typeof(ICompositionInfoExtractor).Assembly // CompositionInfoExtractor assembly
+                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SimpleInjector))),
+                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Basics))),
+                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
+                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.SettingsManager))),
             };
 
             Assert.True(compositionInfo.All(Satisfies));
@@ -162,7 +146,8 @@ namespace SpaceEngineers.Core.Modules.Test
             bool TypeSatisfies(Type type)
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
-                                || type == typeof(ExtendedTypeProviderDecorator);
+                                || type == typeof(ExtendedTypeProviderDecorator)
+                                || type == typeof(ExtendedTypeProviderDecorator.TypeProviderExtension);
 
                 if (!satisfies)
                 {

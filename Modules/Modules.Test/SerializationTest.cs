@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
+    using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -25,7 +26,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = typeof(IJsonSerializer).Assembly; // CrossCuttingConcerns
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
             DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }

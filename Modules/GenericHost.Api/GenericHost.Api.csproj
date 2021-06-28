@@ -32,4 +32,7 @@
         <HintPath>..\..\packages\microsoft.extensions.hosting.abstractions\5.0.0\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
       </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Basics\Basics.csproj" />
+    </ItemGroup>
 </Project>

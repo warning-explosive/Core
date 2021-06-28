@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Enumerations;
+    using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns;
     using CrossCuttingConcerns.Api.Abstractions;
     using Xunit;
     using Xunit.Abstractions;
@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public CrossCuttingConcernsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = typeof(CrossCuttingConcernsManualRegistration).Assembly; // CrossCuttingConcerns
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
             var options = new DependencyContainerOptions();
 

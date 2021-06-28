@@ -30,13 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new LoggerTestRegistration());
-
-            var assembly = GetType().Assembly; // Modules.Test
-
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
         }
 
         /// <summary>
@@ -113,7 +107,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                         if (service.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                         {
-                            Assert.Throws<InvalidOperationException>(() => resolve(DependencyContainer, service));
+                            Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
                         }
                         else if (component.RegistrationKind == EnComponentRegistrationKind.AutomaticallyRegistered
                                  || component.RegistrationKind == EnComponentRegistrationKind.ManuallyRegistered)

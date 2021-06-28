@@ -9,8 +9,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration;
-    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
@@ -85,7 +83,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
                     .WithMessageHandlers(typeof(ThrowingMessageHandler))
-                    .ModifyContainerOptions(ExtendTypeProvider(additionalTypes))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
@@ -160,21 +158,21 @@ namespace SpaceEngineers.Core.Modules.Test
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
                     .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendTypeProvider(additionalTypes))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
                     .BuildOptions(endpointIdentity10))
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
                     .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendTypeProvider(additionalTypes))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
                     .BuildOptions(endpointIdentity11))
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
                     .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendTypeProvider(additionalTypes))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
                     .BuildOptions(endpointIdentity20))
                 .BuildHost();
 
@@ -452,17 +450,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 await Task.Delay(TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
-        }
-
-        private Func<DependencyContainerOptions, DependencyContainerOptions> ExtendTypeProvider(params Type[] additionalTypes)
-        {
-            return options => options.WithManualRegistration(
-                Fixture.DelegateRegistration(container =>
-                {
-                    container
-                        .RegisterDecorator<ITypeProvider, ExtendedTypeProviderDecorator>()
-                        .RegisterInstance(new TypeProviderExtension(additionalTypes));
-                }));
         }
 
         [Component(EnLifestyle.Transient)]

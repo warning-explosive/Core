@@ -4,6 +4,8 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration;
+    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -36,6 +38,44 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
         {
             return _decoratee.IsOurType(type)
                    || _extension.OurTypes.Contains(type);
+        }
+
+        internal static Func<DependencyContainerOptions, DependencyContainerOptions> ExtendTypeProvider(params Type[] additionalTypes)
+        {
+            return options => ExtendTypeProvider(options, additionalTypes);
+        }
+
+        internal static DependencyContainerOptions ExtendTypeProvider(DependencyContainerOptions options, params Type[] additionalTypes)
+        {
+            return options.WithManualRegistration(new ExtendedTypeProviderManualRegistration(additionalTypes));
+        }
+
+        [Component(EnLifestyle.Singleton)]
+        internal class TypeProviderExtension
+        {
+            public TypeProviderExtension(IReadOnlyCollection<Type> ourTypes)
+            {
+                OurTypes = ourTypes;
+            }
+
+            public IReadOnlyCollection<Type> OurTypes { get; }
+        }
+
+        private class ExtendedTypeProviderManualRegistration : IManualRegistration
+        {
+            private readonly IReadOnlyCollection<Type> _additionalTypes;
+
+            public ExtendedTypeProviderManualRegistration(IReadOnlyCollection<Type> additionalTypes)
+            {
+                _additionalTypes = additionalTypes;
+            }
+
+            public void Register(IManualRegistrationsContainer container)
+            {
+                container
+                    .RegisterDecorator<ITypeProvider, ExtendedTypeProviderDecorator>()
+                    .RegisterInstance(new TypeProviderExtension(_additionalTypes));
+            }
         }
     }
 }

@@ -4,17 +4,14 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Reflection;
     using System.Threading.Tasks;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
     using Core.SettingsManager.Abstractions;
     using Core.SettingsManager.Internals;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using GenericEndpoint.Settings;
     using Registrations;
     using Settings;
-    using SettingsManager;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -29,13 +26,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new LoggerTestRegistration());
-
-            var assembly = GetType().Assembly; // Modules.Test
-
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
         }
 
         /// <summary>
@@ -54,13 +45,15 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal async Task EnvironmentSettingsSetTest()
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(Set)
-                        .ConfigureAwait(false);
+            await Assert
+                .ThrowsAsync<InvalidOperationException>(Set)
+                .ConfigureAwait(false);
 
             Task Set()
             {
-                return DependencyContainer.Resolve<ISettingsManager<EnvironmentSettings>>()
-                                          .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()));
+                return DependencyContainer
+                    .Resolve<ISettingsManager<EnvironmentSettings>>()
+                    .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()));
             }
         }
 
@@ -81,7 +74,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Task<EnvironmentSettings> Get()
             {
-                return DependencyContainer.Resolve<ISettingsManager<EnvironmentSettings>>().Get();
+                return DependencyContainer
+                    .Resolve<ISettingsManager<EnvironmentSettings>>()
+                    .Get();
             }
         }
 
@@ -97,9 +92,9 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory]
-        [InlineData(typeof(QueueConventions))]
+        [InlineData(typeof(TestYamlSettings))]
+        [InlineData(typeof(TestJsonSettings))]
         [InlineData(typeof(PersistenceSettings))]
-        [InlineData(typeof(TransportSettings))]
         internal async Task GenericEndpointSettingsReadWriteTest(Type settingsType)
         {
             await this.CallMethod(nameof(GenericEndpointSettingsReadWriteTestInternal))
@@ -139,7 +134,7 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         private async Task GenericEndpointSettingsReadWriteTestInternal<TSetting>()
-            where TSetting : class, IJsonSettings
+            where TSetting : class, ISettings
         {
             var manager = DependencyContainer.Resolve<ISettingsManager<TSetting>>();
 

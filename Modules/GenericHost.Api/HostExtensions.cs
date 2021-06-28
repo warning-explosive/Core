@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Api
 {
     using System;
+    using Basics;
     using Microsoft.Extensions.Hosting;
 
     /// <summary>
@@ -20,12 +21,20 @@ namespace SpaceEngineers.Core.GenericHost.Api
         /// <param name="key">Method key</param>
         public static void CheckMultipleCalls(this IHostBuilder hostBuilder, string key)
         {
-            if (hostBuilder.Properties.ContainsKey(key))
+            var added = false;
+
+            _ = hostBuilder.Properties.GetOrAdd(
+                key,
+                _ =>
+                {
+                    added = true;
+                    return true;
+                });
+
+            if (!added)
             {
                 throw new InvalidOperationException($"Method `{key}` should be used once in order to configure the same host instance");
             }
-
-            hostBuilder.Properties[key] = true;
         }
     }
 }

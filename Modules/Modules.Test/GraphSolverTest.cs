@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public GraphSolverTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = typeof(IPathResolver<,>).Assembly; // PathResolver
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
 
             DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }

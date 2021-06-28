@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Modules.Test.SettingsManager
+namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;

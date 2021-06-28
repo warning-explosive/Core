@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiringTest;
     using Core.Test.Api;
@@ -22,13 +21,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public ScopedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new LoggerTestRegistration());
-
-            var assembly = GetType().Assembly; // Modules.Test
-
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
         }
 
         /// <summary>

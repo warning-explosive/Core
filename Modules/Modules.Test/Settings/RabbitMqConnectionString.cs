@@ -1,4 +1,4 @@
-﻿﻿namespace SpaceEngineers.Core.GenericEndpoint.Settings
+﻿﻿namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     /// <summary>
     /// Class that represents connection string to RabbitMQ broker server

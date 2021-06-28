@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiringTest;
@@ -24,13 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDecoratorsTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistration(new GenericEndpointTestRegistration())
-                .WithManualRegistration(new LoggerTestRegistration());
-
-            var assembly = GetType().Assembly; // Modules.Test
-
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
         }
 
         /// <summary>
@@ -121,8 +114,9 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void CollectionResolvableConditionDecorableTest()
         {
-            var services = DependencyContainer.ResolveCollection<ICollectionResolvableConditionDecorableService>()
-                                              .ToArray();
+            var services = DependencyContainer
+                .ResolveCollection<ICollectionResolvableConditionDecorableService>()
+                .ToArray();
 
             var types = new[]
                         {

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
+    using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -20,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = typeof(IDependencyContainer).Assembly; // AutoRegistration
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration)));
 
             DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
         }

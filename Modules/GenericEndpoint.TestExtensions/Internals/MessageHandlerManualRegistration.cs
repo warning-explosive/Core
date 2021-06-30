@@ -1,25 +1,21 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
     using System;
-    using System.Collections.Generic;
     using Api.Abstractions;
     using AutoRegistration.Abstractions;
 
     internal class MessageHandlerManualRegistration : IManualRegistration
     {
-        private readonly IEnumerable<Type> _messageHandlerTypes;
+        private readonly Type _messageHandlerType;
 
-        public MessageHandlerManualRegistration(IEnumerable<Type> messageHandlerTypes)
+        public MessageHandlerManualRegistration(Type messageHandlerType)
         {
-            _messageHandlerTypes = messageHandlerTypes;
+            _messageHandlerType = messageHandlerType;
         }
 
         public void Register(IManualRegistrationsContainer container)
         {
-            foreach (var messageHandlerType in _messageHandlerTypes)
-            {
-                container.Register(typeof(IMessageHandler<>), messageHandlerType);
-            }
+            container.Register(typeof(IMessageHandler<>), _messageHandlerType);
         }
     }
 }

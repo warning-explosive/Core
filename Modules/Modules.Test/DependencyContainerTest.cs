@@ -316,7 +316,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
             });
 
-            var options = new DependencyContainerOptions().WithManualRegistration(registration);
+            var options = new DependencyContainerOptions().WithManualRegistrations(registration);
 
             var localContainer = Fixture.ExactlyBoundedContainer(options);
 

@@ -57,11 +57,12 @@ namespace SpaceEngineers.Core.GenericEndpoint
         /// <summary>
         /// With above assemblies
         /// </summary>
-        /// <param name="assemblies">Assemblies</param>
+        /// <param name="assembly">Required above assembly</param>
+        /// <param name="assemblies">Optional above assemblies</param>
         /// <returns>EndpointOptions</returns>
-        public EndpointOptions WithAboveAssemblies(params Assembly[] assemblies)
+        public EndpointOptions WithAboveAssemblies(Assembly assembly, params Assembly[] assemblies)
         {
-            return new EndpointOptions(Identity, ContainerOptions, AboveAssemblies.Concat(assemblies).ToArray());
+            return new EndpointOptions(Identity, ContainerOptions, AboveAssemblies.Concat(new[] { assembly }).Concat(assemblies).ToArray());
         }
     }
 }

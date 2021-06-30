@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
 
         internal static DependencyContainerOptions ExtendTypeProvider(DependencyContainerOptions options, params Type[] additionalTypes)
         {
-            return options.WithManualRegistration(new ExtendedTypeProviderManualRegistration(additionalTypes));
+            return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalTypes));
         }
 
         [Component(EnLifestyle.Singleton)]

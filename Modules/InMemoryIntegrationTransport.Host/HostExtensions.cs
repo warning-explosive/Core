@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
             };
 
-            var containerOptions = new DependencyContainerOptions().WithManualRegistration(new InMemoryIntegrationTransportManualRegistration());
+            var containerOptions = new DependencyContainerOptions().WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration());
 
             var dependencyContainer = DependencyContainer.CreateBoundedAbove(containerOptions, assemblies);
 

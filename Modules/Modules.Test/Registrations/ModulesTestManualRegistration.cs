@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
         public static IDependencyContainer Container(ModulesTestFixture fixture)
         {
             var options = new DependencyContainerOptions()
-                .WithManualRegistration(new ModulesTestManualRegistration());
+                .WithManualRegistrations(new ModulesTestManualRegistration());
 
             var assemblies = new[]
             {

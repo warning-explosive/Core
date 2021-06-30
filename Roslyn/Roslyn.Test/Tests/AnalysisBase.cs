@@ -45,7 +45,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             Output.WriteLine($"Used framework version: {Version}");
             Output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
-            var options = new DependencyContainerOptions().WithExcludedNamespace(IgnoredNamespaces.ToArray());
+            var options = new DependencyContainerOptions();
+
+            options = IgnoredNamespaces.Length > 1
+                ? options.WithExcludedNamespaces(IgnoredNamespaces.First(), IgnoredNamespaces.Skip(1).ToArray())
+                : IgnoredNamespaces.Length == 1
+                    ? options.WithExcludedNamespaces(IgnoredNamespaces.Single())
+                    : options;
 
             DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
         }

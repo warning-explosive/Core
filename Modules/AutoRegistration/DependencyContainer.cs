@@ -251,7 +251,7 @@ namespace SpaceEngineers.Core.AutoRegistration
             var manualRegistration = new DependencyContainerManualRegistration(this, typeProvider, servicesProvider);
 
             options
-                .WithManualRegistration(manualRegistration)
+                .WithManualRegistrations(manualRegistration)
                 .ManualRegistrations
                 .Each(manual => manual.Register(manualRegistrationsContainer));
 

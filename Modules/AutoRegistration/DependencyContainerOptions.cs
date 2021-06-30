@@ -65,13 +65,14 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// With manual registrations
         /// </summary>
-        /// <param name="manualRegistrations">Manual registrations</param>
+        /// <param name="manualRegistration">Required manual registration</param>
+        /// <param name="manualRegistrations">Optional manual registrations</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithManualRegistration(params IManualRegistration[] manualRegistrations)
+        public DependencyContainerOptions WithManualRegistrations(IManualRegistration manualRegistration, params IManualRegistration[] manualRegistrations)
         {
             return new DependencyContainerOptions()
             {
-                ManualRegistrations = ManualRegistrations.Concat(manualRegistrations).ToList(),
+                ManualRegistrations = ManualRegistrations.Concat(new[] { manualRegistration }).Concat(manualRegistrations).ToList(),
                 Overrides = Overrides,
                 ExcludedAssemblies = ExcludedAssemblies,
                 ExcludedNamespaces = ExcludedNamespaces,
@@ -81,14 +82,15 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// With overrides
         /// </summary>
-        /// <param name="overrides">Overrides</param>
+        /// <param name="override">Required override</param>
+        /// <param name="overrides">Optional overrides</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithOverride(params IManualRegistration[] overrides)
+        public DependencyContainerOptions WithOverrides(IManualRegistration @override, params IManualRegistration[] overrides)
         {
             return new DependencyContainerOptions()
             {
                 ManualRegistrations = ManualRegistrations,
-                Overrides = Overrides.Concat(overrides).ToList(),
+                Overrides = Overrides.Concat(new[] { @override }).Concat(overrides).ToList(),
                 ExcludedAssemblies = ExcludedAssemblies,
                 ExcludedNamespaces = ExcludedNamespaces,
             };
@@ -97,15 +99,16 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// With excluded assemblies
         /// </summary>
-        /// <param name="assemblies">Excluded assemblies</param>
+        /// <param name="assembly">Required excluded assembly</param>
+        /// <param name="assemblies">Optional excluded assemblies</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithExcludedAssembly(params Assembly[] assemblies)
+        public DependencyContainerOptions WithExcludedAssemblies(Assembly assembly, params Assembly[] assemblies)
         {
             return new DependencyContainerOptions()
             {
                 ManualRegistrations = ManualRegistrations,
                 Overrides = Overrides,
-                ExcludedAssemblies = ExcludedAssemblies.Concat(assemblies).ToList(),
+                ExcludedAssemblies = ExcludedAssemblies.Concat(new[] { assembly }).Concat(assemblies).ToList(),
                 ExcludedNamespaces = ExcludedNamespaces,
             };
         }
@@ -113,16 +116,17 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <summary>
         /// With excluded namespaces
         /// </summary>
-        /// <param name="namespaces">Excluded namespaces</param>
+        /// <param name="namespace">Required excluded namespace</param>
+        /// <param name="namespaces">Optional excluded namespaces</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithExcludedNamespace(params string[] namespaces)
+        public DependencyContainerOptions WithExcludedNamespaces(string @namespace, params string[] namespaces)
         {
             return new DependencyContainerOptions()
             {
                 ManualRegistrations = ManualRegistrations,
                 Overrides = Overrides,
                 ExcludedAssemblies = ExcludedAssemblies,
-                ExcludedNamespaces = ExcludedNamespaces.Concat(namespaces).ToList(),
+                ExcludedNamespaces = ExcludedNamespaces.Concat(new[] { @namespace }).Concat(namespaces).ToList(),
             };
         }
     }

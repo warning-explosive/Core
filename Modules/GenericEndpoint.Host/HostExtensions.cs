@@ -126,9 +126,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var integrationTransportInjection = ctx.GetTransportInjection();
 
             var containerOptions = endpointOptions.ContainerOptions
-                .WithManualRegistration(integrationTransportInjection)
-                .WithManualRegistration(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
-                .WithManualRegistration(new LoggerManualRegistration(endpointOptions.Identity, loggerFactory));
+                .WithManualRegistrations(integrationTransportInjection)
+                .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
+                .WithManualRegistrations(new LoggerManualRegistration(endpointOptions.Identity, loggerFactory));
 
             return endpointOptions.WithContainerOptions(containerOptions);
         }

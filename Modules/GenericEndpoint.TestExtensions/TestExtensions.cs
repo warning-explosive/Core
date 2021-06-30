@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
 {
-    using System;
     using Api.Abstractions;
     using Contract.Abstractions;
     using Host;
@@ -27,14 +26,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         }
 
         /// <summary>
-        /// With message handlers
+        /// With message handler
         /// </summary>
         /// <param name="endpointBuilder">Endpoint builder</param>
-        /// <param name="types">Message handlers</param>
+        /// <typeparam name="THandler">THandler type-argument</typeparam>
+        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>EndpointBuilder</returns>
-        public static EndpointBuilder WithMessageHandlers(this EndpointBuilder endpointBuilder, params Type[] types)
+        public static EndpointBuilder WithMessageHandler<THandler, TMessage>(this EndpointBuilder endpointBuilder)
+            where THandler : IMessageHandler<TMessage>
+            where TMessage : IIntegrationMessage
         {
-            return endpointBuilder.ModifyContainerOptions(options => options.WithManualRegistration(new MessageHandlerManualRegistration(types)));
+            return endpointBuilder.ModifyContainerOptions(options => options.WithManualRegistrations(new MessageHandlerManualRegistration(typeof(THandler))));
         }
     }
 }

@@ -4,13 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
@@ -18,7 +15,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Attributes;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.TestExtensions;
@@ -26,6 +22,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericHost.Api.Abstractions;
     using InMemoryIntegrationTransport.Host;
     using IntegrationTransport.Api.Abstractions;
+    using MessageHandlers;
+    using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Mocks;
@@ -69,21 +67,26 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var actualRefusedMessagesCount = 0;
 
-            var additionalTypes = new[]
+            var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+
+            var messageTypes = new[]
             {
-                typeof(TestCommand),
+                typeof(IdentifiedCommand)
+            };
+
+            var messageHandlerTypes = new[]
+            {
                 typeof(ThrowingMessageHandler)
             };
 
-            var endpointIdentity = new EndpointIdentity(Endpoint1, 0);
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .WithMessageHandlers(typeof(ThrowingMessageHandler))
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
@@ -96,7 +99,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .GetTransportDependencyContainer()
                     .Resolve<Core.GenericHost.Abstractions.IIntegrationContext>();
 
-                await integrationContext.Send(new TestCommand(42), cts.Token).ConfigureAwait(false);
+                await integrationContext.Send(new IdentifiedCommand(42), cts.Token).ConfigureAwait(false);
 
                 await Task.Delay(TimeSpan.FromSeconds(4), cts.Token).ConfigureAwait(false);
 
@@ -139,41 +142,48 @@ namespace SpaceEngineers.Core.Modules.Test
             var actualMessagesCount = 0;
             var actualRefusedMessagesCount = 0;
 
-            var additionalTypes = new[]
+            var messageTypes = new[]
             {
-                typeof(TestCommand),
-                typeof(TestEvent),
-                typeof(TestQuery),
-                typeof(TestReply),
-                typeof(TestMessageHandler)
+                typeof(IdentifiedCommand),
+                typeof(IdentifiedEvent),
+                typeof(IdentifiedQuery),
+                typeof(IdentifiedReply)
             };
 
-            var endpointIdentity10 = new EndpointIdentity(Endpoint1, 0);
-            var endpointIdentity11 = new EndpointIdentity(Endpoint1, 1);
-            var endpointIdentity20 = new EndpointIdentity(Endpoint2, 0);
+            var endpoint1MessageHandlerTypes = new[]
+            {
+                typeof(IdentifiedCommandEmptyMessageHandler),
+                typeof(IdentifiedEventEmptyMessageHandler),
+                typeof(AlwaysReplyOnIdentifiedQueryMessageHandler)
+            };
+
+            var endpoint2MessageHandlerTypes = new[]
+            {
+                typeof(IdentifiedEventEmptyMessageHandler)
+            };
+
+            var endpoint1AdditionalOurTypes = messageTypes.Concat(endpoint1MessageHandlerTypes).ToArray();
+            var endpoint2AdditionalOurTypes = messageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
-                    .BuildOptions(endpointIdentity10))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
-                    .BuildOptions(endpointIdentity11))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint11))
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .WithMessageHandlers(typeof(TestMessageHandler))
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalTypes))
-                    .BuildOptions(endpointIdentity20))
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint2AdditionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
             using (host)
@@ -206,8 +216,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 for (var i = 0; i < count; i++)
                 {
                     var operation = i % 2 == 0
-                        ? integrationContext.Send(new TestCommand(i), token)
-                        : integrationContext.Publish(new TestEvent(i), token);
+                        ? integrationContext.Send(new IdentifiedCommand(i), token)
+                        : integrationContext.Publish(new IdentifiedEvent(i), token);
 
                     await operation.ConfigureAwait(false);
                 }
@@ -218,20 +228,17 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(TransportTestData))]
         internal async Task SameTransportTest(Func<IHostBuilder, IHostBuilder> useTransport, Assembly[] endpointPluginAssemblies)
         {
-            var identity1 = new EndpointIdentity(Endpoint1, 0);
-            var identity2 = new EndpointIdentity(Endpoint2, 0);
-
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .BuildOptions(identity1))
+                    .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .BuildOptions(identity2))
+                    .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
             bool transportIsSame;
@@ -245,8 +252,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 transportIsSame = new[]
                     {
-                        host.GetEndpointDependencyContainer(identity1),
-                        host.GetEndpointDependencyContainer(identity2)
+                        host.GetEndpointDependencyContainer(TestIdentity.Endpoint10),
+                        host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)
                     }
                     .Select(container => container.Resolve<IIntegrationTransport>())
                     .All(endpointTransport => ReferenceEquals(transport, endpointTransport));
@@ -268,35 +275,52 @@ namespace SpaceEngineers.Core.Modules.Test
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .WithMessageHandlers(typeof(TestMessageHandler))
+                    .WithMessageHandler<IdentifiedCommandEmptyMessageHandler, IdentifiedCommand>()
+                    .WithMessageHandler<IdentifiedEventEmptyMessageHandler, IdentifiedEvent>()
+                    .WithMessageHandler<OddReplyOnIdentifiedQueryMessageHandler, IdentifiedQuery>()
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
             var dependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
 
-            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestCommand>>().OnMessage(new TestCommand(42))).Invoke();
-            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestEvent>>().OnMessage(new TestEvent(42))).Invoke();
-            ShouldNotProduceMessages(dependencyContainer.Resolve<IMessageHandler<TestQuery>>().OnMessage(new TestQuery(42))).Invoke();
-
             dependencyContainer
-                .Resolve<IMessageHandler<TestQuery>>()
-                .OnMessage(new TestQuery(43))
+                .Resolve<IMessageHandler<IdentifiedCommand>>()
+                .OnMessage(new IdentifiedCommand(42))
+                .ShouldProduceNothing()
                 .ShouldNotSend<IIntegrationCommand>()
                 .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<TestQuery, TestReply>()
-                .Replied<TestReply>(reply => reply.Id == 43)
+                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
+                .ShouldNotReply<IIntegrationMessage>()
                 .Invoke();
 
-            TestMessageHandlerBuilder<T> ShouldNotProduceMessages<T>(TestMessageHandlerBuilder<T> builder)
-                where T : IIntegrationMessage
-            {
-                return builder
-                    .ShouldProduceNothing()
-                    .ShouldNotSend<IIntegrationCommand>()
-                    .ShouldNotPublish<IIntegrationEvent>()
-                    .ShouldNotRequest<TestQuery, TestReply>()
-                    .ShouldNotReply<IIntegrationMessage>();
-            }
+            dependencyContainer
+                .Resolve<IMessageHandler<IdentifiedEvent>>()
+                .OnMessage(new IdentifiedEvent(42))
+                .ShouldProduceNothing()
+                .ShouldNotSend<IIntegrationCommand>()
+                .ShouldNotPublish<IIntegrationEvent>()
+                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
+                .ShouldNotReply<IIntegrationMessage>()
+                .Invoke();
+
+            dependencyContainer
+                .Resolve<IMessageHandler<IdentifiedQuery>>()
+                .OnMessage(new IdentifiedQuery(42))
+                .ShouldProduceNothing()
+                .ShouldNotSend<IIntegrationCommand>()
+                .ShouldNotPublish<IIntegrationEvent>()
+                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
+                .ShouldNotReply<IIntegrationMessage>()
+                .Invoke();
+
+            dependencyContainer
+                .Resolve<IMessageHandler<IdentifiedQuery>>()
+                .OnMessage(new IdentifiedQuery(43))
+                .ShouldNotSend<IIntegrationCommand>()
+                .ShouldNotPublish<IIntegrationEvent>()
+                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
+                .Replied<IdentifiedReply>(reply => reply.Id == 43)
+                .Invoke();
         }
 
         [Theory(Timeout = 120_000)]
@@ -348,7 +372,7 @@ namespace SpaceEngineers.Core.Modules.Test
             void CheckEndpoint(IHost host)
             {
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
-                var integrationMessage = new IntegrationMessage(new TestCommand(0), typeof(TestCommand), new StringFormatterMock());
+                var integrationMessage = new IntegrationMessage(new IdentifiedCommand(0), typeof(IdentifiedCommand), new StringFormatterMock());
 
                 Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
                 Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
@@ -449,99 +473,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
                 await Task.Delay(TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
-            }
-        }
-
-        [Component(EnLifestyle.Transient)]
-        private class ThrowingMessageHandler : IMessageHandler<TestCommand>
-        {
-            public Task Handle(TestCommand message, GenericEndpoint.Api.Abstractions.IIntegrationContext context, CancellationToken token)
-            {
-                throw new InvalidOperationException(message.Id.ToString(CultureInfo.InvariantCulture));
-            }
-        }
-
-        [Component(EnLifestyle.Transient)]
-        private class TestMessageHandler : IMessageHandler<TestCommand>, IMessageHandler<TestEvent>, IMessageHandler<TestQuery>
-        {
-            public Task Handle(TestCommand message, GenericEndpoint.Api.Abstractions.IIntegrationContext context, CancellationToken token)
-            {
-                return Task.CompletedTask;
-            }
-
-            public Task Handle(TestEvent message, GenericEndpoint.Api.Abstractions.IIntegrationContext context, CancellationToken token)
-            {
-                return Task.CompletedTask;
-            }
-
-            public Task Handle(TestQuery message, GenericEndpoint.Api.Abstractions.IIntegrationContext context, CancellationToken token)
-            {
-                return message.Id % 2 == 0
-                    ? Task.CompletedTask
-                    : context.Reply(message, new TestReply(message.Id), token);
-            }
-        }
-
-        [OwnedBy(Endpoint1)]
-        private class TestCommand : IIntegrationCommand
-        {
-            public TestCommand(int id)
-            {
-                Id = id;
-            }
-
-            internal int Id { get; }
-
-            public override string ToString()
-            {
-                return Id.ToString(CultureInfo.InvariantCulture);
-            }
-        }
-
-        [OwnedBy(Endpoint1)]
-        private class TestQuery : IIntegrationQuery<TestReply>
-        {
-            public TestQuery(int id)
-            {
-                Id = id;
-            }
-
-            internal int Id { get; }
-
-            public override string ToString()
-            {
-                return Id.ToString(CultureInfo.InvariantCulture);
-            }
-        }
-
-        private class TestReply : IIntegrationMessage
-        {
-            public TestReply(int id)
-            {
-                Id = id;
-            }
-
-            internal int Id { get; }
-
-            public override string ToString()
-            {
-                return Id.ToString(CultureInfo.InvariantCulture);
-            }
-        }
-
-        [OwnedBy(Endpoint2)]
-        private class TestEvent : IIntegrationEvent
-        {
-            public TestEvent(int id)
-            {
-                Id = id;
-            }
-
-            internal int Id { get; }
-
-            public override string ToString()
-            {
-                return Id.ToString(CultureInfo.InvariantCulture);
             }
         }
     }

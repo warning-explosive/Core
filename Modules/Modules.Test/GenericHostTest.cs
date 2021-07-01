@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Host;
+    using GenericEndpoint.Internals;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.TestExtensions;
     using GenericHost;
@@ -327,13 +328,34 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(TransportTestData))]
         internal void BuildHostTest(Func<IHostBuilder, IHostBuilder> useTransport, Assembly[] endpointPluginAssemblies)
         {
-            var endpointIdentity = new EndpointIdentity(nameof(BuildHostTest), 0);
+            var endpointIdentity = new EndpointIdentity(nameof(Endpoint1), 0);
+
+            var messageTypes = new[]
+            {
+                typeof(BaseEvent),
+                typeof(InheritedEvent),
+                typeof(IdentifiedCommand),
+                typeof(IdentifiedEvent),
+                typeof(IdentifiedQuery),
+                typeof(IdentifiedReply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(BaseEventEmptyMessageHandler),
+                typeof(IdentifiedCommandEmptyMessageHandler),
+                typeof(IdentifiedEventEmptyMessageHandler),
+                typeof(AlwaysReplyOnIdentifiedQueryMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var testHost = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(builder => builder
                     .WithEndpointPluginAssemblies(endpointPluginAssemblies)
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
@@ -412,6 +434,87 @@ namespace SpaceEngineers.Core.Modules.Test
                         .ToList();
 
                     Assert.Equal(expectedPipeline, actualPipeline);
+
+                    var integrationTypeProvider = endpointDependencyContainer.Resolve<IntegrationTypeProvider>();
+
+                    var expectedIntegrationMessageTypes = new[]
+                    {
+                        typeof(IIntegrationMessage),
+                        typeof(IIntegrationCommand),
+                        typeof(IIntegrationEvent),
+                        typeof(IIntegrationQuery<>),
+                        typeof(BaseEvent),
+                        typeof(InheritedEvent),
+                        typeof(IdentifiedCommand),
+                        typeof(IdentifiedEvent),
+                        typeof(IdentifiedQuery),
+                        typeof(IdentifiedReply)
+                    };
+
+                    var actualIntegrationMessageTypes = integrationTypeProvider
+                        .IntegrationMessageTypes()
+                        .ShowTypes(nameof(IntegrationTypeProvider.IntegrationMessageTypes), Output.WriteLine)
+                        .OrderBy(t => t.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(t => t.FullName).ToList(), actualIntegrationMessageTypes);
+
+                    var expectedCommands = new[]
+                    {
+                        typeof(IIntegrationCommand),
+                        typeof(IdentifiedCommand)
+                    };
+
+                    var actualCommands = integrationTypeProvider
+                        .EndpointCommands()
+                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointCommands), Output.WriteLine)
+                        .OrderBy(t => t.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedCommands.OrderBy(t => t.FullName).ToList(), actualCommands);
+
+                    var expectedEvents = new[]
+                    {
+                        typeof(IIntegrationEvent),
+                        typeof(BaseEvent),
+                        typeof(InheritedEvent)
+                    };
+
+                    var actualEvents = integrationTypeProvider
+                        .EndpointEvents()
+                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointEvents), Output.WriteLine)
+                        .OrderBy(t => t.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedEvents.OrderBy(t => t.FullName).ToList(), actualEvents);
+
+                    var expectedQueries = new[]
+                    {
+                        typeof(IIntegrationQuery<>),
+                        typeof(IdentifiedQuery)
+                    };
+
+                    var actualQueries = integrationTypeProvider
+                        .EndpointQueries()
+                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointQueries), Output.WriteLine)
+                        .OrderBy(t => t.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedQueries.OrderBy(t => t.FullName).ToList(), actualQueries);
+
+                    var expectedSubscriptions = new[]
+                    {
+                        typeof(BaseEvent),
+                        typeof(IdentifiedEvent)
+                    };
+
+                    var actualSubscriptions = integrationTypeProvider
+                        .EndpointSubscriptions()
+                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointSubscriptions), Output.WriteLine)
+                        .OrderBy(t => t.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedSubscriptions.OrderBy(t => t.FullName).ToList(), actualSubscriptions);
                 }
             }
 

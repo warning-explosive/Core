@@ -40,14 +40,14 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
                    || _extension.OurTypes.Contains(type);
         }
 
-        internal static Func<DependencyContainerOptions, DependencyContainerOptions> ExtendTypeProvider(params Type[] additionalTypes)
+        internal static Func<DependencyContainerOptions, DependencyContainerOptions> ExtendTypeProvider(params Type[] additionalOurTypes)
         {
-            return options => ExtendTypeProvider(options, additionalTypes);
+            return options => ExtendTypeProvider(options, additionalOurTypes);
         }
 
-        internal static DependencyContainerOptions ExtendTypeProvider(DependencyContainerOptions options, params Type[] additionalTypes)
+        internal static DependencyContainerOptions ExtendTypeProvider(DependencyContainerOptions options, params Type[] additionalOurTypes)
         {
-            return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalTypes));
+            return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalOurTypes));
         }
 
         [Component(EnLifestyle.Singleton)]

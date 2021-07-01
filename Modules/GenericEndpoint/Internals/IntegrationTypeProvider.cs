@@ -31,11 +31,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         {
             return _typeProvider
                 .OurTypes
-                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
-                               && typeof(IIntegrationMessage) != type
-                               && typeof(IIntegrationCommand) != type
-                               && typeof(IIntegrationEvent) != type
-                               && typeof(IIntegrationQuery<>) != type.GenericTypeDefinitionOrSelf());
+                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type));
         }
 
         public IEnumerable<Type> EndpointCommands()
@@ -43,8 +39,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return _typeProvider
                 .OurTypes
                 .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
-                               && typeof(IIntegrationCommand) != type
-                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
         }
 
         public IEnumerable<Type> EndpointQueries()
@@ -52,8 +47,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return _typeProvider
                 .OurTypes
                 .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
-                               && typeof(IIntegrationQuery<>) != type.GenericTypeDefinitionOrSelf()
-                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
         }
 
         public IEnumerable<Type> EndpointEvents()
@@ -61,8 +55,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return _typeProvider
                 .OurTypes
                 .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
-                               && typeof(IIntegrationEvent) != type
-                               && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase));
+                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
         }
 
         public IEnumerable<Type> EndpointSubscriptions()
@@ -73,9 +66,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                                && !type.IsAbstract
                                && type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                 .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IMessageHandler<>), 0))
-                .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
-                               && !type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
+                .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type))
                 .Distinct();
+        }
+
+        private static bool IsMessageAbstraction(Type type)
+        {
+            return type == typeof(IIntegrationMessage)
+                   || type == typeof(IIntegrationCommand)
+                   || type == typeof(IIntegrationEvent)
+                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
+        }
+
+        private bool OwnedByCurrentEndpoint(Type type)
+        {
+            return (typeof(IIntegrationCommand).IsAssignableFrom(type)
+                    || typeof(IIntegrationEvent).IsAssignableFrom(type)
+                    || type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)))
+                   && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

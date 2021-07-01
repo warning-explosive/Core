@@ -54,7 +54,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             foreach (var message in messageTypes)
             {
-                _ = message.GetRequiredAttribute<OwnedByAttribute>();
+                if (!IsMessageAbstraction(message))
+                {
+                    _ = message.GetRequiredAttribute<OwnedByAttribute>();
+                }
 
                 var service = typeof(IMessageHandler<>).MakeGenericType(message);
                 var handlerExists = _typeProvider
@@ -63,11 +66,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
                                  && !type.IsAbstract
                                  && service.IsAssignableFrom(type));
 
-                if (!handlerExists)
+                if (!handlerExists && !IsMessageAbstraction(message))
                 {
                     throw new InvalidOperationException($"Message '{message.FullName}' should have message handler");
                 }
             }
+        }
+
+        private static bool IsMessageAbstraction(Type type)
+        {
+            return type == typeof(IIntegrationMessage)
+                   || type == typeof(IIntegrationCommand)
+                   || type == typeof(IIntegrationEvent)
+                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
         }
 
         private static bool ImplementsSeveralSpecializedInterfaces(Type type)

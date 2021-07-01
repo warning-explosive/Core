@@ -173,5 +173,11 @@
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
       <DependentUpon>PersistenceSettings.cs</DependentUpon>
     </Compile>
+    <Compile Update="Messages\InheritedEvent.cs">
+      <DependentUpon>BaseEvent.cs</DependentUpon>
+    </Compile>
+    <Compile Update="MessageHandlers\InheritedEventEmptyMessageHandler.cs">
+      <DependentUpon>BaseEventEmptyMessageHandler.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

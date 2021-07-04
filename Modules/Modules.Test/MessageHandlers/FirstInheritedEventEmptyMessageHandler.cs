@@ -8,9 +8,9 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class InheritedEventEmptyMessageHandler : IMessageHandler<InheritedEvent>
+    internal class FirstInheritedEventEmptyMessageHandler : IMessageHandler<FirstInheritedEvent>
     {
-        public Task Handle(InheritedEvent message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(FirstInheritedEvent message, IIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }

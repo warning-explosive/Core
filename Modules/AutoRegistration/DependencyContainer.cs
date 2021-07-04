@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
-    public class DependencyContainer : IDependencyContainer
+    public class DependencyContainer : IDependencyContainer, IDisposable
     {
         private readonly Container _container;
 
@@ -44,6 +44,12 @@ namespace SpaceEngineers.Core.AutoRegistration
             _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
         }
 
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _container.Dispose();
+        }
+
         #region Creation
 
         /// <summary>
@@ -54,17 +60,23 @@ namespace SpaceEngineers.Core.AutoRegistration
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer Create(DependencyContainerOptions options)
         {
-            var typeProvider = new TypeProvider(
-                AssembliesExtensions.AllFromCurrentDomain(),
-                RootAssemblies(),
-                options.ExcludedAssemblies,
-                options.ExcludedNamespaces);
+            return CreateExactlyBounded(options, AssembliesExtensions.AllAssembliesFromCurrentDomain());
+        }
 
-            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+        /// <summary>
+        /// Creates dependency container bounded above by specified assembly (project)
+        /// </summary>
+        /// <param name="options">DependencyContainer creation options</param>
+        /// <param name="assemblies">Assembly for container configuration</param>
+        /// <returns>DependencyContainer</returns>
+        public static IDependencyContainer CreateBoundedAbove(DependencyContainerOptions options, params Assembly[] assemblies)
+        {
+            var belowAssemblies = assemblies
+                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
+                .Distinct()
+                .ToArray();
 
-#pragma warning disable 618
-            return new DependencyContainer(typeProvider, servicesProvider, options);
-#pragma warning restore 618
+            return CreateExactlyBounded(options, belowAssemblies);
         }
 
         /// <summary>
@@ -83,34 +95,16 @@ namespace SpaceEngineers.Core.AutoRegistration
 
             var servicesProvider = new AutoWiringServicesProvider(typeProvider);
 
-#pragma warning disable 618
-            return new DependencyContainer(typeProvider, servicesProvider, options);
-#pragma warning restore 618
-        }
-
-        /// <summary>
-        /// Creates dependency container bounded above by specified assembly (project)
-        /// </summary>
-        /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="assemblies">Assembly for container configuration</param>
-        /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateBoundedAbove(DependencyContainerOptions options, params Assembly[] assemblies)
-        {
-            var belowAssemblies = assemblies
-                .SelectMany(assembly => AssembliesExtensions.AllFromCurrentDomain().Below(assembly))
-                .Distinct()
-                .ToArray();
-
-            var typeProvider = new TypeProvider(
-                belowAssemblies,
-                RootAssemblies(),
-                options.ExcludedAssemblies,
-                options.ExcludedNamespaces);
-
-            var servicesProvider = new AutoWiringServicesProvider(typeProvider);
+            options = options.WithManualRegistrations(new TypeProviderManualRegistration(typeProvider));
 
 #pragma warning disable 618
-            return new DependencyContainer(typeProvider, servicesProvider, options);
+            using (var templateContainer = new DependencyContainer(typeProvider, servicesProvider, options))
+            {
+                return new DependencyContainer(
+                templateContainer.Resolve<ITypeProvider>(),
+                templateContainer.Resolve<IAutoWiringServicesProvider>(),
+                options);
+            }
 #pragma warning restore 618
         }
 
@@ -185,24 +179,12 @@ namespace SpaceEngineers.Core.AutoRegistration
 
         private static Assembly[] RootAssemblies()
         {
-            var regularRootAssemblies = new[]
+            return new[]
             {
-                typeof(DependencyContainer).Assembly, // AutoRegistration
-                typeof(ComponentAttribute).Assembly, // AutoWiring.Api
-                typeof(TypeExtensions).Assembly // Basics
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics)))
             };
-
-            return regularRootAssemblies.Concat(OptionalRootAssemblies()).ToArray();
-        }
-
-        private static IEnumerable<Assembly> OptionalRootAssemblies()
-        {
-            const string optionalAssemblyName = "SpaceEngineers.Core.GenericEndpoint.Contract";
-            var genericEndpointContract = AssembliesExtensions.FindAssembly(optionalAssemblyName);
-
-            return genericEndpointContract != null
-                ? new[] { genericEndpointContract }
-                : Array.Empty<Assembly>();
         }
 
         private static Container BuildSimpleInjector()
@@ -248,10 +230,8 @@ namespace SpaceEngineers.Core.AutoRegistration
             var autoRegistrationsContainer = new AutoRegistrationsContainer(container, typeProvider, servicesProvider);
 
             var manualRegistrationsContainer = new ManualRegistrationsContainer();
-            var manualRegistration = new DependencyContainerManualRegistration(this, typeProvider, servicesProvider);
-
             options
-                .WithManualRegistrations(manualRegistration)
+                .WithManualRegistrations(new DependencyContainerManualRegistration(this))
                 .ManualRegistrations
                 .Each(manual => manual.Register(manualRegistrationsContainer));
 

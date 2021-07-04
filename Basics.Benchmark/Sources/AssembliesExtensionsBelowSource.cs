@@ -26,7 +26,7 @@ namespace Basics.Benchmark.Sources
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _allAssemblies = AssembliesExtensions.AllFromCurrentDomain();
+            _allAssemblies = AssembliesExtensions.AllAssembliesFromCurrentDomain();
             _belowAssembly = GetType().Assembly;
         }
 

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -54,11 +55,12 @@ namespace SpaceEngineers.Core.Basics
         private static IReadOnlyDictionary<Type, IReadOnlyCollection<Type>> InitializeDependents()
         {
             return AssembliesExtensions
-                .AllFromCurrentDomain()
+                .AllAssembliesFromCurrentDomain()
                 .Where(assembly => !assembly.IsDynamic)
                 .SelectMany(assembly => new Func<IEnumerable<Type>>(assembly.GetTypes)
                     .Try()
                     .Catch<ReflectionTypeLoadException>()
+                    .Catch<FileNotFoundException>()
                     .Invoke(_ => Enumerable.Empty<Type>()))
                 .Select(type =>
                 {

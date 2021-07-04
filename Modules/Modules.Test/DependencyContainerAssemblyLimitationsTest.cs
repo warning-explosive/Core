@@ -35,9 +35,9 @@ namespace SpaceEngineers.Core.Modules.Test
             var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
             var assembly3 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Contract)));
 
-            var below1 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly1);
-            var below2 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly2);
-            var below3 = AssembliesExtensions.AllFromCurrentDomain().Below(assembly3);
+            var below1 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly1);
+            var below2 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly2);
+            var below3 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly3);
 
             Assert.DoesNotContain(assembly1, below2);
             Assert.DoesNotContain(assembly1, below3);

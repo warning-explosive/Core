@@ -19,13 +19,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
         {
             return container.GetTypesToRegister(
                 serviceType,
-                typeProvider.OurAssemblies.ToArray(),
+                AssembliesExtensions.AllOurAssembliesFromCurrentDomain(),
                 new TypesToRegisterOptions
                 {
                     IncludeComposites = false,
                     IncludeDecorators = false,
                     IncludeGenericTypeDefinitions = true
-                });
+                })
+                .Where(typeProvider.IsOurType);
         }
 
         internal static IEnumerable<Type> RegisteredComponents(this Container container)

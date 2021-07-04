@@ -8,13 +8,11 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class OddReplyOnIdentifiedQueryMessageHandler : IMessageHandler<IdentifiedQuery>
+    internal class IdentifiedQueryAlwaysReplyMessageHandler : IMessageHandler<IdentifiedQuery>
     {
         public Task Handle(IdentifiedQuery message, IIntegrationContext context, CancellationToken token)
         {
-            return message.Id % 2 == 0
-                ? Task.CompletedTask
-                : context.Reply(message, new IdentifiedReply(message.Id), token);
+            return context.Reply(message, new IdentifiedReply(message.Id), token);
         }
     }
 }

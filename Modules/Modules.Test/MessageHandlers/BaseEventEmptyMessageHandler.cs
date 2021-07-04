@@ -10,9 +10,10 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     [Component(EnLifestyle.Transient)]
     internal class BaseEventEmptyMessageHandler : IMessageHandler<BaseEvent>
     {
-        public Task Handle(BaseEvent message, IIntegrationContext context, CancellationToken token)
+        public async Task Handle(BaseEvent message, IIntegrationContext context, CancellationToken token)
         {
-            return Task.CompletedTask;
+            await context.Publish(new FirstInheritedEvent(), token).ConfigureAwait(false);
+            await context.Publish(new SecondInheritedEvent(), token).ConfigureAwait(false);
         }
     }
 }

@@ -32,22 +32,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
             /*
              * 1. Messages should be marked with OwnedByAttribute
              * 2. Endpoint should have message handler for owned messages
+             * 3. Message handler should have transient lifestyle
              */
             Verify(_integrationTypeProvider.EndpointCommands());
             Verify(_integrationTypeProvider.EndpointQueries());
             Verify(_integrationTypeProvider.EndpointEvents());
 
             /*
-             * 3. Message implements only one specialized interface (command, query, event or just message)
+             * 4. Message implements only one specialized interface (command, query, event or just message)
              */
             _integrationTypeProvider
                 .IntegrationMessageTypes()
                 .Where(ImplementsSeveralSpecializedInterfaces)
                 .Each(type => throw new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, query, event or just message)"));
-
-            /*
-             * TODO: message handler should have got transient lifestyle
-             */
         }
 
         private void Verify(IEnumerable<Type> messageTypes)
@@ -60,16 +57,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
                 }
 
                 var service = typeof(IMessageHandler<>).MakeGenericType(message);
-                var handlerExists = _typeProvider
-                    .OurTypes
-                    .Any(type => type.IsClass
-                                 && !type.IsAbstract
-                                 && service.IsAssignableFrom(type));
 
-                if (!handlerExists && !IsMessageAbstraction(message))
+                var messageHandlerType = _typeProvider
+                    .OurTypes
+                    .Where(type => type.IsClass
+                                   && !type.IsAbstract
+                                   && service.IsAssignableFrom(type))
+                    .InformativeSingleOrDefault(Amb(message));
+
+                if (messageHandlerType == null
+                    && !IsMessageAbstraction(message))
                 {
                     throw new InvalidOperationException($"Message '{message.FullName}' should have message handler");
                 }
+
+                if (messageHandlerType != null
+                    && messageHandlerType.GetRequiredAttribute<ComponentAttribute>().Lifestyle != EnLifestyle.Transient)
+                {
+                    throw new InvalidOperationException($"Message handler '{messageHandlerType.FullName}' should have transient lifestyle");
+                }
+            }
+
+            static Func<IEnumerable<Type>, string> Amb(Type message)
+            {
+                return _ => throw new InvalidOperationException($"Message '{message.FullName}' should have only one message handler. To produce forks publish new events explicitly in that message handler.");
             }
         }
 

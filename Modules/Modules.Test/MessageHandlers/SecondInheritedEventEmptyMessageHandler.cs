@@ -8,11 +8,11 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class AlwaysReplyOnIdentifiedQueryMessageHandler : IMessageHandler<IdentifiedQuery>
+    internal class SecondInheritedEventEmptyMessageHandler : IMessageHandler<SecondInheritedEvent>
     {
-        public Task Handle(IdentifiedQuery message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(SecondInheritedEvent message, IIntegrationContext context, CancellationToken token)
         {
-            return context.Reply(message, new IdentifiedReply(message.Id), token);
+            return Task.CompletedTask;
         }
     }
 }

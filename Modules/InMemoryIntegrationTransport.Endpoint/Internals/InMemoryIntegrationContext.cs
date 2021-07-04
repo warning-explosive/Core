@@ -78,11 +78,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
+            // TODO: deliver within transaction
             return Deliver(Message, token);
         }
 
         public Task Refuse(Exception exception, CancellationToken token)
         {
+            // TODO: Refuse within transaction
             return _transport.OnError(new FailedMessage(Message, exception), token);
         }
 

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class ThrowingMessageHandler : IMessageHandler<IdentifiedCommand>
+    internal class IdentifiedCommandThrowingMessageHandler : IMessageHandler<IdentifiedCommand>
     {
         public Task Handle(IdentifiedCommand message, IIntegrationContext context, CancellationToken token)
         {

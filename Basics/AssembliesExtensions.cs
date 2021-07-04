@@ -16,8 +16,15 @@ namespace SpaceEngineers.Core.Basics
         private const string Dot = ".";
         private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
-        private static readonly Lazy<Assembly[]> LoadedAssemblies
-            = new Lazy<Assembly[]>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
+        private static readonly string[] ExcludedAssemblies =
+        {
+            nameof(System),
+            nameof(Microsoft),
+            "Windows"
+        };
+
+        private static readonly Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)> AllAssembliesLoadedInCurrentAppDomain
+            = new Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
         /// Build name
@@ -72,17 +79,76 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Found assembly</returns>
         public static Assembly? FindAssembly(string assemblyName)
         {
-            return AllFromCurrentDomain()
+            return AllAssembliesFromCurrentDomain()
                 .SingleOrDefault(assembly => assembly.GetName().Name.Equals(assemblyName, StringComparison.Ordinal));
         }
 
         /// <summary>
-        /// Get all assemblies from current domain
+        /// Get all assemblies from current app domain
         /// </summary>
-        /// <returns>All assemblies from current domain</returns>
-        public static Assembly[] AllFromCurrentDomain()
+        /// <returns>All assemblies from current app domain</returns>
+        public static Assembly[] AllAssembliesFromCurrentDomain()
         {
-            return LoadedAssemblies.Value;
+            return AllAssembliesLoadedInCurrentAppDomain.Value.AllAssemblies;
+        }
+
+        /// <summary>
+        /// Get all our assemblies from current app domain
+        /// </summary>
+        /// <returns>All our assemblies from current app domain</returns>
+        public static Assembly[] AllOurAssembliesFromCurrentDomain()
+        {
+            return AllAssembliesLoadedInCurrentAppDomain.Value.OurAssemblies;
+        }
+
+        /// <summary>
+        /// Is our reference
+        /// </summary>
+        /// <param name="assemblies">All assemblies</param>
+        /// <param name="rootAssemblies">Root assemblies</param>
+        /// <returns>Is our reference func</returns>
+        public static Func<Assembly, bool> IsOurReference(
+            IEnumerable<Assembly> assemblies,
+            IEnumerable<Assembly> rootAssemblies)
+        {
+            var map = assemblies.ToDictionary(a => a.GetName().FullName);
+
+            var visited = rootAssemblies
+                .Distinct(new AssemblyByNameEqualityComparer())
+                .ToDictionary(root => root.GetName().FullName, _ => true);
+
+            return assembly => IsOurReferenceInternal(assembly, map, visited);
+
+            static bool IsOurReferenceInternal(
+                Assembly assembly,
+                IReadOnlyDictionary<string, Assembly> map,
+                IDictionary<string, bool> visited)
+            {
+                var key = string.Intern(assembly.GetName().FullName);
+
+                if (visited.ContainsKey(key) && visited[key])
+                {
+                    return true;
+                }
+
+                var exclusiveReferences = assembly.GetReferencedAssemblies();
+                var isReferencedDirectly = exclusiveReferences.Any(a => visited.ContainsKey(a.FullName) && visited[a.FullName]);
+
+                if (isReferencedDirectly)
+                {
+                    visited[key] = true;
+                    return true;
+                }
+
+                var isIndirectlyReferenced = exclusiveReferences
+                    .Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
+                                               && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
+                    .Any(unknownReference => map.TryGetValue(unknownReference.FullName, out var unknownAssembly)
+                                             && IsOurReferenceInternal(unknownAssembly, map, visited));
+
+                visited[key] = isIndirectlyReferenced;
+                return isIndirectlyReferenced;
+            }
         }
 
         /// <summary>
@@ -126,7 +192,7 @@ namespace SpaceEngineers.Core.Basics
                     .SelectMany(name => BelowReference(name, all, visited)));
         }
 
-        private static Assembly[] WarmUpAppDomain()
+        private static (Assembly[] OurAssemblies, Assembly[] AllAssemblies) WarmUpAppDomain()
         {
             var loaded = new HashSet<string>();
 
@@ -136,12 +202,28 @@ namespace SpaceEngineers.Core.Basics
                 .SelectMany(name => LoadReferences(name, loaded))
                 .ToList();
 
-            return AppDomain.CurrentDomain
+            var allAssemblies = AppDomain.CurrentDomain
                 .EnsureNotNull($"{nameof(AppDomain.CurrentDomain)} is null")
                 .GetAssemblies()
                 .GroupBy(assembly => assembly.GetName().Name)
                 .SelectMany(RemoveDuplicates)
                 .ToArray();
+
+            var regularAssembly = typeof(AssembliesExtensions).Assembly; // Basics
+
+            var optionalAssemblyName = BuildName(nameof(SpaceEngineers), nameof(Core), "AutoWiring", "Api");
+            var optionalAssembly = allAssemblies
+                .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase));
+
+            var rootAssemblies = optionalAssembly != null
+                ? new[] { regularAssembly, optionalAssembly }
+                : new[] { regularAssembly };
+
+            var isOurReference = IsOurReference(allAssemblies, rootAssemblies);
+
+            var ourAssemblies = allAssemblies.Where(isOurReference).ToArray();
+
+            return (ourAssemblies, allAssemblies);
         }
 
         private static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)

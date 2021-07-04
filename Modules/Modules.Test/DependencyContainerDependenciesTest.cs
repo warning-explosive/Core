@@ -52,9 +52,26 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Where(assembly => ourAssembliesNames.Contains(assembly.GetName().Name!))
                 .ToList();
 
+            Output.WriteLine("Our assemblies:");
             ourAssemblies.Select(assembly => assembly.GetName().Name).Each(Output.WriteLine);
 
-            Assert.True(provider.OurAssemblies.All(assembly => ourAssemblies.Contains(assembly)));
+            var missing = ourAssemblies
+                .Where(assembly => !provider.OurAssemblies.Contains(assembly))
+                .ToList();
+
+            Output.WriteLine("missing #1:");
+            missing.Select(assembly => assembly.GetName().Name).Each(Output.WriteLine);
+
+            Assert.Empty(missing);
+
+            missing = ourAssemblies
+                .Where(assembly => !AssembliesExtensions.AllOurAssembliesFromCurrentDomain().Contains(assembly))
+                .ToList();
+
+            Output.WriteLine("missing #2:");
+            missing.Select(assembly => assembly.GetName().Name).Each(Output.WriteLine);
+
+            Assert.Empty(missing);
         }
 
         [Fact]
@@ -83,7 +100,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var assemblies = AssembliesExtensions
-                .AllFromCurrentDomain()
+                .AllAssembliesFromCurrentDomain()
                 .Where(assembly =>
                 {
                     var assemblyName = assembly.GetName().FullName;

@@ -73,13 +73,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             try
             {
+                _cts?.Cancel();
                 _backgroundWorkersTask?.Wait(Token);
             }
             catch (OperationCanceledException)
             {
             }
-
-            _cts?.Dispose();
+            finally
+            {
+                _cts?.Dispose();
+            }
         }
     }
 }

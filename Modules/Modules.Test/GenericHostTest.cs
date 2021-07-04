@@ -61,6 +61,105 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 120_000)]
         [MemberData(nameof(TransportTestData))]
+        internal async Task EndpointShouldHaveOnlyOneMessageHandlerPerMessage(Func<IHostBuilder, IHostBuilder> useTransport, Assembly[] endpointPluginAssemblies)
+        {
+            var messageTypes = new[]
+            {
+                typeof(IdentifiedCommand)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(IdentifiedCommandEmptyMessageHandler),
+                typeof(IdentifiedCommandThrowingMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseEndpoint(builder => builder
+                    .WithEndpointPluginAssemblies(endpointPluginAssemblies)
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithStatistics()
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint10))
+                .BuildHost();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                try
+                {
+                    await host.StartAsync(cts.Token).ConfigureAwait(false);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Assert.Equal(ex.Message, $"Message '{typeof(IdentifiedCommand).FullName}' should have only one message handler. To produce forks publish new events explicitly in that message handler.");
+                }
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task VariantMessageHandlerTest(Func<IHostBuilder, IHostBuilder> useTransport, Assembly[] endpointPluginAssemblies)
+        {
+            var actualMessagesCount = 0;
+            var expectedMessagesCount = 3;
+
+            var messageTypes = new[]
+            {
+                typeof(BaseEvent),
+                typeof(FirstInheritedEvent),
+                typeof(SecondInheritedEvent)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(BaseEventEmptyMessageHandler),
+                typeof(FirstInheritedEventEmptyMessageHandler),
+                typeof(SecondInheritedEventEmptyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseEndpoint(builder => builder
+                    .WithEndpointPluginAssemblies(endpointPluginAssemblies)
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithStatistics()
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint10))
+                .BuildHost();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+
+                _ = endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>();
+                _ = endpointDependencyContainer.Resolve<IMessageHandler<FirstInheritedEvent>>();
+                _ = endpointDependencyContainer.Resolve<IMessageHandler<SecondInheritedEvent>>();
+
+                var integrationContext = host
+                    .GetTransportDependencyContainer()
+                    .Resolve<Core.GenericHost.Abstractions.IIntegrationContext>();
+
+                await integrationContext.Publish(new BaseEvent(), cts.Token).ConfigureAwait(false);
+
+                // await Task.Delay(TimeSpan.FromSeconds(4), cts.Token).ConfigureAwait(false);
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
+            Assert.Equal(expectedMessagesCount, actualMessagesCount);
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
         internal async Task ThrowingMessageHandlerTest(Func<IHostBuilder, IHostBuilder> useTransport, Assembly[] endpointPluginAssemblies)
         {
             var incomingMessages = new ConcurrentBag<IntegrationMessage>();
@@ -77,7 +176,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var messageHandlerTypes = new[]
             {
-                typeof(ThrowingMessageHandler)
+                typeof(IdentifiedCommandThrowingMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -155,7 +254,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(IdentifiedCommandEmptyMessageHandler),
                 typeof(IdentifiedEventEmptyMessageHandler),
-                typeof(AlwaysReplyOnIdentifiedQueryMessageHandler)
+                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
             };
 
             var endpoint2MessageHandlerTypes = new[]
@@ -278,7 +377,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .WithStatistics()
                     .WithMessageHandler<IdentifiedCommandEmptyMessageHandler, IdentifiedCommand>()
                     .WithMessageHandler<IdentifiedEventEmptyMessageHandler, IdentifiedEvent>()
-                    .WithMessageHandler<OddReplyOnIdentifiedQueryMessageHandler, IdentifiedQuery>()
+                    .WithMessageHandler<IdentifiedQueryOddReplyMessageHandler, IdentifiedQuery>()
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
@@ -333,7 +432,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var messageTypes = new[]
             {
                 typeof(BaseEvent),
-                typeof(InheritedEvent),
+                typeof(FirstInheritedEvent),
+                typeof(SecondInheritedEvent),
                 typeof(IdentifiedCommand),
                 typeof(IdentifiedEvent),
                 typeof(IdentifiedQuery),
@@ -343,9 +443,11 @@ namespace SpaceEngineers.Core.Modules.Test
             var messageHandlerTypes = new[]
             {
                 typeof(BaseEventEmptyMessageHandler),
+                typeof(FirstInheritedEventEmptyMessageHandler),
+                typeof(SecondInheritedEventEmptyMessageHandler),
                 typeof(IdentifiedCommandEmptyMessageHandler),
                 typeof(IdentifiedEventEmptyMessageHandler),
-                typeof(AlwaysReplyOnIdentifiedQueryMessageHandler)
+                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -444,7 +546,8 @@ namespace SpaceEngineers.Core.Modules.Test
                         typeof(IIntegrationEvent),
                         typeof(IIntegrationQuery<>),
                         typeof(BaseEvent),
-                        typeof(InheritedEvent),
+                        typeof(FirstInheritedEvent),
+                        typeof(SecondInheritedEvent),
                         typeof(IdentifiedCommand),
                         typeof(IdentifiedEvent),
                         typeof(IdentifiedQuery),
@@ -477,7 +580,8 @@ namespace SpaceEngineers.Core.Modules.Test
                     {
                         typeof(IIntegrationEvent),
                         typeof(BaseEvent),
-                        typeof(InheritedEvent)
+                        typeof(FirstInheritedEvent),
+                        typeof(SecondInheritedEvent)
                     };
 
                     var actualEvents = integrationTypeProvider
@@ -505,6 +609,8 @@ namespace SpaceEngineers.Core.Modules.Test
                     var expectedSubscriptions = new[]
                     {
                         typeof(BaseEvent),
+                        typeof(FirstInheritedEvent),
+                        typeof(SecondInheritedEvent),
                         typeof(IdentifiedEvent)
                     };
 

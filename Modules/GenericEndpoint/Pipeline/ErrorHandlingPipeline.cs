@@ -30,10 +30,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(IAdvancedIntegrationContext context, CancellationToken token)
+        public Task Process(
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => Decoratee.Process(context, token))
+                .TryAsync(() => Decoratee.Process(producer, context, token))
                 .Invoke(ex => OnError(context, ex, token));
         }
 

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
@@ -18,17 +19,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(IAdvancedIntegrationContext context, CancellationToken token)
+        public Task Process(
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
-            return context.UnitOfWork.StartTransaction(context,
-                ProcessWithinTransaction,
+            return context.UnitOfWork.StartTransaction(
+                context,
+                ProcessWithinTransaction(producer),
                 true,
                 token);
         }
 
-        private Task ProcessWithinTransaction(IAdvancedIntegrationContext context, CancellationToken token)
+        private Func<IAdvancedIntegrationContext, CancellationToken, Task> ProcessWithinTransaction(
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> messageHandler)
         {
-            return Decoratee.Process(context, token);
+            return (context, token) => Decoratee.Process(messageHandler, context, token);
         }
     }
 }

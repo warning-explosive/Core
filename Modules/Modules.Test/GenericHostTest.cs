@@ -526,7 +526,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         typeof(SpaceEngineers.Core.GenericEndpoint.Statistics.Internals.StatisticsPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.UnitOfWorkPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.QueryReplyValidationPipeline),
-                        typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.MessagePipeline),
+                        typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.MessageHandlerPipeline),
                     };
 
                     var actualPipeline = endpointDependencyContainer

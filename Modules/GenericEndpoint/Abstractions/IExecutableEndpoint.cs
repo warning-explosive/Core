@@ -10,10 +10,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     public interface IExecutableEndpoint : IResolvable
     {
         /// <summary>
-        /// Invokes message handler
+        /// Process message
         /// </summary>
         /// <param name="message">Integration message</param>
-        /// <returns>Ongoing invoke operation</returns>
-        Task InvokeMessageHandler(IntegrationMessage message);
+        /// <returns>Ongoing operation</returns>
+        Task ProcessMessage(IntegrationMessage message);
     }
 }

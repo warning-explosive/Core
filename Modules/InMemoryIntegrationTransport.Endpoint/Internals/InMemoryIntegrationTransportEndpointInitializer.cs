@@ -37,16 +37,16 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
             _integrationTypeProvider.EndpointCommands()
                 .Concat(_integrationTypeProvider.EndpointQueries())
                 .Concat(_integrationTypeProvider.EndpointSubscriptions())
-                .Each(message => _transport.Bind(message, _endpointIdentity, InvokeMessageHandler));
+                .Each(message => _transport.Bind(message, _endpointIdentity, ProcessMessage));
 
             return Task.CompletedTask;
         }
 
-        private Task InvokeMessageHandler(IntegrationMessage message)
+        private Task ProcessMessage(IntegrationMessage message)
         {
             return _dependencyContainer
                 .Resolve<IExecutableEndpoint>()
-                .InvokeMessageHandler(message);
+                .ProcessMessage(message);
         }
     }
 }

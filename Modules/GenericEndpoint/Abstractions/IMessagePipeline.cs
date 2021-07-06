@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
@@ -12,9 +13,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <summary>
         /// Handle incoming message
         /// </summary>
+        /// <param name="producer">Message handler function</param>
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing handle task</returns>
-        Task Process(IAdvancedIntegrationContext context, CancellationToken token);
+        Task Process(
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+            IAdvancedIntegrationContext context,
+            CancellationToken token);
     }
 }

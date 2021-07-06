@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -8,8 +9,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
     using Basics.Primitives;
     using Contract;
+    using Contract.Abstractions;
     using Messaging;
 
     [Component(EnLifestyle.Singleton)]
@@ -45,22 +48,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
-        public async Task InvokeMessageHandler(IntegrationMessage message)
+        public async Task ProcessMessage(IntegrationMessage message)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            await using (DependencyContainer.OpenScopeAsync())
-            {
-                var exclusiveContext = DependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>((IntegrationMessage)message.Clone());
+            var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(message.ReflectedType);
+            var messageHandlers = DependencyContainer.ResolveCollection(handlerServiceType);
 
-                using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
-                {
-                    await DependencyContainer
-                        .Resolve<IMessagePipeline>()
-                        .Process(exclusiveContext, Token)
-                        .ConfigureAwait(false);
-                }
-            }
+            await InvokeMessageHandlers(messageHandlers, message)
+                .WhenAll()
+                .ConfigureAwait(false);
         }
 
         public async Task StartAsync(CancellationToken token)
@@ -69,7 +66,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
             foreach (var initializer in Initializers)
             {
-                await initializer.Initialize(token).ConfigureAwait(false);
+                await initializer.Initialize(Token).ConfigureAwait(false);
             }
 
             _ready.Set();
@@ -91,6 +88,41 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
                     .WhenAny(_runningHandlers.WaitAsync(Token), Task.Delay(Timeout.InfiniteTimeSpan, Token))
                     .ConfigureAwait(false);
             }
+        }
+
+        private IEnumerable<Task> InvokeMessageHandlers(IEnumerable<object> messageHandlers, IntegrationMessage message)
+        {
+            foreach (var messageHandler in messageHandlers)
+            {
+                var copy = (IntegrationMessage)message.Clone();
+                yield return InvokeMessageHandler(message, messageHandler, Token);
+            }
+        }
+
+        private async Task InvokeMessageHandler(IntegrationMessage message, object messageHandler, CancellationToken token)
+        {
+            var producer = InvokeMessageHandler(messageHandler);
+
+            await using (DependencyContainer.OpenScopeAsync())
+            {
+                var exclusiveContext = DependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
+
+                using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
+                {
+                    await MessagePipeline
+                        .Process(producer, exclusiveContext, token)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+
+        private static Func<IAdvancedIntegrationContext, CancellationToken, Task> InvokeMessageHandler(object messageHandler)
+        {
+            return (context, token) => messageHandler
+                .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
+                .WithTypeArgument(context.Message.ReflectedType)
+                .WithArguments(context.Message.Payload, context, token)
+                .Invoke<Task>();
         }
     }
 }

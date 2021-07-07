@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
     using Contract.Abstractions;
 
     /// <summary>
@@ -10,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
     /// Implements reaction on incoming messages
     /// </summary>
     /// <typeparam name="TMessage">TMessage type-argument</typeparam>
-    public interface IMessageHandler<TMessage> : IResolvable
+    public interface IMessageHandler<in TMessage>
         where TMessage : IIntegrationMessage
     {
         /// <summary>
@@ -20,9 +19,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         /// <param name="context">Integration context</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing handle task</returns>
-        Task Handle(
-            TMessage message,
-            IIntegrationContext context,
-            CancellationToken token);
+        Task Handle(TMessage message, IIntegrationContext context, CancellationToken token);
     }
 }

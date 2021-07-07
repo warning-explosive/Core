@@ -4,13 +4,14 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using GenericEndpoint.Api;
     using GenericEndpoint.Api.Abstractions;
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class IdentifiedQueryAlwaysReplyMessageHandler : IMessageHandler<IdentifiedQuery>
+    internal class IdentifiedQueryAlwaysReplyMessageHandler : MessageHandlerBase<IdentifiedQuery>
     {
-        public Task Handle(IdentifiedQuery message, IIntegrationContext context, CancellationToken token)
+        public override Task Handle(IdentifiedQuery message, IIntegrationContext context, CancellationToken token)
         {
             return context.Reply(message, new IdentifiedReply(message.Id), token);
         }

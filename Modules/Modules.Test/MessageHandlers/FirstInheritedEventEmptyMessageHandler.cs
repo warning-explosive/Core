@@ -4,13 +4,14 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using GenericEndpoint.Api;
     using GenericEndpoint.Api.Abstractions;
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class FirstInheritedEventEmptyMessageHandler : IMessageHandler<FirstInheritedEvent>
+    internal class FirstInheritedEventEmptyMessageHandler : MessageHandlerBase<FirstInheritedEvent>
     {
-        public Task Handle(FirstInheritedEvent message, IIntegrationContext context, CancellationToken token)
+        public override Task Handle(FirstInheritedEvent message, IIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }

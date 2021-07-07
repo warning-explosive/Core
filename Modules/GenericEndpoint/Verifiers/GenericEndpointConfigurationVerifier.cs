@@ -60,29 +60,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
 
                 var service = typeof(IMessageHandler<>).MakeGenericType(message);
 
-                var messageHandlerType = _typeProvider
+                var messageHandlers = _typeProvider
                     .OurTypes
                     .Where(type => type.IsClass
                                    && !type.IsAbstract
                                    && service.IsAssignableFrom(type))
-                    .InformativeSingleOrDefault(Amb(message));
+                    .ToList();
 
-                if (messageHandlerType == null
+                if (!messageHandlers.Any()
                     && !IsMessageAbstraction(message))
                 {
-                    throw new InvalidOperationException($"Message '{message.FullName}' should have message handler");
+                    throw new InvalidOperationException($"Message '{message.FullName}' should have at least one message handler");
                 }
 
-                if (messageHandlerType != null
-                    && messageHandlerType.GetRequiredAttribute<ComponentAttribute>().Lifestyle != EnLifestyle.Transient)
+                var lifestyleViolations = messageHandlers
+                    .Where(messageHandler => messageHandler.GetRequiredAttribute<ComponentAttribute>().Lifestyle != EnLifestyle.Transient)
+                    .ToList();
+
+                if (lifestyleViolations.Any())
                 {
-                    throw new InvalidOperationException($"Message handler '{messageHandlerType.FullName}' should have transient lifestyle");
+                    throw new InvalidOperationException($"Message handlers {lifestyleViolations.ToString(", ", type => type.FullName)} should have transient lifestyle");
                 }
-            }
-
-            static Func<IEnumerable<Type>, string> Amb(Type message)
-            {
-                return _ => throw new InvalidOperationException($"Message '{message.FullName}' should have only one message handler. To produce forks publish new events explicitly in that message handler.");
             }
         }
 

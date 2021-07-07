@@ -118,8 +118,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var messageHandlerTypes = new[]
             {
                 typeof(BaseEventEmptyMessageHandler),
-                typeof(FirstInheritedEventEmptyMessageHandler),
-                typeof(SecondInheritedEventEmptyMessageHandler)
+                typeof(FirstInheritedEventEmptyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -138,19 +137,12 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
-
-                _ = endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>();
-                _ = endpointDependencyContainer.Resolve<IMessageHandler<FirstInheritedEvent>>();
-                _ = endpointDependencyContainer.Resolve<IMessageHandler<SecondInheritedEvent>>();
-
                 var integrationContext = host
                     .GetTransportDependencyContainer()
                     .Resolve<Core.GenericHost.Abstractions.IIntegrationContext>();
 
                 await integrationContext.Publish(new BaseEvent(), cts.Token).ConfigureAwait(false);
 
-                // await Task.Delay(TimeSpan.FromSeconds(4), cts.Token).ConfigureAwait(false);
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
 
@@ -444,7 +436,6 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(BaseEventEmptyMessageHandler),
                 typeof(FirstInheritedEventEmptyMessageHandler),
-                typeof(SecondInheritedEventEmptyMessageHandler),
                 typeof(IdentifiedCommandEmptyMessageHandler),
                 typeof(IdentifiedEventEmptyMessageHandler),
                 typeof(IdentifiedQueryAlwaysReplyMessageHandler)
@@ -537,7 +528,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     Assert.Equal(expectedPipeline, actualPipeline);
 
-                    var integrationTypeProvider = endpointDependencyContainer.Resolve<IntegrationTypeProvider>();
+                    var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
 
                     var expectedIntegrationMessageTypes = new[]
                     {
@@ -556,11 +547,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
                         .IntegrationMessageTypes()
-                        .ShowTypes(nameof(IntegrationTypeProvider.IntegrationMessageTypes), Output.WriteLine)
-                        .OrderBy(t => t.FullName)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(t => t.FullName).ToList(), actualIntegrationMessageTypes);
+                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(type => type.FullName).ToList(), actualIntegrationMessageTypes);
 
                     var expectedCommands = new[]
                     {
@@ -570,11 +561,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualCommands = integrationTypeProvider
                         .EndpointCommands()
-                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointCommands), Output.WriteLine)
-                        .OrderBy(t => t.FullName)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedCommands.OrderBy(t => t.FullName).ToList(), actualCommands);
+                    Assert.Equal(expectedCommands.OrderBy(type => type.FullName).ToList(), actualCommands);
 
                     var expectedEvents = new[]
                     {
@@ -586,11 +577,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualEvents = integrationTypeProvider
                         .EndpointEvents()
-                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointEvents), Output.WriteLine)
-                        .OrderBy(t => t.FullName)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointEvents), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedEvents.OrderBy(t => t.FullName).ToList(), actualEvents);
+                    Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
 
                     var expectedQueries = new[]
                     {
@@ -600,27 +591,69 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualQueries = integrationTypeProvider
                         .EndpointQueries()
-                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointQueries), Output.WriteLine)
-                        .OrderBy(t => t.FullName)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedQueries.OrderBy(t => t.FullName).ToList(), actualQueries);
+                    Assert.Equal(expectedQueries.OrderBy(type => type.FullName).ToList(), actualQueries);
 
                     var expectedSubscriptions = new[]
                     {
                         typeof(BaseEvent),
                         typeof(FirstInheritedEvent),
-                        typeof(SecondInheritedEvent),
                         typeof(IdentifiedEvent)
                     };
 
                     var actualSubscriptions = integrationTypeProvider
                         .EndpointSubscriptions()
-                        .ShowTypes(nameof(IntegrationTypeProvider.EndpointSubscriptions), Output.WriteLine)
-                        .OrderBy(t => t.FullName)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointSubscriptions), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedSubscriptions.OrderBy(t => t.FullName).ToList(), actualSubscriptions);
+                    Assert.Equal(expectedSubscriptions.OrderBy(type => type.FullName).ToList(), actualSubscriptions);
+
+                    var expectedBaseEventHandlers = new[]
+                    {
+                        typeof(BaseEventEmptyMessageHandler)
+                    };
+
+                    var actualBaseEventHandlers = endpointDependencyContainer
+                        .ResolveCollection<IMessageHandler<BaseEvent>>()
+                        .Select(handler => handler.GetType())
+                        .ShowTypes("actualBaseEventHandlers", Output.WriteLine)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedBaseEventHandlers.OrderBy(type => type.FullName).ToList(), actualBaseEventHandlers);
+
+                    var expectedFirstInheritedEventHandlers = new[]
+                    {
+                        typeof(BaseEventEmptyMessageHandler),
+                        typeof(FirstInheritedEventEmptyMessageHandler)
+                    };
+
+                    var actualFirstInheritedEventHandlers = endpointDependencyContainer
+                        .ResolveCollection<IMessageHandler<FirstInheritedEvent>>()
+                        .Select(handler => handler.GetType())
+                        .ShowTypes("actualFirstInheritedEventHandlers", Output.WriteLine)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedFirstInheritedEventHandlers.OrderBy(type => type.FullName).ToList(), actualFirstInheritedEventHandlers);
+
+                    var expectedSecondInheritedEventHandlers = new[]
+                    {
+                        typeof(BaseEventEmptyMessageHandler)
+                    };
+
+                    var actualSecondInheritedEventHandlers = endpointDependencyContainer
+                        .ResolveCollection<IMessageHandler<SecondInheritedEvent>>()
+                        .Select(handler => handler.GetType())
+                        .ShowTypes("actualSecondInheritedEventHandlers", Output.WriteLine)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedSecondInheritedEventHandlers.OrderBy(type => type.FullName).ToList(), actualSecondInheritedEventHandlers);
                 }
             }
 

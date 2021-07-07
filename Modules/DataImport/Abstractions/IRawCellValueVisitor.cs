@@ -1,11 +1,9 @@
 namespace SpaceEngineers.Core.DataImport.Abstractions
 {
-    using AutoWiring.Api.Abstractions;
-
     /// <summary>
     /// Raw cell value visitor
     /// </summary>
-    public interface IRawCellValueVisitor : ICollectionResolvable<IRawCellValueVisitor>
+    public interface IRawCellValueVisitor
     {
         /// <summary>
         /// Visit cell value

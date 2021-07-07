@@ -5,12 +5,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Reflection;
     using Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class StringLengthSqlExpressionProvider : ISqlExpressionProvider
+    internal class StringLengthSqlExpressionProvider : ISqlExpressionProvider,
+                                                       ICollectionResolvable<ISqlExpressionProvider>
     {
         public bool TryRecognize(MemberInfo member, [NotNullWhen(true)] out IIntermediateExpression? expression)
         {

@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Basics.EqualityComparers;
 

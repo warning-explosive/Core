@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Basics.Primitives;
     using Extensions;

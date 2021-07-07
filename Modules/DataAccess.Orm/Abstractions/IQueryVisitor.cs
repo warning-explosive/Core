@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Abstractions
 {
     using System.Linq.Expressions;
-    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// IQueryVisitor
     /// </summary>
-    public interface IQueryVisitor : ICollectionResolvable<IQueryVisitor>
+    public interface IQueryVisitor
     {
         /// <summary>
         /// Apply the query visitor

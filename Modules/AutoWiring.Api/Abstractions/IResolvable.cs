@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.AutoWiring.Api.Abstractions
 {
     /// <summary>
-    /// Define resolvable service
+    /// Defines resolvable service
     /// </summary>
     public interface IResolvable
     {

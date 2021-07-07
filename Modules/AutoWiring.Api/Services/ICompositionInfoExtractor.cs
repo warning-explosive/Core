@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.AutoWiring.Api.Abstractions
+namespace SpaceEngineers.Core.AutoWiring.Api.Services
 {
     using System.Collections.Generic;
+    using Abstractions;
 
     /// <summary>
     /// Extracts late-bound (bound at runtime) information about project objects composition

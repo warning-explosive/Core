@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System.Linq;
     using System.Security;
     using System.Text.RegularExpressions;
-    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Services;
     using Basics;
     using Newtonsoft.Json;
 

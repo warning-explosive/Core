@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
-    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Newtonsoft.Json;
 
@@ -18,14 +18,14 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 
         [SuppressMessage("Analysis", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
         public JsonSerializerImpl(ITypeProvider typeProvider,
-                                  IEnumerable<IJsonConverter> converters)
+                                  IEnumerable<JsonConverter> converters)
         {
             _settings = new JsonSerializerSettings
                         {
                             TypeNameHandling = TypeNameHandling.Auto,
                             Formatting = Formatting.Indented,
                             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                            Converters = converters.Select(c => c.Converter).ToList(),
+                            Converters = converters.ToList(),
                             SerializationBinder = new SecureSerializationBinder(typeProvider)
                         };
         }

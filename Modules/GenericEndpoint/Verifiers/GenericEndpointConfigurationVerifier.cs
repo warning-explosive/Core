@@ -8,12 +8,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Contract.Abstractions;
     using Contract.Attributes;
 
     [Component(EnLifestyle.Singleton)]
-    internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier
+    internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
+                                                          ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly ITypeProvider _typeProvider;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;

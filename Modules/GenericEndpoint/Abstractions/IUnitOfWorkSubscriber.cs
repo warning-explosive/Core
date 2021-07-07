@@ -2,13 +2,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// IUnitOfWorkSubscriber
     /// </summary>
     /// <typeparam name="TContext">TContext type-argument</typeparam>
-    public interface IUnitOfWorkSubscriber<TContext> : ICollectionResolvable<IUnitOfWorkSubscriber<TContext>>
+    public interface IUnitOfWorkSubscriber<in TContext>
     {
         /// <summary>
         /// Fires when logical transaction is starting

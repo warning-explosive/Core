@@ -1,8 +1,9 @@
-namespace SpaceEngineers.Core.AutoWiring.Api.Abstractions
+namespace SpaceEngineers.Core.AutoWiring.Api.Services
 {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using Abstractions;
 
     /// <summary>
     /// Type info storage abstraction

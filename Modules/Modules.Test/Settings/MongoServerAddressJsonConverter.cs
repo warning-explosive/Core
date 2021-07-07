@@ -2,18 +2,16 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
     using MongoDB.Driver;
     using Newtonsoft.Json;
 
     [Component(EnLifestyle.Singleton)]
     internal class MongoServerAddressJsonConverter : JsonConverter,
-                                                     IJsonConverter
+                                                     ICollectionResolvable<JsonConverter>
     {
-        public JsonConverter Converter => this;
-
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             writer.WriteStartObject();

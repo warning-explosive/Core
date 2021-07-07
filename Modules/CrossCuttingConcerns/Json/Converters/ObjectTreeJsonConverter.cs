@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
 {
     using System;
     using System.Linq;
-    using Api.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Newtonsoft.Json;
@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
     /// </summary>
     [Component(EnLifestyle.Singleton)]
     public sealed class ObjectTreeJsonConverter : JsonConverter,
-                                                  IJsonConverter
+                                                  IExternalResolvable<JsonConverter>
     {
         private readonly IObjectTreeValueReader _objectTreeValueReader;
 
@@ -22,9 +22,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
         {
             _objectTreeValueReader = objectTreeValueReader;
         }
-
-        /// <inheritdoc />
-        public JsonConverter Converter => this;
 
         /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)

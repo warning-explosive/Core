@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Internals
 {
     using Abstractions;
-    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Services;
     using Implementations;
 
     internal class TypeProviderManualRegistration : IManualRegistration

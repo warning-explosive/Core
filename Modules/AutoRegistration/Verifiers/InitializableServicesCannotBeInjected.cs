@@ -7,12 +7,14 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Extensions;
     using SimpleInjector;
 
     [Component(EnLifestyle.Singleton)]
-    internal class InitializableServicesCannotBeInjected : IConfigurationVerifier
+    internal class InitializableServicesCannotBeInjected : IConfigurationVerifier,
+                                                           ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly ITypeProvider _typeProvider;
         private readonly Container _container;

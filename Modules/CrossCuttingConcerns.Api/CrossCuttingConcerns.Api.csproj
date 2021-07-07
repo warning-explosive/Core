@@ -34,9 +34,6 @@
       <Compile Update="Abstractions\IObjectTransformer.cs">
         <DependentUpon>IObjectBuilder.cs</DependentUpon>
       </Compile>
-      <Compile Update="Abstractions\IJsonConverter.cs">
-        <DependentUpon>IJsonSerializer.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

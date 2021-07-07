@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api;
-    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Services;
     using Basics;
     using Core.SettingsManager.Abstractions;
     using Core.Test.Api;

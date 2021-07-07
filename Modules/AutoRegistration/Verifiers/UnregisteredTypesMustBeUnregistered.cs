@@ -6,11 +6,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Verifiers
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using SimpleInjector;
 
     [Component(EnLifestyle.Singleton)]
-    internal class UnregisteredTypesMustBeUnregistered : AttributesConfigurationVerifierBase
+    internal class UnregisteredTypesMustBeUnregistered : AttributesConfigurationVerifierBase,
+                                                         ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly ITypeProvider _typeProvider;
 

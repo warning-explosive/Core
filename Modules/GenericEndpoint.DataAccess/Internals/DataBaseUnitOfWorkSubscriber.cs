@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Core.DataAccess.Contract.Abstractions;
@@ -10,7 +11,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using Messaging;
 
     [Component(EnLifestyle.Scoped)]
-    internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>
+    internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,
+                                                  ICollectionResolvable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>>
     {
         private readonly IDatabaseTransaction _databaseTransaction;
 

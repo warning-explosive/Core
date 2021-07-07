@@ -1,7 +1,8 @@
-namespace SpaceEngineers.Core.AutoWiring.Api.Abstractions
+namespace SpaceEngineers.Core.AutoWiring.Api.Services
 {
     using System;
     using System.Collections.Generic;
+    using Abstractions;
 
     /// <summary>
     /// Services provider

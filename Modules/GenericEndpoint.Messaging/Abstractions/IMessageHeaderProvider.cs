@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// IMessageHeaderProvider abstraction
     /// </summary>
-    public interface IMessageHeaderProvider : ICollectionResolvable<IMessageHeaderProvider>
+    public interface IMessageHeaderProvider
     {
         /// <summary>
         /// Returns headers for automatic forwarding

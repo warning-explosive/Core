@@ -6,12 +6,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using Api.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using GenericDomain.Abstractions;
 
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Unregistered)]
-    internal class DatabaseModelInitializer : IEndpointInitializer
+    internal class DatabaseModelInitializer : IEndpointInitializer,
+                                              ICollectionResolvable<IEndpointInitializer>
     {
         private readonly IDomainTypeProvider _domainTypeProvider;
         private readonly IDataBaseModelBuilder _dataBaseModelBuilder;

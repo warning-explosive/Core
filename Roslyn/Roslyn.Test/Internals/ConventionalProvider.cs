@@ -6,9 +6,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using System.Linq;
     using Abstractions;
     using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
     using Basics;
     using Basics.Exceptions;
     using Basics.Roslyn;

@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.AutoWiring.Api.Abstractions
 {
     /// <summary>
-    /// IExternalResolvable service - wrapper for registration external services
+    /// Defines resolvable service for external types
     /// </summary>
-    /// <typeparam name="TExternalService">External service type-argument</typeparam>
+    /// <typeparam name="TExternalService">TExternalService type-argument</typeparam>
     public interface IExternalResolvable<TExternalService>
         where TExternalService : class
     {

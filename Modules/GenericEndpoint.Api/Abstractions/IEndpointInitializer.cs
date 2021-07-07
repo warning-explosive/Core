@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
 
     /// <summary>
     /// Endpoint initializer abstraction
     /// </summary>
-    public interface IEndpointInitializer : ICollectionResolvable<IEndpointInitializer>
+    public interface IEndpointInitializer
     {
         /// <summary>
         /// Initialize endpoint

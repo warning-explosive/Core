@@ -3,12 +3,14 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using AutoWiring.Api.Services;
 
     /// <summary>
     /// Verifies domain configuration
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    internal class DomainConfigurationVerifier : IConfigurationVerifier
+    internal class DomainConfigurationVerifier : IConfigurationVerifier,
+                                                 ICollectionResolvable<IConfigurationVerifier>
     {
         /// <inheritdoc />
         public void Verify()

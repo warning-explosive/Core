@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
     using System;
-    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Services;
     using Converters;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;

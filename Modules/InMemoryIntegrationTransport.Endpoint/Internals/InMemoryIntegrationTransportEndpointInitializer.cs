@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
@@ -13,7 +14,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
     using GenericEndpoint.Messaging;
 
     [Component(EnLifestyle.Singleton)]
-    internal class InMemoryIntegrationTransportEndpointInitializer : IEndpointInitializer
+    internal class InMemoryIntegrationTransportEndpointInitializer : IEndpointInitializer,
+                                                                     ICollectionResolvable<IEndpointInitializer>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;

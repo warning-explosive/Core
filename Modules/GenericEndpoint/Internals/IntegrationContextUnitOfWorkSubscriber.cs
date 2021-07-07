@@ -3,11 +3,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>
+    internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,
+                                                            ICollectionResolvable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>>
     {
         public Task OnStart(IAdvancedIntegrationContext context, CancellationToken token)
         {

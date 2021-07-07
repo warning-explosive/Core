@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
     /// </summary>
     [Component(EnLifestyle.Singleton)]
     public sealed class ObjectTreeJsonConverter : JsonConverter,
-                                                  IExternalResolvable<JsonConverter>
+                                                  ICollectionResolvable<JsonConverter>
     {
         private readonly IObjectTreeValueReader _objectTreeValueReader;
 

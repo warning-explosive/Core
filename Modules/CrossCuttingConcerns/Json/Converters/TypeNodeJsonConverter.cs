@@ -1,12 +1,14 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
 {
     using System;
+    using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Newtonsoft.Json;
 
     [Component(EnLifestyle.Singleton)]
-    internal class TypeNodeJsonConverter : JsonConverter
+    internal class TypeNodeJsonConverter : JsonConverter,
+                                           ICollectionResolvable<JsonConverter>
     {
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {

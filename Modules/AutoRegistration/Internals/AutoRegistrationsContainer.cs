@@ -32,9 +32,13 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
-            return _servicesProvider.Resolvable()
-                .Concat(_servicesProvider.External())
-                .GetComponents(_container, _typeProvider);
+            return _servicesProvider
+                .Resolvable()
+                .GetComponents(_container, _typeProvider)
+                .Concat(_servicesProvider
+                    .External()
+                    .GetComponents(_container, _typeProvider)
+                    .Where(info => info.ImplementationType.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>))));
         }
 
         public IEnumerable<DelegateRegistrationInfo> Delegates()
@@ -46,7 +50,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Internals
         {
             return _servicesProvider
                 .Collections()
-                .GetComponents(_container, _typeProvider);
+                .GetComponents(_container, _typeProvider)
+                .Where(info => info.ImplementationType.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)));
         }
 
         public IEnumerable<DecoratorRegistrationInfo> Decorators()

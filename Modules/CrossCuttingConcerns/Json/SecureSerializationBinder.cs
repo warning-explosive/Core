@@ -1,22 +1,29 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
     using System;
+    using AutoWiring.Api.Abstractions;
+    using AutoWiring.Api.Attributes;
+    using AutoWiring.Api.Enumerations;
     using AutoWiring.Api.Services;
     using Converters;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
-    internal class SecureSerializationBinder : ISerializationBinder
+    [Component(EnLifestyle.Singleton)]
+    internal class SecureSerializationBinder : ISerializationBinder,
+                                               IExternalResolvable<ISerializationBinder>
     {
         private readonly JsonSerializerSettings _settings;
         private readonly ITypeProvider _typeProvider;
 
-        public SecureSerializationBinder(ITypeProvider typeProvider)
+        public SecureSerializationBinder(
+            ITypeProvider typeProvider,
+            TypeNodeJsonConverter typeNodeJsonConverter)
         {
             _settings = new JsonSerializerSettings
                         {
                             Formatting = Formatting.Indented,
-                            Converters = { new TypeNodeJsonConverter() }
+                            Converters = { typeNodeJsonConverter }
                         };
 
             _typeProvider = typeProvider;

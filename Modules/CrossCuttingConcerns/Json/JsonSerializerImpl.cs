@@ -7,9 +7,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
     using Basics;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Serialization;
 
     [Component(EnLifestyle.Singleton)]
     internal class JsonSerializerImpl : IJsonSerializer
@@ -17,8 +17,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
         private readonly JsonSerializerSettings _settings;
 
         [SuppressMessage("Analysis", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
-        public JsonSerializerImpl(ITypeProvider typeProvider,
-                                  IEnumerable<JsonConverter> converters)
+        public JsonSerializerImpl(
+            ISerializationBinder serializationBinder,
+            IEnumerable<JsonConverter> converters)
         {
             _settings = new JsonSerializerSettings
                         {
@@ -26,7 +27,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
                             Formatting = Formatting.Indented,
                             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                             Converters = converters.ToList(),
-                            SerializationBinder = new SecureSerializationBinder(typeProvider)
+                            SerializationBinder = serializationBinder
                         };
         }
 

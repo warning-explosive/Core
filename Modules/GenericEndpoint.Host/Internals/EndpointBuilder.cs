@@ -1,17 +1,15 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host
+namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Abstractions;
     using AutoRegistration;
     using Basics;
     using Contract;
 
-    /// <summary>
-    /// EndpointBuilder
-    /// </summary>
-    public class EndpointBuilder
+    internal class EndpointBuilder : IEndpointBuilder
     {
         private readonly Assembly[] _rootAssemblies;
 
@@ -26,19 +24,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
         }
 
-        /// <summary>
-        /// Endpoint plugin assemblies
-        /// </summary>
-        public IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; private set; }
+        private IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; set; }
 
         private IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; set; }
 
-        /// <summary>
-        /// With endpoint plugin assemblies
-        /// </summary>
-        /// <param name="assemblies">Endpoint plugin assemblies</param>
-        /// <returns>EndpointBuilder</returns>
-        public EndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
+        public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {
             return new EndpointBuilder
             {
@@ -47,11 +37,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             };
         }
 
-        /// <summary>
-        /// With default cross cutting concerns
-        /// </summary>
-        /// <returns>EndpointBuilder</returns>
-        public EndpointBuilder WithDefaultCrossCuttingConcerns()
+        public IEndpointBuilder WithDefaultCrossCuttingConcerns()
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
@@ -62,11 +48,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             };
         }
 
-        /// <summary>
-        /// With statistics
-        /// </summary>
-        /// <returns>EndpointBuilder</returns>
-        public EndpointBuilder WithStatistics()
+        public IEndpointBuilder WithStatistics()
         {
             var genericEndpointStatisticsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Statistics)));
 
@@ -77,12 +59,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             };
         }
 
-        /// <summary>
-        /// Modify container options
-        /// </summary>
-        /// <param name="modifier">Modifier</param>
-        /// <returns>EndpointBuilder</returns>
-        public EndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
+        public IEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
         {
             return new EndpointBuilder
             {
@@ -91,11 +68,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             };
         }
 
-        /// <summary>
-        /// Build endpoint options
-        /// </summary>
-        /// <param name="endpointIdentity">EndpointIdentity</param>
-        /// <returns>EndpointOptions</returns>
         public EndpointOptions BuildOptions(EndpointIdentity endpointIdentity)
         {
             var containerOptions = new DependencyContainerOptions();

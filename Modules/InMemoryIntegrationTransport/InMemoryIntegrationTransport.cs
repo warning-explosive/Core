@@ -27,7 +27,6 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         private readonly DeferredQueue<IntegrationMessage> _delayedDeliveryQueue;
         private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
 
-        // TODO: use readonly collections
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>> _topology;
 
         /// <summary> .cctor </summary>

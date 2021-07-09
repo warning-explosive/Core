@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
 {
     using Api.Abstractions;
     using Contract.Abstractions;
-    using Host;
+    using Host.Abstractions;
     using Internals;
 
     /// <summary>

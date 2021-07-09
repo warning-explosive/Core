@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions;
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
@@ -73,7 +74,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="factory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseEndpoint(this IHostBuilder hostBuilder, Func<EndpointBuilder, EndpointOptions> factory)
+        public static IHostBuilder UseEndpoint(this IHostBuilder hostBuilder, Func<IEndpointBuilder, EndpointOptions> factory)
         {
             var endpointOptions = factory(new EndpointBuilder());
 

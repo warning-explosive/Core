@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
     public static class HostExtensions
     {
         /// <summary>
-        /// Use specified endpoints
+        /// Use in-memory integration transport inside specified host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>Configured IHostBuilder</returns>
@@ -37,8 +37,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.InMemoryIntegrationTransport))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.InMemoryIntegrationTransport), nameof(Core.InMemoryIntegrationTransport.Host))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(GenericEndpoint.Messaging))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Messaging))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)))
             };
 
             var containerOptions = new DependencyContainerOptions().WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration());

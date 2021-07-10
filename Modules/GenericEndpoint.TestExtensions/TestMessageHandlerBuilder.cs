@@ -17,18 +17,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
     public class TestMessageHandlerBuilder<TMessage>
         where TMessage : IIntegrationMessage
     {
-        private const string RequiredFormat = "Message handler hasn't {0} any {1} or type {2} that corresponds to predicate '{3}'";
-        private const string ShouldNotProduceFormat = "Message handler should not {0} any {1} of type {2}";
-
         private readonly TMessage _message;
         private readonly IMessageHandler<TMessage> _messageHandler;
-        private readonly ICollection<TestCase> _testCases;
+        private readonly ICollection<ITestCase> _testCases;
 
         internal TestMessageHandlerBuilder(TMessage message, IMessageHandler<TMessage> messageHandler)
         {
             _message = message;
             _messageHandler = messageHandler;
-            _testCases = new List<TestCase>();
+            _testCases = new List<ITestCase>();
         }
 
         /// <summary>
@@ -38,11 +35,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         {
             var context = new TestIntegrationContext();
 
-            _messageHandler.Handle(_message, context, CancellationToken.None).Wait();
+            var exception = ExecutionExtensions
+                .Try(() =>
+                {
+                    _messageHandler.Handle(_message, context, CancellationToken.None).Wait();
+                    return (Exception?)null;
+                })
+                .Catch<Exception>()
+                .Invoke(ex => ex);
 
             var errors = _testCases
-                .Where(testCase => !testCase.Assertion.Invoke(context.Messages))
-                .Select(testCase => new InvalidOperationException(testCase.ErrorMessage))
+                .Select(testCase => testCase.Assert(context, exception))
+                .Where(errorMessage => errorMessage != null)
+                .Select(errorMessage => new InvalidOperationException(errorMessage))
                 .ToList();
 
             switch (errors.Count)
@@ -50,204 +55,172 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
                 case > 1: throw new AggregateException(errors);
                 case 1:
                 {
-                    var exception = errors.Single();
-                    exception.Rethrow();
-                    throw exception;
+                    var error = errors.Single();
+                    error.Rethrow();
+                    throw error;
                 }
             }
         }
 
         /// <summary>
-        /// Validates the message handler has sent command that corresponds to specified predicate
+        /// Validates that message handler sends command that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
         /// <typeparam name="TCommand">TCommand type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> Sent<TCommand>(Expression<Func<TCommand, bool>> predicate)
+        public TestMessageHandlerBuilder<TMessage> Sends<TCommand>(Expression<Func<TCommand, bool>> predicate)
             where TCommand : IIntegrationCommand
         {
-            RegisterRequiredTestCase(predicate);
+            _testCases.Add(new MessageHandlerProducesMessageTestCase<TCommand>(predicate));
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler should not send any commands with specified type
+        /// Validates that message handler doesn't send any commands with specified type
         /// </summary>
         /// <typeparam name="TCommand">TCommand type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> ShouldNotSend<TCommand>()
+        public TestMessageHandlerBuilder<TMessage> DoesNotSend<TCommand>()
             where TCommand : IIntegrationCommand
         {
-            RegisterNegativeTestCase<TCommand>();
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TCommand>());
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler has published event that corresponds to specified predicate
+        /// Validates that message handler publishes event that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
         /// <typeparam name="TEvent">TEvent type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> Published<TEvent>(Expression<Func<TEvent, bool>> predicate)
+        public TestMessageHandlerBuilder<TMessage> Publishes<TEvent>(Expression<Func<TEvent, bool>> predicate)
             where TEvent : IIntegrationEvent
         {
-            RegisterRequiredTestCase(predicate);
+            _testCases.Add(new MessageHandlerProducesMessageTestCase<TEvent>(predicate));
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler should not publish any events with specified type
+        /// Validates that message handler doesn't publish any events with specified type
         /// </summary>
         /// <typeparam name="TEvent">TEvent type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> ShouldNotPublish<TEvent>()
+        public TestMessageHandlerBuilder<TMessage> DoesNotPublish<TEvent>()
             where TEvent : IIntegrationEvent
         {
-            RegisterNegativeTestCase<TEvent>();
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TEvent>());
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler has requested query that corresponds to specified predicate
+        /// Validates that message handler requests query that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
         /// <typeparam name="TQuery">TQuery type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> Requested<TQuery, TReply>(Expression<Func<TQuery, bool>> predicate)
+        public TestMessageHandlerBuilder<TMessage> Requests<TQuery, TReply>(Expression<Func<TQuery, bool>> predicate)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            RegisterRequiredTestCase(predicate);
+            _testCases.Add(new MessageHandlerProducesMessageTestCase<TQuery>(predicate));
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler should not request any queries with specified type
+        /// Validates that message handler doesn't request any queries with specified type
         /// </summary>
         /// <typeparam name="TQuery">TQuery type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> ShouldNotRequest<TQuery, TReply>()
+        public TestMessageHandlerBuilder<TMessage> DoesNotRequest<TQuery, TReply>()
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            RegisterNegativeTestCase<TQuery>();
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TQuery>());
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler has replied with message that corresponds to specified predicate
+        /// Validates that message handler replies with message that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> Replied<TReply>(Expression<Func<TReply, bool>> predicate)
+        public TestMessageHandlerBuilder<TMessage> Replies<TReply>(Expression<Func<TReply, bool>> predicate)
             where TReply : IIntegrationMessage
         {
-            RegisterRequiredTestCase(predicate);
+            _testCases.Add(new MessageHandlerProducesMessageTestCase<TReply>(predicate));
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler should not reply on incoming query with specified reply message type
+        /// Validates that message handler doesn't reply on incoming query with specified reply message type
         /// </summary>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> ShouldNotReply<TReply>()
+        public TestMessageHandlerBuilder<TMessage> DoesNotReply<TReply>()
             where TReply : IIntegrationMessage
         {
-            RegisterNegativeTestCase<TReply>();
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TReply>());
             return this;
         }
 
         /// <summary>
-        /// Validates the message handler should not produce any outgoing messages
+        /// Validates that message handler doesn't produce any outgoing messages
         /// </summary>
         /// <returns>TestMessageHandlerBuilder</returns>
-        public TestMessageHandlerBuilder<TMessage> ShouldProduceNothing()
+        public TestMessageHandlerBuilder<TMessage> ProducesNothing()
         {
-            RegisterNegativeTestCase<IIntegrationMessage>();
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TMessage>());
             return this;
         }
 
-        private void RegisterRequiredTestCase<T>(Expression<Func<T, bool>> predicate)
-            where T : IIntegrationMessage
+        /// <summary>
+        /// Validates that message handler throws an exception
+        /// </summary>
+        /// <typeparam name="TException">TException type-argument</typeparam>
+        /// <returns>TestMessageHandlerBuilder</returns>
+        public TestMessageHandlerBuilder<TMessage> Throws<TException>()
+            where TException : Exception
         {
-            var predicateFunc = predicate.Compile();
-            var errorMessage = RequiredMessage(predicate);
-            _testCases.Add(new TestCase(messages => messages.OfType<T>().Any(predicateFunc), errorMessage));
+            _testCases.Add(new MessageHandlerThrowsExceptionTestCase<TException>(_ => true));
+            return this;
         }
 
-        private void RegisterNegativeTestCase<T>()
-            where T : IIntegrationMessage
+        /// <summary>
+        /// Validates that message handler throws an exception
+        /// </summary>
+        /// <param name="assertion">Assertion</param>
+        /// <typeparam name="TException">TException type-argument</typeparam>
+        /// <returns>TestMessageHandlerBuilder</returns>
+        public TestMessageHandlerBuilder<TMessage> Throws<TException>(Func<TException, bool> assertion)
+            where TException : Exception
         {
-            var errorMessage = ShouldNotProduceMessage<T>();
-            _testCases.Add(new TestCase(messages => !messages.OfType<T>().Any(), errorMessage));
+            _testCases.Add(new MessageHandlerThrowsExceptionTestCase<TException>(assertion));
+            return this;
         }
 
-        private string RequiredMessage<T>(Expression<Func<T, bool>> predicate)
-            where T : IIntegrationMessage
+        /// <summary>
+        /// Validates that message handler doesn't throw an exception
+        /// </summary>
+        /// <typeparam name="TException">TException type-argument</typeparam>
+        /// <returns>TestMessageHandlerBuilder</returns>
+        public TestMessageHandlerBuilder<TMessage> DoesNotThrow<TException>()
+            where TException : Exception
         {
-            var info = GetMessageInfo<T>();
-            return string.Format(RequiredFormat, info.OperationV3, info.MessageKind, typeof(T).FullName, predicate);
+            _testCases.Add(new MessageHandlerDoesNotThrowExceptionTestCase<TException>());
+            return this;
         }
 
-        private string ShouldNotProduceMessage<T>()
-            where T : IIntegrationMessage
+        /// <summary>
+        /// Validates that message handler doesn't throw any exception
+        /// </summary>
+        /// <returns>TestMessageHandlerBuilder</returns>
+        public TestMessageHandlerBuilder<TMessage> DoesNotThrow()
         {
-            var info = GetMessageInfo<T>();
-            return string.Format(ShouldNotProduceFormat, info.Operation, info.MessageKind, typeof(T).FullName);
-        }
-
-        private static MessageInfo GetMessageInfo<T>()
-            where T : IIntegrationMessage
-        {
-            if (typeof(IIntegrationCommand).IsAssignableFrom(typeof(T)))
-            {
-                return new MessageInfo("send", "sent", "commands");
-            }
-
-            if (typeof(T).IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)))
-            {
-                return new MessageInfo("request", "requested", "queries");
-            }
-
-            if (typeof(IIntegrationEvent).IsAssignableFrom(typeof(T)))
-            {
-                return new MessageInfo("publish", "published", "events");
-            }
-
-            return new MessageInfo("produce", "produced", "messages");
-        }
-
-        private class TestCase
-        {
-            internal TestCase(Func<IReadOnlyCollection<IIntegrationMessage>, bool> assertion, string errorMessage)
-            {
-                Assertion = assertion;
-                ErrorMessage = errorMessage;
-            }
-
-            internal Func<IReadOnlyCollection<IIntegrationMessage>, bool> Assertion { get; }
-
-            internal string ErrorMessage { get; }
-        }
-
-        private class MessageInfo
-        {
-            public MessageInfo(string operation, string operationV3, string messageKind)
-            {
-                Operation = operation;
-                OperationV3 = operationV3;
-                MessageKind = messageKind;
-            }
-
-            internal string Operation { get; }
-
-            internal string OperationV3 { get; }
-
-            internal string MessageKind { get; }
+            _testCases.Add(new MessageHandlerDoesNotThrowExceptionTestCase<Exception>());
+            return this;
         }
     }
 }

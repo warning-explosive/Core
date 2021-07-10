@@ -350,55 +350,69 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var endpointIdentity = new EndpointIdentity(nameof(MessageHandlerTestExtensionsTest), 0);
 
+            var messageTypes = new[]
+            {
+                typeof(IdentifiedCommand),
+                typeof(IdentifiedEvent),
+                typeof(IdentifiedQuery),
+                typeof(IdentifiedReply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(IdentifiedCommandEmptyMessageHandler),
+                typeof(IdentifiedCommandThrowingMessageHandler),
+                typeof(IdentifiedEventEmptyMessageHandler),
+                typeof(IdentifiedQueryOddReplyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(builder => withTransport(builder)
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .WithMessageHandler<IdentifiedCommandEmptyMessageHandler, IdentifiedCommand>()
-                    .WithMessageHandler<IdentifiedEventEmptyMessageHandler, IdentifiedEvent>()
-                    .WithMessageHandler<IdentifiedQueryOddReplyMessageHandler, IdentifiedQuery>()
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
             var dependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
 
             dependencyContainer
-                .Resolve<IMessageHandler<IdentifiedCommand>>()
+                .Resolve<IdentifiedCommandEmptyMessageHandler>()
                 .OnMessage(new IdentifiedCommand(42))
-                .ShouldProduceNothing()
-                .ShouldNotSend<IIntegrationCommand>()
-                .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
-                .ShouldNotReply<IIntegrationMessage>()
+                .ProducesNothing()
+                .DoesNotThrow()
                 .Invoke();
 
             dependencyContainer
-                .Resolve<IMessageHandler<IdentifiedEvent>>()
+                .Resolve<IdentifiedCommandThrowingMessageHandler>()
+                .OnMessage(new IdentifiedCommand(42))
+                .ProducesNothing()
+                .Throws<InvalidOperationException>(ex => ex.Message == "42")
+                .Invoke();
+
+            dependencyContainer
+                .Resolve<IdentifiedEventEmptyMessageHandler>()
                 .OnMessage(new IdentifiedEvent(42))
-                .ShouldProduceNothing()
-                .ShouldNotSend<IIntegrationCommand>()
-                .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
-                .ShouldNotReply<IIntegrationMessage>()
+                .ProducesNothing()
+                .DoesNotThrow()
                 .Invoke();
 
             dependencyContainer
-                .Resolve<IMessageHandler<IdentifiedQuery>>()
+                .Resolve<IdentifiedQueryOddReplyMessageHandler>()
                 .OnMessage(new IdentifiedQuery(42))
-                .ShouldProduceNothing()
-                .ShouldNotSend<IIntegrationCommand>()
-                .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
-                .ShouldNotReply<IIntegrationMessage>()
+                .ProducesNothing()
+                .DoesNotThrow()
                 .Invoke();
 
             dependencyContainer
-                .Resolve<IMessageHandler<IdentifiedQuery>>()
+                .Resolve<IdentifiedQueryOddReplyMessageHandler>()
                 .OnMessage(new IdentifiedQuery(43))
-                .ShouldNotSend<IIntegrationCommand>()
-                .ShouldNotPublish<IIntegrationEvent>()
-                .ShouldNotRequest<IdentifiedQuery, IdentifiedReply>()
-                .Replied<IdentifiedReply>(reply => reply.Id == 43)
+                .DoesNotSend<IIntegrationCommand>()
+                .DoesNotPublish<IIntegrationEvent>()
+                .DoesNotRequest<IdentifiedQuery, IdentifiedReply>()
+                .Replies<IdentifiedReply>(reply => reply.Id == 43)
+                .DoesNotThrow()
                 .Invoke();
         }
 

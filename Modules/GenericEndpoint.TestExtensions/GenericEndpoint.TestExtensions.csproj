@@ -31,4 +31,18 @@
       <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
       <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Internals\MessageHandlerThrowsExceptionTestCase.cs">
+        <DependentUpon>ITestCase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\MessageHandlerProducesMessageTestCase.cs">
+        <DependentUpon>ITestCase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\MessageHandlerDoesNotThrowExceptionTestCase.cs">
+        <DependentUpon>ITestCase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\MessageHandlerDoesNotProduceMessageTestCase.cs">
+        <DependentUpon>ITestCase.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

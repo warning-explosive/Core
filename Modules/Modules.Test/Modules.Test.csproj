@@ -57,8 +57,6 @@
     <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     <ProjectReference Include="..\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
     <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
-    <ProjectReference Include="..\InMemoryIntegrationTransport.Endpoint.Host\InMemoryIntegrationTransport.Endpoint.Host.csproj" />
-    <ProjectReference Include="..\InMemoryIntegrationTransport.Endpoint\InMemoryIntegrationTransport.Endpoint.csproj" />
     <ProjectReference Include="..\InMemoryIntegrationTransport.Host\InMemoryIntegrationTransport.Host.csproj" />
     <ProjectReference Include="..\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />

@@ -27,4 +27,12 @@
         <TieredCompilation>true</TieredCompilation>
         <Library />
     </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Messages\EndpointStatisticsReply.cs">
+        <DependentUpon>GetEndpointStatistics.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

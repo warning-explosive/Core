@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
     using AutoWiring.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
+    using StatisticsEndpoint.Contract.Messages;
 
     [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(GenericEndpoint.Pipeline.UnitOfWorkPipeline))]
@@ -27,13 +28,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
             CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => Decoratee.Process(producer, context, token))
+                .TryAsync(async () =>
+                {
+                    await Decoratee.Process(producer, context, token).ConfigureAwait(false);
+                    await OnSuccess(context, token).ConfigureAwait(false);
+                })
                 .Invoke(ex => OnError(context, ex, token));
         }
 
-        private Task OnError(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        private static Task OnSuccess(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            throw new NotImplementedException();
+            var command = new CaptureMessageStatistics(context.Message);
+            return context.Send(command, token);
+        }
+
+        private static Task OnError(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        {
+            var command = new CaptureMessageStatistics(context.Message) { Exception = exception };
+            return context.Send(command, token);
         }
     }
 }

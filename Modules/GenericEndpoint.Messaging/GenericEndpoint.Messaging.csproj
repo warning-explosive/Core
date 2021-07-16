@@ -32,9 +32,4 @@
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Compile Update="FailedMessage.cs">
-        <DependentUpon>IntegrationMessage.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
 </Project>

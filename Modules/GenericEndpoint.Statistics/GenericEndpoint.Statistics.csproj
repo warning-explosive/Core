@@ -29,5 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
+      <ProjectReference Include="..\StatisticsEndpoint.Contract\StatisticsEndpoint.Contract.csproj" />
     </ItemGroup>
 </Project>

@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

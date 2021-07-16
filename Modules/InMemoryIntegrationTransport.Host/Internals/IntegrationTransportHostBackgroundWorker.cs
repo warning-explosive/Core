@@ -3,12 +3,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using GenericHost.Api.Abstractions;
+    using IntegrationTransport.Api.Abstractions;
 
-    internal class InMemoryIntegrationTransportHostBackgroundWorker : IHostBackgroundWorker
+    internal class IntegrationTransportHostBackgroundWorker : IHostBackgroundWorker
     {
-        private readonly InMemoryIntegrationTransport _transport;
+        private readonly IIntegrationTransport _transport;
 
-        public InMemoryIntegrationTransportHostBackgroundWorker(InMemoryIntegrationTransport transport)
+        public IntegrationTransportHostBackgroundWorker(IIntegrationTransport transport)
         {
             _transport = transport;
         }

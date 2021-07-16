@@ -1,91 +1,99 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.Contract;
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Messaging;
-    using GenericEndpoint.Messaging.Abstractions;
+    using Contract;
+    using Contract.Abstractions;
+    using IntegrationTransport.Api.Abstractions;
+    using Messaging;
+    using Messaging.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InMemoryIntegrationContext : IAdvancedIntegrationContext
+    internal class AdvancedIntegrationContext : IAdvancedIntegrationContext
     {
-        private readonly InMemoryIntegrationTransport _transport;
+        private readonly IIntegrationTransport _transport;
+        private readonly ICollection<IntegrationMessage> _outgoingMessages;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationMessageFactory _factory;
 
-        private readonly ICollection<IntegrationMessage> _outgoingMessages;
-
         private IntegrationMessage? _message;
 
-        public InMemoryIntegrationContext(
-            InMemoryIntegrationTransport transport,
+        public AdvancedIntegrationContext(
+            IIntegrationTransport transport,
             EndpointIdentity endpointIdentity,
             IIntegrationMessageFactory factory,
             IIntegrationUnitOfWork unitOfWork)
         {
             _transport = transport;
+            _outgoingMessages = new List<IntegrationMessage>();
             _endpointIdentity = endpointIdentity;
             _factory = factory;
 
             UnitOfWork = unitOfWork;
-
-            _outgoingMessages = new List<IntegrationMessage>();
         }
 
-        public IntegrationMessage Message => _message.EnsureNotNull($"{nameof(IIntegrationContext)} should be initialized with integration message");
+        public IntegrationMessage Message => _message.EnsureNotNull($"{nameof(IAdvancedIntegrationContext)} should be initialized with integration message");
 
         public IIntegrationUnitOfWork UnitOfWork { get; }
 
-        public void Initialize(IntegrationMessage message)
+        public void Initialize(IntegrationMessage inputData)
         {
-            _message = message;
+            _message = inputData;
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return Gather(command);
+            return Gather(CreateGeneralMessage(command), token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            return Gather(integrationEvent);
+            return Gather(CreateGeneralMessage(integrationEvent), token);
         }
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            return Gather(query);
+            return Gather(CreateGeneralMessage(query), token);
         }
 
         public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            return Gather(reply);
+            Message.MarkAsReplied();
+
+            return Gather(CreateGeneralMessage(reply), token);
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
-            // TODO: deliver within transaction
-            return Deliver(Message, token);
+            var copy = (IntegrationMessage)Message.Clone();
+
+            copy.IncrementRetryCounter();
+            copy.DeferDelivery(dueTime);
+
+            return Deliver(copy, token);
         }
 
         public Task Refuse(Exception exception, CancellationToken token)
         {
-            // TODO: Refuse within transaction
-            return _transport.OnError(new FailedMessage(Message, exception), token);
+            return _transport.EnqueueError(Message, exception, token);
+        }
+
+        public Task Deliver(IntegrationMessage message, CancellationToken token)
+        {
+            return _transport.Enqueue(message, token);
         }
 
         public async Task DeliverAll(CancellationToken token)
@@ -101,22 +109,26 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
             await forDelivery.Select(message => Deliver(message, token)).WhenAll().ConfigureAwait(false);
         }
 
-        private Task Deliver(IntegrationMessage message, CancellationToken token)
-        {
-            return _transport.Enqueue(message, token);
-        }
-
-        private Task Gather<TMessage>(TMessage message)
+        private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
             where TMessage : IIntegrationMessage
         {
-            var integrationMessage = _factory.CreateGeneralMessage(message, _endpointIdentity, Message);
+            return _factory.CreateGeneralMessage(message, _endpointIdentity, Message);
+        }
 
-            lock (_outgoingMessages)
+        private Task Gather(IntegrationMessage message, CancellationToken token)
+        {
+            // TODO: if (UnitOfWork.WasFinished)
+            if (true)
             {
-                _outgoingMessages.Add(integrationMessage);
+                return Deliver(message, token);
             }
 
-            return Task.CompletedTask;
+            /*lock (_outgoingMessages)
+            {
+                _outgoingMessages.Add(message);
+            }
+
+            return Task.CompletedTask;*/
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Abstractions
+namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;

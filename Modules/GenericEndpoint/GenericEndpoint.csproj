@@ -55,5 +55,6 @@
     <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
+    <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
   </ItemGroup>
 </Project>

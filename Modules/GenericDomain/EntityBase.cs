@@ -20,6 +20,8 @@ namespace SpaceEngineers.Core.GenericDomain
         {
             Id = Guid.NewGuid();
             Version = 0;
+
+            // TODO: start track entity in transaction
         }
 
         /// <summary>

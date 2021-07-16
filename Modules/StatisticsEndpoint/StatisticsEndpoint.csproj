@@ -27,4 +27,20 @@
         <TieredCompilation>true</TieredCompilation>
         <Library />
     </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
+      <ProjectReference Include="..\StatisticsEndpoint.Contract\StatisticsEndpoint.Contract.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Model\MessageHeader.cs">
+        <DependentUpon>MessageInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\FailedMessage.cs">
+        <DependentUpon>EndpointStatistics.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\MessageInfo.cs">
+        <DependentUpon>EndpointStatistics.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

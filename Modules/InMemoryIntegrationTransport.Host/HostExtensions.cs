@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
 
             var transport = dependencyContainer.Resolve<InMemoryIntegrationTransport>();
 
-            serviceCollection.AddSingleton<IHostBackgroundWorker>(new InMemoryIntegrationTransportHostBackgroundWorker(transport));
+            serviceCollection.AddSingleton<IHostBackgroundWorker>(new IntegrationTransportHostBackgroundWorker(transport));
 
             return dependencyContainer;
         }

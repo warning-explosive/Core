@@ -16,11 +16,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using GenericEndpoint.Messaging;
     using IntegrationTransport.Api.Abstractions;
 
-    /// <summary>
-    /// InMemoryIntegrationTransport
-    /// </summary>
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
-    public class InMemoryIntegrationTransport : IIntegrationTransport
+    internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
         private readonly AsyncManualResetEvent _ready;
         private readonly MessageQueue<IntegrationMessage> _inputQueue;
@@ -29,8 +26,6 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>> _topology;
 
-        /// <summary> .cctor </summary>
-        /// <param name="selectionBehavior">IEndpointInstanceSelectionBehavior</param>
         public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior selectionBehavior)
         {
             _ready = new AsyncManualResetEvent(false);
@@ -45,28 +40,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>();
         }
 
-        /// <summary>
-        /// Configures transport topology
-        /// </summary>
-        /// <param name="message">Message type</param>
-        /// <param name="endpointIdentity">EndpointIdentity</param>
-        /// <param name="messageHandler">Message handler</param>
-        public void Bind(
-            Type message,
-            EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, Task> messageHandler)
+        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> messageHandler)
         {
-            var logicalGroup = _topology.GetOrAdd(message, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>(StringComparer.OrdinalIgnoreCase));
-            var physicalGroup = logicalGroup.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>());
+            var logicalGroups = _topology.GetOrAdd(message, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>(StringComparer.OrdinalIgnoreCase));
+            var physicalGroup = logicalGroups.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>());
             physicalGroup.Add(endpointIdentity, messageHandler);
         }
 
-        /// <summary>
-        /// Enqueue message into input queue
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing enqueue operation</returns>
         public async Task Enqueue(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
@@ -82,23 +62,12 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             }
         }
 
-        /// <summary>
-        /// Refuse integration message
-        /// </summary>
-        /// <param name="failedMessage">Failed integration message</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing refuse operation</returns>
-        public Task OnError(FailedMessage failedMessage, CancellationToken token)
+        public Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token)
         {
             /* TODO: collect statistics */
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Starts message processing
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing message processing operation</returns>
         public Task StartMessageProcessing(CancellationToken token)
         {
             var messageProcessingTask = Task.WhenAll(
@@ -114,14 +83,14 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         {
             return ExecutionExtensions
                 .TryAsync(() => DispatchToEndpoint(message))
-                .Invoke(ex => OnError(new FailedMessage(message, ex), token));
+                .Invoke(ex => EnqueueError(message, ex, token));
         }
 
         private Task DispatchToEndpoint(IntegrationMessage message)
         {
-            if (_topology.TryGetValue(message.ReflectedType, out var logicalGroup))
+            if (_topology.TryGetValue(message.ReflectedType, out var logicalGroups))
             {
-                var messageHandlers = logicalGroup
+                var messageHandlers = logicalGroups
                     .Select(grp =>
                     {
                         var endpointIdentity = _selectionBehavior.SelectInstance(message, grp.Value.Keys.ToList());

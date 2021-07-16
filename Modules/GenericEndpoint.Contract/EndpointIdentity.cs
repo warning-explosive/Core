@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
     using Basics;
 
     /// <summary>
-    /// Endpoint identity
+    /// EndpointIdentity
     /// </summary>
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
     public class EndpointIdentity : ISafelyEquatable<EndpointIdentity>,

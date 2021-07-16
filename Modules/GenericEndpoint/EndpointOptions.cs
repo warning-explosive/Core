@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
         }
 
         /// <summary>
-        /// Endpoint identity
+        /// EndpointIdentity
         /// </summary>
         public EndpointIdentity Identity { get; }
 

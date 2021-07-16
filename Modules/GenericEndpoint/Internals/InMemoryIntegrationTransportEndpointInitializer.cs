@@ -1,17 +1,18 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Internals
 {
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
+    using Api.Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.Contract;
-    using GenericEndpoint.Messaging;
+    using Contract;
+    using IntegrationTransport.Api.Abstractions;
+    using Messaging;
 
     [Component(EnLifestyle.Singleton)]
     internal class InMemoryIntegrationTransportEndpointInitializer : IEndpointInitializer,
@@ -19,18 +20,18 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint.Internals
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
-        private readonly InMemoryIntegrationTransport _transport;
+        private readonly IIntegrationTransport _transport;
         private readonly IDependencyContainer _dependencyContainer;
 
         public InMemoryIntegrationTransportEndpointInitializer(
+            IIntegrationTransport transport,
             EndpointIdentity endpointIdentity,
             IIntegrationTypeProvider integrationTypeProvider,
-            InMemoryIntegrationTransport transport,
             IDependencyContainer dependencyContainer)
         {
+            _transport = transport;
             _endpointIdentity = endpointIdentity;
             _integrationTypeProvider = integrationTypeProvider;
-            _transport = transport;
             _dependencyContainer = dependencyContainer;
         }
 

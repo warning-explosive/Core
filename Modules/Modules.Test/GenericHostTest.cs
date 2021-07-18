@@ -60,15 +60,33 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 120_000)]
         [MemberData(nameof(TransportTestData))]
-        internal async Task StatisticsEndpointTest(Func<IHostBuilder, IHostBuilder> useTransport)
+        internal async Task RpcRequestTest(Func<IHostBuilder, IHostBuilder> useTransport)
         {
-            var endpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
+            var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
+
+            var messageTypes = new[]
+            {
+                typeof(IdentifiedQuery),
+                typeof(IdentifiedReply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseStatisticsEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithOrm(new PostgreSqlDatabaseProvider())
-                    .BuildOptions(endpointIdentity))
+                    .BuildOptions(statisticsEndpointIdentity))
+                .UseEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithStatistics()
+                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
             using (host)
@@ -76,7 +94,25 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                await Task.Delay(3, cts.Token).ConfigureAwait(false);
+                var query1 = new GetEndpointStatistics(statisticsEndpointIdentity);
+
+                var reply1 = await host
+                    .GetTransportDependencyContainer()
+                    .Resolve<IIntegrationContext>()
+                    .RpcRequest<GetEndpointStatistics, EndpointStatisticsReply>(query1, cts.Token)
+                    .ConfigureAwait(false);
+
+                Assert.Equal(statisticsEndpointIdentity, reply1.EndpointIdentity);
+
+                var query2 = new IdentifiedQuery(42);
+
+                var reply2 = await host
+                    .GetTransportDependencyContainer()
+                    .Resolve<IIntegrationContext>()
+                    .RpcRequest<IdentifiedQuery, IdentifiedReply>(query2, cts.Token)
+                    .ConfigureAwait(false);
+
+                Assert.Equal(query2.Id, reply2.Id);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
@@ -690,7 +726,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var expected = new[]
                 {
-                    typeof(SpaceEngineers.Core.IntegrationTransport.Api.Internals.IntegrationContext)
+                    typeof(SpaceEngineers.Core.IntegrationTransport.Internals.IntegrationContext)
                 };
 
                 var actual = integrationContext

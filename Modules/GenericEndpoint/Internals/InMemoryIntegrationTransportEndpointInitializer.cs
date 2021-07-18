@@ -37,6 +37,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         public Task Initialize(CancellationToken token)
         {
+            // TODO: handle replies
             _integrationTypeProvider.EndpointCommands()
                 .Concat(_integrationTypeProvider.EndpointQueries())
                 .Concat(_integrationTypeProvider.EndpointSubscriptions())

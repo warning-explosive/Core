@@ -34,5 +34,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// Actual delivery date to the input queue (system time) - DateTime, NotNull
         /// </summary>
         public const string ActualDeliveryDate = "ACTUAL_DELIVERY_DATE";
+
+        /// <summary>
+        /// Request id, valid for replies only - Guid, CanBeNull
+        /// </summary>
+        public const string RequestId = "REQUEST_ID";
     }
 }

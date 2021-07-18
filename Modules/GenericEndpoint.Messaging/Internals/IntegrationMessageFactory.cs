@@ -32,6 +32,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Internals
             {
                 generalMessage.Headers[IntegrationMessageHeader.ConversationId] =
                     initiatorMessage.ReadRequiredHeader<Guid>(IntegrationMessageHeader.ConversationId);
+
+                if (initiatorMessage.IsQuery())
+                {
+                    generalMessage.Headers[IntegrationMessageHeader.RequestId] = initiatorMessage.Id;
+                }
             }
 
             return generalMessage;

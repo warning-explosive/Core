@@ -37,6 +37,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         {
             return ExecutionExtensions
                 .TryAsync(() => Decoratee.Process(producer, context, token))
+                .Catch<Exception>()
                 .Invoke(ex => OnError(context, ex, token));
         }
 

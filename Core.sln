@@ -73,6 +73,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericHost.Api", "Modules\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericHost", "Modules\GenericHost\GenericHost.csproj", "{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTransport", "Modules\IntegrationTransport\IntegrationTransport.csproj", "{48D0B88E-F988-4ECE-B9D8-055ACE83B321}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTransport.Api", "Modules\IntegrationTransport.Api\IntegrationTransport.Api.csproj", "{5BB27AD8-320C-4CB3-AEE5-707993A9488F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InMemoryIntegrationTransport", "Modules\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj", "{0EBE59EB-C382-4D85-843C-0888D12F4550}"
@@ -247,6 +249,10 @@ Global
 		{6CE85142-75B1-45D3-9005-C01DD43BA64F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CE85142-75B1-45D3-9005-C01DD43BA64F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CE85142-75B1-45D3-9005-C01DD43BA64F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48D0B88E-F988-4ECE-B9D8-055ACE83B321}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48D0B88E-F988-4ECE-B9D8-055ACE83B321}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48D0B88E-F988-4ECE-B9D8-055ACE83B321}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48D0B88E-F988-4ECE-B9D8-055ACE83B321}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -290,6 +296,7 @@ Global
 		{4302B7D0-7E03-4326-AB76-BCE26D3D0E9B} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{B2767F31-E791-4C16-8527-AF5B4B545A51} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{6CE85142-75B1-45D3-9005-C01DD43BA64F} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{48D0B88E-F988-4ECE-B9D8-055ACE83B321} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

@@ -30,5 +30,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <returns>Ongoing publish operation</returns>
         Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent;
+
+        /// <summary>
+        /// Request data with RPC pattern
+        /// </summary>
+        /// <param name="query">Integration query</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TReply">TReply type-argument</typeparam>
+        /// <returns>Ongoing remote procedure call</returns>
+        Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationMessage;
     }
 }

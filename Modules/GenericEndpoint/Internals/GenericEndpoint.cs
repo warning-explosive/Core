@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             foreach (var messageHandler in messageHandlers)
             {
                 var copy = (IntegrationMessage)message.Clone();
-                yield return InvokeMessageHandler(message, messageHandler, Token);
+                yield return InvokeMessageHandler(copy, messageHandler, Token);
             }
         }
 
@@ -120,8 +120,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         {
             return (context, token) => messageHandler
                 .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
-                .WithTypeArgument(context.Message.ReflectedType)
-                .WithArguments(context.Message.Payload, context, token)
+                .WithArgument(context.Message.ReflectedType, context.Message.Payload)
+                .WithArgument<IIntegrationContext>(context)
+                .WithArgument(token)
                 .Invoke<Task>();
         }
     }

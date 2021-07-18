@@ -83,6 +83,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         {
             return ExecutionExtensions
                 .TryAsync(() => DispatchToEndpoint(message))
+                .Catch<Exception>()
                 .Invoke(ex => EnqueueError(message, ex, token));
         }
 

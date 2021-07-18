@@ -67,13 +67,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             return Gather(CreateGeneralMessage(query), token);
         }
 
-        public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
+        public async Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            Message.MarkAsReplied();
+            // TODO: fix reply behavior
+            var sentFrom = Message.ReadRequiredHeader<EndpointIdentity>(IntegrationMessageHeader.SentFrom);
 
-            return Gather(CreateGeneralMessage(reply), token);
+            await Gather(CreateGeneralMessage(reply), token).ConfigureAwait(false);
+
+            Message.MarkAsReplied();
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)

@@ -33,6 +33,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
                     await Decoratee.Process(producer, context, token).ConfigureAwait(false);
                     await OnSuccess(context, token).ConfigureAwait(false);
                 })
+                .Catch<Exception>()
                 .Invoke(ex => OnError(context, ex, token));
         }
 

@@ -61,6 +61,20 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Execute method with argument
         /// </summary>
+        /// <param name="argumentType">Argument type</param>
+        /// <param name="argument">Argument</param>
+        /// <returns>MethodExecutionInfo</returns>
+        public MethodExecutionInfo WithArgument(Type argumentType, object? argument)
+        {
+            _args.Add(argument);
+            _argumentTypes.Add(argumentType);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Execute method with argument
+        /// </summary>
         /// <param name="argument">Argument</param>
         /// <typeparam name="TArgument">Argument type</typeparam>
         /// <returns>MethodExecutionInfo</returns>
@@ -159,7 +173,10 @@ namespace SpaceEngineers.Core.Basics
 
             Func<object?> action = () => constructedMethod.Invoke(_target, _args.ToArray());
 
-            return action.Try().Invoke(ex => throw ex);
+            return action
+                .Try()
+                .Catch<Exception>()
+                .Invoke(ex => throw ex);
         }
 
         private static BindingFlags GetBindings(bool isInstanceMethod)

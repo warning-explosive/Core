@@ -60,6 +60,7 @@
     <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     <ProjectReference Include="..\InMemoryIntegrationTransport.Host\InMemoryIntegrationTransport.Host.csproj" />
     <ProjectReference Include="..\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
+    <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     <ProjectReference Include="..\StatisticsEndpoint.Host\StatisticsEndpoint.Host.csproj" />

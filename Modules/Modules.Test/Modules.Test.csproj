@@ -51,6 +51,7 @@
     <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
     <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
     <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
+    <ProjectReference Include="..\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj" />
     <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
     <ProjectReference Include="..\DataImport\DataImport.csproj" />
     <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
@@ -61,6 +62,8 @@
     <ProjectReference Include="..\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
+    <ProjectReference Include="..\StatisticsEndpoint.Host\StatisticsEndpoint.Host.csproj" />
+    <ProjectReference Include="..\StatisticsEndpoint\StatisticsEndpoint.csproj" />
     <ProjectReference Include="..\Test.Api\Test.Api.csproj" />
   </ItemGroup>
   <ItemGroup>

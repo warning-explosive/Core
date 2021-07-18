@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using DataAccess.PostgreSql.Host;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -27,7 +28,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Mocks;
+    using StatisticsEndpoint.Contract;
     using StatisticsEndpoint.Contract.Messages;
+    using StatisticsEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
     using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
@@ -57,7 +60,31 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 120_000)]
         [MemberData(nameof(TransportTestData))]
-        internal async Task EndpointShouldHaveOnlyOneMessageHandlerPerMessage(Func<IHostBuilder, IHostBuilder> useTransport)
+        internal async Task StatisticsEndpointTest(Func<IHostBuilder, IHostBuilder> useTransport)
+        {
+            var endpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseStatisticsEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithOrm(new PostgreSqlDatabaseProvider())
+                    .BuildOptions(endpointIdentity))
+                .BuildHost();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await Task.Delay(3, cts.Token).ConfigureAwait(false);
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -83,14 +110,9 @@ namespace SpaceEngineers.Core.Modules.Test
             using (host)
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
             {
-                try
-                {
-                    await host.StartAsync(cts.Token).ConfigureAwait(false);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    Assert.Equal(ex.Message, $"Message '{typeof(IdentifiedCommand).FullName}' should have only one message handler. To produce forks publish new events explicitly in that message handler.");
-                }
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await Task.Delay(3, cts.Token).ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

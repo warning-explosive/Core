@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.PostgreSql.Settings
 {
     using System.Data;
     using Basics;
-    using SettingsManager.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     /// <summary>
     /// Postgre sql settings

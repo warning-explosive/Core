@@ -7,8 +7,8 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using AutoRegistration;
     using AutoRegistration.Abstractions;
     using Basics;
+    using CrossCuttingConcerns.Settings;
     using Internals;
-    using SettingsManager.Extensions;
 
     /// <summary>
     /// ModulesTestFixture

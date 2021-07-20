@@ -1,17 +1,17 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class EnvironmentSettingsManager : ISettingsManager<EnvironmentSettings>
+    internal class EnvironmentSettingsProvider : ISettingsProvider<EnvironmentSettings>
     {
         /// <inheritdoc />
         public Task<EnvironmentSettings> Get()

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Settings
 {
     using System;
-    using SettingsManager.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     /// <summary>
     /// IntegrationTransportSettings

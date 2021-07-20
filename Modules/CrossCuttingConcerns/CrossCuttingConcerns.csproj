@@ -69,5 +69,35 @@
       <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
         <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Settings\EnvironmentSettingsEntry.cs">
+        <DependentUpon>EnvironmentSettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\JsonSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\YamlSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\EnvironmentSettings.cs">
+        <DependentUpon>EnvironmentSettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ArrayNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\NodeBase.cs">
+        <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ObjectNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\RootNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ValueNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="YamlDotNet" Version="11.2.1" />
     </ItemGroup>
 </Project>

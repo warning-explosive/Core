@@ -8,9 +8,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoWiring.Api;
     using AutoWiring.Api.Services;
     using Basics;
-    using Core.SettingsManager.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Api.Abstractions;
     using Mocks;
     using Xunit;
     using Xunit.Abstractions;
@@ -94,8 +94,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assemblies = new[]
             {
-                typeof(ISettingsManager<>).Assembly,
-                typeof(ICompositionInfoExtractor).Assembly
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)))
             };
 
             var boundedContainer = Fixture.ExactlyBoundedContainer(new DependencyContainerOptions(), assemblies);
@@ -127,11 +128,14 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var allowedAssemblies = new[]
             {
-                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SimpleInjector))),
-                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Basics))),
-                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
-                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
-                AssembliesExtensions.FindAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.SettingsManager))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SimpleInjector))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(Newtonsoft), nameof(Newtonsoft.Json))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(YamlDotNet))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
             };
 
             Assert.True(compositionInfo.All(Satisfies));

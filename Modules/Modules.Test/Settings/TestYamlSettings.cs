@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;
-    using SettingsManager.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     internal class TestYamlSettings : ITestSettings, IYamlSettings
     {

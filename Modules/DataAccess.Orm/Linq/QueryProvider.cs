@@ -16,24 +16,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
     using Settings;
-    using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryProvider : IAsyncQueryProvider,
                                    IExternalResolvable<IQueryProvider>
     {
-        private readonly ISettingsManager<OrmSettings> _ormSettingsProvider;
+        private readonly ISettingsProvider<OrmSettings> _ormSettings;
         private readonly IDatabaseTransaction _transaction;
         private readonly IQueryTranslator _translator;
         private readonly IObjectBuilder _objectBuilder;
 
         public QueryProvider(
-            ISettingsManager<OrmSettings> ormSettingsProvider,
+            ISettingsProvider<OrmSettings> ormSettings,
             IDatabaseTransaction transaction,
             IQueryTranslator translator,
             IObjectBuilder objectBuilder)
         {
-            _ormSettingsProvider = ormSettingsProvider;
+            _ormSettings = ormSettings;
             _transaction = transaction;
             _translator = translator;
             _objectBuilder = objectBuilder;
@@ -87,7 +86,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             Expression expression,
             [EnumeratorCancellation] CancellationToken token)
         {
-            var ormSettings = await _ormSettingsProvider
+            var ormSettings = await _ormSettings
                 .Get()
                 .ConfigureAwait(false);
 

@@ -7,26 +7,26 @@
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Abstractions;
     using Npgsql;
     using Settings;
-    using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IDatabaseTransaction, IDisposable
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly ISettingsManager<PostgreSqlDatabaseSettings> _postgreSqlSettingsProvider;
+        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _postgreSqlSettings;
 
         private NpgsqlConnection? _connection;
         private NpgsqlTransaction? _transaction;
 
         public DatabaseTransaction(
             IConnectionFactory connectionFactory,
-            ISettingsManager<PostgreSqlDatabaseSettings> postgreSqlSettingsProvider)
+            ISettingsProvider<PostgreSqlDatabaseSettings> postgreSqlSettings)
         {
             _connectionFactory = connectionFactory;
-            _postgreSqlSettingsProvider = postgreSqlSettingsProvider;
+            _postgreSqlSettings = postgreSqlSettings;
         }
 
         public bool HasChanges => throw new NotImplementedException();
@@ -39,7 +39,7 @@
                 return _transaction;
             }
 
-            var postgreSqlSettings = await _postgreSqlSettingsProvider
+            var postgreSqlSettings = await _postgreSqlSettings
                 .Get()
                 .ConfigureAwait(false);
 

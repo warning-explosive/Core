@@ -1,7 +1,7 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System.Collections.Generic;
-    using Abstractions;
+    using Api.Abstractions;
 
     /// <summary>
     /// Represents all settings stored in process environment

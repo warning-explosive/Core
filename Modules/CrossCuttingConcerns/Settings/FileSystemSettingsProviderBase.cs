@@ -1,21 +1,21 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System;
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
-    using Abstractions;
+    using Api.Abstractions;
     using Basics;
 
-    internal abstract class FileSystemSettingsManagerBase<TSettings> : ISettingsManager<TSettings>
+    internal abstract class FileSystemSettingsProviderBase<TSettings> : ISettingsProvider<TSettings>
         where TSettings : class, IFileSystemSettings
     {
         private readonly Encoding _encoding = new UTF8Encoding(true);
         private readonly string _folder;
 
-        protected FileSystemSettingsManagerBase()
+        protected FileSystemSettingsProviderBase()
         {
-            var dir = EnvironmentSettingsManager.Get(Constants.FileSystemSettingsDirectory).Value;
+            var dir = EnvironmentSettingsProvider.Get(SettingsExtensions.FileSystemSettingsDirectory).Value;
 
             if (!Directory.Exists(dir))
             {

@@ -62,7 +62,6 @@
     <ProjectReference Include="..\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
     <ProjectReference Include="..\PathResolver\PathResolver.csproj" />
-    <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     <ProjectReference Include="..\StatisticsEndpoint.Host\StatisticsEndpoint.Host.csproj" />
     <ProjectReference Include="..\StatisticsEndpoint\StatisticsEndpoint.csproj" />
     <ProjectReference Include="..\Test.Api\Test.Api.csproj" />

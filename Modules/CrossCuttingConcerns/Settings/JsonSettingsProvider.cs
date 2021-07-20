@@ -1,17 +1,16 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
-    using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JsonSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
+    internal class JsonSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>
         where TSettings : class, IJsonSettings
     {
         private readonly IJsonSerializer _jsonSerializer;
 
-        public JsonSettingsManager(IJsonSerializer jsonSerializer)
+        public JsonSettingsProvider(IJsonSerializer jsonSerializer)
         {
             _jsonSerializer = jsonSerializer;
         }

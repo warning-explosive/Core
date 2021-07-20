@@ -30,7 +30,6 @@
     <ItemGroup>
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
-      <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.0.90" />

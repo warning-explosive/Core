@@ -1,6 +1,6 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
-    using Abstractions;
+    using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using YamlDotNet.Serialization;
@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.SettingsManager.Internals
     using YamlDotNet.Serialization.TypeResolvers;
 
     [Component(EnLifestyle.Singleton)]
-    internal class YamlSettingsManager<TSettings> : FileSystemSettingsManagerBase<TSettings>
+    internal class YamlSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>
         where TSettings : class, IYamlSettings
     {
         private readonly ISerializer _serializer =

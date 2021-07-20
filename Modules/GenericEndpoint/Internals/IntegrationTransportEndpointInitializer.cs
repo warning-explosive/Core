@@ -15,15 +15,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using Messaging;
 
     [Component(EnLifestyle.Singleton)]
-    internal class InMemoryIntegrationTransportEndpointInitializer : IEndpointInitializer,
-                                                                     ICollectionResolvable<IEndpointInitializer>
+    internal class IntegrationTransportEndpointInitializer : IEndpointInitializer,
+                                                             ICollectionResolvable<IEndpointInitializer>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
         private readonly IIntegrationTransport _transport;
         private readonly IDependencyContainer _dependencyContainer;
 
-        public InMemoryIntegrationTransportEndpointInitializer(
+        public IntegrationTransportEndpointInitializer(
             IIntegrationTransport transport,
             EndpointIdentity endpointIdentity,
             IIntegrationTypeProvider integrationTypeProvider,

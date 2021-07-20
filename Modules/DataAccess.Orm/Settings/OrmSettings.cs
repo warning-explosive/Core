@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Settings
 {
     using System;
-    using SettingsManager.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
 
     /// <summary>
     /// Orm settings

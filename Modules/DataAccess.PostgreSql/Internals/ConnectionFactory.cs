@@ -3,18 +3,18 @@ namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
     using Settings;
-    using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ConnectionFactory : IConnectionFactory
     {
-        private readonly ISettingsManager<PostgreSqlDatabaseSettings> _databaseSettingsProvider;
+        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
 
-        public ConnectionFactory(ISettingsManager<PostgreSqlDatabaseSettings> databaseSettingsProvider)
+        public ConnectionFactory(ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
         {
-            _databaseSettingsProvider = databaseSettingsProvider;
+            _databaseSettings = databaseSettings;
         }
 
         public async Task<NpgsqlConnection> OpenConnection()
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
 
         private async Task<string> GetConnectionString()
         {
-            var databaseSettings = await _databaseSettingsProvider
+            var databaseSettings = await _databaseSettings
                 .Get()
                 .ConfigureAwait(false);
 

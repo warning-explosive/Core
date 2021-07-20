@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
-      <ProjectReference Include="..\SettingsManager\SettingsManager.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />

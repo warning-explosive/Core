@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.Settings
 {
-    using Core.SettingsManager.Abstractions;
+    using CrossCuttingConcerns.Api.Abstractions;
     using MongoDB.Driver;
 
     /// <summary>

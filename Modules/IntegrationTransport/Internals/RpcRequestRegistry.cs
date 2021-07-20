@@ -6,26 +6,26 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using Settings;
-    using SettingsManager.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class RpcRequestRegistry : IRpcRequestRegistry
     {
         private readonly MemoryCache _memoryCache;
-        private readonly ISettingsManager<IntegrationTransportSettings> _integrationTransportSettingsProvider;
+        private readonly ISettingsProvider<IntegrationTransportSettings> _integrationTransportSettings;
 
-        public RpcRequestRegistry(ISettingsManager<IntegrationTransportSettings> integrationTransportSettingsProvider)
+        public RpcRequestRegistry(ISettingsProvider<IntegrationTransportSettings> integrationTransportSettings)
         {
             _memoryCache = new MemoryCache(nameof(RpcRequestRegistry));
-            _integrationTransportSettingsProvider = integrationTransportSettingsProvider;
+            _integrationTransportSettings = integrationTransportSettings;
         }
 
         public async Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs)
             where TReply : IIntegrationMessage
         {
-            var settings = await _integrationTransportSettingsProvider
+            var settings = await _integrationTransportSettings
                 .Get()
                 .ConfigureAwait(false);
 

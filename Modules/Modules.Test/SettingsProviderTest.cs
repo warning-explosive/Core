@@ -6,24 +6,24 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Core.SettingsManager.Abstractions;
-    using Core.SettingsManager.Internals;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Registrations;
     using Settings;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
-    /// SettingsManager class tests
+    /// ISettingsProvider class tests
     /// </summary>
-    public class SettingsManagerTest : TestBase
+    public class SettingsProviderTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
-        public SettingsManagerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        public SettingsProviderTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
             DependencyContainer = ModulesTestManualRegistration.Container(fixture);
@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Task Set()
             {
                 return DependencyContainer
-                    .Resolve<ISettingsManager<EnvironmentSettings>>()
+                    .Resolve<ISettingsProvider<EnvironmentSettings>>()
                     .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()));
             }
         }
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Task<EnvironmentSettings> Get()
             {
                 return DependencyContainer
-                    .Resolve<ISettingsManager<EnvironmentSettings>>()
+                    .Resolve<ISettingsProvider<EnvironmentSettings>>()
                     .Get();
             }
         }
@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.Modules.Test
         private async Task ReadWriteTestInternal<TSettings>(Func<object> cfgFactory)
             where TSettings : class, ISettings
         {
-            var manager = DependencyContainer.Resolve<ISettingsManager<TSettings>>();
+            var manager = DependencyContainer.Resolve<ISettingsProvider<TSettings>>();
 
             /*
              * 1 - Read
@@ -136,7 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
         private async Task GenericEndpointSettingsReadWriteTestInternal<TSetting>()
             where TSetting : class, ISettings
         {
-            var manager = DependencyContainer.Resolve<ISettingsManager<TSetting>>();
+            var manager = DependencyContainer.Resolve<ISettingsProvider<TSetting>>();
 
             var setting = await manager.Get().ConfigureAwait(false);
             Assert.NotNull(setting);

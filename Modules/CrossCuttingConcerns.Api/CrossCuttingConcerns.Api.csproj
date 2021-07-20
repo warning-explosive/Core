@@ -34,6 +34,18 @@
       <Compile Update="Abstractions\IObjectTransformer.cs">
         <DependentUpon>IObjectBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\IJsonSettings.cs">
+        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IFileSystemSettings.cs">
+        <DependentUpon>ISettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IYamlSettings.cs">
+        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\ISettings.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

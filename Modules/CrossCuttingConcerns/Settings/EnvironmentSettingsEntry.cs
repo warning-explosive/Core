@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.SettingsManager.Internals
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     /// <summary>
     /// Represents settings entry stored in process environment

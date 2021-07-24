@@ -35,17 +35,11 @@
       <PackageReference Include="Dapper" Version="2.0.90" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Linq\QueryProvider.cs">
-        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
+      <Compile Update="Model\Abstractions\CreateDatabase.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\Queryable.cs">
-        <DependentUpon>QueryProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\ReplaceParameterVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\ReplaceFilterExpressionVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      <Compile Update="Model\Abstractions\IModelNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -24,11 +24,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Abstractions
         public IEndpointBuilder WithDefaultCrossCuttingConcerns();
 
         /// <summary>
-        /// With ORM
+        /// With data access
         /// </summary>
         /// <param name="databaseProvider">Database provider</param>
         /// <returns>EndpointBuilder</returns>
-        public IEndpointBuilder WithOrm(IDatabaseProvider databaseProvider);
+        public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider);
 
         /// <summary>
         /// Adds statistics pipeline into message processing in order to grab and store processing results

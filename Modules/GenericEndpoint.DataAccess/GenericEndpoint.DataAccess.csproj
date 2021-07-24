@@ -29,6 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
 </Project>

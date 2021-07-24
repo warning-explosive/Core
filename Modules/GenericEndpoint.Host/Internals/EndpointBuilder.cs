@@ -48,11 +48,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
             };
         }
 
-        public IEndpointBuilder WithOrm(IDatabaseProvider databaseProvider)
+        public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider)
         {
+            var genericEndpointDataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(nameof(SpaceEngineers),
+                nameof(Core),
+                nameof(Core.GenericEndpoint),
+                "DataAccess"));
+
             return new EndpointBuilder
             {
-                EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(databaseProvider.Implementation()).ToList(),
+                EndpointPluginAssemblies = EndpointPluginAssemblies
+                    .Concat(new[] { genericEndpointDataAccessAssembly })
+                    .Concat(databaseProvider.Implementation())
+                    .ToList(),
                 Modifiers = Modifiers
             };
         }

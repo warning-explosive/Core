@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
     {
         internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, Container container)
         {
-            infos.OrderByDependencyAttribute(z => z.ImplementationType)
+            infos.OrderByDependencyAttribute(info => info.ImplementationType)
                  .Each(info =>
                        {
                            if (info.ConditionAttribute == null)
@@ -40,9 +40,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Extensions
 
             materialized.RegisterImplementationsWithOpenGenericFallBack(container);
 
-            materialized.OrderByDependencyAttribute(z => z.ImplementationType)
-                 .GroupBy(k => k.ServiceType, v => v.ImplementationType)
-                 .Each(info => container.Collection.Register(info.Key, info));
+            materialized
+                .OrderByDependencyAttribute(info => info.ImplementationType)
+                .GroupBy(info => info.ServiceType, info => info.ImplementationType)
+                .Each(info => container.Collection.Register(info.Key, info));
         }
 
         internal static void RegisterSingletons(this IEnumerable<(Type, object)> singletons, Container container)

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using DataAccess.Orm.Model.Abstractions;
     using DataAccess.PostgreSql.Host;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
@@ -60,10 +61,50 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 120_000)]
         [MemberData(nameof(TransportTestData))]
-        internal async Task RpcRequestTest(Func<IHostBuilder, IHostBuilder> useTransport)
+        internal async Task BuildDatabaseModelTest(Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
 
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseStatisticsEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithDataAccess(new PostgreSqlDatabaseProvider())
+                    .BuildOptions(statisticsEndpointIdentity))
+                .BuildHost();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var container = host.GetEndpointDependencyContainer(statisticsEndpointIdentity);
+
+                var actualModel = container
+                    .Resolve<IDatabaseModelBuilder>()
+                    .BuildModel();
+
+                var expectedModel = container
+                    .Resolve<ICodeModelBuilder>()
+                    .BuildModel();
+
+                var modelChanges = host
+                    .GetEndpointDependencyContainer(statisticsEndpointIdentity)
+                    .Resolve<IDatabaseModelComparator>()
+                    .ExtractDiff(actualModel, expectedModel)
+                    .ToList();
+
+                modelChanges.Each(change => Output.WriteLine(change.ToString()));
+                Assert.NotEmpty(modelChanges);
+                Assert.NotNull(modelChanges.OfType<CreateDatabase>().SingleOrDefault());
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        [Theory(Timeout = 120_000)]
+        [MemberData(nameof(TransportTestData))]
+        internal async Task RpcRequestTest(Func<IHostBuilder, IHostBuilder> useTransport)
+        {
             var messageTypes = new[]
             {
                 typeof(IdentifiedQuery),
@@ -78,10 +119,6 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseStatisticsEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithOrm(new PostgreSqlDatabaseProvider())
-                    .BuildOptions(statisticsEndpointIdentity))
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
@@ -94,25 +131,15 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                var query1 = new GetEndpointStatistics(statisticsEndpointIdentity);
+                var query = new IdentifiedQuery(42);
 
-                var reply1 = await host
+                var reply = await host
                     .GetTransportDependencyContainer()
                     .Resolve<IIntegrationContext>()
-                    .RpcRequest<GetEndpointStatistics, EndpointStatisticsReply>(query1, cts.Token)
+                    .RpcRequest<IdentifiedQuery, IdentifiedReply>(query, cts.Token)
                     .ConfigureAwait(false);
 
-                Assert.Equal(statisticsEndpointIdentity, reply1.EndpointIdentity);
-
-                var query2 = new IdentifiedQuery(42);
-
-                var reply2 = await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
-                    .RpcRequest<IdentifiedQuery, IdentifiedReply>(query2, cts.Token)
-                    .ConfigureAwait(false);
-
-                Assert.Equal(query2.Id, reply2.Id);
+                Assert.Equal(query.Id, reply.Id);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

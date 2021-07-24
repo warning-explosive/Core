@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Internals
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
-    using Linq;
+    using Linq.Internals;
 
     [Component(EnLifestyle.Scoped)]
     internal class ReadRepository<TEntity> : IReadRepository<TEntity>

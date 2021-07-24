@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq;
     using Abstractions;
     using Basics;
-    using Linq;
+    using Internals;
 
     /// <summary>
     /// ProjectionExpression

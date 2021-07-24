@@ -13,7 +13,41 @@ namespace SpaceEngineers.Core.Basics
     public static class EnumerableExtensions
     {
         /// <summary>
-        /// LeftJoin
+        /// Full outer join
+        /// </summary>
+        /// <param name="leftSource">Left source</param>
+        /// <param name="rightSource">Right source</param>
+        /// <param name="leftKeySelector">Left key selector</param>
+        /// <param name="rightKeySelector">Right key selector</param>
+        /// <param name="resultSelector">Result selector (left/right could be null for reference types)</param>
+        /// <typeparam name="TLeft">TLeft type-argument</typeparam>
+        /// <typeparam name="TRight">TRight type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Left join result</returns>
+        public static IEnumerable<TResult> FullOuterJoin<TLeft, TRight, TKey, TResult>(
+            this IEnumerable<TLeft> leftSource,
+            IEnumerable<TRight> rightSource,
+            Func<TLeft, TKey> leftKeySelector,
+            Func<TRight, TKey> rightKeySelector,
+            Func<TLeft?, TRight?, TResult> resultSelector)
+        {
+            var leftLookup = leftSource.ToLookup(leftKeySelector);
+            var rightLookup = rightSource.ToLookup(rightKeySelector);
+
+            var keys = leftLookup
+                .Select(p => p.Key)
+                .Concat(rightLookup.Select(p => p.Key))
+                .ToHashSet();
+
+            return from key in keys
+                from left in leftLookup[key].DefaultIfEmpty()
+                from right in rightLookup[key].DefaultIfEmpty()
+                select resultSelector(left, right);
+        }
+
+        /// <summary>
+        /// Left outer join
         /// </summary>
         /// <param name="leftSource">Left source</param>
         /// <param name="rightSource">Right source</param>
@@ -30,14 +64,13 @@ namespace SpaceEngineers.Core.Basics
             IEnumerable<TRight> rightSource,
             Func<TLeft, TKey> leftKeySelector,
             Func<TRight, TKey> rightKeySelector,
-            Func<TLeft, TRight, TResult> resultSelector)
+            Func<TLeft, TRight?, TResult> resultSelector)
         {
             return from left in leftSource
-                   join right in rightSource
-                       on leftKeySelector(left) equals rightKeySelector(right)
-                       into rightMatch
-                   from nullableRight in rightMatch.DefaultIfEmpty()
-                   select resultSelector(left, nullableRight);
+                join right in rightSource
+                    on leftKeySelector(left) equals rightKeySelector(right) into rightMatch
+                from nullableRight in rightMatch.DefaultIfEmpty()
+                select resultSelector(left, nullableRight);
         }
 
         /// <summary>

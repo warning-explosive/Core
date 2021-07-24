@@ -1,59 +1,44 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
 {
-    using System;
-    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
     using Api.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using GenericDomain.Abstractions;
+    using Core.DataAccess.Orm.Model.Abstractions;
 
     [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Unregistered)]
     internal class DatabaseModelInitializer : IEndpointInitializer,
                                               ICollectionResolvable<IEndpointInitializer>
     {
-        private readonly IDomainTypeProvider _domainTypeProvider;
-        private readonly IDataBaseModelBuilder _dataBaseModelBuilder;
+        private readonly IDatabaseModelBuilder _databaseModelBuilder;
+        private readonly ICodeModelBuilder _codeModelBuilder;
+        private readonly IDatabaseModelComparator _databaseModelComparator;
 
         public DatabaseModelInitializer(
-            IDomainTypeProvider domainTypeProvider,
-            IDataBaseModelBuilder dataBaseModelBuilder)
+            IDatabaseModelBuilder databaseModelBuilder,
+            ICodeModelBuilder codeModelBuilder,
+            IDatabaseModelComparator databaseModelComparator)
         {
-            _domainTypeProvider = domainTypeProvider;
-            _dataBaseModelBuilder = dataBaseModelBuilder;
+            _databaseModelBuilder = databaseModelBuilder;
+            _codeModelBuilder = codeModelBuilder;
+            _databaseModelComparator = databaseModelComparator;
         }
 
         public Task Initialize(CancellationToken token)
         {
-            /*
-             * TODO: 1. Build model tree from code
-             * TODO: 2. Build model tree from database (if exists)
-             * TODO: 3. Compare, extract diff, generate migration
-             * TODO: 4. Apply migration (initial migration or regular migration)
-             */
+            var actualModel = _databaseModelBuilder.BuildModel();
+            var expectedModel = _codeModelBuilder.BuildModel();
 
-            var model = new Dictionary<Type, ModelNode>();
+            // TODO: Compare, extract diff, generate migration
+            var modelChanges = _databaseModelComparator
+                .ExtractDiff(actualModel, expectedModel)
+                .ToList();
 
-            foreach (var entity in _domainTypeProvider.Entities())
-            {
-                if (model.ContainsKey(entity))
-                {
-                    continue;
-                }
-
-                foreach (var node in _dataBaseModelBuilder.BuildNodes(entity))
-                {
-                    if (!model.ContainsKey(node.NodeType))
-                    {
-                        model[entity] = node;
-                    }
-                }
-            }
-
-            throw new NotImplementedException();
+            // TODO: Apply migration (initial migration or regular migration)
+            return Task.CompletedTask;
         }
     }
 }

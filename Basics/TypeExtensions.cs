@@ -168,6 +168,46 @@ namespace SpaceEngineers.Core.Basics
             return source.OrderBy(SortFunc);
         }
 
+        /// <summary> Order collection by DependencyAttribute </summary>
+        /// <param name="source">Unordered source collection</param>
+        /// <param name="getKey">Key accessor</param>
+        /// <param name="getDependencies">Dependencies accessor</param>
+        /// <typeparam name="TSource">TSource type-argument</typeparam>
+        /// <typeparam name="TDependency">TDependency type-argument</typeparam>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
+        /// <returns>Ordered by DependencyAttribute collection</returns>
+        public static IOrderedEnumerable<TSource> OrderByDependencies<TSource, TDependency>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TDependency> getKey,
+            Func<TSource, IEnumerable<TSource>> getDependencies)
+        {
+            return source.OrderBy(SortFunc);
+
+            int SortFunc(TSource item)
+            {
+                var key = getKey(item);
+                var dependencies = getDependencies(item).ToList();
+                var dependenciesKeys = dependencies.Select(getKey).ToList();
+
+                var depth = 0;
+
+                while (dependenciesKeys.Any())
+                {
+                    if (dependenciesKeys.Contains(key))
+                    {
+                        throw new InvalidOperationException($"{key} has cycle dependency");
+                    }
+
+                    ++depth;
+
+                    dependencies = dependencies.SelectMany(getDependencies).ToList();
+                    dependenciesKeys = dependencies.Select(getKey).ToList();
+                }
+
+                return depth;
+            }
+        }
+
         /// <summary>
         /// Get type dependencies from DependencyAttribute
         /// </summary>

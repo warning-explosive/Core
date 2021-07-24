@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Contract.Abstractions;
-    using DataAccess.Orm.Abstractions;
+    using DataAccess.Orm.Linq.Abstractions;
     using GenericDomain;
     using GenericDomain.Abstractions;
     using Xunit;

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using AutoRegistration.Abstractions;
     using Basics;

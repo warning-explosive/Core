@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
-      <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     </ItemGroup>
 </Project>

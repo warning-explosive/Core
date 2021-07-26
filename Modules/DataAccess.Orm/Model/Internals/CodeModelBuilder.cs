@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using Abstractions;

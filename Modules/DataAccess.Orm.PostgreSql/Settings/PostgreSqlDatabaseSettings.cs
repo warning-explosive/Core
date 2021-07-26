@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.PostgreSql.Settings
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
 {
     using System.Data;
     using Basics;

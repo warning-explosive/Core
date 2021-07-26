@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Internals;
     using Linq;
     using Linq.Abstractions;
     using Linq.Internals;
+    using Translation;
 
     /// <summary>
     /// QueryTranslator

@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
     using System.Data;
@@ -10,6 +10,7 @@
     using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Abstractions;
     using Npgsql;
+    using Orm.Connection.Abstractions;
     using Settings;
 
     [Component(EnLifestyle.Scoped)]
@@ -48,7 +49,7 @@
                 await _connection.DisposeAsync().ConfigureAwait(false);
             }
 
-            _connection = await _connectionFactory
+            _connection = (NpgsqlConnection)await _connectionFactory
                 .OpenConnection()
                 .ConfigureAwait(false);
 

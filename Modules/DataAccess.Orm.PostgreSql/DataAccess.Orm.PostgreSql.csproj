@@ -30,9 +30,11 @@
     <ItemGroup>
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
       <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
-      <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Remove="Marker.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Npgsql" Version="5.0.7" />
     </ItemGroup>
 </Project>

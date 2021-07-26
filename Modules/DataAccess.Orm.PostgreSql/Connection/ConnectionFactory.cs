@@ -1,10 +1,12 @@
-namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
+    using System.Data;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
+    using Orm.Connection.Abstractions;
     using Settings;
 
     [Component(EnLifestyle.Singleton)]
@@ -17,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.PostgreSql.Internals
             _databaseSettings = databaseSettings;
         }
 
-        public async Task<NpgsqlConnection> OpenConnection()
+        public async Task<IDbConnection> OpenConnection()
         {
             var connectionString = await GetConnectionString().ConfigureAwait(false);
             var connection = new NpgsqlConnection(connectionString);

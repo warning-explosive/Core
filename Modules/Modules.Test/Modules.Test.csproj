@@ -52,7 +52,6 @@
     <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
     <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
     <ProjectReference Include="..\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj" />
-    <ProjectReference Include="..\DataAccess.PostgreSql\DataAccess.PostgreSql.csproj" />
     <ProjectReference Include="..\DataImport\DataImport.csproj" />
     <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />

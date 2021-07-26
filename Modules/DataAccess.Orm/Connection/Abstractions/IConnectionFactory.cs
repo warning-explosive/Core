@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Connection.Abstractions
 {
     using System.Data;
+    using System.Data.Common;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
 
@@ -9,6 +10,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection.Abstractions
     /// </summary>
     public interface IConnectionFactory : IResolvable
     {
+        /// <summary>
+        /// Gets connection string
+        /// </summary>
+        /// <returns>Ongoing operation</returns>
+        Task<DbConnectionStringBuilder> GetConnectionString();
+
         /// <summary>
         /// Opens DB connection
         /// </summary>

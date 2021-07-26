@@ -27,10 +27,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
             _databaseModelComparator = databaseModelComparator;
         }
 
-        public Task Initialize(CancellationToken token)
+        public async Task Initialize(CancellationToken token)
         {
-            var actualModel = _databaseModelBuilder.BuildModel();
-            var expectedModel = _codeModelBuilder.BuildModel();
+            var actualModel = await _databaseModelBuilder
+                .BuildModel()
+                .ConfigureAwait(false);
+
+            var expectedModel = await _codeModelBuilder
+                .BuildModel()
+                .ConfigureAwait(false);
 
             // TODO: Compare, extract diff, generate migration
             var modelChanges = _databaseModelComparator
@@ -38,7 +43,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
                 .ToList();
 
             // TODO: Apply migration (initial migration or regular migration)
-            return Task.CompletedTask;
         }
     }
 }

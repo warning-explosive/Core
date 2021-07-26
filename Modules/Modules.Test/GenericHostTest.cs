@@ -79,13 +79,15 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var container = host.GetEndpointDependencyContainer(statisticsEndpointIdentity);
 
-                var actualModel = container
+                var actualModel = await container
                     .Resolve<IDatabaseModelBuilder>()
-                    .BuildModel();
+                    .BuildModel()
+                    .ConfigureAwait(false);
 
-                var expectedModel = container
+                var expectedModel = await container
                     .Resolve<ICodeModelBuilder>()
-                    .BuildModel();
+                    .BuildModel()
+                    .ConfigureAwait(false);
 
                 var modelChanges = host
                     .GetEndpointDependencyContainer(statisticsEndpointIdentity)
@@ -95,7 +97,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 modelChanges.Each(change => Output.WriteLine(change.ToString()));
                 Assert.NotEmpty(modelChanges);
-                Assert.NotNull(modelChanges.OfType<CreateDatabase>().SingleOrDefault());
+
+                var createDatabase = modelChanges.OfType<CreateDatabase>().Single();
+                Assert.Equal("SpaceEngineersDatabase", createDatabase.Name);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

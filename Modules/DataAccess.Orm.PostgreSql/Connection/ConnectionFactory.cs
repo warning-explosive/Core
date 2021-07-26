@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System.Data;
+    using System.Data.Common;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -19,21 +20,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             _databaseSettings = databaseSettings;
         }
 
-        public async Task<IDbConnection> OpenConnection()
-        {
-            var connectionString = await GetConnectionString().ConfigureAwait(false);
-            var connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync().ConfigureAwait(false);
-            return connection;
-        }
-
-        private async Task<string> GetConnectionString()
+        public async Task<DbConnectionStringBuilder> GetConnectionString()
         {
             var databaseSettings = await _databaseSettings
                 .Get()
                 .ConfigureAwait(false);
 
-            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            return new NpgsqlConnectionStringBuilder
             {
                 Host = databaseSettings.Host,
                 Port = databaseSettings.Port,
@@ -41,8 +34,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 Username = databaseSettings.Username,
                 Password = databaseSettings.Password
             };
+        }
 
-            return connectionStringBuilder.ConnectionString;
+        public async Task<IDbConnection> OpenConnection()
+        {
+            var connectionStringBuilder = await GetConnectionString().ConfigureAwait(false);
+            var connectionString = connectionStringBuilder.ConnectionString;
+
+            var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            return connection;
         }
     }
 }

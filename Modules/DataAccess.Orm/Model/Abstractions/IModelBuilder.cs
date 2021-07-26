@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
 {
+    using System.Threading.Tasks;
+
     /// <summary>
     /// IModelBuilder
     /// </summary>
@@ -9,6 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// Builds database model from the specified source
         /// </summary>
         /// <returns>Built model nodes</returns>
-        DatabaseNode? BuildModel();
+        Task<DatabaseNode?> BuildModel();
     }
 }

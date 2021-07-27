@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
 {
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -10,7 +11,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// <summary>
         /// Builds database model from the specified source
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Built model nodes</returns>
-        Task<DatabaseNode?> BuildModel();
+        Task<DatabaseNode?> BuildModel(CancellationToken token);
     }
 }

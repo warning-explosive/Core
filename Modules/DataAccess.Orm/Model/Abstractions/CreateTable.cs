@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateTable)} {Table.Name}";
+            return $"{nameof(CreateTable)} {Table.Type.Name}";
         }
     }
 }

@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(AddColumn)} {Table.Name}.{Column.Name}";
+            return $"{nameof(AddColumn)} {Table.Type.Name}.{Column.Name}";
         }
     }
 }

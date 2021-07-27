@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using AutoWiring.Api.Enumerations;
     using Core.DataAccess.Orm.Model.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Unregistered)]
+    [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelInitializer : IEndpointInitializer,
                                               ICollectionResolvable<IEndpointInitializer>
     {
@@ -30,18 +30,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
         public async Task Initialize(CancellationToken token)
         {
             var actualModel = await _databaseModelBuilder
-                .BuildModel()
+                .BuildModel(token)
                 .ConfigureAwait(false);
 
             var expectedModel = await _codeModelBuilder
-                .BuildModel()
+                .BuildModel(token)
                 .ConfigureAwait(false);
 
-            // TODO: Compare, extract diff, generate migration
             var modelChanges = _databaseModelComparator
                 .ExtractDiff(actualModel, expectedModel)
                 .ToList();
 
+            // TODO: generate migration
             // TODO: Apply migration (initial migration or regular migration)
         }
     }

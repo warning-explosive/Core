@@ -11,6 +11,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection.Abstractions
     public interface IConnectionFactory : IResolvable
     {
         /// <summary>
+        /// Checks does the database exist
+        /// </summary>
+        /// <returns>Ongoing check operation</returns>
+        Task<bool> DoesDatabaseExist();
+
+        /// <summary>
         /// Gets connection string
         /// </summary>
         /// <returns>Ongoing operation</returns>

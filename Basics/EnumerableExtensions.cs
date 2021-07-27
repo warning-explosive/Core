@@ -20,6 +20,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="leftKeySelector">Left key selector</param>
         /// <param name="rightKeySelector">Right key selector</param>
         /// <param name="resultSelector">Result selector (left/right could be null for reference types)</param>
+        /// <param name="comparer">Custom equality comparer</param>
         /// <typeparam name="TLeft">TLeft type-argument</typeparam>
         /// <typeparam name="TRight">TRight type-argument</typeparam>
         /// <typeparam name="TKey">TKey type-argument</typeparam>
@@ -30,7 +31,8 @@ namespace SpaceEngineers.Core.Basics
             IEnumerable<TRight> rightSource,
             Func<TLeft, TKey> leftKeySelector,
             Func<TRight, TKey> rightKeySelector,
-            Func<TLeft?, TRight?, TResult> resultSelector)
+            Func<TLeft?, TRight?, TResult> resultSelector,
+            IEqualityComparer<TKey>? comparer = null)
         {
             var leftLookup = leftSource.ToLookup(leftKeySelector);
             var rightLookup = rightSource.ToLookup(rightKeySelector);
@@ -38,7 +40,7 @@ namespace SpaceEngineers.Core.Basics
             var keys = leftLookup
                 .Select(p => p.Key)
                 .Concat(rightLookup.Select(p => p.Key))
-                .ToHashSet();
+                .ToHashSet(comparer ?? EqualityComparer<TKey>.Default);
 
             return from key in keys
                 from left in leftLookup[key].DefaultIfEmpty()
@@ -54,6 +56,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="leftKeySelector">Left key selector</param>
         /// <param name="rightKeySelector">Right key selector</param>
         /// <param name="resultSelector">Result selector (right could be null for reference types)</param>
+        /// <param name="comparer">Custom equality comparer</param>
         /// <typeparam name="TLeft">TLeft type-argument</typeparam>
         /// <typeparam name="TRight">TRight type-argument</typeparam>
         /// <typeparam name="TKey">TKey type-argument</typeparam>
@@ -64,13 +67,20 @@ namespace SpaceEngineers.Core.Basics
             IEnumerable<TRight> rightSource,
             Func<TLeft, TKey> leftKeySelector,
             Func<TRight, TKey> rightKeySelector,
-            Func<TLeft, TRight?, TResult> resultSelector)
+            Func<TLeft, TRight?, TResult> resultSelector,
+            IEqualityComparer<TKey>? comparer = null)
         {
-            return from left in leftSource
-                join right in rightSource
-                    on leftKeySelector(left) equals rightKeySelector(right) into rightMatch
-                from nullableRight in rightMatch.DefaultIfEmpty()
-                select resultSelector(left, nullableRight);
+            var leftLookup = leftSource.ToLookup(leftKeySelector);
+            var rightLookup = rightSource.ToLookup(rightKeySelector);
+
+            var keys = leftLookup
+                .Select(p => p.Key)
+                .ToHashSet(comparer ?? EqualityComparer<TKey>.Default);
+
+            return from key in keys
+                from left in leftLookup[key]
+                from right in rightLookup[key].DefaultIfEmpty()
+                select resultSelector(left, right);
         }
 
         /// <summary>

@@ -11,18 +11,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     [Component(EnLifestyle.Singleton)]
     internal class QuerySourceExpressionTranslator : IExpressionTranslator<QuerySourceExpression>
     {
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _postgreSqlSettings;
+        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
 
-        public QuerySourceExpressionTranslator(ISettingsProvider<PostgreSqlDatabaseSettings> postgreSqlSettings)
+        public QuerySourceExpressionTranslator(ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
         {
-            _postgreSqlSettings = postgreSqlSettings;
+            _databaseSettings = databaseSettings;
         }
 
         public string Translate(QuerySourceExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.Append(_postgreSqlSettings.Get().Result.Schema);
+            sb.Append(_databaseSettings.Get().Result.Schema);
             sb.Append('.');
             sb.Append('\"');
             sb.Append(expression.ItemType.Name);

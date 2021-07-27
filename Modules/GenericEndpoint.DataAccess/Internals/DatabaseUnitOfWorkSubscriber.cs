@@ -11,12 +11,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using Messaging;
 
     [Component(EnLifestyle.Scoped)]
-    internal class DataBaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,
+    internal class DatabaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,
                                                   ICollectionResolvable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>>
     {
         private readonly IDatabaseTransaction _databaseTransaction;
 
-        public DataBaseUnitOfWorkSubscriber(IDatabaseTransaction databaseTransaction)
+        public DatabaseUnitOfWorkSubscriber(IDatabaseTransaction databaseTransaction)
         {
             _databaseTransaction = databaseTransaction;
         }

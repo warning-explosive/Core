@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
     /// <summary>
     /// ColumnNode
     /// </summary>
-    public class ColumnNode : IModelNode
+    public class ColumnNode
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Column type</param>
@@ -16,10 +16,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
             Name = name;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Column type
+        /// </summary>
         public Type Type { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Column name
+        /// </summary>
         public string Name { get; }
     }
 }

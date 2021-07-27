@@ -10,10 +10,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// <summary> .cctor </summary>
         /// <param name="name">Database name</param>
         /// <param name="tables">Database tables</param>
-        public DatabaseNode(string name, IReadOnlyCollection<TableNode> tables)
+        /// <param name="views">Database views</param>
+        public DatabaseNode(string name,
+            IReadOnlyCollection<TableNode> tables,
+            IReadOnlyCollection<ViewNode> views)
         {
-            Tables = tables;
             Name = name;
+            Tables = tables;
+            Views = views;
         }
 
         /// <summary>
@@ -25,5 +29,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
         /// Tables
         /// </summary>
         public IReadOnlyCollection<TableNode> Tables { get; }
+
+        /// <summary>
+        /// Views
+        /// </summary>
+        public IReadOnlyCollection<ViewNode> Views { get; }
     }
 }

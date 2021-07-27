@@ -6,23 +6,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
     /// <summary>
     /// TableNode
     /// </summary>
-    public class TableNode : IModelNode
+    public class TableNode
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Table type</param>
-        /// <param name="name">Table name</param>
         /// <param name="columns">Columns</param>
-        public TableNode(Type type, string name, IReadOnlyCollection<ColumnNode> columns)
+        public TableNode(Type type, IReadOnlyCollection<ColumnNode> columns)
         {
             Type = type;
+            Name = type.Name;
+            Columns = columns;
+        }
+
+        /// <summary> .cctor </summary>
+        /// <param name="name">Table name</param>
+        /// <param name="columns">Columns</param>
+        public TableNode(string name, IReadOnlyCollection<ColumnNode> columns)
+        {
             Name = name;
             Columns = columns;
         }
 
-        /// <inheritdoc />
-        public Type Type { get; }
+        /// <summary>
+        /// Table type
+        /// </summary>
+        public Type? Type { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Table name
+        /// </summary>
         public string Name { get; }
 
         /// <summary>

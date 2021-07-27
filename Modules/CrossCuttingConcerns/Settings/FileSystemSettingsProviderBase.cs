@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         /// <inheritdoc />
         public async Task<TSettings> Get()
         {
-            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.None))
+            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var serialized = await fileStream.ReadAllAsync(_encoding).ConfigureAwait(false);
 

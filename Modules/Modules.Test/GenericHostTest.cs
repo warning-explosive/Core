@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Orm.Model.Abstractions;
+    using DataAccess.Orm.PostgreSql.Model;
     using DataAccess.PostgreSql.Host;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
@@ -81,12 +82,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var actualModel = await container
                     .Resolve<IDatabaseModelBuilder>()
-                    .BuildModel()
+                    .BuildModel(cts.Token)
                     .ConfigureAwait(false);
 
                 var expectedModel = await container
                     .Resolve<ICodeModelBuilder>()
-                    .BuildModel()
+                    .BuildModel(cts.Token)
                     .ConfigureAwait(false);
 
                 var modelChanges = host
@@ -100,6 +101,10 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var createDatabase = modelChanges.OfType<CreateDatabase>().Single();
                 Assert.Equal("SpaceEngineersDatabase", createDatabase.Name);
+
+                var upsertViewChanges = modelChanges.OfType<UpsertView>().ToList();
+                Assert.NotNull(upsertViewChanges.SingleOrDefault(change => change.Type == typeof(DatabaseColumn)));
+                Assert.NotNull(upsertViewChanges.SingleOrDefault(change => change.Type == typeof(DatabaseView)));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

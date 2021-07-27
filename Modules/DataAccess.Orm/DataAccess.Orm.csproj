@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+      <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
     </ItemGroup>
@@ -38,7 +39,40 @@
       <Compile Update="Model\Abstractions\CreateDatabase.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\Abstractions\IModelNode.cs">
+      <Compile Update="Model\Abstractions\DropTable.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\DropColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\CreateTable.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ColumnNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\AlterColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\AddColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\TableNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ICodeModelBuilder.cs">
+        <DependentUpon>IModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\IDatabaseModelBuilder.cs">
+        <DependentUpon>IModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\UpsertView.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\DropView.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ViewNode.cs">
         <DependentUpon>DatabaseNode.cs</DependentUpon>
       </Compile>
     </ItemGroup>

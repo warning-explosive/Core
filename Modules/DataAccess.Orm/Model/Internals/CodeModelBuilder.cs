@@ -3,11 +3,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using System;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
     using Connection.Abstractions;
+    using Contract.Abstractions;
     using GenericDomain;
     using GenericDomain.Abstractions;
 
@@ -16,33 +20,41 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     {
         private const string DatabaseKey = "Database";
 
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDomainTypeProvider _domainTypeProvider;
         private readonly IConnectionFactory _connectionFactory;
 
-        public CodeModelBuilder(IDomainTypeProvider domainTypeProvider, IConnectionFactory connectionFactory)
+        public CodeModelBuilder(
+            IDependencyContainer dependencyContainer,
+            IDomainTypeProvider domainTypeProvider,
+            IConnectionFactory connectionFactory)
         {
+            _dependencyContainer = dependencyContainer;
             _domainTypeProvider = domainTypeProvider;
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<DatabaseNode?> BuildModel()
+        public async Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
             var tables = _domainTypeProvider
                 .Entities()
+                .Where(entity => !entity.IsView())
                 .Select(BuildTableNode)
                 .ToList();
 
-            var connectionStringBuilder = await _connectionFactory
-                .GetConnectionString()
+            var views = (await _domainTypeProvider
+                    .Entities()
+                    .Where(OrmModelExtensions.IsView)
+                    .Select(view => BuildViewNode(view, token))
+                    .WhenAll()
+                    .ConfigureAwait(false))
+                .ToList();
+
+            var database = await _connectionFactory
+                .GetDatabaseName(token)
                 .ConfigureAwait(false);
 
-            if (connectionStringBuilder.TryGetValue(DatabaseKey, out object value)
-                && value is string database)
-            {
-                return new DatabaseNode(database, tables);
-            }
-
-            throw new InvalidOperationException("Cannot find database name in the settings");
+            return new DatabaseNode(database, tables, views);
         }
 
         private static TableNode BuildTableNode(Type tableType)
@@ -55,7 +67,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
                 .Select(property => BuildColumnNode(tableType, property))
                 .ToList();
 
-            return new TableNode(tableType, tableType.Name, columns);
+            return new TableNode(tableType, columns);
         }
 
         private static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
@@ -67,6 +79,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
             return columnType.IsTypeSupported()
                 ? new ColumnNode(columnType, columnName)
                 : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+        }
+
+        private Task<ViewNode> BuildViewNode(Type viewType, CancellationToken token)
+        {
+            return this
+                .CallMethod(nameof(BuildViewNodeGeneric))
+                .WithTypeArgument(viewType)
+                .WithArgument(token)
+                .Invoke<Task<ViewNode>>();
+        }
+
+        private async Task<ViewNode> BuildViewNodeGeneric<TView>(CancellationToken token)
+            where TView : IView
+        {
+            var query = await _dependencyContainer
+                .Resolve<IViewQueryProvider<TView>>()
+                .GetQuery(token)
+                .ConfigureAwait(false);
+
+            return new ViewNode(typeof(TView), query);
         }
     }
 }

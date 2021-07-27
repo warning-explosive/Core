@@ -17,17 +17,17 @@
     internal class DatabaseTransaction : IDatabaseTransaction, IDisposable
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _postgreSqlSettings;
+        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
 
         private NpgsqlConnection? _connection;
         private NpgsqlTransaction? _transaction;
 
         public DatabaseTransaction(
             IConnectionFactory connectionFactory,
-            ISettingsProvider<PostgreSqlDatabaseSettings> postgreSqlSettings)
+            ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
         {
             _connectionFactory = connectionFactory;
-            _postgreSqlSettings = postgreSqlSettings;
+            _databaseSettings = databaseSettings;
         }
 
         public bool HasChanges => throw new NotImplementedException();
@@ -40,7 +40,7 @@
                 return _transaction;
             }
 
-            var postgreSqlSettings = await _postgreSqlSettings
+            var postgreSqlSettings = await _databaseSettings
                 .Get()
                 .ConfigureAwait(false);
 

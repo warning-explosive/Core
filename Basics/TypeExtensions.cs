@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using Exceptions;
 
     /// <summary>
@@ -20,7 +21,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Whether type is anonymous or not</returns>
         public static bool IsAnonymous(this Type type)
         {
-            return type.Name.Contains(AnonymousType, StringComparison.OrdinalIgnoreCase);
+            return type.HasAttribute<CompilerGeneratedAttribute>();
         }
 
         /// <summary>

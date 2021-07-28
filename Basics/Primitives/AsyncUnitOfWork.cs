@@ -34,8 +34,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
                 if (exception != null)
                 {
-                    exception.Rethrow();
-                    throw exception;
+                    throw exception.Rethrow();
                 }
             }
         }

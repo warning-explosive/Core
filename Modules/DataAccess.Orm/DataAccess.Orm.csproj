@@ -75,5 +75,38 @@
       <Compile Update="Model\Abstractions\ViewNode.cs">
         <DependentUpon>DatabaseNode.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\Internals\Queryable.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\QueryProvider.cs">
+        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\ReplaceFilterExpressionVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\ReplaceParameterVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\NamedBindingExpression.cs">
+        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\SimpleBindingExpression.cs">
+        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\FilterExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\ProjectionExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\NamedSourceExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\GroupByExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\ExtractLambdaExpressionVisitor.cs">
+        <DependentUpon>SqlTranslator.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

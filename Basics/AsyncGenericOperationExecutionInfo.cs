@@ -88,8 +88,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
-                    realException.Rethrow();
-                    throw realException;
+                    throw realException.Rethrow();
                 }
 
                 return default;
@@ -131,8 +130,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
-                    realException.Rethrow();
-                    throw realException;
+                    throw realException.Rethrow();
                 }
 
                 return await exceptionResultFactory(realException).ConfigureAwait(_configureAwait);

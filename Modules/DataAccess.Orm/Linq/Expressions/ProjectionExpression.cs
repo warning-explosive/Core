@@ -133,6 +133,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             Source = filter;
         }
 
+        internal void Apply(GroupByExpression groupBy)
+        {
+            Source = groupBy;
+        }
+
         internal void Apply(NewExpression @new)
         {
             IsProjectionToClass = true;

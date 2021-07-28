@@ -29,6 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         private static readonly MethodInfo Select = QueryableSelect();
         private static readonly MethodInfo Where = QueryableWhere();
+        private static readonly MethodInfo GroupBy2 = QueryableGroupBy2();
 
         private readonly IEnumerable<ISqlExpressionProvider> _sqlFunctionProviders;
 
@@ -83,6 +84,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.Where()"));
         }
 
+        private static MethodInfo QueryableGroupBy2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.GroupBy),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.GroupBy()"));
+        }
+
         private sealed class IntermediateExpressionVisitor : ExpressionVisitor
         {
             private readonly SqlTranslator _translator;
@@ -117,32 +131,88 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     if (_stack.TryPeek(out var outer)
                         && outer is ProjectionExpression)
                     {
-                        return WithScopeOpening(new QuerySourceExpression(itemType),
-                            () => base.VisitMethodCall(node));
+                        WithScopeOpening(new QuerySourceExpression(itemType), () => base.VisitMethodCall(node));
+
+                        return node;
                     }
 
-                    return WithScopeOpening(new ProjectionExpression(itemType, new QuerySourceExpression(itemType), Enumerable.Empty<IIntermediateExpression>()),
-                        () => base.VisitMethodCall(node));
+                    var projection = new ProjectionExpression(itemType, new QuerySourceExpression(itemType), Enumerable.Empty<IIntermediateExpression>());
+
+                    WithScopeOpening(projection, () => base.VisitMethodCall(node));
+
+                    return node;
                 }
 
                 if (method == Select)
                 {
-                    return WithScopeOpening(new ProjectionExpression(itemType),
-                        () => base.VisitMethodCall(node));
+                    WithScopeOpening(new ProjectionExpression(itemType), () => base.VisitMethodCall(node));
+
+                    return node;
                 }
 
                 if (method == Where)
                 {
-                    return WithoutScopeDuplication(() => new FilterExpression(itemType),
-                        () => base.VisitMethodCall(node));
+                    WithoutScopeDuplication(() => new FilterExpression(itemType), () => base.VisitMethodCall(node));
+
+                    return node;
+                }
+
+                if (method == GroupBy2)
+                {
+                    var typeArguments = itemType
+                        .ExtractGenericArguments(typeof(IGrouping<,>))
+                        .Single();
+
+                    var groupKeyType = typeArguments[0];
+                    var groupItemType = typeArguments[1];
+
+                    var sourceType = node
+                        .Arguments[0]
+                        .Type
+                        .ExtractGenericArgumentsAt(typeof(IQueryable<>))
+                        .Single();
+
+                    var sourceExpression = node.Arguments[0];
+                    var keyExpression = new ExtractLambdaExpressionVisitor().Extract(node.Arguments[1])
+                                        ?? throw new InvalidOperationException(string.Format(UnableToTranslateFormat, $"method: {node.Method}"));
+
+                    var groupByProjection = new ProjectionExpression(groupItemType);
+
+                    WithScopeOpening(groupByProjection,
+                        () =>
+                        {
+                            var groupBy = new GroupByExpression(itemType);
+
+                            WithScopeOpening(groupBy, () => Visit(sourceExpression));
+
+                            var keyProjection = new ProjectionExpression(groupKeyType, groupBy.Source, Enumerable.Empty<IIntermediateExpression>());
+
+                            WithScopeOpening(groupBy,
+                                () => WithScopeOpening(keyProjection,
+                                    () => VisitLambda(sourceType, groupKeyType, keyExpression)));
+
+                            Apply(keyProjection.Source, groupBy);
+
+                            if (!groupByProjection.Bindings.Any())
+                            {
+                                foreach (var keyProjectionBinding in keyProjection.Bindings)
+                                {
+                                    Apply(keyProjectionBinding, groupByProjection);
+                                }
+                            }
+                        });
+
+                    return node;
                 }
 
                 if (TryRecognizeSqlExpression(node.Method, out var recognized))
                 {
-                    return WithScopeOpening(recognized, () => base.VisitMethodCall(node));
+                    WithScopeOpening(recognized, () => base.VisitMethodCall(node));
+
+                    return node;
                 }
 
-                throw new NotSupportedException(string.Format(UnableToTranslateFormat, $"method: {node.Method}"));
+                throw new InvalidOperationException(string.Format(UnableToTranslateFormat, $"method: {node.Method}"));
             }
 
             protected override Expression VisitMember(MemberExpression node)
@@ -151,12 +221,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     ? recognized
                     : new SimpleBindingExpression(node.Type, node.Member.Name);
 
-                return WithScopeOpening(expression, () => base.VisitMember(node));
+                WithScopeOpening(expression, () => base.VisitMember(node));
+
+                return node;
             }
 
             protected override Expression VisitNew(NewExpression node)
             {
-                return WithoutScopeOpening(() => new Expressions.NewExpression(node.Type),
+                WithoutScopeOpening(() => new Expressions.NewExpression(node.Type),
                     () =>
                     {
                         node.Members
@@ -177,27 +249,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                                     Apply(pair.expression);
                                 }
                             });
-
-                        return node;
                     });
+
+                return node;
             }
 
             protected override Expression VisitConditional(ConditionalExpression node)
             {
-                return WithScopeOpening(new Expressions.ConditionalExpression(node.Type),
-                    () => base.VisitConditional(node));
+                WithScopeOpening(new Expressions.ConditionalExpression(node.Type), () => base.VisitConditional(node));
+
+                return node;
             }
 
             protected override Expression VisitBinary(BinaryExpression node)
             {
-                return WithScopeOpening(new Expressions.BinaryExpression(node.Type, node.NodeType.ToString()),
-                    () => base.VisitBinary(node));
+                WithScopeOpening(new Expressions.BinaryExpression(node.Type, node.NodeType.ToString()), () => base.VisitBinary(node));
+
+                return node;
             }
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                return WithScopeOpening(new Expressions.ParameterExpression(node.Type, node.Name),
-                    () => base.VisitParameter(node));
+                WithScopeOpening(new Expressions.ParameterExpression(node.Type, node.Name), () => base.VisitParameter(node));
+
+                return node;
             }
 
             protected override Expression VisitConstant(ConstantExpression node)
@@ -207,8 +282,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     return base.VisitConstant(node);
                 }
 
-                return WithScopeOpening(new Expressions.ConstantExpression(node.Type, node.Value),
-                    () => base.VisitConstant(node));
+                WithScopeOpening(new Expressions.ConstantExpression(node.Type, node.Value), () => base.VisitConstant(node));
+
+                return node;
             }
 
             private static void Apply(IIntermediateExpression current, IIntermediateExpression outer)
@@ -233,12 +309,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 }
             }
 
-            private Expression WithScopeOpening<T>(T expression, Func<Expression> producer)
+            private void WithScopeOpening<T>(T expression, Action? action = null)
                 where T : class, IIntermediateExpression
             {
                 using (Disposable.Create(_stack, Push, Pop))
                 {
-                    return producer();
+                    action?.Invoke();
                 }
 
                 void Push(Stack<IIntermediateExpression> stack)
@@ -261,29 +337,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 }
             }
 
-            private Expression WithoutScopeDuplication<T>(Func<T> intermediateExpressionProducer, Func<Expression> producer)
+            private void WithoutScopeDuplication<T>(Func<T> intermediateExpressionProducer, Action? action = null)
                 where T : class, IIntermediateExpression
             {
                 if (_stack.TryPeek(out var outer)
                     && outer is T)
                 {
-                    return producer();
+                    action?.Invoke();
                 }
 
-                return WithScopeOpening(intermediateExpressionProducer(), producer);
+                WithScopeOpening(intermediateExpressionProducer(), action);
             }
 
-            private Expression WithoutScopeOpening<T>(Func<T> intermediateExpressionProducer, Func<Expression> producer)
+            private void WithoutScopeOpening<T>(Func<T> intermediateExpressionProducer, Action? action = null)
                 where T : class, IIntermediateExpression
             {
-                var produced = producer();
+                action?.Invoke();
 
                 if (_stack.TryPeek(out var outer))
                 {
                     Apply(intermediateExpressionProducer(), outer);
                 }
-
-                return produced;
             }
 
             private bool TryRecognizeSqlExpression(MemberInfo memberInfo, [NotNullWhen(true)] out IIntermediateExpression? expression)
@@ -304,6 +378,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 {
                     throw new InvalidOperationException($"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member");
                 }
+            }
+
+            private void VisitLambda(Type sourceType, Type itemType, LambdaExpression lambdaExpression)
+            {
+                this.CallMethod(nameof(VisitLambdaGeneric))
+                    .WithTypeArgument(sourceType)
+                    .WithTypeArgument(itemType)
+                    .WithArgument(lambdaExpression)
+                    .Invoke();
+            }
+
+            private void VisitLambdaGeneric<TSource, TItem>(Expression<Func<TSource, TItem>> expression)
+            {
+                _ = VisitLambda(expression);
             }
         }
     }

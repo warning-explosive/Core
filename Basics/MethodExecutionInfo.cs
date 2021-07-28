@@ -176,7 +176,7 @@ namespace SpaceEngineers.Core.Basics
             return action
                 .Try()
                 .Catch<Exception>()
-                .Invoke(ex => throw ex);
+                .Invoke(ex => throw ex.Rethrow());
         }
 
         private static BindingFlags GetBindings(bool isInstanceMethod)

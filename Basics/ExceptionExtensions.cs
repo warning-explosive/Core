@@ -15,9 +15,11 @@ namespace SpaceEngineers.Core.Basics
         /// Rethrows exception and keeps original stack trace
         /// </summary>
         /// <param name="exception">Original exception</param>
-        public static void Rethrow(this Exception exception)
+        /// <returns>Exception to throw</returns>
+        public static Exception Rethrow(this Exception exception)
         {
             ExceptionDispatchInfo.Capture(exception).Throw();
+            return exception;
         }
 
         /// <summary>

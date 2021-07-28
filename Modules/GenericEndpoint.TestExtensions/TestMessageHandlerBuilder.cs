@@ -56,8 +56,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
                 case 1:
                 {
                     var error = errors.Single();
-                    error.Rethrow();
-                    throw error;
+                    throw error.Rethrow();
                 }
             }
         }

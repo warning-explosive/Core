@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     /// GroupByExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class GroupByExpression : ISubsequentIntermediateExpression,
+    public class GroupByExpression : IIntermediateExpression,
                                      IEquatable<GroupByExpression>,
                                      ISafelyEquatable<GroupByExpression>
     {
@@ -24,14 +24,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public Type ItemType { get; }
 
         /// <summary>
-        /// GroupBy source
+        /// Group by keys
         /// </summary>
-        public IIntermediateExpression Source { get; private set; } = null!;
+        public ProjectionExpression Keys { get; private set; } = null!;
 
         /// <summary>
-        /// GroupBy key
+        /// Group by values
         /// </summary>
-        public ProjectionExpression Key { get; private set; } = null!;
+        public ProjectionExpression Values { get; private set; } = null!;
 
         #region IEquatable
 
@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Source);
+            return HashCode.Combine(ItemType, Keys, Values);
         }
 
         /// <inheritdoc />
@@ -79,26 +79,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public bool SafeEquals(GroupByExpression other)
         {
             return ItemType == other.ItemType
-                   && Source.Equals(other.Source);
+                   && Keys.Equals(other.Keys)
+                   && Values.Equals(other.Values);
         }
 
         #endregion
 
         internal void Apply(ProjectionExpression expression)
         {
-            if (Source == null)
+            if (Keys == null)
             {
-                Source = expression;
+                Keys = expression;
             }
-            else if (Key == null)
+            else if (Values == null)
             {
-                Key = expression;
+                Values = expression;
             }
-        }
-
-        internal void Apply(NamedSourceExpression expression)
-        {
-            Source = expression;
         }
     }
 }

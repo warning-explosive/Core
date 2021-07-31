@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Primitives;
 
     /// <summary>
     /// AsyncExtensions
@@ -33,18 +35,12 @@ namespace SpaceEngineers.Core.Basics
         /// Converts Enumerable source to IAsyncEnumerable source
         /// </summary>
         /// <param name="source">Source</param>
+        /// <param name="token">Cancellation token</param>
         /// <typeparam name="T">T type-argument</typeparam>
-        /// <returns>AsyncEnumerable source</returns>
-        public static async Task<IEnumerable<T>> AsEnumerable<T>(this IAsyncEnumerable<T> source)
+        /// <returns>Enumerable over async enumerable source</returns>
+        public static IEnumerable<T> AsEnumerable<T>(this IAsyncEnumerable<T> source, CancellationToken token)
         {
-            var list = new List<T>();
-
-            await foreach (var element in source.ConfigureAwait(false))
-            {
-                list.Add(element);
-            }
-
-            return list;
+            return new AsyncEnumerable<T>(source, token);
         }
     }
 }

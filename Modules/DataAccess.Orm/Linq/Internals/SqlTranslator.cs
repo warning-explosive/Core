@@ -159,48 +159,44 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
                 if (method == GroupBy2)
                 {
-                    var typeArguments = itemType
-                        .ExtractGenericArguments(typeof(IGrouping<,>))
-                        .Single();
-
-                    var groupKeyType = typeArguments[0];
-                    var groupItemType = typeArguments[1];
-
                     var sourceType = node
                         .Arguments[0]
                         .Type
                         .ExtractGenericArgumentsAt(typeof(IQueryable<>))
                         .Single();
 
+                    var typeArguments = itemType
+                        .ExtractGenericArguments(typeof(IGrouping<,>))
+                        .Single();
+
+                    var keyType = typeArguments[0];
+                    var valueType = typeArguments[1];
+
                     var sourceExpression = node.Arguments[0];
+
                     var keyExpression = new ExtractLambdaExpressionVisitor().Extract(node.Arguments[1])
                                         ?? throw new InvalidOperationException(string.Format(UnableToTranslateFormat, $"method: {node.Method}"));
 
-                    var groupByProjection = new ProjectionExpression(groupItemType);
+                    var groupBy = new GroupByExpression(itemType);
 
-                    WithScopeOpening(groupByProjection,
-                        () =>
-                        {
-                            var groupBy = new GroupByExpression(itemType);
+                    var keysProjection = new ProjectionExpression(keyType) { IsDistinct = true };
 
-                            WithScopeOpening(groupBy, () => Visit(sourceExpression));
-
-                            var keyProjection = new ProjectionExpression(groupKeyType, groupBy.Source, Enumerable.Empty<IIntermediateExpression>());
-
-                            WithScopeOpening(groupBy,
-                                () => WithScopeOpening(keyProjection,
-                                    () => VisitLambda(sourceType, groupKeyType, keyExpression)));
-
-                            Apply(keyProjection.Source, groupBy);
-
-                            if (!groupByProjection.Bindings.Any())
+                    WithScopeOpening(groupBy,
+                        () => WithScopeOpening(keysProjection,
+                            () =>
                             {
-                                foreach (var keyProjectionBinding in keyProjection.Bindings)
-                                {
-                                    Apply(keyProjectionBinding, groupByProjection);
-                                }
-                            }
-                        });
+                                Visit(sourceExpression);
+                                VisitLambda(sourceType, keyType, keyExpression);
+                            }));
+
+                    var sourceFilter = new FilterExpression(sourceType);
+
+                    WithScopeOpening(groupBy, () => WithScopeOpening(sourceFilter, () => Visit(sourceExpression)));
+
+                    foreach (var filterBinding in keysProjection.GetFilterBindings())
+                    {
+                        Apply(filterBinding, sourceFilter);
+                    }
 
                     return node;
                 }

@@ -1,13 +1,13 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     /// <summary>
-    /// Translated query
+    /// Flat query
     /// </summary>
-    public sealed class TranslatedQuery
+    public sealed class FlatQuery : IQuery
     {
         /// <summary> .cctor </summary>
-        /// <param name="query">Translated query</param>
-        public TranslatedQuery(string query)
+        /// <param name="query">Query</param>
+        public FlatQuery(string query)
         {
             Query = query;
         }

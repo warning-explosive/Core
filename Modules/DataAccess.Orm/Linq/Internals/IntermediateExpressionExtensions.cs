@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
+    using Abstractions;
     using AutoRegistration.Abstractions;
     using Basics;
-    using Linq.Abstractions;
 
     internal static class IntermediateExpressionExtensions
     {

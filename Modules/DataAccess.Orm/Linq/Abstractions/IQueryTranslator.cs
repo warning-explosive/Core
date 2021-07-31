@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
         /// Translate linq query expression
         /// </summary>
         /// <param name="expression">Linq query expression</param>
-        /// <returns>Translated query</returns>
-        TranslatedQuery Translate(Expression expression);
+        /// <returns>Query</returns>
+        IQuery Translate(Expression expression);
     }
 }

@@ -102,11 +102,26 @@
       <Compile Update="Linq\Expressions\NamedSourceExpression.cs">
         <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\Expressions\GroupByExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\Internals\ExtractLambdaExpressionVisitor.cs">
         <DependentUpon>SqlTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\IMaterializer.cs">
+        <DependentUpon>IQueryAsyncQueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\FlatQuery.cs">
+        <DependentUpon>IQuery.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\GroupedQuery.cs">
+        <DependentUpon>IQuery.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\IQueryMaterializer.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\FlatQueryMaterializer.cs">
+        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\GroupedQueryMaterializer.cs">
+        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

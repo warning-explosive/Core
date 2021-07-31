@@ -2,40 +2,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Abstractions;
+    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using Contract.Abstractions;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
-    using Settings;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryProvider : IAsyncQueryProvider,
                                    IExternalResolvable<IQueryProvider>
     {
-        private readonly ISettingsProvider<OrmSettings> _ormSettings;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IQueryTranslator _translator;
-        private readonly IObjectBuilder _objectBuilder;
 
-        public QueryProvider(
-            ISettingsProvider<OrmSettings> ormSettings,
-            IDatabaseTransaction transaction,
-            IQueryTranslator translator,
-            IObjectBuilder objectBuilder)
+        public QueryProvider(IDependencyContainer dependencyContainer, IQueryTranslator translator)
         {
-            _ormSettings = ormSettings;
-            _transaction = transaction;
+            _dependencyContainer = dependencyContainer;
             _translator = translator;
-            _objectBuilder = objectBuilder;
         }
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -77,6 +65,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 .CallMethod(nameof(AsEnumerable))
                 .WithTypeArgument(itemType)
                 .WithArgument(asyncEnumerable)
+                .WithArgument(CancellationToken.None)
                 .Invoke<object>();
 
             return (TResult)enumerable;
@@ -86,36 +75,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             Expression expression,
             [EnumeratorCancellation] CancellationToken token)
         {
-            var ormSettings = await _ormSettings
-                .Get()
-                .ConfigureAwait(false);
-
             var query = _translator.Translate(expression);
 
-            var transaction = await _transaction
-                .Open(token)
-                .ConfigureAwait(false);
-
-            var dynamicResult = await transaction
-                .Connection
-                .QueryAsync(query.Query, query.Parameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
-                .ConfigureAwait(false);
-
-            foreach (var dynamicValues in dynamicResult)
+            await foreach (var item in Materialize<T>(query, token))
             {
-                var values = dynamicValues as IDictionary<string, object>;
-                var built = _objectBuilder.Build(typeof(T), values);
-
-                if (built != null)
-                {
-                    yield return (T)built;
-                }
+                yield return item;
             }
         }
 
-        private static IEnumerable<T> AsEnumerable<T>(IAsyncEnumerable<T> asyncEnumerable)
+        private IAsyncEnumerable<T> Materialize<T>(IQuery query, CancellationToken token)
         {
-            return asyncEnumerable.AsEnumerable().Result;
+            return this
+                .CallMethod(nameof(Materialize))
+                .WithTypeArgument(query.GetType())
+                .WithTypeArgument<T>()
+                .WithArgument(query)
+                .WithArgument(token)
+                .Invoke<IAsyncEnumerable<T>>();
+        }
+
+        private IAsyncEnumerable<TItem> Materialize<TQuery, TItem>(TQuery query, CancellationToken token)
+            where TQuery : IQuery
+        {
+            return _dependencyContainer
+                .Resolve<IQueryMaterializer<TQuery, TItem>>()
+                .Materialize(query, token);
+        }
+
+        private static IEnumerable<T> AsEnumerable<T>(IAsyncEnumerable<T> asyncEnumerable, CancellationToken token)
+        {
+            return asyncEnumerable.AsEnumerable(token);
         }
     }
 }

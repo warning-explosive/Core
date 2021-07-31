@@ -55,6 +55,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public bool IsAnonymousProjection { get; private set; }
 
         /// <summary>
+        /// Is projection takes distinct values
+        /// </summary>
+        public bool IsDistinct { get; set; }
+
+        /// <summary>
         /// Transformation bindings
         /// </summary>
         public IReadOnlyCollection<IIntermediateExpression> Bindings => _bindings;
@@ -91,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, IsProjectionToClass, IsAnonymousProjection, Bindings, Source);
+            return HashCode.Combine(ItemType, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Bindings, Source);
         }
 
         /// <inheritdoc />
@@ -112,6 +117,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             return ItemType == other.ItemType
                    && IsProjectionToClass == other.IsProjectionToClass
                    && IsAnonymousProjection == other.IsAnonymousProjection
+                   && IsDistinct == other.IsDistinct
                    && Bindings.SequenceEqual(other.Bindings)
                    && Source.Equals(other.Source);
         }
@@ -131,11 +137,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         internal void Apply(FilterExpression filter)
         {
             Source = filter;
-        }
-
-        internal void Apply(GroupByExpression groupBy)
-        {
-            Source = groupBy;
         }
 
         internal void Apply(NewExpression @new)
@@ -190,6 +191,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                     Source.ItemType,
                     Source,
                     parameter);
+            }
+        }
+
+        internal IEnumerable<IIntermediateExpression> GetFilterBindings()
+        {
+            if (Bindings.Any())
+            {
+                foreach (var binding in Bindings)
+                {
+                    yield return binding;
+                }
+            }
+            else if (IsProjectionToClass)
+            {
+                var parameter = new ParameterExpression(ItemType, "a");
+
+                foreach (var property in ItemType.GetProperties())
+                {
+                    yield return new SimpleBindingExpression(property.PropertyType, property.Name, parameter);
+                }
             }
         }
     }

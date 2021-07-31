@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Linq.Abstractions;
+    using Linq.Internals;
     using BinaryExpression = Linq.Expressions.BinaryExpression;
     using ConstantExpression = Linq.Expressions.ConstantExpression;
 

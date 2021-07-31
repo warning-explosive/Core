@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoWiring.Api.Enumerations;
     using Linq.Abstractions;
     using Linq.Expressions;
+    using Linq.Internals;
 
     [Component(EnLifestyle.Singleton)]
     internal class NamedSourceExpressionTranslator : IExpressionTranslator<NamedSourceExpression>

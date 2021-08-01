@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AutoRegistration.Internals
+namespace SpaceEngineers.Core.AutoRegistration.ManualRegistrations
 {
     using Abstractions;
     using AutoWiring.Api.Services;

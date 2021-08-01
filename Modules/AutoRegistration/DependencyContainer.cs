@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.AutoRegistration
     using Extensions;
     using Implementations;
     using Internals;
+    using ManualRegistrations;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
 
@@ -229,8 +230,8 @@ namespace SpaceEngineers.Core.AutoRegistration
             DependencyContainerOptions options)
         {
             var autoRegistrationsContainer = new AutoRegistrationsContainer(container, typeProvider, servicesProvider);
-
             var manualRegistrationsContainer = new ManualRegistrationsContainer();
+
             options
                 .WithManualRegistrations(new DependencyContainerManualRegistration(this))
                 .ManualRegistrations

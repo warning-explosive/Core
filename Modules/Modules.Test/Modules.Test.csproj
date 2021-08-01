@@ -53,6 +53,8 @@
     <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
     <ProjectReference Include="..\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj" />
     <ProjectReference Include="..\DataImport\DataImport.csproj" />
+    <ProjectReference Include="..\Dynamic.Api\Dynamic.Api.csproj" />
+    <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     <ProjectReference Include="..\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
-    using Connection.Abstractions;
+    using Connection;
     using Contract.Abstractions;
     using GenericDomain;
     using GenericDomain.Abstractions;
@@ -18,8 +18,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder
     {
-        private const string DatabaseKey = "Database";
-
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDomainTypeProvider _domainTypeProvider;
         private readonly IConnectionFactory _connectionFactory;

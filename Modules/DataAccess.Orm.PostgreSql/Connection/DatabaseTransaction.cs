@@ -10,7 +10,7 @@
     using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Abstractions;
     using Npgsql;
-    using Orm.Connection.Abstractions;
+    using Orm.Connection;
     using Settings;
 
     [Component(EnLifestyle.Scoped)]

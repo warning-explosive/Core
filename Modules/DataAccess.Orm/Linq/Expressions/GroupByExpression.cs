@@ -26,12 +26,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <summary>
         /// Group by keys
         /// </summary>
-        public ProjectionExpression Keys { get; private set; } = null!;
+        public IIntermediateExpression Keys { get; private set; } = null!;
 
         /// <summary>
         /// Group by values
         /// </summary>
-        public ProjectionExpression Values { get; private set; } = null!;
+        public IIntermediateExpression Values { get; private set; } = null!;
 
         #region IEquatable
 
@@ -85,7 +85,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(ProjectionExpression expression)
+        internal void Apply(ProjectionExpression projection)
+        {
+            ApplyInternal(projection);
+        }
+
+        internal void Apply(FilterExpression filter)
+        {
+            ApplyInternal(filter);
+        }
+
+        internal void ApplyInternal(IIntermediateExpression expression)
         {
             if (Keys == null)
             {

@@ -1,9 +1,8 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.MemberInfoTranslators
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using Abstractions;
     using AutoWiring.Api.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -11,13 +10,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class StringLengthSqlExpressionProvider : ISqlExpressionProvider,
-                                                       ICollectionResolvable<ISqlExpressionProvider>
+    internal class StringLengthMemberInfoTranslator : IMemberInfoTranslator,
+                                                      ICollectionResolvable<IMemberInfoTranslator>
     {
-        public bool TryRecognize(MemberInfo member, [NotNullWhen(true)] out IIntermediateExpression? expression)
+        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression)
         {
-            if (member.DeclaringType == typeof(string)
-                && member.Name.Equals(nameof(string.Length), StringComparison.OrdinalIgnoreCase))
+            if (context.Member.DeclaringType == typeof(string)
+                && context.Member.Name.Equals(nameof(string.Length), StringComparison.OrdinalIgnoreCase))
             {
                 expression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), Enumerable.Empty<IIntermediateExpression>());
                 return true;

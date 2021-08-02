@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Text;
@@ -10,36 +9,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using Linq.Abstractions;
     using Linq.Internals;
     using BinaryExpression = Linq.Expressions.BinaryExpression;
-    using ConstantExpression = Linq.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
     {
-        private static readonly IReadOnlyDictionary<string, string> FunctionalOperators
-            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly IReadOnlyDictionary<ExpressionType, string> FunctionalOperators
+            = new Dictionary<ExpressionType, string>()
             {
-                [nameof(ExpressionType.Coalesce)] = "COALESCE"
+                [ExpressionType.Coalesce] = "COALESCE"
             };
 
-        private static readonly IReadOnlyDictionary<string, string> Operators
-            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly IReadOnlyDictionary<ExpressionType, string> Operators
+            = new Dictionary<ExpressionType, string>()
             {
-                [nameof(ExpressionType.Equal)] = "=",
-                [nameof(ExpressionType.NotEqual)] = "!=",
-                [nameof(ExpressionType.GreaterThanOrEqual)] = ">=",
-                [nameof(ExpressionType.GreaterThan)] = ">",
-                [nameof(ExpressionType.LessThan)] = "<",
-                [nameof(ExpressionType.LessThanOrEqual)] = "<=",
-                [nameof(ExpressionType.AndAlso)] = "AND",
-                [nameof(ExpressionType.OrElse)] = "OR",
-                [nameof(ExpressionType.ExclusiveOr)] = "XOR"
+                [ExpressionType.Equal] = "=",
+                [ExpressionType.NotEqual] = "!=",
+                [ExpressionType.GreaterThanOrEqual] = ">=",
+                [ExpressionType.GreaterThan] = ">",
+                [ExpressionType.LessThan] = "<",
+                [ExpressionType.LessThanOrEqual] = "<=",
+                [ExpressionType.AndAlso] = "AND",
+                [ExpressionType.OrElse] = "OR",
+                [ExpressionType.ExclusiveOr] = "XOR"
             };
 
-        private static readonly IReadOnlyDictionary<string, string> AltOperators
-            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly IReadOnlyDictionary<ExpressionType, string> AltOperators
+            = new Dictionary<ExpressionType, string>()
             {
-                [nameof(ExpressionType.Equal)] = "IS",
-                [nameof(ExpressionType.NotEqual)] = "IS NOT"
+                [ExpressionType.Equal] = "IS",
+                [ExpressionType.NotEqual] = "IS NOT"
             };
 
         private readonly IDependencyContainer _dependencyContainer;

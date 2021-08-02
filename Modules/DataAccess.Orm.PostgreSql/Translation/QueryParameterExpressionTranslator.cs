@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using Linq.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ConstantExpressionTranslator : IExpressionTranslator<ConstantExpression>
+    internal class QueryParameterExpressionTranslator : IExpressionTranslator<QueryParameterExpression>
     {
-        public string Translate(ConstantExpression expression, int depth)
+        public string Translate(QueryParameterExpression expression, int depth)
         {
-            return expression.Value?.ToString() ?? "NULL";
+            return expression.Name;
         }
     }
 }

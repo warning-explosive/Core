@@ -6,19 +6,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using Basics;
 
     /// <summary>
-    /// ConstantExpression
+    /// QueryParameterExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ConstantExpression : IIntermediateExpression,
-                                      IEquatable<ConstantExpression>,
-                                      ISafelyEquatable<ConstantExpression>
+    public class QueryParameterExpression : IIntermediateExpression,
+                                            IEquatable<QueryParameterExpression>,
+                                            ISafelyEquatable<QueryParameterExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
-        /// <param name="value">Constant value</param>
-        public ConstantExpression(Type itemType, object? value)
+        /// <param name="name">Query parameter name</param>
+        /// <param name="value">Query parameter value</param>
+        public QueryParameterExpression(Type itemType, string name, object? value)
         {
             ItemType = itemType;
+            Name = name;
             Value = value;
         }
 
@@ -26,7 +28,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public Type ItemType { get; }
 
         /// <summary>
-        /// Constant value
+        /// Query parameter name
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Query parameter value
         /// </summary>
         public object? Value { get; }
 
@@ -35,10 +42,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left ConstantExpression</param>
-        /// <param name="right">Right ConstantExpression</param>
+        /// <param name="left">Left QueryParameterExpression</param>
+        /// <param name="right">Right QueryParameterExpression</param>
         /// <returns>equals</returns>
-        public static bool operator ==(ConstantExpression? left, ConstantExpression? right)
+        public static bool operator ==(QueryParameterExpression? left, QueryParameterExpression? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -46,10 +53,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left ConstantExpression</param>
-        /// <param name="right">Right ConstantExpression</param>
+        /// <param name="left">Left QueryParameterExpression</param>
+        /// <param name="right">Right QueryParameterExpression</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(ConstantExpression? left, ConstantExpression? right)
+        public static bool operator !=(QueryParameterExpression? left, QueryParameterExpression? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -57,7 +64,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Value);
+            return HashCode.Combine(ItemType, Name, Value);
         }
 
         /// <inheritdoc />
@@ -67,15 +74,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         /// <inheritdoc />
-        public bool Equals(ConstantExpression? other)
+        public bool Equals(QueryParameterExpression? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(ConstantExpression other)
+        public bool SafeEquals(QueryParameterExpression other)
         {
             return ItemType == other.ItemType
+                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Value?.Equals(other.Value) == true;
         }
 

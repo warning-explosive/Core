@@ -17,16 +17,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             {
                 BinaryExpression binaryExpression => VisitBinary(binaryExpression),
                 ConditionalExpression conditionalExpression => VisitConditional(conditionalExpression),
-                ConstantExpression constantExpression => VisitConstant(constantExpression),
-                FilterExpression filterExpression => VisitFilter(filterExpression),
-                ProjectionExpression projectionExpression => VisitProjection(projectionExpression),
                 NamedBindingExpression namedBindingExpression => VisitNamedBinding(namedBindingExpression),
-                ParameterExpression parameterExpression => VisitParameter(parameterExpression),
                 SimpleBindingExpression simpleBindingExpression => VisitSimpleBinding(simpleBindingExpression),
+                FilterExpression filterExpression => VisitFilter(filterExpression),
                 NamedSourceExpression namedSourceExpression => VisitNamedSource(namedSourceExpression),
-                NewExpression newExpression => VisitNew(newExpression),
-                QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
+                ProjectionExpression projectionExpression => VisitProjection(projectionExpression),
                 MethodCallExpression methodCallExpression => VisitMethodCall(methodCallExpression),
+                NewExpression newExpression => VisitNew(newExpression),
+                ParameterExpression parameterExpression => VisitParameter(parameterExpression),
+                QueryParameterExpression queryParameterExpression => VisitQueryParameter(queryParameterExpression),
+                QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
                 _ => throw new NotSupportedException(expression.GetType().FullName)
             };
         }
@@ -60,29 +60,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         }
 
         /// <summary>
-        /// Visit ConstantExpression
-        /// </summary>
-        /// <param name="constantExpression">ConstantExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitConstant(ConstantExpression constantExpression)
-        {
-            return constantExpression;
-        }
-
-        /// <summary>
-        /// Visit FilterExpression
-        /// </summary>
-        /// <param name="filterExpression">FilterExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitFilter(FilterExpression filterExpression)
-        {
-            return new FilterExpression(
-                filterExpression.ItemType,
-                Visit(filterExpression.Source),
-                Visit(filterExpression.Expression));
-        }
-
-        /// <summary>
         /// Visit NamedBindingExpression
         /// </summary>
         /// <param name="namedBindingExpression">NamedBindingExpression</param>
@@ -106,6 +83,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         }
 
         /// <summary>
+        /// Visit FilterExpression
+        /// </summary>
+        /// <param name="filterExpression">FilterExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitFilter(FilterExpression filterExpression)
+        {
+            return new FilterExpression(
+                filterExpression.ItemType,
+                Visit(filterExpression.Source),
+                Visit(filterExpression.Expression));
+        }
+
+        /// <summary>
         /// Visit NamedSourceExpression
         /// </summary>
         /// <param name="namedSourceExpression">NamedSourceExpression</param>
@@ -116,6 +106,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 namedSourceExpression.ItemType,
                 Visit(namedSourceExpression.Source),
                 Visit(namedSourceExpression.Parameter));
+        }
+
+        /// <summary>
+        /// Visit ProjectionExpression
+        /// </summary>
+        /// <param name="projectionExpression">ProjectionExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitProjection(ProjectionExpression projectionExpression)
+        {
+            return new ProjectionExpression(
+                projectionExpression.ItemType,
+                Visit(projectionExpression.Source),
+                projectionExpression.Bindings.Select(Visit));
+        }
+
+        /// <summary>
+        /// Visit MethodCallExpression
+        /// </summary>
+        /// <param name="methodCallExpression">MethodCallExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitMethodCall(MethodCallExpression methodCallExpression)
+        {
+            return new MethodCallExpression(
+                methodCallExpression.ItemType,
+                methodCallExpression.Name,
+                methodCallExpression.Arguments.Select(Visit).ToList());
         }
 
         /// <summary>
@@ -139,16 +155,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         }
 
         /// <summary>
-        /// Visit ProjectionExpression
+        /// Visit QueryParameterExpression
         /// </summary>
-        /// <param name="projectionExpression">ProjectionExpression</param>
+        /// <param name="queryParameterExpression">QueryParameterExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitProjection(ProjectionExpression projectionExpression)
+        protected virtual IIntermediateExpression VisitQueryParameter(QueryParameterExpression queryParameterExpression)
         {
-            return new ProjectionExpression(
-                projectionExpression.ItemType,
-                Visit(projectionExpression.Source),
-                projectionExpression.Bindings.Select(Visit));
+            return queryParameterExpression;
         }
 
         /// <summary>
@@ -159,19 +172,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitQuerySource(QuerySourceExpression querySourceExpression)
         {
             return querySourceExpression;
-        }
-
-        /// <summary>
-        /// Visit MethodCallExpression
-        /// </summary>
-        /// <param name="methodCallExpression">MethodCallExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitMethodCall(MethodCallExpression methodCallExpression)
-        {
-            return new MethodCallExpression(
-                methodCallExpression.ItemType,
-                methodCallExpression.Name,
-                methodCallExpression.Arguments.Select(Visit).ToList());
         }
     }
 }

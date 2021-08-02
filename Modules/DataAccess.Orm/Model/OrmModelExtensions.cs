@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Connection.Abstractions;
+    using Connection;
     using Contract.Abstractions;
 
     /// <summary>

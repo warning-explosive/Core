@@ -103,7 +103,7 @@
         <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Internals\ExtractLambdaExpressionVisitor.cs">
-        <DependentUpon>SqlTranslator.cs</DependentUpon>
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Internals\IMaterializer.cs">
         <DependentUpon>IQueryAsyncQueryProvider.cs</DependentUpon>
@@ -122,6 +122,9 @@
       </Compile>
       <Compile Update="Linq\Internals\GroupedQueryMaterializer.cs">
         <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\TranslationExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

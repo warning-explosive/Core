@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -20,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <param name="right">Right IIntermediateExpression</param>
         public BinaryExpression(
             Type itemType,
-            string @operator,
+            ExpressionType @operator,
             IIntermediateExpression left,
             IIntermediateExpression right)
         {
@@ -30,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             Right = right;
         }
 
-        internal BinaryExpression(Type itemType, string @operator)
+        internal BinaryExpression(Type itemType, ExpressionType @operator)
         {
             ItemType = itemType;
             Operator = @operator;
@@ -42,7 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <summary>
         /// Binary operator
         /// </summary>
-        public string Operator { get; }
+        public ExpressionType Operator { get; }
 
         /// <summary>
         /// Left expression
@@ -100,7 +101,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public bool SafeEquals(BinaryExpression other)
         {
             return ItemType == other.ItemType
-                   && Operator.Equals(other.Operator, StringComparison.OrdinalIgnoreCase)
+                   && Operator == other.Operator
                    && Left.Equals(other.Left)
                    && Right.Equals(other.Right);
         }

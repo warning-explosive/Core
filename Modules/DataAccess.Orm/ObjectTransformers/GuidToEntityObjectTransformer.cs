@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.ObjectTransformers
 {
     using System;
     using AutoWiring.Api.Attributes;

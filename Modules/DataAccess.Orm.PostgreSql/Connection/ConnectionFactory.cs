@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
-    using Orm.Connection.Abstractions;
+    using Orm.Connection;
     using Settings;
 
     [Component(EnLifestyle.Singleton)]

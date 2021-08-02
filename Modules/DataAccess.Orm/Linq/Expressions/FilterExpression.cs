@@ -158,7 +158,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             }
 
             Expression = Expression != null
-                ? new BinaryExpression(typeof(bool), ExpressionType.AndAlso.ToString(), Expression, expression)
+                ? new BinaryExpression(typeof(bool), ExpressionType.AndAlso, Expression, expression)
                 : expression;
         }
     }

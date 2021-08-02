@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Connection.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System.Data;
     using System.Data.Common;

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
-    using Orm.Connection.Abstractions;
+    using Orm.Connection;
     using Orm.Model;
     using Orm.Model.Abstractions;
 

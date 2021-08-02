@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
     using Internals;
@@ -194,23 +195,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             }
         }
 
-        internal IEnumerable<IIntermediateExpression> GetFilterBindings()
+        internal IEnumerable<IIntermediateExpression> GetFilterBindings(ParameterExpression parameter)
         {
-            if (Bindings.Any())
-            {
-                foreach (var binding in Bindings)
-                {
-                    yield return binding;
-                }
-            }
-            else if (IsProjectionToClass)
-            {
-                var parameter = new ParameterExpression(ItemType, "a");
+            IEnumerable<INamedIntermediateExpression> bindings;
 
-                foreach (var property in ItemType.GetProperties())
-                {
-                    yield return new SimpleBindingExpression(property.PropertyType, property.Name, parameter);
-                }
+            if (IsProjectionToClass)
+            {
+                bindings = ItemType.SelectAll(parameter);
+            }
+            else
+            {
+                var visitor = new ReplaceParameterVisitor(parameter);
+                bindings = Bindings
+                    .Select(binding => visitor.Visit(binding))
+                    .OfType<INamedIntermediateExpression>();
+            }
+
+            return bindings
+                .Select(FilterExpressionSelector);
+
+            static BinaryExpression FilterExpressionSelector(INamedIntermediateExpression binding)
+            {
+                return new BinaryExpression(
+                    typeof(bool),
+                    ExpressionType.Equal,
+                    binding,
+                    new QueryParameterExpression(binding.ItemType, binding.Name, binding.ItemType.DefaultValue()));
             }
         }
     }

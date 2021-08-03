@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
@@ -9,6 +10,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
 
     /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
@@ -26,7 +28,34 @@ namespace SpaceEngineers.Core.Dynamic.Internals
         private static readonly ConcurrentDictionary<DynamicClass, Type> Cache = new ConcurrentDictionary<DynamicClass, Type>();
 
         /// <inheritdoc />
-        public Type Create(DynamicClass dynamicClass)
+        public object CreateInstance(DynamicClass dynamicClass, IReadOnlyDictionary<DynamicProperty, object?> values)
+        {
+            var type = CreateType(dynamicClass);
+
+            var instance = Activator.CreateInstance(type);
+
+            return dynamicClass
+                .Properties
+                .Aggregate(instance, ApplyValue);
+
+            object ApplyValue(object acc, DynamicProperty dynamicProperty)
+            {
+                if (values.TryGetValue(dynamicProperty, out var value))
+                {
+                    type.GetProperty(dynamicProperty.Name,
+                            BindingFlags.Instance
+                            | BindingFlags.SetProperty
+                            | BindingFlags.Public
+                            | BindingFlags.NonPublic)
+                        ?.SetValue(acc, value);
+                }
+
+                return acc;
+            }
+        }
+
+        /// <inheritdoc />
+        public Type CreateType(DynamicClass dynamicClass)
         {
             return Cache.GetOrAdd(dynamicClass, Build);
         }

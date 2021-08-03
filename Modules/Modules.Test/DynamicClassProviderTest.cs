@@ -40,11 +40,13 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>Test data</returns>
         public static IEnumerable<object[]> DynamicClassTestData()
         {
-            var properties = new[]
+            var emptyPropertyValues = new Dictionary<DynamicProperty, object?>();
+
+            var propertyValues = new Dictionary<DynamicProperty, object?>
             {
-                new DynamicProperty(typeof(bool), nameof(Boolean)),
-                new DynamicProperty(typeof(int), nameof(Int32)),
-                new DynamicProperty(typeof(string), nameof(String))
+                [new DynamicProperty(typeof(bool), nameof(Boolean))] = true,
+                [new DynamicProperty(typeof(int), nameof(Int32))] = 42,
+                [new DynamicProperty(typeof(string), nameof(String))] = "qwerty"
             };
 
             var expectedFields = new[]
@@ -64,39 +66,46 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 new Func<DynamicClass>(() => new DynamicClass()),
+                emptyPropertyValues,
                 new Action<Type>(type =>
                 {
                     Assert.Equal(typeof(object), type.BaseType);
                     Assert.Empty(type.GetInterfaces());
                     Assert.Empty(type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
                     Assert.Empty(type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty));
-                })
+                }),
+                new Action<object>(Assert.NotNull)
             };
             yield return new object[]
             {
                 new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass))),
+                emptyPropertyValues,
                 new Action<Type>(type =>
                 {
                     Assert.Equal(typeof(TestBaseClass), type.BaseType);
                     Assert.Empty(type.GetInterfaces());
                     Assert.Empty(type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
                     Assert.Empty(type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty));
-                })
+                }),
+                new Action<object>(Assert.NotNull)
             };
             yield return new object[]
             {
                 new Func<DynamicClass>(() => new DynamicClass().Implements(typeof(ITestInterface))),
+                emptyPropertyValues,
                 new Action<Type>(type =>
                 {
                     Assert.Equal(typeof(object), type.BaseType);
                     Assert.Contains(typeof(ITestInterface), type.GetInterfaces());
                     Assert.Empty(type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
                     Assert.Empty(type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty));
-                })
+                }),
+                new Action<object>(Assert.NotNull)
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().HasProperties(properties)),
+                new Func<DynamicClass>(() => new DynamicClass().HasProperties(propertyValues.Keys.ToArray())),
+                propertyValues,
                 new Action<Type>(type =>
                 {
                     Assert.Equal(typeof(object), type.BaseType);
@@ -115,11 +124,21 @@ namespace SpaceEngineers.Core.Modules.Test
                         .OrderBy(property => property.Name);
 
                     Assert.True(expectedProperties.SequenceEqual(actualProperties));
+                }),
+                new Action<object>(instance =>
+                {
+                    Assert.NotNull(instance);
+
+                    foreach (var (property, value) in propertyValues)
+                    {
+                        Assert.Equal(value, instance.GetPropertyValue(property.Name));
+                    }
                 })
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(properties)),
+                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(propertyValues.Keys.ToArray())),
+                propertyValues,
                 new Action<Type>(type =>
                 {
                     Assert.Equal(typeof(TestBaseClass), type.BaseType);
@@ -139,28 +158,44 @@ namespace SpaceEngineers.Core.Modules.Test
                         .OrderBy(property => property.Name);
 
                     Assert.True(expectedProperties.SequenceEqual(actualProperties));
+                }),
+                new Action<object>(instance =>
+                {
+                    Assert.NotNull(instance);
+
+                    foreach (var (property, value) in propertyValues)
+                    {
+                        Assert.Equal(value, instance.GetPropertyValue(property.Name));
+                    }
                 })
             };
         }
 
         [Theory]
         [MemberData(nameof(DynamicClassTestData))]
-        internal void CacheTest(Func<DynamicClass> factory, Action<Type> assert)
+        internal void CacheTest(
+            Func<DynamicClass> factory,
+            IReadOnlyDictionary<DynamicProperty, object?> values,
+            Action<Type> assertType,
+            Action<object> assertInstance)
         {
             var provider = DependencyContainer.Resolve<IDynamicClassProvider>();
 
-            var type = provider.Create(factory());
+            var type = provider.CreateType(factory());
+            var instance = provider.CreateInstance(factory(), values);
 
             type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty)
-                .Each(field => Output.WriteLine($"{field.Name} ({field.PropertyType.Name})"));
+                .Each(property => Output.WriteLine($"{property.Name} ({property.PropertyType.Name}) - {property.GetValue(instance)?.ToString() ?? "null"}"));
 
             type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Each(field => Output.WriteLine($"{field.Name} ({field.FieldType.Name})"));
+                .Each(field => Output.WriteLine($"{field.Name} ({field.FieldType.Name}) - {field.GetValue(instance)?.ToString() ?? "null"}"));
 
-            assert(type);
+            assertType(type);
+            assertInstance(instance);
 
-            Assert.Equal(type, provider.Create(factory()));
+            Assert.Equal(type, provider.CreateType(factory()));
             Assert.Equal(type, Activator.CreateInstance(type).GetType());
+            Assert.Equal(type, provider.CreateInstance(factory(), values).GetType());
         }
 
         /// <summary>

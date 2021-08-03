@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
-    using Basics;
 
     /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]

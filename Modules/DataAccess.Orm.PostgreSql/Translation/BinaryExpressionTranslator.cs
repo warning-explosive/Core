@@ -9,18 +9,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using Linq.Abstractions;
     using Linq.Internals;
     using BinaryExpression = Linq.Expressions.BinaryExpression;
+    using ConstantExpression = Linq.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
     {
         private static readonly IReadOnlyDictionary<ExpressionType, string> FunctionalOperators
-            = new Dictionary<ExpressionType, string>()
+            = new Dictionary<ExpressionType, string>
             {
                 [ExpressionType.Coalesce] = "COALESCE"
             };
 
         private static readonly IReadOnlyDictionary<ExpressionType, string> Operators
-            = new Dictionary<ExpressionType, string>()
+            = new Dictionary<ExpressionType, string>
             {
                 [ExpressionType.Equal] = "=",
                 [ExpressionType.NotEqual] = "!=",
@@ -34,7 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             };
 
         private static readonly IReadOnlyDictionary<ExpressionType, string> AltOperators
-            = new Dictionary<ExpressionType, string>()
+            = new Dictionary<ExpressionType, string>
             {
                 [ExpressionType.Equal] = "IS",
                 [ExpressionType.NotEqual] = "IS NOT"

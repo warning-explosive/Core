@@ -30,9 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         internal SimpleBindingExpression(Type itemType, string name)
+            : this(itemType, name, null !)
         {
-            ItemType = itemType;
-            Name = name;
         }
 
         /// <inheritdoc />

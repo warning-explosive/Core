@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.MemberInfoTranslators
             if (context.Member.DeclaringType == typeof(string)
                 && context.Member.Name.Equals(nameof(string.Empty), StringComparison.OrdinalIgnoreCase))
             {
-                expression = new QueryParameterExpression(typeof(string), context.NextQueryParameterName(), "''");
+                expression = QueryParameterExpression.Create(context, typeof(string), string.Empty);
                 return true;
             }
 

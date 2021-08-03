@@ -6,32 +6,40 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     public class GroupedQuery : IQuery
     {
         /// <summary> .cctor </summary>
-        /// <param name="keysQuery">Keys query</param>
-        /// <param name="valuesQuery">Values query</param>
-        public GroupedQuery(string keysQuery, string valuesQuery)
+        /// <param name="keyQuery">Key query</param>
+        /// <param name="keyQueryParameters">Key query parameters object</param>
+        /// <param name="valueQuery">Value query</param>
+        /// <param name="valueQueryParameters">Value query parameters object</param>
+        public GroupedQuery(
+            string keyQuery,
+            object? keyQueryParameters,
+            string valueQuery,
+            object? valueQueryParameters)
         {
-            KeysQuery = keysQuery;
-            ValuesQuery = valuesQuery;
+            KeyQuery = keyQuery;
+            KeyQueryParameters = keyQueryParameters;
+            ValueQuery = valueQuery;
+            ValueQueryParameters = valueQueryParameters;
         }
 
         /// <summary>
-        /// Keys query
+        /// Key query
         /// </summary>
-        public string KeysQuery { get; }
+        public string KeyQuery { get; }
 
         /// <summary>
-        /// Keys query parameters object
+        /// Key query parameters object
         /// </summary>
-        public object? KeysParameters { get; set; }
+        public object? KeyQueryParameters { get; }
 
         /// <summary>
-        /// Values query
+        /// Value query
         /// </summary>
-        public string ValuesQuery { get; }
+        public string ValueQuery { get; }
 
         /// <summary>
-        /// Values query parameters object
+        /// Value query parameters object
         /// </summary>
-        public object? ValuesParameters { get; set; }
+        public object? ValueQueryParameters { get; }
     }
 }

@@ -17,6 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             {
                 BinaryExpression binaryExpression => VisitBinary(binaryExpression),
                 ConditionalExpression conditionalExpression => VisitConditional(conditionalExpression),
+                ConstantExpression constantExpression => VisitConstant(constantExpression),
                 NamedBindingExpression namedBindingExpression => VisitNamedBinding(namedBindingExpression),
                 SimpleBindingExpression simpleBindingExpression => VisitSimpleBinding(simpleBindingExpression),
                 FilterExpression filterExpression => VisitFilter(filterExpression),
@@ -57,6 +58,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 Visit(conditionalExpression.When),
                 Visit(conditionalExpression.Then),
                 Visit(conditionalExpression.Else));
+        }
+
+        /// <summary>
+        /// Visit ConstantExpression
+        /// </summary>
+        /// <param name="constantExpression">ConstantExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitConstant(ConstantExpression constantExpression)
+        {
+            return constantExpression;
         }
 
         /// <summary>

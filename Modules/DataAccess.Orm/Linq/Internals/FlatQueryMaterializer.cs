@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
             var dynamicResult = await transaction
                 .Connection
-                .QueryAsync(query.Query, query.Parameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
+                .QueryAsync(query.Query, query.QueryParameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
                 .ConfigureAwait(false);
 
             foreach (var dynamicValues in dynamicResult)

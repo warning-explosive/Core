@@ -7,9 +7,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         /// <summary> .cctor </summary>
         /// <param name="query">Query</param>
-        public FlatQuery(string query)
+        /// <param name="queryParameters">Query parameters object</param>
+        public FlatQuery(string query, object? queryParameters)
         {
             Query = query;
+            QueryParameters = queryParameters;
         }
 
         /// <summary>
@@ -20,6 +22,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <summary>
         /// Query parameters object
         /// </summary>
-        public object? Parameters { get; set; }
+        public object? QueryParameters { get; }
     }
 }

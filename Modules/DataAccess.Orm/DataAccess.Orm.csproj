@@ -31,6 +31,7 @@
       <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\Dynamic.Api\Dynamic.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.0.90" />
@@ -128,6 +129,9 @@
       </Compile>
       <Compile Update="Linq\MemberTranslationContext.cs">
         <DependentUpon>TranslationContext.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\ExtractQueryParametersVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

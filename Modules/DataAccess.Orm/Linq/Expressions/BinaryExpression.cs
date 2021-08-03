@@ -33,9 +33,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         internal BinaryExpression(Type itemType, ExpressionType @operator)
+            : this(itemType, @operator, null !, null !)
         {
-            ItemType = itemType;
-            Operator = @operator;
         }
 
         /// <inheritdoc />

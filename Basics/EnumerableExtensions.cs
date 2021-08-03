@@ -120,17 +120,22 @@ namespace SpaceEngineers.Core.Basics
                 return Enumerable.Empty<ICollection<T>>();
             }
 
-            IEnumerable<ICollection<T>> seed = sourceColumns.Take(1)
-                                                            .Single()
-                                                            .Select(item => new List<T> { item });
+            IEnumerable<ICollection<T>> seed = sourceColumns
+                .Take(1)
+                .Single()
+                .Select(item => new List<T> { item });
 
-            return sourceColumns.Skip(1)
-                                .Aggregate(seed,
-                                           (accumulator, next) =>
-                                               accumulator.Join(next,
-                                                                _ => true,
-                                                                _ => true,
-                                                                (left, right) => new List<T>(left) { right }));
+            return sourceColumns
+                .Skip(1)
+                .Aggregate(seed, Aggregate);
+
+            static IEnumerable<ICollection<T>> Aggregate(IEnumerable<ICollection<T>> acc, IEnumerable<T> next)
+            {
+                return acc.Join(next,
+                    _ => true,
+                    _ => true,
+                    (left, right) => new List<T>(left) { right });
+            }
         }
 
         /// <summary>
@@ -165,30 +170,38 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TSource">The type of the elements of <paramref name="source" /></typeparam>
         public static void Each<TSource>(this IEnumerable<TSource> source, Action<TSource, int> action)
         {
-            var length = source.Count();
-
-            for (var i = 0; i < length; ++i)
+            using (var enumerator = source.GetEnumerator())
             {
-                action(source.ElementAt(i), i);
+                var i = 0;
+
+                while (enumerator.MoveNext())
+                {
+                    action(enumerator.Current, i++);
+                }
             }
         }
 
         /// <summary> Select collection from untyped IEnumerable </summary>
         /// <param name="enumerable">IEnumerable</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<object> ToObjectEnumerable(this IEnumerable enumerable)
+        public static IEnumerable<T> ToEnumerable<T>(this IEnumerable enumerable)
         {
-            return enumerable.GetEnumerator().ToObjectEnumerable();
+            return enumerable.GetEnumerator().ToEnumerable<T>();
         }
 
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<object> ToObjectEnumerable(this IEnumerator numerator)
+        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator numerator)
         {
             while (numerator.MoveNext())
             {
-                yield return numerator.Current;
+                if (numerator.Current is T typed)
+                {
+                    yield return typed;
+                }
             }
         }
 
@@ -218,17 +231,19 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static T InformativeSingle<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            if (!source.Any())
+            var items = source.Take(2).ToList();
+
+            if (!items.Any())
             {
                 throw new NotFoundException("Source collection is empty");
             }
 
-            if (source.Take(2).Count() != 1)
+            if (items.Count != 1)
             {
-                throw new AmbiguousMatchException(amb(source));
+                throw new AmbiguousMatchException(amb(items));
             }
 
-            return source.Single();
+            return items.Single();
         }
 
         /// <summary>
@@ -241,12 +256,14 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            if (source.Take(2).Count() == 2)
+            var items = source.Take(2).ToList();
+
+            if (items.Count >= 2)
             {
-                throw new AmbiguousMatchException(amb(source));
+                throw new AmbiguousMatchException(amb(items));
             }
 
-            return source.SingleOrDefault();
+            return items.SingleOrDefault();
         }
     }
 }

@@ -32,8 +32,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         internal ConditionalExpression(Type itemType)
+            : this(itemType, null !, null !, null !)
         {
-            ItemType = itemType;
         }
 
         /// <inheritdoc />

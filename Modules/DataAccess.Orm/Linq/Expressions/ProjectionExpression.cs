@@ -40,16 +40,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         {
             ItemType = itemType;
             Source = source;
-            IsProjectionToClass = itemType.IsClass;
+            IsProjectionToClass = itemType.IsClass
+                                  && !itemType.IsPrimitive()
+                                  && !itemType.IsCollection();
             IsAnonymousProjection = itemType.IsAnonymous();
 
             _bindings = bindings.ToList();
         }
 
         internal ProjectionExpression(Type itemType)
+            : this(itemType, null !, new List<IIntermediateExpression>())
         {
-            ItemType = itemType;
-            _bindings = new List<IIntermediateExpression>();
         }
 
         /// <inheritdoc />
@@ -241,7 +242,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                     typeof(bool),
                     ExpressionType.Equal,
                     binding,
-                    new QueryParameterExpression(binding.ItemType, context.NextQueryParameterName(), binding.ItemType.DefaultValue()));
+                    QueryParameterExpression.Create(context, binding.ItemType, binding.ItemType.DefaultValue(), binding));
             }
         }
     }

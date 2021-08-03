@@ -10,15 +10,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>
     {
-        private readonly IQueryMaterializer<FlatQuery, TKey> _keysQueryMaterializer;
-        private readonly IQueryMaterializer<FlatQuery, TValue> _valuesQueryMaterializer;
+        private readonly IQueryMaterializer<FlatQuery, TKey> _keyQueryMaterializer;
+        private readonly IQueryMaterializer<FlatQuery, TValue> _valueQueryMaterializer;
 
         public GroupedQueryMaterializer(
-            IQueryMaterializer<FlatQuery, TKey> keysQueryMaterializer,
-            IQueryMaterializer<FlatQuery, TValue> valuesQueryMaterializer)
+            IQueryMaterializer<FlatQuery, TKey> keyQueryMaterializer,
+            IQueryMaterializer<FlatQuery, TValue> valueQueryMaterializer)
         {
-            _keysQueryMaterializer = keysQueryMaterializer;
-            _valuesQueryMaterializer = valuesQueryMaterializer;
+            _keyQueryMaterializer = keyQueryMaterializer;
+            _valueQueryMaterializer = valueQueryMaterializer;
         }
 
         public async IAsyncEnumerable<IGrouping<TKey, TValue>> Materialize(GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
@@ -34,24 +34,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         private IAsyncEnumerable<TKey> MaterializeKeys(GroupedQuery query, CancellationToken token)
         {
-            var keysQuery = new FlatQuery(query.KeysQuery)
-            {
-                Parameters = query.KeysParameters
-            };
+            var keyQuery = new FlatQuery(query.KeyQuery, query.KeyQueryParameters);
 
-            return _keysQueryMaterializer.Materialize(keysQuery, token);
+            return _keyQueryMaterializer.Materialize(keyQuery, token);
         }
 
         private IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, CancellationToken token)
         {
             /* TODO: apply key as parameter */
 
-            var valuesQuery = new FlatQuery(query.ValuesQuery)
-            {
-                Parameters = query.ValuesParameters
-            };
+            var valueQuery = new FlatQuery(query.ValueQuery, query.ValueQueryParameters);
 
-            return _valuesQueryMaterializer.Materialize(valuesQuery, token);
+            return _valueQueryMaterializer.Materialize(valueQuery, token);
         }
     }
 }

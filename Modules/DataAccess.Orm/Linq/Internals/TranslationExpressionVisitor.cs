@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using GenericDomain.Abstractions;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
+    using ConstantExpression = System.Linq.Expressions.ConstantExpression;
     using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
     using NewExpression = System.Linq.Expressions.NewExpression;
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
@@ -227,7 +228,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 return base.VisitConstant(node);
             }
 
-            WithScopeOpening(new QueryParameterExpression(node.Type, NextQueryParameterName(), node.Value), () => base.VisitConstant(node));
+            WithScopeOpening(QueryParameterExpression.Create(_translationContext, node.Type, node.Value), () => base.VisitConstant(node));
 
             return node;
         }

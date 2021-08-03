@@ -23,17 +23,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             var intermediateExpression = _translator.Translate(expression);
 
-            /* TODO: extract parameters */
-
             if (intermediateExpression is GroupByExpression groupByExpression)
             {
-                var keysQuery = groupByExpression.Keys.Translate(_dependencyContainer, 0);
-                var valuesQuery = groupByExpression.Values.Translate(_dependencyContainer, 0);
-                return new GroupedQuery(keysQuery, valuesQuery);
-            }
+                var keyQuery = groupByExpression.Keys.Translate(_dependencyContainer, 0);
+                var keyQueryParameters = groupByExpression.Keys.ExtractParameters(_dependencyContainer);
 
-            var query = intermediateExpression.Translate(_dependencyContainer, 0);
-            return new FlatQuery(query);
+                var valueQuery = groupByExpression.Values.Translate(_dependencyContainer, 0);
+                var valueQueryParameters = groupByExpression.Values.ExtractParameters(_dependencyContainer);
+
+                return new GroupedQuery(keyQuery, keyQueryParameters, valueQuery, valueQueryParameters);
+            }
+            else
+            {
+                var query = intermediateExpression.Translate(_dependencyContainer, 0);
+                var queryParameters = intermediateExpression.ExtractParameters(_dependencyContainer);
+
+                return new FlatQuery(query, queryParameters);
+            }
         }
     }
 }

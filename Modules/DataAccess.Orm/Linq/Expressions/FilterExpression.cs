@@ -37,8 +37,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         internal FilterExpression(Type itemType)
+            : this(itemType, null !, null !)
         {
-            ItemType = itemType;
         }
 
         /// <inheritdoc />

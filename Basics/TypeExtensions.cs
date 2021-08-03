@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -48,17 +49,45 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Is type collection or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is type can be interpreted as collection</returns>
+        public static bool IsCollection(this Type type)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        /// <summary>
         /// Is type primitive or not
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Is type can be interpreted as primitive</returns>
         public static bool IsPrimitive(this Type type)
         {
-            return type.IsPrimitive
-                   || type.IsEnum
-                   || type == typeof(Guid)
-                   || type == typeof(string)
-                   || type == typeof(Type);
+            return type.IsNullable()
+                ? IsPrimitiveType(type.ExtractGenericArgumentsAt(typeof(Nullable<>)).Single())
+                : IsPrimitiveType(type);
+
+            static bool IsPrimitiveType(Type t)
+            {
+                return t.IsPrimitive
+                       || t.IsEnum
+                       || t == typeof(Guid)
+                       || t == typeof(string)
+                       || t == typeof(Type);
+            }
+        }
+
+        /// <summary>
+        ///  Does type implement Nullable
+        /// </summary>
+        /// <param name="type">Type for check</param>
+        /// <returns>Result of check</returns>
+        public static bool IsNullable(this Type type)
+        {
+            return type.IsGenericType
+                   && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
 
         /// <summary>
@@ -228,17 +257,6 @@ namespace SpaceEngineers.Core.Basics
         public static IEnumerable<Type> GetDependenciesByAttribute(this Type type)
         {
             return TypeInfoStorage.Get(type).Dependencies;
-        }
-
-        /// <summary>
-        ///  Does type implement Nullable
-        /// </summary>
-        /// <param name="type">Type for check</param>
-        /// <returns>Result of check</returns>
-        public static bool IsNullable(this Type type)
-        {
-            return type.IsGenericType
-                && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
 
         /// <summary>

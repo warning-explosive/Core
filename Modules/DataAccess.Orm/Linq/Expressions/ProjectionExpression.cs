@@ -15,7 +15,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ProjectionExpression : ISubsequentIntermediateExpression,
                                         IEquatable<ProjectionExpression>,
-                                        ISafelyEquatable<ProjectionExpression>
+                                        ISafelyEquatable<ProjectionExpression>,
+                                        IApplicable<ProjectionExpression>,
+                                        IApplicable<FilterExpression>,
+                                        IApplicable<QuerySourceExpression>,
+                                        IApplicable<NewExpression>,
+                                        IApplicable<SimpleBindingExpression>,
+                                        IApplicable<NamedBindingExpression>,
+                                        IApplicable<BinaryExpression>,
+                                        IApplicable<ConditionalExpression>,
+                                        IApplicable<MethodCallExpression>,
+                                        IApplicable<ParameterExpression>
     {
         private List<IIntermediateExpression> _bindings;
 
@@ -125,53 +135,63 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(QuerySourceExpression querySource)
-        {
-            Source = querySource;
-        }
-
-        internal void Apply(ProjectionExpression projection)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression projection)
         {
             Source = projection;
         }
 
-        internal void Apply(FilterExpression filter)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, FilterExpression filter)
         {
             Source = filter;
         }
 
-        internal void Apply(NewExpression @new)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QuerySourceExpression querySource)
+        {
+            Source = querySource;
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NewExpression @new)
         {
             IsProjectionToClass = true;
             IsAnonymousProjection = @new.ItemType.IsAnonymous();
         }
 
-        internal void Apply(SimpleBindingExpression binding)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression binding)
         {
             _bindings.Add(binding);
         }
 
-        internal void Apply(NamedBindingExpression binding)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedBindingExpression binding)
         {
             _bindings.Add(binding);
         }
 
-        internal void Apply(ConditionalExpression conditional)
-        {
-            _bindings.Add(conditional);
-        }
-
-        internal void Apply(BinaryExpression binary)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression binary)
         {
             _bindings.Add(binary);
         }
 
-        internal void Apply(MethodCallExpression methodCall)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression conditional)
+        {
+            _bindings.Add(conditional);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, MethodCallExpression methodCall)
         {
             _bindings.Add(methodCall);
         }
 
-        internal void Apply(ParameterExpression parameter)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParameterExpression parameter)
         {
             var visitor = new ReplaceParameterVisitor(parameter);
 
@@ -195,7 +215,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             }
         }
 
-        internal IEnumerable<IIntermediateExpression> GetFilterBindings(ParameterExpression parameter)
+        internal IEnumerable<IIntermediateExpression> GetFilterBindings(
+            TranslationContext context,
+            ParameterExpression parameter)
         {
             IEnumerable<INamedIntermediateExpression> bindings;
 
@@ -211,16 +233,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                     .OfType<INamedIntermediateExpression>();
             }
 
-            return bindings
-                .Select(FilterExpressionSelector);
+            return bindings.Select(FilterExpressionSelector(context));
 
-            static BinaryExpression FilterExpressionSelector(INamedIntermediateExpression binding)
+            static Func<INamedIntermediateExpression, BinaryExpression> FilterExpressionSelector(TranslationContext context)
             {
-                return new BinaryExpression(
+                return binding => new BinaryExpression(
                     typeof(bool),
                     ExpressionType.Equal,
                     binding,
-                    new QueryParameterExpression(binding.ItemType, binding.Name, binding.ItemType.DefaultValue()));
+                    new QueryParameterExpression(binding.ItemType, context.NextQueryParameterName(), binding.ItemType.DefaultValue()));
             }
         }
     }

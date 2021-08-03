@@ -126,5 +126,8 @@
       <Compile Update="Linq\Internals\TranslationExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\MemberTranslationContext.cs">
+        <DependentUpon>TranslationContext.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

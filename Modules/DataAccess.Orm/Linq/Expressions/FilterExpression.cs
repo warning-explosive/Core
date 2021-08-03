@@ -14,7 +14,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class FilterExpression : ISubsequentIntermediateExpression,
                                     IEquatable<FilterExpression>,
-                                    ISafelyEquatable<FilterExpression>
+                                    ISafelyEquatable<FilterExpression>,
+                                    IApplicable<ProjectionExpression>,
+                                    IApplicable<QuerySourceExpression>,
+                                    IApplicable<ParameterExpression>,
+                                    IApplicable<BinaryExpression>,
+                                    IApplicable<ConditionalExpression>,
+                                    IApplicable<SimpleBindingExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
@@ -100,17 +106,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(ProjectionExpression projection)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression projection)
         {
             Source = projection;
         }
 
-        internal void Apply(QuerySourceExpression querySource)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QuerySourceExpression querySource)
         {
             Source = querySource;
         }
 
-        internal void Apply(ParameterExpression parameter)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParameterExpression parameter)
         {
             Expression = new ReplaceParameterVisitor(parameter).Visit(Expression);
 
@@ -118,7 +127,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             {
                 if (projection.IsProjectionToClass)
                 {
-                    projection.Apply(parameter);
+                    projection.Apply(context, parameter);
                 }
                 else
                 {
@@ -135,19 +144,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             }
         }
 
-        internal void Apply(ConditionalExpression conditional)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression binary)
+        {
+            ApplyExpression(binary);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression conditional)
         {
             ApplyExpression(conditional);
         }
 
-        internal void Apply(SimpleBindingExpression binding)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression binding)
         {
             ApplyExpression(binding);
-        }
-
-        internal void Apply(BinaryExpression binary)
-        {
-            ApplyExpression(binary);
         }
 
         private void ApplyExpression(IIntermediateExpression expression)

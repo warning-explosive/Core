@@ -15,6 +15,17 @@ namespace SpaceEngineers.Core.Basics
         private const string AnonymousType = nameof(AnonymousType);
 
         /// <summary>
+        /// Is object an instance of specified type
+        /// </summary>
+        /// <param name="obj">Object</param>
+        /// <param name="type">Type</param>
+        /// <returns>Object is an instance of specified type or not</returns>
+        public static bool IsInstanceOfType(this object obj, Type type)
+        {
+            return type.IsInstanceOfType(obj);
+        }
+
+        /// <summary>
         /// Returns an attribute that type is anonymous or not
         /// </summary>
         /// <param name="type">Type</param>

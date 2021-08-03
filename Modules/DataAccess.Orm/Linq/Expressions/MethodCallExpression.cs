@@ -13,7 +13,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class MethodCallExpression : IIntermediateExpression,
                                         IEquatable<MethodCallExpression>,
-                                        ISafelyEquatable<MethodCallExpression>
+                                        ISafelyEquatable<MethodCallExpression>,
+                                        IApplicable<SimpleBindingExpression>
     {
         private readonly List<IIntermediateExpression> _arguments;
 
@@ -96,7 +97,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(IIntermediateExpression expression)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        {
+            ApplyInternal(expression);
+        }
+
+        private void ApplyInternal(IIntermediateExpression expression)
         {
             _arguments.Add(expression);
         }

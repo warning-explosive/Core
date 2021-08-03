@@ -11,7 +11,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class GroupByExpression : IIntermediateExpression,
                                      IEquatable<GroupByExpression>,
-                                     ISafelyEquatable<GroupByExpression>
+                                     ISafelyEquatable<GroupByExpression>,
+                                     IApplicable<ProjectionExpression>,
+                                     IApplicable<FilterExpression>,
+                                     IApplicable<NamedSourceExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
@@ -85,17 +88,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(ProjectionExpression projection)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression projection)
         {
             ApplyInternal(projection);
         }
 
-        internal void Apply(FilterExpression filter)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, FilterExpression filter)
         {
             ApplyInternal(filter);
         }
 
-        internal void ApplyInternal(IIntermediateExpression expression)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedSourceExpression source)
+        {
+            ApplyInternal(source);
+        }
+
+        private void ApplyInternal(IIntermediateExpression expression)
         {
             if (Keys == null)
             {

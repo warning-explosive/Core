@@ -6,28 +6,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// <summary>
     /// MemberTranslationContext
     /// </summary>
-    public class MemberTranslationContext
+    public class MemberTranslationContext : TranslationContext
     {
-        private readonly TranslationExpressionVisitor _visitor;
-
         internal MemberTranslationContext(MemberInfo member, TranslationExpressionVisitor visitor)
+            : base(visitor)
         {
             Member = member;
-            _visitor = visitor;
         }
 
         /// <summary>
         /// Member info
         /// </summary>
         public MemberInfo Member { get; }
-
-        /// <summary>
-        /// Gets next query parameter name
-        /// </summary>
-        /// <returns>Query parameter name</returns>
-        public string NextQueryParameterName()
-        {
-            return _visitor.NextQueryParameterName();
-        }
     }
 }

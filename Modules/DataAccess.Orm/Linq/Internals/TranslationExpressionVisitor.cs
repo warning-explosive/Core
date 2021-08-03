@@ -25,6 +25,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         private readonly ExpressionTranslator _translator;
         private readonly IEnumerable<IMemberInfoTranslator> _memberInfoTranslators;
 
+        private readonly TranslationContext _translationContext;
+
         private readonly Stack<IIntermediateExpression> _stack;
 
         private static readonly MethodInfo Select = LinqMethods.QueryableSelect();
@@ -39,6 +41,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             _translator = translator;
             _memberInfoTranslators = memberInfoTranslators;
+
+            _translationContext = new TranslationContext(this);
 
             _stack = new Stack<IIntermediateExpression>();
 
@@ -132,16 +136,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                         () =>
                         {
                             Visit(sourceExpression);
+
+                            var parameter = new Expressions.ParameterExpression(keysProjection.ItemType, "a");
+
+                            foreach (var filterBinding in keysProjection.GetFilterBindings(_translationContext, parameter))
+                            {
+                                Apply(filterBinding);
+                            }
+
+                            Apply(parameter);
                         }));
-
-                var parameter = new Expressions.ParameterExpression(keysProjection.ItemType, "a");
-
-                foreach (var filterBinding in keysProjection.GetFilterBindings(parameter))
-                {
-                    Apply(filterBinding, sourceFilter);
-                }
-
-                sourceFilter.Apply(parameter);
 
                 return node;
             }
@@ -228,28 +232,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             return node;
         }
 
-        private static void Apply(IIntermediateExpression current, IIntermediateExpression outer)
-        {
-            ExecutionExtensions
-                .Try(CallApply)
-                .Catch<Exception>()
-                .Invoke(ex => throw new InvalidOperationException($"Could not apply {current.GetType().Name} for {outer.GetType().Name}", ex));
-
-            void CallApply()
-            {
-                outer.CallMethod(nameof(Apply)).WithArgument(current).Invoke();
-            }
-        }
-
-        private void Apply<T>(T expression)
-            where T : class, IIntermediateExpression
-        {
-            if (_stack.TryPeek(out var outer))
-            {
-                Apply(expression, outer);
-            }
-        }
-
         private void WithScopeOpening<T>(T expression, Action? action = null)
             where T : class, IIntermediateExpression
         {
@@ -298,6 +280,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             if (_stack.TryPeek(out var outer))
             {
                 Apply(intermediateExpressionProducer(), outer);
+            }
+        }
+
+        private void Apply(IIntermediateExpression expression)
+        {
+            if (_stack.TryPeek(out var outer))
+            {
+                Apply(expression, outer);
+            }
+        }
+
+        private void Apply(IIntermediateExpression inner, IIntermediateExpression outer)
+        {
+            var service = typeof(IApplicable<>).MakeGenericType(inner.GetType());
+
+            if (outer.IsInstanceOfType(service))
+            {
+                outer
+                    .CallMethod(nameof(IApplicable<IIntermediateExpression>.Apply))
+                    .WithArgument(_translationContext)
+                    .WithArgument(inner)
+                    .Invoke();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Could not apply {inner.GetType().Name} for {outer.GetType().Name}");
             }
         }
 

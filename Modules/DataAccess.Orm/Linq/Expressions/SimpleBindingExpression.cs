@@ -11,7 +11,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class SimpleBindingExpression : INamedIntermediateExpression,
                                            IEquatable<SimpleBindingExpression>,
-                                           ISafelyEquatable<SimpleBindingExpression>
+                                           ISafelyEquatable<SimpleBindingExpression>,
+                                           IApplicable<SimpleBindingExpression>,
+                                           IApplicable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
@@ -96,12 +98,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(SimpleBindingExpression binding)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression binding)
         {
             Expression = binding;
         }
 
-        internal void Apply(ParameterExpression parameter)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParameterExpression parameter)
         {
             Expression = parameter;
         }

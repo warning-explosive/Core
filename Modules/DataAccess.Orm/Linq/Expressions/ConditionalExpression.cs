@@ -11,7 +11,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ConditionalExpression : IIntermediateExpression,
                                          IEquatable<ConditionalExpression>,
-                                         ISafelyEquatable<ConditionalExpression>
+                                         ISafelyEquatable<ConditionalExpression>,
+                                         IApplicable<IIntermediateExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="itemType">Item type</param>
@@ -106,7 +107,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         #endregion
 
-        internal void Apply(IIntermediateExpression expression)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, IIntermediateExpression expression)
         {
             if (When == null)
             {

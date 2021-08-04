@@ -14,24 +14,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                             ISafelyEquatable<QueryParameterExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="name">Query parameter name</param>
         /// <param name="value">Query parameter value</param>
         /// <param name="queryParameterBinding">Query parameter binding</param>
         private QueryParameterExpression(
-            Type itemType,
+            Type type,
             string name,
             object? value,
             INamedIntermediateExpression? queryParameterBinding = null)
         {
-            ItemType = itemType;
+            Type = type;
             Name = name;
             Value = value;
             QueryParameterBinding = queryParameterBinding;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Query parameter name
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name, Value, QueryParameterBinding);
+            return HashCode.Combine(Type, Name, Value, QueryParameterBinding);
         }
 
         /// <inheritdoc />
@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(QueryParameterExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Value?.Equals(other.Value) == true
                    && QueryParameterBinding.Equals(other.QueryParameterBinding);
@@ -105,23 +105,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// Factory method
         /// </summary>
         /// <param name="context">Translation context</param>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="value">Value</param>
         /// <param name="queryParameterBinding">QueryParameterBinding</param>
         /// <returns>IIntermediateExpression</returns>
         public static IIntermediateExpression Create(
             TranslationContext context,
-            Type itemType,
+            Type type,
             object? value,
             INamedIntermediateExpression? queryParameterBinding = null)
         {
             var isNullValueParameter = value == null
-                                       && value == itemType.DefaultValue()
+                                       && value == type.DefaultValue()
                                        && queryParameterBinding == null;
 
             return isNullValueParameter
-                ? new ConstantExpression(itemType, value)
-                : new QueryParameterExpression(itemType, context.NextQueryParameterName(), value, queryParameterBinding);
+                ? new ConstantExpression(type, value)
+                : new QueryParameterExpression(type, context.NextQueryParameterName(), value, queryParameterBinding);
         }
     }
 }

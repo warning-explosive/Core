@@ -1,11 +1,14 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
+    using Basics;
 
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>
@@ -25,11 +28,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             await foreach (var key in MaterializeKeys(query, token))
             {
-                /* TODO: create group with key and values */
-                var values = MaterializeValues(key, query, token);
-            }
+                var values = MaterializeValues(key, query, token).AsEnumerable(token);
 
-            yield break;
+                yield return new Grouping<TKey, TValue>(key, values);
+            }
         }
 
         private IAsyncEnumerable<TKey> MaterializeKeys(GroupedQuery query, CancellationToken token)
@@ -41,11 +43,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         private IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, CancellationToken token)
         {
-            /* TODO: apply key as parameter */
+            var valueQueryParameters = ApplyKeyValues(key, query.ValueQueryParameters);
 
-            var valueQuery = new FlatQuery(query.ValueQuery, query.ValueQueryParameters);
+            var valueQuery = new FlatQuery(query.ValueQuery, valueQueryParameters);
 
             return _valueQueryMaterializer.Materialize(valueQuery, token);
+        }
+
+        private static object? ApplyKeyValues(TKey key, object? queryValueQueryParameters)
+        {
+            IReadOnlyDictionary<string, object?> values = typeof(TKey).IsPrimitive()
+                ? new Dictionary<string, object?> { [string.Format(TranslationContext.QueryParameterFormat, 0)] = key }
+                : key?.ToPropertyDictionary() ?? new Dictionary<string, object?>();
+
+            if (queryValueQueryParameters == null)
+            {
+                return null;
+            }
+
+            queryValueQueryParameters
+                .GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
+                .Join(values,
+                    property => property.Name,
+                    value => value.Key,
+                    (property, value) => (property, value.Value),
+                    StringComparer.OrdinalIgnoreCase)
+                .Each(pair => pair.property.SetValue(queryValueQueryParameters, pair.Value));
+
+            return queryValueQueryParameters;
         }
     }
 }

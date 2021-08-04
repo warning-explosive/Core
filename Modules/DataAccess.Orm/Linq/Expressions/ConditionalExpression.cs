@@ -15,29 +15,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                          IApplicable<IIntermediateExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="when">When IIntermediateExpression</param>
         /// <param name="then">Then IIntermediateExpression</param>
         /// <param name="else">Else IIntermediateExpression</param>
         public ConditionalExpression(
-            Type itemType,
+            Type type,
             IIntermediateExpression when,
             IIntermediateExpression then,
             IIntermediateExpression @else)
         {
-            ItemType = itemType;
+            Type = type;
             When = when;
             Then = then;
             Else = @else;
         }
 
-        internal ConditionalExpression(Type itemType)
-            : this(itemType, null !, null !, null !)
+        internal ConditionalExpression(Type type)
+            : this(type, null !, null !, null !)
         {
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// When condition
@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, When, Then, Else);
+            return HashCode.Combine(Type, When, Then, Else);
         }
 
         /// <inheritdoc />
@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(ConditionalExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && When.Equals(other.When)
                    && Then.Equals(other.Then)
                    && Else.Equals(other.Else);

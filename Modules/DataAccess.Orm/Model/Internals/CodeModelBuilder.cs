@@ -58,10 +58,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
         private static TableNode BuildTableNode(Type tableType)
         {
             var columns = tableType
-                .GetProperties(BindingFlags.Instance
-                               | BindingFlags.Public
-                               | BindingFlags.NonPublic
-                               | BindingFlags.GetProperty)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
                 .Select(property => BuildColumnNode(tableType, property))
                 .ToList();
 

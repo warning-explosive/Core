@@ -12,8 +12,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     internal class DatabaseViewViewQueryProvider : IViewQueryProvider<DatabaseView>
     {
         private static readonly string Query = $@"select
-    substring(table_name, {{0}}) as {nameof(DatabaseView.Name)},
-	view_definition as {nameof(DatabaseView.Query)}
+    substring(table_name, {{0}}) as ""{nameof(DatabaseView.Name)}"",
+	view_definition as ""{nameof(DatabaseView.Query)}""
 from INFORMATION_SCHEMA.views
 where lower(substring(table_name, 0, {{0}})) == lower('{{1}}');";
 

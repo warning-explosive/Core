@@ -34,10 +34,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             var argsDictionary = Init(args);
 
             var joined = argsDictionary
-               .Join(typeof(T).GetProperties(BindingFlags.Instance
-                                             | BindingFlags.Public
-                                             | BindingFlags.GetProperty
-                                             | BindingFlags.SetProperty),
+               .Join(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty),
                      cli => cli.Key.ToUpperInvariant(),
                      pd => pd.Name.ToUpperInvariant(),
                      (cli, pd) => new { Info = pd, CliValue = cli.Value });

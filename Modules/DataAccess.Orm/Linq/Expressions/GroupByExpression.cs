@@ -17,14 +17,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                      IApplicable<NamedSourceExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
-        public GroupByExpression(Type itemType)
+        /// <param name="type">Type</param>
+        public GroupByExpression(Type type)
         {
-            ItemType = itemType;
+            Type = type;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Group by keys
@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Keys, Values);
+            return HashCode.Combine(Type, Keys, Values);
         }
 
         /// <inheritdoc />
@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(GroupByExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Keys.Equals(other.Keys)
                    && Values.Equals(other.Values);
         }

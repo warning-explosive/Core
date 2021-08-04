@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(_databaseSettings.Get().Result.Schema);
             sb.Append('.');
             sb.Append('\"');
-            sb.Append(expression.ItemType.Name);
+            sb.Append(expression.Type.Name);
             sb.Append('\"');
 
             return sb.ToString();

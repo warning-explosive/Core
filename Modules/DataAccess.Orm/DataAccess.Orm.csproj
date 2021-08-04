@@ -85,9 +85,6 @@
       <Compile Update="Linq\Internals\ReplaceFilterExpressionVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\Internals\ReplaceParameterVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\Expressions\NamedBindingExpression.cs">
         <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
       </Compile>

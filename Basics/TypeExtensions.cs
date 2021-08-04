@@ -187,7 +187,7 @@ namespace SpaceEngineers.Core.Basics
             int SortFunc(T item)
             {
                 var type = accessor(item);
-                var dependencies = GetDependenciesByAttribute(type);
+                var dependencies = GetDependenciesByAttribute(type).ToList();
 
                 var depth = 0;
 
@@ -200,7 +200,7 @@ namespace SpaceEngineers.Core.Basics
 
                     ++depth;
 
-                    dependencies = dependencies.SelectMany(GetDependenciesByAttribute);
+                    dependencies = dependencies.SelectMany(GetDependenciesByAttribute).ToList();
                 }
 
                 return depth;

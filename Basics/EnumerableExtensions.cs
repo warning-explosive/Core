@@ -138,20 +138,6 @@ namespace SpaceEngineers.Core.Basics
             }
         }
 
-        /// <summary>
-        /// Source enumerator without nulls
-        /// </summary>
-        /// <param name="source">Source enumerator</param>
-        /// <typeparam name="TSource">Source item type type-argument</typeparam>
-        /// <typeparam name="TReturn">TReturn source item type type-argument</typeparam>
-        /// <returns>Source without nulls</returns>
-        public static IEnumerable<TReturn> WithoutNulls<TSource, TReturn>(this IEnumerable<TSource> source)
-            where TReturn : notnull, TSource
-        {
-            return source.Where(item => item != null)
-                         .OfType<TReturn>();
-        }
-
         /// <summary> Execute action on each element </summary>
         /// <param name="source">A sequence of values to invoke an action on</param>
         /// <param name="action">An action to apply to each source element</param>
@@ -185,16 +171,16 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="enumerable">IEnumerable</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<T> ToEnumerable<T>(this IEnumerable enumerable)
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerable enumerable)
         {
-            return enumerable.GetEnumerator().ToEnumerable<T>();
+            return enumerable.GetEnumerator().AsEnumerable<T>();
         }
 
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator numerator)
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerator numerator)
         {
             while (numerator.MoveNext())
             {

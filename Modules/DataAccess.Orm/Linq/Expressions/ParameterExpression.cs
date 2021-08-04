@@ -14,16 +14,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                        ISafelyEquatable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="name">Name</param>
-        public ParameterExpression(Type itemType, string name)
+        public ParameterExpression(Type type, string name)
         {
-            ItemType = itemType;
+            Type = type;
             Name = name;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Name
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name);
+            return HashCode.Combine(Type, Name);
         }
 
         /// <inheritdoc />
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(ParameterExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
         }
 

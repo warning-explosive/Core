@@ -1,15 +1,13 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System.Reflection;
-    using Internals;
 
     /// <summary>
     /// MemberTranslationContext
     /// </summary>
     public class MemberTranslationContext : TranslationContext
     {
-        internal MemberTranslationContext(MemberInfo member, TranslationExpressionVisitor visitor)
-            : base(visitor)
+        internal MemberTranslationContext(MemberInfo member)
         {
             Member = member;
         }

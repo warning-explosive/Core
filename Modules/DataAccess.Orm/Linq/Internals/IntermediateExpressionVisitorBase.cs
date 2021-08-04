@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitBinary(BinaryExpression binaryExpression)
         {
             return new BinaryExpression(
-                binaryExpression.ItemType,
+                binaryExpression.Type,
                 binaryExpression.Operator,
                 Visit(binaryExpression.Left),
                 Visit(binaryExpression.Right));
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitConditional(ConditionalExpression conditionalExpression)
         {
             return new ConditionalExpression(
-                conditionalExpression.ItemType,
+                conditionalExpression.Type,
                 Visit(conditionalExpression.When),
                 Visit(conditionalExpression.Then),
                 Visit(conditionalExpression.Else));
@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             return new SimpleBindingExpression(
-                simpleBindingExpression.ItemType,
+                simpleBindingExpression.Type,
                 simpleBindingExpression.Name,
                 Visit(simpleBindingExpression.Expression));
         }
@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitFilter(FilterExpression filterExpression)
         {
             return new FilterExpression(
-                filterExpression.ItemType,
+                filterExpression.Type,
                 Visit(filterExpression.Source),
                 Visit(filterExpression.Expression));
         }
@@ -114,7 +114,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
         {
             return new NamedSourceExpression(
-                namedSourceExpression.ItemType,
+                namedSourceExpression.Type,
                 Visit(namedSourceExpression.Source),
                 Visit(namedSourceExpression.Parameter));
         }
@@ -127,7 +127,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitProjection(ProjectionExpression projectionExpression)
         {
             return new ProjectionExpression(
-                projectionExpression.ItemType,
+                projectionExpression.Type,
                 Visit(projectionExpression.Source),
                 projectionExpression.Bindings.Select(Visit));
         }
@@ -140,7 +140,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitMethodCall(MethodCallExpression methodCallExpression)
         {
             return new MethodCallExpression(
-                methodCallExpression.ItemType,
+                methodCallExpression.Type,
                 methodCallExpression.Name,
                 methodCallExpression.Arguments.Select(Visit).ToList());
         }

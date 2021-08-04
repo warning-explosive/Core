@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                         IApplicable<ProjectionExpression>,
                                         IApplicable<FilterExpression>,
                                         IApplicable<QuerySourceExpression>,
+                                        IApplicable<NamedSourceExpression>,
                                         IApplicable<NewExpression>,
                                         IApplicable<SimpleBindingExpression>,
                                         IApplicable<NamedBindingExpression>,
@@ -30,31 +31,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         private List<IIntermediateExpression> _bindings;
 
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="source">Source</param>
         /// <param name="bindings">Bindings</param>
         public ProjectionExpression(
-            Type itemType,
+            Type type,
             IIntermediateExpression source,
             IEnumerable<IIntermediateExpression> bindings)
         {
-            ItemType = itemType;
+            Type = type;
             Source = source;
-            IsProjectionToClass = itemType.IsClass
-                                  && !itemType.IsPrimitive()
-                                  && !itemType.IsCollection();
-            IsAnonymousProjection = itemType.IsAnonymous();
+            IsProjectionToClass = type.IsClass
+                                  && !type.IsPrimitive()
+                                  && !type.IsCollection();
+            IsAnonymousProjection = type.IsAnonymous();
 
             _bindings = bindings.ToList();
         }
 
-        internal ProjectionExpression(Type itemType)
-            : this(itemType, null !, new List<IIntermediateExpression>())
+        internal ProjectionExpression(Type type)
+            : this(type, null !, new List<IIntermediateExpression>())
         {
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Is projection creates anonymous or user defined class
@@ -108,7 +109,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Bindings, Source);
+            return HashCode.Combine(Type, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Bindings, Source);
         }
 
         /// <inheritdoc />
@@ -126,7 +127,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(ProjectionExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && IsProjectionToClass == other.IsProjectionToClass
                    && IsAnonymousProjection == other.IsAnonymousProjection
                    && IsDistinct == other.IsDistinct
@@ -155,10 +156,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedSourceExpression namedSource)
+        {
+            Source = namedSource;
+        }
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, NewExpression @new)
         {
             IsProjectionToClass = true;
-            IsAnonymousProjection = @new.ItemType.IsAnonymous();
+            IsAnonymousProjection = @new.Type.IsAnonymous();
         }
 
         /// <inheritdoc />
@@ -194,43 +201,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression parameter)
         {
-            var visitor = new ReplaceParameterVisitor(parameter);
-
-            if (IsProjectionToClass)
+            if (Source is not NamedSourceExpression)
             {
-                _bindings = Bindings
-                    .Select(binding => visitor.Visit(binding))
-                    .ToList();
-            }
-
-            if (Source is NamedSourceExpression namedSource)
-            {
-                Source = visitor.Visit(namedSource);
-            }
-            else
-            {
-                Source = new NamedSourceExpression(
-                    Source.ItemType,
-                    Source,
-                    parameter);
+                Source = new NamedSourceExpression(Source.Type, Source, parameter);
             }
         }
 
-        internal IEnumerable<IIntermediateExpression> GetFilterBindings(
-            TranslationContext context,
-            ParameterExpression parameter)
+        internal IEnumerable<IIntermediateExpression> GetFilterBindings(TranslationContext context)
         {
             IEnumerable<INamedIntermediateExpression> bindings;
 
             if (IsProjectionToClass)
             {
-                bindings = ItemType.SelectAll(parameter);
+                bindings = Type.SelectAll(context.GetParameterExpression(Type));
             }
             else
             {
-                var visitor = new ReplaceParameterVisitor(parameter);
                 bindings = Bindings
-                    .Select(binding => visitor.Visit(binding))
+                    .Select(NamedBindingExpression.Unwrap)
                     .OfType<INamedIntermediateExpression>();
             }
 
@@ -242,7 +230,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                     typeof(bool),
                     ExpressionType.Equal,
                     binding,
-                    QueryParameterExpression.Create(context, binding.ItemType, binding.ItemType.DefaultValue(), binding));
+                    QueryParameterExpression.Create(context, binding.Type, binding.Type.DefaultValue(), binding));
             }
         }
     }

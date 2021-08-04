@@ -10,6 +10,37 @@ namespace SpaceEngineers.Core.Basics
     public static class DictionaryExtensions
     {
         /// <summary>
+        /// Add or update
+        /// </summary>
+        /// <param name="dictionary">Dictionary</param>
+        /// <param name="key">Key</param>
+        /// <param name="add">Add producer</param>
+        /// <param name="update">Update producer</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Added or updated value</returns>
+        public static TValue AddOrUpdate<TKey, TValue>(
+            this IDictionary<TKey, TValue> dictionary,
+            TKey key,
+            Func<TKey, TValue> add,
+            Func<TKey, TValue, TValue> update)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                var value = dictionary[key];
+                var newValue = update(key, value);
+                dictionary[key] = newValue;
+                return newValue;
+            }
+            else
+            {
+                var newValue = add(key);
+                dictionary[key] = newValue;
+                return newValue;
+            }
+        }
+
+        /// <summary>
         /// Get or add
         /// </summary>
         /// <param name="dictionary">Dictionary</param>

@@ -14,14 +14,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                          ISafelyEquatable<QuerySourceExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
-        public QuerySourceExpression(Type itemType)
+        /// <param name="type">Type</param>
+        public QuerySourceExpression(Type type)
         {
-            ItemType = itemType;
+            Type = type;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         #region IEquatable
 
@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType);
+            return HashCode.Combine(Type);
         }
 
         /// <inheritdoc />
@@ -68,7 +68,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(QuerySourceExpression other)
         {
-            return ItemType == other.ItemType;
+            return Type == other.Type;
         }
 
         #endregion

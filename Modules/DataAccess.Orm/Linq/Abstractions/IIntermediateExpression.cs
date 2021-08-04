@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
     public interface IIntermediateExpression
     {
         /// <summary>
-        /// Item type
+        /// Type
         /// </summary>
-        Type ItemType { get; }
+        Type Type { get; }
     }
 }

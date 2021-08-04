@@ -19,21 +19,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         private readonly List<IIntermediateExpression> _arguments;
 
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="name">Name</param>
         /// <param name="arguments">Arguments</param>
         public MethodCallExpression(
-            Type itemType,
+            Type type,
             string name,
             IEnumerable<IIntermediateExpression> arguments)
         {
-            ItemType = itemType;
+            Type = type;
             Name = name;
             _arguments = arguments.ToList();
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Name
@@ -72,7 +72,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name, Arguments);
+            return HashCode.Combine(Type, Name, Arguments);
         }
 
         /// <inheritdoc />
@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(MethodCallExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Arguments.Equals(other.Arguments);
         }

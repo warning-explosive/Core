@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
@@ -23,26 +22,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                     IApplicable<SimpleBindingExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="source">Source</param>
         /// <param name="expression">Expression</param>
         public FilterExpression(
-            Type itemType,
+            Type type,
             IIntermediateExpression source,
             IIntermediateExpression expression)
         {
-            ItemType = itemType;
+            Type = type;
             Source = source;
             Expression = expression;
         }
 
-        internal FilterExpression(Type itemType)
-            : this(itemType, null !, null !)
+        internal FilterExpression(Type type)
+            : this(type, null !, null !)
         {
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Source expression which we want to filter
@@ -81,7 +80,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Source, Expression);
+            return HashCode.Combine(Type, Source, Expression);
         }
 
         /// <inheritdoc />
@@ -99,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(FilterExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Source.Equals(other.Source)
                    && Expression.Equals(other.Expression);
         }
@@ -121,50 +120,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression parameter)
         {
-            Expression = new ReplaceParameterVisitor(parameter).Visit(Expression);
-
-            if (Source is ProjectionExpression projection)
-            {
-                if (projection.IsProjectionToClass)
-                {
-                    projection.Apply(context, parameter);
-                }
-                else
-                {
-                    var binding = projection.Bindings.Single();
-                    Expression = new ReplaceParameterVisitor(NamedBindingExpression.Unwrap(binding)).Visit(Expression);
-                }
-            }
-            else
-            {
-                Source = new NamedSourceExpression(
-                    Source.ItemType,
-                    Source,
-                    parameter);
-            }
+            ApplyBinding(parameter);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression binary)
         {
-            ApplyExpression(binary);
+            ApplyBinding(binary);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression conditional)
         {
-            ApplyExpression(conditional);
+            ApplyBinding(conditional);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression binding)
         {
-            ApplyExpression(binding);
+            ApplyBinding(binding);
         }
 
-        private void ApplyExpression(IIntermediateExpression expression)
+        private void ApplyBinding(IIntermediateExpression expression)
         {
-            if (Source is ProjectionExpression { IsProjectionToClass: true } projection)
+            if (Source is ProjectionExpression projection)
             {
                 expression = new ReplaceFilterExpressionVisitor(projection).Visit(expression);
             }

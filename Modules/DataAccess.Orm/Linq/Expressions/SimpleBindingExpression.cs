@@ -16,26 +16,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                            IApplicable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="name">Name</param>
         /// <param name="expression">IIntermediateExpression</param>
         public SimpleBindingExpression(
-            Type itemType,
+            Type type,
             string name,
             IIntermediateExpression expression)
         {
-            ItemType = itemType;
+            Type = type;
             Name = name;
             Expression = expression;
         }
 
-        internal SimpleBindingExpression(Type itemType, string name)
-            : this(itemType, name, null !)
+        internal SimpleBindingExpression(Type type, string name)
+            : this(type, name, null !)
         {
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <inheritdoc />
         public string Name { get; }
@@ -72,7 +72,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Name, Expression);
+            return HashCode.Combine(Type, Name, Expression);
         }
 
         /// <inheritdoc />
@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(SimpleBindingExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Expression.Equals(other.Expression);
         }

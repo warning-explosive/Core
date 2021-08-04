@@ -28,7 +28,10 @@ namespace SpaceEngineers.Core.Basics.Primitives
             return new AsyncEnumerator(_source, _token);
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         private class AsyncEnumerator : IEnumerator<T>
         {

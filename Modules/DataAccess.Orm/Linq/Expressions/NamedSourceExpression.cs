@@ -14,21 +14,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                          ISafelyEquatable<NamedSourceExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="source">Source</param>
         /// <param name="parameter">Parameter</param>
         public NamedSourceExpression(
-            Type itemType,
+            Type type,
             IIntermediateExpression source,
             IIntermediateExpression parameter)
         {
-            ItemType = itemType;
+            Type = type;
             Source = source;
             Parameter = parameter;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <inheritdoc />
         public IIntermediateExpression Source { get; }
@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Source, Parameter);
+            return HashCode.Combine(Type, Source, Parameter);
         }
 
         /// <inheritdoc />
@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(NamedSourceExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Source.Equals(other.Source)
                    && Parameter.Equals(other.Parameter);
         }

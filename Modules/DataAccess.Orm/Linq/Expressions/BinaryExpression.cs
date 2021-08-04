@@ -16,29 +16,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                     IApplicable<IIntermediateExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="operator">Operator</param>
         /// <param name="left">Left IIntermediateExpression</param>
         /// <param name="right">Right IIntermediateExpression</param>
         public BinaryExpression(
-            Type itemType,
+            Type type,
             ExpressionType @operator,
             IIntermediateExpression left,
             IIntermediateExpression right)
         {
-            ItemType = itemType;
+            Type = type;
             Operator = @operator;
             Left = left;
             Right = right;
         }
 
-        internal BinaryExpression(Type itemType, ExpressionType @operator)
-            : this(itemType, @operator, null !, null !)
+        internal BinaryExpression(Type type, ExpressionType @operator)
+            : this(type, @operator, null !, null !)
         {
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Binary operator
@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Operator, Left, Right);
+            return HashCode.Combine(Type, Operator, Left, Right);
         }
 
         /// <inheritdoc />
@@ -100,7 +100,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(BinaryExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Operator == other.Operator
                    && Left.Equals(other.Left)
                    && Right.Equals(other.Right);

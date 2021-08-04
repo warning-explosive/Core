@@ -14,16 +14,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                       ISafelyEquatable<ConstantExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="itemType">Item type</param>
+        /// <param name="type">Type</param>
         /// <param name="value">Constant value</param>
-        public ConstantExpression(Type itemType, object? value)
+        public ConstantExpression(Type type, object? value)
         {
-            ItemType = itemType;
+            Type = type;
             Value = value;
         }
 
         /// <inheritdoc />
-        public Type ItemType { get; }
+        public Type Type { get; }
 
         /// <summary>
         /// Constant value
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(ItemType, Value);
+            return HashCode.Combine(Type, Value);
         }
 
         /// <inheritdoc />
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(ConstantExpression other)
         {
-            return ItemType == other.ItemType
+            return Type == other.Type
                    && Value?.Equals(other.Value) == true;
         }
 

@@ -51,62 +51,84 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All()),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\"",
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - guid",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison !=",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.Id)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField != 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.Id)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" != @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - bool",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.BooleanField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField < 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" < @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - string",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <=",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.StringField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField <= 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" <= @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - int",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison ==",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.IntField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField == 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" = @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.BooleanField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField > 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.BooleanField)}\"",
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" > @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >=",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\" >= @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary filter",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField).Where(it => it != null)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL",
                         emptyQueryParameters,
                         write))
             };
@@ -114,7 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter after anonymous projection",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.BooleanField, e.StringField }).Where(a => a.BooleanField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\"",
@@ -123,152 +145,20 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Property chain",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.StringField.Length)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tlength(e.\"{nameof(TestAggregate.StringField)}\"){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\"",
                         emptyQueryParameters,
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary filter",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField).Where(str => str != null)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\te.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL",
-                        emptyQueryParameters,
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Coalesce projection",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField ?? string.Empty)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tCOALESCE(e.\"{nameof(TestAggregate.NullableStringField)}\", @param_0){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary projection",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => e.NullableStringField != null ? e.NullableStringField : string.Empty)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tCASE WHEN e.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN e.\"{nameof(TestAggregate.NullableStringField)}\" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e",
-                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.NullableStringField != null ? true : false)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN e.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.StringField, e.NullableStringField }).Where(p => p.NullableStringField != null ? true : false)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tp.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tp.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" p{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN p.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection with renaming",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.StringField, Filter = e.NullableStringField }).Where(p => p.Filter != null ? true : false)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tp.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tp.\"{nameof(TestAggregate.NullableStringField)}\" AS Filter{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" p{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN p.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison ==",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField == 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" = @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison !=",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField != 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" != @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >=",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField >= 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" >= @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField > 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" > @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField < 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" < @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write))
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <=",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField <= 42)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" e{Environment.NewLine}WHERE{Environment.NewLine}\te.\"{nameof(TestAggregate.IntField)}\" <= @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Change anonymous projection parameter name",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(e => new { e.NullableStringField, e.StringField }).Where(a => a.NullableStringField != null)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL",
@@ -277,42 +167,186 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Projection/filter chain",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Coalesce projection",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(a => new { a.NullableStringField, a.StringField, a.IntField }).Select(b => new { b.NullableStringField, b.IntField }).Where(c => c.NullableStringField != null).Select(d => new { d.IntField }).Where(e => e.IntField > 0).Where(f => f.IntField < 42).Select(g => g.IntField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField ?? string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                    $"SELECT{Environment.NewLine}\tg.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tf.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\tpublic.\"{nameof(TestAggregate)}\" a) c{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tc.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL) f{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tf.\"{nameof(TestAggregate.IntField)}\" > 0 AND f.\"{nameof(TestAggregate.IntField)}\" < 42) g",
-                    emptyQueryParameters,
-                    write))
-            };
-            /* TODO: group by test cases
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - single field key test",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(a => a.StringField)),
-                new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"TestAggregate\"{Environment.NewLine}WHERE{Environment.NewLine}\ttodo_key_predicate",
-                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\tCOALESCE(a.\"{nameof(TestAggregate.NullableStringField)}\", @param_0){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         write))
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - single field key test",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => it.StringField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\" = @param_0",
+                        new Dictionary<string, object?> { ["param_0"] = default(string) },
+                        write))
+            };
+            /* TODO: group by test cases */
+            /*yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - anonymous class key test",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(a => new { a.StringField, a.BooleanField })),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>((query, write) => CheckGroupedQuery(query, string.Empty, string.Empty, write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - projection source test",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(e => e.IntField > 42).Select(b => new { b.StringField, b.BooleanField }).GroupBy(a => new { a.StringField, a.BooleanField })),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField > 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>((query, write) => CheckGroupedQuery(query, string.Empty, string.Empty, write))
             };*/
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - bool",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - guid",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.Id)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.Id)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - int",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.IntField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - string",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.StringField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Projection/filter chain",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(b => new { b.NullableStringField, b.IntField }).Where(c => c.NullableStringField != null).Select(d => new { d.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\tk.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\ti.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\tpublic.\"{nameof(TestAggregate)}\" a) d{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL) i{Environment.NewLine}\tWHERE{Environment.NewLine}\t\ti.\"{nameof(TestAggregate.IntField)}\" > @param_0 AND i.\"{nameof(TestAggregate.IntField)}\" < @param_1) k",
+                        new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Property chain with translated member",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.StringField.Length)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\tlength(a.\"{nameof(TestAggregate.StringField)}\"){Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection with renaming",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\" AS Filter{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.NullableStringField != null ? true : false)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary projection",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $"SELECT{Environment.NewLine}\tCASE WHEN a.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL THEN a.\"{nameof(TestAggregate.NullableStringField)}\" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
+                        write))
+            };
+        }
+
+        [Fact]
+        internal void NextLambdaParameterNameTest()
+        {
+            var ctx = new TranslationContext();
+            var type = typeof(bool);
+
+            Assert.Equal("a", ctx.NextLambdaParameterName(type));
+            Assert.Equal("b", ctx.NextLambdaParameterName(type));
+            Assert.Equal("c", ctx.NextLambdaParameterName(type));
+
+            Assert.Equal("a", ctx.NextLambdaParameterName(typeof(object)));
+
+            Enumerable
+                .Range(0, 42)
+                .Each(_ => ctx.NextLambdaParameterName(type));
+
+            Assert.Equal("at", ctx.NextLambdaParameterName(type));
+            Assert.Equal("au", ctx.NextLambdaParameterName(type));
+            Assert.Equal("av", ctx.NextLambdaParameterName(type));
+
+            Assert.Equal("b", ctx.NextLambdaParameterName(typeof(object)));
+
+            Enumerable
+                .Range(0, 42)
+                .Each(_ => ctx.NextLambdaParameterName(type));
+
+            Assert.Equal("cm", ctx.NextLambdaParameterName(type));
+            Assert.Equal("cn", ctx.NextLambdaParameterName(type));
+            Assert.Equal("co", ctx.NextLambdaParameterName(type));
+
+            Assert.Equal("c", ctx.NextLambdaParameterName(typeof(object)));
         }
 
         [Theory]
@@ -339,16 +373,28 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 checkQuery(query, Output.WriteLine);
 
-                /* TODO: Prepare and assert queried data */
-                var result = queryProducer(readRepository)
+                /* TODO: setup appveyor environment so as to run queries */
+                /*var result = queryProducer(readRepository)
                     .GetEnumerator()
-                    .ToEnumerable<object>()
+                    .AsEnumerable<object>()
                     .ToList();
 
                 foreach (var @object in result)
                 {
-                    Output.WriteLine(@object.ToString());
-                }
+                    if (@object is IGrouping<object, object> group)
+                    {
+                        Output.WriteLine(group.Key?.ToString());
+
+                        foreach (var value in group)
+                        {
+                            Output.WriteLine(value?.ToString());
+                        }
+                    }
+                    else
+                    {
+                        Output.WriteLine(@object?.ToString());
+                    }
+                }*/
 
                 /* TODO: IAsyncQueryable extensions
                 _ = await readRepository
@@ -416,7 +462,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private static void CheckParameters(object? actualQueryParameters, IReadOnlyDictionary<string, object?> expectedQueryParameters)
         {
-            var parameters = (actualQueryParameters?.ToPropertyDictionary() ?? new Dictionary<string, object>())
+            var parameters = (actualQueryParameters?.ToPropertyDictionary() ?? new Dictionary<string, object?>())
                 .FullOuterJoin(expectedQueryParameters,
                     actual => actual.Key,
                     expected => expected.Key,

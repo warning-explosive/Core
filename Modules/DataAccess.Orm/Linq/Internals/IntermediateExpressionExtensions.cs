@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
             var dynamicPropertyValues = extractor
                 .QueryParameters
-                .ToDictionary(parameter => new DynamicProperty(parameter.ItemType, parameter.Name),
+                .ToDictionary(parameter => new DynamicProperty(parameter.Type, parameter.Name),
                     parameter => parameter.Value);
 
             var dynamicClass = new DynamicClass().HasProperties(dynamicPropertyValues.Keys.ToArray());
@@ -55,12 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             if (type.IsClass)
             {
-                var properties = type
-                    .GetProperties(BindingFlags.Public
-                                   | BindingFlags.NonPublic
-                                   | BindingFlags.Instance
-                                   | BindingFlags.GetProperty
-                                   | BindingFlags.SetProperty);
+                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
 
                 foreach (var property in properties)
                 {

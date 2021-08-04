@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Implementations
                     return "Type:"
                            + ctx.OpenGeneric
                            + Environment.NewLine
-                           + $"Candidates ({source.Count()}):"
+                           + "Candidates:"
                            + Environment.NewLine
                            + string.Join(Environment.NewLine, source.Take(10).Select(t => t.FullName))
                            + Environment.NewLine

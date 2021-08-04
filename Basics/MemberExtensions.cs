@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class MemberExtensions
     {
-        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public;
 
         /// <summary>
         /// Check that object has property
@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return target
                   .GetType()
-                  .GetProperty(propertyName, Flags)
+                  .GetProperty(propertyName, Flags | BindingFlags.GetProperty)
                   .GetValue(target);
         }
 
@@ -129,12 +129,13 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="target">Target object</param>
         /// <returns>Property dictionary</returns>
-        public static IDictionary<string, object> ToPropertyDictionary(this object target)
+        public static Dictionary<string, object?> ToPropertyDictionary(this object target)
         {
             return target.GetType()
-                         .GetProperties(Flags)
+                         .GetProperties(Flags | BindingFlags.GetProperty)
                          .ToDictionary(prop => prop.Name,
-                                       prop => prop.GetValue(target));
+                                       prop => (object?)prop.GetValue(target),
+                                       StringComparer.OrdinalIgnoreCase);
         }
     }
 }

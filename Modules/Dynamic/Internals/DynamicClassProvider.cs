@@ -41,12 +41,8 @@ namespace SpaceEngineers.Core.Dynamic.Internals
             {
                 if (values.TryGetValue(dynamicProperty, out var value))
                 {
-                    type.GetProperty(dynamicProperty.Name,
-                            BindingFlags.Instance
-                            | BindingFlags.SetProperty
-                            | BindingFlags.Public
-                            | BindingFlags.NonPublic)
-                        ?.SetValue(acc, value);
+                    type.GetProperty(dynamicProperty.Name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
+                       ?.SetValue(acc, value);
                 }
 
                 return acc;

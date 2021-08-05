@@ -94,7 +94,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         {
             foreach (var messageHandler in messageHandlers)
             {
-                var copy = (IntegrationMessage)message.Clone();
+                var copy = message.Clone();
                 yield return InvokeMessageHandler(copy, messageHandler, Token);
             }
         }

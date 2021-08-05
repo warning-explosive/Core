@@ -1,45 +1,40 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
+    using System;
+    using System.Collections.Generic;
+    using Abstractions;
+
     /// <summary>
     /// Grouped query
     /// </summary>
     public class GroupedQuery : IQuery
     {
         /// <summary> .cctor </summary>
-        /// <param name="keyQuery">Key query</param>
-        /// <param name="keyQueryParameters">Key query parameters object</param>
-        /// <param name="valueQuery">Value query</param>
-        /// <param name="valueQueryParameters">Value query parameters object</param>
-        public GroupedQuery(
-            string keyQuery,
-            object? keyQueryParameters,
-            string valueQuery,
-            object? valueQueryParameters)
+        /// <param name="keysQuery">Keys query</param>
+        /// <param name="keysQueryParameters">Keys query parameters object</param>
+        /// <param name="valuesExpressionProducer">Values expression producer</param>
+        public GroupedQuery(string keysQuery,
+            object? keysQueryParameters,
+            Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer)
         {
-            KeyQuery = keyQuery;
-            KeyQueryParameters = keyQueryParameters;
-            ValueQuery = valueQuery;
-            ValueQueryParameters = valueQueryParameters;
+            KeysQuery = keysQuery;
+            KeysQueryParameters = keysQueryParameters;
+            ValuesExpressionProducer = valuesExpressionProducer;
         }
 
         /// <summary>
-        /// Key query
+        /// Keys query
         /// </summary>
-        public string KeyQuery { get; }
+        public string KeysQuery { get; }
 
         /// <summary>
-        /// Key query parameters object
+        /// Keys query parameters object
         /// </summary>
-        public object? KeyQueryParameters { get; }
+        public object? KeysQueryParameters { get; }
 
         /// <summary>
-        /// Value query
+        /// Values expression producer
         /// </summary>
-        public string ValueQuery { get; }
-
-        /// <summary>
-        /// Value query parameters object
-        /// </summary>
-        public object? ValueQueryParameters { get; }
+        public Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer { get; }
     }
 }

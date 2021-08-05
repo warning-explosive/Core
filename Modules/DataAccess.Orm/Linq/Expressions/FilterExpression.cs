@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
-    using Internals;
+    using Visitors;
 
     /// <summary>
     /// FilterExpression
@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                     ISafelyEquatable<FilterExpression>,
                                     IApplicable<ProjectionExpression>,
                                     IApplicable<QuerySourceExpression>,
+                                    IApplicable<QueryParameterExpression>,
                                     IApplicable<ParameterExpression>,
                                     IApplicable<BinaryExpression>,
                                     IApplicable<ConditionalExpression>,
@@ -106,6 +107,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         #endregion
 
         /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            throw new NotImplementedException(nameof(FilterExpression) + "." + nameof(AsExpressionTree));
+        }
+
+        #region IApplicable
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, ProjectionExpression projection)
         {
             Source = projection;
@@ -115,6 +124,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public void Apply(TranslationContext context, QuerySourceExpression querySource)
         {
             Source = querySource;
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QueryParameterExpression queryParameter)
+        {
+            ApplyBinding(queryParameter);
         }
 
         /// <inheritdoc />
@@ -152,5 +167,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                 ? new BinaryExpression(typeof(bool), ExpressionType.AndAlso, Expression, expression)
                 : expression;
         }
+
+        #endregion
     }
 }

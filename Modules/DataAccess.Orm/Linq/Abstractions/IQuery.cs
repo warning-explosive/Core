@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
 {
     /// <summary>
     /// IQuery

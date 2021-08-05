@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
+    using Abstractions;
+
     /// <summary>
     /// Flat query
     /// </summary>

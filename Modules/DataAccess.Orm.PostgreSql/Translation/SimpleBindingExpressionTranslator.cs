@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.Append(expression.Expression.Translate(_dependencyContainer, depth));
+            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
             sb.Append('.');
             sb.Append('\"');
             sb.Append(expression.Name);

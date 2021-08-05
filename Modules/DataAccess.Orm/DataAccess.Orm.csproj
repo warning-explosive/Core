@@ -79,17 +79,11 @@
       <Compile Update="Linq\Internals\Queryable.cs">
         <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\Internals\QueryProvider.cs">
-        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\Internals\ReplaceFilterExpressionVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\Expressions\NamedBindingExpression.cs">
-        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Expressions\SimpleBindingExpression.cs">
-        <DependentUpon>INamedIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Expressions\FilterExpression.cs">
         <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
@@ -106,12 +100,6 @@
       <Compile Update="Linq\Internals\IMaterializer.cs">
         <DependentUpon>IQueryAsyncQueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\FlatQuery.cs">
-        <DependentUpon>IQuery.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\GroupedQuery.cs">
-        <DependentUpon>IQuery.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\Internals\IQueryMaterializer.cs">
         <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
@@ -124,11 +112,14 @@
       <Compile Update="Linq\Internals\TranslationExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\Internals\FlatQueryTranslator.cs">
+        <DependentUpon>QueryTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\GroupedQueryTranslator.cs">
+        <DependentUpon>QueryTranslator.cs</DependentUpon>
+      </Compile>
       <Compile Update="Linq\MemberTranslationContext.cs">
         <DependentUpon>TranslationContext.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\Internals\ExtractQueryParametersVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

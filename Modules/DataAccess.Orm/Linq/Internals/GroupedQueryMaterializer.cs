@@ -1,11 +1,10 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading;
+    using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
     using Basics;
@@ -13,15 +12,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>
     {
-        private readonly IQueryMaterializer<FlatQuery, TKey> _keyQueryMaterializer;
-        private readonly IQueryMaterializer<FlatQuery, TValue> _valueQueryMaterializer;
+        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IQueryMaterializer<FlatQuery, TKey> _keysQueryMaterializer;
+        private readonly IQueryMaterializer<FlatQuery, TValue> _valuesQueryMaterializer;
 
         public GroupedQueryMaterializer(
-            IQueryMaterializer<FlatQuery, TKey> keyQueryMaterializer,
-            IQueryMaterializer<FlatQuery, TValue> valueQueryMaterializer)
+            IDependencyContainer dependencyContainer,
+            IQueryMaterializer<FlatQuery, TKey> keysQueryMaterializer,
+            IQueryMaterializer<FlatQuery, TValue> valuesQueryMaterializer)
         {
-            _keyQueryMaterializer = keyQueryMaterializer;
-            _valueQueryMaterializer = valueQueryMaterializer;
+            _dependencyContainer = dependencyContainer;
+            _keysQueryMaterializer = keysQueryMaterializer;
+            _valuesQueryMaterializer = valuesQueryMaterializer;
         }
 
         public async IAsyncEnumerable<IGrouping<TKey, TValue>> Materialize(GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
@@ -36,42 +38,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         private IAsyncEnumerable<TKey> MaterializeKeys(GroupedQuery query, CancellationToken token)
         {
-            var keyQuery = new FlatQuery(query.KeyQuery, query.KeyQueryParameters);
+            var keysQuery = new FlatQuery(query.KeysQuery, query.KeysQueryParameters);
 
-            return _keyQueryMaterializer.Materialize(keyQuery, token);
+            return _keysQueryMaterializer.Materialize(keysQuery, token);
         }
 
         private IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, CancellationToken token)
         {
-            var valueQueryParameters = ApplyKeyValues(key, query.ValueQueryParameters);
+            var keyValues = key.GetQueryParametersValues();
 
-            var valueQuery = new FlatQuery(query.ValueQuery, valueQueryParameters);
+            var valuesExpression = query.ValuesExpressionProducer(keyValues);
 
-            return _valueQueryMaterializer.Materialize(valueQuery, token);
-        }
+            var valuesQuery = valuesExpression.Translate(_dependencyContainer, 0);
+            var valuesQueryParameters = valuesExpression.ExtractQueryParameters(_dependencyContainer);
 
-        private static object? ApplyKeyValues(TKey key, object? queryValueQueryParameters)
-        {
-            IReadOnlyDictionary<string, object?> values = typeof(TKey).IsPrimitive()
-                ? new Dictionary<string, object?> { [string.Format(TranslationContext.QueryParameterFormat, 0)] = key }
-                : key?.ToPropertyDictionary() ?? new Dictionary<string, object?>();
-
-            if (queryValueQueryParameters == null)
-            {
-                return null;
-            }
-
-            queryValueQueryParameters
-                .GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
-                .Join(values,
-                    property => property.Name,
-                    value => value.Key,
-                    (property, value) => (property, value.Value),
-                    StringComparer.OrdinalIgnoreCase)
-                .Each(pair => pair.property.SetValue(queryValueQueryParameters, pair.Value));
-
-            return queryValueQueryParameters;
+            return _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token);
         }
     }
 }

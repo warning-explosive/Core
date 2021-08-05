@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -14,12 +15,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                        ISafelyEquatable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
+        /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
-        /// <param name="name">Name</param>
-        public ParameterExpression(Type type, string name)
+        public ParameterExpression(TranslationContext context, Type type)
         {
             Type = type;
-            Name = name;
+            Name = context.NextLambdaParameterName();
         }
 
         /// <inheritdoc />
@@ -80,5 +81,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            return System.Linq.Expressions.Expression.Parameter(Type, Name);
+        }
     }
 }

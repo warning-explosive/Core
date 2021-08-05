@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -18,23 +20,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        public GroupByExpression(Type type)
+        /// <param name="valuesExpressionProducer">Values expression producer</param>
+        public GroupByExpression(
+            Type type,
+            Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer)
         {
             Type = type;
+            ValuesExpressionProducer = valuesExpressionProducer;
         }
 
         /// <inheritdoc />
         public Type Type { get; }
 
         /// <summary>
-        /// Group by keys
+        /// Keys expression
         /// </summary>
-        public IIntermediateExpression Keys { get; private set; } = null!;
+        public IIntermediateExpression KeysExpression { get; private set; } = null!;
 
         /// <summary>
-        /// Group by values
+        /// Values expression producer
         /// </summary>
-        public IIntermediateExpression Values { get; private set; } = null!;
+        public Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer { get; }
 
         #region IEquatable
 
@@ -63,7 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Keys, Values);
+            return HashCode.Combine(Type, KeysExpression);
         }
 
         /// <inheritdoc />
@@ -82,11 +88,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public bool SafeEquals(GroupByExpression other)
         {
             return Type == other.Type
-                   && Keys.Equals(other.Keys)
-                   && Values.Equals(other.Values);
+                   && KeysExpression.Equals(other.KeysExpression);
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            throw new NotImplementedException(nameof(GroupByExpression) + "." + nameof(AsExpressionTree));
+        }
+
+        #region IApplicable
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ProjectionExpression projection)
@@ -108,14 +121,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 
         private void ApplyInternal(IIntermediateExpression expression)
         {
-            if (Keys == null)
-            {
-                Keys = expression;
-            }
-            else if (Values == null)
-            {
-                Values = expression;
-            }
+            KeysExpression ??= expression;
         }
+
+        #endregion
     }
 }

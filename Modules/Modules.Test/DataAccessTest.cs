@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -11,6 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Contract.Abstractions;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Linq.Abstractions;
+    using DataAccess.Orm.Linq.Internals;
     using GenericDomain;
     using GenericDomain.Abstractions;
     using Xunit;
@@ -178,6 +180,28 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - anonymous class key test",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - projection source test",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tc.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(TestAggregate.IntField)}\" >= @param_0) b) c",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        write))
+            };
+            yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - single field key test",
                 assemblies,
                 new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => it.StringField)),
@@ -185,25 +209,41 @@ namespace SpaceEngineers.Core.Modules.Test
                     (query, write) => CheckGroupedQuery(query,
                         $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
                         emptyQueryParameters,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\" = @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = default(string) },
                         write))
-            };
-            /* TODO: group by test cases */
-            /*yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - anonymous class key test",
-                assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField })),
-                new Action<IQuery, Action<string>>((query, write) => CheckGroupedQuery(query, string.Empty, string.Empty, write))
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - projection source test",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - anonymous class key test",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField > 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
-                new Action<IQuery, Action<string>>((query, write) => CheckGroupedQuery(query, string.Empty, string.Empty, write))
-            };*/
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\ta.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - projection source test",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\tc.\"{nameof(TestAggregate.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(TestAggregate.BooleanField)}\",{Environment.NewLine}\t\tb.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\tpublic.\"{nameof(TestAggregate)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(TestAggregate.IntField)}\" >= @param_0) b) c",
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - single field key test",
+                assemblies,
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().GroupBy(it => it.StringField, it => it.IntField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckGroupedQuery(query,
+                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(TestAggregate.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\tpublic.\"{nameof(TestAggregate)}\" a",
+                        emptyQueryParameters,
+                        write))
+            };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - bool",
@@ -252,10 +292,10 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Projection/filter chain",
                 assemblies,
-                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(b => new { b.NullableStringField, b.IntField }).Where(c => c.NullableStringField != null).Select(d => new { d.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
+                new Func<IReadRepository<TestAggregate>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tk.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\ti.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\tpublic.\"{nameof(TestAggregate)}\" a) d{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\td.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL) i{Environment.NewLine}\tWHERE{Environment.NewLine}\t\ti.\"{nameof(TestAggregate.IntField)}\" > @param_0 AND i.\"{nameof(TestAggregate.IntField)}\" < @param_1) k",
+                        $"SELECT{Environment.NewLine}\td.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tc.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tb.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\tb.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(TestAggregate.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\tpublic.\"{nameof(TestAggregate)}\" a) b{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tb.\"{nameof(TestAggregate.NullableStringField)}\" IS NOT NULL) c{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tc.\"{nameof(TestAggregate.IntField)}\" > @param_0 AND c.\"{nameof(TestAggregate.IntField)}\" < @param_1) d",
                         new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
                         write))
             };
@@ -320,33 +360,26 @@ namespace SpaceEngineers.Core.Modules.Test
         internal void NextLambdaParameterNameTest()
         {
             var ctx = new TranslationContext();
-            var type = typeof(bool);
 
-            Assert.Equal("a", ctx.NextLambdaParameterName(type));
-            Assert.Equal("b", ctx.NextLambdaParameterName(type));
-            Assert.Equal("c", ctx.NextLambdaParameterName(type));
-
-            Assert.Equal("a", ctx.NextLambdaParameterName(typeof(object)));
+            Assert.Equal("a", ctx.NextLambdaParameterName());
+            Assert.Equal("b", ctx.NextLambdaParameterName());
+            Assert.Equal("c", ctx.NextLambdaParameterName());
 
             Enumerable
                 .Range(0, 42)
-                .Each(_ => ctx.NextLambdaParameterName(type));
+                .Each(_ => ctx.NextLambdaParameterName());
 
-            Assert.Equal("at", ctx.NextLambdaParameterName(type));
-            Assert.Equal("au", ctx.NextLambdaParameterName(type));
-            Assert.Equal("av", ctx.NextLambdaParameterName(type));
-
-            Assert.Equal("b", ctx.NextLambdaParameterName(typeof(object)));
+            Assert.Equal("at", ctx.NextLambdaParameterName());
+            Assert.Equal("au", ctx.NextLambdaParameterName());
+            Assert.Equal("av", ctx.NextLambdaParameterName());
 
             Enumerable
                 .Range(0, 42)
-                .Each(_ => ctx.NextLambdaParameterName(type));
+                .Each(_ => ctx.NextLambdaParameterName());
 
-            Assert.Equal("cm", ctx.NextLambdaParameterName(type));
-            Assert.Equal("cn", ctx.NextLambdaParameterName(type));
-            Assert.Equal("co", ctx.NextLambdaParameterName(type));
-
-            Assert.Equal("c", ctx.NextLambdaParameterName(typeof(object)));
+            Assert.Equal("cm", ctx.NextLambdaParameterName());
+            Assert.Equal("cn", ctx.NextLambdaParameterName());
+            Assert.Equal("co", ctx.NextLambdaParameterName());
         }
 
         [Theory]
@@ -381,19 +414,46 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 foreach (var @object in result)
                 {
-                    if (@object is IGrouping<object, object> group)
+                    if (@object.GetType().IsSubclassOfOpenGeneric(typeof(IGrouping<,>))
+                        && query is GroupedQuery groupedQuery)
                     {
-                        Output.WriteLine(group.Key?.ToString());
+                        var keyValues = @object
+                            .GetPropertyValue(nameof(IGrouping<object, object>.Key))
+                            .GetQueryParametersValues();
 
-                        foreach (var value in group)
+                        Output.WriteLine("Actual key values:");
+                        Output.WriteLine(keyValues.Select(pair => pair.ToString()).ToString(Environment.NewLine));
+                        Output.WriteLine(string.Empty);
+
+                        var valuesExpression = groupedQuery.ValuesExpressionProducer.Invoke(keyValues);
+                        var valuesQuery = valuesExpression.Translate(dependencyContainer, 0);
+                        var valuesQueryParameters = valuesExpression
+                            .ExtractQueryParameters(dependencyContainer)
+                            .GetQueryParametersValues();
+
+                        Output.WriteLine("Actual values query parameters:");
+                        Output.WriteLine(valuesQueryParameters.Select(pair => pair.ToString()).ToString(Environment.NewLine));
+                        Output.WriteLine(string.Empty);
+
+                        Output.WriteLine("Actual values query:");
+                        Output.WriteLine(valuesQuery);
+                        Output.WriteLine(string.Empty);
+
+                        Output.WriteLine("Actual values:");
+
+                        var enumerator = ((IEnumerable)@object).GetEnumerator();
+
+                        while (enumerator.MoveNext())
                         {
-                            Output.WriteLine(value?.ToString());
+                            Output.WriteLine(enumerator.Current.ToString());
                         }
                     }
                     else
                     {
-                        Output.WriteLine(@object?.ToString());
+                        Output.WriteLine(@object.ToString());
                     }
+
+                    Output.WriteLine(string.Empty);
                 }*/
 
                 /* TODO: IAsyncQueryable extensions
@@ -428,36 +488,23 @@ namespace SpaceEngineers.Core.Modules.Test
 
         private static void CheckGroupedQuery(
             IQuery query,
-            string expectedKeyQuery,
-            IReadOnlyDictionary<string, object?> expectedKeyQueryParameters,
-            string expectedValueQuery,
-            IReadOnlyDictionary<string, object?> expectedValueQueryParameters,
+            string expectedKeysQuery,
+            IReadOnlyDictionary<string, object?> expectedKeysQueryParameters,
             Action<string> write)
         {
             var groupedQuery = (GroupedQuery)query;
 
-            write("Expected key query:");
-            write(expectedKeyQuery);
+            write("Expected keys query:");
+            write(expectedKeysQuery);
 
             write(string.Empty);
 
-            write("Actual key query:");
-            write(groupedQuery.KeyQuery);
+            write("Actual keys query:");
+            write(groupedQuery.KeysQuery);
 
-            Assert.Equal(expectedKeyQuery, groupedQuery.KeyQuery, StringComparer.Ordinal);
-            CheckParameters(groupedQuery.KeyQueryParameters, expectedKeyQueryParameters);
+            Assert.Equal(expectedKeysQuery, groupedQuery.KeysQuery, StringComparer.Ordinal);
+            CheckParameters(groupedQuery.KeysQueryParameters, expectedKeysQueryParameters);
             write(string.Empty);
-
-            write("Expected value query:");
-            write(expectedValueQuery);
-
-            write(string.Empty);
-
-            write("Actual value query:");
-            write(groupedQuery.ValueQuery);
-
-            Assert.Equal(expectedValueQuery, groupedQuery.ValueQuery, StringComparer.Ordinal);
-            CheckParameters(groupedQuery.ValueQueryParameters, expectedValueQueryParameters);
         }
 
         private static void CheckParameters(object? actualQueryParameters, IReadOnlyDictionary<string, object?> expectedQueryParameters)

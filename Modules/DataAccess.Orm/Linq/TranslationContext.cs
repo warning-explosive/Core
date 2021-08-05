@@ -11,27 +11,52 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// <summary>
     /// TranslationContext
     /// </summary>
-    public class TranslationContext
+    public class TranslationContext : ICloneable<TranslationContext>
     {
         internal const string QueryParameterFormat = "param_{0}";
 
-        private readonly Stack<IIntermediateExpression> _stack;
-
         private int _queryParameterIndex;
-
-        private IDictionary<Type, int> _lambdaParameterIndexes;
+        private int _lambdaParameterIndex;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
-            _stack = new Stack<IIntermediateExpression>();
-
             _queryParameterIndex = 0;
+            _lambdaParameterIndex = 0;
+            Stack = new Stack<IIntermediateExpression>();
+        }
 
-            _lambdaParameterIndexes = new Dictionary<Type, int>();
+        /// <summary> .cctor </summary>
+        /// <param name="context">TranslationContext</param>
+        internal TranslationContext(TranslationContext context)
+        {
+            _queryParameterIndex = context._queryParameterIndex;
+            _lambdaParameterIndex = context._lambdaParameterIndex;
+            Stack = context.Stack;
         }
 
         internal IIntermediateExpression? Expression { get; private set; }
+
+        private Stack<IIntermediateExpression> Stack { get; init; }
+
+        /// <inheritdoc />
+        public TranslationContext Clone()
+        {
+            var copy = new TranslationContext
+            {
+                Stack = new Stack<IIntermediateExpression>(Stack),
+                _queryParameterIndex = _queryParameterIndex,
+                _lambdaParameterIndex = _lambdaParameterIndex
+            };
+
+            return copy;
+        }
+
+        /// <inheritdoc />
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
 
         /// <summary>
         /// Gets next query parameter name
@@ -45,13 +70,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <summary>
         /// Gets next lambda parameter name
         /// </summary>
-        /// <param name="type">Type</param>
         /// <returns>Lambda parameter name</returns>
-        public string NextLambdaParameterName(Type type)
+        public string NextLambdaParameterName()
         {
-            var index = _lambdaParameterIndexes.AddOrUpdate(type, _ => 0, (_, prev) => prev + 1);
-
-            var ranks = GetRanks(index, 'z' - 'a' + 1)
+            var ranks = GetRanks(_lambdaParameterIndex++, 'z' - 'a' + 1)
                 .Select(rank => (char)('a' + rank))
                 .ToArray();
 
@@ -78,13 +100,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Parameter expression was got successfully or not</returns>
         public ParameterExpression GetParameterExpression(Type type)
         {
-            return _stack
+            var subsequentIntermediateExpression = Stack
                 .OfType<ISubsequentIntermediateExpression>()
-                .SelectMany(UnwrapSequence)
-                .OfType<NamedSourceExpression>()
-                .Select(expression => expression.Parameter)
-                .OfType<ParameterExpression>()
-                .FirstOrDefault(it => it.Type == type) ?? new ParameterExpression(type, NextLambdaParameterName(type));
+                .FirstOrDefault();
+
+            ParameterExpression? parameter = null;
+
+            if (subsequentIntermediateExpression != null)
+            {
+                parameter = UnwrapSequence(subsequentIntermediateExpression)
+                    .OfType<NamedSourceExpression>()
+                    .Select(expression => expression.Parameter)
+                    .OfType<ParameterExpression>()
+                    .FirstOrDefault();
+            }
+
+            return parameter ?? new ParameterExpression(this, type);
 
             static IEnumerable<ISubsequentIntermediateExpression> UnwrapSequence(ISubsequentIntermediateExpression expression)
             {
@@ -100,10 +131,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             }
         }
 
-        internal void WithinExpressionScope<T>(T expression, Action? action = null)
+        internal void WithinScope<T>(Action action)
             where T : class, IIntermediateExpression
         {
-            using (Disposable.Create(_stack, Push, Pop))
+            if (Stack.TryPeek(out var outer)
+                && outer is T)
+            {
+                action.Invoke();
+            }
+        }
+
+        internal void WithinScope<T>(T expression, Action? action = null)
+            where T : class, IIntermediateExpression
+        {
+            using (Disposable.Create(Stack, Push, Pop))
             {
                 action?.Invoke();
             }
@@ -117,7 +158,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             {
                 var expr = (T)stack.Pop();
 
-                if (_stack.TryPeek(out var outer))
+                if (Stack.TryPeek(out var outer))
                 {
                     Apply(expr, outer);
                 }
@@ -128,39 +169,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             }
         }
 
-        internal void WithoutExpressionScopeDuplication<T>(Func<T> intermediateExpressionProducer, Action? action = null)
+        internal void WithoutScopeDuplication<T>(Func<T> intermediateExpressionProducer, Action? action = null)
             where T : class, IIntermediateExpression
         {
-            if (_stack.TryPeek(out var outer)
+            if (Stack.TryPeek(out var outer)
                 && outer is T)
             {
                 action?.Invoke();
             }
             else
             {
-                WithinExpressionScope(intermediateExpressionProducer(), action);
-            }
-        }
-
-        internal void WithinScope<T>(Action action)
-            where T : class, IIntermediateExpression
-        {
-            if (_stack.TryPeek(out var outer)
-                && outer is T)
-            {
-                action.Invoke();
+                WithinScope(intermediateExpressionProducer(), action);
             }
         }
 
         internal void Apply(IIntermediateExpression expression)
         {
-            if (_stack.TryPeek(out var outer))
+            if (Stack.TryPeek(out var outer))
             {
                 Apply(expression, outer);
             }
         }
 
-        internal void Apply(IIntermediateExpression inner, IIntermediateExpression outer)
+        private void Apply(IIntermediateExpression inner, IIntermediateExpression outer)
         {
             var service = typeof(IApplicable<>).MakeGenericType(inner.GetType());
 

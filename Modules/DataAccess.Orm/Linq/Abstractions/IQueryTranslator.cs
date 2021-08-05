@@ -9,10 +9,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
     public interface IQueryTranslator : IResolvable
     {
         /// <summary>
-        /// Translate linq query expression
+        /// Translates linq expression to DB query
         /// </summary>
-        /// <param name="expression">Linq query expression</param>
+        /// <param name="expression">Linq expression</param>
         /// <returns>Query</returns>
         IQuery Translate(Expression expression);
+    }
+
+    /// <summary>
+    /// IQueryTranslator
+    /// </summary>
+    /// <typeparam name="TExpression">TExpression type-argument</typeparam>
+    public interface IQueryTranslator<in TExpression> : IResolvable
+        where TExpression : IIntermediateExpression
+    {
+        /// <summary>
+        /// Translates intermediate expression to DB query
+        /// </summary>
+        /// <param name="intermediateExpression">Intermediate expression</param>
+        /// <returns>Query</returns>
+        IQuery Translate(TExpression intermediateExpression);
     }
 }

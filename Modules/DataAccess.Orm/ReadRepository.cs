@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm
     using AutoWiring.Api.Enumerations;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
+    using Linq.Abstractions;
     using Linq.Internals;
 
     [Component(EnLifestyle.Scoped)]

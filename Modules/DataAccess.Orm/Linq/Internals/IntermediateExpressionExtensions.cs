@@ -10,24 +10,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using Dynamic.Api;
     using Dynamic.Api.Abstractions;
     using Expressions;
+    using Visitors;
 
     internal static class IntermediateExpressionExtensions
     {
-        internal static string Translate(
-            this IIntermediateExpression expression,
-            IDependencyContainer dependencyContainer,
-            int depth)
+        internal static IReadOnlyDictionary<string, object?> GetQueryParametersValues(this object? obj)
         {
-            var service = typeof(IExpressionTranslator<>).MakeGenericType(expression.GetType());
-
-            return dependencyContainer
-                .Resolve(service)
-                .CallMethod(nameof(IExpressionTranslator<IIntermediateExpression>.Translate))
-                .WithArguments(expression, depth)
-                .Invoke<string>();
+            return obj?.GetType().IsPrimitive() == true
+                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase) { [string.Format(TranslationContext.QueryParameterFormat, 0)] = obj }
+                : obj?.ToPropertyDictionary() ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
 
-        internal static object? ExtractParameters(this IIntermediateExpression expression, IDependencyContainer dependencyContainer)
+        internal static object? ExtractQueryParameters(this IIntermediateExpression expression, IDependencyContainer dependencyContainer)
         {
             var extractor = new ExtractQueryParametersVisitor();
             _ = extractor.Visit(expression);
@@ -49,7 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                 .CreateInstance(dynamicClass, dynamicPropertyValues);
         }
 
-        internal static IEnumerable<INamedIntermediateExpression> SelectAll(
+        internal static IEnumerable<IBindingIntermediateExpression> SelectAll(
             this Type type,
             ParameterExpression parameter)
         {
@@ -59,9 +53,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
                 foreach (var property in properties)
                 {
-                    yield return new SimpleBindingExpression(property.PropertyType, property.Name, parameter);
+                    yield return new SimpleBindingExpression(property, property.PropertyType, parameter);
                 }
             }
+        }
+
+        internal static string Translate(
+            this IIntermediateExpression expression,
+            IDependencyContainer dependencyContainer,
+            int depth)
+        {
+            return typeof(IntermediateExpressionExtensions)
+                .CallMethod(nameof(Translate))
+                .WithTypeArgument(expression.GetType())
+                .WithArguments(dependencyContainer, expression, depth)
+                .Invoke<string>();
+        }
+
+        private static string Translate<TExpression>(IDependencyContainer dependencyContainer, TExpression expression, int depth)
+            where TExpression : IIntermediateExpression
+        {
+            return dependencyContainer
+                .Resolve<IExpressionTranslator<TExpression>>()
+                .Translate(expression, depth);
         }
     }
 }

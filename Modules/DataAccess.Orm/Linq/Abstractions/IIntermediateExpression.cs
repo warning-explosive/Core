@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
 {
     using System;
+    using System.Linq.Expressions;
 
     /// <summary>
     /// IIntermediateExpression
@@ -11,5 +12,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
         /// Type
         /// </summary>
         Type Type { get; }
+
+        /// <summary>
+        /// Converts IIntermediateExpression back to expression tree
+        /// </summary>
+        /// <returns>Expression tree</returns>
+        Expression AsExpressionTree();
     }
 }

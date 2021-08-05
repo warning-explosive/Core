@@ -22,14 +22,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            var parentheses = expression.Expression is not SimpleBindingExpression;
+            var parentheses = expression.Source is not SimpleBindingExpression;
 
             if (parentheses)
             {
                 sb.Append("(");
             }
 
-            sb.Append(expression.Expression.Translate(_dependencyContainer, depth));
+            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
 
             if (parentheses)
             {

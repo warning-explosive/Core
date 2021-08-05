@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Visitors
 {
     using System.Collections.Generic;
     using Abstractions;

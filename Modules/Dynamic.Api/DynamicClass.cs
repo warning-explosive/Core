@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Dynamic.Api
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public sealed class DynamicClass : IEquatable<DynamicClass>,
                                        ISafelyEquatable<DynamicClass>,
-                                       ICloneable
+                                       ICloneable<DynamicClass>
     {
         /// <summary> .cctor </summary>
         public DynamicClass()
@@ -113,7 +113,7 @@ namespace SpaceEngineers.Core.Dynamic.Api
         /// <returns>DynamicClass with specified base type</returns>
         public DynamicClass InheritsFrom(Type baseType)
         {
-            var copy = (DynamicClass)Clone();
+            var copy = Clone();
             copy.BaseType = baseType;
             return copy;
         }
@@ -130,7 +130,7 @@ namespace SpaceEngineers.Core.Dynamic.Api
                 return this;
             }
 
-            var copy = (DynamicClass)Clone();
+            var copy = Clone();
             copy.Interfaces = copy.Interfaces.Concat(interfaces).ToList();
             return copy;
         }
@@ -147,7 +147,7 @@ namespace SpaceEngineers.Core.Dynamic.Api
                 return this;
             }
 
-            var copy = (DynamicClass)Clone();
+            var copy = Clone();
             copy.Properties = copy.Properties.Concat(dynamicProperties).ToList();
             return copy;
         }
@@ -155,7 +155,7 @@ namespace SpaceEngineers.Core.Dynamic.Api
         #endregion
 
         /// <inheritdoc />
-        public object Clone()
+        public DynamicClass Clone()
         {
             return new DynamicClass(Name)
             {
@@ -163,6 +163,12 @@ namespace SpaceEngineers.Core.Dynamic.Api
                 Interfaces = Interfaces.ToList(),
                 Properties = Properties.ToList()
             };
+        }
+
+        /// <inheritdoc />
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         private static string GenerateName()

@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)
         {
-            var copy = (IntegrationMessage)Message.Clone();
+            var copy = Message.Clone();
 
             copy.IncrementRetryCounter();
             copy.DeferDelivery(dueTime);

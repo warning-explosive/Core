@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
     using System.Collections.Generic;
     using System.Threading;
+    using Abstractions;
     using AutoWiring.Api.Abstractions;
 
     /// <summary>
@@ -9,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     /// </summary>
     /// <typeparam name="TQuery">TQuery type-argument</typeparam>
     /// <typeparam name="TItem">TItem type-argument</typeparam>
-    public interface IQueryMaterializer<in TQuery, out TItem> : IResolvable
+    internal interface IQueryMaterializer<in TQuery, out TItem> : IResolvable
         where TQuery : IQuery
     {
         /// <summary>

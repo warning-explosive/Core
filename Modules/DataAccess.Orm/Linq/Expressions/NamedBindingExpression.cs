@@ -2,6 +2,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using Abstractions;
     using Basics;
 
@@ -9,29 +11,37 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     /// NamedBindingExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class NamedBindingExpression : INamedIntermediateExpression,
+    public class NamedBindingExpression : IBindingIntermediateExpression,
                                           IEquatable<NamedBindingExpression>,
-                                          ISafelyEquatable<NamedBindingExpression>
+                                          ISafelyEquatable<NamedBindingExpression>,
+                                          IApplicable<SimpleBindingExpression>
     {
         /// <summary> .cctor </summary>
+        /// <param name="member">Member info</param>
         /// <param name="expression">Expression</param>
-        /// <param name="name">Alias name</param>
-        public NamedBindingExpression(IIntermediateExpression expression, string name)
+        public NamedBindingExpression(MemberInfo member, IIntermediateExpression expression)
         {
-            Expression = expression;
-            Name = name;
+            Member = member;
+            Source = expression;
+            Name = member.Name;
+        }
+
+        internal NamedBindingExpression(MemberInfo member)
+            : this(member, null !)
+        {
         }
 
         /// <inheritdoc />
-        public Type Type => Expression.Type;
+        public MemberInfo Member { get; }
+
+        /// <inheritdoc />
+        public Type Type => Source.Type;
 
         /// <inheritdoc />
         public string Name { get; }
 
-        /// <summary>
-        /// Expression
-        /// </summary>
-        public IIntermediateExpression Expression { get; }
+        /// <inheritdoc />
+        public IIntermediateExpression Source { get; private set; } = null!;
 
         #region IEquatable
 
@@ -60,7 +70,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Expression);
+            return HashCode.Combine(Member, Type, Name, Source);
         }
 
         /// <inheritdoc />
@@ -78,9 +88,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(NamedBindingExpression other)
         {
-            return Type == other.Type
+            return Member == other.Member
+                   && Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Expression.Equals(other.Expression);
+                   && Source.Equals(other.Source);
+        }
+
+        #endregion
+
+        /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            throw new NotImplementedException(nameof(NamedBindingExpression) + "." + nameof(AsExpressionTree));
+        }
+
+        #region IApplicable
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression binding)
+        {
+            Source = binding;
         }
 
         #endregion
@@ -93,7 +120,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         public static IIntermediateExpression Unwrap(IIntermediateExpression expression)
         {
             return expression is NamedBindingExpression namedBinding
-                ? namedBinding.Expression
+                ? namedBinding.Source
                 : expression;
         }
     }

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -15,19 +16,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="name">Query parameter name</param>
+        /// <param name="name">Name</param>
         /// <param name="value">Query parameter value</param>
-        /// <param name="queryParameterBinding">Query parameter binding</param>
-        private QueryParameterExpression(
-            Type type,
-            string name,
-            object? value,
-            INamedIntermediateExpression? queryParameterBinding = null)
+        private QueryParameterExpression(Type type, string name, object? value)
         {
             Type = type;
             Name = name;
             Value = value;
-            QueryParameterBinding = queryParameterBinding;
         }
 
         /// <inheritdoc />
@@ -42,11 +37,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// Query parameter value
         /// </summary>
         public object? Value { get; }
-
-        /// <summary>
-        /// Query parameter binding
-        /// </summary>
-        public INamedIntermediateExpression? QueryParameterBinding { get; }
 
         #region IEquatable
 
@@ -75,7 +65,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Value, QueryParameterBinding);
+            return HashCode.Combine(Type, Name, Value);
         }
 
         /// <inheritdoc />
@@ -95,11 +85,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         {
             return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Value?.Equals(other.Value) == true
-                   && QueryParameterBinding.Equals(other.QueryParameterBinding);
+                   && Value?.Equals(other.Value) == true;
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            return System.Linq.Expressions.Expression.Constant(Value, Type);
+        }
 
         /// <summary>
         /// Factory method
@@ -107,21 +102,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <param name="context">Translation context</param>
         /// <param name="type">Type</param>
         /// <param name="value">Value</param>
-        /// <param name="queryParameterBinding">QueryParameterBinding</param>
+        /// <param name="force">Force query parameter</param>
         /// <returns>IIntermediateExpression</returns>
         public static IIntermediateExpression Create(
             TranslationContext context,
             Type type,
             object? value,
-            INamedIntermediateExpression? queryParameterBinding = null)
+            bool force = false)
         {
-            var isNullValueParameter = value == null
-                                       && value == type.DefaultValue()
-                                       && queryParameterBinding == null;
+            // see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
+            var isNullConstant = value == null
+                                 && value == type.DefaultValue()
+                                 && !force;
 
-            return isNullValueParameter
+            return isNullConstant
                 ? new ConstantExpression(type, value)
-                : new QueryParameterExpression(type, context.NextQueryParameterName(), value, queryParameterBinding);
+                : new QueryParameterExpression(type, context.NextQueryParameterName(), value);
         }
     }
 }

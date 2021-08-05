@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -89,5 +90,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            throw new NotImplementedException(nameof(NamedSourceExpression) + "." + nameof(AsExpressionTree));
+        }
     }
 }

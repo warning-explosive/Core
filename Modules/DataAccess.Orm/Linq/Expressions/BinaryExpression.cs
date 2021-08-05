@@ -109,6 +109,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         #endregion
 
         /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            return System.Linq.Expressions.Expression.MakeBinary(Operator, Left.AsExpressionTree(), Right.AsExpressionTree());
+        }
+
+        #region IApplicable
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, IIntermediateExpression expression)
         {
             if (Left == null)
@@ -120,5 +128,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                 Right = expression;
             }
         }
+
+        #endregion
     }
 }

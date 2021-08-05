@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Visitors
 {
     using System;
     using System.Linq;
@@ -77,7 +77,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         /// <returns>Visited result</returns>
         protected virtual IIntermediateExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
         {
-            return new NamedBindingExpression(Visit(namedBindingExpression.Expression), namedBindingExpression.Name);
+            return new NamedBindingExpression(
+                namedBindingExpression.Member,
+                Visit(namedBindingExpression.Source));
         }
 
         /// <summary>
@@ -88,9 +90,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         protected virtual IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             return new SimpleBindingExpression(
+                simpleBindingExpression.Member,
                 simpleBindingExpression.Type,
-                simpleBindingExpression.Name,
-                Visit(simpleBindingExpression.Expression));
+                Visit(simpleBindingExpression.Source));
         }
 
         /// <summary>

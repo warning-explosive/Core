@@ -54,7 +54,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
-                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.GroupBy()"));
+        }
+
+        internal static MethodInfo QueryableGroupBy3()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.GroupBy),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>), typeof(Expression<Func<object, object>>) }
                 }
                 .FindMethod()
                 .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.GroupBy()"));

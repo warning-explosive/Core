@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
 {
     using System.Collections.Generic;
     using System.Linq;

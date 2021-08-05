@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
+namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Visitors
 {
     using System;
     using System.Collections.Generic;
@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             _replacements = projection
                 .Bindings
-                .OfType<INamedIntermediateExpression>()
+                .OfType<IBindingIntermediateExpression>()
                 .ToDictionary(binding => binding.Name,
                     NamedBindingExpression.Unwrap,
                     StringComparer.OrdinalIgnoreCase);
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
-            return simpleBindingExpression.Expression is ParameterExpression
+            return simpleBindingExpression.Source is ParameterExpression
                    && _replacements.TryGetValue(simpleBindingExpression.Name, out var replacement)
                    && replacement.Type == simpleBindingExpression.Type
                 ? replacement
@@ -33,7 +33,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         {
             return _replacements.Count == 1
                    && _replacements.Single().Value is { } binding
-                   && binding.Type == parameterExpression.Type
                 ? binding
                 : parameterExpression;
         }

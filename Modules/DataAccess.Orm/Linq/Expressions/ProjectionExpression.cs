@@ -138,28 +138,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         #endregion
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression projection)
+        public Expression AsExpressionTree()
         {
-            Source = projection;
+            throw new NotImplementedException(nameof(ProjectionExpression) + "." + nameof(AsExpressionTree));
         }
 
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression filter)
-        {
-            Source = filter;
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression querySource)
-        {
-            Source = querySource;
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression namedSource)
-        {
-            Source = namedSource;
-        }
+        #region IApplicable
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, NewExpression @new)
@@ -207,31 +191,38 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
             }
         }
 
-        internal IEnumerable<IIntermediateExpression> GetFilterBindings(TranslationContext context)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression projection)
         {
-            IEnumerable<INamedIntermediateExpression> bindings;
-
-            if (IsProjectionToClass)
-            {
-                bindings = Type.SelectAll(context.GetParameterExpression(Type));
-            }
-            else
-            {
-                bindings = Bindings
-                    .Select(NamedBindingExpression.Unwrap)
-                    .OfType<INamedIntermediateExpression>();
-            }
-
-            return bindings.Select(FilterExpressionSelector(context));
-
-            static Func<INamedIntermediateExpression, BinaryExpression> FilterExpressionSelector(TranslationContext context)
-            {
-                return binding => new BinaryExpression(
-                    typeof(bool),
-                    ExpressionType.Equal,
-                    binding,
-                    QueryParameterExpression.Create(context, binding.Type, binding.Type.DefaultValue(), binding));
-            }
+            ApplySource(context, projection);
         }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, FilterExpression filter)
+        {
+            ApplySource(context, filter);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QuerySourceExpression querySource)
+        {
+            ApplySource(context, querySource);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedSourceExpression namedSource)
+        {
+            ApplySource(context, namedSource);
+        }
+
+        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
+        {
+            Source = Source is not NamedSourceExpression
+                     && expression is not NamedSourceExpression
+                ? new NamedSourceExpression(expression.Type, expression, context.GetParameterExpression(expression.Type))
+                : expression;
+        }
+
+        #endregion
     }
 }

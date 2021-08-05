@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Linq.Expressions;
     using Abstractions;
     using Basics;
 
@@ -98,6 +99,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         #endregion
 
         /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            throw new NotImplementedException(nameof(MethodCallExpression) + "." + nameof(AsExpressionTree));
+        }
+
+        #region IApplicable
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
             ApplyInternal(expression);
@@ -107,5 +116,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         {
             _arguments.Add(expression);
         }
+
+        #endregion
     }
 }

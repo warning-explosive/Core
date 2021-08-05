@@ -7,7 +7,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// </summary>
     public class MemberTranslationContext : TranslationContext
     {
-        internal MemberTranslationContext(MemberInfo member)
+        internal MemberTranslationContext(TranslationContext context, MemberInfo member)
+            : base(context)
         {
             Member = member;
         }

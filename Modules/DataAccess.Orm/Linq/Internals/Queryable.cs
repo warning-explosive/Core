@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
+    using Abstractions;
 
     /// <summary>
     /// Class that represents query to the database

@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       ISafelyComparable<IntegrationMessage>,
                                       IComparable<IntegrationMessage>,
                                       IComparable,
-                                      ICloneable
+                                      ICloneable<IntegrationMessage>
     {
         private readonly IStringFormatter _formatter;
 
@@ -211,9 +211,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         }
 
         /// <inheritdoc />
-        public object Clone()
+        public IntegrationMessage Clone()
         {
             return new IntegrationMessage(Id, Payload.DeepCopy(), ReflectedType, Headers.DeepCopy(), _formatter);
+        }
+
+        /// <inheritdoc />
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
     }
 }

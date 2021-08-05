@@ -2,6 +2,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using Abstractions;
     using Basics;
 
@@ -9,30 +11,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     /// SimpleBindingExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class SimpleBindingExpression : INamedIntermediateExpression,
+    public class SimpleBindingExpression : IBindingIntermediateExpression,
                                            IEquatable<SimpleBindingExpression>,
                                            ISafelyEquatable<SimpleBindingExpression>,
                                            IApplicable<SimpleBindingExpression>,
                                            IApplicable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
+        /// <param name="member">Member info</param>
         /// <param name="type">Type</param>
-        /// <param name="name">Name</param>
         /// <param name="expression">IIntermediateExpression</param>
         public SimpleBindingExpression(
+            MemberInfo member,
             Type type,
-            string name,
             IIntermediateExpression expression)
         {
+            Member = member;
             Type = type;
-            Name = name;
-            Expression = expression;
+            Name = member.Name;
+            Source = expression;
         }
 
-        internal SimpleBindingExpression(Type type, string name)
-            : this(type, name, null !)
+        internal SimpleBindingExpression(MemberInfo member, Type type)
+            : this(member, type, null !)
         {
         }
+
+        /// <inheritdoc />
+        public MemberInfo Member { get; }
 
         /// <inheritdoc />
         public Type Type { get; }
@@ -40,10 +46,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public string Name { get; }
 
-        /// <summary>
-        /// Expression
-        /// </summary>
-        public IIntermediateExpression Expression { get; private set; } = null!;
+        /// <inheritdoc />
+        public IIntermediateExpression Source { get; private set; } = null!;
 
         #region IEquatable
 
@@ -72,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Expression);
+            return HashCode.Combine(Member, Type, Name, Source);
         }
 
         /// <inheritdoc />
@@ -90,23 +94,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public bool SafeEquals(SimpleBindingExpression other)
         {
-            return Type == other.Type
+            return Member == other.Member
+                   && Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Expression.Equals(other.Expression);
+                   && Source.Equals(other.Source);
         }
 
         #endregion
 
         /// <inheritdoc />
+        public Expression AsExpressionTree()
+        {
+            return System.Linq.Expressions.Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
+        }
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression binding)
         {
-            Expression = binding;
+            Source = binding;
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression parameter)
         {
-            Expression = parameter;
+            Source = parameter;
         }
     }
 }

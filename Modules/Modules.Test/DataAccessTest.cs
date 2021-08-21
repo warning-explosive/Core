@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -12,7 +11,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Contract.Abstractions;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Linq.Abstractions;
-    using DataAccess.Orm.Linq.Internals;
     using GenericDomain;
     using GenericDomain.Abstractions;
     using Xunit;

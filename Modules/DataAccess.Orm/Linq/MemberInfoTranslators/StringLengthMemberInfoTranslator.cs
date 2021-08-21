@@ -18,8 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.MemberInfoTranslators
             if (context.Member.DeclaringType == typeof(string)
                 && context.Member.Name.Equals(nameof(string.Length), StringComparison.OrdinalIgnoreCase))
             {
-                // TODO: recode MethodCallExpression
-                expression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), Enumerable.Empty<IIntermediateExpression>());
+                expression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), null, Enumerable.Empty<IIntermediateExpression>());
                 return true;
             }
 

@@ -22,14 +22,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="name">Name</param>
+        /// <param name="source">Source</param>
         /// <param name="arguments">Arguments</param>
         public MethodCallExpression(
             Type type,
             string name,
+            IIntermediateExpression? source,
             IEnumerable<IIntermediateExpression> arguments)
         {
             Type = type;
             Name = name;
+            Source = source;
             _arguments = arguments.ToList();
         }
 
@@ -40,6 +43,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// Name
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Source expression
+        /// </summary>
+        public IIntermediateExpression? Source { get; }
 
         /// <summary>
         /// Expression
@@ -73,7 +81,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Arguments);
+            return HashCode.Combine(Type, Name, Source, Arguments);
         }
 
         /// <inheritdoc />
@@ -93,6 +101,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         {
             return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
+                   && Source == other.Source
                    && Arguments.Equals(other.Arguments);
         }
 

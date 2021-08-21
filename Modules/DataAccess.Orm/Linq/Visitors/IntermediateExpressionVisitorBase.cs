@@ -144,6 +144,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Visitors
             return new MethodCallExpression(
                 methodCallExpression.Type,
                 methodCallExpression.Name,
+                methodCallExpression.Source != null ? Visit(methodCallExpression.Source) : null,
                 methodCallExpression.Arguments.Select(Visit).ToList());
         }
 

@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
-    using Internals;
 
     /// <summary>
     /// ProjectionExpression
@@ -28,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
                                         IApplicable<MethodCallExpression>,
                                         IApplicable<ParameterExpression>
     {
-        private List<IIntermediateExpression> _bindings;
+        private readonly List<IIntermediateExpression> _bindings;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>

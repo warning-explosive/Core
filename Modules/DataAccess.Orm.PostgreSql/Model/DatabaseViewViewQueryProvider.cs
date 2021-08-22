@@ -27,7 +27,7 @@ where lower(substring(table_name, 0, {{0}})) == lower('{{1}}');";
         public async Task<string> GetQuery(CancellationToken token)
         {
             var databaseSettings = await _databaseSettings
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             var prefix = databaseSettings.Schema + "_";

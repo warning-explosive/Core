@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         public static async Task<string> GetDatabaseName(this IConnectionFactory connectionFactory, CancellationToken token)
         {
             var connectionStringBuilder = await connectionFactory
-                .GetConnectionString()
+                .GetConnectionString(token)
                 .ConfigureAwait(false);
 
             if (connectionStringBuilder.TryGetValue("Database", out object value)

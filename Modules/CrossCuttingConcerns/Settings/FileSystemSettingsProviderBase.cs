@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     using System;
     using System.IO;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
@@ -36,22 +37,22 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         private Func<Type, string> SettingsPath => type => Path.ChangeExtension(Path.Combine(_folder, type.Name), Extension);
 
         /// <inheritdoc />
-        public async Task Set(TSettings value)
+        public async Task Set(TSettings value, CancellationToken token)
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
                 var serialized = SerializeInternal(value);
 
-                await fileStream.OverWriteAllAsync(serialized, _encoding).ConfigureAwait(false);
+                await fileStream.OverWriteAllAsync(serialized, _encoding, token).ConfigureAwait(false);
             }
         }
 
         /// <inheritdoc />
-        public async Task<TSettings> Get()
+        public async Task<TSettings> Get(CancellationToken token)
         {
             using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                var serialized = await fileStream.ReadAllAsync(_encoding).ConfigureAwait(false);
+                var serialized = await fileStream.ReadAllAsync(_encoding, token).ConfigureAwait(false);
 
                 return DeserializeInternal(serialized);
             }

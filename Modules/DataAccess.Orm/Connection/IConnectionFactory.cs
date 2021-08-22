@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System.Data;
     using System.Data.Common;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
 
@@ -13,19 +14,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// <summary>
         /// Checks does the database exist
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing check operation</returns>
-        Task<bool> DoesDatabaseExist();
+        Task<bool> DoesDatabaseExist(CancellationToken token);
 
         /// <summary>
         /// Gets connection string
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<DbConnectionStringBuilder> GetConnectionString();
+        Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token);
 
         /// <summary>
         /// Opens DB connection
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<IDbConnection> OpenConnection();
+        Task<IDbConnection> OpenConnection(CancellationToken token);
     }
 }

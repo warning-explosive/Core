@@ -41,7 +41,7 @@
             }
 
             var postgreSqlSettings = await _databaseSettings
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             if (_connection != null)
@@ -50,7 +50,7 @@
             }
 
             _connection = (NpgsqlConnection)await _connectionFactory
-                .OpenConnection()
+                .OpenConnection(token)
                 .ConfigureAwait(false);
 
             if (_transaction != null)

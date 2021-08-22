@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
     using Basics;
@@ -53,7 +54,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 return DependencyContainer
                     .Resolve<ISettingsProvider<EnvironmentSettings>>()
-                    .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()));
+                    .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()), CancellationToken.None);
             }
         }
 
@@ -76,7 +77,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 return DependencyContainer
                     .Resolve<ISettingsProvider<EnvironmentSettings>>()
-                    .Get();
+                    .Get(CancellationToken.None);
             }
         }
 
@@ -107,11 +108,12 @@ namespace SpaceEngineers.Core.Modules.Test
             where TSettings : class, ISettings
         {
             var manager = DependencyContainer.Resolve<ISettingsProvider<TSettings>>();
+            var token = CancellationToken.None;
 
             /*
              * 1 - Read
              */
-            var config = await manager.Get().ConfigureAwait(false);
+            var config = await manager.Get(token).ConfigureAwait(false);
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
@@ -121,14 +123,14 @@ namespace SpaceEngineers.Core.Modules.Test
              */
             config = (TSettings)cfgFactory();
 
-            await manager.Set(config).ConfigureAwait(false);
+            await manager.Set(config, token).ConfigureAwait(false);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
 
             /*
              * 3 - Read again
              */
-            config = await manager.Get().ConfigureAwait(false);
+            config = await manager.Get(token).ConfigureAwait(false);
             Assert.NotNull(config);
             Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
         }
@@ -137,11 +139,12 @@ namespace SpaceEngineers.Core.Modules.Test
             where TSetting : class, ISettings
         {
             var manager = DependencyContainer.Resolve<ISettingsProvider<TSetting>>();
+            var token = CancellationToken.None;
 
-            var setting = await manager.Get().ConfigureAwait(false);
+            var setting = await manager.Get(token).ConfigureAwait(false);
             Assert.NotNull(setting);
 
-            await manager.Set(setting).ConfigureAwait(false);
+            await manager.Set(setting, token).ConfigureAwait(false);
         }
     }
 }

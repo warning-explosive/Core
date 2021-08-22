@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
             var databaseExists = await _connectionFactory
-                .DoesDatabaseExist()
+                .DoesDatabaseExist(token)
                 .ConfigureAwait(false);
 
             if (!databaseExists)

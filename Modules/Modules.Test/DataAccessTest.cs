@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using AutoRegistration;
     using Basics;
     using Core.Test.Api;
@@ -392,6 +393,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(string.Empty);
 
             var dependencyContainer = Fixture.BoundedAboveContainer(new DependencyContainerOptions(), assemblies);
+            var token = CancellationToken.None;
 
             using (dependencyContainer.OpenScope())
             {
@@ -400,7 +402,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var query = dependencyContainer
                     .Resolve<IQueryTranslator>()
-                    .Translate(queryProducer(readRepository).Expression);
+                    .Translate(queryProducer(readRepository).Expression, token)
+                    .Result;
 
                 checkQuery(query, Output.WriteLine);
 
@@ -424,7 +427,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         Output.WriteLine(string.Empty);
 
                         var valuesExpression = groupedQuery.ValuesExpressionProducer.Invoke(keyValues);
-                        var valuesQuery = valuesExpression.Translate(dependencyContainer, 0);
+                        var valuesQuery = valuesExpression.Translate(dependencyContainer, 0, token).Result;
                         var valuesQueryParameters = valuesExpression
                             .ExtractQueryParameters(dependencyContainer)
                             .GetQueryParametersValues();

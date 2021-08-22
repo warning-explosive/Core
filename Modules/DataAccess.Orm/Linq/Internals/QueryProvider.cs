@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             Expression expression,
             [EnumeratorCancellation] CancellationToken token)
         {
-            var query = _translator.Translate(expression);
+            var query = await _translator.Translate(expression, token).ConfigureAwait(false);
 
             await foreach (var item in Materialize<T>(query, token))
             {

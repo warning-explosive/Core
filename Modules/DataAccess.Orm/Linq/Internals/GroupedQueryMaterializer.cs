@@ -43,16 +43,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             return _keysQueryMaterializer.Materialize(keysQuery, token);
         }
 
-        private IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, CancellationToken token)
+        private async IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
         {
             var keyValues = key.GetQueryParametersValues();
 
             var valuesExpression = query.ValuesExpressionProducer(keyValues);
 
-            var valuesQuery = valuesExpression.Translate(_dependencyContainer, 0);
+            var valuesQuery = await valuesExpression.Translate(_dependencyContainer, 0, token).ConfigureAwait(false);
             var valuesQueryParameters = valuesExpression.ExtractQueryParameters(_dependencyContainer);
 
-            return _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token);
+            await foreach (var item in _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token))
+            {
+                yield return item;
+            }
         }
     }
 }

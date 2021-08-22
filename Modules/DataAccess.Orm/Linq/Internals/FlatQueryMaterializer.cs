@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         public async IAsyncEnumerable<T> Materialize(FlatQuery query, [EnumeratorCancellation] CancellationToken token)
         {
             var ormSettings = await _ormSettingsProvider
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             var transaction = await _transaction

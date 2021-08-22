@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
 {
     using System;
     using System.Runtime.Caching;
+    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -22,11 +23,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
             _integrationTransportSettings = integrationTransportSettings;
         }
 
-        public async Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs)
+        public async Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs, CancellationToken token)
             where TReply : IIntegrationMessage
         {
             var settings = await _integrationTransportSettings
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             var cacheItem = new CacheItem(requestId.ToString(), tcs);

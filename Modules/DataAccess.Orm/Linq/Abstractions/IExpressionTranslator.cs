@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
 {
     using System.Linq.Expressions;
+    using System.Threading;
+    using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
 
     /// <summary>
@@ -28,7 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
         /// </summary>
         /// <param name="expression">Intermediate expression</param>
         /// <param name="depth">Depth</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Translated expression</returns>
-        string Translate(TExpression expression, int depth);
+        Task<string> Translate(TExpression expression, int depth, CancellationToken token);
     }
 }

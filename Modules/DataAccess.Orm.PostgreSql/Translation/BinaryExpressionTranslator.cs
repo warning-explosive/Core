@@ -3,6 +3,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -48,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             _dependencyContainer = dependencyContainer;
         }
 
-        public string Translate(BinaryExpression expression, int depth)
+        public async Task<string> Translate(BinaryExpression expression, int depth, CancellationToken token)
         {
             if (FunctionalOperators.ContainsKey(expression.Operator))
             {
@@ -56,9 +58,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
-                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
+                sb.Append(await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
                 sb.Append(", ");
-                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
+                sb.Append(await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
                 sb.Append(')');
 
                 return sb.ToString();
@@ -70,9 +72,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 : Operators;
 
             return string.Join(" ",
-                expression.Left.Translate(_dependencyContainer, depth),
+                await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false),
                 map[expression.Operator],
-                expression.Right.Translate(_dependencyContainer, depth));
+                await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
         }
 
         private static bool IsNullConstant(IIntermediateExpression expression)

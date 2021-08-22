@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
     using System.Linq.Expressions;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -21,23 +23,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             _translator = translator;
         }
 
-        public IQuery Translate(Expression expression)
+        public Task<IQuery> Translate(Expression expression, CancellationToken token)
         {
             var intermediateExpression = _translator.Translate(expression);
 
             return this
                 .CallMethod(nameof(Translate))
                 .WithTypeArgument(intermediateExpression.GetType())
-                .WithArgument(intermediateExpression)
-                .Invoke<IQuery>();
+                .WithArguments(intermediateExpression, token)
+                .Invoke<Task<IQuery>>();
         }
 
-        private IQuery Translate<TExpression>(TExpression expression)
+        private Task<IQuery> Translate<TExpression>(TExpression expression, CancellationToken token)
             where TExpression : IIntermediateExpression
         {
             return _dependencyContainer
                 .Resolve<IQueryTranslator<TExpression>>()
-                .Translate(expression);
+                .Translate(expression, token);
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
@@ -15,9 +16,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// </summary>
         /// <param name="requestId">Request identifier</param>
         /// <param name="tcs">TaskCompletionSource</param>
+        /// <param name="token">Cancellation token</param>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing enroll operation</returns>
-        public Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs)
+        public Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs, CancellationToken token)
             where TReply : IIntegrationMessage;
 
         /// <summary>

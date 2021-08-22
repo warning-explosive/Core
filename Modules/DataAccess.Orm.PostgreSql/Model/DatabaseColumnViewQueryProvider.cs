@@ -35,7 +35,7 @@ order by table_name, ordinal_position;";
         public async Task<string> GetQuery(CancellationToken token)
         {
             var databaseSettings = await _databaseSettings
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             return string.Format(Query, databaseSettings.Schema);

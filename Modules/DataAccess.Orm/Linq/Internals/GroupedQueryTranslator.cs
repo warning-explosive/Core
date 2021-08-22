@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 {
+    using System.Threading;
+    using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -16,9 +18,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             _dependencyContainer = dependencyContainer;
         }
 
-        public IQuery Translate(GroupByExpression intermediateExpression)
+        public async Task<IQuery> Translate(GroupByExpression intermediateExpression, CancellationToken token)
         {
-            var keysQuery = intermediateExpression.KeysExpression.Translate(_dependencyContainer, 0);
+            var keysQuery = await intermediateExpression.KeysExpression.Translate(_dependencyContainer, 0, token).ConfigureAwait(false);
             var keysQueryParameters = intermediateExpression.KeysExpression.ExtractQueryParameters(_dependencyContainer);
 
             return new GroupedQuery(keysQuery, keysQueryParameters, intermediateExpression.ValuesExpressionProducer);

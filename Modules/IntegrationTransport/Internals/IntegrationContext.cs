@@ -56,7 +56,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
 
             var tcs = new TaskCompletionSource<TReply>();
 
-            await _registry.TryEnroll(requestId, tcs).ConfigureAwait(false);
+            await _registry.TryEnroll(requestId, tcs, token).ConfigureAwait(false);
 
             _transport.Bind(typeof(TReply), _rpcRequestMockEndpointIdentity, RpcReplyMessageHandler<TReply>(_registry));
 

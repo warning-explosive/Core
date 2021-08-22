@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using System;
     using System.Data;
     using System.Data.Common;
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoWiring.Api.Attributes;
     using AutoWiring.Api.Enumerations;
@@ -25,18 +26,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             _databaseSettings = databaseSettings;
         }
 
-        public Task<bool> DoesDatabaseExist()
+        public Task<bool> DoesDatabaseExist(CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(DoesDatabaseExistUnsafe)
+                .TryAsync(() => DoesDatabaseExistUnsafe(token))
                 .Catch<PostgresException>()
                 .Invoke(DatabaseDoesNotExist);
         }
 
-        public async Task<DbConnectionStringBuilder> GetConnectionString()
+        public async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
         {
             var databaseSettings = await _databaseSettings
-                .Get()
+                .Get(token)
                 .ConfigureAwait(false);
 
             return new NpgsqlConnectionStringBuilder
@@ -49,20 +50,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             };
         }
 
-        public async Task<IDbConnection> OpenConnection()
+        public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
-            var connectionStringBuilder = await GetConnectionString().ConfigureAwait(false);
+            var connectionStringBuilder = await GetConnectionString(token).ConfigureAwait(false);
             var connectionString = connectionStringBuilder.ConnectionString;
 
             var connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync().ConfigureAwait(false);
+            await connection.OpenAsync(token).ConfigureAwait(false);
 
             return connection;
         }
 
-        public async Task<bool> DoesDatabaseExistUnsafe()
+        public async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
         {
-            using (await OpenConnection().ConfigureAwait(false))
+            using (await OpenConnection(token).ConfigureAwait(false))
             {
                 return true;
             }

@@ -4,6 +4,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Abstractions;
     using AutoRegistration.Abstractions;
     using Basics;
@@ -58,24 +60,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             }
         }
 
-        internal static string Translate(
+        internal static Task<string> Translate(
             this IIntermediateExpression expression,
             IDependencyContainer dependencyContainer,
-            int depth)
+            int depth,
+            CancellationToken token)
         {
             return typeof(IntermediateExpressionExtensions)
                 .CallMethod(nameof(Translate))
                 .WithTypeArgument(expression.GetType())
-                .WithArguments(dependencyContainer, expression, depth)
-                .Invoke<string>();
+                .WithArguments(dependencyContainer, expression, depth, token)
+                .Invoke<Task<string>>();
         }
 
-        private static string Translate<TExpression>(IDependencyContainer dependencyContainer, TExpression expression, int depth)
+        private static Task<string> Translate<TExpression>(
+            IDependencyContainer dependencyContainer,
+            TExpression expression,
+            int depth,
+            CancellationToken token)
             where TExpression : IIntermediateExpression
         {
             return dependencyContainer
                 .Resolve<IExpressionTranslator<TExpression>>()
-                .Translate(expression, depth);
+                .Translate(expression, depth, token);
         }
     }
 }

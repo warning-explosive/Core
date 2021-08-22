@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoWiring.Api.Attributes;
@@ -14,7 +15,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     internal class EnvironmentSettingsProvider : ISettingsProvider<EnvironmentSettings>
     {
         /// <inheritdoc />
-        public Task<EnvironmentSettings> Get()
+        public Task<EnvironmentSettings> Get(CancellationToken token)
         {
             var all = new EnvironmentSettings(All().ToList());
 
@@ -22,7 +23,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         }
 
         /// <inheritdoc />
-        public Task Set(EnvironmentSettings value)
+        public Task Set(EnvironmentSettings value, CancellationToken token)
         {
             throw new InvalidOperationException("Setting environment variables is prohibited");
         }

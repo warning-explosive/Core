@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics.Test
 {
     using System.IO;
     using System.Text;
+    using System.Threading;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -21,6 +22,7 @@ namespace SpaceEngineers.Core.Basics.Test
             const string @long = "Hello world!";
             const string @short = "Hello!";
 
+            var token = CancellationToken.None;
             var encoding = new UTF8Encoding();
 
             var longBytes = encoding.GetBytes(@long);
@@ -28,12 +30,12 @@ namespace SpaceEngineers.Core.Basics.Test
 
             using (var stream = new MemoryStream(longBytes))
             {
-                var readed = stream.ReadAllAsync(encoding).Result;
+                var readed = stream.ReadAllAsync(encoding, token).Result;
                 Assert.Equal(@long, readed);
 
-                stream.OverWriteAllAsync(shortBytes).Wait();
+                stream.OverWriteAllAsync(shortBytes, token).Wait(token);
 
-                readed = stream.ReadAllAsync(encoding).Result;
+                readed = stream.ReadAllAsync(encoding, token).Result;
                 Assert.Equal(@short, readed);
             }
         }

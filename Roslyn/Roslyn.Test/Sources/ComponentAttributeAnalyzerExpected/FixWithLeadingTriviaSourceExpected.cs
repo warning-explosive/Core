@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected
 {
-    using SpaceEngineers.Core.AutoWiring.Api.Attributes;
-    using SpaceEngineers.Core.AutoWiring.Api.Enumerations;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     /// <summary>
     /// Summary

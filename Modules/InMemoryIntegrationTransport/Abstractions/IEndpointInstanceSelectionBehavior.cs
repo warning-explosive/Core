@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
 

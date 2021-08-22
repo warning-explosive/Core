@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using System.Data.Common;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;

@@ -3,20 +3,19 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
-    using AutoWiringTest;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using AutoRegistrationTest;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Exceptions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;
-    using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -108,16 +107,15 @@ namespace SpaceEngineers.Core.Modules.Test
 
                         if (service.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                         {
-                            Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
+                            Assert.Throws<ComponentResolutionException>(() => resolve(DependencyContainer, service));
                         }
-                        else if (component.RegistrationKind == EnComponentRegistrationKind.AutomaticallyRegistered
-                                 || component.RegistrationKind == EnComponentRegistrationKind.ManuallyRegistered)
+                        else if (!type.HasAttribute<UnregisteredComponentAttribute>())
                         {
                             resolve(DependencyContainer, service);
                         }
                         else
                         {
-                            Assert.Throws<ActivationException>(() => resolve(DependencyContainer, service));
+                            Assert.Throws<ComponentResolutionException>(() => resolve(DependencyContainer, service));
                         }
                     });
             }
@@ -258,7 +256,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredServiceResolveTest()
         {
-            Assert.Equal(EnComponentRegistrationKind.Unregistered, typeof(BaseUnregisteredServiceImpl).GetCustomAttribute<ComponentAttribute>(false).RegistrationKind);
+            Assert.True(typeof(BaseUnregisteredServiceImpl).HasAttribute<UnregisteredComponentAttribute>());
 
             Assert.True(typeof(DerivedFromUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
             Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredServiceImpl)));
@@ -270,31 +268,26 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void UnregisteredExternalServiceResolveTest()
         {
-            Assert.Equal(EnComponentRegistrationKind.Unregistered, typeof(BaseUnregisteredExternalServiceImpl).GetCustomAttribute<ComponentAttribute>(false).RegistrationKind);
+            Assert.True(typeof(BaseUnregisteredExternalServiceImpl).HasAttribute<UnregisteredComponentAttribute>());
 
             Assert.True(typeof(DerivedFromUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedFromUnregisteredExternalServiceImpl)));
             Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
 
             Assert.Equal(typeof(DerivedFromUnregisteredExternalServiceImpl), DependencyContainer.Resolve<IUnregisteredExternalService>().GetType());
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<DerivedFromUnregisteredExternalServiceImpl>().GetType());
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<BaseUnregisteredExternalServiceImpl>().GetType());
+            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<DerivedFromUnregisteredExternalServiceImpl>().GetType());
+            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<BaseUnregisteredExternalServiceImpl>().GetType());
         }
 
         [Fact]
         internal void ManualRegistrationResolutionTest()
         {
-            var cctorResolutionBehavior = SimpleInjector(DependencyContainer)
-                .Options
-                .ConstructorResolutionBehavior;
+            var cctorResolutionBehavior = DependencyContainer.Resolve<IConstructorResolutionBehavior>();
 
-            var parameterType = cctorResolutionBehavior
-                .TryGetConstructor(typeof(WiredTestServiceImpl), out var error)
-                .GetParameters()
-                .Single()
-                .ParameterType;
+            Assert.True(cctorResolutionBehavior.TryGetConstructor(typeof(WiredTestServiceImpl), out var cctor));
 
-            Assert.Null(error);
+            var parameterType = cctor.GetParameters().Single().ParameterType;
+
             Assert.Equal(typeof(IIndependentTestService), parameterType);
 
             var expectedCollection = new[]
@@ -306,20 +299,20 @@ namespace SpaceEngineers.Core.Modules.Test
             var registration = Fixture.DelegateRegistration(container =>
             {
                 container
-                    .Register<IWiredTestService, WiredTestServiceImpl>()
-                    .Register<WiredTestServiceImpl, WiredTestServiceImpl>()
-                    .Register<IIndependentTestService, IndependentTestServiceImpl>()
-                    .Register<IndependentTestServiceImpl, IndependentTestServiceImpl>()
-                    .Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>()
-                    .Register<ConcreteImplementationService, ConcreteImplementationService>()
-                    .RegisterCollection<ICollectionResolvableTestService>(expectedCollection)
-                    .Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>()
-                    .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>();
+                    .Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient)
+                    .Register<WiredTestServiceImpl, WiredTestServiceImpl>(EnLifestyle.Transient)
+                    .Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Singleton)
+                    .Register<IndependentTestServiceImpl, IndependentTestServiceImpl>(EnLifestyle.Singleton)
+                    .Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient)
+                    .Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Singleton)
+                    .RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient)
+                    .Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient)
+                    .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
             });
 
             var options = new DependencyContainerOptions().WithManualRegistrations(registration);
 
-            var localContainer = Fixture.ExactlyBoundedContainer(options);
+            var localContainer = Fixture.ExactlyBoundedContainer(options, options.UseSimpleInjector());
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<WiredTestServiceImpl>();
@@ -341,9 +334,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             localContainer.Resolve<IOpenGenericTestService<object>>();
             localContainer.Resolve<OpenGenericTestServiceImpl<object>>();
-            Assert.Throws<ActivationException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
-
-            static Container SimpleInjector(IDependencyContainer container) => container.GetFieldValue<Container>("_container");
+            Assert.Throws<ComponentResolutionException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
         }
 
         internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)

@@ -28,7 +28,6 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

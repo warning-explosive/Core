@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Settings provider

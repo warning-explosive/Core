@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using System.Reflection.Emit;
     using Api;
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
 
     /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]

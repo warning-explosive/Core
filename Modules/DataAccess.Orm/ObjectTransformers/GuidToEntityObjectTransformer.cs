@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.ObjectTransformers
 {
     using System;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Abstractions;

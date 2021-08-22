@@ -5,11 +5,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using Contract.Abstractions;
 
-    [Component(EnLifestyle.Scoped, EnComponentRegistrationKind.Unregistered)]
+    [UnregisteredComponent]
     internal class TestIntegrationContext : IIntegrationContext
     {
         private readonly List<IIntegrationMessage> _messages;

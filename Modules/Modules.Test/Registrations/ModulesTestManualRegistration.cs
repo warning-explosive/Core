@@ -1,9 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host.Internals;
@@ -31,15 +32,18 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
         public static IDependencyContainer Container(ModulesTestFixture fixture)
         {
-            var options = new DependencyContainerOptions()
+            // TODO: test option UseAutoRegistration = false
+            var options = new DependencyContainerOptions { UseAutoRegistration = false }
                 .WithManualRegistrations(new ModulesTestManualRegistration());
 
             var assemblies = new[]
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
 
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoWiring), nameof(Core.AutoWiring.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api))),
@@ -84,7 +88,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(MongoDB), nameof(MongoDB.Driver)))
             };
 
-            return fixture.BoundedAboveContainer(options, assemblies);
+            return fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assemblies);
         }
     }
 }

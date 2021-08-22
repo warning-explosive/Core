@@ -2,9 +2,9 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using MongoDB.Driver;
     using Newtonsoft.Json;
 

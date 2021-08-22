@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 {
-    using AutoRegistration.Abstractions;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
 
     internal class GenericEndpointIdentityManualRegistration : IManualRegistration

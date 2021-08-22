@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Orm.Model.Abstractions;
 
     [Component(EnLifestyle.Singleton)]

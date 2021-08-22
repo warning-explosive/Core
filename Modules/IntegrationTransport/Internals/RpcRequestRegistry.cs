@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using Settings;

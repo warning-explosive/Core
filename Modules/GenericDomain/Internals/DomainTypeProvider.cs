@@ -4,9 +4,10 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using Basics;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class DomainTypeProvider : IDomainTypeProvider
@@ -42,8 +43,7 @@ namespace SpaceEngineers.Core.GenericDomain.Internals
         {
             return _typeProvider
                 .OurTypes
-                .Where(type => type.IsClass
-                               && !type.IsAbstract
+                .Where(type => type.IsConcreteType()
                                && service.IsAssignableFrom(type));
         }
     }

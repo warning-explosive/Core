@@ -53,9 +53,8 @@
     <ProjectReference Include="..\..\Basics.Roslyn\Basics.Roslyn.csproj" />
     <ProjectReference Include="..\..\Basics.Test\Basics.Test.csproj" />
     <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    <ProjectReference Include="..\..\Modules\AutoRegistration\AutoRegistration.csproj" />
-    <ProjectReference Include="..\..\Modules\AutoWiring.Api\AutoWiring.Api.csproj" />
-    <ProjectReference Include="..\AutoWiring.Api.Analyzers\AutoWiring.Api.Analyzers.csproj" />
+    <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.SimpleInjector\CompositionRoot.SimpleInjector.csproj" />
+    <ProjectReference Include="..\AutoRegistration.Api.Analyzers\AutoRegistration.Api.Analyzers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Tests\Analysis.cs">

@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Contract.Messages;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Contract.Abstractions;

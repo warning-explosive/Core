@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IModelComparator

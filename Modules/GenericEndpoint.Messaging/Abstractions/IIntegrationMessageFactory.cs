@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Abstractions
 {
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using Contract;
     using Contract.Abstractions;
 

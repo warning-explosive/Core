@@ -200,15 +200,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
 
         private void GroupBy(MethodCallExpression node, Type itemType, bool isGroupBy3)
         {
-            var sourceType = node
-                .Arguments[0]
-                .Type
-                .ExtractGenericArgumentsAt(typeof(IQueryable<>))
-                .Single();
-
-            var typeArguments = itemType
-                .ExtractGenericArguments(typeof(IGrouping<,>))
-                .Single();
+            var sourceType = node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>));
+            var typeArguments = itemType.UnwrapTypeParameters(typeof(IGrouping<,>));
 
             var keyType = typeArguments[0];
             var valueType = typeArguments[1];

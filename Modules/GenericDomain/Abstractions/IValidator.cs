@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.GenericDomain.Abstractions
 {
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Domain object validator

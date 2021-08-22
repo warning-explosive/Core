@@ -46,8 +46,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         internal async Task AnalysisTest()
         {
             var analyzers = DependencyContainer
-                           .ResolveCollection<IIdentifiedAnalyzer>()
-                           .OfType<SyntaxAnalyzerBase>();
+                .ResolveCollection<IIdentifiedAnalyzer>()
+                .OfType<SyntaxAnalyzerBase>();
 
             foreach (var analyzer in analyzers)
             {

@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]

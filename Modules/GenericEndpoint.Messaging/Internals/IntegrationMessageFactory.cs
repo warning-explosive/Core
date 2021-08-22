@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Internals
 {
     using System;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Contract;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;

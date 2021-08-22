@@ -5,13 +5,12 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Defaults
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
 
     /// <inheritdoc />
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
+    [ManuallyRegisteredComponent]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap

@@ -62,8 +62,23 @@ namespace SpaceEngineers.Core.Basics
         {
             return exception
                 .Flatten()
-                .Select(ex => ex.RealException())
-                .Where(ex => ex is not AggregateException);
+                .Where(ex => ex is not TargetInvocationException
+                             && ex is not AggregateException);
+        }
+
+        /// <summary>
+        /// Unwraps exception
+        /// </summary>
+        /// <param name="exception">Source exception</param>
+        /// <typeparam name="TException">TException type-argument</typeparam>
+        /// <returns>Unwrapped exceptions</returns>
+        public static IEnumerable<Exception> Unwrap<TException>(this Exception exception)
+        {
+            return exception
+                .Flatten()
+                .Where(ex => ex is not TargetInvocationException
+                             && ex is not AggregateException
+                             && ex is not TException);
         }
     }
 }

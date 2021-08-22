@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test.Mocks
 {
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using CrossCuttingConcerns.Api.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Override)]
+    // TODO: [ComponentOverride]
+    [UnregisteredComponent]
     internal class StringFormatterMock : IStringFormatter
     {
         public string Format(object? value)

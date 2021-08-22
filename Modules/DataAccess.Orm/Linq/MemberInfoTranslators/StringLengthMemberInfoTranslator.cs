@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.MemberInfoTranslators
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Expressions;
 
     [Component(EnLifestyle.Singleton)]

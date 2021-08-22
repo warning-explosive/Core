@@ -4,8 +4,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Microsoft.Build.Locator;
     using Xunit.Abstractions;
 
@@ -53,7 +54,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                     ? options.WithExcludedNamespaces(IgnoredNamespaces.Single())
                     : options;
 
-            DependencyContainer = AutoRegistration.DependencyContainer.Create(options);
+            DependencyContainer = CompositionRoot.DependencyContainer.Create(options, options.UseSimpleInjector());
         }
 
         /// <summary>

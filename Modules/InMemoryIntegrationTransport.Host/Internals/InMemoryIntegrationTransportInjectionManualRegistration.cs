@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
 {
     using Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions;
     using Defaults;
     using IntegrationTransport.Api.Abstractions;
 

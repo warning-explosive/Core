@@ -2,9 +2,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
 {
     using System.Collections.Generic;
     using Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Extensions;
     using Microsoft.CodeAnalysis;
 
@@ -17,8 +17,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
         {
             return new[]
                    {
-                       typeof(IDependencyContainer).Assembly.AsMetadataReference(),
-                       typeof(ComponentAttribute).Assembly.AsMetadataReference()
+                       AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))).AsMetadataReference(),
+                       AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))).AsMetadataReference(),
+                       AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))).AsMetadataReference(),
+                       AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector))).AsMetadataReference()
                    };
         }
     }

@@ -2,10 +2,8 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiringTest;
+    using AutoRegistrationTest;
+    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;
@@ -83,77 +81,6 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             CheckRecursive(service, typeof(OpenGenericDecorableServiceDecorator1<object>));
-        }
-
-        [Fact]
-        internal void ConditionalDecoratorTest()
-        {
-            var service = DependencyContainer.Resolve<IConditionalDecorableService>();
-
-            var types = new Dictionary<Type, Type>
-            {
-                [typeof(ConditionalDecorableServiceDecorator1)] = typeof(ConditionalDecorableServiceDecorator3),
-                [typeof(ConditionalDecorableServiceDecorator3)] = typeof(ConditionalDecorableServiceImpl)
-            };
-
-            void CheckRecursive(IConditionalDecorableService resolved, Type type)
-            {
-                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
-                Assert.True(resolved.GetType() == type);
-
-                if (types.TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (IDecorator<IConditionalDecorableService>)resolved;
-                    CheckRecursive(decorator.Decoratee, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(service, typeof(ConditionalDecorableServiceDecorator1));
-        }
-
-        [Fact]
-        internal void CollectionResolvableConditionDecorableTest()
-        {
-            var services = DependencyContainer
-                .ResolveCollection<ICollectionResolvableConditionDecorableService>()
-                .ToArray();
-
-            var types = new[]
-                        {
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceImpl3)
-                            },
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator2),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator2)] = typeof(CollectionResolvableConditionDecorableServiceImpl2)
-                            },
-                            new Dictionary<Type, Type>
-                            {
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator3)] = typeof(CollectionResolvableConditionDecorableServiceDecorator1),
-                                [typeof(CollectionResolvableConditionDecorableServiceDecorator1)] = typeof(CollectionResolvableConditionDecorableServiceImpl1)
-                            }
-                        };
-
-            void CheckRecursive(ICollectionResolvableConditionDecorableService resolved, int i, Type type)
-            {
-                Output.WriteLine($"{resolved.GetType()} == {type.Name}");
-                Assert.True(resolved.GetType() == type);
-
-                if (types[i].TryGetValue(type, out var nextDecorateeType))
-                {
-                    var decorator = (ICollectionDecorator<ICollectionResolvableConditionDecorableService>)resolved;
-
-                    CheckRecursive(decorator.Decoratee, i, nextDecorateeType);
-                }
-            }
-
-            CheckRecursive(services[0], 0, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
-            Output.WriteLine(string.Empty);
-            CheckRecursive(services[1], 1, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
-            Output.WriteLine(string.Empty);
-            CheckRecursive(services[2], 2, typeof(CollectionResolvableConditionDecorableServiceDecorator3));
         }
     }
 }

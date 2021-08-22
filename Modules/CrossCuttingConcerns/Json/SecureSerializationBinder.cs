@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
     using System;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions;
     using Converters;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;

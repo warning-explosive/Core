@@ -3,10 +3,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
     using CliArgumentsParser;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -25,7 +26,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CliArgumentsParser)));
 
-            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
+            var options = new DependencyContainerOptions();
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
         }
 
         /// <summary>

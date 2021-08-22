@@ -1,12 +1,12 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
-    using AutoRegistration.Abstractions;
-    using AutoWiringTest;
+    using AutoRegistrationTest;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Exceptions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;
-    using SimpleInjector;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal async Task AsyncScopeTest()
         {
-            Assert.Throws<ActivationException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
+            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
 
             using (DependencyContainer.OpenScope())
             {

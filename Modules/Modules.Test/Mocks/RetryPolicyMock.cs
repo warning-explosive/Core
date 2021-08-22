@@ -3,12 +3,12 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Messaging;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Override)]
+    // TODO: [ComponentOverride]
+    [UnregisteredComponent]
     internal class RetryPolicyMock : IRetryPolicy
     {
         private static readonly int[] Scale = new[] { 0, 1, 2 };

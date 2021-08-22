@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IMessagePipeline abstraction

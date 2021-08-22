@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IObjectBuilder

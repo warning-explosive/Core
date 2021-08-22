@@ -1,10 +1,11 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Linq;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Services;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.CompositionInfo;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -21,9 +22,11 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector)));
 
-            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
+            var options = new DependencyContainerOptions();
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
         }
 
         /// <summary>

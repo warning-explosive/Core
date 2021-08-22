@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     using System.Data.Common;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IConnectionFactory

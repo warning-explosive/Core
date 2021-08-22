@@ -1,8 +1,9 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
 {
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
+    using System;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using Internals;
@@ -18,19 +19,23 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
         /// Use in-memory integration transport inside specified host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseInMemoryIntegrationTransport(this IHostBuilder hostBuilder)
+        public static IHostBuilder UseInMemoryIntegrationTransport(
+            this IHostBuilder hostBuilder,
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseInMemoryIntegrationTransport));
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, serviceCollection));
+                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, implementationProducer, serviceCollection));
             });
         }
 
         private static IDependencyContainer BuildTransportContainer(
             HostBuilderContext ctx,
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer,
             IServiceCollection serviceCollection)
         {
             var assemblies = new[]
@@ -44,7 +49,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
 
             var containerOptions = new DependencyContainerOptions().WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration());
 
-            var dependencyContainer = DependencyContainer.CreateBoundedAbove(containerOptions, assemblies);
+            var dependencyContainer = DependencyContainer.CreateBoundedAbove(containerOptions, implementationProducer(containerOptions), assemblies);
 
             var injection = dependencyContainer.Resolve<IManualRegistration>();
 

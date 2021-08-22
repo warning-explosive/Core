@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
     internal class IntegrationContextUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,

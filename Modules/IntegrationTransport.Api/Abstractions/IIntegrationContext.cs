@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
     /// <summary>

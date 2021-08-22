@@ -28,7 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
       <ProjectReference Include="..\Dynamic.Api\Dynamic.Api.csproj" />
     </ItemGroup>
 </Project>

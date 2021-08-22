@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 {
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Microsoft.Extensions.Logging;
 

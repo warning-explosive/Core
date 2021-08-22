@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using YamlDotNet.Serialization;
     using YamlDotNet.Serialization.NamingConventions;
     using YamlDotNet.Serialization.TypeResolvers;

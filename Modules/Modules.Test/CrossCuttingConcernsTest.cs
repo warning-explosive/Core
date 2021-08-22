@@ -2,10 +2,11 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -27,7 +28,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
         }
 
         /// <summary>
@@ -47,8 +48,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var stringValues = new Dictionary<string, object> { ["value"] = str };
             Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<string>>().Build(stringValues));
 
-            var enumValues = new Dictionary<string, object> { ["value"] = EnComponentRegistrationKind.AutomaticallyRegistered.ToString() };
-            Assert.Equal(EnComponentRegistrationKind.AutomaticallyRegistered, DependencyContainer.Resolve<IObjectBuilder<EnComponentRegistrationKind>>().Build(enumValues));
+            var enumValues = new Dictionary<string, object> { ["value"] = EnLifestyle.Scoped.ToString() };
+            Assert.Equal(EnLifestyle.Scoped, DependencyContainer.Resolve<IObjectBuilder<EnLifestyle>>().Build(enumValues));
 
             var guid = Guid.NewGuid();
             var guidValues = new Dictionary<string, object> { ["value"] = guid };

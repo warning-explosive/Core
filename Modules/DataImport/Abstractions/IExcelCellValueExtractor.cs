@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using DocumentFormat.OpenXml.Spreadsheet;
     using Excel;
 

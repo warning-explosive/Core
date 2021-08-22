@@ -29,6 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />
-      <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
     </ItemGroup>
 </Project>

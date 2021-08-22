@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration;
+    using CompositionRoot;
     using Contract;
 
     /// <summary>

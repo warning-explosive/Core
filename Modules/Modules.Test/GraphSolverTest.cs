@@ -5,10 +5,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
     using Basics.Exceptions;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using PathResolver;
@@ -64,7 +65,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
 
-            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
+            var options = new DependencyContainerOptions();
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
         }
 
         /// <summary>

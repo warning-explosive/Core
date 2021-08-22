@@ -4,14 +4,14 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.Override)]
+    // TODO: [ComponentOverride]
+    [UnregisteredComponent]
     internal class ExtendedTypeProviderDecorator : ITypeProvider, IDecorator<ITypeProvider>
     {
         private readonly ITypeProvider _decoratee;
@@ -74,7 +74,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             public void Register(IManualRegistrationsContainer container)
             {
                 container
-                    .RegisterDecorator<ITypeProvider, ExtendedTypeProviderDecorator>()
+                    .RegisterDecorator<ITypeProvider, ExtendedTypeProviderDecorator>(EnLifestyle.Singleton)
                     .RegisterInstance(new TypeProviderExtension(_additionalTypes));
             }
         }

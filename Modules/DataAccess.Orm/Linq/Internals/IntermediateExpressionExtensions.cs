@@ -7,8 +7,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoRegistration.Abstractions;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Dynamic.Api;
     using Dynamic.Api.Abstractions;
     using Expressions;

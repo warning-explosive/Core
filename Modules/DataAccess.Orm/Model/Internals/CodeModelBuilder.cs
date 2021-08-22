@@ -6,10 +6,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Connection;
     using Contract.Abstractions;
     using GenericDomain;

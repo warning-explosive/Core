@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
     using Linq.Abstractions;
     using Linq.Expressions;

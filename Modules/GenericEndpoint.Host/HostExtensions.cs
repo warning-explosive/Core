@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using GenericHost.Api.Abstractions;
     using Internals;
@@ -72,9 +72,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// Use specified endpoint
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <param name="factory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseEndpoint(this IHostBuilder hostBuilder, Func<IEndpointBuilder, EndpointOptions> factory)
+        public static IHostBuilder UseEndpoint(
+            this IHostBuilder hostBuilder,
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer,
+            Func<IEndpointBuilder, EndpointOptions> factory)
         {
             var endpointOptions = factory(new EndpointBuilder());
 
@@ -82,7 +86,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions)));
+                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions), implementationProducer));
                 serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildStartup(serviceProvider, endpointOptions));
             });
         }
@@ -112,9 +116,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             optionsCollection.Add(endpointOptions);
         }
 
-        private static IDependencyContainer BuildEndpointContainer(EndpointOptions endpointOptions)
+        private static IDependencyContainer BuildEndpointContainer(
+            EndpointOptions endpointOptions,
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer)
         {
-            return DependencyContainer.CreateBoundedAbove(endpointOptions.ContainerOptions, endpointOptions.AboveAssemblies.ToArray());
+            return DependencyContainer.CreateBoundedAbove(
+                endpointOptions.ContainerOptions,
+                implementationProducer(endpointOptions.ContainerOptions),
+                endpointOptions.AboveAssemblies.ToArray());
         }
 
         private static EndpointOptions ConfigureEndpointOptions(

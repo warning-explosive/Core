@@ -4,9 +4,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Services;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;

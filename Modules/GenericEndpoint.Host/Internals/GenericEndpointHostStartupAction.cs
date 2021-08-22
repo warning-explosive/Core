@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Abstractions;
+    using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Abstractions;
     using GenericHost.Api.Abstractions;
 

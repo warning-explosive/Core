@@ -5,11 +5,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using Api.Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;

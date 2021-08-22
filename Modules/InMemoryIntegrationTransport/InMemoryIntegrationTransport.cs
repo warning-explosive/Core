@@ -6,8 +6,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Enumerations;
     using Basics.Exceptions;
@@ -16,7 +15,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using GenericEndpoint.Messaging;
     using IntegrationTransport.Api.Abstractions;
 
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
+    [ManuallyRegisteredComponent]
     internal class InMemoryIntegrationTransport : IIntegrationTransport
     {
         private readonly AsyncManualResetEvent _ready;

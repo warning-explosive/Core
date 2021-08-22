@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using AutoWiring.Api.Analyzers;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Analyzers;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics.Roslyn;
     using Internals;
     using Microsoft.CodeAnalysis;

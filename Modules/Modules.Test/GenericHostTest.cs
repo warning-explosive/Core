@@ -8,6 +8,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
+    using CompositionRoot.Api.Exceptions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Orm.Model.Abstractions;
@@ -55,7 +57,8 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>Test data</returns>
         public static IEnumerable<object[]> TransportTestData()
         {
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport());
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                hostBuilder => hostBuilder.UseInMemoryIntegrationTransport(options => options.UseSimpleInjector()));
 
             yield return new object[] { useInMemoryIntegrationTransport };
         }
@@ -67,10 +70,11 @@ namespace SpaceEngineers.Core.Modules.Test
             var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseStatisticsEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithDataAccess(new PostgreSqlDatabaseProvider())
-                    .BuildOptions(statisticsEndpointIdentity))
+                .UseStatisticsEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithDataAccess(new PostgreSqlDatabaseProvider())
+                            .BuildOptions(statisticsEndpointIdentity))
                 .BuildHost();
 
             using (host)
@@ -128,11 +132,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
             using (host)
@@ -172,11 +177,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
             using (host)
@@ -213,11 +219,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
             using (host)
@@ -262,11 +269,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(endpointIdentity))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(endpointIdentity))
                 .BuildHost();
 
             using (host)
@@ -345,21 +353,24 @@ namespace SpaceEngineers.Core.Modules.Test
             var endpoint2AdditionalOurTypes = messageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint11))
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint2AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint20))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint1AdditionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint11))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(endpoint2AdditionalOurTypes))
+                            .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
             using (host)
@@ -405,14 +416,16 @@ namespace SpaceEngineers.Core.Modules.Test
         internal async Task SameTransportTest(Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .BuildOptions(TestIdentity.Endpoint20))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
             bool transportIsSame;
@@ -463,10 +476,11 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(endpointIdentity))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(endpointIdentity))
                 .BuildHost();
 
             var dependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
@@ -539,11 +553,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var testHost = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
-                    .BuildOptions(endpointIdentity))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .ModifyContainerOptions(ExtendedTypeProviderDecorator.ExtendTypeProvider(additionalOurTypes))
+                            .BuildOptions(endpointIdentity))
                 .BuildHost();
 
             using (testHost)
@@ -583,13 +598,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
                 var integrationMessage = new IntegrationMessage(new IdentifiedCommand(0), typeof(IdentifiedCommand), new StringFormatterMock());
 
-                Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
-                Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<Core.GenericEndpoint.Api.Abstractions.IIntegrationContext>());
+                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
+                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<Core.GenericEndpoint.Api.Abstractions.IIntegrationContext>());
 
                 using (endpointDependencyContainer.OpenScope())
                 {
-                    Assert.Throws<SimpleInjector.ActivationException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
                     var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
 
                     var expected = new[]
@@ -779,10 +794,11 @@ namespace SpaceEngineers.Core.Modules.Test
         internal async Task RunTest(Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
                 .BuildHost();
 
             using (host)
@@ -797,10 +813,11 @@ namespace SpaceEngineers.Core.Modules.Test
         internal async Task StartStopTest(Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
-                    .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
+                .UseEndpoint(options => options.UseSimpleInjector(),
+                    builder => builder
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithStatistics()
+                            .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
                 .BuildHost();
 
             using (host)

@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using System.Collections.Concurrent;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
     using Internals;
 
@@ -45,36 +45,51 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         /// Setup bounded above dependency container
         /// </summary>
         /// <param name="options">Dependency container options</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <param name="aboveAssemblies">Assemblies that limits assembly loading in dependency container</param>
         /// <returns>IDependencyContainer</returns>
         public IDependencyContainer BoundedAboveContainer(
             DependencyContainerOptions options,
+            Func<IDependencyContainerImplementation> implementationProducer,
             params Assembly[] aboveAssemblies)
         {
-            return CreateDependencyContainer(options, DependencyContainer.CreateBoundedAbove, aboveAssemblies);
+            return CreateDependencyContainer(
+                options,
+                (containerOptions, assemblies) => DependencyContainer.CreateBoundedAbove(containerOptions, implementationProducer, assemblies),
+                aboveAssemblies);
         }
 
         /// <summary>
         /// Setup exactly bounded dependency container
         /// </summary>
         /// <param name="options">Dependency container options</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <param name="exactAssemblies">Assemblies that limits assembly loading in dependency container</param>
         /// <returns>IDependencyContainer</returns>
         public IDependencyContainer ExactlyBoundedContainer(
             DependencyContainerOptions options,
+            Func<IDependencyContainerImplementation> implementationProducer,
             params Assembly[] exactAssemblies)
         {
-            return CreateDependencyContainer(options, DependencyContainer.CreateExactlyBounded, exactAssemblies);
+            return CreateDependencyContainer(
+                options,
+                (containerOptions, assemblies) => DependencyContainer.CreateExactlyBounded(containerOptions, implementationProducer, assemblies),
+                exactAssemblies);
         }
 
         /// <summary>
         /// Setup dependency container without assembly limitations
         /// </summary>
         /// <param name="options">Dependency container options</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <returns>IDependencyContainer</returns>
-        public IDependencyContainer CreateContainer(DependencyContainerOptions options)
+        public IDependencyContainer CreateContainer(
+            DependencyContainerOptions options,
+            Func<IDependencyContainerImplementation> implementationProducer)
         {
-            return CreateDependencyContainer(options, (containerOptions, _) => DependencyContainer.Create(containerOptions));
+            return CreateDependencyContainer(
+                options,
+                (containerOptions, _) => DependencyContainer.Create(containerOptions, implementationProducer));
         }
 
         private IDependencyContainer CreateDependencyContainer(

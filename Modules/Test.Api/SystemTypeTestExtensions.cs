@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Test.Api
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// System.Type extensions for test project

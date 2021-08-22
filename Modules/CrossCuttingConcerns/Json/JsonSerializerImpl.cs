@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;

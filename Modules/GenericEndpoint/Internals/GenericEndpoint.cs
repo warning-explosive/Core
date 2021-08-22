@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Threading.Tasks;
     using Abstractions;
     using Api.Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Primitives;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Contract.Abstractions;
     using Messaging;

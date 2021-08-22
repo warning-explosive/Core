@@ -7,11 +7,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryProvider : IAsyncQueryProvider,

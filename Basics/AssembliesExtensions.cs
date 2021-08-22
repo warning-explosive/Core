@@ -211,7 +211,7 @@ namespace SpaceEngineers.Core.Basics
 
             var regularAssembly = typeof(AssembliesExtensions).Assembly; // Basics
 
-            var optionalAssemblyName = BuildName(nameof(SpaceEngineers), nameof(Core), "AutoWiring", "Api");
+            var optionalAssemblyName = BuildName(nameof(SpaceEngineers), nameof(Core), "AutoRegistration", "Api");
             var optionalAssembly = allAssemblies
                 .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase));
 

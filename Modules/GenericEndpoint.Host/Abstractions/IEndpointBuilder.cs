@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Abstractions
 {
     using System;
     using System.Reflection;
-    using AutoRegistration;
+    using CompositionRoot;
     using Contract;
 
     /// <summary>

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
 {
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using Messaging;
 
     /// <summary>

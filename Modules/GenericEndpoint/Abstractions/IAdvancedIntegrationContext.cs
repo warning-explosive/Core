@@ -4,7 +4,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions;
     using Messaging;
 
     /// <summary>

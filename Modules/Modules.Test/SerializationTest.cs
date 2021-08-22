@@ -4,9 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using AutoRegistration;
-    using AutoRegistration.Abstractions;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -28,7 +29,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
-            DependencyContainer = fixture.BoundedAboveContainer(new DependencyContainerOptions(), assembly);
+            var options = new DependencyContainerOptions();
+
+            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
         }
 
         /// <summary>

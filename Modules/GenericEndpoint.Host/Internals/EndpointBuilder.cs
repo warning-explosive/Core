@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
     using System.Linq;
     using System.Reflection;
     using Abstractions;
-    using AutoRegistration;
     using Basics;
+    using CompositionRoot;
     using Contract;
 
     internal class EndpointBuilder : IEndpointBuilder

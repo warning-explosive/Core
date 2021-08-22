@@ -28,8 +28,8 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\AutoRegistration\AutoRegistration.csproj" />
-      <ProjectReference Include="..\AutoWiring.Api\AutoWiring.Api.csproj" />
+      <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
       <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

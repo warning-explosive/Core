@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.GenericDomain.Internals
 {
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions;
 
     /// <summary>
     /// Verifies domain configuration

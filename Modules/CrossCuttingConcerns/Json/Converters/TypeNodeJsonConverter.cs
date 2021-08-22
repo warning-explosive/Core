@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
 {
     using System;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Newtonsoft.Json;
 
     [Component(EnLifestyle.Singleton)]

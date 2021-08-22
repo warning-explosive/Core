@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System.Linq;
     using System.Security;
     using System.Text.RegularExpressions;
-    using AutoWiring.Api.Services;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Newtonsoft.Json;
 
     internal class TypeNode

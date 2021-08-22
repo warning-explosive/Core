@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm
 {
     using System;
     using System.Linq;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
     using Linq.Abstractions;

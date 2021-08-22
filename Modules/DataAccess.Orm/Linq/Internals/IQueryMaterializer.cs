@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Collections.Generic;
     using System.Threading;
     using Abstractions;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IQueryMaterializer

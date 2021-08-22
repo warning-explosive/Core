@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
 {
     using System;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IJsonSerializer abstraction

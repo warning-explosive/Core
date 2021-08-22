@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model.Abstractions
 {
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Builds database model from the existing database

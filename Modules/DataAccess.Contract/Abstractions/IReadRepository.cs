@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using System;
     using System.Linq;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using GenericDomain.Abstractions;
 
     /// <summary>

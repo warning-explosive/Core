@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     using System.Linq;
     using Abstractions;
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
@@ -62,8 +62,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
         {
             return _typeProvider
                 .OurTypes
-                .Where(type => type.IsClass
-                               && !type.IsAbstract
+                .Where(type => type.IsConcreteType()
                                && type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                 .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IMessageHandler<>), 0))
                 .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type))

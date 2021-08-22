@@ -1,7 +1,8 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
 {
     using Abstractions;
-    using AutoRegistration.Abstractions;
+    using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions;
     using Defaults;
     using IntegrationTransport.Api.Abstractions;
 
@@ -9,13 +10,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Register<IIntegrationTransport, InMemoryIntegrationTransport>();
-            container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>();
+            container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
+            container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
 
-            container.Register<IEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>();
-            container.Register<DefaultEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>();
+            container.Register<IEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
+            container.Register<DefaultEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
 
-            container.Register<IManualRegistration, InMemoryIntegrationTransportInjectionManualRegistration>();
+            container.Register<IManualRegistration, InMemoryIntegrationTransportInjectionManualRegistration>(EnLifestyle.Singleton);
         }
     }
 }

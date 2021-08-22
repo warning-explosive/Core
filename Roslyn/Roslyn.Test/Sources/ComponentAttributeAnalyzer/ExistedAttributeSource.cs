@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer
 {
     using System;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
     [Serializable]

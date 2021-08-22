@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
 {
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IStringFormatter

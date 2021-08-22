@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
     using ValueObjects;

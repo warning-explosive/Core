@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Contract
 {
     using System;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
     using Basics;
 
     /// <summary>
     /// EndpointIdentity
     /// </summary>
-    [Component(EnLifestyle.Singleton, EnComponentRegistrationKind.ManuallyRegistered)]
+    [ManuallyRegisteredComponent]
     public class EndpointIdentity : ISafelyEquatable<EndpointIdentity>,
                                     IEquatable<EndpointIdentity>
     {

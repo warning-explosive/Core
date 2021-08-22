@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using Newtonsoft.Json;
 
     /// <summary>

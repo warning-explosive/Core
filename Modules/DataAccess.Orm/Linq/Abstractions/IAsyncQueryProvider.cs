@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IAsyncQueryProvider

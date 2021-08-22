@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using GenericDomain.Abstractions;
 
     /// <summary>

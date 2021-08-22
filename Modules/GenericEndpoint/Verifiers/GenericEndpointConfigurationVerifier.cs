@@ -5,11 +5,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System.Linq;
     using Abstractions;
     using Api.Abstractions;
-    using AutoWiring.Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
     using Contract.Abstractions;
     using Contract.Attributes;
 
@@ -62,8 +62,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
 
                 var messageHandlers = _typeProvider
                     .OurTypes
-                    .Where(type => type.IsClass
-                                   && !type.IsAbstract
+                    .Where(type => type.IsConcreteType()
                                    && service.IsAssignableFrom(type))
                     .ToList();
 

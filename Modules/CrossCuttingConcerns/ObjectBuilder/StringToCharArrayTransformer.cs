@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 {
     using Api.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
     internal class StringToCharArrayTransformer : IObjectTransformer<string, char[]>

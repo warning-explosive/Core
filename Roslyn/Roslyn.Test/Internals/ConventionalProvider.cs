@@ -5,13 +5,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Internals
     using System.IO;
     using System.Linq;
     using Abstractions;
-    using AutoRegistration.Abstractions;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
-    using AutoWiring.Api.Services;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Exceptions;
     using Basics.Roslyn;
+    using CompositionRoot.Api.Abstractions;
     using Extensions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;

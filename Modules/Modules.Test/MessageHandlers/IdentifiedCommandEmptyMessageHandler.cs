@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Attributes;
-    using AutoWiring.Api.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using GenericEndpoint.Api;
     using GenericEndpoint.Api.Abstractions;
     using Messages;

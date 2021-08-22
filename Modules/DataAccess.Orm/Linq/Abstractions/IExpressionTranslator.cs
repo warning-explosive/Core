@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Abstractions
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoWiring.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IExpressionTranslator

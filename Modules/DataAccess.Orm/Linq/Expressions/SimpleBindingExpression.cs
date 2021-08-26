@@ -109,15 +109,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression binding)
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            Source = binding;
+            Source = expression;
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression parameter)
+        public void Apply(TranslationContext context, ParameterExpression expression)
         {
-            Source = parameter;
+            Source = expression;
         }
     }
 }

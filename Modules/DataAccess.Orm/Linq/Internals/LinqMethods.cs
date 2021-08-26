@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     nameof(IReadRepository<IEntity>.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
                 .FindMethod()
-                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "SpaceEngineers.Core.DataAccess.Contract.Abstractions.IReadRepository<>.All()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Contract.Abstractions.IReadRepository<>.All()"));
         }
 
         internal static MethodInfo QueryableSelect()
@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
                 .FindMethod()
-                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.Select()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Select()"));
         }
 
         internal static MethodInfo QueryableWhere()
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, bool>>) }
                 }
                 .FindMethod()
-                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.Where()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Where()"));
         }
 
         internal static MethodInfo QueryableGroupBy2()
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
                 .FindMethod()
-                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.GroupBy()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
 
         internal static MethodInfo QueryableGroupBy3()
@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>), typeof(Expression<Func<object, object>>) }
                 }
                 .FindMethod()
-                .EnsureNotNull(string.Format(CouldNotFindMethodFormat, "System.Linq.Queryable.GroupBy()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
     }
 }

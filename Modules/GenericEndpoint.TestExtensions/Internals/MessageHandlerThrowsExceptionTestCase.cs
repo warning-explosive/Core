@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
     using System;
+    using Basics;
 
     internal class MessageHandlerThrowsExceptionTestCase<TException> : ITestCase
         where TException : Exception
@@ -18,7 +19,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         {
             return exception is TException exactException && _assertion(exactException)
                 ? null
-                : string.Format(Format, typeof(TException).FullName);
+                : Format.Format(typeof(TException).FullName);
         }
     }
 }

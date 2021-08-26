@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Text;
     using Api.Abstractions.CompositionInfo;
@@ -94,9 +93,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
             var genericArguments = type.GetGenericTypeDefinition().GetGenericArguments();
 
-            return string.Format(CultureInfo.InvariantCulture,
-                                 format,
-                                 string.Join(", ", genericArguments.Select((t, i) => t.Name)));
+            return format.Format(string.Join(", ", genericArguments.Select((t, i) => t.Name)));
         }
     }
 }

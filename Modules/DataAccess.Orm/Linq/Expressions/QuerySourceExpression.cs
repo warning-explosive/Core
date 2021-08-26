@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
+    using Exceptions;
 
     /// <summary>
     /// QuerySourceExpression
@@ -77,7 +78,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(QuerySourceExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(QuerySourceExpression) + "." + nameof(AsExpressionTree));
         }
     }
 }

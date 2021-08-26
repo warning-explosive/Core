@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
+    using Exceptions;
 
     /// <summary>
     /// ProjectionExpression
@@ -139,79 +140,79 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(ProjectionExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(ProjectionExpression) + "." + nameof(AsExpressionTree));
         }
 
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, NewExpression @new)
+        public void Apply(TranslationContext context, NewExpression expression)
         {
             IsProjectionToClass = true;
-            IsAnonymousProjection = @new.Type.IsAnonymous();
+            IsAnonymousProjection = expression.Type.IsAnonymous();
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression binding)
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            _bindings.Add(binding);
+            _bindings.Add(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedBindingExpression binding)
+        public void Apply(TranslationContext context, NamedBindingExpression expression)
         {
-            _bindings.Add(binding);
+            _bindings.Add(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression binary)
+        public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            _bindings.Add(binary);
+            _bindings.Add(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression conditional)
+        public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            _bindings.Add(conditional);
+            _bindings.Add(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression methodCall)
+        public void Apply(TranslationContext context, MethodCallExpression expression)
         {
-            _bindings.Add(methodCall);
+            _bindings.Add(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression parameter)
+        public void Apply(TranslationContext context, ParameterExpression expression)
         {
             if (Source is not NamedSourceExpression)
             {
-                Source = new NamedSourceExpression(Source.Type, Source, parameter);
+                Source = new NamedSourceExpression(Source.Type, Source, expression);
             }
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression projection)
+        public void Apply(TranslationContext context, ProjectionExpression expression)
         {
-            ApplySource(context, projection);
+            ApplySource(context, expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression filter)
+        public void Apply(TranslationContext context, FilterExpression expression)
         {
-            ApplySource(context, filter);
+            ApplySource(context, expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression querySource)
+        public void Apply(TranslationContext context, QuerySourceExpression expression)
         {
-            ApplySource(context, querySource);
+            ApplySource(context, expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression namedSource)
+        public void Apply(TranslationContext context, NamedSourceExpression expression)
         {
-            ApplySource(context, namedSource);
+            ApplySource(context, expression);
         }
 
         private void ApplySource(TranslationContext context, IIntermediateExpression expression)

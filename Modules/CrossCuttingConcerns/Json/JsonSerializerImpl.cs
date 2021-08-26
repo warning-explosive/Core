@@ -16,7 +16,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     {
         private readonly JsonSerializerSettings _settings;
 
-        [SuppressMessage("Analysis", "CA2326", Justification = "Custom SerializationBinder and CA2327")]
+        [SuppressMessage("Analysis", "CA2326", Justification = "custom serializationBinder")]
+        [SuppressMessage("Analysis", "CA2328", Justification = "custom serializationBinder")]
         public JsonSerializerImpl(
             ISerializationBinder serializationBinder,
             IEnumerable<JsonConverter> converters)

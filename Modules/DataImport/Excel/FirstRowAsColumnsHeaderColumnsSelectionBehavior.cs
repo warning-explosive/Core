@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
@@ -35,9 +36,11 @@ namespace SpaceEngineers.Core.DataImport.Excel
         {
             var headerRow = rows.Take(1).Single();
 
+            var headerRowIndex = headerRow.RowIndex.EnsureNotNull<uint>("Row should have index");
+
             return headerRow
                 .Elements<Cell>()
-                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, headerRow.RowIndex, (uint)index, sharedStrings))
+                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, headerRowIndex, (uint)index, sharedStrings))
                 .Where(cell => cell.Value != null
                                && propertyToColumnCaption.Values.Contains(cell.Value, StringComparer.Ordinal))
                 .Select(cell => new DataColumn(cell.ColumnName)

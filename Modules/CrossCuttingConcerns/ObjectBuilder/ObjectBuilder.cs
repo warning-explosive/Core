@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Globalization;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -136,7 +137,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
                 return toConverter.ConvertTo(value, targetType);
             }
 
-            return System.Convert.ChangeType(value, targetType);
+            return System.Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
         }
 
         private static object? Cast(object value, Type targetType)

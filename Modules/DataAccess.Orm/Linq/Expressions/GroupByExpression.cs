@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
+    using Exceptions;
 
     /// <summary>
     /// GroupByExpression
@@ -96,27 +97,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(GroupByExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(GroupByExpression) + "." + nameof(AsExpressionTree));
         }
 
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression projection)
+        public void Apply(TranslationContext context, ProjectionExpression expression)
         {
-            ApplyInternal(projection);
+            ApplyInternal(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression filter)
+        public void Apply(TranslationContext context, FilterExpression expression)
         {
-            ApplyInternal(filter);
+            ApplyInternal(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression source)
+        public void Apply(TranslationContext context, NamedSourceExpression expression)
         {
-            ApplyInternal(source);
+            ApplyInternal(expression);
         }
 
         private void ApplyInternal(IIntermediateExpression expression)

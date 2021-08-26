@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// Gets view query
         /// </summary>
         /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
         public Task<string> GetQuery(CancellationToken token);
     }
 }

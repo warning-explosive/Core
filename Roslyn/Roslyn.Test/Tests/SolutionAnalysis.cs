@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Threading.Tasks;
     using Basics;
     using Basics.Roslyn;
+    using Core.Test.Api.ClassFixtures;
     using Extensions;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.MSBuild;
@@ -29,8 +30,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        public SolutionAnalysis(ITestOutputHelper output)
-            : base(output)
+        /// <param name="fixture">ModulesTestFixture</param>
+        public SolutionAnalysis(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output, fixture)
         {
         }
 

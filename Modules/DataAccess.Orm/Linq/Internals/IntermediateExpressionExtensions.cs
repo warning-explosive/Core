@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
         internal static IReadOnlyDictionary<string, object?> GetQueryParametersValues(this object? obj)
         {
             return obj?.GetType().IsPrimitive() == true
-                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase) { [string.Format(TranslationContext.QueryParameterFormat, 0)] = obj }
+                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase) { [TranslationContext.QueryParameterFormat.Format(0)] = obj }
                 : obj?.ToPropertyDictionary() ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
 

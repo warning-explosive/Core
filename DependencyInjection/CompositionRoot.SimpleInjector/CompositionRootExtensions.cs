@@ -10,11 +10,10 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector
     public static class CompositionRootExtensions
     {
         /// <summary>
-        /// Use SimpleInjector DI container
+        /// Use SimpleInjector as DI container
         /// </summary>
         /// <param name="options">DependencyContainerOptions</param>
         /// <returns>Dependency container implementation producer</returns>
-        // TODO: options.UseGenericContainer for tests - take implementation from configuration
         public static Func<IDependencyContainerImplementation> UseSimpleInjector(this DependencyContainerOptions options)
         {
             return () => new SimpleInjectorDependencyContainerImplementation();

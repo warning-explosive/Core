@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
     using System;
     using System.Linq;
+    using Basics;
     using Contract.Abstractions;
 
     internal class MessageHandlerDoesNotProduceMessageTestCase<TMessage> : ITestCase
@@ -19,7 +20,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         private static string BuildErrorMessage()
         {
             var info = MessageInfo.Prepare<TMessage>();
-            return string.Format(Format, info.Operation, info.MessageKind, typeof(TMessage).FullName);
+            return Format.Format(info.Operation, info.MessageKind, typeof(TMessage).FullName);
         }
     }
 }

@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
     using Contract.Abstractions;
 
     /// <summary>
-    /// TestExtensions
+    /// MessageHandlerExtensions
     /// </summary>
-    public static class TestExtensions
+    public static class MessageHandlerExtensions
     {
         /// <summary>
         /// Incoming test message

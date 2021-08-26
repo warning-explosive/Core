@@ -6,14 +6,15 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Linq;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.SimpleInjector;
+    using Core.Test.Api;
+    using Core.Test.Api.ClassFixtures;
     using Microsoft.Build.Locator;
     using Xunit.Abstractions;
 
     /// <summary>
     /// AnalysisBase
     /// </summary>
-    public abstract class AnalysisBase
+    public abstract class AnalysisBase : TestBase
     {
         private static readonly Version[] AvailableVersions;
         private static readonly Version? Version;
@@ -39,12 +40,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        protected AnalysisBase(ITestOutputHelper output)
+        /// <param name="fixture">ModulesTestFixture</param>
+        protected AnalysisBase(ITestOutputHelper output, ModulesTestFixture fixture)
+            : base(output, fixture)
         {
-            Output = output;
-
-            Output.WriteLine($"Used framework version: {Version}");
-            Output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
+            output.WriteLine($"Used framework version: {Version}");
+            output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
             var options = new DependencyContainerOptions();
 
@@ -54,18 +55,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                     ? options.WithExcludedNamespaces(IgnoredNamespaces.Single())
                     : options;
 
-            DependencyContainer = CompositionRoot.DependencyContainer.Create(options, options.UseSimpleInjector());
+            DependencyContainer = fixture.CreateContainer(options);
         }
 
         /// <summary>
         /// Excluded namespaces
         /// </summary>
         protected abstract ImmutableArray<string> IgnoredNamespaces { get; }
-
-        /// <summary>
-        /// ITestOutputHelper
-        /// </summary>
-        protected ITestOutputHelper Output { get; }
 
         /// <summary>
         /// IDependencyContainer

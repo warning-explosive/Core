@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.SimpleInjector;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host.Internals;
@@ -88,7 +87,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(MongoDB), nameof(MongoDB.Driver)))
             };
 
-            return fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assemblies);
+            return fixture.BoundedAboveContainer(options, assemblies);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
     using Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class RpcRequestRegistry : IRpcRequestRegistry
+    internal class RpcRequestRegistry : IRpcRequestRegistry, IDisposable
     {
         private readonly MemoryCache _memoryCache;
         private readonly ISettingsProvider<IntegrationTransportSettings> _integrationTransportSettings;
@@ -21,6 +21,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
         {
             _memoryCache = new MemoryCache(nameof(RpcRequestRegistry));
             _integrationTransportSettings = integrationTransportSettings;
+        }
+
+        public void Dispose()
+        {
+            _memoryCache.Dispose();
         }
 
         public async Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs, CancellationToken token)

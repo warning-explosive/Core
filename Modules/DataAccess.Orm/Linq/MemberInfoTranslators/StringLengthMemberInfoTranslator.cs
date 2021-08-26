@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.MemberInfoTranslators
     internal class StringLengthMemberInfoTranslator : IMemberInfoTranslator,
                                                       ICollectionResolvable<IMemberInfoTranslator>
     {
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression)
         {
             if (context.Member.DeclaringType == typeof(string)

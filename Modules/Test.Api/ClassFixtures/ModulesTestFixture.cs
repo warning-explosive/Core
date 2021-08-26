@@ -2,8 +2,10 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
 {
     using System;
     using System.Collections.Concurrent;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
+    using Abstractions;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
@@ -13,7 +15,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     /// <summary>
     /// ModulesTestFixture
     /// </summary>
-    public sealed class ModulesTestFixture
+    public sealed class ModulesTestFixture : IModulesTestFixture
     {
         private const string Settings = nameof(Settings);
 
@@ -23,76 +25,49 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         /// <summary> .cctor </summary>
         public ModulesTestFixture()
         {
-            SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
-                .StepInto(Settings)
-                .SetupFileSystemSettingsDirectory();
+            SettingsDirectory.SetupFileSystemSettingsDirectory();
         }
 
-        /// <summary>
-        /// Generates IManualRegistration object with specified delegate
-        /// </summary>
-        /// <param name="registrationAction">Action with IRegistrationContainer instance</param>
-        /// <returns>IManualRegistration instance</returns>
+        /// <inheritdoc />
+        public DirectoryInfo SettingsDirectory => SolutionExtensions
+            .ProjectFile()
+            .Directory
+            .EnsureNotNull("Project directory not found")
+            .StepInto(Settings);
+
+        /// <inheritdoc />
         public IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)
         {
             return new ManualDelegateRegistration(registrationAction);
         }
 
-        /// <summary>
-        /// Setup bounded above dependency container
-        /// </summary>
-        /// <param name="options">Dependency container options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
-        /// <param name="aboveAssemblies">Assemblies that limits assembly loading in dependency container</param>
-        /// <returns>IDependencyContainer</returns>
-        public IDependencyContainer BoundedAboveContainer(
-            DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer,
-            params Assembly[] aboveAssemblies)
+        /// <inheritdoc />
+        public IDependencyContainer BoundedAboveContainer(DependencyContainerOptions options, params Assembly[] aboveAssemblies)
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, assemblies) => DependencyContainer.CreateBoundedAbove(containerOptions, implementationProducer, assemblies),
+                (containerOptions, assemblies) => DependencyContainer.CreateBoundedAbove(containerOptions, containerOptions.UseGenericContainer(), assemblies),
                 aboveAssemblies);
         }
 
-        /// <summary>
-        /// Setup exactly bounded dependency container
-        /// </summary>
-        /// <param name="options">Dependency container options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
-        /// <param name="exactAssemblies">Assemblies that limits assembly loading in dependency container</param>
-        /// <returns>IDependencyContainer</returns>
-        public IDependencyContainer ExactlyBoundedContainer(
-            DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer,
-            params Assembly[] exactAssemblies)
+        /// <inheritdoc />
+        public IDependencyContainer ExactlyBoundedContainer(DependencyContainerOptions options, params Assembly[] exactAssemblies)
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, assemblies) => DependencyContainer.CreateExactlyBounded(containerOptions, implementationProducer, assemblies),
+                (containerOptions, assemblies) => DependencyContainer.CreateExactlyBounded(containerOptions, containerOptions.UseGenericContainer(), assemblies),
                 exactAssemblies);
         }
 
-        /// <summary>
-        /// Setup dependency container without assembly limitations
-        /// </summary>
-        /// <param name="options">Dependency container options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
-        /// <returns>IDependencyContainer</returns>
-        public IDependencyContainer CreateContainer(
-            DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer)
+        /// <inheritdoc />
+        public IDependencyContainer CreateContainer(DependencyContainerOptions options)
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, _) => DependencyContainer.Create(containerOptions, implementationProducer));
+                (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer()));
         }
 
-        private IDependencyContainer CreateDependencyContainer(
+        private static IDependencyContainer CreateDependencyContainer(
             DependencyContainerOptions options,
             Func<DependencyContainerOptions, Assembly[], IDependencyContainer> factory,
             params Assembly[] assemblies)

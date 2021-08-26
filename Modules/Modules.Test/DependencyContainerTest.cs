@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Exceptions;
-    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;
@@ -312,7 +311,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions().WithManualRegistrations(registration);
 
-            var localContainer = Fixture.ExactlyBoundedContainer(options, options.UseSimpleInjector());
+            var localContainer = Fixture.ExactlyBoundedContainer(options);
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<WiredTestServiceImpl>();

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Contract
     /// <summary>
     /// Statistics EndpointIdentity
     /// </summary>
-    public class StatisticsEndpointIdentity
+    public static class StatisticsEndpointIdentity
     {
         /// <summary>
         /// Statistics endpoint logical name

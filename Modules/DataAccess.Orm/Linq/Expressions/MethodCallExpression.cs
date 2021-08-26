@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
+    using Exceptions;
 
     /// <summary>
     /// MethodCallExpression
@@ -110,7 +111,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(MethodCallExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(MethodCallExpression) + "." + nameof(AsExpressionTree));
         }
 
         #region IApplicable

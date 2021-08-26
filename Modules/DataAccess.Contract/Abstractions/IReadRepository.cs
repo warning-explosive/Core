@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using AutoRegistration.Api.Abstractions;
     using GenericDomain.Abstractions;
@@ -23,6 +24,8 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
         /// </summary>
         /// <param name="key">Primary key</param>
         /// <returns>Linq query</returns>
+        [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
+        [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
         public TEntity Single(Guid key);
 
         /// <summary>

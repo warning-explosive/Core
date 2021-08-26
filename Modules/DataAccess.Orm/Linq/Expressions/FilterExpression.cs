@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Linq.Expressions;
     using Abstractions;
     using Basics;
+    using Exceptions;
     using Visitors;
 
     /// <summary>
@@ -109,51 +110,51 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(FilterExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(FilterExpression) + "." + nameof(AsExpressionTree));
         }
 
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression projection)
+        public void Apply(TranslationContext context, ProjectionExpression expression)
         {
-            Source = projection;
+            Source = expression;
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression querySource)
+        public void Apply(TranslationContext context, QuerySourceExpression expression)
         {
-            Source = querySource;
+            Source = expression;
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression queryParameter)
+        public void Apply(TranslationContext context, QueryParameterExpression expression)
         {
-            ApplyBinding(queryParameter);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression parameter)
+        public void Apply(TranslationContext context, ParameterExpression expression)
         {
-            ApplyBinding(parameter);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression binary)
+        public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            ApplyBinding(binary);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression conditional)
+        public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            ApplyBinding(conditional);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression binding)
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            ApplyBinding(binding);
+            ApplyBinding(expression);
         }
 
         private void ApplyBinding(IIntermediateExpression expression)

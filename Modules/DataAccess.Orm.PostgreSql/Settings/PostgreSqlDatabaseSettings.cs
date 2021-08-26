@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
         {
             return this
                 .ToPropertyDictionary()
-                .ToString(";", pair => string.Format(Format, pair.Key, pair.Value));
+                .ToString(";", pair => Format.Format(pair.Key, pair.Value?.ToString() ?? "null"));
         }
     }
 }

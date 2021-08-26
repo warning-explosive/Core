@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
-    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -26,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
         /// <summary>

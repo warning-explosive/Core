@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
     using System.Reflection;
     using Abstractions;
     using Basics;
+    using Exceptions;
 
     /// <summary>
     /// NamedBindingExpression
@@ -99,15 +100,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            throw new NotImplementedException(nameof(NamedBindingExpression) + "." + nameof(AsExpressionTree));
+            throw new TranslationException(nameof(NamedBindingExpression) + "." + nameof(AsExpressionTree));
         }
 
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression binding)
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            Source = binding;
+            Source = expression;
         }
 
         #endregion

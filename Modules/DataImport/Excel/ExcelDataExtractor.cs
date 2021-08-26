@@ -111,16 +111,19 @@
             IReadOnlyDictionary<int, string> sharedStrings,
             DataTable dataTable)
         {
+            var rowIndex = row.RowIndex.EnsureNotNull<uint>("Row should have index");
+
             return row
                 .Elements<Cell>()
-                .Where(cell => dataTable.Columns.Contains(cell.CellColumnName(row.RowIndex)))
-                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, row.RowIndex, (uint)index, sharedStrings))
-                .Aggregate(dataTable.NewRow(),
-                    (row, cell) =>
-                    {
-                        row[cell.ColumnName] = cell.Value;
-                        return row;
-                    });
+                .Where(cell => dataTable.Columns.Contains(cell.CellColumnName(rowIndex)))
+                .Select((cell, index) => _cellValueExtractor.ExtractCellValue(cell, rowIndex, (uint)index, sharedStrings))
+                .Aggregate(dataTable.NewRow(), SetValue);
+
+            static DataRow SetValue(DataRow row, ExcelCellValue cell)
+            {
+                row[cell.ColumnName] = cell.Value;
+                return row;
+            }
         }
 
         private IReadOnlyDictionary<string, string> MergeColumns(DataTable dataTable)

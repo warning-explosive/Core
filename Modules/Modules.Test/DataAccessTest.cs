@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Contract.Abstractions;
@@ -394,7 +393,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(string.Empty);
 
             var options = new DependencyContainerOptions();
-            var dependencyContainer = Fixture.BoundedAboveContainer(options, options.UseSimpleInjector(), assemblies);
+            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
             var token = CancellationToken.None;
 
             using (dependencyContainer.OpenScope())

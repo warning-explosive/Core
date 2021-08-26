@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
-    using CompositionRoot.SimpleInjector;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -72,7 +71,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var options = new DependencyContainerOptions();
 
             var ourTypes = Fixture
-                .BoundedAboveContainer(options, options.UseSimpleInjector(), aboveAssemblies)
+                .BoundedAboveContainer(options, aboveAssemblies)
                 .Resolve<ITypeProvider>()
                 .OurTypes;
 
@@ -108,7 +107,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
 
-            var boundedContainer = Fixture.ExactlyBoundedContainer(options, options.UseSimpleInjector(), assemblies);
+            var boundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
 
             if (mode)
             {
@@ -128,7 +127,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             options = ExtendedTypeProviderDecorator.ExtendTypeProvider(new DependencyContainerOptions(), additionalTypes);
 
-            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, options.UseSimpleInjector(), assemblies);
+            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
 
             var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
 

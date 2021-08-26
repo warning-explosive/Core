@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Query parameter name</returns>
         public string NextQueryParameterName()
         {
-            return string.Format(QueryParameterFormat, _queryParameterIndex++);
+            return QueryParameterFormat.Format(_queryParameterIndex++);
         }
 
         /// <summary>

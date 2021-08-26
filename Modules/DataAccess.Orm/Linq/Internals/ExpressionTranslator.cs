@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             return visitor
                 .Context
                 .Expression
-                .EnsureNotNull(() => new TranslationException(expression, new NullReferenceException(nameof(TranslationContext.Expression))));
+                .EnsureNotNull(() => new TranslationException(expression));
         }
     }
 }

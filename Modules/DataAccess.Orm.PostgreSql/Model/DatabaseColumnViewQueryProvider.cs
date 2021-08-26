@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
     using Settings;
@@ -11,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseColumnViewQueryProvider : IViewQueryProvider<DatabaseColumn>
     {
+        [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
     table_name as ""{nameof(DatabaseColumn.TableName)}"",
     column_name as ""{nameof(DatabaseColumn.ColumnName)}"",
@@ -38,7 +41,7 @@ order by table_name, ordinal_position;";
                 .Get(token)
                 .ConfigureAwait(false);
 
-            return string.Format(Query, databaseSettings.Schema);
+            return Query.Format(databaseSettings.Schema);
         }
     }
 }

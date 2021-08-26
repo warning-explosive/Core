@@ -17,6 +17,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         private readonly IAutoRegistrationServicesProvider _servicesProvider;
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
 
+        private IReadOnlyCollection<ServiceRegistrationInfo>? _resolvable;
+        private IReadOnlyCollection<ServiceRegistrationInfo>? _collections;
+        private IReadOnlyCollection<DecoratorRegistrationInfo>? _decorators;
+
         public AutoRegistrationsContainer(
             ITypeProvider typeProvider,
             IAutoRegistrationServicesProvider servicesProvider,
@@ -34,13 +38,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
-            return _servicesProvider
-                .Resolvable()
-                .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                .Concat(_servicesProvider
-                    .External()
-                    .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                    .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>))));
+            _resolvable ??= InitResolvable();
+            return _resolvable;
         }
 
         public IEnumerable<DelegateRegistrationInfo> Delegates()
@@ -50,13 +49,42 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
         public IEnumerable<ServiceRegistrationInfo> Collections()
         {
-            return _servicesProvider
-                .Collections()
-                .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)));
+            _collections ??= InitCollections();
+            return _collections;
         }
 
         public IEnumerable<DecoratorRegistrationInfo> Decorators()
+        {
+            _decorators ??= InitDecorators();
+            return _decorators;
+        }
+
+        private IReadOnlyCollection<ServiceRegistrationInfo> InitResolvable()
+        {
+            var resolvable = _servicesProvider
+                .Resolvable()
+                .GetComponents(_typeProvider, _constructorResolutionBehavior);
+
+            var externalResolvable = _servicesProvider
+                .External()
+                .GetComponents(_typeProvider, _constructorResolutionBehavior)
+                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)));
+
+            return resolvable
+                .Concat(externalResolvable)
+                .ToList();
+        }
+
+        private IReadOnlyCollection<ServiceRegistrationInfo> InitCollections()
+        {
+            return _servicesProvider
+                .Collections()
+                .GetComponents(_typeProvider, _constructorResolutionBehavior)
+                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
+                .ToList();
+        }
+
+        private IReadOnlyCollection<DecoratorRegistrationInfo> InitDecorators()
         {
             var decorators = _servicesProvider
                 .Decorators()
@@ -66,7 +94,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
                 .CollectionDecorators()
                 .GetDecoratorInfo(typeof(ICollectionDecorator<>));
 
-            return decorators.Concat(collectionDecorators);
+            return decorators
+                .Concat(collectionDecorators)
+                .ToList();
         }
     }
 }

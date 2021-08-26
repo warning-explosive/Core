@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>ITypeInfo</returns>
         public static ITypeInfo Get(Type type) => Cache.GetOrAdd(GetKey(type), _ => new TypeInfo(type));
 
-        internal static IReadOnlyCollection<Type> ExtractDependencies(Type type)
+        internal static IEnumerable<Type> ExtractDependencies(Type type)
         {
             var byDependencyAttribute = type.GetCustomAttribute<DependencyAttribute>()?.Dependencies
                                         ?? Enumerable.Empty<Type>();
@@ -35,9 +35,7 @@ namespace SpaceEngineers.Core.Basics
                 ? value
                 : Enumerable.Empty<Type>();
 
-            return byDependencyAttribute
-                .Concat(byDependentAttribute)
-                .ToList();
+            return byDependencyAttribute.Concat(byDependentAttribute);
         }
 
         private static string GetKey(Type type)

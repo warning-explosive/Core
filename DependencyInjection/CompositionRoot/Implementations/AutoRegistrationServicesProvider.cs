@@ -60,9 +60,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private static IEnumerable<Type> ExtractGeneric(IEnumerable<Type> source, Type openGenericService)
         {
             return source
-                  .Where(type => type.IsConcreteType()
-                              && type.IsSubclassOfOpenGeneric(openGenericService))
-                  .SelectMany(type => type.ExtractGenericArgumentsAt(openGenericService, 0))
+                  .Where(type => type.IsConcreteType())
+                  .SelectMany(type => type.ExtractGenericArgumentsAt(openGenericService))
                   .Where(type => !type.IsGenericParameter)
                   .Select(type => type.GenericTypeDefinitionOrSelf())
                   .Distinct();

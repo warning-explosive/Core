@@ -4,34 +4,43 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
 
     [DebuggerDisplay("{OriginalType}")]
     internal class TypeInfo : ITypeInfo
     {
+        private readonly Lazy<IReadOnlyCollection<Type>> _dependencies;
+        private readonly Lazy<IReadOnlyCollection<Type>> _baseTypes;
+        private readonly Lazy<IReadOnlyCollection<Type>> _genericTypeDefinitions;
+        private readonly Lazy<IReadOnlyCollection<Type>> _declaredInterfaces;
+        private readonly Lazy<IReadOnlyCollection<Type>> _genericInterfaceDefinitions;
+        private readonly Lazy<IReadOnlyCollection<Attribute>> _attributes;
+
         internal TypeInfo(Type type)
         {
             OriginalType = type;
-            Dependencies = TypeInfoStorage.ExtractDependencies(type);
-            BaseTypes = ExtractBaseTypes(type).ToList();
-            GenericTypeDefinitions = ExtractGenericTypeDefinitions(type).ToList();
-            DeclaredInterfaces = ExtractDeclaredInterfaces(type).ToList();
-            GenericInterfaceDefinitions = ExtractGenericInterfaceDefinitions(type).ToList();
-            Attributes = ExtractAttributes(type).ToList();
+
+            _dependencies = new Lazy<IReadOnlyCollection<Type>>(() => TypeInfoStorage.ExtractDependencies(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _baseTypes = new Lazy<IReadOnlyCollection<Type>>(() => ExtractBaseTypes(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _genericTypeDefinitions = new Lazy<IReadOnlyCollection<Type>>(() => ExtractGenericTypeDefinitions(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _declaredInterfaces = new Lazy<IReadOnlyCollection<Type>>(() => ExtractDeclaredInterfaces(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _genericInterfaceDefinitions = new Lazy<IReadOnlyCollection<Type>>(() => ExtractGenericInterfaceDefinitions(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _attributes = new Lazy<IReadOnlyCollection<Attribute>>(() => ExtractAttributes(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public Type OriginalType { get; }
 
-        public IReadOnlyCollection<Type> Dependencies { get; }
+        public IReadOnlyCollection<Type> Dependencies => _dependencies.Value;
 
-        public IReadOnlyCollection<Type> BaseTypes { get; }
+        public IReadOnlyCollection<Type> BaseTypes => _baseTypes.Value;
 
-        public IReadOnlyCollection<Type> GenericTypeDefinitions { get; }
+        public IReadOnlyCollection<Type> GenericTypeDefinitions => _genericTypeDefinitions.Value;
 
-        public IReadOnlyCollection<Type> DeclaredInterfaces { get; }
+        public IReadOnlyCollection<Type> DeclaredInterfaces => _declaredInterfaces.Value;
 
-        public IReadOnlyCollection<Type> GenericInterfaceDefinitions { get; }
+        public IReadOnlyCollection<Type> GenericInterfaceDefinitions => _genericInterfaceDefinitions.Value;
 
-        public IReadOnlyCollection<Attribute> Attributes { get; }
+        public IReadOnlyCollection<Attribute> Attributes => _attributes.Value;
 
         private static IEnumerable<Type> ExtractBaseTypes(Type type)
         {

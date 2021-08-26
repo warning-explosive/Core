@@ -18,6 +18,8 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
         {
+            UseAutoRegistration = true;
+
             ConstructorResolutionBehavior = new DefaultConstructorResolutionBehavior();
 
             ManualRegistrations = new List<IManualRegistration>();
@@ -31,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Use auto-registration feature or not
         /// Enabled by default
         /// </summary>
-        public bool UseAutoRegistration { get; set; } = true;
+        public bool UseAutoRegistration { get; init; }
 
         /// <summary>
         /// Constructor resolution behavior

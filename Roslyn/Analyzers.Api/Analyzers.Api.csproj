@@ -4,13 +4,13 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <AssemblyName>SpaceEngineers.Core.AutoRegistration.Api.Analyzers</AssemblyName>
-    <RootNamespace>SpaceEngineers.Core.AutoRegistration.Api.Analyzers</RootNamespace>
+    <AssemblyName>SpaceEngineers.Core.Analyzers.Api</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.Analyzers.Api</RootNamespace>
     <IsPackable>true</IsPackable>
-    <Title>SpaceEngineers.Core.AutoRegistration.Api.Analyzers</Title>
+    <Title>SpaceEngineers.Core.Analyzers.Api</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>SpaceEngineers.Core.AutoRegistration.Api.Analyzers</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.Analyzers.Api</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -31,6 +31,11 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -38,11 +43,6 @@
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="tools\*.ps1" CopyToOutputDirectory="Always" Pack="true" PackagePath="" />
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
-    <ProjectReference Include="..\Analyzers.Api\Analyzers.Api.csproj" />
   </ItemGroup>
 </Project>

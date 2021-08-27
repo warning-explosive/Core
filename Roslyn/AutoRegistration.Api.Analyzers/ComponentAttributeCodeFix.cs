@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     using System.Threading.Tasks;
     using Abstractions;
     using Attributes;
-    using Basics.Roslyn;
+    using Core.Analyzers.Api;
     using Enumerations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;

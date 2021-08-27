@@ -4,13 +4,13 @@
         <TargetFramework>net5.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.Modules.Test</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.Modules.Test</RootNamespace>
+        <AssemblyName>Modules.Benchmark</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Modules.Benchmark</RootNamespace>
         <IsPackable>false</IsPackable>
-        <Title>SpaceEngineers.Core.Modules.Test</Title>
+        <Title>SpaceEngineers.Core.Modules.Benchmark</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.Modules.Test</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.Modules.Benchmark</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -41,5 +41,9 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Basics.Benchmark.Api\Basics.Benchmark.Api.csproj" />
+      <ProjectReference Include="..\Modules.Test\Modules.Test.csproj" />
     </ItemGroup>
 </Project>

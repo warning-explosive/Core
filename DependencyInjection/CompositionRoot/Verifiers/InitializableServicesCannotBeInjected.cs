@@ -41,10 +41,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
             _registrations
                 .RegisteredComponents()
-                .Where(HasWrongConstructor)
+                .Where(HasWrongConstructor(initializableComponents))
                 .Each(type => throw new InvalidOperationException($"Component {type.FullName} shouldn't depends on {typeof(IInitializable<>).Name} service"));
+        }
 
-            bool HasWrongConstructor(Type type)
+        private Func<Type, bool> HasWrongConstructor(IReadOnlyCollection<Type> initializableComponents)
+        {
+            return type =>
             {
                 var cctor = _options
                     .ConstructorResolutionBehavior
@@ -56,25 +59,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                     .Select(t => t.UnwrapTypeParameter(typeof(IEnumerable<>)))
                     .Select(t => t.GenericTypeDefinitionOrSelf())
                     .Any(parameter => WrongParameter(type, cctor, parameter, initializableComponents));
-            }
+            };
+        }
 
-            static bool WrongParameter(
-                Type declaringType,
-                ConstructorInfo constructorInfo,
-                Type parameterType,
-                IEnumerable<Type> initializableComponents)
+        private static bool WrongParameter(
+            Type declaringType,
+            ConstructorInfo constructorInfo,
+            Type parameterType,
+            IEnumerable<Type> initializableComponents)
+        {
+            var isImplementation = parameterType.IsAssignableFrom(declaringType)
+                                   || declaringType.IsSubclassOfOpenGeneric(parameterType.GenericTypeDefinitionOrSelf());
+
+            if (isImplementation
+                && constructorInfo.IsDecorator(parameterType))
             {
-                var isImplementation = parameterType.IsAssignableFrom(declaringType)
-                                       || declaringType.IsSubclassOfOpenGeneric(parameterType.GenericTypeDefinitionOrSelf());
-
-                if (isImplementation
-                    && constructorInfo.IsDecorator(parameterType))
-                {
-                    return false;
-                }
-
-                return initializableComponents.Any(cmp => cmp == parameterType);
+                return false;
             }
+
+            return initializableComponents.Any(cmp => cmp == parameterType);
         }
     }
 }

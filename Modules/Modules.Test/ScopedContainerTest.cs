@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public ScopedContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
+            DependencyContainer = fixture.ModulesContainer();
         }
 
         /// <summary>

@@ -1,9 +1,9 @@
-namespace Basics.Benchmark.Sources
+namespace SpaceEngineers.Core.Basics.Benchmark.Sources
 {
+    using Basics;
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
-    using SpaceEngineers.Core.Basics;
-    using SpaceEngineers.Core.Basics.Test.DeepCopy;
+    using Test.DeepCopy;
 
     /// <summary>
     /// ObjectExtensions.DeepCopy benchmark source

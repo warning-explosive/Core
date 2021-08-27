@@ -1,5 +1,6 @@
-namespace Basics.Benchmark
+namespace SpaceEngineers.Core.Basics.Benchmark
 {
+    using Api;
     using Sources;
     using Xunit;
     using Xunit.Abstractions;
@@ -22,27 +23,36 @@ namespace Basics.Benchmark
         [Fact]
         internal void DeepCopyBenchmark()
         {
-            var summary = BenchmarkRunnerExtensions.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
-            var measures = summary.NanosecondMeasures("Mean", Output.WriteLine);
+            var summary = Benchmark.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
 
-            var bySerialization = measures[nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization)];
-            var byReflection = measures[nameof(DeepCopyBenchmarkSource.DeepCopyByReflection)];
+            var bySerialization = summary.NanosecondMeasure(
+                nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization),
+                Measure.Mean,
+                Output.WriteLine);
+
+            var byReflection = summary.NanosecondMeasure(
+                nameof(DeepCopyBenchmarkSource.DeepCopyByReflection),
+                Measure.Mean,
+                Output.WriteLine);
+
             var multiplier = bySerialization / byReflection;
 
             Output.WriteLine($"{nameof(bySerialization)}: {bySerialization}");
             Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            Assert.True(multiplier >= 5m);
+            Assert.True(multiplier >= 3m);
         }
 
         [Fact]
         internal void AssembliesExtensionsBelowBenchmark()
         {
-            var summary = BenchmarkRunnerExtensions.Run<AssembliesExtensionsBelowSource>(Output.WriteLine);
+            var summary = Benchmark.Run<AssembliesExtensionsBelowBenchmarkSource>(Output.WriteLine);
 
-            var measures = summary.MillisecondMeasures("Mean", Output.WriteLine);
-            var measure = measures[nameof(AssembliesExtensionsBelowSource.Below)];
+            var measure = summary.MillisecondMeasure(
+                nameof(AssembliesExtensionsBelowBenchmarkSource.Below),
+                Measure.Mean,
+                Output.WriteLine);
 
             Assert.True(measure <= 25m);
         }

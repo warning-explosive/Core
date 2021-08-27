@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Test.Api.Abstractions
 {
     using System;
-    using System.IO;
     using System.Reflection;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
@@ -11,11 +10,6 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
     /// </summary>
     public interface IModulesTestFixture
     {
-        /// <summary>
-        /// File system settings directory
-        /// </summary>
-        public DirectoryInfo SettingsDirectory { get; }
-
         /// <summary>
         /// Generates IManualRegistration object with specified delegate
         /// </summary>

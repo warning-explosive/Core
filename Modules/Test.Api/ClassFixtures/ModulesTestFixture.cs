@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
 {
     using System;
     using System.Collections.Concurrent;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
     using Abstractions;
@@ -25,15 +24,13 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         /// <summary> .cctor </summary>
         public ModulesTestFixture()
         {
-            SettingsDirectory.SetupFileSystemSettingsDirectory();
+            SolutionExtensions
+                .ProjectFile()
+                .Directory
+                .EnsureNotNull("Project directory not found")
+                .StepInto(Settings)
+                .SetupFileSystemSettingsDirectory();
         }
-
-        /// <inheritdoc />
-        public DirectoryInfo SettingsDirectory => SolutionExtensions
-            .ProjectFile()
-            .Directory
-            .EnsureNotNull("Project directory not found")
-            .StepInto(Settings);
 
         /// <inheritdoc />
         public IManualRegistration DelegateRegistration(Action<IManualRegistrationsContainer> registrationAction)

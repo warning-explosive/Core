@@ -99,6 +99,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modules.Test", "Modules\Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modules.Benchmark", "Modules\Modules.Benchmark\Modules.Benchmark.csproj", "{6C377719-AD3D-40F7-B8BB-D7F4040B7233}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.Benchmark.Api", "Basics.Benchmark.Api\Basics.Benchmark.Api.csproj", "{220266BC-E486-4D32-A470-5913CB3C9228}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -273,6 +275,10 @@ Global
 		{6C377719-AD3D-40F7-B8BB-D7F4040B7233}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C377719-AD3D-40F7-B8BB-D7F4040B7233}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C377719-AD3D-40F7-B8BB-D7F4040B7233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{220266BC-E486-4D32-A470-5913CB3C9228}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{220266BC-E486-4D32-A470-5913CB3C9228}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{220266BC-E486-4D32-A470-5913CB3C9228}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{220266BC-E486-4D32-A470-5913CB3C9228}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -320,6 +326,7 @@ Global
 		{1EF38C1A-45C6-49E8-837D-77D5DB7EAC6F} = {D1C13AB4-4366-49FC-B4A8-889EEFD4A733}
 		{8FFBE591-65D2-46BF-86A5-AFF126BD2136} = {D1C13AB4-4366-49FC-B4A8-889EEFD4A733}
 		{6C377719-AD3D-40F7-B8BB-D7F4040B7233} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{220266BC-E486-4D32-A470-5913CB3C9228} = {604765A9-BB32-4E7F-9A49-978799315BA8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

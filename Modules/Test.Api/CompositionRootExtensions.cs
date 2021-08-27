@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Test.Api
     using ClassFixtures;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Settings;
 
     /// <summary>
@@ -34,7 +35,9 @@ namespace SpaceEngineers.Core.Test.Api
 
         private static Type FindRequiredType()
         {
-            var settingsDirectory = new ModulesTestFixture().SettingsDirectory;
+            var settingsDirectory = Environment
+                .GetEnvironmentVariable(SettingsExtensions.FileSystemSettingsDirectory, EnvironmentVariableTarget.Process)
+                .AsDirectoryInfo();
 
             var settingsPath = Path.ChangeExtension(Path.Combine(settingsDirectory.FullName, nameof(GenericContainerSettings)), "yaml");
 

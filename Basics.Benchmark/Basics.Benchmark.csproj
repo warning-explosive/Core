@@ -2,15 +2,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <LangVersion>8</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>Basics.Benchmark</AssemblyName>
-    <RootNamespace>Basics.Benchmark</RootNamespace>
+    <RootNamespace>SpaceEngineers.Core.Basics.Benchmark</RootNamespace>
     <IsPackable>false</IsPackable>
     <Title>SpaceEngineers.Core.Basics.Benchmark</Title>
     <Authors>SpaceEngineers</Authors>
     <Company>SpaceEngineers</Company>
-    <PackageDescription>Basics.Benchmark</PackageDescription>
+    <PackageDescription>SpaceEngineers.Core.Basics.Benchmark</PackageDescription>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
     <Copyright>Copyright (c) 2019</Copyright>
@@ -30,7 +30,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -44,6 +43,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Basics.Benchmark.Api\Basics.Benchmark.Api.csproj" />
     <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
   </ItemGroup>
 </Project>

@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            DependencyContainer = ModulesTestManualRegistration.Container(fixture);
+            DependencyContainer = fixture.ModulesContainer();
         }
 
         /// <summary>

@@ -1,16 +1,16 @@
-namespace Basics.Benchmark.Sources
+namespace SpaceEngineers.Core.Basics.Benchmark.Sources
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using Basics;
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
-    using SpaceEngineers.Core.Basics;
 
     /// <summary>
     /// AssembliesExtensions.Below(assembly) benchmark source
     /// </summary>
     [SimpleJob(RunStrategy.Throughput)]
-    public class AssembliesExtensionsBelowSource
+    public class AssembliesExtensionsBelowBenchmarkSource
     {
         [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
         private Assembly[]? _allAssemblies;

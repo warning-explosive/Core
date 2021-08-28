@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
 {
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IView

@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.StatisticsEndpoint.Model
 {
     using System.Collections.Generic;
-    using GenericDomain;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api;
+    using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Contract;
 
     internal class EndpointStatistics : EntityBase, IAggregate

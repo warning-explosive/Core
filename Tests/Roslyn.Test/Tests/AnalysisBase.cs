@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using ManualRegistrations;
     using Microsoft.Build.Locator;
     using Xunit.Abstractions;
 
@@ -47,7 +48,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             output.WriteLine($"Used framework version: {Version}");
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
-            var options = new DependencyContainerOptions();
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new AnalyzersManualRegistration());
 
             options = IgnoredNamespaces.Length > 1
                 ? options.WithExcludedNamespaces(IgnoredNamespaces.First(), IgnoredNamespaces.Skip(1).ToArray())

@@ -28,7 +28,6 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
     </ItemGroup>
     <ItemGroup>

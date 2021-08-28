@@ -2,11 +2,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Dependency container abstraction
     /// </summary>
-    public interface IDependencyContainer : IScopedContainer
+    public interface IDependencyContainer : IScopedContainer, IResolvable
     {
         /// <summary>
         /// Resolve service implementation

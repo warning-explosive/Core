@@ -8,7 +8,7 @@
     using AutoRegistration.Api.Enumerations;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
     using Npgsql;
     using Orm.Connection;
     using Settings;

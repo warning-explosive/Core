@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     public class DependencyContainer : IDependencyContainer, IDisposable
     {
         private DependencyContainerOptions _options;
@@ -245,21 +245,11 @@ namespace SpaceEngineers.Core.CompositionRoot
             ITypeProvider typeProvider,
             IAutoRegistrationServicesProvider servicesProvider)
         {
-            var overrides = CollectOverrides();
+            var overrides = CollectOverrides(typeProvider);
+            var manualRegistrations = new ManualRegistrationsContainer(typeProvider);
+            var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
 
-            var manualRegistrations = new ManualRegistrationsContainer();
-
-            IRegistrationsContainer registrations;
-
-            if (_options.UseAutoRegistration)
-            {
-                var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
-                registrations = new CompositeRegistrationsContainer(overrides, autoRegistrations, manualRegistrations);
-            }
-            else
-            {
-                registrations = new CompositeRegistrationsContainer(overrides, manualRegistrations);
-            }
+            var registrations = new CompositeRegistrationsContainer(overrides, autoRegistrations, manualRegistrations);
 
             _options = _options
                 .WithManualRegistrations(new DependencyContainerManualRegistration(this, _options))
@@ -270,9 +260,9 @@ namespace SpaceEngineers.Core.CompositionRoot
             return registrations;
         }
 
-        private IRegistrationsContainer CollectOverrides()
+        private IRegistrationsContainer CollectOverrides(ITypeProvider typeProvider)
         {
-            var overrides = new ManualRegistrationsContainer();
+            var overrides = new ManualRegistrationsContainer(typeProvider);
             _options.Overrides.Each(manual => manual.Register(overrides));
 
             return overrides;

@@ -31,13 +31,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
                     return new ComponentAttributesInfo(type, component, manuallyRegistered, unregistered);
                 })
+                .Where(it => it.IsVerificationRequired())
                 .Where(TypeHasCorrectlyDefinedAttributes().Not())
                 .Each(info => throw new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} attributes configuration"));
 
             static Func<ComponentAttributesInfo, bool> TypeHasCorrectlyDefinedAttributes()
             {
-                return info => info.IsNotComponent()
-                               || info.IsComponent()
+                return info => info.IsComponent()
                                || info.IsManuallyRegisteredComponent()
                                || info.IsUnregisteredComponent();
             }
@@ -65,32 +65,45 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
             private bool Unregistered { get; }
 
-            public bool IsNotComponent()
+            public bool IsVerificationRequired()
             {
-                return !Component
-                       && !ManuallyRegistered
-                       && !Unregistered;
+                return Component
+                       || ManuallyRegistered
+                       || Unregistered;
             }
 
             public bool IsComponent()
             {
                 return Component
                        && !ManuallyRegistered
-                       && !Unregistered;
+                       && !Unregistered
+                       && IsComponentCandidate(Type);
             }
 
             public bool IsManuallyRegisteredComponent()
             {
                 return !Component
                        && ManuallyRegistered
-                       && !Unregistered;
+                       && !Unregistered
+                       && IsComponentCandidate(Type);
             }
 
             public bool IsUnregisteredComponent()
             {
                 return !Component
                        && !ManuallyRegistered
-                       && Unregistered;
+                       && Unregistered
+                       && IsComponentCandidate(Type);
+            }
+
+            private static bool IsComponentCandidate(Type type)
+            {
+                return type.IsConcreteType()
+                       && (typeof(IResolvable).IsAssignableFrom(type)
+                           || type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>))
+                           || type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>))
+                           || type.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
+                           || type.IsSubclassOfOpenGeneric(typeof(ICollectionDecorator<>)));
             }
         }
     }

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.StatisticsEndpoint.Model
 {
     using System;
-    using GenericDomain;
+    using GenericDomain.Api;
 
     internal class MessageHeader : EntityBase
     {

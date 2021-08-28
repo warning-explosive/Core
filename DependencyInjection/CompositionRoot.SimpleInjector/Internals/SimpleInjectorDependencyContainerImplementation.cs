@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
     using Registration;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("Is created manually during DependencyContainer initialization")]
     internal class SimpleInjectorDependencyContainerImplementation : IDependencyContainerImplementation
     {
         private readonly Container _container;

@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assembly1 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
             var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
-            var assembly3 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Contract)));
+            var assembly3 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)));
 
             var below1 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly1);
             var below2 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly2);

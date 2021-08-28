@@ -6,8 +6,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-    using Api;
-    using Api.Abstractions;
+    using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 

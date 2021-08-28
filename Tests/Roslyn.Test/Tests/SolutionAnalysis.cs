@@ -3,10 +3,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Analyzers.Api;
     using Basics;
     using Core.Test.Api.ClassFixtures;
     using Extensions;
@@ -47,8 +45,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         internal async Task SolutionAnalysisTest()
         {
             var analyzers = DependencyContainer
-                           .ResolveCollection<IIdentifiedAnalyzer>()
-                           .OfType<DiagnosticAnalyzer>()
+                           .ResolveCollection<DiagnosticAnalyzer>()
                            .ToImmutableArray();
 
             var diagnosticsCount = 0;

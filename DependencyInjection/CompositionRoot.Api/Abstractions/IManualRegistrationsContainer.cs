@@ -14,6 +14,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
         /// </summary>
         IAdvancedManualRegistrationsContainer Advanced { get; }
 
+        /// <summary>
+        /// ITypeProvider
+        /// </summary>
+        ITypeProvider Types { get; }
+
         /// <summary> Register implementation of service </summary>
         /// <param name="service">Service</param>
         /// <param name="implementation">Implementation</param>

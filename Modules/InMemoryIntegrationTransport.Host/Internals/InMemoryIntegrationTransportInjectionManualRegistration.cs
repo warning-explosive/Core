@@ -1,13 +1,10 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
 {
     using Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions;
     using Defaults;
     using IntegrationTransport.Api.Abstractions;
 
-    [Component(EnLifestyle.Singleton)]
     internal class InMemoryIntegrationTransportInjectionManualRegistration : IManualRegistration
     {
         private readonly IDependencyContainer _dependencyContainer;

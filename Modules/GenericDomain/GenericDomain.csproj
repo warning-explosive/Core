@@ -38,27 +38,9 @@
       </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Abstractions\IValidationResult.cs">
-        <DependentUpon>IValidatable.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\IValidator.cs">
-        <DependentUpon>IValidatable.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\IAggregate.cs">
-        <DependentUpon>IEntity.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\IEntity.cs">
-        <DependentUpon>IDomainObject.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\IValueObject.cs">
-        <DependentUpon>IDomainObject.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\EnumerationObject.cs">
-        <DependentUpon>IDomainObject.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
+      <ProjectReference Include="..\GenericDomain.Api\GenericDomain.Api.csproj" />
     </ItemGroup>
 </Project>

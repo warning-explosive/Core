@@ -23,6 +23,13 @@ namespace SpaceEngineers.Core.Basics
             "Windows"
         };
 
+        private static readonly string[] OptionalRootAssemblies =
+        {
+            "SpaceEngineers.Core.AutoRegistration.Api",
+            "SpaceEngineers.Core.Analyzers.Api",
+            "SpaceEngineers.Core.Benchmark.Api"
+        };
+
         private static readonly Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)> AllAssembliesLoadedInCurrentAppDomain
             = new Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
@@ -209,15 +216,14 @@ namespace SpaceEngineers.Core.Basics
                 .SelectMany(RemoveDuplicates)
                 .ToArray();
 
-            var regularAssembly = typeof(AssembliesExtensions).Assembly; // Basics
+            var optionalAssemblies = OptionalRootAssemblies
+                .Select(optionalAssemblyName => allAssemblies
+                    .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase)))
+                .Where(optionalAssembly => optionalAssembly != null);
 
-            var optionalAssemblyName = BuildName(nameof(SpaceEngineers), nameof(Core), "AutoRegistration", "Api");
-            var optionalAssembly = allAssemblies
-                .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase));
+            var regularRootAssembly = typeof(AssembliesExtensions).Assembly; // Basics
 
-            var rootAssemblies = optionalAssembly != null
-                ? new[] { regularAssembly, optionalAssembly }
-                : new[] { regularAssembly };
+            var rootAssemblies = optionalAssemblies.Concat(new[] { regularRootAssembly });
 
             var isOurReference = IsOurReference(allAssemblies, rootAssemblies);
 

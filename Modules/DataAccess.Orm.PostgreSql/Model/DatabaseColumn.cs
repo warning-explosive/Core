@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 {
     using Contract.Abstractions;
-    using GenericDomain;
+    using GenericDomain.Api;
 
     internal class DatabaseColumn : EntityBase, IView
     {

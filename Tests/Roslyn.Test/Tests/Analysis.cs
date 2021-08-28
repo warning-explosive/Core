@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using Basics.Exceptions;
     using Core.Test.Api.ClassFixtures;
     using Extensions;
-    using Internals;
+    using Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
         internal async Task AnalysisTest()
         {
             var analyzers = DependencyContainer
-                .ResolveCollection<IIdentifiedAnalyzer>()
+                .ResolveCollection<DiagnosticAnalyzer>()
                 .OfType<SyntaxAnalyzerBase>();
 
             foreach (var analyzer in analyzers)

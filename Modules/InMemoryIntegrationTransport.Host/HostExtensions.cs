@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using Internals;
@@ -47,7 +48,11 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)))
             };
 
-            var containerOptions = new DependencyContainerOptions().WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration());
+            var endpointIdentity = new EndpointIdentity(nameof(InMemoryIntegrationTransport), 0);
+
+            var containerOptions = new DependencyContainerOptions()
+                .WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration())
+                .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity));
 
             var dependencyContainer = DependencyContainer.CreateBoundedAbove(containerOptions, implementationProducer(containerOptions), assemblies);
 

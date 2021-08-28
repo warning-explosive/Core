@@ -28,7 +28,6 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
       <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

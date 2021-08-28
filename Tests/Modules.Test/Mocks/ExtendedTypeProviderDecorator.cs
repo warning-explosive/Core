@@ -51,8 +51,9 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalOurTypes));
         }
 
-        [Component(EnLifestyle.Singleton)]
-        internal class TypeProviderExtension
+        // TODO: [ComponentOverride]
+        [UnregisteredComponent]
+        internal class TypeProviderExtension : IResolvable
         {
             public TypeProviderExtension(IReadOnlyCollection<Type> ourTypes)
             {

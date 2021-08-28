@@ -72,7 +72,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseStatisticsEndpoint(options => options.UseGenericContainer(),
                     builder => builder
                             .WithDefaultCrossCuttingConcerns()
-                            .WithDataAccess(new PostgreSqlDatabaseProvider())
+                            .WithDataAccess(new PostgreSqlDatabaseProvider()) // TODO: UseGenericDatabase
                             .BuildOptions(statisticsEndpointIdentity))
                 .BuildHost();
 
@@ -621,8 +621,8 @@ namespace SpaceEngineers.Core.Modules.Test
                     var expectedPipeline = new[]
                     {
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.ErrorHandlingPipeline),
-                        typeof(SpaceEngineers.Core.GenericEndpoint.Statistics.Internals.StatisticsPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.UnitOfWorkPipeline),
+                        typeof(SpaceEngineers.Core.GenericEndpoint.Statistics.Internals.StatisticsPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.QueryReplyValidationPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.MessageHandlerPipeline),
                     };

@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot.Api.Abstractions;
     using Contract;
     using GenericHost.Api.Abstractions;
+    using IntegrationTransport.Api.Abstractions;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -29,15 +30,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return host
                 .Services
                 .GetServices<IDependencyContainer>()
-                .Single(IsEndpointContainer().Not());
+                .Single(IsTransportContainer());
 
-            static Func<IDependencyContainer, bool> IsEndpointContainer()
+            static Func<IDependencyContainer, bool> IsTransportContainer()
             {
                 return container =>
                     new Func<bool>(() =>
                         {
-                            _ = container.Resolve<EndpointIdentity>();
-                            return true;
+                            var endpointIdentity = container.Resolve<EndpointIdentity>();
+                            var integrationTransport = container.Resolve<IIntegrationTransport>();
+
+                            // TODO: unwrap decorators
+                            return endpointIdentity.LogicalName.Equals(
+                                integrationTransport.GetType().Name,
+                                StringComparison.OrdinalIgnoreCase);
                         })
                         .Try()
                         .Catch<Exception>()

@@ -10,10 +10,8 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     {
         private static IDependencyContainer? _container;
 
-        // TODO: test option UseAutoRegistration = false
         internal static DependencyContainerOptions ModulesOptions { get; } =
-            new DependencyContainerOptions { UseAutoRegistration = false }
-                .WithManualRegistrations(new ModulesTestManualRegistration());
+            new DependencyContainerOptions().WithManualRegistrations(new ModulesTestManualRegistration());
 
         internal static Assembly[] ModulesAssemblies { get; } = new[]
         {
@@ -33,7 +31,6 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
             AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataImport))),
 
             AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic))),
-            AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic), nameof(Core.Dynamic.Api))),
 
             AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericDomain))),
 

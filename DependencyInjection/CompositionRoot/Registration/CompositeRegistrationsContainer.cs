@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     using Abstractions;
     using AutoRegistration.Api.Attributes;
 
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class CompositeRegistrationsContainer : IRegistrationsContainer
     {
         private readonly IRegistrationsContainer _overrides;

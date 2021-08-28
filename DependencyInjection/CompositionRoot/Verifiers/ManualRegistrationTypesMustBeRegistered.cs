@@ -28,11 +28,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
         {
             _typeProvider
                .OurTypes
-               .Where(type => type.HasAttribute<ManuallyRegisteredComponentAttribute>())
-               .Select(info => info)
-               .SelectMany(implementation => ExtractAutoWiringServices(implementation).Select(service => (service, implementation)))
-               .Where(pair => !registered.Contains(pair.implementation))
-               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} should be manually registered in the dependency container as {pair.service.FullName}"));
+               .Select(type =>
+               {
+                   var implementation = type;
+                   var attribute = type.GetAttribute<ManuallyRegisteredComponentAttribute>();
+                   return (implementation, attribute);
+               })
+               .Where(info => info.attribute != null)
+               .SelectMany(info => ExtractAutoWiringServices(info.implementation)
+                   .Select(service => (service, info.implementation, info.attribute)))
+               .Where(info => !registered.Contains(info.implementation))
+               .Each(info => throw new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));
         }
     }
 }

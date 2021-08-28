@@ -12,14 +12,12 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// <summary>
     /// DependencyContainer creation options
     /// </summary>
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("Is created manually during DependencyContainer initialization")]
     public class DependencyContainerOptions : IResolvable
     {
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
         {
-            UseAutoRegistration = true;
-
             ConstructorResolutionBehavior = new DefaultConstructorResolutionBehavior();
 
             ManualRegistrations = new List<IManualRegistration>();
@@ -28,12 +26,6 @@ namespace SpaceEngineers.Core.CompositionRoot
             ExcludedAssemblies = Array.Empty<Assembly>();
             ExcludedNamespaces = Array.Empty<string>();
         }
-
-        /// <summary>
-        /// Use auto-registration feature or not
-        /// Enabled by default
-        /// </summary>
-        public bool UseAutoRegistration { get; init; }
 
         /// <summary>
         /// Constructor resolution behavior
@@ -108,7 +100,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             return new DependencyContainerOptions()
             {
-                UseAutoRegistration = UseAutoRegistration,
                 ManualRegistrations = ManualRegistrations,
                 Overrides = Overrides.Concat(new[] { @override }).Concat(overrides).ToList(),
                 ExcludedAssemblies = ExcludedAssemblies,
@@ -126,7 +117,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             return new DependencyContainerOptions()
             {
-                UseAutoRegistration = UseAutoRegistration,
                 ManualRegistrations = ManualRegistrations,
                 Overrides = Overrides,
                 ExcludedAssemblies = ExcludedAssemblies.Concat(new[] { assembly }).Concat(assemblies).ToList(),
@@ -144,7 +134,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             return new DependencyContainerOptions()
             {
-                UseAutoRegistration = UseAutoRegistration,
                 ManualRegistrations = ManualRegistrations,
                 Overrides = Overrides,
                 ExcludedAssemblies = ExcludedAssemblies,

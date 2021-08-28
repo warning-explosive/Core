@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Analyzers.Api
 {
     using System.Collections.Immutable;
-    using AutoRegistration.Api.Abstractions;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -10,8 +9,7 @@ namespace SpaceEngineers.Core.Analyzers.Api
     /// SyntaxAnalyzerBase
     /// </summary>
     public abstract class SyntaxAnalyzerBase : DiagnosticAnalyzer,
-                                               IIdentifiedAnalyzer,
-                                               ICollectionResolvable<IIdentifiedAnalyzer>
+                                               IIdentifiedAnalyzer
     {
         private const string Branch = "master";
 

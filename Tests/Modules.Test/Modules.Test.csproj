@@ -52,7 +52,7 @@
     <ProjectReference Include="..\..\Modules\DataAccess.Orm\DataAccess.Orm.csproj" />
     <ProjectReference Include="..\..\Modules\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj" />
     <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
-    <ProjectReference Include="..\..\Modules\Dynamic.Api\Dynamic.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
     <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
     <ProjectReference Include="..\..\Modules\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
     <ProjectReference Include="..\..\Modules\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />

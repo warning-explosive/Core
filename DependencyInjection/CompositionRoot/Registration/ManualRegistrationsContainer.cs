@@ -12,7 +12,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [UnregisteredComponent]
-    internal class ManualRegistrationsContainer : IRegistrationsContainer, IAdvancedManualRegistrationsContainer
+    internal class ManualRegistrationsContainer : IRegistrationsContainer,
+                                                  IAdvancedManualRegistrationsContainer
     {
         private readonly List<(Type, object)> _singletons;
         private readonly List<ServiceRegistrationInfo> _registrations;
@@ -20,8 +21,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         private readonly List<ServiceRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
-        public ManualRegistrationsContainer()
+        public ManualRegistrationsContainer(ITypeProvider typeProvider)
         {
+            Types = typeProvider;
+
             _singletons = new List<(Type, object)>();
             _registrations = new List<ServiceRegistrationInfo>();
             _delegates = new List<DelegateRegistrationInfo>();
@@ -32,6 +35,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         #region IRegistrationsContainer
 
         public IAdvancedManualRegistrationsContainer Advanced => this;
+
+        public ITypeProvider Types { get; }
 
         public IEnumerable<(Type Type, object Instance)> Singletons()
         {

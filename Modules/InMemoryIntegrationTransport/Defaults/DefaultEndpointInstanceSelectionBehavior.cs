@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Defaults
     using GenericEndpoint.Messaging;
 
     /// <inheritdoc />
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     public class DefaultEndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap

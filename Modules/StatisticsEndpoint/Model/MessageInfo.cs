@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Model
     using System.Collections.Generic;
     using System.Linq;
     using CrossCuttingConcerns.Api.Abstractions;
-    using GenericDomain;
+    using GenericDomain.Api;
     using GenericEndpoint.Messaging;
 
     internal class MessageInfo : EntityBase

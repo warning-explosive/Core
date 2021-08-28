@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using CrossCuttingConcerns.Settings;
+    using CrossCuttingConcerns.Api.Extensions;
     using Internals;
 
     /// <summary>

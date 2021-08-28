@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Basics.EqualityComparers;
 
     [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [ManuallyRegisteredComponent]
+    [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class TypeProvider : ITypeProvider
     {
         private static readonly string[] ExcludedTypes =

@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using AutoRegistration.Api.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IReadRepository

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
-    using CrossCuttingConcerns.Settings;
+    using CrossCuttingConcerns.Api.Extensions;
     using Test.Registrations;
 
     /// <summary>

@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     using Abstractions;
     using Attributes;
     using Core.Analyzers.Api;
-    using Enumerations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,7 +14,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     /// <summary>
     /// Component should be marked with ComponentAttribute
     /// </summary>
-    [Component(EnLifestyle.Transient)]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ComponentAttributeAnalyzer : SyntaxAnalyzerBase
     {

@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Linq.Expressions;
     using System.Reflection;
     using Contract.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     internal static class RootQueries
     {

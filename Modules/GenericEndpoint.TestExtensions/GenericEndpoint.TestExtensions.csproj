@@ -28,8 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
-      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Internals\MessageHandlerThrowsExceptionTestCase.cs">

@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using Api.Extensions;
     using Basics;
 
     internal abstract class FileSystemSettingsProviderBase<TSettings> : ISettingsProvider<TSettings>

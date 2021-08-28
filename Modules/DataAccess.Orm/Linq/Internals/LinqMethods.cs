@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using System.Reflection;
     using Basics;
     using Contract.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     internal static class LinqMethods
     {

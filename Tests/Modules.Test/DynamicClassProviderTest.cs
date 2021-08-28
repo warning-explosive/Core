@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using Dynamic.Api;
-    using Dynamic.Api.Abstractions;
+    using Dynamic;
+    using Dynamic.Abstractions;
     using Xunit;
     using Xunit.Abstractions;
 

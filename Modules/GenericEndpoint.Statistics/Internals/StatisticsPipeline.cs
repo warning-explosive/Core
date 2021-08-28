@@ -11,8 +11,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
     using StatisticsEndpoint.Contract.Messages;
 
     [Component(EnLifestyle.Singleton)]
-    [Dependency(typeof(GenericEndpoint.Pipeline.UnitOfWorkPipeline))]
-    [Dependent(typeof(GenericEndpoint.Pipeline.ErrorHandlingPipeline))]
+    [Dependency(typeof(GenericEndpoint.Pipeline.QueryReplyValidationPipeline))]
+    [Dependent(typeof(GenericEndpoint.Pipeline.UnitOfWorkPipeline))]
     internal class StatisticsPipeline : IMessagePipelineStep, IMessagePipeline
     {
         public StatisticsPipeline(IMessagePipeline decoratee)

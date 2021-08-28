@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Contract.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IDatabaseTransaction

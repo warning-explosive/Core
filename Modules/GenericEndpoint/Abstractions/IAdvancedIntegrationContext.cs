@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoRegistration.Api.Abstractions;
     using CompositionRoot.Api.Abstractions;
     using Messaging;
 
@@ -13,8 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     /// Use to pass it in message processing pipeline
     /// </summary>
     public interface IAdvancedIntegrationContext : IIntegrationContext,
-                                                   IInitializable<IntegrationMessage>,
-                                                   IResolvable
+                                                   IInitializable<IntegrationMessage>
     {
         /// <summary>
         /// Integration message, processing initiator

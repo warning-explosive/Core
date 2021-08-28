@@ -9,8 +9,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using Abstractions;
     using Basics;
     using CompositionRoot.Api.Abstractions;
-    using Dynamic.Api;
-    using Dynamic.Api.Abstractions;
+    using Dynamic;
+    using Dynamic.Abstractions;
     using Expressions;
     using Visitors;
 

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.ObjectTransformers
     using AutoRegistration.Api.Enumerations;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class GuidToEntityObjectTransformer<TEntity> : IObjectTransformer<Guid, TEntity>

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract.Abstractions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
     using Linq.Abstractions;
     using Linq.Internals;
 

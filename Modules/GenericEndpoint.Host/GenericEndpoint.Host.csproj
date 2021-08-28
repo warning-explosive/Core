@@ -36,10 +36,10 @@
       </Reference>
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Statistics\GenericEndpoint.Statistics.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
-      <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

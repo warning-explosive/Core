@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using AutoRegistration.Api.Analyzers;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Internals;
+    using Implementations;
     using Microsoft.CodeAnalysis;
     using Sources.ComponentAttributeAnalyzer;
     using ValueObjects;

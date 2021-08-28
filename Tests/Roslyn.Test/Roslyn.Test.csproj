@@ -50,12 +50,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Roslyn\Analyzers.Api\Analyzers.Api.csproj" />
-    <ProjectReference Include="..\Basics.Test\Basics.Test.csproj" />
-    <ProjectReference Include="..\Test.Api\Test.Api.csproj" />
-    <ProjectReference Include="..\..\Basics\Basics.csproj" />
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.SimpleInjector\CompositionRoot.SimpleInjector.csproj" />
+    <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
     <ProjectReference Include="..\..\Roslyn\AutoRegistration.Api.Analyzers\AutoRegistration.Api.Analyzers.csproj" />
+    <ProjectReference Include="..\Test.Api\Test.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Tests\Analysis.cs">

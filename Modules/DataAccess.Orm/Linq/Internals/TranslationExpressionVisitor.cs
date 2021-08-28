@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using Basics;
     using Contract.Abstractions;
     using Expressions;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api.Abstractions;
     using Visitors;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;

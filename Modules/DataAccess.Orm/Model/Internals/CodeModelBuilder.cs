@@ -12,8 +12,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using CompositionRoot.Api.Abstractions;
     using Connection;
     using Contract.Abstractions;
-    using GenericDomain;
     using GenericDomain.Abstractions;
+    using GenericDomain.Api;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder

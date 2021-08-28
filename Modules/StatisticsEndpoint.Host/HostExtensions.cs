@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Host
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using GenericEndpoint;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Abstractions;
     using Microsoft.Extensions.Hosting;

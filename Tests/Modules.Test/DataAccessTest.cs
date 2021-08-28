@@ -12,8 +12,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Contract.Abstractions;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Linq.Abstractions;
-    using GenericDomain;
-    using GenericDomain.Abstractions;
+    using GenericDomain.Api;
+    using GenericDomain.Api.Abstractions;
     using Xunit;
     using Xunit.Abstractions;
 

@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     using System.Collections.Immutable;
     using System.Linq;
     using System.Threading.Tasks;
-    using Abstractions;
     using Attributes;
     using Core.Analyzers.Api;
     using Enumerations;
@@ -17,11 +16,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     /// <summary>
     /// CodeFixProvider that inserts ComponentAttribute on components (component - service implementation)
     /// </summary>
-    [Component(EnLifestyle.Transient)]
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ComponentAttributeCodeFix))]
-    public class ComponentAttributeCodeFix : CodeFixProvider,
-                                             IIdentifiedCodeFix,
-                                             ICollectionResolvable<IIdentifiedCodeFix>
+    public class ComponentAttributeCodeFix : CodeFixProvider, IIdentifiedCodeFix
     {
         private const string Title = "Mark with " + nameof(ComponentAttribute);
         private const string EnLifestyleValue = "ChooseLifestyle";

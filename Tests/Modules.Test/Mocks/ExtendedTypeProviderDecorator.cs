@@ -6,12 +6,11 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using Registrations;
 
-    // TODO: [ComponentOverride]
-    [UnregisteredComponent]
+    [ManuallyRegisteredComponent(nameof(DependencyContainerAssemblyLimitationsTest.ExactlyBoundedContainerTest))]
     internal class ExtendedTypeProviderDecorator : ITypeProvider, IDecorator<ITypeProvider>
     {
         private readonly ITypeProvider _decoratee;
@@ -51,8 +50,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalOurTypes));
         }
 
-        // TODO: [ComponentOverride]
-        [UnregisteredComponent]
+        [ManuallyRegisteredComponent(nameof(DependencyContainerAssemblyLimitationsTest.ExactlyBoundedContainerTest))]
         internal class TypeProviderExtension : IResolvable
         {
             public TypeProviderExtension(IReadOnlyCollection<Type> ourTypes)
@@ -61,23 +59,6 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             }
 
             public IReadOnlyCollection<Type> OurTypes { get; }
-        }
-
-        private class ExtendedTypeProviderManualRegistration : IManualRegistration
-        {
-            private readonly IReadOnlyCollection<Type> _additionalTypes;
-
-            public ExtendedTypeProviderManualRegistration(IReadOnlyCollection<Type> additionalTypes)
-            {
-                _additionalTypes = additionalTypes;
-            }
-
-            public void Register(IManualRegistrationsContainer container)
-            {
-                container
-                    .RegisterDecorator<ITypeProvider, ExtendedTypeProviderDecorator>(EnLifestyle.Singleton)
-                    .RegisterInstance(new TypeProviderExtension(_additionalTypes));
-            }
         }
     }
 }

@@ -122,7 +122,8 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 typeof(TestJsonSettings),
                 typeof(TestYamlSettings),
-                typeof(ExtendedTypeProviderDecorator)
+                typeof(ExtendedTypeProviderDecorator),
+                typeof(ExtendedTypeProviderDecorator.TypeProviderExtension)
             };
 
             options = ExtendedTypeProviderDecorator.ExtendTypeProvider(new DependencyContainerOptions(), additionalTypes);
@@ -160,6 +161,8 @@ namespace SpaceEngineers.Core.Modules.Test
             bool TypeSatisfies(Type type)
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
+                                || type == typeof(TestJsonSettings)
+                                || type == typeof(TestYamlSettings)
                                 || type == typeof(ExtendedTypeProviderDecorator)
                                 || type == typeof(ExtendedTypeProviderDecorator.TypeProviderExtension);
 

@@ -267,6 +267,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
+            // TODO: apply RetryPolicyMock override
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseEndpoint(options => options.UseGenericContainer(),
                     builder => builder

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
+    using System;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions;
@@ -25,6 +26,8 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
             new GenericEndpointIdentityManualRegistration(endpointIdentity).Register(container);
 
             new InMemoryIntegrationTransportManualRegistration().Register(container);
+
+            new ExtendedTypeProviderManualRegistration(Array.Empty<Type>()).Register(container);
         }
     }
 }

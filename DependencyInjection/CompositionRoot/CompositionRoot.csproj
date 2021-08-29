@@ -54,5 +54,8 @@
     <Compile Update="Verifiers\UnregisteredTypesMustBeUnregistered.cs">
       <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="Registration\ComponentOverridesContainer.cs">
+      <DependentUpon>CompositeRegistrationsContainer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

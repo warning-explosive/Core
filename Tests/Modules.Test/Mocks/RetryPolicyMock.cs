@@ -7,8 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Messaging;
 
-    // TODO: [ComponentOverride]
-    [UnregisteredComponent]
+    [ComponentOverride]
     internal class RetryPolicyMock : IRetryPolicy
     {
         private static readonly int[] Scale = new[] { 0, 1, 2 };

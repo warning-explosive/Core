@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Benchmark.Api
     /// <summary>
     /// Benchmark entry point
     /// </summary>
-    [SuppressMessage("Analysis", "CA1724", Justification = "Desired name")]
+    [SuppressMessage("Analysis", "CA1724", Justification = "desired name")]
     public static class Benchmark
     {
         /// <summary>

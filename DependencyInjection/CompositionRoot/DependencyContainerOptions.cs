@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ConstructorResolutionBehavior = new DefaultConstructorResolutionBehavior();
 
             ManualRegistrations = new List<IManualRegistration>();
-            Overrides = new List<IManualRegistration>();
+            Overrides = new List<IComponentsOverride>();
 
             ExcludedAssemblies = Array.Empty<Assembly>();
             ExcludedNamespaces = Array.Empty<string>();
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary>
         /// Overrides
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> Overrides { get; init; }
+        public IReadOnlyCollection<IComponentsOverride> Overrides { get; init; }
 
         /// <summary>
         /// Excluded assemblies
@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <param name="override">Required override</param>
         /// <param name="overrides">Optional overrides</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithOverrides(IManualRegistration @override, params IManualRegistration[] overrides)
+        public DependencyContainerOptions WithOverrides(IComponentsOverride @override, params IComponentsOverride[] overrides)
         {
             return new DependencyContainerOptions()
             {

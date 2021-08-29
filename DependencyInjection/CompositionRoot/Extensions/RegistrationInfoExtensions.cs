@@ -93,7 +93,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
             return implementation.IsConcreteType()
                    && !service.HasAttribute<UnregisteredComponentAttribute>()
                    && !implementation.HasAttribute<UnregisteredComponentAttribute>()
-                   && !implementation.HasAttribute<ManuallyRegisteredComponentAttribute>();
+                   && !implementation.HasAttribute<ManuallyRegisteredComponentAttribute>()
+                   && !implementation.HasAttribute<ComponentOverrideAttribute>();
         }
 
         private static IEnumerable<(Type Service, Type Implementation)> GetClosedGenericImplForOpenGenericService(

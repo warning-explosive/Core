@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
-    using Abstractions;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     /// <summary>
     /// DelegateRegistrationInfo
     /// </summary>
-    public class DelegateRegistrationInfo : IRegistrationInfo
+    public class DelegateRegistrationInfo
     {
         /// <summary> .cctor </summary>
         /// <param name="service">Service</param>
@@ -21,10 +20,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             Lifestyle = lifestyle;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Service
+        /// </summary>
         public Type Service { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Lifestyle
+        /// </summary>
         public EnLifestyle Lifestyle { get; }
 
         /// <summary>

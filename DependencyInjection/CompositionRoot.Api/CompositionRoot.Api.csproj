@@ -37,6 +37,9 @@
   <Compile Update="Abstractions\IAdvancedManualRegistrationsContainer.cs">
     <DependentUpon>IManualRegistration.cs</DependentUpon>
   </Compile>
+  <Compile Update="Abstractions\IComponentsOverrideContainer.cs">
+    <DependentUpon>IComponentsOverride.cs</DependentUpon>
+  </Compile>
 </ItemGroup>
 <ItemGroup>
   <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

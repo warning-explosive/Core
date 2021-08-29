@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -9,8 +10,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     /// DecoratorRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class DecoratorRegistrationInfo : ServiceRegistrationInfo,
-                                             IEquatable<DecoratorRegistrationInfo>,
+    public class DecoratorRegistrationInfo : IEquatable<DecoratorRegistrationInfo>,
                                              ISafelyEquatable<DecoratorRegistrationInfo>
     {
         /// <summary> .cctor </summary>
@@ -18,8 +18,36 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <param name="implementation">Implementation</param>
         /// <param name="lifestyle">EnLifestyle</param>
         public DecoratorRegistrationInfo(Type service, Type implementation, EnLifestyle lifestyle)
-            : base(service, implementation, lifestyle)
         {
+            Service = service.GenericTypeDefinitionOrSelf();
+            Implementation = implementation;
+            Lifestyle = lifestyle;
+        }
+
+        /// <summary>
+        /// Service
+        /// </summary>
+        public Type Service { get; }
+
+        /// <summary>
+        /// Implementation
+        /// </summary>
+        public Type Implementation { get; }
+
+        /// <summary>
+        /// Lifestyle
+        /// </summary>
+        public EnLifestyle Lifestyle { get; }
+
+        /// <summary>
+        /// Override comparer
+        /// </summary>
+        public static IEqualityComparer<DecoratorRegistrationInfo> OverrideComparer { get; } = new DecoratorRegistrationInfoComparer();
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return string.Join(" | ", Service, Implementation, Lifestyle);
         }
 
         #region IEquatable
@@ -27,7 +55,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public bool SafeEquals(DecoratorRegistrationInfo other)
         {
-            return base.SafeEquals(other);
+            return Service == other.Service
+                   && Implementation == other.Implementation
+                   && Lifestyle == other.Lifestyle;
         }
 
         /// <inheritdoc />
@@ -45,9 +75,29 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return HashCode.Combine(Service, Implementation, Lifestyle);
         }
 
         #endregion
+
+        private class DecoratorRegistrationInfoComparer : IEqualityComparer<DecoratorRegistrationInfo>
+        {
+            public bool Equals(DecoratorRegistrationInfo actual, DecoratorRegistrationInfo @override)
+            {
+                if (ReferenceEquals(actual, @override))
+                {
+                    return true;
+                }
+
+                return actual.Service == @override.Service
+                       && actual.Implementation == @override.Implementation
+                       && actual.Lifestyle <= @override.Lifestyle;
+            }
+
+            public int GetHashCode(DecoratorRegistrationInfo info)
+            {
+                return HashCode.Combine(info.Service, info.Implementation, info.Lifestyle);
+            }
+        }
     }
 }

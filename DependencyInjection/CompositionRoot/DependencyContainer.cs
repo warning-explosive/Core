@@ -245,27 +245,23 @@ namespace SpaceEngineers.Core.CompositionRoot
             ITypeProvider typeProvider,
             IAutoRegistrationServicesProvider servicesProvider)
         {
-            var overrides = CollectOverrides(typeProvider);
-            var manualRegistrations = new ManualRegistrationsContainer(typeProvider);
+            var overrides = new ComponentOverridesContainer();
             var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
+            var manualRegistrations = new ManualRegistrationsContainer(typeProvider);
 
-            var registrations = new CompositeRegistrationsContainer(overrides, autoRegistrations, manualRegistrations);
+            var registrations = new CompositeRegistrationsContainer(
+                overrides,
+                autoRegistrations,
+                manualRegistrations);
 
             _options = _options
                 .WithManualRegistrations(new DependencyContainerManualRegistration(this, _options))
                 .WithManualRegistrations(new RegistrationsContainerManualRegistration(registrations));
 
             _options.ManualRegistrations.Each(registration => registration.Register(manualRegistrations));
+            _options.Overrides.Each(@override => @override.RegisterOverrides(overrides));
 
             return registrations;
-        }
-
-        private IRegistrationsContainer CollectOverrides(ITypeProvider typeProvider)
-        {
-            var overrides = new ManualRegistrationsContainer(typeProvider);
-            _options.Overrides.Each(manual => manual.Register(overrides));
-
-            return overrides;
         }
 
         private void Register(IRegistrationsContainer registrations)

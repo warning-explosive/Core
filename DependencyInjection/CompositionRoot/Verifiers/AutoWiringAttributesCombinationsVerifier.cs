@@ -28,8 +28,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                     var component = type.HasAttribute<ComponentAttribute>();
                     var manuallyRegistered = type.HasAttribute<ManuallyRegisteredComponentAttribute>();
                     var unregistered = type.HasAttribute<UnregisteredComponentAttribute>();
+                    var componentOverride = type.HasAttribute<ComponentOverrideAttribute>();
 
-                    return new ComponentAttributesInfo(type, component, manuallyRegistered, unregistered);
+                    return new ComponentAttributesInfo(type, component, manuallyRegistered, unregistered, componentOverride);
                 })
                 .Where(it => it.IsVerificationRequired())
                 .Where(TypeHasCorrectlyDefinedAttributes().Not())
@@ -39,22 +40,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             {
                 return info => info.IsComponent()
                                || info.IsManuallyRegisteredComponent()
-                               || info.IsUnregisteredComponent();
+                               || info.IsUnregisteredComponent()
+                               || info.IsComponentOverride();
             }
         }
 
         private class ComponentAttributesInfo
         {
-            public ComponentAttributesInfo(
-                Type type,
+            public ComponentAttributesInfo(Type type,
                 bool component,
                 bool manuallyRegistered,
-                bool unregistered)
+                bool unregistered,
+                bool componentOverride)
             {
                 Type = type;
                 Component = component;
                 ManuallyRegistered = manuallyRegistered;
                 Unregistered = unregistered;
+                ComponentOverride = componentOverride;
             }
 
             public Type Type { get; }
@@ -65,11 +68,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
             private bool Unregistered { get; }
 
+            private bool ComponentOverride { get; }
+
             public bool IsVerificationRequired()
             {
                 return Component
                        || ManuallyRegistered
-                       || Unregistered;
+                       || Unregistered
+                       || ComponentOverride;
             }
 
             public bool IsComponent()
@@ -77,6 +83,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 return Component
                        && !ManuallyRegistered
                        && !Unregistered
+                       && !ComponentOverride
                        && IsComponentCandidate(Type);
             }
 
@@ -85,6 +92,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 return !Component
                        && ManuallyRegistered
                        && !Unregistered
+                       && !ComponentOverride
                        && IsComponentCandidate(Type);
             }
 
@@ -93,6 +101,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 return !Component
                        && !ManuallyRegistered
                        && Unregistered
+                       && !ComponentOverride
+                       && IsComponentCandidate(Type);
+            }
+
+            public bool IsComponentOverride()
+            {
+                return !Component
+                       && !ManuallyRegistered
+                       && !Unregistered
+                       && ComponentOverride
                        && IsComponentCandidate(Type);
             }
 

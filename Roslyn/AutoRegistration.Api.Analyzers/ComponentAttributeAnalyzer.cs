@@ -61,7 +61,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
 
             if (!IsContainsAttribute<ComponentAttribute>(context, classDeclarationSyntax)
                 && !IsContainsAttribute<ManuallyRegisteredComponentAttribute>(context, classDeclarationSyntax)
-                && !IsContainsAttribute<UnregisteredComponentAttribute>(context, classDeclarationSyntax))
+                && !IsContainsAttribute<UnregisteredComponentAttribute>(context, classDeclarationSyntax)
+                && !IsContainsAttribute<ComponentOverrideAttribute>(context, classDeclarationSyntax))
             {
                 ReportDiagnostic(context, classDeclarationSyntax.Identifier.GetLocation(), MarkWithComponentAttribute);
             }

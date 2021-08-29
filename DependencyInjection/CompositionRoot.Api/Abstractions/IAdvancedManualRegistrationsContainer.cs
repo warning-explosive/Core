@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
     using AutoRegistration.Api.Enumerations;
 
     /// <summary>
-    /// Advanced manual registrations container abstraction
+    /// IAdvancedManualRegistrationsContainer
     /// </summary>
     public interface IAdvancedManualRegistrationsContainer : IManualRegistrationsContainer
     {

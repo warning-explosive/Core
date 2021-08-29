@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
                                                   IAdvancedManualRegistrationsContainer
     {
         private readonly List<(Type, object)> _singletons;
-        private readonly List<ServiceRegistrationInfo> _registrations;
+        private readonly List<ServiceRegistrationInfo> _resolvable;
         private readonly List<DelegateRegistrationInfo> _delegates;
         private readonly List<ServiceRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             Types = typeProvider;
 
             _singletons = new List<(Type, object)>();
-            _registrations = new List<ServiceRegistrationInfo>();
+            _resolvable = new List<ServiceRegistrationInfo>();
             _delegates = new List<DelegateRegistrationInfo>();
             _collections = new List<ServiceRegistrationInfo>();
             _decorators = new List<DecoratorRegistrationInfo>();
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
-            return _registrations;
+            return _resolvable;
         }
 
         public IEnumerable<DelegateRegistrationInfo> Delegates()
@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         public IManualRegistrationsContainer Register(Type service, Type implementation, EnLifestyle lifestyle)
         {
             var info = new ServiceRegistrationInfo(service, implementation, lifestyle);
-            _registrations.Add(info);
+            _resolvable.Add(info);
             return this;
         }
 

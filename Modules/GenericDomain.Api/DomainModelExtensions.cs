@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api
         /// <param name="type">Type</param>
         /// <param name="itemType">Item type</param>
         /// <returns>Type represents multiple relation or not</returns>
-        [SuppressMessage("Analysis", "CA1021", Justification = "Desirable method name")]
+        [SuppressMessage("Analysis", "CA1021", Justification = "desired method name")]
         public static bool IsMultipleRelation(this Type type, [NotNullWhen(true)] out Type? itemType)
         {
             itemType = SupportedCollections

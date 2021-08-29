@@ -40,6 +40,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         {
             _resolvable ??= InitResolvable();
             return _resolvable;
+
+            IReadOnlyCollection<ServiceRegistrationInfo> InitResolvable()
+            {
+                var resolvable = _servicesProvider
+                    .Resolvable()
+                    .GetComponents(_typeProvider, _constructorResolutionBehavior);
+
+                var externalResolvable = _servicesProvider
+                    .External()
+                    .GetComponents(_typeProvider, _constructorResolutionBehavior)
+                    .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)));
+
+                return resolvable
+                    .Concat(externalResolvable)
+                    .ToList();
+            }
         }
 
         public IEnumerable<DelegateRegistrationInfo> Delegates()
@@ -51,52 +67,36 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         {
             _collections ??= InitCollections();
             return _collections;
+
+            IReadOnlyCollection<ServiceRegistrationInfo> InitCollections()
+            {
+                return _servicesProvider
+                    .Collections()
+                    .GetComponents(_typeProvider, _constructorResolutionBehavior)
+                    .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
+                    .ToList();
+            }
         }
 
         public IEnumerable<DecoratorRegistrationInfo> Decorators()
         {
             _decorators ??= InitDecorators();
             return _decorators;
-        }
 
-        private IReadOnlyCollection<ServiceRegistrationInfo> InitResolvable()
-        {
-            var resolvable = _servicesProvider
-                .Resolvable()
-                .GetComponents(_typeProvider, _constructorResolutionBehavior);
+            IReadOnlyCollection<DecoratorRegistrationInfo> InitDecorators()
+            {
+                var decorators = _servicesProvider
+                    .Decorators()
+                    .GetDecoratorInfo(typeof(IDecorator<>));
 
-            var externalResolvable = _servicesProvider
-                .External()
-                .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)));
+                var collectionDecorators = _servicesProvider
+                    .CollectionDecorators()
+                    .GetDecoratorInfo(typeof(ICollectionDecorator<>));
 
-            return resolvable
-                .Concat(externalResolvable)
-                .ToList();
-        }
-
-        private IReadOnlyCollection<ServiceRegistrationInfo> InitCollections()
-        {
-            return _servicesProvider
-                .Collections()
-                .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
-                .ToList();
-        }
-
-        private IReadOnlyCollection<DecoratorRegistrationInfo> InitDecorators()
-        {
-            var decorators = _servicesProvider
-                .Decorators()
-                .GetDecoratorInfo(typeof(IDecorator<>));
-
-            var collectionDecorators = _servicesProvider
-                .CollectionDecorators()
-                .GetDecoratorInfo(typeof(ICollectionDecorator<>));
-
-            return decorators
-                .Concat(collectionDecorators)
-                .ToList();
+                return decorators
+                    .Concat(collectionDecorators)
+                    .ToList();
+            }
         }
     }
 }

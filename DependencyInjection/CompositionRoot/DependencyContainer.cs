@@ -3,12 +3,10 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Reflection;
     using Abstractions;
     using Api.Abstractions;
     using Api.Exceptions;
-    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Extensions;
@@ -22,7 +20,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// Don't use it like ServiceLocator!
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     public class DependencyContainer : IDependencyContainer, IDisposable
     {
@@ -31,14 +28,12 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary> .cctor </summary>
         /// <param name="implementation">IDependencyContainerImplementation</param>
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
-        /// <param name="servicesProvider">AutoWiringServicesProvider</param>
         /// <param name="options">DependencyContainerOptions</param>
         [Obsolete("Use factory methods instead")]
         public DependencyContainer(
             IDependencyContainerImplementation implementation,
             DependencyContainerOptions options,
-            ITypeProvider typeProvider,
-            IAutoRegistrationServicesProvider servicesProvider)
+            ITypeProvider typeProvider)
         {
             Container = implementation;
             _options = options;
@@ -46,7 +41,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ExecutionExtensions
                 .Try(() =>
                 {
-                    ConfigureAndVerify(typeProvider, servicesProvider);
+                    ConfigureAndVerify(typeProvider);
                 })
                 .Catch<Exception>()
                 .Invoke(ex => throw new ContainerConfigurationException(ex).Rethrow());
@@ -63,8 +58,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         #region Creation
 
         /// <summary>
-        /// Creates default dependency container without assembly limitations
-        /// Assemblies loaded in CurrentDomain from BaseDirectory and SpaceEngineers.Core.AutoRegistration.Api assembly as root assembly
+        /// Creates IDependencyContainer without assembly limitations
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
         /// <param name="implementationProducer">Dependency container implementation producer</param>
@@ -73,14 +67,39 @@ namespace SpaceEngineers.Core.CompositionRoot
             DependencyContainerOptions options,
             Func<IDependencyContainerImplementation> implementationProducer)
         {
-            return CreateExactlyBounded(
-                options,
-                implementationProducer,
-                AssembliesExtensions.AllAssembliesFromCurrentDomain());
+            var typeProvider = TypeProvider.CreateExactlyBounded(
+                AssembliesExtensions.AllAssembliesFromCurrentDomain(),
+                options.ExcludedAssemblies,
+                options.ExcludedNamespaces);
+
+            #pragma warning disable 618
+
+            return new DependencyContainer(implementationProducer(), options, typeProvider);
+
+            #pragma warning restore 618
         }
 
         /// <summary>
-        /// Creates dependency container bounded above by specified assembly (project)
+        /// Creates IDependencyContainer limited by specified ITypeProvider
+        /// </summary>
+        /// <param name="options">DependencyContainer creation options</param>
+        /// <param name="implementationProducer">Dependency container implementation producer</param>
+        /// <param name="typeProvider">ITypeProvider</param>
+        /// <returns>DependencyContainer</returns>
+        public static IDependencyContainer Create(
+            DependencyContainerOptions options,
+            Func<IDependencyContainerImplementation> implementationProducer,
+            ITypeProvider typeProvider)
+        {
+#pragma warning disable 618
+
+            return new DependencyContainer(implementationProducer(), options, typeProvider);
+
+#pragma warning restore 618
+        }
+
+        /// <summary>
+        /// Creates IDependencyContainer bounded above by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
         /// <param name="implementationProducer">Dependency container implementation producer</param>
@@ -91,16 +110,20 @@ namespace SpaceEngineers.Core.CompositionRoot
             Func<IDependencyContainerImplementation> implementationProducer,
             params Assembly[] assemblies)
         {
-            var belowAssemblies = assemblies
-                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
-                .Distinct()
-                .ToArray();
+            var typeProvider = TypeProvider.CreateBoundedAbove(
+                assemblies,
+                options.ExcludedAssemblies,
+                options.ExcludedNamespaces);
 
-            return CreateExactlyBounded(options, implementationProducer, belowAssemblies);
+            #pragma warning disable 618
+
+            return new DependencyContainer(implementationProducer(), options, typeProvider);
+
+            #pragma warning restore 618
         }
 
         /// <summary>
-        /// Creates dependency container exactly bounded by specified assemblies
+        /// Creates IDependencyContainer exactly bounded by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
         /// <param name="implementationProducer">Dependency container implementation producer</param>
@@ -111,25 +134,14 @@ namespace SpaceEngineers.Core.CompositionRoot
             Func<IDependencyContainerImplementation> implementationProducer,
             params Assembly[] assemblies)
         {
-            var typeProvider = new TypeProvider(
+            var typeProvider = TypeProvider.CreateExactlyBounded(
                 assemblies,
-                RootAssemblies(),
                 options.ExcludedAssemblies,
                 options.ExcludedNamespaces);
 
             #pragma warning disable 618
 
-            using var templateContainer = new DependencyContainer(
-                implementationProducer(),
-                options.WithManualRegistrations(new TypeProviderManualRegistration(typeProvider)),
-                typeProvider,
-                new AutoRegistrationServicesProvider(typeProvider));
-
-            return new DependencyContainer(
-                implementationProducer(),
-                options.WithManualRegistrations(new TypeProviderManualRegistration(typeProvider)),
-                templateContainer.Resolve<ITypeProvider>(),
-                templateContainer.Resolve<IAutoRegistrationServicesProvider>());
+            return new DependencyContainer(implementationProducer(), options, typeProvider);
 
             #pragma warning restore 618
         }
@@ -222,30 +234,19 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         #region Internals
 
-        private static Assembly[] RootAssemblies()
+        private void ConfigureAndVerify(ITypeProvider typeProvider)
         {
-            return new[]
-            {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
-            };
-        }
-
-        private void ConfigureAndVerify(ITypeProvider typeProvider, IAutoRegistrationServicesProvider servicesProvider)
-        {
-            var registrations = CollectRegistrations(typeProvider, servicesProvider);
+            var registrations = CollectRegistrations(typeProvider);
 
             Register(registrations);
 
             Container.ResolveCollection<IConfigurationVerifier>().Each(v => v.Verify());
         }
 
-        private IRegistrationsContainer CollectRegistrations(
-            ITypeProvider typeProvider,
-            IAutoRegistrationServicesProvider servicesProvider)
+        private IRegistrationsContainer CollectRegistrations(ITypeProvider typeProvider)
         {
-            var overrides = new ComponentOverridesContainer();
+            var overrides = new ComponentsOverrideContainer(_options.ConstructorResolutionBehavior);
+            var servicesProvider = new AutoRegistrationServicesProvider(typeProvider);
             var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
             var manualRegistrations = new ManualRegistrationsContainer(typeProvider);
 
@@ -255,11 +256,12 @@ namespace SpaceEngineers.Core.CompositionRoot
                 manualRegistrations);
 
             _options = _options
+                .WithManualRegistrations(new TypeProviderManualRegistration(typeProvider, servicesProvider))
                 .WithManualRegistrations(new DependencyContainerManualRegistration(this, _options))
-                .WithManualRegistrations(new RegistrationsContainerManualRegistration(registrations));
+                .WithManualRegistrations(new RegistrationsContainerManualRegistration(registrations, overrides));
 
             _options.ManualRegistrations.Each(registration => registration.Register(manualRegistrations));
-            _options.Overrides.Each(@override => @override.RegisterOverrides(overrides));
+            _options.Overrides.Each(overrideInfo => overrideInfo.RegisterOverrides(overrides));
 
             return registrations;
         }

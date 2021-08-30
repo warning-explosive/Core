@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    [Component(EnLifestyle.Transient)]
-    internal class DecorableServiceImpl : IDecorableService
+    [Component(EnLifestyle.Singleton)]
+    internal class SingletonService : ISingletonService
     {
     }
 }

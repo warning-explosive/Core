@@ -6,13 +6,13 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    internal class ExternalResolvableOpenGenericImpl<T> : IProgress<T>,
-                                                          IExternalResolvable<IProgress<T>>
+    internal class ExternalResolvableOpenGeneric<T> : IProgress<T>,
+                                                      IExternalResolvable<IProgress<T>>
         where T : class
     {
         public void Report(T value)
         {
-            throw new ArgumentException(nameof(ExternalResolvableImpl), nameof(value));
+            throw new ArgumentException(nameof(ExternalResolvable), nameof(value));
         }
     }
 }

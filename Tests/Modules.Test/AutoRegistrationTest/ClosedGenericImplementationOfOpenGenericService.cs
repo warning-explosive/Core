@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    internal class ClosedGenericImplementationOfOpenGenericService : IOpenGenericTestService<ExternalResolvableImpl>
+    internal class ClosedGenericImplementationOfOpenGenericService : IOpenGenericTestService<ExternalResolvable>
     {
     }
 }

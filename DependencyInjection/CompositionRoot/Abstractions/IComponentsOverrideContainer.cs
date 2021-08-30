@@ -1,18 +1,32 @@
 namespace SpaceEngineers.Core.CompositionRoot.Abstractions
 {
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
     using Registration;
 
     /// <summary>
     /// IComponentsOverrideContainer
     /// </summary>
-    public interface IComponentsOverrideContainer
+    public interface IComponentsOverrideContainer : IResolvable
     {
         /// <summary>
-        /// Overrides
+        /// All overrides
         /// </summary>
-        [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
-        IReadOnlyCollection<ComponentOverrideInfo> Overrides { get; }
+        IEnumerable<ComponentOverrideInfo> AllOverrides { get; }
+
+        /// <summary>
+        /// Resolvable overrides
+        /// </summary>
+        IReadOnlyCollection<ComponentOverrideInfo> ResolvableOverrides { get; }
+
+        /// <summary>
+        /// Collection resolvable overrides
+        /// </summary>
+        IReadOnlyCollection<ComponentOverrideInfo> CollectionResolvableOverrides { get; }
+
+        /// <summary>
+        /// Decorator overrides
+        /// </summary>
+        IReadOnlyCollection<ComponentOverrideInfo> DecoratorOverrides { get; }
     }
 }

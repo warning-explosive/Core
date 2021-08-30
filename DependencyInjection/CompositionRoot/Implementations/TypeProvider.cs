@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Basics;
     using Basics.EqualityComparers;
 
-    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class TypeProvider : ITypeProvider
     {
@@ -26,8 +26,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             "Microsoft.CodeAnalysis"
         };
 
+        [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
+        private static Assembly[]? _rootAssemblies;
+
         private readonly HashSet<string> _ourTypesCache;
 
+        [Obsolete("Use factory methods instead")]
         public TypeProvider(IReadOnlyCollection<Assembly> allAssemblies,
                             IReadOnlyCollection<Assembly> rootAssemblies,
                             IReadOnlyCollection<Assembly> excludedAssemblies,
@@ -62,6 +66,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));
         }
 
+        #region ITypeProvider
+
         public IReadOnlyCollection<Assembly> AllLoadedAssemblies { get; }
 
         public IReadOnlyCollection<Type> AllLoadedTypes { get; }
@@ -77,12 +83,86 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             return _ourTypesCache.Contains(type.FullName);
         }
 
+        #endregion
+
+        #region Creation
+
+        internal static ITypeProvider CreateBoundedAbove(
+            IReadOnlyCollection<Assembly> assemblies)
+        {
+            return CreateBoundedAbove(
+                assemblies,
+                Array.Empty<Assembly>(),
+                Array.Empty<string>());
+        }
+
+        internal static ITypeProvider CreateBoundedAbove(
+            IReadOnlyCollection<Assembly> assemblies,
+            IReadOnlyCollection<Assembly> excludedAssemblies,
+            IReadOnlyCollection<string> excludedNamespaces)
+        {
+            var belowAssemblies = assemblies
+                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
+                .Distinct()
+                .ToArray();
+
+            return CreateExactlyBounded(
+                belowAssemblies,
+                excludedAssemblies,
+                excludedNamespaces);
+        }
+
+        internal static ITypeProvider CreateExactlyBounded(
+            IReadOnlyCollection<Assembly> allAssemblies)
+        {
+            return CreateExactlyBounded(
+                allAssemblies,
+                Array.Empty<Assembly>(),
+                Array.Empty<string>());
+        }
+
+        internal static ITypeProvider CreateExactlyBounded(
+            IReadOnlyCollection<Assembly> allAssemblies,
+            IReadOnlyCollection<Assembly> excludedAssemblies,
+            IReadOnlyCollection<string> excludedNamespaces)
+        {
+            #pragma warning disable 618
+
+            return new TypeProvider(
+                allAssemblies,
+                RootAssemblies(),
+                excludedAssemblies,
+                excludedNamespaces);
+
+            #pragma warning restore 618
+        }
+
+        #endregion
+
         private static IEnumerable<Type> ExtractOurTypes(Assembly assembly)
         {
             return assembly
                 .GetTypes()
                 .Where(t => t.FullName != null
                             && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)));
+        }
+
+        private static Assembly[] RootAssemblies()
+        {
+            _rootAssemblies ??= InitRootAssemblies();
+            return _rootAssemblies;
+
+            static Assembly[] InitRootAssemblies()
+            {
+                return new[]
+                {
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
+
+                    // TODO: review root assemblies
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
+                };
+            }
         }
     }
 }

@@ -9,12 +9,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class AutoWiringAttributesCombinationsVerifier : IConfigurationVerifier,
-                                                              ICollectionResolvable<IConfigurationVerifier>
+    internal class AutoRegistrationAttributesCombinationsVerifier : IConfigurationVerifier,
+                                                                    ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly ITypeProvider _typeProvider;
 
-        public AutoWiringAttributesCombinationsVerifier(ITypeProvider typeProvider)
+        public AutoRegistrationAttributesCombinationsVerifier(ITypeProvider typeProvider)
         {
             _typeProvider = typeProvider;
         }

@@ -32,25 +32,25 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal async Task AsyncScopeTest()
         {
-            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<IScopedLifestyleService>());
+            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<IScopedService>());
 
             using (DependencyContainer.OpenScope())
             {
-                var service = DependencyContainer.Resolve<IScopedLifestyleService>();
+                var service = DependencyContainer.Resolve<IScopedService>();
                 await service.DoSmth().ConfigureAwait(false);
 
-                var anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                var anotherService = DependencyContainer.Resolve<IScopedService>();
                 await anotherService.DoSmth().ConfigureAwait(false);
                 Assert.True(ReferenceEquals(service, anotherService));
 
                 using (DependencyContainer.OpenScope())
                 {
-                    anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                    anotherService = DependencyContainer.Resolve<IScopedService>();
                     await anotherService.DoSmth().ConfigureAwait(false);
                     Assert.False(ReferenceEquals(service, anotherService));
                 }
 
-                anotherService = DependencyContainer.Resolve<IScopedLifestyleService>();
+                anotherService = DependencyContainer.Resolve<IScopedService>();
                 await anotherService.DoSmth().ConfigureAwait(false);
                 Assert.True(ReferenceEquals(service, anotherService));
             }

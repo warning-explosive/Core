@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// DependencyContainer decorators test class
+    /// DependencyContainerDecoratorsTest
     /// </summary>
     public class DependencyContainerDecoratorsTest : TestBase
     {
@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 [typeof(DecorableServiceDecorator1)] = typeof(DecorableServiceDecorator2),
                 [typeof(DecorableServiceDecorator2)] = typeof(DecorableServiceDecorator3),
-                [typeof(DecorableServiceDecorator3)] = typeof(DecorableServiceImpl)
+                [typeof(DecorableServiceDecorator3)] = typeof(DecorableService)
             };
 
             void CheckRecursive(IDecorableService resolved, Type type)
@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 [typeof(OpenGenericDecorableServiceDecorator1<object>)] = typeof(OpenGenericDecorableServiceDecorator2<object>),
                 [typeof(OpenGenericDecorableServiceDecorator2<object>)] = typeof(OpenGenericDecorableServiceDecorator3<object>),
-                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableServiceImpl<object>)
+                [typeof(OpenGenericDecorableServiceDecorator3<object>)] = typeof(OpenGenericDecorableService<object>)
             };
 
             void CheckRecursive(IOpenGenericDecorableService<object> resolved, Type type)

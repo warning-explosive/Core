@@ -19,14 +19,14 @@ namespace SpaceEngineers.Core.Modules.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// IDependencyContainer class tests
+    /// DependencyContainerResolveTest
     /// </summary>
-    public class DependencyContainerTest : TestBase
+    public class DependencyContainerResolveTest : TestBase
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
-        public DependencyContainerTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        public DependencyContainerResolveTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
             DependencyContainer = fixture.ModulesContainer();
@@ -148,30 +148,30 @@ namespace SpaceEngineers.Core.Modules.Test
         internal void SingletonTest()
         {
             // 1 - resolve via service type
-            Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
-                         DependencyContainer.Resolve<ISingletonTestService>());
+            Assert.Equal(DependencyContainer.Resolve<ISingletonService>(),
+                         DependencyContainer.Resolve<ISingletonService>());
 
             // 2 - resolve via concrete type
-            Assert.Equal(DependencyContainer.Resolve<SingletonTestServiceImpl>(),
-                         DependencyContainer.Resolve<SingletonTestServiceImpl>());
+            Assert.Equal(DependencyContainer.Resolve<SingletonService>(),
+                         DependencyContainer.Resolve<SingletonService>());
 
             // 3 - cross equals resolve
-            Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
-                         DependencyContainer.Resolve<SingletonTestServiceImpl>());
+            Assert.Equal(DependencyContainer.Resolve<ISingletonService>(),
+                         DependencyContainer.Resolve<SingletonService>());
         }
 
         [Fact]
         internal void TypedUntypedSingletonTest()
         {
-            Assert.Equal(DependencyContainer.Resolve<ISingletonTestService>(),
-                         DependencyContainer.Resolve(typeof(ISingletonTestService)));
+            Assert.Equal(DependencyContainer.Resolve<ISingletonService>(),
+                         DependencyContainer.Resolve(typeof(ISingletonService)));
         }
 
         [Fact]
         internal void OpenGenericTest()
         {
-            Assert.Equal(typeof(OpenGenericTestServiceImpl<string>), DependencyContainer.Resolve<IOpenGenericTestService<string>>().GetType());
-            Assert.Equal(typeof(ClosedGenericImplementationOfOpenGenericService), DependencyContainer.Resolve<IOpenGenericTestService<ExternalResolvableImpl>>().GetType());
+            Assert.Equal(typeof(OpenGenericTestService<string>), DependencyContainer.Resolve<IOpenGenericTestService<string>>().GetType());
+            Assert.Equal(typeof(ClosedGenericImplementationOfOpenGenericService), DependencyContainer.Resolve<IOpenGenericTestService<ExternalResolvable>>().GetType());
         }
 
         [Fact]
@@ -248,20 +248,20 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact]
         internal void ExternalResolvableTest()
         {
-            Assert.Equal(typeof(ExternalResolvableImpl), DependencyContainer.Resolve<IProgress<ExternalResolvableImpl>>().GetType());
-            Assert.Equal(typeof(ExternalResolvableOpenGenericImpl<object>), DependencyContainer.Resolve<IProgress<object>>().GetType());
+            Assert.Equal(typeof(ExternalResolvable), DependencyContainer.Resolve<IProgress<ExternalResolvable>>().GetType());
+            Assert.Equal(typeof(ExternalResolvableOpenGeneric<object>), DependencyContainer.Resolve<IProgress<object>>().GetType());
         }
 
         [Fact]
         internal void UnregisteredServiceResolveTest()
         {
-            Assert.True(typeof(BaseUnregisteredServiceImpl).HasAttribute<UnregisteredComponentAttribute>());
+            Assert.True(typeof(BaseUnregisteredService).HasAttribute<UnregisteredComponentAttribute>());
 
-            Assert.True(typeof(DerivedFromUnregisteredServiceImpl).IsSubclassOf(typeof(BaseUnregisteredServiceImpl)));
-            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredServiceImpl)));
-            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(BaseUnregisteredServiceImpl)));
+            Assert.True(typeof(DerivedFromUnregisteredService).IsSubclassOf(typeof(BaseUnregisteredService)));
+            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(DerivedFromUnregisteredService)));
+            Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(BaseUnregisteredService)));
 
-            Assert.Equal(typeof(DerivedFromUnregisteredServiceImpl), DependencyContainer.Resolve<IUnregisteredService>().GetType());
+            Assert.Equal(typeof(DerivedFromUnregisteredService), DependencyContainer.Resolve<IUnregisteredService>().GetType());
         }
 
         [Fact]
@@ -283,7 +283,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var cctorResolutionBehavior = DependencyContainer.Resolve<IConstructorResolutionBehavior>();
 
-            Assert.True(cctorResolutionBehavior.TryGetConstructor(typeof(WiredTestServiceImpl), out var cctor));
+            Assert.True(cctorResolutionBehavior.TryGetConstructor(typeof(WiredTestService), out var cctor));
 
             var parameterType = cctor.GetParameters().Single().ParameterType;
 
@@ -298,15 +298,15 @@ namespace SpaceEngineers.Core.Modules.Test
             var registration = Fixture.DelegateRegistration(container =>
             {
                 container
-                    .Register<IWiredTestService, WiredTestServiceImpl>(EnLifestyle.Transient)
-                    .Register<WiredTestServiceImpl, WiredTestServiceImpl>(EnLifestyle.Transient)
-                    .Register<IIndependentTestService, IndependentTestServiceImpl>(EnLifestyle.Singleton)
-                    .Register<IndependentTestServiceImpl, IndependentTestServiceImpl>(EnLifestyle.Singleton)
+                    .Register<IWiredTestService, WiredTestService>(EnLifestyle.Transient)
+                    .Register<WiredTestService, WiredTestService>(EnLifestyle.Transient)
+                    .Register<IIndependentTestService, IndependentTestService>(EnLifestyle.Singleton)
+                    .Register<IndependentTestService, IndependentTestService>(EnLifestyle.Singleton)
                     .Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient)
                     .Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Singleton)
                     .RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient)
-                    .Register<IOpenGenericTestService<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient)
-                    .Register<OpenGenericTestServiceImpl<object>, OpenGenericTestServiceImpl<object>>(EnLifestyle.Transient);
+                    .Register<IOpenGenericTestService<object>, OpenGenericTestService<object>>(EnLifestyle.Transient)
+                    .Register<OpenGenericTestService<object>, OpenGenericTestService<object>>(EnLifestyle.Transient);
             });
 
             var options = new DependencyContainerOptions().WithManualRegistrations(registration);
@@ -314,10 +314,10 @@ namespace SpaceEngineers.Core.Modules.Test
             var localContainer = Fixture.ExactlyBoundedContainer(options);
 
             localContainer.Resolve<IWiredTestService>();
-            localContainer.Resolve<WiredTestServiceImpl>();
+            localContainer.Resolve<WiredTestService>();
 
             localContainer.Resolve<IIndependentTestService>();
-            localContainer.Resolve<IndependentTestServiceImpl>();
+            localContainer.Resolve<IndependentTestService>();
 
             localContainer.Resolve<ConcreteImplementationWithDependencyService>();
 
@@ -332,7 +332,7 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(expectedCollection.OrderByDependencyAttribute().SequenceEqual(actual));
 
             localContainer.Resolve<IOpenGenericTestService<object>>();
-            localContainer.Resolve<OpenGenericTestServiceImpl<object>>();
+            localContainer.Resolve<OpenGenericTestService<object>>();
             Assert.Throws<ComponentResolutionException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
         }
 

@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Test.Api
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// System.Type extensions for test project
@@ -26,22 +25,6 @@ namespace SpaceEngineers.Core.Test.Api
                 show(type.FullName ?? "null");
                 return type;
             });
-        }
-
-        /// <summary> Extract decorators from source object </summary>
-        /// <param name="service">Service implementation</param>
-        /// <typeparam name="TService">TService type argument</typeparam>
-        /// <returns>Applied decorators</returns>
-        public static IEnumerable<Type> UnwrapDecorators<TService>(this TService service)
-            where TService : class
-        {
-            while (service is IDecorator<TService> decorator)
-            {
-                yield return decorator.GetType();
-                service = decorator.Decoratee;
-            }
-
-            yield return service.GetType();
         }
     }
 }

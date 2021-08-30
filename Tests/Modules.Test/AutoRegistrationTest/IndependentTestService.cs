@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class IndependentTestServiceImpl : IIndependentTestService
+    internal class IndependentTestService : IIndependentTestService
     {
     }
 }

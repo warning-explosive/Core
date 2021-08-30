@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -11,8 +9,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     /// ServiceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    [DebuggerDisplay("{Implementation.FullName} - {Service.FullName} - {Lifestyle}")]
-    public class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
+    public class ServiceRegistrationInfo : IComponentRegistrationInfo,
+                                           IEquatable<ServiceRegistrationInfo>,
                                            ISafelyEquatable<ServiceRegistrationInfo>
     {
         /// <summary> .cctor </summary>
@@ -40,11 +38,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// Lifestyle
         /// </summary>
         public EnLifestyle Lifestyle { get; }
-
-        /// <summary>
-        /// Override comparer
-        /// </summary>
-        public static IEqualityComparer<ServiceRegistrationInfo> OverrideComparer { get; } = new ServiceRegistrationInfoComparer();
 
         /// <inheritdoc />
         public override string ToString()
@@ -86,26 +79,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         {
             return Implementation.IsGenericType
                    && !Implementation.IsConstructedGenericType;
-        }
-
-        private class ServiceRegistrationInfoComparer : IEqualityComparer<ServiceRegistrationInfo>
-        {
-            public bool Equals(ServiceRegistrationInfo actual, ServiceRegistrationInfo @override)
-            {
-                if (ReferenceEquals(actual, @override))
-                {
-                    return true;
-                }
-
-                return actual.Service == @override.Service
-                       && actual.Implementation == @override.Implementation
-                       && actual.Lifestyle <= @override.Lifestyle;
-            }
-
-            public int GetHashCode(ServiceRegistrationInfo info)
-            {
-                return HashCode.Combine(info.Service, info.Implementation, info.Lifestyle);
-            }
         }
     }
 }

@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    internal class OpenGenericDecorableServiceImpl<T> : IOpenGenericDecorableService<T>
+    internal class OpenGenericTestService<T> : IOpenGenericTestService<T>
     {
     }
 }

@@ -1,15 +1,15 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
+    using System;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
 
-    [Component(EnLifestyle.Scoped)]
-    internal class ScopedLifestyleServiceImpl : IScopedLifestyleService
+    [ComponentOverride]
+    internal class ScopedServiceTransientOverride : IScopedService
     {
         public Task DoSmth()
         {
-            return Task.Delay(50);
+            return Task.Delay(TimeSpan.FromMilliseconds(10));
         }
     }
 }

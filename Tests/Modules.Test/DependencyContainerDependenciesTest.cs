@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// IDependencyContainer dependencies tests
+    /// DependencyContainerDependenciesTest
     /// </summary>
     public class DependencyContainerDependenciesTest : TestBase
     {

@@ -25,12 +25,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         protected abstract void VerifyInternal(ICollection<Type> registered);
 
-        protected static IEnumerable<Type> ExtractAutoWiringServices(Type type)
+        protected static IEnumerable<Type> UnwrapAutoRegistrationServices(Type type)
         {
             return type.IncludedTypes().Where(t => typeof(IResolvable).IsAssignableFrom(t))
-                       .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>), 0))
-                       .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>), 0))
-                       .Distinct();
+                .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>)))
+                .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>)))
+                .Distinct();
         }
     }
 }

@@ -76,15 +76,6 @@
     <Compile Update="AutoRegistrationTest\CollectionResolvableConditionDecorableServiceDecorator3.cs">
       <DependentUpon>ICollectionResolvableConditionDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\CollectionResolvableConditionDecorableServiceImpl1.cs">
-      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AutoRegistrationTest\CollectionResolvableConditionDecorableServiceImpl2.cs">
-      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AutoRegistrationTest\CollectionResolvableConditionDecorableServiceImpl3.cs">
-      <DependentUpon>ICollectionResolvableConditionDecorableService.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoRegistrationTest\CollectionResolvableTestServiceImpl1.cs">
       <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
     </Compile>
@@ -103,9 +94,6 @@
     <Compile Update="AutoRegistrationTest\ConditionalDecorableServiceDecorator3.cs">
       <DependentUpon>IConditionalDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\ConditionalDecorableServiceImpl.cs">
-      <DependentUpon>IConditionalDecorableService.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoRegistrationTest\DecorableServiceDecorator1.cs">
       <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
@@ -115,17 +103,17 @@
     <Compile Update="AutoRegistrationTest\DecorableServiceDecorator3.cs">
       <DependentUpon>IDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\DecorableServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\DecorableService.cs">
       <DependentUpon>IDecorableService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\IndependentTestServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\IndependentTestService.cs">
       <DependentUpon>IIndependentTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\WiredTestServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\WiredTestService.cs">
       <DependentUpon>IWiredTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\SingletonTestServiceImpl.cs">
-      <DependentUpon>ISingletonTestService.cs</DependentUpon>
+    <Compile Update="AutoRegistrationTest\SingletonService.cs">
+      <DependentUpon>ISingletonService.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoRegistrationTest\SingletonGenericCollectionResolvableTestServiceImpl1.cs">
       <DependentUpon>ISingletonGenericCollectionResolvableTestService.cs</DependentUpon>
@@ -145,22 +133,22 @@
     <Compile Update="AutoRegistrationTest\OpenGenericDecorableServiceDecorator3.cs">
       <DependentUpon>IOpenGenericDecorableServiceDecorator.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\OpenGenericDecorableServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\OpenGenericDecorableService.cs">
       <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\OpenGenericTestServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\OpenGenericTestService.cs">
       <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\WithInjectedDependencyContainerImpl.cs">
+    <Compile Update="AutoRegistrationTest\WithInjectedDependencyContainer.cs">
       <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoRegistrationTest\ClosedGenericImplementationOfOpenGenericService.cs">
       <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\BaseUnregisteredServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\BaseUnregisteredService.cs">
       <DependentUpon>IUnregisteredService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\DerivedFromUnregisteredServiceImpl.cs">
+    <Compile Update="AutoRegistrationTest\DerivedFromUnregisteredService.cs">
       <DependentUpon>IUnregisteredService.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoRegistrationTest\BaseUnregisteredExternalServiceImpl.cs">
@@ -169,8 +157,8 @@
     <Compile Update="AutoRegistrationTest\DerivedFromUnregisteredExternalServiceImpl.cs">
       <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\ScopedLifestyleServiceImpl.cs">
-      <DependentUpon>IScopedLifestyleService.cs</DependentUpon>
+    <Compile Update="AutoRegistrationTest\ScopedService.cs">
+      <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
       <DependentUpon>PersistenceSettings.cs</DependentUpon>
@@ -186,6 +174,18 @@
     </Compile>
     <Compile Update="Messages\FirstInheritedEvent.cs">
       <DependentUpon>BaseEvent.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedServiceOverride.cs">
+      <DependentUpon>IScopedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Mocks\TypeProviderExtensions.cs">
+      <DependentUpon>ExtendedTypeProviderDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedServiceSingletonOverride.cs">
+      <DependentUpon>IScopedService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedServiceTransientOverride.cs">
+      <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

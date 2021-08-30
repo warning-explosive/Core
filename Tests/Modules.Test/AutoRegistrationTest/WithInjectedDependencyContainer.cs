@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
-    internal class WithInjectedDependencyContainerImpl : IWithInjectedDependencyContainer
+    internal class WithInjectedDependencyContainer : IWithInjectedDependencyContainer
     {
-        public WithInjectedDependencyContainerImpl(IDependencyContainer dependencyContainer,
-                                                   IScopedContainer scopedContainer)
+        public WithInjectedDependencyContainer(IDependencyContainer dependencyContainer,
+                                               IScopedContainer scopedContainer)
         {
             DependencyContainer = dependencyContainer;
             ScopedContainer = scopedContainer;

@@ -2,15 +2,15 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using Registrations;
 
-    [ManuallyRegisteredComponent(nameof(DependencyContainerAssemblyLimitationsTest.ExactlyBoundedContainerTest))]
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    [ComponentOverride]
     internal class ExtendedTypeProviderDecorator : ITypeProvider, IDecorator<ITypeProvider>
     {
         private readonly ITypeProvider _decoratee;
@@ -21,6 +21,8 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             _decoratee = decoratee;
             _extension = extension;
         }
+
+        #region ITypeProvider
 
         public ITypeProvider Decoratee => _decoratee;
 
@@ -40,18 +42,9 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
                    || _extension.OurTypes.Contains(type);
         }
 
-        internal static Func<DependencyContainerOptions, DependencyContainerOptions> ExtendTypeProvider(params Type[] additionalOurTypes)
-        {
-            return options => ExtendTypeProvider(options, additionalOurTypes);
-        }
+        #endregion
 
-        internal static DependencyContainerOptions ExtendTypeProvider(DependencyContainerOptions options, params Type[] additionalOurTypes)
-        {
-            return options.WithManualRegistrations(new ExtendedTypeProviderManualRegistration(additionalOurTypes));
-        }
-
-        [ManuallyRegisteredComponent(nameof(DependencyContainerAssemblyLimitationsTest.ExactlyBoundedContainerTest))]
-        internal class TypeProviderExtension : IResolvable
+        internal class TypeProviderExtension
         {
             public TypeProviderExtension(IReadOnlyCollection<Type> ourTypes)
             {

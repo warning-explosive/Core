@@ -39,6 +39,12 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
+        public IComponentsOverride DelegateOverride(Action<IComponentsOverrideContainer> overrideAction)
+        {
+            return new DelegateComponentsOverride(overrideAction);
+        }
+
+        /// <inheritdoc />
         public IDependencyContainer BoundedAboveContainer(DependencyContainerOptions options, params Assembly[] aboveAssemblies)
         {
             return CreateDependencyContainer(
@@ -62,6 +68,14 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
             return CreateDependencyContainer(
                 options,
                 (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer()));
+        }
+
+        /// <inheritdoc />
+        public IDependencyContainer CreateContainer(DependencyContainerOptions options, ITypeProvider typeProvider)
+        {
+            return CreateDependencyContainer(
+                options,
+                (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer(), typeProvider));
         }
 
         private static IDependencyContainer CreateDependencyContainer(

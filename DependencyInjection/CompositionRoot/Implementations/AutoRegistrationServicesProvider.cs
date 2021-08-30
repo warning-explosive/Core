@@ -2,16 +2,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
 
-    [SuppressMessage("Analysis", "CR1", Justification = "Registered by hand. See DependencyContainerImpl.")]
-    [Component(EnLifestyle.Singleton)]
+    [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class AutoRegistrationServicesProvider : IAutoRegistrationServicesProvider
     {
         private readonly ITypeProvider _typeProvider;

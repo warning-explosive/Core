@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    internal class WiredTestServiceImpl : IWiredTestService
+    internal class WiredTestService : IWiredTestService
     {
-        public WiredTestServiceImpl(IIndependentTestService independentTestService)
+        public WiredTestService(IIndependentTestService independentTestService)
         {
             IndependentTestService = independentTestService;
         }

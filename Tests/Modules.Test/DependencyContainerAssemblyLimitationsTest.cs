@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
+    using CompositionRoot.Implementations;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -15,7 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// IDependencyContainer and assembly limitations test
+    /// DependencyContainerAssemblyLimitationsTest
     /// </summary>
     public class DependencyContainerAssemblyLimitationsTest : TestBase
     {
@@ -126,9 +127,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(ExtendedTypeProviderDecorator.TypeProviderExtension)
             };
 
-            options = ExtendedTypeProviderDecorator.ExtendTypeProvider(new DependencyContainerOptions(), additionalTypes);
+            options = new DependencyContainerOptions();
 
-            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
+            var typeProvider = TypeProvider
+                .CreateExactlyBounded(assemblies)
+                .ExtendTypeProvider(additionalTypes);
+
+            var extendedBoundedContainer = Fixture.CreateContainer(options, typeProvider);
 
             var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
 

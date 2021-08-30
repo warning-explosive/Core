@@ -68,7 +68,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
                 Measure.Mean,
                 Output.WriteLine);
 
-            Assert.True(measure <= 1500m);
+            Assert.True(measure <= 1000m);
         }
     }
 }

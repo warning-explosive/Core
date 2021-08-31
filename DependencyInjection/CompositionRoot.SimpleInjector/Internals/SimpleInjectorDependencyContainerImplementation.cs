@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
                 .Select(implementation => new ServiceRegistrationInfo(service, implementation, lifestyle))
                 .RegisterImplementationsWithOpenGenericFallBack(this);
 
-            _container.Collection.Register(service, materialized.OrderByDependencyAttribute());
+            _container.Collection.Register(service, materialized.OrderByDependencyAttribute(), lifestyle.MapLifestyle());
         }
 
         public void RegisterDecorator(Type service, Type implementation, EnLifestyle lifestyle)

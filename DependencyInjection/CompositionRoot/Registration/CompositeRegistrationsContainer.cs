@@ -89,7 +89,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
                 return ApplyOverrides(
                         Aggregate(_registrations, container => container.Decorators()),
                         container => container.DecoratorOverrides,
-                        OverrideProducer(overrideInfo => new DecoratorRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
+                        OverrideDecoratorProducer(overrideInfo => new DecoratorRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
                     .ToList();
             }
         }
@@ -144,6 +144,21 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             return (registrationInfo, overrideInfo) =>
             {
                 if (registrationInfo.Lifestyle <= overrideInfo.Lifestyle)
+                {
+                    return producer(overrideInfo);
+                }
+
+                throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
+            };
+        }
+
+        private static Func<T, ComponentOverrideInfo, T> OverrideDecoratorProducer<T>(
+            Func<ComponentOverrideInfo, T> producer)
+            where T : IComponentRegistrationInfo
+        {
+            return (registrationInfo, overrideInfo) =>
+            {
+                if (registrationInfo.Lifestyle >= overrideInfo.Lifestyle)
                 {
                     return producer(overrideInfo);
                 }

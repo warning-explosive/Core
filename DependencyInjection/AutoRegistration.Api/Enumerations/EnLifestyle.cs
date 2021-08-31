@@ -8,16 +8,16 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Enumerations
         /// <summary>
         /// Transient lifestyle
         /// </summary>
-        Transient = 0,
+        Transient,
 
         /// <summary>
         /// Scoped lifestyle
         /// </summary>
-        Scoped = 1,
+        Scoped,
 
         /// <summary>
         /// Singleton lifestyle
         /// </summary>
-        Singleton = 2
+        Singleton
     }
 }

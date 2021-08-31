@@ -5,11 +5,11 @@ namespace SpaceEngineers.Core.Basics.Test.DeepCopy
         /// <summary>
         /// Default
         /// </summary>
-        Default = 0,
+        Default,
 
         /// <summary>
         /// Value
         /// </summary>
-        Value = 1
+        Value
     }
 }

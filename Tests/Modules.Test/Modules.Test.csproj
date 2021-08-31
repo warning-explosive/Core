@@ -187,5 +187,29 @@
     <Compile Update="AutoRegistrationTest\ScopedServiceTransientOverride.cs">
       <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvable.cs">
+      <DependentUpon>IScopedCollectionResolvable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableOverride.cs">
+      <DependentUpon>ScopedCollectionResolvable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableTransientOverride.cs">
+      <DependentUpon>ScopedCollectionResolvable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableSingletonOverride.cs">
+      <DependentUpon>ScopedCollectionResolvable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableDecorator.cs">
+      <DependentUpon>IScopedCollectionResolvable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableDecoratorOverride.cs">
+      <DependentUpon>ScopedCollectionResolvableDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableDecoratorTransientOverride.cs">
+      <DependentUpon>ScopedCollectionResolvableDecorator.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableDecoratorSingletonOverride.cs">
+      <DependentUpon>ScopedCollectionResolvableDecorator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

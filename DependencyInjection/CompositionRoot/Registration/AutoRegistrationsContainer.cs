@@ -85,16 +85,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
             IReadOnlyCollection<DecoratorRegistrationInfo> InitDecorators()
             {
-                var decorators = _servicesProvider
+                return _servicesProvider
                     .Decorators()
-                    .GetDecoratorInfo(typeof(IDecorator<>));
-
-                var collectionDecorators = _servicesProvider
-                    .CollectionDecorators()
-                    .GetDecoratorInfo(typeof(ICollectionDecorator<>));
-
-                return decorators
-                    .Concat(collectionDecorators)
+                    .GetDecoratorInfo(typeof(IDecorator<>))
                     .ToList();
             }
         }

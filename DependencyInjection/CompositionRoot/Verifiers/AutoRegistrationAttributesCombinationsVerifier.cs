@@ -35,19 +35,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 .Where(it => it.IsVerificationRequired())
                 .Where(TypeHasCorrectlyDefinedAttributes().Not())
                 .Each(info => throw new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} attributes configuration"));
+        }
 
-            static Func<ComponentAttributesInfo, bool> TypeHasCorrectlyDefinedAttributes()
+        private static Func<ComponentAttributesInfo, bool> TypeHasCorrectlyDefinedAttributes()
+        {
+            return info =>
             {
-                return info => info.IsComponent()
-                               || info.IsManuallyRegisteredComponent()
-                               || info.IsUnregisteredComponent()
-                               || info.IsComponentOverride();
-            }
+                var sum = info.IsComponent().Bit()
+                          + info.IsManuallyRegisteredComponent().Bit()
+                          + info.IsUnregisteredComponent().Bit()
+                          + info.IsComponentOverride().Bit();
+
+                return sum == 1;
+            };
         }
 
         private class ComponentAttributesInfo
         {
-            public ComponentAttributesInfo(Type type,
+            public ComponentAttributesInfo(
+                Type type,
                 bool component,
                 bool manuallyRegistered,
                 bool unregistered,
@@ -120,8 +126,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                        && (typeof(IResolvable).IsAssignableFrom(type)
                            || type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>))
                            || type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>))
-                           || type.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
-                           || type.IsSubclassOfOpenGeneric(typeof(ICollectionDecorator<>)));
+                           || type.IsSubclassOfOpenGeneric(typeof(IDecorator<>)));
             }
         }
     }

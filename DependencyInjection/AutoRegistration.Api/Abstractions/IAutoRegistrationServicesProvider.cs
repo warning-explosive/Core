@@ -27,15 +27,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Abstractions
         IEnumerable<Type> External();
 
         /// <summary>
-        /// Gets decorators registered in container by AutoRegistration.Api include conditional decorators, Unregistered and ManualRegistered types
+        /// Gets decorators registered in container by AutoRegistration.Api include Unregistered and ManualRegistered types
         /// </summary>
-        /// <returns>Decorators registered by AutoRegistration.Api include conditional decorators</returns>
+        /// <returns>Decorators registered by AutoRegistration.Api</returns>
         IEnumerable<Type> Decorators();
-
-        /// <summary>
-        /// Gets decorators for collections registered in container by AutoRegistration.Api include conditional decorators, Unregistered and ManualRegistered types
-        /// </summary>
-        /// <returns>Decorators for collections registered by AutoRegistration.Api include conditional decorators</returns>
-        IEnumerable<Type> CollectionDecorators();
     }
 }

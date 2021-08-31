@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Extensions;
     using Contract;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
@@ -40,10 +41,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                             var endpointIdentity = container.Resolve<EndpointIdentity>();
                             var integrationTransport = container.Resolve<IIntegrationTransport>();
 
-                            // TODO: unwrap decorators
-                            return endpointIdentity.LogicalName.Equals(
-                                integrationTransport.GetType().Name,
-                                StringComparison.OrdinalIgnoreCase);
+                            return integrationTransport
+                                .UnwrapDecoratorTypes()
+                                .Any(it => it.Name.Equals(
+                                    endpointIdentity.LogicalName,
+                                    StringComparison.OrdinalIgnoreCase));
                         })
                         .Try()
                         .Catch<Exception>()

@@ -41,11 +41,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             return ExtractDecorators(typeof(IDecorator<>));
         }
 
-        public IEnumerable<Type> CollectionDecorators()
-        {
-            return ExtractDecorators(typeof(ICollectionDecorator<>));
-        }
-
         private IEnumerable<Type> ExtractDecorators(Type decorator)
         {
             return _typeProvider

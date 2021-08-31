@@ -93,16 +93,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
 
         private static bool ImplementsSeveralSpecializedInterfaces(Type type)
         {
-            var implements = Is(typeof(IIntegrationCommand).IsAssignableFrom(type))
-                             + Is(type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)))
-                             + Is(typeof(IIntegrationEvent).IsAssignableFrom(type));
+            var sum = typeof(IIntegrationCommand).IsAssignableFrom(type).Bit()
+                      + type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)).Bit()
+                      + typeof(IIntegrationEvent).IsAssignableFrom(type).Bit();
 
-            return implements > 1;
-        }
-
-        private static int Is(bool conditionResult)
-        {
-            return conditionResult ? 1 : 0;
+            return sum > 1;
         }
     }
 }

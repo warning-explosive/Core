@@ -23,9 +23,13 @@ namespace SpaceEngineers.Core.Basics
             "Windows"
         };
 
-        private static readonly string[] OptionalRootAssemblies =
+        private static readonly string[] RootAssemblies =
         {
+            "SpaceEngineers.Core.Basics",
             "SpaceEngineers.Core.AutoRegistration.Api",
+            "SpaceEngineers.Core.CompositionRoot.Api",
+            "SpaceEngineers.Core.CompositionRoot",
+
             "SpaceEngineers.Core.Analyzers.Api",
             "SpaceEngineers.Core.Benchmark.Api"
         };
@@ -216,14 +220,10 @@ namespace SpaceEngineers.Core.Basics
                 .SelectMany(RemoveDuplicates)
                 .ToArray();
 
-            var optionalAssemblies = OptionalRootAssemblies
+            var rootAssemblies = RootAssemblies
                 .Select(optionalAssemblyName => allAssemblies
                     .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase)))
                 .Where(optionalAssembly => optionalAssembly != null);
-
-            var regularRootAssembly = typeof(AssembliesExtensions).Assembly; // Basics
-
-            var rootAssemblies = optionalAssemblies.Concat(new[] { regularRootAssembly });
 
             var isOurReference = IsOurReference(allAssemblies, rootAssemblies);
 

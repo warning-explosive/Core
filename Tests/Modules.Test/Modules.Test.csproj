@@ -211,5 +211,11 @@
     <Compile Update="AutoRegistrationTest\ScopedCollectionResolvableDecoratorSingletonOverride.cs">
       <DependentUpon>ScopedCollectionResolvableDecorator.cs</DependentUpon>
     </Compile>
+    <Compile Update="AutoRegistrationTest\ManuallyRegisteredService.cs">
+      <DependentUpon>IManuallyRegisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AutoRegistrationTest\ManuallyRegisteredServiceOverride.cs">
+      <DependentUpon>IManuallyRegisteredService.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -146,7 +146,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var containerOptions = endpointOptions.ContainerOptions
                 .WithManualRegistrations(integrationTransportInjection)
                 .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
-                .WithManualRegistrations(new LoggerManualRegistration(endpointOptions.Identity, loggerFactory));
+                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointOptions.Identity, loggerFactory));
 
             return endpointOptions.WithContainerOptions(containerOptions);
         }

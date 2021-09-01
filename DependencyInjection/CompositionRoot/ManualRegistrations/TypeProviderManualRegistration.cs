@@ -22,7 +22,6 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
 
         public void Register(IManualRegistrationsContainer container)
         {
-            // TODO: forbid replacements for other manually registered components
             var typeProviderInstance = _typeProvider.UnwrapDecorators().OfType<TypeProvider>().FirstOrDefault()
                 ?? throw new InvalidOperationException($"You can't replace {typeof(ITypeProvider)} with custom implementation");
 

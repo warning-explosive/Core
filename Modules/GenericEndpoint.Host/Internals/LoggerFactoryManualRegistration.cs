@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
     using Contract;
     using Microsoft.Extensions.Logging;
 
-    internal class LoggerManualRegistration : IManualRegistration
+    internal class LoggerFactoryManualRegistration : IManualRegistration
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly ILoggerFactory _loggerFactory;
 
-        public LoggerManualRegistration(EndpointIdentity endpointIdentity, ILoggerFactory loggerFactory)
+        public LoggerFactoryManualRegistration(EndpointIdentity endpointIdentity, ILoggerFactory loggerFactory)
         {
             _endpointIdentity = endpointIdentity;
             _loggerFactory = loggerFactory;

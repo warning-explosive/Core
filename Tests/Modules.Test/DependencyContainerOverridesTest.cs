@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Mocks;
+    using Registrations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -26,6 +27,61 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerOverridesTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
+        }
+
+        [Fact]
+        internal void OverrideManuallyRegisteredComponentTest()
+        {
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(IScopedService),
+                typeof(ScopedService),
+                typeof(IManuallyRegisteredService),
+                typeof(ManuallyRegisteredService),
+                typeof(ManuallyRegisteredServiceOverride)
+            };
+
+            var typeProvider = TypeProvider
+                .CreateBoundedAbove(assemblies)
+                .ExtendTypeProvider(additionalOurTypes);
+
+            // register & override
+            {
+                var options = OverrideManuallyRegistered(Fixture).WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
+                var container = Fixture.CreateContainer(options, typeProvider);
+
+                Assert.Equal(typeof(ManuallyRegisteredServiceOverride), container.Resolve<IManuallyRegisteredService>().GetType());
+                Assert.Equal(typeof(ManuallyRegisteredService), container.Resolve<ManuallyRegisteredService>().GetType());
+                Assert.Equal(typeof(ManuallyRegisteredServiceOverride), container.Resolve<ManuallyRegisteredServiceOverride>().GetType());
+            }
+
+            // override without original registration
+            {
+                var options = OverrideManuallyRegistered(Fixture);
+                Assert.Throws<ContainerConfigurationException>(() => Fixture.CreateContainer(options, typeProvider));
+            }
+
+            static DependencyContainerOptions OverrideManuallyRegistered(ModulesTestFixture fixture)
+            {
+                var registration = fixture.DelegateRegistration(container =>
+                {
+                    container.Register<ManuallyRegisteredServiceOverride, ManuallyRegisteredServiceOverride>(EnLifestyle.Transient);
+                });
+
+                var overrides = fixture.DelegateOverride(container =>
+                {
+                    container.Override<IManuallyRegisteredService, ManuallyRegisteredService, ManuallyRegisteredServiceOverride>(EnLifestyle.Transient);
+                });
+
+                return new DependencyContainerOptions()
+                    .WithManualRegistrations(registration)
+                    .WithOverrides(overrides);
+            }
         }
 
         [Fact]

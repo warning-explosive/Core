@@ -49,15 +49,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
             var options = new DependencyContainerOptions()
-                .WithManualRegistrations(new AnalyzersManualRegistration());
+                .WithManualRegistrations(new AnalyzersManualRegistration())
+                .WithExcludedNamespaces(IgnoredNamespaces.ToArray());
 
-            options = IgnoredNamespaces.Length > 1
-                ? options.WithExcludedNamespaces(IgnoredNamespaces.First(), IgnoredNamespaces.Skip(1).ToArray())
-                : IgnoredNamespaces.Length == 1
-                    ? options.WithExcludedNamespaces(IgnoredNamespaces.Single())
-                    : options;
-
-            DependencyContainer = fixture.CreateContainer(options);
+            DependencyContainer = fixture.Container(options);
         }
 
         /// <summary>

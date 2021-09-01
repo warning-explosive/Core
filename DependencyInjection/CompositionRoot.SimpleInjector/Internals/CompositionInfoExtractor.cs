@@ -57,8 +57,8 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
         private IEnumerable<Type> GetClosedServices()
         {
             return _autoRegistrationServiceProvider.Resolvable().Select(CloseOpenGeneric)
-                                             .Concat(_autoRegistrationServiceProvider.External().Select(CloseOpenGeneric))
-                                             .Concat(_autoRegistrationServiceProvider.Collections().Select(CloseOpenGenericCollection));
+                .Concat(_autoRegistrationServiceProvider.External().Select(CloseOpenGeneric))
+                .Concat(_autoRegistrationServiceProvider.Collections().Select(CloseOpenGenericCollection));
         }
 
         private Type CloseOpenGeneric(Type type)

@@ -4,23 +4,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
     using Contract.Abstractions;
 
     /// <summary>
-    /// MessageHandlerExtensions
+    /// MessageHandlerTestExtensions
     /// </summary>
-    public static class MessageHandlerExtensions
+    public static class MessageHandlerTestExtensions
     {
         /// <summary>
-        /// Incoming test message
+        /// Tests handler reaction on incoming message in isolation
         /// </summary>
         /// <param name="handler">Message handler</param>
         /// <param name="message">Incoming integration message</param>
         /// <typeparam name="TMessage">TMessage type-argument</typeparam>
-        /// <returns>TestMessageHandlerBuilder</returns>
-        public static TestMessageHandlerBuilder<TMessage> OnMessage<TMessage>(
+        /// <returns>MessageHandlerTestBuilder</returns>
+        public static MessageHandlerTestBuilder<TMessage> OnMessage<TMessage>(
             this IMessageHandler<TMessage> handler,
             TMessage message)
             where TMessage : IIntegrationMessage
         {
-            return new TestMessageHandlerBuilder<TMessage>(message, handler);
+            return new MessageHandlerTestBuilder<TMessage>(message, handler);
         }
     }
 }

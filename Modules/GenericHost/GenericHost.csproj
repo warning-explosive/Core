@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

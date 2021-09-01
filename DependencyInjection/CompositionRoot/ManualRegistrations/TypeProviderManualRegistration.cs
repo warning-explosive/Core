@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
 
         public void Register(IManualRegistrationsContainer container)
         {
-            var typeProviderInstance = _typeProvider.UnwrapDecorators().OfType<TypeProvider>().FirstOrDefault()
+            var typeProviderInstance = _typeProvider.FlattenDecoratedObject().OfType<TypeProvider>().FirstOrDefault()
                 ?? throw new InvalidOperationException($"You can't replace {typeof(ITypeProvider)} with custom implementation");
 
             container

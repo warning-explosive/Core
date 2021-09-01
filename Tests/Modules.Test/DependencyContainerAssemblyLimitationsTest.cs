@@ -7,11 +7,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
-    using CompositionRoot.Implementations;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
-    using Mocks;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -122,18 +120,12 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalTypes = new[]
             {
                 typeof(TestJsonSettings),
-                typeof(TestYamlSettings),
-                typeof(ExtendedTypeProviderDecorator),
-                typeof(ExtendedTypeProviderDecorator.TypeProviderExtension)
+                typeof(TestYamlSettings)
             };
 
-            options = new DependencyContainerOptions();
+            options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalTypes);
 
-            var typeProvider = TypeProvider
-                .CreateExactlyBounded(assemblies)
-                .ExtendTypeProvider(additionalTypes);
-
-            var extendedBoundedContainer = Fixture.CreateContainer(options, typeProvider);
+            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
 
             var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
 
@@ -167,9 +159,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
                                 || type == typeof(TestJsonSettings)
-                                || type == typeof(TestYamlSettings)
-                                || type == typeof(ExtendedTypeProviderDecorator)
-                                || type == typeof(ExtendedTypeProviderDecorator.TypeProviderExtension);
+                                || type == typeof(TestYamlSettings);
 
                 if (!satisfies)
                 {

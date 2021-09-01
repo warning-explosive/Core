@@ -31,12 +31,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         private readonly HashSet<string> _ourTypesCache;
 
-        [Obsolete("Use factory methods instead")]
         public TypeProvider(IReadOnlyCollection<Assembly> allAssemblies,
-                            IReadOnlyCollection<Assembly> rootAssemblies,
-                            IReadOnlyCollection<Assembly> excludedAssemblies,
-                            IReadOnlyCollection<string> excludedNamespaces)
+            IReadOnlyCollection<Assembly> excludedAssemblies,
+            IReadOnlyCollection<string> excludedNamespaces,
+            IReadOnlyCollection<Type> additionalOurTypes)
         {
+            var rootAssemblies = RootAssemblies();
+
             AllLoadedAssemblies = allAssemblies
                 .Union(rootAssemblies)
                 .Distinct(new AssemblyByNameEqualityComparer())
@@ -45,6 +46,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
             AllLoadedTypes = AllLoadedAssemblies
                 .SelectMany(a => a.GetTypes())
+                .Union(additionalOurTypes)
                 .ToList();
 
             TypeCache = AllLoadedAssemblies
@@ -61,6 +63,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             OurTypes = OurAssemblies
                 .SelectMany(ExtractOurTypes)
                 .Where(t => !excludedNamespaces.Contains(t.Namespace, StringComparer.OrdinalIgnoreCase))
+                .Union(additionalOurTypes)
                 .ToList();
 
             _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));
@@ -81,60 +84,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         public bool IsOurType(Type type)
         {
             return _ourTypesCache.Contains(type.FullName);
-        }
-
-        #endregion
-
-        #region Creation
-
-        internal static ITypeProvider CreateBoundedAbove(
-            IReadOnlyCollection<Assembly> assemblies)
-        {
-            return CreateBoundedAbove(
-                assemblies,
-                Array.Empty<Assembly>(),
-                Array.Empty<string>());
-        }
-
-        internal static ITypeProvider CreateBoundedAbove(
-            IReadOnlyCollection<Assembly> assemblies,
-            IReadOnlyCollection<Assembly> excludedAssemblies,
-            IReadOnlyCollection<string> excludedNamespaces)
-        {
-            var belowAssemblies = assemblies
-                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
-                .Distinct()
-                .ToArray();
-
-            return CreateExactlyBounded(
-                belowAssemblies,
-                excludedAssemblies,
-                excludedNamespaces);
-        }
-
-        internal static ITypeProvider CreateExactlyBounded(
-            IReadOnlyCollection<Assembly> allAssemblies)
-        {
-            return CreateExactlyBounded(
-                allAssemblies,
-                Array.Empty<Assembly>(),
-                Array.Empty<string>());
-        }
-
-        internal static ITypeProvider CreateExactlyBounded(
-            IReadOnlyCollection<Assembly> allAssemblies,
-            IReadOnlyCollection<Assembly> excludedAssemblies,
-            IReadOnlyCollection<string> excludedNamespaces)
-        {
-            #pragma warning disable 618
-
-            return new TypeProvider(
-                allAssemblies,
-                RootAssemblies(),
-                excludedAssemblies,
-                excludedNamespaces);
-
-            #pragma warning restore 618
         }
 
         #endregion

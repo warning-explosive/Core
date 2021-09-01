@@ -2,8 +2,6 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Host
 {
     using System;
     using Basics;
-    using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Abstractions;
     using Microsoft.Extensions.Hosting;
@@ -17,12 +15,10 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Host
         /// Use specified endpoint
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <param name="factory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseStatisticsEndpoint(
             this IHostBuilder hostBuilder,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer,
             Func<IEndpointBuilder, EndpointOptions> factory)
         {
             var assemblies = new[]
@@ -31,9 +27,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Host
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(SpaceEngineers.Core), nameof(Core.StatisticsEndpoint)))
             };
 
-            return hostBuilder.UseEndpoint(
-                implementationProducer,
-                endpointBuilder => factory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
+            return hostBuilder.UseEndpoint(endpointBuilder => factory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
         }
     }
 }

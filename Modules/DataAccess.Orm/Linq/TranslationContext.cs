@@ -108,7 +108,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             if (subsequentIntermediateExpression != null)
             {
-                parameter = UnwrapSequence(subsequentIntermediateExpression)
+                parameter = FlattenSequence(subsequentIntermediateExpression)
                     .OfType<NamedSourceExpression>()
                     .Select(expression => expression.Parameter)
                     .OfType<ParameterExpression>()
@@ -117,13 +117,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             return parameter ?? new ParameterExpression(this, type);
 
-            static IEnumerable<ISubsequentIntermediateExpression> UnwrapSequence(ISubsequentIntermediateExpression expression)
+            static IEnumerable<ISubsequentIntermediateExpression> FlattenSequence(ISubsequentIntermediateExpression expression)
             {
                 yield return expression;
 
                 if (expression.Source is ISubsequentIntermediateExpression subsequentSource)
                 {
-                    foreach (var source in UnwrapSequence(subsequentSource))
+                    foreach (var source in FlattenSequence(subsequentSource))
                     {
                         yield return source;
                     }

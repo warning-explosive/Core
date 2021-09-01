@@ -24,9 +24,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
             Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
         }
 
-        private IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; set; }
+        private IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; init; }
 
-        private IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; set; }
+        private IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; init; }
 
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {

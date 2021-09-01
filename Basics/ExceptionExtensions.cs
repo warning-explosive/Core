@@ -29,12 +29,10 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Real exception hidden beside TargetInvocationException</returns>
         public static Exception RealException(this Exception exception)
         {
-            while (exception is TargetInvocationException tex)
-            {
-                exception = tex.InnerException;
-            }
-
-            return exception;
+            return exception
+                .Flatten()
+                .First(ex => ex is not TargetInvocationException
+                             && ex is not AggregateException);
         }
 
         /// <summary>
@@ -51,34 +49,6 @@ namespace SpaceEngineers.Core.Basics
                     ? new[] { exception }.Concat(Flatten(exception.InnerException))
                     : new[] { exception };
             }
-        }
-
-        /// <summary>
-        /// Unwraps exception
-        /// </summary>
-        /// <param name="exception">Source exception</param>
-        /// <returns>Unwrapped exceptions</returns>
-        public static IEnumerable<Exception> Unwrap(this Exception exception)
-        {
-            return exception
-                .Flatten()
-                .Where(ex => ex is not TargetInvocationException
-                             && ex is not AggregateException);
-        }
-
-        /// <summary>
-        /// Unwraps exception
-        /// </summary>
-        /// <param name="exception">Source exception</param>
-        /// <typeparam name="TException">TException type-argument</typeparam>
-        /// <returns>Unwrapped exceptions</returns>
-        public static IEnumerable<Exception> Unwrap<TException>(this Exception exception)
-        {
-            return exception
-                .Flatten()
-                .Where(ex => ex is not TargetInvocationException
-                             && ex is not AggregateException
-                             && ex is not TException);
         }
     }
 }

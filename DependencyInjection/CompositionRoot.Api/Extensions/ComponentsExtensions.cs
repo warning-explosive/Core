@@ -10,12 +10,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Extensions
     public static class ComponentsExtensions
     {
         /// <summary>
-        /// Extract decorators and implementation from the source object tree
+        /// Flattens decorators and implementation objects from the source object tree
         /// </summary>
         /// <param name="service">Service implementation</param>
         /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>Unwrapped decorators and implementation</returns>
-        public static IEnumerable<TService> UnwrapDecorators<TService>(this TService service)
+        public static IEnumerable<TService> FlattenDecoratedObject<TService>(this TService service)
             where TService : class
         {
             while (service is IDecorator<TService> decorator)
@@ -28,12 +28,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Extensions
         }
 
         /// <summary>
-        /// Extract decorators and implementation types from the source object tree
+        /// Flattens decorators and implementation types from the source object type
         /// </summary>
         /// <param name="service">Service implementation</param>
         /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>Unwrapped decorators and implementation</returns>
-        public static IEnumerable<Type> UnwrapDecoratorTypes<TService>(this TService service)
+        public static IEnumerable<Type> FlattenDecoratedType<TService>(this TService service)
             where TService : class
         {
             while (service is IDecorator<TService> decorator)

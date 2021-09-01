@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Reflection;
     using Abstractions;
     using Api.Abstractions;
@@ -61,63 +62,51 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Creates IDependencyContainer without assembly limitations
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
+        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer Create(
             DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer)
+            Func<IDependencyContainerImplementation> containerImplementationProducer)
         {
-            var typeProvider = TypeProvider.CreateExactlyBounded(
+            var typeProvider = new TypeProvider(
                 AssembliesExtensions.AllAssembliesFromCurrentDomain(),
                 options.ExcludedAssemblies,
-                options.ExcludedNamespaces);
+                options.ExcludedNamespaces,
+                options.AdditionalOurTypes);
 
             #pragma warning disable 618
 
-            return new DependencyContainer(implementationProducer(), options, typeProvider);
+            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
 
             #pragma warning restore 618
-        }
-
-        /// <summary>
-        /// Creates IDependencyContainer limited by specified ITypeProvider
-        /// </summary>
-        /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
-        /// <param name="typeProvider">ITypeProvider</param>
-        /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer Create(
-            DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer,
-            ITypeProvider typeProvider)
-        {
-#pragma warning disable 618
-
-            return new DependencyContainer(implementationProducer(), options, typeProvider);
-
-#pragma warning restore 618
         }
 
         /// <summary>
         /// Creates IDependencyContainer bounded above by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
+        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <param name="assemblies">Assembly for container configuration</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBoundedAbove(
             DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer,
+            Func<IDependencyContainerImplementation> containerImplementationProducer,
             params Assembly[] assemblies)
         {
-            var typeProvider = TypeProvider.CreateBoundedAbove(
-                assemblies,
+            var belowAssemblies = assemblies
+                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
+                .Distinct()
+                .ToArray();
+
+            var typeProvider = new TypeProvider(
+                belowAssemblies,
                 options.ExcludedAssemblies,
-                options.ExcludedNamespaces);
+                options.ExcludedNamespaces,
+                options.AdditionalOurTypes);
 
             #pragma warning disable 618
 
-            return new DependencyContainer(implementationProducer(), options, typeProvider);
+            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
 
             #pragma warning restore 618
         }
@@ -126,22 +115,23 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Creates IDependencyContainer exactly bounded by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
+        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <param name="assemblies">Assemblies for container configuration</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateExactlyBounded(
             DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> implementationProducer,
+            Func<IDependencyContainerImplementation> containerImplementationProducer,
             params Assembly[] assemblies)
         {
-            var typeProvider = TypeProvider.CreateExactlyBounded(
+            var typeProvider = new TypeProvider(
                 assemblies,
                 options.ExcludedAssemblies,
-                options.ExcludedNamespaces);
+                options.ExcludedNamespaces,
+                options.AdditionalOurTypes);
 
             #pragma warning disable 618
 
-            return new DependencyContainer(implementationProducer(), options, typeProvider);
+            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
 
             #pragma warning restore 618
         }

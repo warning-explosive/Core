@@ -178,9 +178,6 @@
     <Compile Update="AutoRegistrationTest\ScopedServiceOverride.cs">
       <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>
-    <Compile Update="Mocks\TypeProviderExtensions.cs">
-      <DependentUpon>ExtendedTypeProviderDecorator.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoRegistrationTest\ScopedServiceSingletonOverride.cs">
       <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>

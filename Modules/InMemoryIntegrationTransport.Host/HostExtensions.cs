@@ -16,28 +16,24 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
     /// </summary>
     public static class HostExtensions
     {
+        private const string RequireUseContainerCall = ".UseContainer() should be called before any endpoint declarations";
+
         /// <summary>
         /// Use in-memory integration transport inside specified host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseInMemoryIntegrationTransport(
-            this IHostBuilder hostBuilder,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer)
+        public static IHostBuilder UseInMemoryIntegrationTransport(this IHostBuilder hostBuilder)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseInMemoryIntegrationTransport));
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, implementationProducer, serviceCollection));
+                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, serviceCollection));
             });
         }
 
-        private static IDependencyContainer BuildTransportContainer(
-            HostBuilderContext ctx,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer,
-            IServiceCollection serviceCollection)
+        private static IDependencyContainer BuildTransportContainer(HostBuilderContext context, IServiceCollection serviceCollection)
         {
             var assemblies = new[]
             {
@@ -54,17 +50,33 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
                 .WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration())
                 .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity));
 
-            var dependencyContainer = DependencyContainer.CreateBoundedAbove(containerOptions, implementationProducer(containerOptions), assemblies);
+            var containerImplementationProducer = GetContainerImplementationProducer(context);
+
+            var dependencyContainer = DependencyContainer.CreateBoundedAbove(
+                containerOptions,
+                containerImplementationProducer(containerOptions),
+                assemblies);
 
             var injection = dependencyContainer.Resolve<IManualRegistration>();
 
-            ctx.Properties.Add(GenericHost.Api.HostExtensions.TransportInjectionKey, injection);
+            context.Properties.Add(GenericHost.Api.HostExtensions.TransportInjectionKey, injection);
 
             var transport = dependencyContainer.Resolve<InMemoryIntegrationTransport>();
 
             serviceCollection.AddSingleton<IHostBackgroundWorker>(new IntegrationTransportHostBackgroundWorker(transport));
 
             return dependencyContainer;
+        }
+
+        private static Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> GetContainerImplementationProducer(HostBuilderContext context)
+        {
+            if (context.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out var value)
+                && value is Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
+            {
+                return containerImplementationProducer;
+            }
+
+            throw new InvalidOperationException(RequireUseContainerCall);
         }
     }
 }

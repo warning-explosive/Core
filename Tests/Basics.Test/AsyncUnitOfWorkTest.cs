@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Primitives;
@@ -85,7 +84,7 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             ExecutionExtensions
                 .Try(() => unitOfWork.StartTransaction(new object(), producer, saveChanges, CancellationToken.None).Wait())
-                .Catch<AggregateException>(ex => throw ex.Unwrap().First())
+                .Catch<AggregateException>(ex => throw ex.RealException())
                 .Invoke();
         }
 

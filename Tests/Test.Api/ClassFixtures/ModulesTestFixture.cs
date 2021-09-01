@@ -63,19 +63,11 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IDependencyContainer CreateContainer(DependencyContainerOptions options)
+        public IDependencyContainer Container(DependencyContainerOptions options)
         {
             return CreateDependencyContainer(
                 options,
                 (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer()));
-        }
-
-        /// <inheritdoc />
-        public IDependencyContainer CreateContainer(DependencyContainerOptions options, ITypeProvider typeProvider)
-        {
-            return CreateDependencyContainer(
-                options,
-                (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer(), typeProvider));
         }
 
         private static IDependencyContainer CreateDependencyContainer(

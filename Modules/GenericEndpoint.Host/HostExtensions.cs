@@ -21,6 +21,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     /// </summary>
     public static class HostExtensions
     {
+        private const string RequireUseTransportCall = ".UseTransport() should be called before any endpoint declarations";
+        private const string RequireUseContainerCall = ".UseContainer() should be called before any endpoint declarations";
+        private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}";
+
         /// <summary>
         /// Gets endpoint dependency container
         /// </summary>
@@ -42,7 +46,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                             var integrationTransport = container.Resolve<IIntegrationTransport>();
 
                             return integrationTransport
-                                .UnwrapDecoratorTypes()
+                                .FlattenDecoratedType()
                                 .Any(it => it.Name.Equals(
                                     endpointIdentity.LogicalName,
                                     StringComparison.OrdinalIgnoreCase));
@@ -80,12 +84,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// Use specified endpoint
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="implementationProducer">Dependency container implementation producer</param>
         /// <param name="factory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer,
             Func<IEndpointBuilder, EndpointOptions> factory)
         {
             var endpointOptions = factory(new EndpointBuilder());
@@ -94,7 +96,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions), implementationProducer));
+                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ctx, ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions)));
                 serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildStartup(serviceProvider, endpointOptions));
             });
         }
@@ -117,20 +119,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             if (duplicates.Any())
             {
-                throw new InvalidOperationException(
-                    $"Endpoint duplicates was found: {string.Join(", ", duplicates)}");
+                throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(string.Join(", ", duplicates)));
             }
 
             optionsCollection.Add(endpointOptions);
         }
 
         private static IDependencyContainer BuildEndpointContainer(
-            EndpointOptions endpointOptions,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> implementationProducer)
+            HostBuilderContext context,
+            EndpointOptions endpointOptions)
         {
+            var containerImplementationProducer = GetContainerImplementationProducer(context);
+
             return DependencyContainer.CreateBoundedAbove(
                 endpointOptions.ContainerOptions,
-                implementationProducer(endpointOptions.ContainerOptions),
+                containerImplementationProducer(endpointOptions.ContainerOptions),
                 endpointOptions.AboveAssemblies.ToArray());
         }
 
@@ -168,12 +171,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
         private static IManualRegistration GetTransportInjection(this HostBuilderContext ctx)
         {
-            if (ctx.Properties.TryGetValue(GenericHost.Api.HostExtensions.TransportInjectionKey, out var value))
+            if (ctx.Properties.TryGetValue(GenericHost.Api.HostExtensions.TransportInjectionKey, out var value)
+                && value is IManualRegistration transportInjection)
             {
-                return value.EnsureNotNull<IManualRegistration>(".UseTransport() should be called before any endpoint declarations");
+                return transportInjection;
             }
 
-            throw new InvalidOperationException("You should call .UseTransport() extension method");
+            throw new InvalidOperationException(RequireUseTransportCall);
+        }
+
+        private static Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> GetContainerImplementationProducer(HostBuilderContext context)
+        {
+            if (context.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out var value)
+                && value is Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
+            {
+                return containerImplementationProducer;
+            }
+
+            throw new InvalidOperationException(RequireUseContainerCall);
         }
     }
 }

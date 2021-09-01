@@ -17,20 +17,34 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
+            : this(Array.Empty<IManualRegistration>(),
+                Array.Empty<IComponentsOverride>(),
+                Array.Empty<Assembly>(),
+                Array.Empty<string>(),
+                Array.Empty<Type>())
+        {
+        }
+
+        private DependencyContainerOptions(
+            IReadOnlyCollection<IManualRegistration> manualRegistrations,
+            IReadOnlyCollection<IComponentsOverride> overrides,
+            IReadOnlyCollection<Assembly> excludedAssemblies,
+            IReadOnlyCollection<string> excludedNamespaces,
+            IReadOnlyCollection<Type> additionalOurTypes)
         {
             ConstructorResolutionBehavior = new DefaultConstructorResolutionBehavior();
 
-            ManualRegistrations = new List<IManualRegistration>();
-            Overrides = new List<IComponentsOverride>();
-
-            ExcludedAssemblies = Array.Empty<Assembly>();
-            ExcludedNamespaces = Array.Empty<string>();
+            ManualRegistrations = manualRegistrations;
+            Overrides = overrides;
+            ExcludedAssemblies = excludedAssemblies;
+            ExcludedNamespaces = excludedNamespaces;
+            AdditionalOurTypes = additionalOurTypes;
         }
 
         /// <summary>
         /// Constructor resolution behavior
         /// </summary>
-        public IConstructorResolutionBehavior ConstructorResolutionBehavior { get; init; }
+        public IConstructorResolutionBehavior ConstructorResolutionBehavior { get; }
 
         /// <summary>
         /// Manual registrations
@@ -45,25 +59,32 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary>
         /// Excluded assemblies
         /// Assemblies excluded from type loading
-        /// These assemblies and their types will be identified as third party and won't participate in the container registrations
+        /// These assemblies and their types will be identified as third party and won't participate in components registrations
         /// </summary>
         public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; init; }
 
         /// <summary>
         /// Excluded namespaces
         /// Namespaces excluded from type loading
-        /// These types will be identified as third party and won't participate in the container registrations
+        /// These types will be identified as third party and won't participate in components registrations
         /// </summary>
         public IReadOnlyCollection<string> ExcludedNamespaces { get; init; }
+
+        /// <summary>
+        /// Additional our types
+        /// Types that will be identified as ours and will take part in components registration
+        /// </summary>
+        public IReadOnlyCollection<Type> AdditionalOurTypes { get; init; }
 
         /// <inheritdoc />
         public override int GetHashCode()
         {
             return HashCode.Combine(
+                CombineHashCode(ManualRegistrations),
+                CombineHashCode(Overrides),
                 CombineHashCode(ExcludedAssemblies),
                 CombineHashCode(ExcludedNamespaces),
-                CombineHashCode(ManualRegistrations),
-                CombineHashCode(Overrides));
+                CombineHashCode(AdditionalOurTypes));
 
             static int CombineHashCode<T>(IReadOnlyCollection<T> source)
             {
@@ -76,69 +97,86 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary>
         /// With manual registrations
         /// </summary>
-        /// <param name="manualRegistration">Required manual registration</param>
-        /// <param name="manualRegistrations">Optional manual registrations</param>
+        /// <param name="manualRegistrations">Manual registrations</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithManualRegistrations(IManualRegistration manualRegistration, params IManualRegistration[] manualRegistrations)
+        public DependencyContainerOptions WithManualRegistrations(params IManualRegistration[] manualRegistrations)
         {
-            return new DependencyContainerOptions()
-            {
-                ManualRegistrations = ManualRegistrations.Concat(new[] { manualRegistration }).Concat(manualRegistrations).ToList(),
-                Overrides = Overrides,
-                ExcludedAssemblies = ExcludedAssemblies,
-                ExcludedNamespaces = ExcludedNamespaces,
-            };
+            return !manualRegistrations.Any()
+                ? this
+                : new DependencyContainerOptions(
+                    ManualRegistrations.Concat(manualRegistrations).ToList(),
+                    Overrides,
+                    ExcludedAssemblies,
+                    ExcludedNamespaces,
+                    AdditionalOurTypes);
         }
 
         /// <summary>
         /// With overrides
         /// </summary>
-        /// <param name="override">Required override</param>
-        /// <param name="overrides">Optional overrides</param>
+        /// <param name="overrides">Components overrides</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithOverrides(IComponentsOverride @override, params IComponentsOverride[] overrides)
+        public DependencyContainerOptions WithOverrides(params IComponentsOverride[] overrides)
         {
-            return new DependencyContainerOptions()
-            {
-                ManualRegistrations = ManualRegistrations,
-                Overrides = Overrides.Concat(new[] { @override }).Concat(overrides).ToList(),
-                ExcludedAssemblies = ExcludedAssemblies,
-                ExcludedNamespaces = ExcludedNamespaces,
-            };
+            return !overrides.Any()
+                ? this
+                : new DependencyContainerOptions(
+                    ManualRegistrations,
+                    Overrides.Concat(overrides).ToList(),
+                    ExcludedAssemblies,
+                    ExcludedNamespaces,
+                    AdditionalOurTypes);
         }
 
         /// <summary>
         /// With excluded assemblies
         /// </summary>
-        /// <param name="assembly">Required excluded assembly</param>
-        /// <param name="assemblies">Optional excluded assemblies</param>
+        /// <param name="assemblies">Excluded assemblies</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithExcludedAssemblies(Assembly assembly, params Assembly[] assemblies)
+        public DependencyContainerOptions WithExcludedAssemblies(params Assembly[] assemblies)
         {
-            return new DependencyContainerOptions()
-            {
-                ManualRegistrations = ManualRegistrations,
-                Overrides = Overrides,
-                ExcludedAssemblies = ExcludedAssemblies.Concat(new[] { assembly }).Concat(assemblies).ToList(),
-                ExcludedNamespaces = ExcludedNamespaces,
-            };
+            return !assemblies.Any()
+                ? this
+                : new DependencyContainerOptions(
+                    ManualRegistrations,
+                    Overrides,
+                    ExcludedAssemblies.Concat(assemblies).ToList(),
+                    ExcludedNamespaces,
+                    AdditionalOurTypes);
         }
 
         /// <summary>
         /// With excluded namespaces
         /// </summary>
-        /// <param name="namespace">Required excluded namespace</param>
-        /// <param name="namespaces">Optional excluded namespaces</param>
+        /// <param name="namespaces">Excluded namespaces</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithExcludedNamespaces(string @namespace, params string[] namespaces)
+        public DependencyContainerOptions WithExcludedNamespaces(params string[] namespaces)
         {
-            return new DependencyContainerOptions()
-            {
-                ManualRegistrations = ManualRegistrations,
-                Overrides = Overrides,
-                ExcludedAssemblies = ExcludedAssemblies,
-                ExcludedNamespaces = ExcludedNamespaces.Concat(new[] { @namespace }).Concat(namespaces).ToList(),
-            };
+            return !namespaces.Any()
+                ? this
+                : new DependencyContainerOptions(
+                    ManualRegistrations,
+                    Overrides,
+                    ExcludedAssemblies,
+                    ExcludedNamespaces.Concat(namespaces).ToHashSet(StringComparer.OrdinalIgnoreCase),
+                    AdditionalOurTypes);
+        }
+
+        /// <summary>
+        /// Adds types as ours that will take part in components registration
+        /// </summary>
+        /// <param name="additionalOurTypes">Additional our types</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithAdditionalOurTypes(params Type[] additionalOurTypes)
+        {
+            return !additionalOurTypes.Any()
+                ? this
+                : new DependencyContainerOptions(
+                    ManualRegistrations,
+                    Overrides,
+                    ExcludedAssemblies,
+                    ExcludedNamespaces,
+                    AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet());
         }
     }
 }

@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.CompositionRoot.Abstractions
 {
-    using System;
     using System.Collections.Generic;
     using AutoRegistration.Api.Abstractions;
     using Registration;
@@ -10,9 +9,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
     /// </summary>
     public interface IRegistrationsContainer : IResolvable
     {
-        /// <summary> Singletons </summary>
-        /// <returns> Singleton objects </returns>
-        IEnumerable<(Type Type, object Instance)> Singletons();
+        /// <summary> Instances </summary>
+        /// <returns> Instance components </returns>
+        IEnumerable<InstanceRegistrationInfo> Instances();
 
         /// <summary> Resolvable </summary>
         /// <returns> ServiceRegistrationInfos </returns>

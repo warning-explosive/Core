@@ -9,8 +9,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     /// ServiceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ServiceRegistrationInfo : IComponentRegistrationInfo,
-                                           IEquatable<ServiceRegistrationInfo>,
+    public class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
                                            ISafelyEquatable<ServiceRegistrationInfo>
     {
         /// <summary> .cctor </summary>

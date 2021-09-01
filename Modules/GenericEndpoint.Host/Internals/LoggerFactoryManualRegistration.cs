@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Advanced.RegisterFactory<ILogger>(() => _loggerFactory.CreateLogger(_endpointIdentity.ToString()), EnLifestyle.Singleton);
+            container.Advanced.RegisterDelegate<ILogger>(() => _loggerFactory.CreateLogger(_endpointIdentity.ToString()), EnLifestyle.Singleton);
         }
     }
 }

@@ -25,11 +25,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 .Each(grp => container.RegisterCollection(grp.Key.Service, grp, grp.Key.Lifestyle));
         }
 
-        internal static void RegisterSingletons(this IEnumerable<(Type, object)> singletons, IDependencyContainerImplementation container)
+        internal static void RegisterInstances(this IEnumerable<InstanceRegistrationInfo> instances, IDependencyContainerImplementation container)
         {
-            foreach (var (service, instance) in singletons)
+            foreach (var info in instances)
             {
-                container.RegisterInstance(service, instance);
+                container.RegisterInstance(info.Service, info.Instance);
             }
         }
 
@@ -39,6 +39,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
             {
                 container.Register(info.Service, info.InstanceProducer, info.Lifestyle);
             }
+        }
+
+        internal static void RegisterResolvable(this IEnumerable<ServiceRegistrationInfo> infos, IDependencyContainerImplementation container)
+        {
+            infos.RegisterServicesWithOpenGenericFallBack(container);
         }
 
         internal static void RegisterServicesWithOpenGenericFallBack(this IEnumerable<ServiceRegistrationInfo> infos, IDependencyContainerImplementation container)

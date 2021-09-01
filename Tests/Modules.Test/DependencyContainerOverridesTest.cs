@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
+    using System;
     using System.Linq;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Enumerations;
@@ -293,6 +294,102 @@ namespace SpaceEngineers.Core.Modules.Test
                     ? decorator.Decoratee
                     : service;
             }
+        }
+
+        [Fact]
+        internal void OverrideInstanceTest()
+        {
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(IScopedService),
+                typeof(ScopedService),
+                typeof(IManuallyRegisteredService),
+                typeof(ManuallyRegisteredService),
+                typeof(ManuallyRegisteredServiceOverride)
+            };
+
+            var typeProvider = TypeProvider
+                .CreateBoundedAbove(assemblies)
+                .ExtendTypeProvider(additionalOurTypes);
+
+            var original = new ManuallyRegisteredService();
+
+            var registration = Fixture.DelegateRegistration(container =>
+            {
+                container.RegisterInstance<IManuallyRegisteredService>(original);
+                container.RegisterInstance<ManuallyRegisteredService>(original);
+            });
+
+            var replacement = new ManuallyRegisteredServiceOverride();
+
+            var overrides = Fixture.DelegateOverride(container =>
+            {
+                container.OverrideInstance<IManuallyRegisteredService>(replacement);
+            });
+
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(registration)
+                .WithOverrides(overrides);
+
+            var dependencyContainer = Fixture.CreateContainer(options, typeProvider);
+            var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
+
+            Assert.NotSame(original, replacement);
+            Assert.NotSame(original, resolved);
+            Assert.Same(replacement, resolved);
+            Assert.Same(resolved, dependencyContainer.Resolve<IManuallyRegisteredService>());
+        }
+
+        [Fact]
+        internal void OverrideDelegateTest()
+        {
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(IScopedService),
+                typeof(ScopedService),
+                typeof(IManuallyRegisteredService),
+                typeof(ManuallyRegisteredService),
+                typeof(ManuallyRegisteredServiceOverride)
+            };
+
+            var typeProvider = TypeProvider
+                .CreateBoundedAbove(assemblies)
+                .ExtendTypeProvider(additionalOurTypes);
+
+            var originalFactory = new Func<ManuallyRegisteredService>(() => new ManuallyRegisteredService());
+
+            var registration = Fixture.DelegateRegistration(container =>
+            {
+                container.Advanced.RegisterDelegate<IManuallyRegisteredService>(originalFactory, EnLifestyle.Singleton);
+                container.Advanced.RegisterDelegate<ManuallyRegisteredService>(originalFactory, EnLifestyle.Singleton);
+            });
+
+            var replacementFactory = new Func<IManuallyRegisteredService>(() => new ManuallyRegisteredServiceOverride());
+
+            var overrides = Fixture.DelegateOverride(container =>
+            {
+                container.OverrideDelegate<IManuallyRegisteredService>(replacementFactory, EnLifestyle.Singleton);
+            });
+
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(registration)
+                .WithOverrides(overrides);
+
+            var dependencyContainer = Fixture.CreateContainer(options, typeProvider);
+            var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
+
+            Assert.Equal(typeof(ManuallyRegisteredServiceOverride), resolved.GetType());
+            Assert.Same(resolved, dependencyContainer.Resolve<IManuallyRegisteredService>());
         }
     }
 }

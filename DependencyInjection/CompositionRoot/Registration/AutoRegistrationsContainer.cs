@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
@@ -31,9 +30,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             _constructorResolutionBehavior = constructorResolutionBehavior;
         }
 
-        public IEnumerable<(Type Type, object Instance)> Singletons()
+        public IEnumerable<InstanceRegistrationInfo> Instances()
         {
-            return Enumerable.Empty<(Type, object)>();
+            return Enumerable.Empty<InstanceRegistrationInfo>();
         }
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()

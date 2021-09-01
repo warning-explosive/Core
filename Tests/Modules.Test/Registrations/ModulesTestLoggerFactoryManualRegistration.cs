@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
         {
             var name = AssembliesExtensions.BuildName(nameof(Core), nameof(Core.Modules), nameof(Core.Modules.Test));
 
-            container.Advanced.RegisterFactory<ILogger>(() =>
+            container.Advanced.RegisterDelegate<ILogger>(() =>
                 {
                     using var loggerFactory = new LoggerFactory();
                     return loggerFactory.CreateLogger(name);

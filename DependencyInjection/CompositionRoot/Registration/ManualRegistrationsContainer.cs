@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     internal class ManualRegistrationsContainer : IRegistrationsContainer,
                                                   IAdvancedManualRegistrationsContainer
     {
-        private readonly List<(Type, object)> _singletons;
+        private readonly List<InstanceRegistrationInfo> _instances;
         private readonly List<ServiceRegistrationInfo> _resolvable;
         private readonly List<DelegateRegistrationInfo> _delegates;
         private readonly List<ServiceRegistrationInfo> _collections;
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         {
             Types = typeProvider;
 
-            _singletons = new List<(Type, object)>();
+            _instances = new List<InstanceRegistrationInfo>();
             _resolvable = new List<ServiceRegistrationInfo>();
             _delegates = new List<DelegateRegistrationInfo>();
             _collections = new List<ServiceRegistrationInfo>();
@@ -38,9 +38,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
         public ITypeProvider Types { get; }
 
-        public IEnumerable<(Type Type, object Instance)> Singletons()
+        public IEnumerable<InstanceRegistrationInfo> Instances()
         {
-            return _singletons;
+            return _instances;
         }
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
@@ -89,17 +89,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
         public IManualRegistrationsContainer RegisterInstance(Type service, object singletonInstance)
         {
-            _singletons.Add((service, singletonInstance));
+            _instances.Add(new InstanceRegistrationInfo(service, singletonInstance));
             return this;
         }
 
-        public IManualRegistrationsContainer RegisterFactory<TService>(Func<TService> factory, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterDelegate<TService>(Func<TService> factory, EnLifestyle lifestyle)
             where TService : class
         {
-            return RegisterFactory(typeof(TService), factory, lifestyle);
+            return RegisterDelegate(typeof(TService), factory, lifestyle);
         }
 
-        public IManualRegistrationsContainer RegisterFactory(Type service, Func<object> factory, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterDelegate(Type service, Func<object> factory, EnLifestyle lifestyle)
         {
             var info = new DelegateRegistrationInfo(service, factory, lifestyle);
             _delegates.Add(info);

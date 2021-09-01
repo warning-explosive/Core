@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
     {
         internal static IEnumerable<Type> RegisteredComponents(this IRegistrationsContainer registrations)
         {
-            return registrations.Singletons().Select(singleton => singleton.Type)
+            return registrations.Instances().Select(singleton => singleton.Instance.GetType())
                 .Concat(registrations.Resolvable().Select(info => info.Implementation))
                 .Concat(registrations.Delegates().Select(info => info.Service))
                 .Concat(registrations.Collections().Select(info => info.Implementation))

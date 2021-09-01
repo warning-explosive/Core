@@ -2,25 +2,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
 
     /// <summary>
-    /// DecoratorRegistrationInfo
+    /// InstanceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class DecoratorRegistrationInfo : IEquatable<DecoratorRegistrationInfo>,
-                                             ISafelyEquatable<DecoratorRegistrationInfo>
+    public class InstanceRegistrationInfo : IEquatable<InstanceRegistrationInfo>,
+                                            ISafelyEquatable<InstanceRegistrationInfo>
     {
         /// <summary> .cctor </summary>
         /// <param name="service">Service</param>
-        /// <param name="implementation">Implementation</param>
-        /// <param name="lifestyle">EnLifestyle</param>
-        public DecoratorRegistrationInfo(Type service, Type implementation, EnLifestyle lifestyle)
+        /// <param name="instance">Instance</param>
+        public InstanceRegistrationInfo(Type service, object instance)
         {
             Service = service.GenericTypeDefinitionOrSelf();
-            Implementation = implementation;
-            Lifestyle = lifestyle;
+            Instance = instance;
         }
 
         /// <summary>
@@ -29,33 +26,27 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         public Type Service { get; }
 
         /// <summary>
-        /// Implementation
+        /// Instance
         /// </summary>
-        public Type Implementation { get; }
-
-        /// <summary>
-        /// Lifestyle
-        /// </summary>
-        public EnLifestyle Lifestyle { get; }
+        public object Instance { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" | ", Service, Implementation, Lifestyle);
+            return string.Join(" | ", Service, Instance.GetType());
         }
 
         #region IEquatable
 
         /// <inheritdoc />
-        public bool SafeEquals(DecoratorRegistrationInfo other)
+        public bool SafeEquals(InstanceRegistrationInfo other)
         {
             return Service == other.Service
-                   && Implementation == other.Implementation
-                   && Lifestyle == other.Lifestyle;
+                   && Instance == other.Instance;
         }
 
         /// <inheritdoc />
-        public bool Equals(DecoratorRegistrationInfo? other)
+        public bool Equals(InstanceRegistrationInfo? other)
         {
             return Equatable.Equals(this, other);
         }
@@ -69,7 +60,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Service, Implementation, Lifestyle);
+            return HashCode.Combine(Service, Instance);
         }
 
         #endregion

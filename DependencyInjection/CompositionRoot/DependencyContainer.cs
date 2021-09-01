@@ -268,8 +268,8 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private void Register(IRegistrationsContainer registrations)
         {
-            registrations.Singletons().RegisterSingletons(Container);
-            registrations.Resolvable().RegisterServicesWithOpenGenericFallBack(Container);
+            registrations.Instances().RegisterInstances(Container);
+            registrations.Resolvable().RegisterResolvable(Container);
             registrations.Delegates().RegisterDelegates(Container);
             registrations.Collections().RegisterCollections(Container);
             registrations.Decorators().RegisterDecorators(Container);

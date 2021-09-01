@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         private readonly IComponentsOverrideContainer _overridesContainer;
         private readonly IEnumerable<IRegistrationsContainer> _registrations;
 
-        private IReadOnlyCollection<(Type, object)>? _singletons;
+        private IReadOnlyCollection<InstanceRegistrationInfo>? _instances;
         private IReadOnlyCollection<ServiceRegistrationInfo>? _resolvable;
         private IReadOnlyCollection<DelegateRegistrationInfo>? _delegates;
         private IReadOnlyCollection<ServiceRegistrationInfo>? _collections;
@@ -27,14 +27,20 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             _registrations = registrations;
         }
 
-        public IEnumerable<(Type Type, object Instance)> Singletons()
+        public IEnumerable<InstanceRegistrationInfo> Instances()
         {
-            _singletons ??= InitSingletons();
-            return _singletons;
+            _instances ??= InitInstances();
+            return _instances;
 
-            IReadOnlyCollection<(Type, object)> InitSingletons()
+            IReadOnlyCollection<InstanceRegistrationInfo> InitInstances()
             {
-                return Aggregate(_registrations, container => container.Singletons()).ToList();
+                return ApplyOverrides(
+                        Aggregate(_registrations, container => container.Instances()),
+                        registrationInfo => new { registrationInfo.Service },
+                        container => container.InstanceOverrides,
+                        overrideInfo => new { overrideInfo.Service },
+                        InstanceOverrideProducer)
+                    .ToList();
             }
         }
 
@@ -47,8 +53,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             {
                 return ApplyOverrides(
                         Aggregate(_registrations, container => container.Resolvable()),
+                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
                         container => container.ResolvableOverrides,
-                        OverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
+                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
+                        ResolvableOverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
                     .ToList();
             }
         }
@@ -60,7 +68,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
             IReadOnlyCollection<DelegateRegistrationInfo> InitDelegates()
             {
-                return Aggregate(_registrations, container => container.Delegates()).ToList();
+                return ApplyOverrides(
+                        Aggregate(_registrations, container => container.Delegates()),
+                        registrationInfo => new { registrationInfo.Service },
+                        container => container.DelegateOverrides,
+                        overrideInfo => new { overrideInfo.Service },
+                        DelegateOverrideProducer(overrideInfo => overrideInfo))
+                    .ToList();
             }
         }
 
@@ -73,8 +87,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             {
                 return ApplyOverrides(
                         Aggregate(_registrations, container => container.Collections()),
+                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
                         container => container.CollectionResolvableOverrides,
-                        OverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
+                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
+                        ResolvableOverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
                     .ToList();
             }
         }
@@ -88,8 +104,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             {
                 return ApplyOverrides(
                         Aggregate(_registrations, container => container.Decorators()),
+                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
                         container => container.DecoratorOverrides,
-                        OverrideDecoratorProducer(overrideInfo => new DecoratorRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
+                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
+                        DecoratorOverrideProducer(overrideInfo => new DecoratorRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
                     .ToList();
             }
         }
@@ -101,20 +119,21 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             return registrations.SelectMany(accessor);
         }
 
-        private IEnumerable<T> ApplyOverrides<T>(
-            IEnumerable<T> source,
-            Func<IComponentsOverrideContainer, IReadOnlyCollection<ComponentOverrideInfo>> overrides,
-            Func<T, ComponentOverrideInfo, T> overrideProducer)
-            where T : IComponentRegistrationInfo
+        private IEnumerable<TSource> ApplyOverrides<TSource, TOverride, TKey>(
+            IEnumerable<TSource> source,
+            Func<TSource, TKey> sourceKeySelector,
+            Func<IComponentsOverrideContainer, IReadOnlyCollection<TOverride>> overrides,
+            Func<TOverride, TKey> overridesKeySelector,
+            Func<TSource, TOverride, TSource> overrideProducer)
         {
             return source.FullOuterJoin(
                     overrides(_overridesContainer),
-                    left => new { left.Service, left.Implementation },
-                    right => new { right.Service, right.Implementation },
+                    sourceKeySelector,
+                    overridesKeySelector,
                     ApplyOverride(overrideProducer));
         }
 
-        private static Func<T?, ComponentOverrideInfo?, T> ApplyOverride<T>(Func<T, ComponentOverrideInfo, T> producer)
+        private static Func<TSource?, TOverride?, TSource> ApplyOverride<TSource, TOverride>(Func<TSource, TOverride, TSource> producer)
         {
             return (registrationInfo, overrideInfo) =>
             {
@@ -137,9 +156,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             };
         }
 
-        private static Func<T, ComponentOverrideInfo, T> OverrideProducer<T>(
-            Func<ComponentOverrideInfo, T> producer)
-            where T : IComponentRegistrationInfo
+        private static InstanceRegistrationInfo InstanceOverrideProducer(
+            InstanceRegistrationInfo registrationInfo,
+            InstanceRegistrationInfo overrideInfo)
+        {
+            return overrideInfo;
+        }
+
+        private static Func<DelegateRegistrationInfo, DelegateRegistrationInfo, DelegateRegistrationInfo> DelegateOverrideProducer(
+            Func<DelegateRegistrationInfo, DelegateRegistrationInfo> producer)
         {
             return (registrationInfo, overrideInfo) =>
             {
@@ -152,9 +177,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             };
         }
 
-        private static Func<T, ComponentOverrideInfo, T> OverrideDecoratorProducer<T>(
-            Func<ComponentOverrideInfo, T> producer)
-            where T : IComponentRegistrationInfo
+        private static Func<ServiceRegistrationInfo, ComponentOverrideInfo, ServiceRegistrationInfo> ResolvableOverrideProducer(
+            Func<ComponentOverrideInfo, ServiceRegistrationInfo> producer)
+        {
+            return (registrationInfo, overrideInfo) =>
+            {
+                if (registrationInfo.Lifestyle <= overrideInfo.Lifestyle)
+                {
+                    return producer(overrideInfo);
+                }
+
+                throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
+            };
+        }
+
+        private static Func<DecoratorRegistrationInfo, ComponentOverrideInfo, DecoratorRegistrationInfo> DecoratorOverrideProducer(
+            Func<ComponentOverrideInfo, DecoratorRegistrationInfo> producer)
         {
             return (registrationInfo, overrideInfo) =>
             {

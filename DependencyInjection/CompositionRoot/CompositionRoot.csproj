@@ -57,14 +57,5 @@
     <Compile Update="Registration\ComponentsOverrideContainer.cs">
       <DependentUpon>CompositeRegistrationsContainer.cs</DependentUpon>
     </Compile>
-    <Compile Update="Registration\ServiceRegistrationInfo.cs">
-      <DependentUpon>IComponentRegistrationInfo.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Registration\DecoratorRegistrationInfo.cs">
-      <DependentUpon>IComponentRegistrationInfo.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Registration\DelegateRegistrationInfo.cs">
-      <DependentUpon>IComponentRegistrationInfo.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
 </Project>

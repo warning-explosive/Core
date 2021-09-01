@@ -10,9 +10,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Abstractions
     public interface IComponentsOverrideContainer : IResolvable
     {
         /// <summary>
-        /// All overrides
+        /// Instance overrides
         /// </summary>
-        IEnumerable<ComponentOverrideInfo> AllOverrides { get; }
+        IReadOnlyCollection<InstanceRegistrationInfo> InstanceOverrides { get; }
+
+        /// <summary>
+        /// Delegate overrides
+        /// </summary>
+        IReadOnlyCollection<DelegateRegistrationInfo> DelegateOverrides { get; }
 
         /// <summary>
         /// Resolvable overrides

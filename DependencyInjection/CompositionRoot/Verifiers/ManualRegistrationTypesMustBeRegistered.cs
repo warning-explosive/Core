@@ -46,8 +46,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         private bool HasBeenOverridden(Type service, Type implementation)
         {
-            return _overrides
-                .AllOverrides
+            return _overrides.InstanceOverrides
+                .Select(info => new { info.Service, Implementation = info.Instance.GetType() })
+                .Concat(_overrides.ResolvableOverrides
+                    .Concat(_overrides.CollectionResolvableOverrides)
+                    .Concat(_overrides.DecoratorOverrides)
+                    .Select(info => new { info.Service, info.Implementation }))
                 .Any(info => info.Service == service && info.Implementation == implementation);
         }
     }

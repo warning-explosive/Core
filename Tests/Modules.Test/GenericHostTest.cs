@@ -24,6 +24,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Defaults;
     using GenericEndpoint.Host;
+    using GenericEndpoint.Host.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.TestExtensions;
     using GenericHost;
@@ -57,21 +58,56 @@ namespace SpaceEngineers.Core.Modules.Test
         {
         }
 
-        /// <summary> TransportTestData member </summary>
-        /// <returns>Test data</returns>
-        public static IEnumerable<object[]> TransportTestData()
+        /// <summary>
+        /// DependencyContainerTestData
+        /// </summary>
+        /// <returns>Dependency container producers</returns>
+        public static IEnumerable<object[]> DependencyContainerTestData()
         {
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport());
-            var useGenericContainer = new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer());
+            var dependencyContainerProducers = new object[]
+            {
+                new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
+            };
 
-            yield return new object[] { useInMemoryIntegrationTransport, useGenericContainer };
+            return new[] { dependencyContainerProducers };
+        }
+
+        /// <summary>
+        /// IntegrationTransportTestData
+        /// </summary>
+        /// <returns>Integration transport providers</returns>
+        public static IEnumerable<object[]> IntegrationTransportTestData()
+        {
+            var integrationTransportProviders = new object[]
+            {
+                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport())
+            };
+
+            return DependencyContainerTestData()
+                .SelectMany(it => integrationTransportProviders.Select(provider => it.Concat(new[] { provider }).ToArray()));
+        }
+
+        /// <summary>
+        /// DataAccessTestData
+        /// </summary>
+        /// <returns>Database providers</returns>
+        public static IEnumerable<object[]> DataAccessTestData()
+        {
+            var databaseProviders = new object[]
+            {
+                new PostgreSqlDatabaseProvider()
+            };
+
+            return IntegrationTransportTestData()
+                .SelectMany(it => databaseProviders.Select(provider => it.Concat(new[] { provider }).ToArray()));
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(DataAccessTestData))]
         internal async Task BuildDatabaseModelTest(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            IDatabaseProvider databaseProvider)
         {
             var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
 
@@ -79,7 +115,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseContainer(useContainer)
                 .UseStatisticsEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithDataAccess(new PostgreSqlDatabaseProvider()) // TODO: UseGenericDatabase
+                    .WithDataAccess(databaseProvider)
                     .BuildOptions(statisticsEndpointIdentity))
                 .BuildHost();
 
@@ -121,10 +157,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task RpcRequestTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -168,10 +204,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -207,10 +243,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task VariantMessageHandlerTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var actualMessagesCount = 0;
             var expectedMessagesCount = 3;
@@ -258,10 +294,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task ThrowingMessageHandlerTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var actualIncomingMessagesCount = 0;
             var actualRefusedMessagesCount = 0;
@@ -341,10 +377,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task SimpleHostTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var expectedMessagesCount = 1000;
             var expectedRefusedMessagesCount = 0;
@@ -433,10 +469,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task SameTransportTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
@@ -511,10 +547,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal void BuildHostTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var endpointIdentity = new EndpointIdentity(TestIdentity.Endpoint1, 0);
 
@@ -778,10 +814,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task RunTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
@@ -799,10 +835,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory(Timeout = 120_000)]
-        [MemberData(nameof(TransportTestData))]
+        [MemberData(nameof(IntegrationTransportTestData))]
         internal async Task StartStopTest(
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer)
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)

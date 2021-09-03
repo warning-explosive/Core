@@ -41,8 +41,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
                 .ExtractDiff(actualModel, expectedModel)
                 .ToList();
 
-            // TODO: generate migration
-            // TODO: Apply migration (initial migration or regular migration)
+            // TODO: #110 - generate migration
+            // TODO: #110 - Apply migration (initial migration or regular migration)
         }
     }
 }

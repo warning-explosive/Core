@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void WrongNullableInferenceTest()
         {
-            // TODO: Compiler Issue
+            // TODO: #38 - Compiler Issue
             object? x = null;
             void Action() => Output.WriteLine(x.GetHashCode().ToString(CultureInfo.InvariantCulture));
             Assert.Throws<NullReferenceException>(Action);

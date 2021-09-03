@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
             Database = "SpaceEngineersDatabase";
             Schema = "public";
 
-            /* TODO: use credentials vault */
+            /* TODO: #130 - use secrets or credentials vault */
             Username = "SpaceEngineer";
             Password = "1234";
 

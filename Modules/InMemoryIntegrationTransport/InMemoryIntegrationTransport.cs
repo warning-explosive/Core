@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         public Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token)
         {
-            /* TODO: collect statistics */
+            /* TODO: #112 - collect statistics */
             return Task.CompletedTask;
         }
 

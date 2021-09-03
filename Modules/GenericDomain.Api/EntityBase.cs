@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api
             Id = Guid.NewGuid();
             Version = 0;
 
-            // TODO: start track entity in transaction
+            // TODO: #131 - track domain entities
         }
 
         /// <summary>
@@ -31,7 +31,8 @@ namespace SpaceEngineers.Core.GenericDomain.Api
 
         /// <summary>
         /// Entity identifier
-        /// TODO: Versions / optimistic concurrency / historical entities
+        /// TODO: #133 - Versions, optimistic / pessimistic concurrency
+        /// TODO: #132 - historical entities
         /// </summary>
         public ulong Version { get; private set; }
 

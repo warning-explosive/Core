@@ -30,7 +30,7 @@
             _databaseSettings = databaseSettings;
         }
 
-        public bool HasChanges => throw new NotImplementedException();
+        public bool HasChanges => throw new NotImplementedException("#131 - track domain entities");
 
         public async Task<IDbTransaction> Open(CancellationToken token)
         {
@@ -86,7 +86,7 @@
         public void Track<TAggregate>(TAggregate aggregate)
             where TAggregate : class, IAggregate
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("#131 - track domain entities");
         }
     }
 }

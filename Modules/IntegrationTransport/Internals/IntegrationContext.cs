@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
             {
                 var requestId = message.ReadRequiredHeader<Guid>(IntegrationMessageHeader.RequestId);
 
-                // TODO: think about lost headers
+                // TODO: #137 - think about lost headers
                 registry.TrySetResult(requestId, (TReply)message.Payload);
 
                 return Task.CompletedTask;

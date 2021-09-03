@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             {
                 while (!token.IsCancellationRequested)
                 {
-                    // TODO: dequeue several messages
+                    // TODO: #129 - dequeue several messages asynchronously
                     var element = await Dequeue(token).ConfigureAwait(false);
 
                     if (element != null)

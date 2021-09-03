@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
     /// <summary>
     /// Benchmarks
     /// </summary>
-    // TODO: remove magic numbers and use adaptive approach -> store test artifacts in DB and search performance change points
+    // TODO: #136 - remove magic numbers and use adaptive approach -> store test artifacts in DB and search performance change points
     public class Benchmarks : TestBase
     {
         /// <summary> .cctor </summary>

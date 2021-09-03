@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
     {
         public override Task Handle(GetEndpointStatistics message, IIntegrationContext context, CancellationToken token)
         {
-            // TODO: add metrics
+            // TODO: #112 - add metrics
             var reply = new EndpointStatisticsReply(message.EndpointIdentity);
 
             return context.Reply(message, reply, token);

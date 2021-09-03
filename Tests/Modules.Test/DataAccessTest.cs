@@ -408,7 +408,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 checkQuery(query, Output.WriteLine);
 
-                /* TODO: setup appveyor environment so as to run queries */
+                /* TODO: #135 - setup appveyor environment so as to run queries */
                 /*var result = queryProducer(readRepository)
                     .GetEnumerator()
                     .AsEnumerable<object>()
@@ -458,7 +458,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     Output.WriteLine(string.Empty);
                 }*/
 
-                /* TODO: IAsyncQueryable extensions
+                /* TODO: #134 - IAsyncQueryable extensions
                 _ = await readRepository
                     .All()
                     .Select(entity => entity.Id)

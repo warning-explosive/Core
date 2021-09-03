@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 
         private static Type GetColumnType(DatabaseColumn column)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("#110 - Model builder & migrations");
         }
 
         private static ViewNode BuildViewNode(DatabaseView view)

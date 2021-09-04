@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         /// <returns>Ongoing request operation</returns>
         Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage;
+            where TReply : IIntegrationReply;
 
         /// <summary>
         /// Reply to initiator endpoint
@@ -55,6 +55,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         /// <returns>Ongoing reply operation</returns>
         Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage;
+            where TReply : IIntegrationReply;
     }
 }

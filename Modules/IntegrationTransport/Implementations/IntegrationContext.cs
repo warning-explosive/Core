@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
 
         public async Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             var message = CreateGeneralMessage(query);
 

@@ -37,6 +37,9 @@
       <Compile Update="Abstractions\IIntegrationQuery.cs">
         <DependentUpon>IIntegrationMessage.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\IIntegrationReply.cs">
+        <DependentUpon>IIntegrationMessage.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />

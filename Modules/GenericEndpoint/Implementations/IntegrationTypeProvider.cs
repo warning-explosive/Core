@@ -58,6 +58,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
                                && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
         }
 
+        public IEnumerable<Type> Replies()
+        {
+            return _typeProvider
+                .AllLoadedTypes
+                .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type));
+        }
+
         public IEnumerable<Type> EndpointSubscriptions()
         {
             return _typeProvider

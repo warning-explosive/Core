@@ -3,9 +3,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
     using System;
 
     /// <summary>
-    /// Specifies logical (not physical) owner for events and commands
-    /// Event owner - publisher endpoint
-    /// Command owner - send operation target endpoint
+    /// Specifies logical (not physical) owner for contract messages
+    /// Command owner - endpoint which can handle that command
+    /// Event owner - endpoint which publishes event
+    /// Query owner - endpoint which can handle that query
+    /// Reply has no owner
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class OwnedByAttribute : Attribute

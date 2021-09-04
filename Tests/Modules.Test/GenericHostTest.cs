@@ -668,6 +668,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         typeof(IIntegrationMessage),
                         typeof(IIntegrationCommand),
                         typeof(IIntegrationEvent),
+                        typeof(IIntegrationReply),
                         typeof(IIntegrationQuery<>),
                         typeof(BaseEvent),
                         typeof(FirstInheritedEvent),
@@ -718,6 +719,21 @@ namespace SpaceEngineers.Core.Modules.Test
                         .ToList();
 
                     Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
+
+                    var expectedReplies = new[]
+                    {
+                        typeof(IIntegrationReply),
+                        typeof(IdentifiedReply),
+                        typeof(EndpointStatisticsReply)
+                    };
+
+                    var actualReplies = integrationTypeProvider
+                        .Replies()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.Replies), Output.WriteLine)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
 
                     var expectedQueries = new[]
                     {

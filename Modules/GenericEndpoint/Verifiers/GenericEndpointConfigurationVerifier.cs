@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Abstractions;
     using CompositionRoot.Api.Abstractions;
     using Contract.Abstractions;
     using Contract.Attributes;
@@ -17,87 +18,109 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
                                                           ICollectionResolvable<IConfigurationVerifier>
     {
-        private readonly ITypeProvider _typeProvider;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
+        private readonly IRegistrationsContainer _registrations;
 
         public GenericEndpointConfigurationVerifier(
-            ITypeProvider typeProvider,
-            IIntegrationTypeProvider integrationTypeProvider)
+            IIntegrationTypeProvider integrationTypeProvider,
+            IRegistrationsContainer registrations)
         {
-            _typeProvider = typeProvider;
             _integrationTypeProvider = integrationTypeProvider;
+            _registrations = registrations;
         }
 
         /// <inheritdoc />
         public void Verify()
         {
-            /*
-             * 1. Messages should be marked with OwnedByAttribute
-             * 2. Endpoint should have message handler for owned messages
-             * 3. Message handler should have transient lifestyle
-             */
-            Verify(_integrationTypeProvider.EndpointCommands());
-            Verify(_integrationTypeProvider.EndpointQueries());
-            Verify(_integrationTypeProvider.EndpointEvents());
+            VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
 
-            /*
-             * 4. Message implements only one specialized interface (command, query, event or just message)
-             */
-            _integrationTypeProvider
-                .IntegrationMessageTypes()
-                .Where(ImplementsSeveralSpecializedInterfaces)
-                .Each(type => throw new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, query, event or just message)"));
+            VerifyOwnedAttribute(_integrationTypeProvider.EndpointCommands());
+            VerifyOwnedAttribute(_integrationTypeProvider.EndpointEvents());
+            VerifyOwnedAttribute(_integrationTypeProvider.Replies());
+            VerifyOwnedAttribute(_integrationTypeProvider.EndpointQueries());
+
+            VerifyMessageHandlersLifestyle();
+
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands());
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointEvents());
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries());
         }
 
-        private void Verify(IEnumerable<Type> messageTypes)
+        private static void VerifyMessageInterfaces(IEnumerable<Type> messageTypes)
         {
-            foreach (var message in messageTypes)
+            messageTypes
+                .Where(ImplementsSeveralSpecializedInterfaces)
+                .Each(type => throw new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, query, event or just message)"));
+
+            static bool ImplementsSeveralSpecializedInterfaces(Type type)
             {
-                if (!IsMessageAbstraction(message))
+                var sum = typeof(IIntegrationCommand).IsAssignableFrom(type).Bit()
+                          + typeof(IIntegrationEvent).IsAssignableFrom(type).Bit()
+                          + typeof(IIntegrationReply).IsAssignableFrom(type).Bit()
+                          + type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)).Bit();
+
+                return sum > 1;
+            }
+        }
+
+        private static void VerifyOwnedAttribute(IEnumerable<Type> messageTypes)
+        {
+            foreach (var messageType in messageTypes)
+            {
+                if (!messageType.IsConcreteType())
                 {
-                    _ = message.GetRequiredAttribute<OwnedByAttribute>();
+                    continue;
                 }
 
-                var service = typeof(IMessageHandler<>).MakeGenericType(message);
-
-                var messageHandlers = _typeProvider
-                    .OurTypes
-                    .Where(type => type.IsConcreteType()
-                                   && service.IsAssignableFrom(type))
-                    .ToList();
-
-                if (!messageHandlers.Any()
-                    && !IsMessageAbstraction(message))
+                if (typeof(IIntegrationReply).IsAssignableFrom(messageType))
                 {
-                    throw new InvalidOperationException($"Message '{message.FullName}' should have at least one message handler");
+                    if (messageType.HasAttribute<OwnedByAttribute>())
+                    {
+                        throw new InvalidOperationException($"Reply should not have {nameof(OwnedByAttribute)}");
+                    }
                 }
-
-                var lifestyleViolations = messageHandlers
-                    .Where(messageHandler => messageHandler.GetRequiredAttribute<ComponentAttribute>().Lifestyle != EnLifestyle.Transient)
-                    .ToList();
-
-                if (lifestyleViolations.Any())
+                else
                 {
-                    throw new InvalidOperationException($"Message handlers {lifestyleViolations.ToString(", ", type => type.FullName)} should have transient lifestyle");
+                    _ = messageType.GetRequiredAttribute<OwnedByAttribute>();
                 }
             }
         }
 
-        private static bool IsMessageAbstraction(Type type)
+        private void VerifyMessageHandlersLifestyle()
         {
-            return type == typeof(IIntegrationMessage)
-                   || type == typeof(IIntegrationCommand)
-                   || type == typeof(IIntegrationEvent)
-                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
+            var lifestyleViolations = _registrations
+                .Collections()
+                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>))
+                               && info.Lifestyle != EnLifestyle.Transient)
+                .Select(info => info.Implementation)
+                .ToList();
+
+            if (lifestyleViolations.Any())
+            {
+                throw new InvalidOperationException($"Message handlers {lifestyleViolations.ToString(", ", type => type.FullName)} should have transient lifestyle");
+            }
         }
 
-        private static bool ImplementsSeveralSpecializedInterfaces(Type type)
+        private void VerifyHandlerExistence(IEnumerable<Type> messageTypes)
         {
-            var sum = typeof(IIntegrationCommand).IsAssignableFrom(type).Bit()
-                      + type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)).Bit()
-                      + typeof(IIntegrationEvent).IsAssignableFrom(type).Bit();
+            foreach (var messageType in messageTypes)
+            {
+                if (!messageType.IsConcreteType())
+                {
+                    continue;
+                }
 
-            return sum > 1;
+                var serviceType = typeof(IMessageHandler<>).MakeGenericType(messageType);
+
+                var messageHandlers = _registrations
+                    .Collections()
+                    .Where(info => serviceType.IsAssignableFrom(info.Implementation));
+
+                if (!messageHandlers.Any())
+                {
+                    throw new InvalidOperationException($"Message '{messageType.FullName}' should have at least one message handler");
+                }
+            }
         }
     }
 }

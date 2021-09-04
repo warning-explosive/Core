@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions
 {
     /// <summary>
-    /// Command that used to make request to perform integration action between endpoints
+    /// Command is used for integration between endpoints so as to perform integration action and state change
     ///     - can be sent
     ///     - has one logical owner (endpoint which can handle this command)
     ///     - has multiple senders

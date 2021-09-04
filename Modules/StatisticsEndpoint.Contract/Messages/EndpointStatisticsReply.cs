@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Contract.Messages
     /// <summary>
     /// EndpointStatisticsReply
     /// </summary>
-    public class EndpointStatisticsReply : IIntegrationMessage
+    public class EndpointStatisticsReply : IIntegrationReply
     {
         /// <summary> .cctor </summary>
         /// <param name="endpointIdentity">EndpointIdentity</param>

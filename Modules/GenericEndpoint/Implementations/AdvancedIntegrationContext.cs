@@ -58,14 +58,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             return Gather(CreateGeneralMessage(query), token);
         }
 
         public async Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             // TODO: #139 - fix reply behavior
             var sentFrom = Message.ReadRequiredHeader<EndpointIdentity>(IntegrationMessageHeader.SentFrom);

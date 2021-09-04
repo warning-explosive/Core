@@ -41,6 +41,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <returns>Ongoing remote procedure call</returns>
         Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage;
+            where TReply : IIntegrationReply;
     }
 }

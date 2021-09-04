@@ -34,6 +34,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         IEnumerable<Type> EndpointEvents();
 
         /// <summary>
+        /// Receive all integration replies
+        /// </summary>
+        /// <returns>All integration replies</returns>
+        IEnumerable<Type> Replies();
+
+        /// <summary>
         /// Receive endpoint subscriptions to integration events
         /// Events which have IMessageHandler implementation
         /// </summary>

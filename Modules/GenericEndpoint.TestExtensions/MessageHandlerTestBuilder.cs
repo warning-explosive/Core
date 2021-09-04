@@ -120,7 +120,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         /// <returns>MessageHandlerTestBuilder</returns>
         public MessageHandlerTestBuilder<TMessage> Requests<TQuery, TReply>(Expression<Func<TQuery, bool>> predicate)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             _testCases.Add(new MessageHandlerProducesMessageTestCase<TQuery>(predicate));
             return this;
@@ -134,7 +134,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         /// <returns>MessageHandlerTestBuilder</returns>
         public MessageHandlerTestBuilder<TMessage> DoesNotRequest<TQuery, TReply>()
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TQuery>());
             return this;

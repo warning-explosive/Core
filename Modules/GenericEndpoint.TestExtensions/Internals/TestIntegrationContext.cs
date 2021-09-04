@@ -43,14 +43,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             return Grab(query);
         }
 
         public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationMessage
+            where TReply : IIntegrationReply
         {
             return Grab(reply);
         }

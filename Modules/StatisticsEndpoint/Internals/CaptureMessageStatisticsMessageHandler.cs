@@ -10,8 +10,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
     using DataAccess.Contract.Abstractions;
     using GenericEndpoint.Api;
     using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.Contract;
-    using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.MessageHeaders;
     using Model;
 
     [Component(EnLifestyle.Transient)]
@@ -30,7 +29,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
 
         public override Task Handle(CaptureMessageStatistics message, IIntegrationContext context, CancellationToken token)
         {
-            var originator = message.GeneralMessage.ReadRequiredHeader<EndpointIdentity>(IntegrationMessageHeader.SentFrom);
+            var originator = message.GeneralMessage.ReadRequiredHeader<SentFrom>().Value;
 
             var endpointStatistics = _repository
                 .All()

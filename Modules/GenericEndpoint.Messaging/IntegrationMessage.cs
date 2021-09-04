@@ -2,15 +2,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Abstractions;
     using Basics;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
+    using MessageHeaders;
 
     /// <summary>
     /// Integration message
     /// Class for technical purposes with headers support
     /// </summary>
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class IntegrationMessage : IEquatable<IntegrationMessage>,
                                       ISafelyEquatable<IntegrationMessage>,
                                       ISafelyComparable<IntegrationMessage>,
@@ -19,6 +23,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       ICloneable<IntegrationMessage>
     {
         private readonly IStringFormatter _formatter;
+        private readonly List<IIntegrationMessageHeader> _headers;
 
         /// <summary> .cctor </summary>
         /// <param name="payload">User-defined payload message</param>
@@ -32,33 +37,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             Id = Guid.NewGuid();
             Payload = payload;
             ReflectedType = reflectedType;
-            Headers = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
-            {
-                [IntegrationMessageHeader.ConversationId] = Guid.NewGuid()
-            };
 
             _formatter = formatter;
+            _headers = new List<IIntegrationMessageHeader>();
         }
 
-        /// <summary>
-        /// Copy .cctor
-        /// </summary>
-        /// <param name="id">Identifier</param>
-        /// <param name="payload">Payload</param>
-        /// <param name="reflectedType">Reflected type</param>
-        /// <param name="headers">Headers</param>
-        /// <param name="formatter">To string formatter</param>
         private IntegrationMessage(
             Guid id,
             IIntegrationMessage payload,
             Type reflectedType,
-            IDictionary<string, object> headers,
+            List<IIntegrationMessageHeader> headers,
             IStringFormatter formatter)
         {
             Id = id;
             Payload = payload;
             ReflectedType = reflectedType;
-            Headers = headers;
+            _headers = headers;
 
             _formatter = formatter;
         }
@@ -81,7 +75,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <summary>
         /// Integration message headers
         /// </summary>
-        public IDictionary<string, object> Headers { get; }
+        public IReadOnlyCollection<IIntegrationMessageHeader> Headers => _headers;
+
+        #region IEquitable
 
         /// <summary>
         /// Equality ==
@@ -150,24 +146,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         }
 
         /// <inheritdoc />
-        public int CompareTo(object obj)
-        {
-            return Comparable.CompareTo(this, obj);
-        }
-
-        /// <inheritdoc />
-        public int CompareTo(IntegrationMessage? other)
-        {
-            return Comparable.CompareTo(this, other);
-        }
-
-        /// <inheritdoc />
-        public int SafeCompareTo(IntegrationMessage other)
-        {
-            return Id.CompareTo(other.Id);
-        }
-
-        /// <inheritdoc />
         public bool SafeEquals(IntegrationMessage other)
         {
             return Id == other.Id;
@@ -191,35 +169,103 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             return Id.GetHashCode();
         }
 
+        #endregion
+
+        #region IComparable
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            return Comparable.CompareTo(this, obj);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(IntegrationMessage? other)
+        {
+            return Comparable.CompareTo(this, other);
+        }
+
+        /// <inheritdoc />
+        public int SafeCompareTo(IntegrationMessage other)
+        {
+            return Id.CompareTo(other.Id);
+        }
+
+        #endregion
+
         /// <inheritdoc />
         public override string ToString()
         {
-            var headers = new Dictionary<string, object>(Headers)
+            var headers = new List<IIntegrationMessageHeader>(Headers)
             {
-                [nameof(ReflectedType)] = ReflectedType.Name,
-                [nameof(Payload)] = Payload
+                new ObjectHeader(nameof(ReflectedType), ReflectedType.Name),
+                new ObjectHeader(nameof(Payload), Payload)
             };
 
-            return headers
-                .Select(pair => new
-                {
-                    pair.Key,
-                    Value = _formatter.Format(pair.Value)
-                })
-                .Select(pair => $"[{pair.Key}, {pair.Value}]")
-                .ToString(" ");
+            return FormatHeaders(headers);
         }
 
         /// <inheritdoc />
         public IntegrationMessage Clone()
         {
-            return new IntegrationMessage(Id, Payload.DeepCopy(), ReflectedType, Headers.DeepCopy(), _formatter);
+            return new IntegrationMessage(Id, Payload.DeepCopy(), ReflectedType, _headers.DeepCopy(), _formatter);
         }
 
         /// <inheritdoc />
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        /// <summary>
+        /// Reads header
+        /// </summary>
+        /// <typeparam name="THeader">THeader type-argument</typeparam>
+        /// <returns>Header value</returns>
+        public THeader? ReadHeader<THeader>()
+            where THeader : IIntegrationMessageHeader
+        {
+            return Headers
+                .OfType<THeader>()
+                .InformativeSingleOrDefault(FormatHeaders);
+        }
+
+        /// <summary>
+        /// Reads required header
+        /// </summary>
+        /// <typeparam name="THeader">THeader type-argument</typeparam>
+        /// <returns>Header value</returns>
+        public THeader ReadRequiredHeader<THeader>()
+            where THeader : IIntegrationMessageHeader
+        {
+            return ReadHeader<THeader>()
+                   ?? throw new InvalidOperationException($"Message should have {typeof(THeader).Name} message header");
+        }
+
+        /// <summary>
+        /// Writes header
+        /// </summary>
+        /// <param name="header">Header value</param>
+        /// <typeparam name="THeader">THeader type-argument</typeparam>
+        public void WriteHeader<THeader>(THeader header)
+            where THeader : IIntegrationMessageHeader
+        {
+            var existedHeader = ReadHeader<THeader>();
+
+            if (existedHeader != null)
+            {
+                throw new InvalidOperationException($"Header {typeof(THeader).Name} already exists in the message");
+            }
+
+            _headers.Add(header);
+        }
+
+        private string FormatHeaders<THeader>(IEnumerable<THeader> headers)
+            where THeader : IIntegrationMessageHeader
+        {
+            return headers
+                .Select(header => $"[{(header as ObjectHeader)?.Name ?? header.GetType().Name}, {_formatter.Format(header.Value)}]")
+                .ToString(" ");
         }
     }
 }

@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
+    using Basics.Primitives;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
@@ -22,7 +21,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Defaults;
     using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Abstractions;
     using GenericEndpoint.Host.Implementations;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.TestExtensions;
@@ -31,14 +29,13 @@ namespace SpaceEngineers.Core.Modules.Test
     using InMemoryIntegrationTransport.Host;
     using InMemoryIntegrationTransport.Host.Implementations;
     using IntegrationTransport.Api.Abstractions;
+    using IntegrationTransport.Api.Enumerations;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Mocks;
-    using StatisticsEndpoint.Contract;
     using StatisticsEndpoint.Contract.Messages;
-    using StatisticsEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
     using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
@@ -72,14 +69,14 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         /// <summary>
-        /// IntegrationTransportTestData
+        /// useContainer; useTransport;
         /// </summary>
-        /// <returns>Integration transport providers</returns>
-        public static IEnumerable<object[]> IntegrationTransportTestData()
+        /// <returns>BuildHostTestData</returns>
+        public static IEnumerable<object[]> BuildHostTestData()
         {
             var integrationTransportProviders = new object[]
             {
-                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport())
+                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport()),
             };
 
             return DependencyContainerTestData()
@@ -87,27 +84,44 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         /// <summary>
-        /// DataAccessTestData
+        /// useContainer; useTransport; timeout;
         /// </summary>
-        /// <returns>Database providers</returns>
-        public static IEnumerable<object[]> DataAccessTestData()
+        /// <returns>RunHostTestData</returns>
+        public static IEnumerable<object[]> RunHostTestData()
         {
+            var timeout = TimeSpan.FromSeconds(60);
+
+            var integrationTransportProviders = new object[]
+            {
+                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport()),
+            };
+
+            return DependencyContainerTestData()
+                .SelectMany(it => integrationTransportProviders.Select(provider => it.Concat(new[] { provider, timeout }).ToArray()));
+        }
+
+        /// <summary>
+        /// useContainer; useTransport; databaseProvider; timeout;
+        /// </summary>
+        /// <returns>RunHostWithDataAccessTestData</returns>
+        public static IEnumerable<object[]> RunHostWithDataAccessTestData()
+        {
+            var timeout = TimeSpan.FromSeconds(60);
+
             var databaseProviders = new object[]
             {
                 new PostgreSqlDatabaseProvider()
             };
 
-            return IntegrationTransportTestData()
-                .SelectMany(it => databaseProviders.Select(provider => it.Concat(new[] { provider }).ToArray()));
+            return BuildHostTestData()
+                .SelectMany(it => databaseProviders.Select(provider => it.Concat(new[] { provider, timeout }).ToArray()));
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(DataAccessTestData))]
-        internal Task BuildDatabaseModelTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider)
+        [Fact(Timeout = 60_000)]
+        /*[MemberData(nameof(RunHostWithDataAccessTestData))]*/
+        internal void BuildDatabaseModelTest()
         {
+            /* TODO: #110
             var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
 
             var host = useTransport(Host.CreateDefaultBuilder())
@@ -118,11 +132,11 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(statisticsEndpointIdentity))
                 .BuildHost();
 
+            _ = timeout;
             return Task.CompletedTask;
 
-            /* TODO: #110
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
@@ -159,11 +173,12 @@ namespace SpaceEngineers.Core.Modules.Test
             */
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
             var messageTypes = new[]
             {
@@ -188,7 +203,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .BuildHost();
 
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
@@ -206,11 +221,12 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
             var messageTypes = new[]
             {
@@ -234,25 +250,29 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                await Task.Delay(3, cts.Token).ConfigureAwait(false);
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task VariantMessageHandlerTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
+            /* TODO: #112
             var actualMessagesCount = 0;
-            /* TODO: #112 - var expectedMessagesCount = 3;*/
+            var expectedMessagesCount = 3;*/
 
             var messageTypes = new[]
             {
@@ -278,10 +298,14 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var integrationContext = host
                     .GetTransportDependencyContainer()
@@ -289,23 +313,28 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await integrationContext.Publish(new BaseEvent(), cts.Token).ConfigureAwait(false);
 
+                /* TODO: #112 - await until event is not handled */
+
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
 
+            /* TODO: #112
             Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
-            /* TODO: #112 - Assert.Equal(expectedMessagesCount, actualMessagesCount);*/
+            Assert.Equal(expectedMessagesCount, actualMessagesCount);*/
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
+            /* TODO: #112
             var actualIncomingMessagesCount = 0;
-            /* TODO: #112 - var actualRefusedMessagesCount = 0;*/
+            var actualRefusedMessagesCount = 0;
             var incomingMessages = new ConcurrentBag<IntegrationMessage>();
-            var failedMessages = new ConcurrentBag<(IntegrationMessage message, Exception exception)>();
+            var failedMessages = new ConcurrentBag<(IntegrationMessage message, Exception exception)>();*/
 
             var endpointIdentity = new EndpointIdentity(TestIdentity.Endpoint1, 0);
 
@@ -337,10 +366,14 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var integrationContext = host
                     .GetTransportDependencyContainer()
@@ -348,15 +381,15 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await integrationContext.Send(new IdentifiedCommand(42), cts.Token).ConfigureAwait(false);
 
-                await Task.Delay(TimeSpan.FromSeconds(4), cts.Token).ConfigureAwait(false);
+                /* TODO: #112 - await until all retry attempts is not proceed */
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
 
+            /* TODO: #112
             Output.WriteLine($"{nameof(actualIncomingMessagesCount)}: {actualIncomingMessagesCount}");
             Output.WriteLine(incomingMessages.Select((message, index) => $"[{index}] - {message}").ToString(Environment.NewLine));
 
-            /* TODO: #112
             Assert.Equal(4, actualIncomingMessagesCount);
             Assert.Single(incomingMessages.Select(it => it.ReflectedType).Distinct());
             Assert.Single(incomingMessages.Select(it => it.Payload.ToString()).Distinct());
@@ -381,17 +414,19 @@ namespace SpaceEngineers.Core.Modules.Test
             */
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task SimpleHostTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
+            /* TODO: #112
             var expectedMessagesCount = 1000;
-            /* TODO: #112 - var expectedRefusedMessagesCount = 0;*/
+            var expectedRefusedMessagesCount = 0;
 
             var actualMessagesCount = 0;
-            var actualRefusedMessagesCount = 0;
+            var actualRefusedMessagesCount = 0;*/
 
             var messageTypes = new[]
             {
@@ -435,27 +470,32 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(300)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var integrationContext = host
                     .GetTransportDependencyContainer()
                     .Resolve<IIntegrationContext>();
 
+                /* TODO: #112
                 await SendInitiationMessages(integrationContext, expectedMessagesCount, cts.Token).ConfigureAwait(false);
-
-                await Task.Delay(TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                await until initiation message is not handled */
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
 
+            /* TODO: #112
             Output.WriteLine($"{nameof(actualMessagesCount)}: {actualMessagesCount}");
-            /* TODO: #112 - Assert.Equal(expectedMessagesCount, actualMessagesCount);*/
+            Assert.Equal(expectedMessagesCount, actualMessagesCount);
 
             Output.WriteLine($"{nameof(actualRefusedMessagesCount)}: {actualRefusedMessagesCount}");
-            /* TODO: #112 - Assert.Equal(expectedRefusedMessagesCount, actualRefusedMessagesCount);*/
+            Assert.Equal(expectedRefusedMessagesCount, actualRefusedMessagesCount);
 
             static async Task SendInitiationMessages(
                 IIntegrationContext integrationContext,
@@ -470,12 +510,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     await operation.ConfigureAwait(false);
                 }
-            }
+            }*/
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
-        internal async Task SameTransportTest(
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(BuildHostTestData))]
+        internal void SameTransportTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport)
         {
@@ -491,30 +531,20 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
-            bool transportIsSame;
+            var transport = host.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
 
-            using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-            {
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var transport = host.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
-
-                transportIsSame = new[]
-                    {
-                        host.GetEndpointDependencyContainer(TestIdentity.Endpoint10),
-                        host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)
-                    }
-                    .Select(container => container.Resolve<IIntegrationTransport>())
-                    .All(endpointTransport => ReferenceEquals(transport, endpointTransport));
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-            }
+            var transportIsSame = new[]
+                {
+                    host.GetEndpointDependencyContainer(TestIdentity.Endpoint10),
+                    host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)
+                }
+                .Select(container => container.Resolve<IIntegrationTransport>())
+                .All(endpointTransport => ReferenceEquals(transport, endpointTransport));
 
             Assert.True(transportIsSame);
         }
 
-        [Fact(Timeout = 120_000)]
+        [Fact(Timeout = 60_000)]
         internal void MessageHandlerTestExtensionsTest()
         {
             new IdentifiedCommandEmptyMessageHandler()
@@ -551,8 +581,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Invoke();
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(BuildHostTestData))]
         internal void BuildHostTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport)
@@ -581,7 +611,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var testHost = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
@@ -590,14 +620,14 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
-            using (testHost)
+            using (host)
             {
-                CheckHost(testHost);
-                CheckEndpoint(testHost);
-                CheckTransport(testHost);
+                CheckHost(host);
+                CheckEndpoint(host, endpointIdentity, Output.WriteLine);
+                CheckTransport(host, Output.WriteLine);
             }
 
-            void CheckHost(IHost host)
+            static void CheckHost(IHost host)
             {
                 _ = host.Services.GetRequiredService<IHostedService>();
 
@@ -622,7 +652,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(typeof(IntegrationTransportHostBackgroundWorker), hostBackgroundWorker.GetType());
             }
 
-            void CheckEndpoint(IHost host)
+            static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
             {
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
                 var integrationMessage = new IntegrationMessage(new IdentifiedCommand(0), typeof(IdentifiedCommand), new StringFormatterMock());
@@ -643,7 +673,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actual = advancedIntegrationContext
                         .FlattenDecoratedType()
-                        .ShowTypes("#extended integration context", Output.WriteLine)
+                        .ShowTypes("#extended integration context", log)
                         .ToList();
 
                     Assert.Equal(expected, actual);
@@ -660,7 +690,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     var actualPipeline = endpointDependencyContainer
                         .Resolve<IMessagePipeline>()
                         .FlattenDecoratedType()
-                        .ShowTypes("#message pipeline", Output.WriteLine)
+                        .ShowTypes("#message pipeline", log)
                         .ToList();
 
                     Assert.Equal(expectedPipeline, actualPipeline);
@@ -688,7 +718,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
                         .IntegrationMessageTypes()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -702,7 +732,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualCommands = integrationTypeProvider
                         .EndpointCommands()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -718,7 +748,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualEvents = integrationTypeProvider
                         .EndpointEvents()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointEvents), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointEvents), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -733,7 +763,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualReplies = integrationTypeProvider
                         .Replies()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.Replies), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.Replies), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -747,7 +777,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualQueries = integrationTypeProvider
                         .EndpointQueries()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -762,7 +792,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actualSubscriptions = integrationTypeProvider
                         .EndpointSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointSubscriptions), Output.WriteLine)
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointSubscriptions), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -776,7 +806,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     var actualBaseEventHandlers = endpointDependencyContainer
                         .ResolveCollection<IMessageHandler<BaseEvent>>()
                         .Select(handler => handler.GetType())
-                        .ShowTypes("actualBaseEventHandlers", Output.WriteLine)
+                        .ShowTypes("actualBaseEventHandlers", log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -791,7 +821,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     var actualFirstInheritedEventHandlers = endpointDependencyContainer
                         .ResolveCollection<IMessageHandler<FirstInheritedEvent>>()
                         .Select(handler => handler.GetType())
-                        .ShowTypes("actualFirstInheritedEventHandlers", Output.WriteLine)
+                        .ShowTypes("actualFirstInheritedEventHandlers", log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -805,7 +835,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     var actualSecondInheritedEventHandlers = endpointDependencyContainer
                         .ResolveCollection<IMessageHandler<SecondInheritedEvent>>()
                         .Select(handler => handler.GetType())
-                        .ShowTypes("actualSecondInheritedEventHandlers", Output.WriteLine)
+                        .ShowTypes("actualSecondInheritedEventHandlers", log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
@@ -813,7 +843,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
             }
 
-            void CheckTransport(IHost host)
+            static void CheckTransport(IHost host, Action<string> log)
             {
                 var transportDependencyContainer = host.GetTransportDependencyContainer();
 
@@ -827,18 +857,19 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var actual = integrationContext
                     .FlattenDecoratedType()
-                    .ShowTypes("#transport integration context", Output.WriteLine)
+                    .ShowTypes("#transport integration context", log)
                     .ToList();
 
                 Assert.Equal(expected, actual);
             }
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task RunTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
@@ -848,18 +879,24 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
-                await host.RunAsync(cts.Token).ConfigureAwait(false);
+                var runningHost = host.RunAsync(cts.Token);
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                await runningHost.ConfigureAwait(false);
             }
         }
 
-        [Theory(Timeout = 120_000)]
-        [MemberData(nameof(IntegrationTransportTestData))]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
@@ -869,12 +906,55 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
                 .BuildHost();
 
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
             using (host)
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
-                await Task.Delay(TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        private static async Task WaitUntilTransportIsNotRunning(IHost host, Action<string> log)
+        {
+            var tcs = new TaskCompletionSource();
+            var subscription = MakeSubscription(tcs, log);
+
+            var integrationTransport = host
+                .GetTransportDependencyContainer()
+                .Resolve<IIntegrationTransport>();
+
+            using (Disposable.Create((integrationTransport, subscription), Subscribe, Unsubscribe))
+            {
+                log("Wait until transport is not started");
+                await tcs.Task.ConfigureAwait(false);
+            }
+
+            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(TaskCompletionSource tcs, Action<string> log)
+            {
+                return (s, e) =>
+                {
+                    log($"{s.GetType().Name}: {e.PreviousStatus} -> {e.CurrentStatus}");
+
+                    if (e.CurrentStatus == EnIntegrationTransportStatus.Running)
+                    {
+                        tcs.TrySetResult();
+                    }
+                };
+            }
+
+            static void Subscribe((IIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
+            {
+                var (integrationTransport, subscription) = state;
+                integrationTransport.StatusChanged += subscription;
+            }
+
+            static void Unsubscribe((IIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
+            {
+                var (integrationTransport, subscription) = state;
+                integrationTransport.StatusChanged -= subscription;
             }
         }
     }

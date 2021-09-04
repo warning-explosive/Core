@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
+    using GenericEndpoint.Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationContext : IIntegrationContext
@@ -49,7 +50,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
         {
             var message = CreateGeneralMessage(query);
 
-            message.Headers[IntegrationMessageHeader.SentFrom] = _endpointIdentity;
+            message.WriteHeader(new SentFrom(_endpointIdentity));
 
             var requestId = message.Id;
 
@@ -80,7 +81,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
         {
             return message =>
             {
-                var requestId = message.ReadRequiredHeader<Guid>(IntegrationMessageHeader.RequestId);
+                var requestId = message.ReadRequiredHeader<InitiatorMessageId>().Value;
 
                 // TODO: #137 - think about lost headers
                 registry.TrySetResult(requestId, (TReply)message.Payload);

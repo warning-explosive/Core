@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
     using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Messaging;
+    using Messaging.MessageHeaders;
 
     /// <summary>
     /// Default IRetryPolicy implementation
@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Defaults
         /// <inheritdoc />
         public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
         {
-            var actualCounter = context.Message.ReadHeader<int>(IntegrationMessageHeader.RetryCounter);
+            var actualCounter = context.Message.ReadHeader<RetryCounter>()?.Value ?? 0;
 
             if (actualCounter < Scale.Length)
             {

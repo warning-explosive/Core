@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
+    using Enumerations;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
 
@@ -12,6 +13,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     /// </summary>
     public interface IIntegrationTransport : IResolvable
     {
+        /// <summary>
+        /// Status changed
+        /// </summary>
+        event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
+
+        /// <summary>
+        /// Status
+        /// </summary>
+        EnIntegrationTransportStatus Status { get; }
+
         /// <summary>
         /// Bind message handler and configure topology
         /// </summary>
@@ -38,10 +49,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token);
 
         /// <summary>
-        /// Starts message processing
+        /// Starts message processing in background thread
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing message processing operation</returns>
-        public Task StartMessageProcessing(CancellationToken token);
+        public Task StartBackgroundMessageProcessing(CancellationToken token);
     }
 }

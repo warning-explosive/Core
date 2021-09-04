@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Messaging;
+    using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
     internal class QueryReplyValidationPipeline : IMessagePipelineStep, IMessagePipeline
@@ -28,7 +29,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
                 .ConfigureAwait(false);
 
             if (context.Message.IsQuery()
-                && !context.Message.DidHandlerReply())
+                && context.Message.ReadHeader<DidHandlerReplyToTheQuery>()?.Value != true)
             {
                 throw new InvalidOperationException("Message handler should reply to the query");
             }

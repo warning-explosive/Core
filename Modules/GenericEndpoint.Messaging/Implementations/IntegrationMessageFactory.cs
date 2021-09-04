@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
 {
     using System;
     using Abstractions;
@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Internals
     using Contract;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
+    using MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory
@@ -25,18 +26,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Internals
 
             if (endpointIdentity != null)
             {
-                generalMessage.Headers[IntegrationMessageHeader.SentFrom] = endpointIdentity;
+                generalMessage.WriteHeader(new SentFrom(endpointIdentity));
             }
 
             if (initiatorMessage != null)
             {
-                generalMessage.Headers[IntegrationMessageHeader.ConversationId] =
-                    initiatorMessage.ReadRequiredHeader<Guid>(IntegrationMessageHeader.ConversationId);
-
-                if (initiatorMessage.IsQuery())
-                {
-                    generalMessage.Headers[IntegrationMessageHeader.RequestId] = initiatorMessage.Id;
-                }
+                var conversationId = initiatorMessage.ReadRequiredHeader<ConversationId>().Value;
+                generalMessage.WriteHeader(new ConversationId(conversationId));
+                generalMessage.WriteHeader(new InitiatorMessageId(initiatorMessage.Id));
+            }
+            else
+            {
+                generalMessage.WriteHeader(new ConversationId(Guid.NewGuid()));
             }
 
             return generalMessage;

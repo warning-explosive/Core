@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using GenericEndpoint.Abstractions;
-    using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.MessageHeaders;
 
     [ComponentOverride]
     internal class RetryPolicyMock : IRetryPolicy
@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
         /// <inheritdoc />
         public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
         {
-            var actualCounter = context.Message.ReadHeader<int>(IntegrationMessageHeader.RetryCounter);
+            var actualCounter = context.Message.ReadHeader<RetryCounter>()?.Value ?? 0;
 
             if (actualCounter < Scale.Length)
             {

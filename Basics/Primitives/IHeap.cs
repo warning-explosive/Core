@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <summary>
         /// Root node changed
         /// </summary>
-        public event EventHandler<RootNodeChangedEventArgs<TElement>>? RootNodeChanged;
+        event EventHandler<RootNodeChangedEventArgs<TElement>>? RootNodeChanged;
 
         /// <summary>
         /// Gets the number of elements contained in the heap

@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Model
         {
             var headers = message
                 .Headers
-                .Select(it => new MessageHeader(it.Key, serializer.SerializeObject(it.Value), it.Value?.GetType()))
+                .Select(it => new MessageHeader(it.GetType().Name, serializer.SerializeObject(it.Value), it.Value?.GetType()))
                 .ToList();
 
             return new MessageInfo(serializer.SerializeObject(message), message.ReflectedType, headers);

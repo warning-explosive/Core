@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Implementations
 
         public Task Run(CancellationToken token)
         {
-            return _transport.StartMessageProcessing(token);
+            return _transport.StartBackgroundMessageProcessing(token);
         }
     }
 }

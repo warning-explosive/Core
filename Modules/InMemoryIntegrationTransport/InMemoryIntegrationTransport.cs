@@ -13,7 +13,9 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using Basics.Primitives;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.MessageHeaders;
     using IntegrationTransport.Api.Abstractions;
+    using IntegrationTransport.Api.Enumerations;
 
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     internal class InMemoryIntegrationTransport : IIntegrationTransport
@@ -25,8 +27,11 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>> _topology;
 
+        private EnIntegrationTransportStatus _status;
+
         public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior selectionBehavior)
         {
+            _status = EnIntegrationTransportStatus.Stopped;
             _ready = new AsyncManualResetEvent(false);
 
             _inputQueue = new MessageQueue<IntegrationMessage>();
@@ -37,6 +42,21 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             _selectionBehavior = selectionBehavior;
 
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>();
+        }
+
+        public event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
+
+        public EnIntegrationTransportStatus Status
+        {
+            get => _status;
+
+            private set
+            {
+                var previousValue = _status;
+                _status = value;
+                var eventArgs = new IntegrationTransportStatusChangedEventArgs(previousValue, value);
+                StatusChanged?.Invoke(this, eventArgs);
+            }
         }
 
         public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> messageHandler)
@@ -50,13 +70,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
 
-            if (message.IsDeferred())
+            if (message.ReadHeader<DeferredUntil>() != null)
             {
                 _delayedDeliveryQueue.Enqueue(message);
             }
             else
             {
-                message.SetActualDeliveryDate(DateTime.Now);
+                message.WriteHeader(new ActualDeliveryDate(DateTime.Now));
                 _inputQueue.Enqueue(message);
             }
         }
@@ -67,13 +87,16 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             return Task.CompletedTask;
         }
 
-        public Task StartMessageProcessing(CancellationToken token)
+        public Task StartBackgroundMessageProcessing(CancellationToken token)
         {
+            Status = EnIntegrationTransportStatus.Starting;
+
             var messageProcessingTask = Task.WhenAll(
                 _delayedDeliveryQueue.Run(Enqueue, token),
                 _inputQueue.Run(MessageProcessingCallback, token));
 
             _ready.Set();
+            Status = EnIntegrationTransportStatus.Running;
 
             return messageProcessingTask;
         }
@@ -111,7 +134,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         private static DateTime PrioritySelector(IntegrationMessage message)
         {
-            return message.ReadRequiredHeader<DateTime>(IntegrationMessageHeader.DeferredUntil);
+            return message.ReadRequiredHeader<DeferredUntil>().Value;
         }
     }
 }

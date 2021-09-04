@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Messaging.Abstractions;
+    using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Scoped)]
     internal class AdvancedIntegrationContext : IAdvancedIntegrationContext
@@ -68,13 +69,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
             where TReply : IIntegrationReply
         {
             // TODO: #139 - fix reply behavior
-            var sentFrom = Message.ReadRequiredHeader<EndpointIdentity>(IntegrationMessageHeader.SentFrom);
+            var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
 
             var replyIntegrationMessage = CreateGeneralMessage(reply);
 
             await Gather(replyIntegrationMessage, token).ConfigureAwait(false);
 
-            Message.MarkAsReplied();
+            if (Message.ReadHeader<DidHandlerReplyToTheQuery>()?.Value == true)
+            {
+                throw new InvalidOperationException("Message handler already replied to integration query");
+            }
+
+            Message.WriteHeader(new DidHandlerReplyToTheQuery(true));
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)

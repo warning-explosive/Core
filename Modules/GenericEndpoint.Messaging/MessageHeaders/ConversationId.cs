@@ -1,0 +1,26 @@
+namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
+{
+    using System;
+    using Abstractions;
+
+    /// <summary>
+    /// ConversationId
+    /// </summary>
+    public class ConversationId : IIntegrationMessageHeader
+    {
+        /// <summary> .cctor </summary>
+        /// <param name="value">Conversation id</param>
+        public ConversationId(Guid value)
+        {
+            Value = value;
+        }
+
+        /// <summary>
+        /// Value
+        /// </summary>
+        public Guid Value { get; }
+
+        /// <inheritdoc />
+        object IIntegrationMessageHeader.Value => Value;
+    }
+}

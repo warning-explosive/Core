@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericHost
     using Api;
     using Api.Abstractions;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;

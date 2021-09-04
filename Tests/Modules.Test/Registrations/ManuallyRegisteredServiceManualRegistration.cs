@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using AutoRegistration.Api.Enumerations;
     using AutoRegistrationTest;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
 
     internal class ManuallyRegisteredServiceManualRegistration : IManualRegistration
     {

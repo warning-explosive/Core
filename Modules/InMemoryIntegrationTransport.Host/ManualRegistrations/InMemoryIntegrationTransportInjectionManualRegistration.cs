@@ -1,7 +1,8 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
 {
     using Abstractions;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Defaults;
     using IntegrationTransport.Api.Abstractions;
 

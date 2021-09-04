@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     /// <summary>
     /// IManualRegistration

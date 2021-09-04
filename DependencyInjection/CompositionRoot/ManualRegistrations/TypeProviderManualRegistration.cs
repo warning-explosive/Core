@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
     using System;
     using System.Linq;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using Api.Extensions;
     using AutoRegistration.Api.Abstractions;
     using Implementations;

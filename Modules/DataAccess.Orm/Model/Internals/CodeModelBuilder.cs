@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model.Internals
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;

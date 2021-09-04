@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 {
     using Api.Abstractions;
+    using Api.Abstractions.Container;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

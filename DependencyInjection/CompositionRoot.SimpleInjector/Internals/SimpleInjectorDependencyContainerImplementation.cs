@@ -5,13 +5,14 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
+    using Api.Abstractions.Container;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Extensions;
     using global::SimpleInjector;
     using global::SimpleInjector.Lifestyles;
-    using Registration;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually during DependencyContainer initialization")]

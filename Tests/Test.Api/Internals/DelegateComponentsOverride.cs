@@ -1,18 +1,18 @@
 namespace SpaceEngineers.Core.Test.Api.Internals
 {
     using System;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
 
     internal class DelegateComponentsOverride : IComponentsOverride
     {
-        private readonly Action<IComponentsOverrideContainer> _overrideAction;
+        private readonly Action<IRegisterComponentsOverrideContainer> _overrideAction;
 
-        public DelegateComponentsOverride(Action<IComponentsOverrideContainer> overrideAction)
+        public DelegateComponentsOverride(Action<IRegisterComponentsOverrideContainer> overrideAction)
         {
             _overrideAction = overrideAction;
         }
 
-        public void RegisterOverrides(IComponentsOverrideContainer container)
+        public void RegisterOverrides(IRegisterComponentsOverrideContainer container)
         {
             _overrideAction(container);
         }

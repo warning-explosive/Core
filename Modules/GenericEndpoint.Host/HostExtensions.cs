@@ -6,7 +6,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using Abstractions;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
     using CompositionRoot.Api.Extensions;
     using Contract;
     using GenericHost.Api.Abstractions;

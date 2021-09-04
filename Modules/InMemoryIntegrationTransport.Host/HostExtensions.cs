@@ -3,7 +3,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
     using System;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Contract;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;

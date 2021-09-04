@@ -9,8 +9,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Abstractions;
     using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Contract.Abstractions;
     using Contract.Attributes;
 

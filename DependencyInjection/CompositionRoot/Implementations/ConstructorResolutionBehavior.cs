@@ -7,10 +7,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Api.Abstractions;
     using Basics;
 
-    /// <summary>
-    /// DefaultConstructorResolutionBehavior
-    /// </summary>
-    public class DefaultConstructorResolutionBehavior : IConstructorResolutionBehavior
+    internal class ConstructorResolutionBehavior : IConstructorResolutionBehavior
     {
         /// <inheritdoc />
         public bool TryGetConstructor(Type implementation, [NotNullWhen(true)] out ConstructorInfo? cctor)

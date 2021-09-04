@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     /// <summary>
     /// IComponentsOverride
@@ -9,6 +9,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
         /// Registers overrides manually
         /// </summary>
         /// <param name="container">IComponentsOverrideContainer</param>
-        public void RegisterOverrides(IComponentsOverrideContainer container);
+        public void RegisterOverrides(IRegisterComponentsOverrideContainer container);
     }
 }

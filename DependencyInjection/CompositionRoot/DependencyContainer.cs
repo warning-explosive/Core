@@ -5,15 +5,15 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
     using Api.Abstractions;
+    using Api.Abstractions.Container;
+    using Api.Abstractions.Registration;
     using Api.Exceptions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Extensions;
     using Implementations;
     using ManualRegistrations;
-    using Registration;
 
     /// <summary>
     /// Dependency container implementation based on SimpleInjector

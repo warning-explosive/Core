@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Linq;
     using System.Reflection;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Implementations;
@@ -32,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             IReadOnlyCollection<string> excludedNamespaces,
             IReadOnlyCollection<Type> additionalOurTypes)
         {
-            ConstructorResolutionBehavior = new DefaultConstructorResolutionBehavior();
+            ConstructorResolutionBehavior = new ConstructorResolutionBehavior();
 
             ManualRegistrations = manualRegistrations;
             Overrides = overrides;

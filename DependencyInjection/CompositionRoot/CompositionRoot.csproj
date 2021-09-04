@@ -42,20 +42,11 @@
     <ProjectReference Include="..\CompositionRoot.Api\CompositionRoot.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Registration\AutoRegistrationsContainer.cs">
-      <DependentUpon>CompositeRegistrationsContainer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Registration\ManualRegistrationsContainer.cs">
-      <DependentUpon>CompositeRegistrationsContainer.cs</DependentUpon>
-    </Compile>
     <Compile Update="Verifiers\ManualRegistrationTypesMustBeRegistered.cs">
       <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
     </Compile>
     <Compile Update="Verifiers\UnregisteredTypesMustBeUnregistered.cs">
       <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Registration\ComponentsOverrideContainer.cs">
-      <DependentUpon>CompositeRegistrationsContainer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

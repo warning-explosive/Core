@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -14,12 +14,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     internal class ManualRegistrationTypesMustBeRegistered : AttributesConfigurationVerifierBase,
                                                              ICollectionResolvable<IConfigurationVerifier>
     {
-        private readonly Abstractions.IComponentsOverrideContainer _overrides;
+        private readonly IComponentsOverrideContainer _overrides;
         private readonly ITypeProvider _typeProvider;
 
         public ManualRegistrationTypesMustBeRegistered(
             IRegistrationsContainer registrations,
-            Abstractions.IComponentsOverrideContainer overrides,
+            IComponentsOverrideContainer overrides,
             ITypeProvider typeProvider)
             : base(registrations)
         {

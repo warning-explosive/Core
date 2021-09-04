@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;

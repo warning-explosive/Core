@@ -1,11 +1,11 @@
-namespace SpaceEngineers.Core.CompositionRoot.Registration
+namespace SpaceEngineers.Core.CompositionRoot.Implementations
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using Abstractions;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;

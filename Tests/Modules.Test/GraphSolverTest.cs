@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Basics.Exceptions;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using PathResolver;

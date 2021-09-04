@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Registration
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using System.Diagnostics.CodeAnalysis;

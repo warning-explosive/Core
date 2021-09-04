@@ -28,17 +28,36 @@
     <Library />
 </PropertyGroup>
 <ItemGroup>
+  <ProjectReference Include="..\..\Basics\Basics.csproj" />
   <ProjectReference Include="..\AutoRegistration.Api\AutoRegistration.Api.csproj" />
 </ItemGroup>
 <ItemGroup>
-  <Compile Update="Abstractions\IManualRegistrationsContainer.cs">
-    <DependentUpon>IManualRegistration.cs</DependentUpon>
-  </Compile>
-  <Compile Update="Abstractions\IAdvancedManualRegistrationsContainer.cs">
-    <DependentUpon>IManualRegistration.cs</DependentUpon>
-  </Compile>
-  <Compile Update="Abstractions\IComponentsOverrideContainer.cs">
+  <Compile Update="Abstractions\Registration\ComponentOverrideInfo.cs">
     <DependentUpon>IComponentsOverride.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\ServiceRegistrationInfo.cs">
+    <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\InstanceRegistrationInfo.cs">
+    <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\DelegateRegistrationInfo.cs">
+    <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\DecoratorRegistrationInfo.cs">
+    <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\IComponentsOverrideContainer.cs">
+    <DependentUpon>IComponentsOverride.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\IRegisterComponentsOverrideContainer.cs">
+    <DependentUpon>IComponentsOverride.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\IAdvancedManualRegistrationsContainer.cs">
+    <DependentUpon>IManualRegistrationsContainer.cs</DependentUpon>
+  </Compile>
+  <Compile Update="Abstractions\Registration\IManualRegistrationsContainer.cs">
+    <DependentUpon>IManualRegistration.cs</DependentUpon>
   </Compile>
 </ItemGroup>
 <ItemGroup>

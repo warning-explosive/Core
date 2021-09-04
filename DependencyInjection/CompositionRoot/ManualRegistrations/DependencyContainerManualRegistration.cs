@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
 {
     using Api.Abstractions;
+    using Api.Abstractions.Container;
+    using Api.Abstractions.Registration;
 
     internal class DependencyContainerManualRegistration : IManualRegistration
     {

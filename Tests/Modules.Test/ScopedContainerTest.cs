@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System.Threading.Tasks;
     using AutoRegistrationTest;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;

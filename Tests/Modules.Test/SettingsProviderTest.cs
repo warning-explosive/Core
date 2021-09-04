@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;

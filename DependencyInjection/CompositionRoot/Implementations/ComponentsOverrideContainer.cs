@@ -1,9 +1,10 @@
-namespace SpaceEngineers.Core.CompositionRoot.Registration
+namespace SpaceEngineers.Core.CompositionRoot.Implementations
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -11,7 +12,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class ComponentsOverrideContainer : IComponentsOverrideContainer,
-                                                 Abstractions.IComponentsOverrideContainer
+                                                 IRegisterComponentsOverrideContainer
     {
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
 
@@ -87,14 +88,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             }
         }
 
-        public IComponentsOverrideContainer Override<TService, TImplementation, TReplacement>(EnLifestyle lifestyle)
+        public IRegisterComponentsOverrideContainer Override<TService, TImplementation, TReplacement>(EnLifestyle lifestyle)
             where TImplementation : TService
             where TReplacement : TService
         {
             return Override(typeof(TService), typeof(TImplementation), typeof(TReplacement), lifestyle);
         }
 
-        public IComponentsOverrideContainer Override(
+        public IRegisterComponentsOverrideContainer Override(
             Type service,
             Type implementation,
             Type replacement,
@@ -125,25 +126,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             throw new InvalidOperationException($"You can't use {replacement} as component override for {implementation} that have been registered as {service} with {lifestyle} lifestyle");
         }
 
-        public IComponentsOverrideContainer OverrideInstance<TService>(TService replacement)
+        public IRegisterComponentsOverrideContainer OverrideInstance<TService>(TService replacement)
             where TService : notnull
         {
             return OverrideInstance(typeof(TService), replacement);
         }
 
-        public IComponentsOverrideContainer OverrideInstance(Type service, object replacement)
+        public IRegisterComponentsOverrideContainer OverrideInstance(Type service, object replacement)
         {
             _instanceOverridesStore.Add(new InstanceRegistrationInfo(service, replacement));
             return this;
         }
 
-        public IComponentsOverrideContainer OverrideDelegate<TService>(Func<TService> replacement, EnLifestyle lifestyle)
+        public IRegisterComponentsOverrideContainer OverrideDelegate<TService>(Func<TService> replacement, EnLifestyle lifestyle)
             where TService : class
         {
             return OverrideDelegate(typeof(TService), replacement, lifestyle);
         }
 
-        public IComponentsOverrideContainer OverrideDelegate(Type service, Func<object> replacement, EnLifestyle lifestyle)
+        public IRegisterComponentsOverrideContainer OverrideDelegate(Type service, Func<object> replacement, EnLifestyle lifestyle)
         {
             _delegateOverridesStore.Add(new DelegateRegistrationInfo(service, replacement, lifestyle));
             return this;

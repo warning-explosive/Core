@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Expressions;
 
     [Component(EnLifestyle.Scoped)]

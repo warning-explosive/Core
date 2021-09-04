@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.ManualRegistrations
     using System.Linq;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
 

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector
 {
     using System;
-    using Api.Abstractions;
+    using Api.Abstractions.Container;
     using Internals;
 
     /// <summary>

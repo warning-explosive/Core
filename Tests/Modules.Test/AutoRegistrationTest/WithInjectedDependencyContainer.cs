@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
 
     [Component(EnLifestyle.Transient)]
     internal class WithInjectedDependencyContainer : IWithInjectedDependencyContainer

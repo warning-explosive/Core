@@ -7,7 +7,8 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using Abstractions;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
     using CrossCuttingConcerns.Api.Extensions;
     using Internals;
 
@@ -39,7 +40,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IComponentsOverride DelegateOverride(Action<IComponentsOverrideContainer> overrideAction)
+        public IComponentsOverride DelegateOverride(Action<IRegisterComponentsOverrideContainer> overrideAction)
         {
             return new DelegateComponentsOverride(overrideAction);
         }

@@ -3,7 +3,8 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
     using System;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
 
     /// <summary>
     /// IModulesTestFixture
@@ -22,7 +23,7 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
         /// </summary>
         /// <param name="overrideAction">Override action</param>
         /// <returns>IComponentsOverride</returns>
-        IComponentsOverride DelegateOverride(Action<IComponentsOverrideContainer> overrideAction);
+        IComponentsOverride DelegateOverride(Action<IRegisterComponentsOverrideContainer> overrideAction);
 
         /// <summary>
         /// Creates IDependencyContainer bounded above by specified assemblies

@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Microsoft.Extensions.Logging;
 
     internal class ModulesTestLoggerFactoryManualRegistration : IManualRegistration

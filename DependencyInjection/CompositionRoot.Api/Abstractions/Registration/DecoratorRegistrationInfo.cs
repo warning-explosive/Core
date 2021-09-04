@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Registration
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -6,17 +6,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     using Basics;
 
     /// <summary>
-    /// ServiceRegistrationInfo
+    /// DecoratorRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
-                                           ISafelyEquatable<ServiceRegistrationInfo>
+    public class DecoratorRegistrationInfo : IEquatable<DecoratorRegistrationInfo>,
+                                             ISafelyEquatable<DecoratorRegistrationInfo>
     {
         /// <summary> .cctor </summary>
         /// <param name="service">Service</param>
         /// <param name="implementation">Implementation</param>
         /// <param name="lifestyle">EnLifestyle</param>
-        public ServiceRegistrationInfo(Type service, Type implementation, EnLifestyle lifestyle)
+        public DecoratorRegistrationInfo(Type service, Type implementation, EnLifestyle lifestyle)
         {
             Service = service.GenericTypeDefinitionOrSelf();
             Implementation = implementation;
@@ -47,15 +47,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         #region IEquatable
 
         /// <inheritdoc />
-        public bool SafeEquals(ServiceRegistrationInfo other)
+        public bool SafeEquals(DecoratorRegistrationInfo other)
         {
             return Service == other.Service
-                    && Implementation == other.Implementation
-                    && Lifestyle == other.Lifestyle;
+                   && Implementation == other.Implementation
+                   && Lifestyle == other.Lifestyle;
         }
 
         /// <inheritdoc />
-        public bool Equals(ServiceRegistrationInfo? other)
+        public bool Equals(DecoratorRegistrationInfo? other)
         {
             return Equatable.Equals(this, other);
         }
@@ -73,11 +73,5 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         }
 
         #endregion
-
-        internal bool IsOpenGenericFallback()
-        {
-            return Implementation.IsGenericType
-                   && !Implementation.IsConstructedGenericType;
-        }
     }
 }

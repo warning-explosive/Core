@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Test.Api.Internals
 {
     using System;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
 
     internal class ManualDelegateRegistration : IManualRegistration
     {

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
+    using Api.Abstractions.Registration;
     using Basics;
 
     internal static class RegistrationsContainerExtensions

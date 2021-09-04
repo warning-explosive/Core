@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Abstractions;
     using Api.Abstractions;
+    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

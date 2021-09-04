@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using CliArgumentsParser;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;

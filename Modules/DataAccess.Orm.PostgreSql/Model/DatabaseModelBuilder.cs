@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Contract.Abstractions;
     using GenericDomain.Abstractions;
     using Orm.Connection;

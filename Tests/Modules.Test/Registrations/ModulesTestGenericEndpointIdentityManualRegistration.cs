@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host.ManualRegistrations;
 

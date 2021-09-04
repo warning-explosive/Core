@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
 
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>

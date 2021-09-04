@@ -1,8 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
 {
-    using Abstractions;
-    using Api.Abstractions;
-    using Registration;
+    using Api.Abstractions.Registration;
+    using Implementations;
 
     internal class RegistrationsContainerManualRegistration : IManualRegistration
     {
@@ -22,7 +21,7 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
             container
                 .RegisterInstance<IRegistrationsContainer>(_registrations)
                 .RegisterInstance<CompositeRegistrationsContainer>(_registrations)
-                .RegisterInstance<Abstractions.IComponentsOverrideContainer>(_overrides)
+                .RegisterInstance<IComponentsOverrideContainer>(_overrides)
                 .RegisterInstance<ComponentsOverrideContainer>(_overrides);
         }
     }

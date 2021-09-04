@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CompositionRoot.Registration
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -6,26 +6,20 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
     using Basics;
 
     /// <summary>
-    /// ComponentOverrideInfo
+    /// ServiceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ComponentOverrideInfo : IEquatable<ComponentOverrideInfo>,
-                                         ISafelyEquatable<ComponentOverrideInfo>
+    public class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
+                                           ISafelyEquatable<ServiceRegistrationInfo>
     {
         /// <summary> .cctor </summary>
         /// <param name="service">Service</param>
         /// <param name="implementation">Implementation</param>
-        /// <param name="replacement">Implementation replacement</param>
-        /// <param name="lifestyle">Implementation replacement lifestyle</param>
-        public ComponentOverrideInfo(
-            Type service,
-            Type implementation,
-            Type replacement,
-            EnLifestyle lifestyle)
+        /// <param name="lifestyle">EnLifestyle</param>
+        public ServiceRegistrationInfo(Type service, Type implementation, EnLifestyle lifestyle)
         {
             Service = service.GenericTypeDefinitionOrSelf();
             Implementation = implementation;
-            Replacement = replacement;
             Lifestyle = lifestyle;
         }
 
@@ -40,34 +34,28 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         public Type Implementation { get; }
 
         /// <summary>
-        /// Implementation replacement
-        /// </summary>
-        public Type Replacement { get; }
-
-        /// <summary>
-        /// Implementation replacement lifestyle
+        /// Lifestyle
         /// </summary>
         public EnLifestyle Lifestyle { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" | ", Service, Implementation, Replacement, Lifestyle);
+            return string.Join(" | ", Service, Implementation, Lifestyle);
         }
 
         #region IEquatable
 
         /// <inheritdoc />
-        public bool SafeEquals(ComponentOverrideInfo other)
+        public bool SafeEquals(ServiceRegistrationInfo other)
         {
             return Service == other.Service
-                   && Implementation == other.Implementation
-                   && Replacement == other.Replacement
-                   && Lifestyle == other.Lifestyle;
+                    && Implementation == other.Implementation
+                    && Lifestyle == other.Lifestyle;
         }
 
         /// <inheritdoc />
-        public bool Equals(ComponentOverrideInfo? other)
+        public bool Equals(ServiceRegistrationInfo? other)
         {
             return Equatable.Equals(this, other);
         }
@@ -81,9 +69,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Service, Implementation, Replacement, Lifestyle);
+            return HashCode.Combine(Service, Implementation, Lifestyle);
         }
 
         #endregion
+
+        internal bool IsOpenGenericFallback()
+        {
+            return Implementation.IsGenericType
+                   && !Implementation.IsConstructedGenericType;
+        }
     }
 }

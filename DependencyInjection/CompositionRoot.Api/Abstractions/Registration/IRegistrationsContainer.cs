@@ -1,8 +1,7 @@
-namespace SpaceEngineers.Core.CompositionRoot.Abstractions
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System.Collections.Generic;
     using AutoRegistration.Api.Abstractions;
-    using Registration;
 
     /// <summary>
     /// IRegistrationsContainer

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Test.Api
     using Basics;
     using Basics.Exceptions;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using CrossCuttingConcerns.Api.Extensions;
     using Settings;
 

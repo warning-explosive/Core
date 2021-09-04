@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using Basics;
     using Basics.Exceptions;
     using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Extensions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;

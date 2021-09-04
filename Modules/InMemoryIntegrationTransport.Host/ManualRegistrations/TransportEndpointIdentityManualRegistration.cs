@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
 {
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Contract;
 
     internal class TransportEndpointIdentityManualRegistration : IManualRegistration

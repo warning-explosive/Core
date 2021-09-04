@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api.Abstractions;
+    using Api.Abstractions.Container;
+    using Api.Abstractions.Registration;
     using Basics;
-    using Registration;
 
     internal static class RegistrationExtensions
     {

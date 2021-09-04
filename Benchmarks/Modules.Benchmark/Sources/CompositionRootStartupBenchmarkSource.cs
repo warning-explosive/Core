@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using CrossCuttingConcerns.Api.Extensions;
     using Test.Registrations;

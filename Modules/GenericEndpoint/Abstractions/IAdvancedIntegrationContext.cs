@@ -40,20 +40,5 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing reject operation</returns>
         Task Refuse(Exception exception, CancellationToken token);
-
-        /// <summary>
-        /// Delivers built message
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing delivery</returns>
-        Task Deliver(IntegrationMessage message, CancellationToken token);
-
-        /// <summary>
-        /// Delivers all messages which have buffered during message processing
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing delivery</returns>
-        Task DeliverAll(CancellationToken token);
     }
 }

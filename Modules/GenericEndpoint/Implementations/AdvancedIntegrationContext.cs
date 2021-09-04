@@ -1,8 +1,6 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Implementations
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
@@ -19,7 +17,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
     internal class AdvancedIntegrationContext : IAdvancedIntegrationContext
     {
         private readonly IIntegrationTransport _transport;
-        private readonly ICollection<IntegrationMessage> _outgoingMessages;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationMessageFactory _factory;
 
@@ -32,7 +29,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             IIntegrationUnitOfWork unitOfWork)
         {
             _transport = transport;
-            _outgoingMessages = new List<IntegrationMessage>();
             _endpointIdentity = endpointIdentity;
             _factory = factory;
 
@@ -71,10 +67,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationMessage
         {
-            // TODO: fix reply behavior
+            // TODO: #139 - fix reply behavior
             var sentFrom = Message.ReadRequiredHeader<EndpointIdentity>(IntegrationMessageHeader.SentFrom);
 
-            await Gather(CreateGeneralMessage(reply), token).ConfigureAwait(false);
+            var replyIntegrationMessage = CreateGeneralMessage(reply);
+
+            await Gather(replyIntegrationMessage, token).ConfigureAwait(false);
 
             Message.MarkAsReplied();
         }
@@ -86,30 +84,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
             copy.IncrementRetryCounter();
             copy.DeferDelivery(dueTime);
 
-            return Deliver(copy, token);
+            return _transport.Enqueue(copy, token);
         }
 
         public Task Refuse(Exception exception, CancellationToken token)
         {
             return _transport.EnqueueError(Message, exception, token);
-        }
-
-        public Task Deliver(IntegrationMessage message, CancellationToken token)
-        {
-            return _transport.Enqueue(message, token);
-        }
-
-        public async Task DeliverAll(CancellationToken token)
-        {
-            ICollection<IntegrationMessage> forDelivery;
-
-            lock (_outgoingMessages)
-            {
-                forDelivery = _outgoingMessages.ToList();
-                _outgoingMessages.Clear();
-            }
-
-            await forDelivery.Select(message => Deliver(message, token)).WhenAll().ConfigureAwait(false);
         }
 
         private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
@@ -120,18 +100,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         private Task Gather(IntegrationMessage message, CancellationToken token)
         {
-            // TODO: if (UnitOfWork.WasFinished)
-            if (true)
-            {
-                return Deliver(message, token);
-            }
-
-            /*lock (_outgoingMessages)
-            {
-                _outgoingMessages.Add(message);
-            }
-
-            return Task.CompletedTask;*/
+            return UnitOfWork.OutboxStorage.Add(message, token);
         }
     }
 }

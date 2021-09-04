@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Host.Implementations
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
     using Basics;
     using CompositionRoot;
     using Contract;
+    using Overrides;
 
     internal class EndpointBuilder : IEndpointBuilder
     {
@@ -50,19 +51,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
 
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider)
         {
-            var genericEndpointDataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(nameof(SpaceEngineers),
-                nameof(Core),
-                nameof(Core.GenericEndpoint),
-                "DataAccess"));
+            var genericEndpointDataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
+            var dataAccessModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithOverrides(new DataAccessOverrides()));
 
             return new EndpointBuilder
             {
+                Modifiers = Modifiers
+                    .Concat(new[] { dataAccessModifier })
+                    .ToList(),
                 EndpointPluginAssemblies = EndpointPluginAssemblies
                     .Concat(new[] { genericEndpointDataAccessAssembly })
                     .Concat(databaseProvider.Implementation())
-                    .ToList(),
-                Modifiers = Modifiers
+                    .ToList()
             };
         }
 

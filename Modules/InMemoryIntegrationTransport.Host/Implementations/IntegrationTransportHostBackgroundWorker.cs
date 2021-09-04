@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
+namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Implementations
 {
     using System.Threading;
     using System.Threading.Tasks;

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using CompositionRoot.Api.Abstractions;
-    using InMemoryIntegrationTransport.Host.Internals;
+    using InMemoryIntegrationTransport.Host.ManualRegistrations;
 
     internal class ModulesTestManualRegistration : IManualRegistration
     {

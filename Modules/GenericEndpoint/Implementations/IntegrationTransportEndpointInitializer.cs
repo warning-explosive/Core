@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Implementations
 {
     using System.Linq;
     using System.Threading;
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Internals
 
         public Task Initialize(CancellationToken token)
         {
-            // TODO: handle replies
+            // TODO: #139 - fix reply behavior
             _integrationTypeProvider.EndpointCommands()
                 .Concat(_integrationTypeProvider.EndpointQueries())
                 .Concat(_integrationTypeProvider.EndpointSubscriptions())

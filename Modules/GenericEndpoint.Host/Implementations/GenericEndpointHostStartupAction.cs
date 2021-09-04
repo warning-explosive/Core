@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Host.Implementations
 {
     using System.Threading;
     using System.Threading.Tasks;

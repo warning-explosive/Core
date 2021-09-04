@@ -1,13 +1,13 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
+namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
 {
     using CompositionRoot.Api.Abstractions;
-    using Contract;
+    using GenericEndpoint.Contract;
 
-    internal class GenericEndpointIdentityManualRegistration : IManualRegistration
+    internal class TransportEndpointIdentityManualRegistration : IManualRegistration
     {
         private readonly EndpointIdentity _endpointIdentity;
 
-        public GenericEndpointIdentityManualRegistration(EndpointIdentity endpointIdentity)
+        public TransportEndpointIdentityManualRegistration(EndpointIdentity endpointIdentity)
         {
             _endpointIdentity = endpointIdentity;
         }

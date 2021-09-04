@@ -41,7 +41,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
         {
             return info =>
             {
-                var sum = info.IsComponent().Bit()
+                var sum = info.IsNotComponent().Bit()
+                          + info.IsComponent().Bit()
                           + info.IsManuallyRegisteredComponent().Bit()
                           + info.IsUnregisteredComponent().Bit()
                           + info.IsComponentOverride().Bit();
@@ -82,6 +83,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                        || ManuallyRegistered
                        || Unregistered
                        || ComponentOverride;
+            }
+
+            public bool IsNotComponent()
+            {
+                return !Component
+                       && !ManuallyRegistered
+                       && !Unregistered
+                       && !ComponentOverride
+                       && !IsComponentCandidate(Type);
             }
 
             public bool IsComponent()

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.IntegrationTransport.Internals
+namespace SpaceEngineers.Core.IntegrationTransport.Implementations
 {
     using System;
     using System.Threading;
@@ -14,22 +14,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationContext : IIntegrationContext
     {
-        private const string RpcRequestMockEndpoint = nameof(RpcRequestMockEndpoint);
-
+        private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;
         private readonly IIntegrationMessageFactory _factory;
         private readonly IRpcRequestRegistry _registry;
-        private readonly EndpointIdentity _rpcRequestMockEndpointIdentity;
 
         public IntegrationContext(
+            EndpointIdentity endpointIdentity,
             IIntegrationTransport transport,
             IIntegrationMessageFactory factory,
             IRpcRequestRegistry registry)
         {
+            _endpointIdentity = endpointIdentity;
             _transport = transport;
             _factory = factory;
             _registry = registry;
-            _rpcRequestMockEndpointIdentity = new EndpointIdentity(RpcRequestMockEndpoint, 0);
         }
 
         public Task Send<TCommand>(TCommand command, CancellationToken token)
@@ -50,7 +49,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
         {
             var message = CreateGeneralMessage(query);
 
-            message.Headers[IntegrationMessageHeader.SentFrom] = _rpcRequestMockEndpointIdentity;
+            message.Headers[IntegrationMessageHeader.SentFrom] = _endpointIdentity;
 
             var requestId = message.Id;
 
@@ -58,7 +57,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Internals
 
             await _registry.TryEnroll(requestId, tcs, token).ConfigureAwait(false);
 
-            _transport.Bind(typeof(TReply), _rpcRequestMockEndpointIdentity, RpcReplyMessageHandler<TReply>(_registry));
+            _transport.Bind(typeof(TReply), _endpointIdentity, RpcReplyMessageHandler<TReply>(_registry));
 
             await Deliver(message, token).ConfigureAwait(false);
 

@@ -37,6 +37,7 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Statistics\GenericEndpoint.Statistics.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />

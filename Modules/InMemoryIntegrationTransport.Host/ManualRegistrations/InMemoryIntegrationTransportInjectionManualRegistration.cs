@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.Internals
+namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
 {
     using Abstractions;
     using CompositionRoot.Api.Abstractions;

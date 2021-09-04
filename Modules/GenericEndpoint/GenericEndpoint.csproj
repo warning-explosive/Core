@@ -44,12 +44,6 @@
     <Compile Update="Abstractions\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
-    <Compile Update="Internals\IntegrationContextUnitOfWorkSubscriber.cs">
-      <DependentUpon>IntegrationUnitOfWork.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Abstractions\IUnitOfWorkSubscriber.cs">
-      <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />

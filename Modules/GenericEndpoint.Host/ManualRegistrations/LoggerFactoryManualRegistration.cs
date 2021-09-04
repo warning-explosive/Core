@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Host.ManualRegistrations
 {
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions;

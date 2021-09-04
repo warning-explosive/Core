@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.IntegrationTransport.Internals
+namespace SpaceEngineers.Core.IntegrationTransport.Implementations
 {
     using System;
     using System.Runtime.Caching;

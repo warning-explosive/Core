@@ -3,30 +3,35 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
+    using Basics.Primitives;
     using Core.DataAccess.Contract.Abstractions;
     using GenericEndpoint.Abstractions;
     using Messaging;
 
-    [Component(EnLifestyle.Scoped)]
-    internal class DatabaseUnitOfWorkSubscriber : IUnitOfWorkSubscriber<IAdvancedIntegrationContext>,
-                                                  ICollectionResolvable<IUnitOfWorkSubscriber<IAdvancedIntegrationContext>>
+    [ComponentOverride]
+    internal class DataAccessIntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
+                                                     IIntegrationUnitOfWork
     {
         private readonly IDatabaseTransaction _databaseTransaction;
 
-        public DatabaseUnitOfWorkSubscriber(IDatabaseTransaction databaseTransaction)
+        public DataAccessIntegrationUnitOfWork(
+            IDatabaseTransaction databaseTransaction,
+            IOutboxStorage outboxStorage)
         {
             _databaseTransaction = databaseTransaction;
+            OutboxStorage = outboxStorage;
         }
 
-        public Task OnStart(IAdvancedIntegrationContext context, CancellationToken token)
+        // TODO: #100 - implement transactional outbox pattern & register override
+        public IOutboxStorage OutboxStorage { get; }
+
+        protected override Task Start(IAdvancedIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }
 
-        public async Task OnCommit(IAdvancedIntegrationContext context, CancellationToken token)
+        protected override async Task Commit(IAdvancedIntegrationContext context, CancellationToken token)
         {
             var isCommand = context.Message.IsCommand();
 
@@ -41,7 +46,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
                 .ConfigureAwait(false);
         }
 
-        public async Task OnRollback(IAdvancedIntegrationContext context, CancellationToken token)
+        protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
         {
             await _databaseTransaction
                 .Close(false, token)

@@ -10,8 +10,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot.Api.Extensions;
     using Contract;
     using GenericHost.Api.Abstractions;
+    using Implementations;
     using IntegrationTransport.Api.Abstractions;
-    using Internals;
+    using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;

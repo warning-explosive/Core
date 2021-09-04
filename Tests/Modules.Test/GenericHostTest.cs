@@ -25,12 +25,13 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Defaults;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Abstractions;
+    using GenericEndpoint.Host.Implementations;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.TestExtensions;
     using GenericHost;
     using GenericHost.Api.Abstractions;
     using InMemoryIntegrationTransport.Host;
-    using InMemoryIntegrationTransport.Host.Internals;
+    using InMemoryIntegrationTransport.Host.Implementations;
     using IntegrationTransport.Api.Abstractions;
     using MessageHandlers;
     using Messages;
@@ -604,7 +605,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Single(hostStartupActions);
                 var hostStartupAction = hostStartupActions.Single();
 
-                Assert.Equal(typeof(SpaceEngineers.Core.GenericEndpoint.Host.Internals.GenericEndpointHostStartupAction), hostStartupAction.GetType());
+                Assert.Equal(typeof(GenericEndpointHostStartupAction), hostStartupAction.GetType());
 
                 var hostBackgroundWorkers = host
                     .Services
@@ -633,7 +634,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var expected = new[]
                     {
-                        typeof(SpaceEngineers.Core.GenericEndpoint.Internals.AdvancedIntegrationContext)
+                        typeof(SpaceEngineers.Core.GenericEndpoint.Implementations.AdvancedIntegrationContext)
                     };
 
                     var actual = advancedIntegrationContext
@@ -801,7 +802,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var expected = new[]
                 {
-                    typeof(SpaceEngineers.Core.IntegrationTransport.Internals.IntegrationContext)
+                    typeof(SpaceEngineers.Core.IntegrationTransport.Implementations.IntegrationContext)
                 };
 
                 var actual = integrationContext

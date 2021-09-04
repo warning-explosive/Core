@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using Basics;
     using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.Host.Internals;
+    using GenericEndpoint.Host.ManualRegistrations;
 
     internal class ModulesTestGenericEndpointIdentityManualRegistration : IManualRegistration
     {

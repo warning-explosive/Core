@@ -9,5 +9,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Abstractions
     public interface IIntegrationUnitOfWork : IAsyncUnitOfWork<IAdvancedIntegrationContext>,
                                               IResolvable
     {
+        /// <summary>
+        /// Outbox storage
+        /// </summary>
+        IOutboxStorage OutboxStorage { get; }
     }
 }

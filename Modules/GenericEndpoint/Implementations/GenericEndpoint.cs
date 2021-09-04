@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Internals
+namespace SpaceEngineers.Core.GenericEndpoint.Implementations
 {
     using System;
     using System.Collections.Generic;

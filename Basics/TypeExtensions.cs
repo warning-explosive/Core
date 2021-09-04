@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using Exceptions;
 
     /// <summary>
@@ -12,81 +14,67 @@ namespace SpaceEngineers.Core.Basics
     public static class TypeExtensions
     {
         /// <summary>
-        /// Get specified attribute from type
+        /// Is object an instance of specified type
         /// </summary>
+        /// <param name="obj">Object</param>
         /// <param name="type">Type</param>
-        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
-        /// <returns>Attribute</returns>
-        /// <exception cref="NotFoundException">Throws if source is empty</exception>
-        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
-        public static TAttribute GetAttribute<TAttribute>(this Type type)
-            where TAttribute : Attribute
+        /// <returns>Object is an instance of specified type or not</returns>
+        public static bool IsInstanceOfType(this object obj, Type type)
         {
-            return TypeInfoStorage.Get(type).Attributes
-                                  .OfType<TAttribute>()
-                                  .InformativeSingle(Amb);
-
-            string Amb(IEnumerable<TAttribute> arg)
-            {
-                return $"Type has more than one {typeof(TAttribute)}";
-            }
+            return type.IsInstanceOfType(obj);
         }
 
         /// <summary>
-        /// Does the specified type has an attribute
+        /// Returns an attribute that type is anonymous or not
         /// </summary>
         /// <param name="type">Type</param>
-        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
-        /// <returns>Attribute existence</returns>
-        public static bool HasAttribute<TAttribute>(this Type type)
-            where TAttribute : Attribute
+        /// <returns>Whether type is anonymous or not</returns>
+        public static bool IsAnonymous(this Type type)
         {
-            return TypeInfoStorage.Get(type).Attributes
-                                  .OfType<TAttribute>()
-                                  .Any();
-        }
-
-        /// <summary> Order collection by DependencyAttribute </summary>
-        /// <param name="source">Unordered source collection</param>
-        /// <param name="accessor">Type accessor</param>
-        /// <typeparam name="T">Source items type-argument</typeparam>
-        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
-        /// <returns>Ordered by DependencyAttribute collection</returns>
-        public static IOrderedEnumerable<T> OrderByDependencyAttribute<T>(this IEnumerable<T> source, Func<T, Type> accessor)
-        {
-            int SortFunc(T item)
-            {
-                var type = accessor(item);
-                var dependencies = GetDependenciesByAttribute(type);
-
-                var depth = 0;
-
-                while (dependencies.Any())
-                {
-                    if (dependencies.Contains(type))
-                    {
-                        throw new InvalidOperationException($"{type} has cycle dependency");
-                    }
-
-                    ++depth;
-
-                    dependencies = dependencies.SelectMany(GetDependenciesByAttribute);
-                }
-
-                return depth;
-            }
-
-            return source.OrderBy(SortFunc);
+            return type.HasAttribute<CompilerGeneratedAttribute>();
         }
 
         /// <summary>
-        /// Get type dependencies from DependencyAttribute
+        /// Gets default value of the specified system type
         /// </summary>
         /// <param name="type">Type</param>
-        /// <returns>Type dependencies</returns>
-        public static IEnumerable<Type> GetDependenciesByAttribute(this Type type)
+        /// <returns>Default value</returns>
+        public static object? DefaultValue(this Type type)
         {
-            return TypeInfoStorage.Get(type).Dependencies;
+            return type.IsValueType
+                ? Activator.CreateInstance(type)
+                : null;
+        }
+
+        /// <summary>
+        /// Is type collection or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is type can be interpreted as collection</returns>
+        public static bool IsCollection(this Type type)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        /// <summary>
+        /// Is type primitive or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is type can be interpreted as primitive</returns>
+        public static bool IsPrimitive(this Type type)
+        {
+            return type.IsNullable()
+                ? IsPrimitiveType(type.UnwrapTypeParameter(typeof(Nullable<>)))
+                : IsPrimitiveType(type);
+
+            static bool IsPrimitiveType(Type t)
+            {
+                return t.IsPrimitive
+                       || t.IsEnum
+                       || t == typeof(Guid)
+                       || t == typeof(string)
+                       || t == typeof(Type);
+            }
         }
 
         /// <summary>
@@ -97,7 +85,94 @@ namespace SpaceEngineers.Core.Basics
         public static bool IsNullable(this Type type)
         {
             return type.IsGenericType
-                && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+                   && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        /// <summary>
+        /// True for non-generic or constructed generic types
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Is constructed or simple type</returns>
+        public static bool IsConstructedOrNonGenericType(this Type type)
+        {
+            return !type.IsGenericType || type.IsConstructedGenericType;
+        }
+
+        /// <summary>
+        /// Is type generic and partially closed
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Type is generic and partially closed or not</returns>
+        public static bool IsPartiallyClosed(this Type type)
+        {
+            return type.IsGenericType
+                   && type.ContainsGenericParameters
+                   && type.GetGenericTypeDefinition() != type;
+        }
+
+        /// <summary>
+        /// Is type concrete
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Type is concrete</returns>
+        public static bool IsConcreteType(this Type type)
+        {
+            return !type.IsAbstract
+                   && !type.IsArray
+                   && type != typeof(object)
+                   && !typeof(Delegate).IsAssignableFrom(type);
+        }
+
+        /// <summary>
+        /// Is constructor decorates specified type
+        /// </summary>
+        /// <param name="cctor">Constructor</param>
+        /// <param name="dependency">Decorator dependency type</param>
+        /// <returns>Constructor decorates specified type</returns>
+        public static bool IsDecorator(this ConstructorInfo cctor, Type dependency)
+        {
+            return cctor
+                .SelfDependencies(dependency)
+                .Any(type => ContainsDecorateeParameters(cctor, type));
+
+            static bool ContainsDecorateeParameters(ConstructorInfo cctor, Type dependency)
+            {
+                return cctor
+                    .GetParameters()
+                    .Any(parameter => IsDecorateeParameter(parameter, dependency));
+            }
+
+            static bool IsDecorateeParameter(ParameterInfo parameter, Type dependency)
+            {
+                return parameter.ParameterType == dependency;
+            }
+        }
+
+        /// <summary>
+        /// Is constructor composes collections of specified type
+        /// </summary>
+        /// <param name="cctor">Constructor</param>
+        /// <param name="dependency">Composite dependency type</param>
+        /// <returns>Constructor composes collections of specified type</returns>
+        public static bool IsComposite(this ConstructorInfo cctor, Type dependency)
+        {
+            return cctor
+                .SelfDependencies(dependency)
+                .Any(type => ContainsCompositeParameters(cctor, type));
+
+            static bool ContainsCompositeParameters(ConstructorInfo cctor, Type dependency)
+            {
+                return cctor
+                    .GetParameters()
+                    .Any(parameter => IsCompositeParameter(parameter, dependency));
+            }
+
+            static bool IsCompositeParameter(ParameterInfo parameter, Type dependency)
+            {
+                return parameter
+                    .ParameterType
+                    .UnwrapTypeParameter(typeof(IEnumerable<>)) == dependency;
+            }
         }
 
         /// <summary>
@@ -114,7 +189,7 @@ namespace SpaceEngineers.Core.Basics
             }
 
             return TypeInfoStorage.Get(type).GenericTypeDefinitions.Contains(openGenericAncestor)
-                || TypeInfoStorage.Get(type).GenericInterfaceDefinitions.Contains(openGenericAncestor);
+                   || TypeInfoStorage.Get(type).GenericInterfaceDefinitions.Contains(openGenericAncestor);
         }
 
         /// <summary>
@@ -135,10 +210,179 @@ namespace SpaceEngineers.Core.Basics
             var genericInterfaceDefinition = @interface.GenericTypeDefinitionOrSelf();
 
             return TypeInfoStorage.Get(genericTypeDefinition)
-                                  .DeclaredInterfaces
-                                  .Select(z => z.GUID)
-                                  .Contains(genericInterfaceDefinition.GUID)
-                && type.GetGenericArguments().SequenceEqual(@interface.GetGenericArguments());
+                       .DeclaredInterfaces
+                       .Select(z => z.GUID)
+                       .Contains(genericInterfaceDefinition.GUID)
+                   && type.GetGenericArguments().SequenceEqual(@interface.GetGenericArguments());
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static TAttribute GetRequiredAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage
+                       .Get(type)
+                       .Attributes
+                       .OfType<TAttribute>()
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new AttributeRequiredException(typeof(TAttribute), type);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static TAttribute? GetAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>()
+                .InformativeSingleOrDefault(Amb);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>()
+                .Any();
+        }
+
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <param name="attributeType">Attribute type</param>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute(this Type type, Type attributeType)
+        {
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .Any(attributeType.IsInstanceOfType);
+        }
+
+        /// <summary> Order types collection by DependencyAttribute </summary>
+        /// <param name="source">Unordered types collection</param>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
+        /// <returns>Ordered by DependencyAttribute collection</returns>
+        public static IOrderedEnumerable<Type> OrderByDependencyAttribute(this IEnumerable<Type> source)
+        {
+            return source.OrderByDependencyAttribute(t => t);
+        }
+
+        /// <summary> Order collection by DependencyAttribute </summary>
+        /// <param name="source">Unordered source collection</param>
+        /// <param name="accessor">Type accessor</param>
+        /// <typeparam name="T">Source items type-argument</typeparam>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
+        /// <returns>Ordered by DependencyAttribute collection</returns>
+        public static IOrderedEnumerable<T> OrderByDependencyAttribute<T>(this IEnumerable<T> source, Func<T, Type> accessor)
+        {
+            int SortFunc(T item)
+            {
+                var type = accessor(item);
+                var dependencies = GetDependenciesByAttribute(type).ToList();
+
+                var depth = 0;
+
+                while (dependencies.Any())
+                {
+                    if (dependencies.Contains(type))
+                    {
+                        throw new InvalidOperationException($"{type} has cycle dependency");
+                    }
+
+                    ++depth;
+
+                    dependencies = dependencies.SelectMany(GetDependenciesByAttribute).ToList();
+                }
+
+                return depth;
+            }
+
+            return source.OrderBy(SortFunc);
+        }
+
+        /// <summary> Order collection by DependencyAttribute </summary>
+        /// <param name="source">Unordered source collection</param>
+        /// <param name="getKey">Key accessor</param>
+        /// <param name="getDependencies">Dependencies accessor</param>
+        /// <typeparam name="TSource">TSource type-argument</typeparam>
+        /// <typeparam name="TDependency">TDependency type-argument</typeparam>
+        /// <exception cref="InvalidOperationException">Source type has cycle dependency</exception>
+        /// <returns>Ordered by DependencyAttribute collection</returns>
+        public static IOrderedEnumerable<TSource> OrderByDependencies<TSource, TDependency>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TDependency> getKey,
+            Func<TSource, IEnumerable<TSource>> getDependencies)
+        {
+            return source.OrderBy(SortFunc);
+
+            int SortFunc(TSource item)
+            {
+                var key = getKey(item);
+                var dependencies = getDependencies(item).ToList();
+                var dependenciesKeys = dependencies.Select(getKey).ToList();
+
+                var depth = 0;
+
+                while (dependenciesKeys.Any())
+                {
+                    if (dependenciesKeys.Contains(key))
+                    {
+                        throw new InvalidOperationException($"{key} has cycle dependency");
+                    }
+
+                    ++depth;
+
+                    dependencies = dependencies.SelectMany(getDependencies).ToList();
+                    dependenciesKeys = dependencies.Select(getKey).ToList();
+                }
+
+                return depth;
+            }
+        }
+
+        /// <summary>
+        /// Get type dependencies from DependencyAttribute
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Type dependencies</returns>
+        public static IEnumerable<Type> GetDependenciesByAttribute(this Type type)
+        {
+            return TypeInfoStorage.Get(type).Dependencies;
         }
 
         /// <summary>
@@ -153,20 +397,21 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+                throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
             }
 
             if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
             {
-                throw new ArgumentException("Must be in bounds of generic arguments count", nameof(typeArgumentAt));
+                throw new ArgumentException("Should be in bounds of generic arguments count", nameof(typeArgumentAt));
             }
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)
                        ? Enumerable.Empty<Type>()
-                       : source.IncludedTypes()
-                               .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                               .Select(type => type.GetGenericArguments()[typeArgumentAt])
-                               .Distinct();
+                       : source
+                           .IncludedTypes()
+                           .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
+                           .Select(type => type.GetGenericArguments()[typeArgumentAt])
+                           .Distinct();
         }
 
         /// <summary>
@@ -179,14 +424,52 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Must be GenericTypeDefinition", nameof(openGeneric));
+                throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
             }
 
             return !IsSubclassOfOpenGeneric(source, openGeneric)
                        ? Enumerable.Empty<Type[]>()
-                       : source.IncludedTypes()
-                               .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                               .Select(type => type.GetGenericArguments().ToArray());
+                       : source
+                           .IncludedTypes()
+                           .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
+                           .Select(type => type.GetGenericArguments().ToArray());
+        }
+
+        /// <summary>
+        /// Unwrap type parameter if possible
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <param name="typeArgumentAt">Type argument position</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type UnwrapTypeParameter(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        {
+            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault()
+                   ?? typeToUnwrap;
+        }
+
+        /// <summary>
+        /// Unwrap type parameters is possible
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type[] UnwrapTypeParameters(this Type typeToUnwrap, Type openGeneric)
+        {
+            return typeToUnwrap.ExtractGenericArguments(openGeneric).Single();
+        }
+
+        /// <summary>
+        /// Base types from source type
+        /// - base types
+        /// - interfaces
+        /// </summary>
+        /// <param name="source">Source type</param>
+        /// <returns>Included types</returns>
+        public static IEnumerable<Type> BaseTypes(this Type source)
+        {
+            return TypeInfoStorage.Get(source).BaseTypes
+                .Concat(source.GetInterfaces());
         }
 
         /// <summary>
@@ -199,9 +482,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Included types</returns>
         public static IEnumerable<Type> IncludedTypes(this Type source)
         {
-            return new[] { source }
-                  .Concat(TypeInfoStorage.Get(source).BaseTypes)
-                  .Concat(source.GetInterfaces());
+            return new[] { source }.Concat(source.BaseTypes());
         }
 
         /// <summary>
@@ -226,58 +507,99 @@ namespace SpaceEngineers.Core.Basics
         {
             if (!typeArgument.IsGenericParameter)
             {
-                return typeArgument.IsAssignableFrom(typeForCheck);
+                if (!typeArgument.IsGenericType)
+                {
+                    return typeArgument.IsAssignableFrom(typeForCheck);
+                }
+
+                var genericParameters = typeArgument.GetGenericArguments();
+
+                return typeForCheck
+                    .ExtractGenericArguments(typeArgument.GetGenericTypeDefinition())
+                    .Any(set => set
+                            .Zip(genericParameters, (arg, param) => (arg, param))
+                            .All(pair => pair.arg.FitsForTypeArgument(pair.param)));
             }
 
-            bool CheckConstraint(Type constraint) =>
-                constraint.IsGenericType
-                    ? IsSubclassOfOpenGeneric(typeForCheck, constraint.GetGenericTypeDefinition())
-                    : constraint.IsAssignableFrom(typeForCheck);
-
-            var byConstraints = typeArgument.GetGenericParameterConstraints()
-                                            .All(CheckConstraint);
+            var byConstraints = typeArgument
+                .GetGenericParameterConstraints()
+                .All(CheckConstraint);
 
             var filters = GetFiltersByTypeParameterAttributes(typeArgument.GenericParameterAttributes);
             var byGenericParameterAttributes = filters.All(filter => filter(typeForCheck));
 
             return byConstraints && byGenericParameterAttributes;
+
+            bool CheckConstraint(Type constraint)
+            {
+                if (!constraint.IsGenericType)
+                {
+                    return constraint.IsAssignableFrom(typeForCheck);
+                }
+
+                var constraintGenericTypeDefinition = constraint.GetGenericTypeDefinition();
+
+                return IsSubclassOfOpenGeneric(typeForCheck, constraintGenericTypeDefinition)
+                       && HasSuitableTypeArguments();
+
+                bool HasSuitableTypeArguments()
+                {
+                    var typeArgumentsForCheck = ExtractGenericArguments(typeForCheck, constraintGenericTypeDefinition).ToArray();
+
+                    return constraint
+                        .GetGenericArguments()
+                        .Select((constraintGenericArgument, position) => (constraintGenericArgument, position))
+                        .All(info => typeArgumentsForCheck
+                            .Any(typeArgumentForCheck => info.constraintGenericArgument == typeArgument
+                                                         ? typeForCheck == typeArgumentForCheck[info.position] // T : IService<T>
+                                                         : FitsForTypeArgument(typeArgumentForCheck[info.position], info.constraintGenericArgument)));
+                }
+            }
+
+            static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)
+            {
+                var filters = new List<Func<Type, bool>>();
+
+                if (genericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
+                {
+                    filters.Add(type => type.IsClass);
+                }
+
+                if (genericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
+                {
+                    filters.Add(type => type.IsValueType && !type.IsNullable());
+                }
+
+                if (genericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
+                {
+                    filters.Add(type =>
+                    {
+                        if (type.IsValueType)
+                        {
+                            return true;
+                        }
+
+                        var ctor = type.GetConstructor(Array.Empty<Type>());
+
+                        return ctor != null;
+                    });
+                }
+
+                if (!filters.Any())
+                {
+                    filters.Add(type => true);
+                }
+
+                return filters;
+            }
         }
 
-        private static ICollection<Func<Type, bool>> GetFiltersByTypeParameterAttributes(GenericParameterAttributes genericParameterAttributes)
+        private static IEnumerable<Type> SelfDependencies(this ConstructorInfo cctor, Type dependency)
         {
-            var filters = new List<Func<Type, bool>>();
-
-            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
-            {
-                filters.Add(type => type.IsClass);
-            }
-
-            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
-            {
-                filters.Add(type => type.IsValueType && !type.IsNullable());
-            }
-
-            if (genericParameterAttributes.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
-            {
-                filters.Add(type =>
-                            {
-                                if (type.IsValueType)
-                                {
-                                    return true;
-                                }
-
-                                var ctor = type.GetConstructor(Array.Empty<Type>());
-
-                                return ctor != null;
-                            });
-            }
-
-            if (!filters.Any())
-            {
-                filters.Add(type => true);
-            }
-
-            return filters;
+            return cctor
+                .DeclaringType
+                .BaseTypes()
+                .Where(type => type.GenericTypeDefinitionOrSelf() == dependency.GenericTypeDefinitionOrSelf());
         }
     }
 }

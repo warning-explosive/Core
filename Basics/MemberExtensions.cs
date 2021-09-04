@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -9,7 +10,7 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class MemberExtensions
     {
-        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public;
 
         /// <summary>
         /// Check that object has property
@@ -34,7 +35,7 @@ namespace SpaceEngineers.Core.Basics
         {
             return target
                   .GetType()
-                  .GetProperty(propertyName, Flags)
+                  .GetProperty(propertyName, Flags | BindingFlags.GetProperty)
                   .GetValue(target);
         }
 
@@ -58,9 +59,18 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Field value</returns>
         public static bool HasField(this object target, string fieldName)
         {
-            return target
-                  .GetType()
-                  .GetField(fieldName, Flags) != null;
+            return HasField(target.GetType(), fieldName);
+        }
+
+        /// <summary>
+        /// Check that object has field
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <returns>Field value</returns>
+        public static bool HasField(this Type type, string fieldName)
+        {
+            return type.GetField(fieldName, Flags) != null;
         }
 
         /// <summary>
@@ -71,10 +81,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Field value</returns>
         public static object GetFieldValue(this object target, string fieldName)
         {
-            return target
-                  .GetType()
-                  .GetField(fieldName, Flags)
-                  .GetValue(target);
+            return GetFieldValue(target.GetType(), target, fieldName);
         }
 
         /// <summary>
@@ -90,17 +97,45 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Get field value from target object
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <returns>Field value</returns>
+        public static object GetFieldValue(this Type type, object target, string fieldName)
+        {
+            return type.HasField(fieldName)
+                ? type.GetField(fieldName, Flags).GetValue(target)
+                : throw new InvalidOperationException($"Type '{type}' doesn't contain field '{fieldName}'");
+        }
+
+        /// <summary>
+        /// Get field value from target object
+        /// </summary>
+        /// <param name="type">Target type</param>
+        /// <param name="target">Target object</param>
+        /// <param name="fieldName">Name of the field</param>
+        /// <typeparam name="TField">TField type-argument</typeparam>
+        /// <returns>Field value</returns>
+        public static TField GetFieldValue<TField>(this Type type, object target, string fieldName)
+        {
+            return (TField)type.GetFieldValue(target, fieldName);
+        }
+
+        /// <summary>
         /// Get dictionary of object property values
         /// Key - property name, Value - property value
         /// </summary>
         /// <param name="target">Target object</param>
         /// <returns>Property dictionary</returns>
-        public static IDictionary<string, object> ToPropertyDictionary(this object target)
+        public static Dictionary<string, object?> ToPropertyDictionary(this object target)
         {
             return target.GetType()
-                         .GetProperties(Flags)
+                         .GetProperties(Flags | BindingFlags.GetProperty)
                          .ToDictionary(prop => prop.Name,
-                                       prop => prop.GetValue(target));
+                                       prop => (object?)prop.GetValue(target),
+                                       StringComparer.OrdinalIgnoreCase);
         }
     }
 }

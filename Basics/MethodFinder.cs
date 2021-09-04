@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -8,8 +9,11 @@ namespace SpaceEngineers.Core.Basics
     /// <summary>
     /// Method finder
     /// </summary>
-    internal class MethodFinder
+    public class MethodFinder
     {
+        private static readonly ConcurrentDictionary<string, MethodInfo?> Cache
+            = new ConcurrentDictionary<string, MethodInfo?>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary> .ctor </summary>
         /// <param name="declaringType">Type that declare method</param>
         /// <param name="methodName">Method name</param>
@@ -24,35 +28,56 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary> Type that declare method </summary>
-        internal Type DeclaringType { get; }
+        public Type DeclaringType { get; }
 
         /// <summary> Method name </summary>
-        internal string MethodName { get; }
+        public string MethodName { get; }
 
         /// <summary> BindingFlags </summary>
-        internal BindingFlags BindingFlags { get; }
+        public BindingFlags BindingFlags { get; }
 
         /// <summary> TypeArguments </summary>
-        internal IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
+        public IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
 
         /// <summary> ArgumentTypes </summary>
-        internal IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
+        public IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{DeclaringType.FullName}.{MethodName} with {TypeArguments.Count} type arguments and arguments types: {string.Join(", ", ArgumentTypes.Select(t => t.Name))}";
+            var properties = new Dictionary<string, string>
+            {
+                [nameof(DeclaringType)] = DeclaringType.FullName,
+                [nameof(MethodName)] = MethodName,
+                [nameof(BindingFlags)] = BindingFlags.ToString("G"),
+                [nameof(TypeArguments)] = string.Join(string.Empty, TypeArguments.Select(type => type.FullName)),
+                [nameof(ArgumentTypes)] = string.Join(string.Empty, ArgumentTypes.Select(type => type.FullName))
+            };
+
+            return string.Join(string.Empty, properties);
         }
 
         /// <summary> Find method </summary>
         /// <returns>MethodInfo</returns>
-        internal MethodInfo? FindMethod()
+        public MethodInfo? FindMethod()
+        {
+            var key = string.Intern(ToString());
+
+            return Cache.GetOrAdd(key, _ => Find());
+        }
+
+        private MethodInfo? Find()
         {
             var isGenericMethod = TypeArguments.Any();
 
             return isGenericMethod
-                       ? FindGenericMethod()
-                       : DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
+                ? FindGenericMethod()
+                : FindNonGenericMethod();
+        }
+
+        private MethodInfo? FindNonGenericMethod()
+        {
+            return DeclaringType.GetMethod(MethodName, BindingFlags, null, ArgumentTypes.ToArray(), null);
         }
 
         private MethodInfo? FindGenericMethod()

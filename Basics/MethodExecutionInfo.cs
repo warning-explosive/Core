@@ -53,7 +53,21 @@ namespace SpaceEngineers.Core.Basics
         public MethodExecutionInfo WithArgument<TArgument>(TArgument argument)
         {
             _args.Add(argument);
-            _argumentTypes.Add(typeof(TArgument));
+            _argumentTypes.Add(argument.GetType());
+
+            return this;
+        }
+
+        /// <summary>
+        /// Execute method with argument
+        /// </summary>
+        /// <param name="argumentType">Argument type</param>
+        /// <param name="argument">Argument</param>
+        /// <returns>MethodExecutionInfo</returns>
+        public MethodExecutionInfo WithArgument(Type argumentType, object? argument)
+        {
+            _args.Add(argument);
+            _argumentTypes.Add(argumentType);
 
             return this;
         }
@@ -67,7 +81,23 @@ namespace SpaceEngineers.Core.Basics
         public MethodExecutionInfo WithArgument<TArgument>(object? argument)
         {
             _args.Add(argument);
-            _argumentTypes.Add(typeof(TArgument));
+            _argumentTypes.Add(argument?.GetType() ?? typeof(TArgument));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Execute method with arguments
+        /// </summary>
+        /// <param name="arguments">Arguments</param>
+        /// <returns>MethodExecutionInfo</returns>
+        public MethodExecutionInfo WithArguments(params object[] arguments)
+        {
+            foreach (var argument in arguments)
+            {
+                _args.Add(argument);
+                _argumentTypes.Add(argument.GetType());
+            }
 
             return this;
         }
@@ -141,9 +171,12 @@ namespace SpaceEngineers.Core.Basics
                                         ? methodInfo.MakeGenericMethod(_typeArguments.ToArray())
                                         : methodInfo;
 
-            Func<object> action = () => constructedMethod.Invoke(_target, _args.ToArray());
+            Func<object?> action = () => constructedMethod.Invoke(_target, _args.ToArray());
 
-            return action.Try().Invoke();
+            return action
+                .Try()
+                .Catch<Exception>()
+                .Invoke(ex => throw ex.Rethrow());
         }
 
         private static BindingFlags GetBindings(bool isInstanceMethod)

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Execution extension methods
@@ -13,10 +14,11 @@ namespace SpaceEngineers.Core.Basics
             typeof(StackOverflowException),
             typeof(OutOfMemoryException),
             typeof(OperationCanceledException),
+            typeof(AccessViolationException)
         };
 
         /// <summary>
-        /// Try execute client action
+        /// Try execute client's action
         /// </summary>
         /// <param name="clientAction">Client action</param>
         /// <returns>ActionExecutionInfo</returns>
@@ -26,27 +28,37 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Try execute client function
+        /// Try execute client's function
         /// </summary>
         /// <param name="clientFunction">Client function</param>
         /// <typeparam name="TResult">Function TResult type-argument</typeparam>
-        /// <returns>ActionExecutionInfo</returns>
+        /// <returns>FunctionExecutionInfo</returns>
         public static FunctionExecutionInfo<TResult> Try<TResult>(this Func<TResult> clientFunction)
         {
             return new FunctionExecutionInfo<TResult>(clientFunction);
         }
 
         /// <summary>
-        /// Invoke client function
+        /// Try execute client's asynchronous operation
         /// </summary>
-        /// <param name="info">FunctionExecutionInfo</param>
-        /// <param name="exceptionHandler">Exception handler</param>
-        /// <typeparam name="TResult">Function TResult type-argument</typeparam>
-        /// <returns>TResult</returns>
-        public static TResult Invoke<TResult>(this FunctionExecutionInfo<TResult> info,
-                                              Func<Exception, TResult>? exceptionHandler = null)
+        /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
+        /// <param name="configureAwait">Configure await option</param>
+        /// <returns>AsyncOperationExecutionInfo</returns>
+        public static AsyncOperationExecutionInfo TryAsync(this Func<Task> clientAsyncOperationFactory, bool configureAwait = false)
         {
-            return info.InvokeInternal(exceptionHandler);
+            return new AsyncOperationExecutionInfo(clientAsyncOperationFactory, configureAwait);
+        }
+
+        /// <summary>
+        /// Try execute client's asynchronous operation
+        /// </summary>
+        /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
+        /// <param name="configureAwait">Configure await option</param>
+        /// <typeparam name="TResult">Async operation result type-argument</typeparam>
+        /// <returns>AsyncOperationExecutionInfo</returns>
+        public static AsyncGenericOperationExecutionInfo<TResult> TryAsync<TResult>(this Func<Task<TResult>> clientAsyncOperationFactory, bool configureAwait = false)
+        {
+            return new AsyncGenericOperationExecutionInfo<TResult>(clientAsyncOperationFactory, configureAwait);
         }
 
         /// <summary>

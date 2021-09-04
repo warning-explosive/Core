@@ -8,9 +8,11 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public class ActionExecutionInfo
     {
-        private readonly Action _clientAction;
+        private static readonly Action<Exception> EmptyExceptionHandler =
+            _ => { };
 
-        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
+        private readonly Action _clientAction;
+        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
@@ -19,6 +21,7 @@ namespace SpaceEngineers.Core.Basics
         public ActionExecutionInfo(Action clientAction)
         {
             _clientAction = clientAction;
+            _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
 
         /// <summary>
@@ -30,7 +33,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>ActionExecutionInfo</returns>
         public ActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
-            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
+            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
             return this;
         }
@@ -48,11 +51,16 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client action
+        /// Invoke client's action
         /// </summary>
-        /// <param name="exceptionHandler">Exception handler</param>
-        public void Invoke(Action<Exception>? exceptionHandler = null)
+        /// <param name="fallbackExceptionHandler">Fallback exception handler</param>
+        public void Invoke(Action<Exception>? fallbackExceptionHandler = null)
         {
+            if (fallbackExceptionHandler != null)
+            {
+                _exceptionHandlers[typeof(Exception)] = fallbackExceptionHandler;
+            }
+
             try
             {
                 _clientAction.Invoke();
@@ -74,10 +82,8 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
-                    throw realException;
+                    throw realException.Rethrow();
                 }
-
-                exceptionHandler?.Invoke(realException);
             }
             finally
             {

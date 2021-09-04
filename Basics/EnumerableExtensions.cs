@@ -12,6 +12,103 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class EnumerableExtensions
     {
+        /// <summary>
+        /// Full outer join
+        /// </summary>
+        /// <param name="leftSource">Left source</param>
+        /// <param name="rightSource">Right source</param>
+        /// <param name="leftKeySelector">Left key selector</param>
+        /// <param name="rightKeySelector">Right key selector</param>
+        /// <param name="resultSelector">Result selector (left/right could be null for reference types)</param>
+        /// <param name="comparer">Custom equality comparer</param>
+        /// <typeparam name="TLeft">TLeft type-argument</typeparam>
+        /// <typeparam name="TRight">TRight type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Left join result</returns>
+        public static IEnumerable<TResult> FullOuterJoin<TLeft, TRight, TKey, TResult>(
+            this IEnumerable<TLeft> leftSource,
+            IEnumerable<TRight> rightSource,
+            Func<TLeft, TKey> leftKeySelector,
+            Func<TRight, TKey> rightKeySelector,
+            Func<TLeft?, TRight?, TResult> resultSelector,
+            IEqualityComparer<TKey>? comparer = null)
+        {
+            var leftLookup = leftSource.ToLookup(leftKeySelector);
+            var rightLookup = rightSource.ToLookup(rightKeySelector);
+
+            var keys = leftLookup
+                .Select(p => p.Key)
+                .Concat(rightLookup.Select(p => p.Key))
+                .ToHashSet(comparer ?? EqualityComparer<TKey>.Default);
+
+            return from key in keys
+                from left in leftLookup[key].DefaultIfEmpty()
+                from right in rightLookup[key].DefaultIfEmpty()
+                select resultSelector(left, right);
+        }
+
+        /// <summary>
+        /// Left outer join
+        /// </summary>
+        /// <param name="leftSource">Left source</param>
+        /// <param name="rightSource">Right source</param>
+        /// <param name="leftKeySelector">Left key selector</param>
+        /// <param name="rightKeySelector">Right key selector</param>
+        /// <param name="resultSelector">Result selector (right could be null for reference types)</param>
+        /// <param name="comparer">Custom equality comparer</param>
+        /// <typeparam name="TLeft">TLeft type-argument</typeparam>
+        /// <typeparam name="TRight">TRight type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>Left join result</returns>
+        public static IEnumerable<TResult> LeftJoin<TLeft, TRight, TKey, TResult>(
+            this IEnumerable<TLeft> leftSource,
+            IEnumerable<TRight> rightSource,
+            Func<TLeft, TKey> leftKeySelector,
+            Func<TRight, TKey> rightKeySelector,
+            Func<TLeft, TRight?, TResult> resultSelector,
+            IEqualityComparer<TKey>? comparer = null)
+        {
+            var leftLookup = leftSource.ToLookup(leftKeySelector);
+            var rightLookup = rightSource.ToLookup(rightKeySelector);
+
+            var keys = leftLookup
+                .Select(p => p.Key)
+                .ToHashSet(comparer ?? EqualityComparer<TKey>.Default);
+
+            return from key in keys
+                from left in leftLookup[key]
+                from right in rightLookup[key].DefaultIfEmpty()
+                select resultSelector(left, right);
+        }
+
+        /// <summary>
+        /// Flatten source stream
+        /// </summary>
+        /// <param name="source">Source stream</param>
+        /// <param name="unfold">Unfold function</param>
+        /// <typeparam name="T">Element type-argument</typeparam>
+        /// <returns> Flatten source </returns>
+        public static IEnumerable<T> Flatten<T>(
+            this T source,
+            Func<T, IEnumerable<T>> unfold)
+        {
+            return new[] { source }.Concat(unfold(source).SelectMany(z => Flatten(z, unfold)));
+        }
+
+        /// <summary>
+        /// Flatten source stream
+        /// </summary>
+        /// <param name="source">Source stream</param>
+        /// <param name="unfold">Unfold function</param>
+        /// <typeparam name="T">Element type-argument</typeparam>
+        /// <returns> Flatten source </returns>
+        public static IEnumerable<T> Flatten<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> unfold)
+        {
+            return source.SelectMany(item => item.Flatten(unfold));
+        }
+
         /// <summary> Produce cartesian product of source columns </summary>
         /// <param name="sourceColumns">Source columns</param>
         /// <typeparam name="T">Item type-argument</typeparam>
@@ -23,31 +120,22 @@ namespace SpaceEngineers.Core.Basics
                 return Enumerable.Empty<ICollection<T>>();
             }
 
-            IEnumerable<ICollection<T>> seed = sourceColumns.Take(1)
-                                                            .Single()
-                                                            .Select(item => new List<T> { item });
+            IEnumerable<ICollection<T>> seed = sourceColumns
+                .Take(1)
+                .Single()
+                .Select(item => new List<T> { item });
 
-            return sourceColumns.Skip(1)
-                                .Aggregate(seed,
-                                           (accumulator, next) =>
-                                               accumulator.Join(next,
-                                                                _ => true,
-                                                                _ => true,
-                                                                (left, right) => new List<T>(left) { right }));
-        }
+            return sourceColumns
+                .Skip(1)
+                .Aggregate(seed, Aggregate);
 
-        /// <summary>
-        /// Source enumerator without nulls
-        /// </summary>
-        /// <param name="source">Source enumerator</param>
-        /// <typeparam name="TSource">Source item type type-argument</typeparam>
-        /// <typeparam name="TReturn">TReturn source item type type-argument</typeparam>
-        /// <returns>Source without nulls</returns>
-        public static IEnumerable<TReturn> WithoutNulls<TSource, TReturn>(this IEnumerable<TSource> source)
-            where TReturn : notnull, TSource
-        {
-            return source.Where(item => item != null)
-                         .OfType<TReturn>();
+            static IEnumerable<ICollection<T>> Aggregate(IEnumerable<ICollection<T>> acc, IEnumerable<T> next)
+            {
+                return acc.Join(next,
+                    _ => true,
+                    _ => true,
+                    (left, right) => new List<T>(left) { right });
+            }
         }
 
         /// <summary> Execute action on each element </summary>
@@ -68,30 +156,38 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TSource">The type of the elements of <paramref name="source" /></typeparam>
         public static void Each<TSource>(this IEnumerable<TSource> source, Action<TSource, int> action)
         {
-            var length = source.Count();
-
-            for (var i = 0; i < length; ++i)
+            using (var enumerator = source.GetEnumerator())
             {
-                action(source.ElementAt(i), i);
+                var i = 0;
+
+                while (enumerator.MoveNext())
+                {
+                    action(enumerator.Current, i++);
+                }
             }
         }
 
         /// <summary> Select collection from untyped IEnumerable </summary>
         /// <param name="enumerable">IEnumerable</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<object> ToObjectEnumerable(this IEnumerable enumerable)
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerable enumerable)
         {
-            return enumerable.GetEnumerator().ToObjectEnumerable();
+            return enumerable.GetEnumerator().AsEnumerable<T>();
         }
 
         /// <summary> Select collection from IEnumerator </summary>
         /// <param name="numerator">IEnumerator</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Collection of objects</returns>
-        public static IEnumerable<object> ToObjectEnumerable(this IEnumerator numerator)
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerator numerator)
         {
             while (numerator.MoveNext())
             {
-                yield return numerator.Current;
+                if (numerator.Current is T typed)
+                {
+                    yield return typed;
+                }
             }
         }
 
@@ -121,17 +217,19 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static T InformativeSingle<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            if (!source.Any())
+            var items = source.Take(2).ToList();
+
+            if (!items.Any())
             {
                 throw new NotFoundException("Source collection is empty");
             }
 
-            if (source.Take(2).Count() != 1)
+            if (items.Count != 1)
             {
-                throw new AmbiguousMatchException(amb(source));
+                throw new AmbiguousMatchException(amb(items));
             }
 
-            return source.Single();
+            return items.Single();
         }
 
         /// <summary>
@@ -144,12 +242,14 @@ namespace SpaceEngineers.Core.Basics
         /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
         public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
         {
-            if (source.Take(2).Count() != 1)
+            var items = source.Take(2).ToList();
+
+            if (items.Count >= 2)
             {
-                throw new AmbiguousMatchException(amb(source));
+                throw new AmbiguousMatchException(amb(items));
             }
 
-            return source.Single();
+            return items.SingleOrDefault();
         }
     }
 }

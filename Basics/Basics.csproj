@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>SpaceEngineers.Core.Basics</AssemblyName>
@@ -46,11 +46,55 @@
     <Compile Update="TypeInfo.cs">
       <DependentUpon>ITypeInfo.cs</DependentUpon>
     </Compile>
+    <Compile Update="AsyncOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AsyncGenericOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\BinaryHeap.cs">
+      <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\HeapEntry.cs">
+      <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\PriorityQueue.cs">
+      <DependentUpon>IQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\DeferredQueue.cs">
+      <DependentUpon>IAsyncQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\MessageQueue.cs">
+      <DependentUpon>IAsyncQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\IAsyncQueue.cs">
+      <DependentUpon>IQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\ICompositeDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\AsyncDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ISafelyComparable.cs">
+      <DependentUpon>Comparable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ISafelyEquatable.cs">
+      <DependentUpon>Equatable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="State.cs">
+      <DependentUpon>StateExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\RootNodeChangedEventArgs.cs">
+      <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
-    <PackageReference Include="System.Reactive" Version="4.4.1" />
   </ItemGroup>
 </Project>

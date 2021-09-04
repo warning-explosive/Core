@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.Basics.Attributes
         }
 
         /// <summary>
-        /// Order
+        /// Dependencies
         /// </summary>
         public IReadOnlyCollection<Type> Dependencies { get; }
     }

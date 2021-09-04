@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.PathResolver
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using AutoWiringApi.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Service for resolve shortest path on the graph between two nodes

@@ -9,9 +9,11 @@ namespace SpaceEngineers.Core.Basics
     /// <typeparam name="TResult">Function TResult Type-argument</typeparam>
     public class FunctionExecutionInfo<TResult>
     {
-        private readonly Func<TResult> _clientFunction;
+        private static readonly Action<Exception> EmptyExceptionHandler =
+            _ => { };
 
-        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
+        private readonly Func<TResult> _clientFunction;
+        private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
@@ -20,6 +22,7 @@ namespace SpaceEngineers.Core.Basics
         public FunctionExecutionInfo(Func<TResult> clientFunction)
         {
             _clientFunction = clientFunction;
+            _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
 
         /// <summary>
@@ -31,7 +34,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>FunctionExecutionInfo</returns>
         public FunctionExecutionInfo<TResult> Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
-            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? (ex => { });
+            _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
             return this;
         }
@@ -49,17 +52,20 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Try invoke client function
+        /// Invoke client's function
         /// </summary>
-        /// <param name="exceptionHandler">Exception handler</param>
+        /// <param name="fallbackExceptionHandler">Fallback exception handler</param>
         /// <returns>TResult</returns>
-        internal TResult InvokeInternal(Func<Exception, TResult>? exceptionHandler = null)
+        public TResult? Invoke(Action<Exception>? fallbackExceptionHandler = null)
         {
-            TResult result = default!;
+            if (fallbackExceptionHandler != null)
+            {
+                _exceptionHandlers[typeof(Exception)] = fallbackExceptionHandler;
+            }
 
             try
             {
-                result = _clientFunction.Invoke();
+                return _clientFunction.Invoke();
             }
             catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
             {
@@ -78,20 +84,54 @@ namespace SpaceEngineers.Core.Basics
 
                 if (!handled)
                 {
-                    throw realException;
+                    throw realException.Rethrow();
                 }
 
-                if (exceptionHandler != null)
-                {
-                    return exceptionHandler.Invoke(realException);
-                }
+                return default;
             }
             finally
             {
                 _finallyAction?.Invoke();
             }
+        }
 
-            return result;
+        /// <summary>
+        /// Invoke client's function
+        /// </summary>
+        /// <param name="exceptionResultFactory">Creates result from handled exception</param>
+        /// <returns>TResult</returns>
+        public TResult Invoke(Func<Exception, TResult> exceptionResultFactory)
+        {
+            try
+            {
+                return _clientFunction.Invoke();
+            }
+            catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
+            {
+                var realException = ex.RealException();
+                var handled = false;
+
+                foreach (var pair in _exceptionHandlers)
+                {
+                    if (pair.Key.IsInstanceOfType(realException))
+                    {
+                        pair.Value.Invoke(realException);
+                        handled = true;
+                        break;
+                    }
+                }
+
+                if (!handled)
+                {
+                    throw realException.Rethrow();
+                }
+
+                return exceptionResultFactory.Invoke(realException);
+            }
+            finally
+            {
+                _finallyAction?.Invoke();
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
@@ -8,6 +10,21 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static partial class ObjectExtensions
     {
+        /// <summary>
+        /// Converts enumerable source into string
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="separator">Elements separator</param>
+        /// <param name="projection">Projection func</param>
+        /// <typeparam name="TSource">TSource type-argument</typeparam>
+        /// <returns>String</returns>
+        public static string ToString<TSource>(this IEnumerable<TSource> source, string separator, Func<TSource, string>? projection = null)
+        {
+            projection ??= item => item.ToString();
+
+            return string.Join(separator, source.Select(projection));
+        }
+
         /// <summary>
         /// Show properties of object
         /// </summary>
@@ -21,18 +38,7 @@ namespace SpaceEngineers.Core.Basics
                         instance.GetType()
                                 .GetProperties(flags)
                                 .Where(z => !blackList.Contains(z.Name))
-                                .Select(z => $"[{z.Name}] = {z.GetValue(instance)?.ToString() ?? "null"}"));
-        }
-
-        /// <summary>
-        /// Show NAME/Value pair of variable
-        /// </summary>
-        /// <param name="variable">Variable value</param>
-        /// <param name="name">Variable name</param>
-        /// <returns>NAME/Value pair</returns>
-        public static string ShowVariable(this object variable, string name)
-        {
-            return $"[{name}] {variable}";
+                                .Select(z => $"[{z.Name}] - {z.GetValue(instance)?.ToString() ?? "null"}"));
         }
     }
 }

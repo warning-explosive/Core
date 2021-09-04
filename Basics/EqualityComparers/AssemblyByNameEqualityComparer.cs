@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Basics.EqualityComparers
 {
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -9,14 +10,13 @@ namespace SpaceEngineers.Core.Basics.EqualityComparers
         /// <inheritdoc />
         public override bool Equals(Assembly x, Assembly y)
         {
-            return x?.GetName().FullName == y?.GetName().FullName;
+            return string.Intern(x.GetName().FullName).Equals(string.Intern(y.GetName().FullName), StringComparison.Ordinal);
         }
 
         /// <inheritdoc />
         public override int GetHashCode(Assembly obj)
         {
-            return obj?.GetName().FullName.GetHashCode()
-                   ?? 0;
+            return obj.GetName().FullName.GetHashCode(StringComparison.Ordinal);
         }
     }
 }

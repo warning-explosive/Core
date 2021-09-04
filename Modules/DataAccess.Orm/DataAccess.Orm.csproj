@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.DataAccess.Orm</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DataAccess.Orm</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.DataAccess.Orm</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.DataAccess.Orm</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
+      <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
+      <ProjectReference Include="..\DataAccess.Contract\DataAccess.Contract.csproj" />
+      <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
+      <ProjectReference Include="..\GenericDomain\GenericDomain.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.0.90" />
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Model\Abstractions\CreateDatabase.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\DropTable.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\DropColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\CreateTable.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ColumnNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\AlterColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\AddColumn.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\TableNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ICodeModelBuilder.cs">
+        <DependentUpon>IModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\IDatabaseModelBuilder.cs">
+        <DependentUpon>IModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\UpsertView.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\DropView.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Abstractions\ViewNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\Queryable.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\NamedBindingExpression.cs">
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\SimpleBindingExpression.cs">
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\FilterExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\ProjectionExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Expressions\NamedSourceExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\ExtractLambdaExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\IMaterializer.cs">
+        <DependentUpon>IQueryAsyncQueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\IQueryMaterializer.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\FlatQueryMaterializer.cs">
+        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\GroupedQueryMaterializer.cs">
+        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\TranslationExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\FlatQueryTranslator.cs">
+        <DependentUpon>QueryTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Internals\GroupedQueryTranslator.cs">
+        <DependentUpon>QueryTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\MemberTranslationContext.cs">
+        <DependentUpon>TranslationContext.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+</Project>

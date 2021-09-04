@@ -4,13 +4,13 @@ namespace SpaceEngineers.Core.PathResolver
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Exceptions;
 
     /// <inheritdoc />
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>

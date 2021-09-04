@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
-    using AutoWiringApi.Attributes;
-    using AutoWiringApi.Enumerations;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
 
     /// <summary>
@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     /// Example2:
     ///     -param1 value1 --param2 /param3:'Test-:-work' /param4=happy -param5 '--=nice=--'
     /// </summary>
-    [Lifestyle(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Singleton)]
     internal class CliArgumentsParserImpl : ICliArgumentsParser
     {
         private static readonly Regex RegexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -34,10 +34,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             var argsDictionary = Init(args);
 
             var joined = argsDictionary
-               .Join(typeof(T).GetProperties(BindingFlags.Instance
-                                             | BindingFlags.Public
-                                             | BindingFlags.GetProperty
-                                             | BindingFlags.SetProperty),
+               .Join(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty),
                      cli => cli.Key.ToUpperInvariant(),
                      pd => pd.Name.ToUpperInvariant(),
                      (cli, pd) => new { Info = pd, CliValue = cli.Value });
@@ -185,7 +182,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                         var perValueResult = flagsValues.Select(value => new
                                                                          {
                                                                              Success = TryParseEnum(enumType, value, out _),
-                                                                             Value = value,
+                                                                             Value = value
                                                                          });
                         throw new ArgumentException($"Values {string.Join(string.Empty, perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'"))} is not recognized");
                     }
@@ -205,19 +202,26 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static bool TryParseEnum(Type enumType, string strValue, out object? result)
         {
-            result = typeof(CliArgumentsParserImpl).CallMethod(nameof(TryParseEnum))
-                                                   .WithTypeArgument(enumType)
-                                                   .WithArgument(strValue)
-                                                   .Invoke<object>();
+            result = ParseEnum(enumType, strValue);
 
-            var separatedValues = strValue.ToUpperInvariant()
-                                          .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                          .SelectMany(s => s)
-                                          .ToArray();
+            var separatedValues = strValue
+                .ToUpperInvariant()
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .SelectMany(s => s)
+                .ToArray();
 
             var parsed = ToEnumString(result).ToUpperInvariant();
 
-            return separatedValues.All(single => parsed.Contains(single));
+            return separatedValues.All(single => parsed.Contains(single, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static object ParseEnum(Type enumType, string strValue)
+        {
+            return typeof(CliArgumentsParserImpl)
+                .CallMethod(nameof(TryParseEnum))
+                .WithTypeArgument(enumType)
+                .WithArgument(strValue)
+                .Invoke<object>();
         }
 
         private static TEnum TryParseEnum<TEnum>(string strValue)
@@ -230,9 +234,10 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static string ToEnumString(object value)
         {
-            return value.CallMethod(nameof(Enum.ToString))
-                        .WithArgument("G")
-                        .Invoke<string>();
+            return value
+                .CallMethod(nameof(Enum.ToString))
+                .WithArgument("G")
+                .Invoke<string>();
         }
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
     using System.Runtime.Serialization.Formatters.Binary;
@@ -34,10 +35,11 @@
         /// <param name="original">Original object</param>
         /// <typeparam name="T">Object type</typeparam>
         /// <returns>Deep copy of original object</returns>
-        public static T DeepCopy<T>(this T original)
-            where T : class
+        public static T DeepCopy<T>([DisallowNull] this T original)
         {
-            return (T)DeepCopy((object)original);
+            return original
+                .DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
+                .EnsureNotNull<T>("Not nullable input should be copied into not nullable output");
         }
 
         /// <summary>
@@ -66,19 +68,6 @@
         }
 
         /// <summary>
-        /// Get deep copy of object (by reflection)
-        /// Copy all internal reference links except System.String, System.Type, System.ValueType
-        /// </summary>
-        /// <param name="original">Original object</param>
-        /// <returns>Deep copy of original object</returns>
-        /// <exception cref="InvalidOperationException">InvalidOperationException if copy or original is null</exception>
-        public static object DeepCopy(this object original)
-        {
-            return original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                           .EnsureNotNull<object>("Not nullable input must be copied into not nullable output");
-        }
-
-        /// <summary>
         /// Get deep copy of object (by serialization)
         /// Copy all internal reference links
         /// </summary>
@@ -87,7 +76,7 @@
         /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
         public static object DeepCopyBySerialization(this object original)
         {
-            original.GetType().GetCustomAttribute<SerializableAttribute>();
+            original.GetType().GetRequiredAttribute<SerializableAttribute>();
 
             using (var stream = new MemoryStream())
             {
@@ -98,7 +87,7 @@
             }
         }
 
-        private static object? DeepCopyInternal(this object original, IDictionary<object, object> visited)
+        private static object? DeepCopyInternal(this object? original, IDictionary<object, object> visited)
         {
             if (original == null)
             {
@@ -112,7 +101,7 @@
                 return visited[original];
             }
 
-            if (typeToReflect.IsPrimitive())
+            if (IsPrimitive(typeToReflect))
             {
                 return original;
             }
@@ -129,18 +118,15 @@
             return clone;
         }
 
-        private static bool IsPrimitive(this Type type)
+        private static bool IsPrimitive(Type type)
         {
-            return type.IsPrimitive
-                   || type.IsEnum
-                   || type == typeof(Type)
+            return type.IsPrimitive()
 
                    // ReSharper disable once PossibleMistakenCallToGetType.2
-                   || type == typeof(Type).GetType() // reviewed
-                   || type == typeof(string);
+                   || type == typeof(Type).GetType(); // reviewed
         }
 
-        private static void ProcessClone(this object clone, object original, Type typeToReflect, IDictionary<object, object> visited)
+        private static void ProcessClone(this object? clone, object original, Type typeToReflect, IDictionary<object, object> visited)
         {
             if (clone == null)
             {
@@ -174,7 +160,7 @@
                                                               | BindingFlags.DeclaredOnly))
             {
                 fieldInfo.SetValue(clone,
-                                   fieldInfo.FieldType.IsPrimitive()
+                                   IsPrimitive(fieldInfo.FieldType)
                                        ? fieldInfo.GetValue(original)
                                        : fieldInfo.GetValue(original).DeepCopyInternal(visited));
             }

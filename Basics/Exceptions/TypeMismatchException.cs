@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Basics.Exceptions
     /// TypeMismatchException
     /// Type is not accessable from expected type
     /// </summary>
-    public class TypeMismatchException : Exception
+    public sealed class TypeMismatchException : Exception
     {
         /// <summary> .ctor </summary>
         /// <param name="expectedType">Expected type</param>

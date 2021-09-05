@@ -9,10 +9,11 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class FirstInheritedEventEmptyMessageHandler : IMessageHandler<FirstInheritedEvent>,
-                                                            ICollectionResolvable<IMessageHandler<FirstInheritedEvent>>
+    internal class OpenGenericCommandEmptyMessageHandler<TCommand> : IMessageHandler<TCommand>,
+                                                                     ICollectionResolvable<IMessageHandler<TCommand>>
+        where TCommand : OpenGenericHandlerCommand
     {
-        public Task Handle(FirstInheritedEvent message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(TCommand message, IIntegrationContext context, CancellationToken token)
         {
             return Task.CompletedTask;
         }

@@ -37,10 +37,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
 
         public Task Initialize(CancellationToken token)
         {
-            // TODO: #139 - fix reply behavior
             _integrationTypeProvider.EndpointCommands()
                 .Concat(_integrationTypeProvider.EndpointQueries())
-                .Concat(_integrationTypeProvider.EndpointSubscriptions())
+                .Concat(_integrationTypeProvider.RepliesSubscriptions())
+                .Concat(_integrationTypeProvider.EventsSubscriptions())
                 .Each(message => _transport.Bind(message, _endpointIdentity, ProcessMessage));
 
             return Task.CompletedTask;

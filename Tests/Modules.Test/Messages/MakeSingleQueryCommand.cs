@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
 
-    [OwnedBy(TestIdentity.Endpoint2)]
-    internal class IdentifiedEvent : IIntegrationEvent
+    [OwnedBy(TestIdentity.Endpoint1)]
+    internal class MakeSingleQueryCommand : IIntegrationCommand
     {
-        public IdentifiedEvent(int id)
+        public MakeSingleQueryCommand(int id)
         {
             Id = id;
         }

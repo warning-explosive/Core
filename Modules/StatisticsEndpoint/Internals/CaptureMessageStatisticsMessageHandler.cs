@@ -3,18 +3,19 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract.Messages;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Contract.Abstractions;
-    using GenericEndpoint.Api;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
     using Model;
 
     [Component(EnLifestyle.Transient)]
-    internal class CaptureMessageStatisticsMessageHandler : MessageHandlerBase<CaptureMessageStatistics>
+    internal class CaptureMessageStatisticsMessageHandler : IMessageHandler<CaptureMessageStatistics>,
+                                                            ICollectionResolvable<IMessageHandler<CaptureMessageStatistics>>
     {
         private readonly IReadRepository<EndpointStatistics> _repository;
         private readonly IJsonSerializer _serializer;
@@ -27,7 +28,7 @@ namespace SpaceEngineers.Core.StatisticsEndpoint.Internals
             _serializer = serializer;
         }
 
-        public override Task Handle(CaptureMessageStatistics message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(CaptureMessageStatistics message, IIntegrationContext context, CancellationToken token)
         {
             var originator = message.GeneralMessage.ReadRequiredHeader<SentFrom>().Value;
 

@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using CompositionRoot.Api.Abstractions.Registration;
     using Contract.Abstractions;
     using Contract.Attributes;
+    using Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
@@ -33,17 +34,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         public void Verify()
         {
             VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
-
-            VerifyOwnedAttribute(_integrationTypeProvider.EndpointCommands());
-            VerifyOwnedAttribute(_integrationTypeProvider.EndpointEvents());
-            VerifyOwnedAttribute(_integrationTypeProvider.Replies());
-            VerifyOwnedAttribute(_integrationTypeProvider.EndpointQueries());
+            VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
 
             VerifyMessageHandlersLifestyle();
 
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands());
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointEvents());
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries());
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()));
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()));
         }
 
         private static void VerifyMessageInterfaces(IEnumerable<Type> messageTypes)
@@ -67,7 +63,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             foreach (var messageType in messageTypes)
             {
-                if (!messageType.IsConcreteType())
+                if (messageType.IsMessageContractAbstraction())
                 {
                     continue;
                 }
@@ -105,18 +101,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             foreach (var messageType in messageTypes)
             {
-                if (!messageType.IsConcreteType())
-                {
-                    continue;
-                }
-
-                var serviceType = typeof(IMessageHandler<>).MakeGenericType(messageType);
-
-                var messageHandlers = _registrations
-                    .Collections()
-                    .Where(info => serviceType.IsAssignableFrom(info.Implementation));
-
-                if (!messageHandlers.Any())
+                if (!messageType.HasMessageHandler(_registrations))
                 {
                     throw new InvalidOperationException($"Message '{messageType.FullName}' should have at least one message handler");
                 }

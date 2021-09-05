@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class IdentifiedQuery : IIntegrationQuery<IdentifiedReply>
+    internal class Command : IIntegrationCommand
     {
-        public IdentifiedQuery(int id)
+        public Command(int id)
         {
             Id = id;
         }

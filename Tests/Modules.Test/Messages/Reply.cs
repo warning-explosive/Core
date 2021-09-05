@@ -2,12 +2,10 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
 {
     using System.Globalization;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Attributes;
 
-    [OwnedBy(TestIdentity.Endpoint1)]
-    internal class IdentifiedCommand : IIntegrationCommand
+    internal class Reply : IIntegrationReply
     {
-        public IdentifiedCommand(int id)
+        public Reply(int id)
         {
             Id = id;
         }

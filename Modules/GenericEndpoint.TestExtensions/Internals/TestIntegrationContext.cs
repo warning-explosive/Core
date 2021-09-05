@@ -32,30 +32,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return Grab(command);
+            return Collect(command);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            return Grab(integrationEvent);
+            return Collect(integrationEvent);
         }
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            return Grab(query);
+            return Collect(query);
         }
 
         public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            return Grab(reply);
+            return Collect(reply);
         }
 
-        private Task Grab<TMessage>(TMessage message)
+        private Task Collect<TMessage>(TMessage message)
             where TMessage : IIntegrationMessage
         {
             lock (_messages)

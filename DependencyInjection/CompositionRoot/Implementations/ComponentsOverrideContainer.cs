@@ -103,6 +103,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         {
             var info = new ComponentOverrideInfo(service, implementation, replacement, lifestyle);
 
+            if (replacement.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
+                || (_constructorResolutionBehavior.TryGetConstructor(replacement, out var cctor)
+                    && cctor.IsDecorator(service)))
+            {
+                _decoratorOverridesStore.Add(info);
+                return this;
+            }
+
             if (typeof(IResolvable).IsAssignableFrom(replacement))
             {
                 _resolvableOverridesStore.Add(info);
@@ -112,14 +120,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             if (replacement.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
             {
                 _collectionResolvableOverridesStore.Add(info);
-                return this;
-            }
-
-            if (replacement.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
-                || (_constructorResolutionBehavior.TryGetConstructor(replacement, out var cctor)
-                    && cctor.IsDecorator(service)))
-            {
-                _decoratorOverridesStore.Add(info);
                 return this;
             }
 

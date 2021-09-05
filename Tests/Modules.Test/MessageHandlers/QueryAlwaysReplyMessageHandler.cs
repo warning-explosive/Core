@@ -9,12 +9,12 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class FirstInheritedEventEmptyMessageHandler : IMessageHandler<FirstInheritedEvent>,
-                                                            ICollectionResolvable<IMessageHandler<FirstInheritedEvent>>
+    internal class QueryAlwaysReplyMessageHandler : IMessageHandler<Query>,
+                                                    ICollectionResolvable<IMessageHandler<Query>>
     {
-        public Task Handle(FirstInheritedEvent message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(Query message, IIntegrationContext context, CancellationToken token)
         {
-            return Task.CompletedTask;
+            return context.Reply(message, new Reply(message.Id), token);
         }
     }
 }

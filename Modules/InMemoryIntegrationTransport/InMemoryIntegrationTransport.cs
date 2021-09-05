@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using Basics.Exceptions;
     using Basics.Primitives;
     using GenericEndpoint.Contract;
+    using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using IntegrationTransport.Api.Abstractions;
@@ -23,13 +24,13 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         private readonly AsyncManualResetEvent _ready;
         private readonly MessageQueue<IntegrationMessage> _inputQueue;
         private readonly DeferredQueue<IntegrationMessage> _delayedDeliveryQueue;
-        private readonly IEndpointInstanceSelectionBehavior _selectionBehavior;
+        private readonly IEndpointInstanceSelectionBehavior _instanceSelectionBehavior;
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>> _topology;
 
         private EnIntegrationTransportStatus _status;
 
-        public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior selectionBehavior)
+        public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior instanceSelectionBehavior)
         {
             _status = EnIntegrationTransportStatus.Stopped;
             _ready = new AsyncManualResetEvent(false);
@@ -39,7 +40,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             var heap = new BinaryHeap<HeapEntry<IntegrationMessage, DateTime>>(EnOrderingKind.Asc);
             _delayedDeliveryQueue = new DeferredQueue<IntegrationMessage>(heap, PrioritySelector);
 
-            _selectionBehavior = selectionBehavior;
+            _instanceSelectionBehavior = instanceSelectionBehavior;
 
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>();
         }
@@ -124,10 +125,10 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             if (_topology.TryGetValue(message.ReflectedType, out var logicalGroups))
             {
                 var messageHandlers = logicalGroups
-                    .Select(grp =>
+                    .Select(logicalGroup =>
                     {
-                        var endpointIdentity = _selectionBehavior.SelectInstance(message, grp.Value.Keys.ToList());
-                        return grp.Value[endpointIdentity];
+                        var selectedEndpointInstanceIdentity = SelectedEndpointInstanceIdentity(message, logicalGroup.Value);
+                        return logicalGroup.Value[selectedEndpointInstanceIdentity];
                     })
                     .ToList();
 
@@ -140,6 +141,26 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             }
 
             throw new NotFoundException($"Target endpoint for message '{message.ReflectedType.FullName}' not found");
+        }
+
+        private EndpointIdentity SelectedEndpointInstanceIdentity(
+            IntegrationMessage message,
+            ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> logicalGroup)
+        {
+            EndpointIdentity endpointIdentity;
+
+            if (message.Payload is IIntegrationReply)
+            {
+                var replyTo = message.ReadRequiredHeader<ReplyTo>().Value;
+
+                endpointIdentity = logicalGroup.Keys.Single(it => it.Equals(replyTo));
+            }
+            else
+            {
+                endpointIdentity = _instanceSelectionBehavior.SelectInstance(message, logicalGroup.Keys.ToList());
+            }
+
+            return endpointIdentity;
         }
 
         private static DateTime PrioritySelector(IntegrationMessage message)

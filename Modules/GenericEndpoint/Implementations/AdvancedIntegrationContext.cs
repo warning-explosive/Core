@@ -48,32 +48,31 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return Gather(CreateGeneralMessage(command), token);
+            return Collect(CreateGeneralMessage(command), token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            return Gather(CreateGeneralMessage(integrationEvent), token);
+            return Collect(CreateGeneralMessage(integrationEvent), token);
         }
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            return Gather(CreateGeneralMessage(query), token);
+            return Collect(CreateGeneralMessage(query), token);
         }
 
         public async Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            // TODO: #139 - fix reply behavior
-            var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
-
             var replyIntegrationMessage = CreateGeneralMessage(reply);
+            var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
+            replyIntegrationMessage.WriteHeader(new ReplyTo(sentFrom));
 
-            await Gather(replyIntegrationMessage, token).ConfigureAwait(false);
+            await Collect(replyIntegrationMessage, token).ConfigureAwait(false);
 
             if (Message.ReadHeader<DidHandlerReplyToTheQuery>()?.Value == true)
             {
@@ -104,7 +103,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
             return _factory.CreateGeneralMessage(message, _endpointIdentity, Message);
         }
 
-        private Task Gather(IntegrationMessage message, CancellationToken token)
+        private Task Collect(IntegrationMessage message, CancellationToken token)
         {
             return UnitOfWork.OutboxStorage.Add(message, token);
         }

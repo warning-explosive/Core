@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.PostgreSql.Host;
+    using Extensions;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -175,6 +176,78 @@ namespace SpaceEngineers.Core.Modules.Test
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
+        internal async Task RequestReplyTest(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
+        {
+            var messageTypes = new[]
+            {
+                typeof(MakeSingleQueryCommand),
+                typeof(Query),
+                typeof(Reply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(MakeSingleQueryCommandHandler),
+                typeof(QueryAlwaysReplyMessageHandler),
+                typeof(ReplyEmptyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
+            var collector = new MessagesCollector();
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseContainer(useContainer)
+                .UseEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithStatistics()
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes)
+                        .WithStatisticsOverride(collector))
+                    .BuildOptions(TestIdentity.Endpoint10))
+                .BuildHost();
+
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
+            using (host)
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                var command = new MakeSingleQueryCommand(42);
+
+                await host
+                    .GetTransportDependencyContainer()
+                    .Resolve<IIntegrationContext>()
+                    .Send(command, cts.Token)
+                    .ConfigureAwait(false);
+
+                await collector.WaitUntilMessageIsNotReceived<Reply>(reply => reply.Id == command.Id).ConfigureAwait(false);
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                collector.ShowAllMessages(Output.WriteLine);
+                collector.ShowAllErrorMessages(Output.WriteLine);
+
+                var expectedMessageTypes = new[]
+                {
+                    typeof(MakeSingleQueryCommand),
+                    typeof(Query),
+                    typeof(Reply)
+                };
+
+                Assert.Equal(expectedMessageTypes, collector.Messages.Select(message => message.Payload.GetType()).ToList());
+                Assert.Empty(collector.ErrorMessages);
+            }
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
@@ -182,13 +255,13 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var messageTypes = new[]
             {
-                typeof(IdentifiedQuery),
-                typeof(IdentifiedReply)
+                typeof(Query),
+                typeof(Reply)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
+                typeof(QueryAlwaysReplyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -198,21 +271,26 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
+
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                var query = new IdentifiedQuery(42);
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                var query = new Query(42);
 
                 var reply = await host
                     .GetTransportDependencyContainer()
                     .Resolve<IIntegrationContext>()
-                    .RpcRequest<IdentifiedQuery, IdentifiedReply>(query, cts.Token)
+                    .RpcRequest<Query, Reply>(query, cts.Token)
                     .ConfigureAwait(false);
 
                 Assert.Equal(query.Id, reply.Id);
@@ -230,13 +308,13 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var messageTypes = new[]
             {
-                typeof(IdentifiedCommand)
+                typeof(Command)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(IdentifiedCommandEmptyMessageHandler),
-                typeof(IdentifiedCommandThrowingMessageHandler)
+                typeof(CommandEmptyMessageHandler),
+                typeof(CommandThrowingMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -246,7 +324,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
@@ -294,7 +373,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
@@ -340,12 +420,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var messageTypes = new[]
             {
-                typeof(IdentifiedCommand)
+                typeof(Command)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(IdentifiedCommandThrowingMessageHandler)
+                typeof(CommandThrowingMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -379,7 +459,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .GetTransportDependencyContainer()
                     .Resolve<IIntegrationContext>();
 
-                await integrationContext.Send(new IdentifiedCommand(42), cts.Token).ConfigureAwait(false);
+                await integrationContext.Send(new Command(42), cts.Token).ConfigureAwait(false);
 
                 /* TODO: #112 - await until all retry attempts is not proceed */
 
@@ -430,22 +510,22 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var messageTypes = new[]
             {
-                typeof(IdentifiedCommand),
-                typeof(IdentifiedEvent),
-                typeof(IdentifiedQuery),
-                typeof(IdentifiedReply)
+                typeof(Command),
+                typeof(Event),
+                typeof(Query),
+                typeof(Reply)
             };
 
             var endpoint1MessageHandlerTypes = new[]
             {
-                typeof(IdentifiedCommandEmptyMessageHandler),
-                typeof(IdentifiedEventEmptyMessageHandler),
-                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
+                typeof(CommandEmptyMessageHandler),
+                typeof(EventEmptyMessageHandler),
+                typeof(QueryAlwaysReplyMessageHandler)
             };
 
             var endpoint2MessageHandlerTypes = new[]
             {
-                typeof(IdentifiedEventEmptyMessageHandler)
+                typeof(EventEmptyMessageHandler)
             };
 
             var endpoint1AdditionalOurTypes = messageTypes.Concat(endpoint1MessageHandlerTypes).ToArray();
@@ -456,17 +536,20 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint11))
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
@@ -547,38 +630,100 @@ namespace SpaceEngineers.Core.Modules.Test
         [Fact(Timeout = 60_000)]
         internal void MessageHandlerTestExtensionsTest()
         {
-            new IdentifiedCommandEmptyMessageHandler()
-                .OnMessage(new IdentifiedCommand(42))
+            new CommandEmptyMessageHandler()
+                .OnMessage(new Command(42))
                 .ProducesNothing()
                 .DoesNotThrow()
                 .Invoke();
 
-            new IdentifiedCommandThrowingMessageHandler()
-                .OnMessage(new IdentifiedCommand(42))
+            new CommandThrowingMessageHandler()
+                .OnMessage(new Command(42))
                 .ProducesNothing()
                 .Throws<InvalidOperationException>(ex => ex.Message == "42")
                 .Invoke();
 
-            new IdentifiedEventEmptyMessageHandler()
-                .OnMessage(new IdentifiedEvent(42))
+            new EventEmptyMessageHandler()
+                .OnMessage(new Event(42))
                 .ProducesNothing()
                 .DoesNotThrow()
                 .Invoke();
 
-            new IdentifiedQueryOddReplyMessageHandler()
-                .OnMessage(new IdentifiedQuery(42))
+            new QueryOddReplyMessageHandler()
+                .OnMessage(new Query(42))
                 .ProducesNothing()
                 .DoesNotThrow()
                 .Invoke();
 
-            new IdentifiedQueryOddReplyMessageHandler()
-                .OnMessage(new IdentifiedQuery(43))
+            new QueryOddReplyMessageHandler()
+                .OnMessage(new Query(43))
                 .DoesNotSend<IIntegrationCommand>()
                 .DoesNotPublish<IIntegrationEvent>()
-                .DoesNotRequest<IdentifiedQuery, IdentifiedReply>()
-                .Replies<IdentifiedReply>(reply => reply.Id == 43)
+                .DoesNotRequest<Query, Reply>()
+                .Replies<Reply>(reply => reply.Id == 43)
                 .DoesNotThrow()
                 .Invoke();
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(BuildHostTestData))]
+        internal void OverrideStatisticsPipelineTest(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport)
+        {
+            var endpointIdentity = TestIdentity.Endpoint10;
+
+            var messageTypes = new[]
+            {
+                typeof(MakeSingleQueryCommand),
+                typeof(Query),
+                typeof(Reply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(MakeSingleQueryCommandHandler),
+                typeof(QueryAlwaysReplyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
+            var collector = new MessagesCollector();
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseContainer(useContainer)
+                .UseEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithStatistics()
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes)
+                        .WithStatisticsOverride(collector))
+                    .BuildOptions(endpointIdentity))
+                .BuildHost();
+
+            var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
+
+            using (endpointDependencyContainer.OpenScope())
+            {
+                var expectedPipeline = new[]
+                {
+                    typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.ErrorHandlingPipeline),
+                    typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.UnitOfWorkPipeline),
+                    typeof(SpaceEngineers.Core.Modules.Test.Mocks.StatisticsPipelineMock),
+                    typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.QueryReplyValidationPipeline),
+                    typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.MessageHandlerPipeline),
+                };
+
+                var actualPipeline = endpointDependencyContainer
+                    .Resolve<IMessagePipeline>()
+                    .FlattenDecoratedType()
+                    .ShowTypes("message pipeline", Output.WriteLine)
+                    .ToList();
+
+                Assert.Equal(expectedPipeline, actualPipeline);
+            }
+
+            Assert.Empty(collector.Messages);
+            Assert.Empty(collector.ErrorMessages);
         }
 
         [Theory(Timeout = 60_000)]
@@ -594,19 +739,22 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(BaseEvent),
                 typeof(FirstInheritedEvent),
                 typeof(SecondInheritedEvent),
-                typeof(IdentifiedCommand),
-                typeof(IdentifiedEvent),
-                typeof(IdentifiedQuery),
-                typeof(IdentifiedReply)
+                typeof(Command),
+                typeof(OpenGenericHandlerCommand),
+                typeof(Event),
+                typeof(Query),
+                typeof(Reply)
             };
 
             var messageHandlerTypes = new[]
             {
                 typeof(BaseEventEmptyMessageHandler),
                 typeof(FirstInheritedEventEmptyMessageHandler),
-                typeof(IdentifiedCommandEmptyMessageHandler),
-                typeof(IdentifiedEventEmptyMessageHandler),
-                typeof(IdentifiedQueryAlwaysReplyMessageHandler)
+                typeof(CommandEmptyMessageHandler),
+                typeof(OpenGenericCommandEmptyMessageHandler<>),
+                typeof(EventEmptyMessageHandler),
+                typeof(QueryAlwaysReplyMessageHandler),
+                typeof(ReplyEmptyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -616,7 +764,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithStatistics()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
@@ -655,7 +804,7 @@ namespace SpaceEngineers.Core.Modules.Test
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
             {
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
-                var integrationMessage = new IntegrationMessage(new IdentifiedCommand(0), typeof(IdentifiedCommand), new StringFormatterMock());
+                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command), new StringFormatterMock());
 
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
@@ -673,7 +822,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var actual = advancedIntegrationContext
                         .FlattenDecoratedType()
-                        .ShowTypes("#extended integration context", log)
+                        .ShowTypes("extended integration context", log)
                         .ToList();
 
                     Assert.Equal(expected, actual);
@@ -690,7 +839,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     var actualPipeline = endpointDependencyContainer
                         .Resolve<IMessagePipeline>()
                         .FlattenDecoratedType()
-                        .ShowTypes("#message pipeline", log)
+                        .ShowTypes("message pipeline", log)
                         .ToList();
 
                     Assert.Equal(expectedPipeline, actualPipeline);
@@ -707,10 +856,11 @@ namespace SpaceEngineers.Core.Modules.Test
                         typeof(BaseEvent),
                         typeof(FirstInheritedEvent),
                         typeof(SecondInheritedEvent),
-                        typeof(IdentifiedCommand),
-                        typeof(IdentifiedEvent),
-                        typeof(IdentifiedQuery),
-                        typeof(IdentifiedReply),
+                        typeof(Command),
+                        typeof(OpenGenericHandlerCommand),
+                        typeof(Event),
+                        typeof(Query),
+                        typeof(Reply),
                         typeof(CaptureMessageStatistics),
                         typeof(GetEndpointStatistics),
                         typeof(EndpointStatisticsReply)
@@ -726,8 +876,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var expectedCommands = new[]
                     {
-                        typeof(IIntegrationCommand),
-                        typeof(IdentifiedCommand)
+                        typeof(Command),
+                        typeof(OpenGenericHandlerCommand)
                     };
 
                     var actualCommands = integrationTypeProvider
@@ -738,41 +888,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     Assert.Equal(expectedCommands.OrderBy(type => type.FullName).ToList(), actualCommands);
 
-                    var expectedEvents = new[]
-                    {
-                        typeof(IIntegrationEvent),
-                        typeof(BaseEvent),
-                        typeof(FirstInheritedEvent),
-                        typeof(SecondInheritedEvent)
-                    };
-
-                    var actualEvents = integrationTypeProvider
-                        .EndpointEvents()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointEvents), log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
-
-                    Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
-
-                    var expectedReplies = new[]
-                    {
-                        typeof(IIntegrationReply),
-                        typeof(IdentifiedReply),
-                        typeof(EndpointStatisticsReply)
-                    };
-
-                    var actualReplies = integrationTypeProvider
-                        .Replies()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.Replies), log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
-
-                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
-
                     var expectedQueries = new[]
                     {
-                        typeof(IIntegrationQuery<>),
-                        typeof(IdentifiedQuery)
+                        typeof(Query)
                     };
 
                     var actualQueries = integrationTypeProvider
@@ -783,20 +901,62 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     Assert.Equal(expectedQueries.OrderBy(type => type.FullName).ToList(), actualQueries);
 
-                    var expectedSubscriptions = new[]
+                    var expectedReplies = new[]
                     {
-                        typeof(BaseEvent),
-                        typeof(FirstInheritedEvent),
-                        typeof(IdentifiedEvent)
+                        typeof(Reply)
                     };
 
-                    var actualSubscriptions = integrationTypeProvider
-                        .EndpointSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointSubscriptions), log)
+                    var actualReplies = integrationTypeProvider
+                        .RepliesSubscriptions()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
                         .OrderBy(type => type.FullName)
                         .ToList();
 
-                    Assert.Equal(expectedSubscriptions.OrderBy(type => type.FullName).ToList(), actualSubscriptions);
+                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
+
+                    var expectedEvents = new[]
+                    {
+                        typeof(IIntegrationEvent),
+                        typeof(BaseEvent),
+                        typeof(FirstInheritedEvent),
+                        typeof(Event)
+                    };
+
+                    var actualEvents = integrationTypeProvider
+                        .EventsSubscriptions()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
+
+                    var expectedCommandHandlers = new[]
+                    {
+                        typeof(CommandEmptyMessageHandler)
+                    };
+
+                    var actualCommandHandlers = endpointDependencyContainer
+                        .ResolveCollection<IMessageHandler<Command>>()
+                        .Select(handler => handler.GetType())
+                        .ShowTypes("actualCommandHandlers", log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedCommandHandlers.OrderBy(type => type.FullName).ToList(), actualCommandHandlers);
+
+                    var expectedOpenGenericHandlerCommandHandlers = new[]
+                    {
+                        typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>)
+                    };
+
+                    var actualOpenGenericHandlerCommandHandlers = endpointDependencyContainer
+                        .ResolveCollection<IMessageHandler<OpenGenericHandlerCommand>>()
+                        .Select(handler => handler.GetType())
+                        .ShowTypes("actualOpenGenericHandlerCommandHandlers", log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(actualOpenGenericHandlerCommandHandlers.OrderBy(type => type.FullName).ToList(), expectedOpenGenericHandlerCommandHandlers);
 
                     var expectedBaseEventHandlers = new[]
                     {
@@ -857,7 +1017,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var actual = integrationContext
                     .FlattenDecoratedType()
-                    .ShowTypes("#transport integration context", log)
+                    .ShowTypes("transport integration context", log)
                     .ToList();
 
                 Assert.Equal(expected, actual);

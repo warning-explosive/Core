@@ -4,92 +4,121 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
     using System.Collections.Generic;
     using System.Linq;
     using Abstractions;
-    using Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
+    using Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationTypeProvider : IIntegrationTypeProvider
     {
         private readonly ITypeProvider _typeProvider;
         private readonly EndpointIdentity _endpointIdentity;
+        private readonly IRegistrationsContainer _registrations;
+
+        private IReadOnlyCollection<Type>? _integrationMessageTypes;
+        private IReadOnlyCollection<Type>? _endpointCommands;
+        private IReadOnlyCollection<Type>? _endpointQueries;
+        private IReadOnlyCollection<Type>? _repliesSubscriptions;
+        private IReadOnlyCollection<Type>? _eventsSubscriptions;
 
         public IntegrationTypeProvider(
             EndpointIdentity endpointIdentity,
-            ITypeProvider typeProvider)
+            ITypeProvider typeProvider,
+            IRegistrationsContainer registrations)
         {
-            _typeProvider = typeProvider;
             _endpointIdentity = endpointIdentity;
+            _typeProvider = typeProvider;
+            _registrations = registrations;
         }
 
         public IEnumerable<Type> IntegrationMessageTypes()
         {
-            return _typeProvider
-                .OurTypes
-                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type));
+            _integrationMessageTypes ??= InitIntegrationMessageTypes();
+            return _integrationMessageTypes;
+
+            IReadOnlyCollection<Type> InitIntegrationMessageTypes()
+            {
+                return _typeProvider
+                    .OurTypes
+                    .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type))
+                    .ToList();
+            }
         }
 
         public IEnumerable<Type> EndpointCommands()
         {
-            return _typeProvider
-                .OurTypes
-                .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
-                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
+            _endpointCommands ??= InitEndpointCommands();
+            return _endpointCommands;
+
+            IReadOnlyCollection<Type> InitEndpointCommands()
+            {
+                return _typeProvider
+                    .OurTypes
+                    .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
+                                   && !type.IsMessageContractAbstraction()
+                                   && OwnedByCurrentEndpoint(type)
+                                   && type.HasMessageHandler(_registrations))
+                    .ToList();
+            }
         }
 
         public IEnumerable<Type> EndpointQueries()
         {
-            return _typeProvider
-                .OurTypes
-                .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
-                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
+            _endpointQueries ??= InitEndpointQueries();
+            return _endpointQueries;
+
+            IReadOnlyCollection<Type> InitEndpointQueries()
+            {
+                return _typeProvider
+                    .OurTypes
+                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
+                                   && !type.IsMessageContractAbstraction()
+                                   && OwnedByCurrentEndpoint(type)
+                                   && type.HasMessageHandler(_registrations))
+                    .ToList();
+            }
         }
 
-        public IEnumerable<Type> EndpointEvents()
+        public IEnumerable<Type> RepliesSubscriptions()
         {
-            return _typeProvider
-                .OurTypes
-                .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
-                               && (IsMessageAbstraction(type) || OwnedByCurrentEndpoint(type)));
+            _repliesSubscriptions ??= InitRepliesSubscriptions();
+            return _repliesSubscriptions;
+
+            IReadOnlyCollection<Type> InitRepliesSubscriptions()
+            {
+                return _typeProvider
+                    .OurTypes
+                    .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type)
+                                   && !type.IsMessageContractAbstraction()
+                                   && type.HasMessageHandler(_registrations))
+                    .ToList();
+            }
         }
 
-        public IEnumerable<Type> Replies()
+        public IEnumerable<Type> EventsSubscriptions()
         {
-            return _typeProvider
-                .AllLoadedTypes
-                .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type));
-        }
+            _eventsSubscriptions ??= InitEventsSubscriptions();
+            return _eventsSubscriptions;
 
-        public IEnumerable<Type> EndpointSubscriptions()
-        {
-            return _typeProvider
-                .OurTypes
-                .Where(type => type.IsConcreteType()
-                               && type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
-                .SelectMany(type => type.ExtractGenericArgumentsAt(typeof(IMessageHandler<>), 0))
-                .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type))
-                .Distinct();
-        }
-
-        private static bool IsMessageAbstraction(Type type)
-        {
-            return type == typeof(IIntegrationMessage)
-                   || type == typeof(IIntegrationCommand)
-                   || type == typeof(IIntegrationEvent)
-                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
+            IReadOnlyCollection<Type> InitEventsSubscriptions()
+            {
+                return _typeProvider
+                    .OurTypes
+                    .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
+                                   && type.HasMessageHandler(_registrations))
+                    .ToList();
+            }
         }
 
         private bool OwnedByCurrentEndpoint(Type type)
         {
-            return (typeof(IIntegrationCommand).IsAssignableFrom(type)
-                    || typeof(IIntegrationEvent).IsAssignableFrom(type)
-                    || type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)))
-                   && type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
+            return type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

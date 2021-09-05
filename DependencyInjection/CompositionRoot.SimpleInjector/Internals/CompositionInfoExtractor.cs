@@ -66,8 +66,12 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
             var closedOrSame = _provider.CloseByConstraints(type, ctx => ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault());
 
             // build graph by invocation
-            Func<object> getInstance = () => _container.GetInstance(closedOrSame);
-            getInstance.Try().Catch<ActivationException>().Invoke();
+            Func<object?> getInstance = () => _container.GetInstance(closedOrSame);
+
+            ExecutionExtensions
+                .Try(getInstance)
+                .Catch<ActivationException>()
+                .Invoke(_ => default);
 
             return closedOrSame;
         }
@@ -77,8 +81,12 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
             var closedOrSame = _provider.CloseByConstraints(type, ctx => ctx.Matches.OrderBy(t => t.IsGenericType).FirstOrDefault());
 
             // build graph by invocation
-            Func<IEnumerable<object>> getAllInstances = () => _container.GetAllInstances(closedOrSame);
-            getAllInstances.Try().Catch<ActivationException>().Invoke();
+            Func<IEnumerable<object>?> getAllInstances = () => _container.GetAllInstances(closedOrSame);
+
+            ExecutionExtensions
+                .Try(getAllInstances)
+                .Catch<ActivationException>()
+                .Invoke(_ => default);
 
             return typeof(IEnumerable<>).MakeGenericType(closedOrSame);
         }

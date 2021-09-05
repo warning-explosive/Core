@@ -153,30 +153,36 @@ namespace SpaceEngineers.Core.Basics
             }
 
             // 2 - find
-            var methodFinder = new MethodFinder(isInstanceMethod ? _target.GetType() : _declaringType,
-                                                _methodName,
-                                                GetBindings(isInstanceMethod))
-                               {
-                                   TypeArguments = _typeArguments.ToArray(),
-                                   ArgumentTypes = _argumentTypes.ToArray()
-                               };
+            var methodFinder = new MethodFinder(
+                isInstanceMethod ? _target.GetType() : _declaringType,
+                _methodName,
+                GetBindings(isInstanceMethod))
+            {
+                TypeArguments = _typeArguments.ToArray(),
+                ArgumentTypes = _argumentTypes.ToArray()
+            };
 
-            var methodInfo = methodFinder.FindMethod()
-                                         .EnsureNotNull(() => new NotFoundException($"Method not found: {methodFinder}"));
+            var methodInfo = methodFinder
+                .FindMethod()
+                .EnsureNotNull(() => new NotFoundException($"Method not found: {methodFinder}"));
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();
 
             var constructedMethod = isGenericMethod
-                                        ? methodInfo.MakeGenericMethod(_typeArguments.ToArray())
-                                        : methodInfo;
+                ? methodInfo.MakeGenericMethod(_typeArguments.ToArray())
+                : methodInfo;
 
-            Func<object?> action = () => constructedMethod.Invoke(_target, _args.ToArray());
-
-            return action
-                .Try()
+            return ExecutionExtensions
+                .Try((constructedMethod, _target, _args.ToArray()), InvokeMethod)
                 .Catch<Exception>()
                 .Invoke(ex => throw ex.Rethrow());
+
+            static object? InvokeMethod((MethodInfo, object?, object?[]) state)
+            {
+                var (methodInfo, target, args) = state;
+                return methodInfo.Invoke(target, args);
+            }
         }
 
         private static BindingFlags GetBindings(bool isInstanceMethod)

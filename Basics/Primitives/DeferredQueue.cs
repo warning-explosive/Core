@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// DeferredQueue
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class DeferredQueue<TElement> : IQueue<TElement>,
                                            IAsyncQueue<TElement>
         where TElement : IEquatable<TElement>,
@@ -38,6 +39,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
             _priorityQueue = new PriorityQueue<TElement, DateTime>(heap, prioritySelector);
             _state = new State();
         }
+
+        #region IQueue
 
         /// <inheritdoc />
         public int Count
@@ -96,6 +99,17 @@ namespace SpaceEngineers.Core.Basics.Primitives
             throw new NotSupportedException(nameof(TryPeek));
         }
 
+        #endregion
+
+        #region IAsyncQueue
+
+        /// <inheritdoc />
+        public Task Enqueue(TElement element, CancellationToken token)
+        {
+            Enqueue(element);
+            return Task.CompletedTask;
+        }
+
         /// <inheritdoc />
         public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
@@ -132,6 +146,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 await CancelSchedule().ConfigureAwait(false);
             }
         }
+
+        #endregion
 
         private TElement DequeueSync()
         {

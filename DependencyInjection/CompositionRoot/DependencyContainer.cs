@@ -40,12 +40,9 @@ namespace SpaceEngineers.Core.CompositionRoot
             _options = options;
 
             ExecutionExtensions
-                .Try(() =>
-                {
-                    ConfigureAndVerify(typeProvider);
-                })
-                .Catch<Exception>()
-                .Invoke(ex => throw new ContainerConfigurationException(ex).Rethrow());
+                .Try(typeProvider, ConfigureAndVerify)
+                .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
+                .Invoke();
         }
 
         internal IDependencyContainerImplementation Container { get; }
@@ -267,10 +264,10 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private static T Resolve<T>(Type service, Func<T> producer)
         {
-            return producer
-                .Try()
+            return ExecutionExtensions
+                .Try(producer)
                 .Catch<Exception>()
-                .Invoke(ex => throw new ComponentResolutionException(service, ex).Rethrow());
+                .Invoke(ex => throw new ComponentResolutionException(service, ex));
         }
 
         private static void IsNotInitializable(Type serviceType)

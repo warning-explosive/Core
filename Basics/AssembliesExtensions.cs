@@ -262,9 +262,9 @@ namespace SpaceEngineers.Core.Basics
         private static Assembly? LoadByName(AssemblyName assemblyName)
         {
             return ExecutionExtensions
-                .Try(() => AppDomain.CurrentDomain.Load(assemblyName))
+                .Try<AssemblyName, Assembly?>(assemblyName, AppDomain.CurrentDomain.Load)
                 .Catch<FileNotFoundException>()
-                .Invoke();
+                .Invoke(_ => default);
         }
 
         private static IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)

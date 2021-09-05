@@ -4,29 +4,22 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
 
     /// <summary>
-    /// FunctionExecutionInfo
+    /// StatelessActionExecutionInfo
     /// </summary>
-    /// <typeparam name="TState">TState Type-argument</typeparam>
-    /// <typeparam name="TResult">TResult Type-argument</typeparam>
-    public class FunctionExecutionInfo<TState, TResult>
+    public class StatelessActionExecutionInfo
     {
         private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
 
-        private readonly TState _state;
-        private readonly Func<TState, TResult> _clientFunction;
+        private readonly Action _clientAction;
         private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
         /// <summary> .ctor </summary>
-        /// <param name="state">State</param>
-        /// <param name="clientFunction">Client function</param>
-        public FunctionExecutionInfo(
-            TState state,
-            Func<TState, TResult> clientFunction)
+        /// <param name="clientAction">Client action</param>
+        public StatelessActionExecutionInfo(Action clientAction)
         {
-            _state = state;
-            _clientFunction = clientFunction;
+            _clientAction = clientAction;
             _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
 
@@ -36,8 +29,8 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="exceptionHandler">Exception handler</param>
         /// <typeparam name="TException">Real exception type-argument</typeparam>
-        /// <returns>FunctionExecutionInfo</returns>
-        public FunctionExecutionInfo<TState, TResult> Catch<TException>(Action<Exception>? exceptionHandler = null)
+        /// <returns>StatelessActionExecutionInfo</returns>
+        public StatelessActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
             _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
@@ -48,8 +41,8 @@ namespace SpaceEngineers.Core.Basics
         /// Finally block
         /// </summary>
         /// <param name="finallyAction">Finally action</param>
-        /// <returns>FunctionExecutionInfo</returns>
-        public FunctionExecutionInfo<TState, TResult> Finally(Action finallyAction)
+        /// <returns>StatelessActionExecutionInfo</returns>
+        public StatelessActionExecutionInfo Finally(Action finallyAction)
         {
             _finallyAction = finallyAction;
 
@@ -57,15 +50,13 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Invoke client's function
+        /// Invoke client's action
         /// </summary>
-        /// <param name="exceptionResultFactory">Creates result from handled exception</param>
-        /// <returns>TResult</returns>
-        public TResult Invoke(Func<Exception, TResult> exceptionResultFactory)
+        public void Invoke()
         {
             try
             {
-                return _clientFunction.Invoke(_state);
+                _clientAction.Invoke();
             }
             catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
             {
@@ -86,8 +77,6 @@ namespace SpaceEngineers.Core.Basics
                 {
                     throw realException.Rethrow();
                 }
-
-                return exceptionResultFactory.Invoke(realException);
             }
             finally
             {

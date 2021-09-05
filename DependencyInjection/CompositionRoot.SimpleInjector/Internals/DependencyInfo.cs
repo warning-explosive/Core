@@ -104,10 +104,10 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
                 return nodeInfo;
             }
 
-            var lifestyle = new Func<EnLifestyle?>(() => dependency.Lifestyle.MapLifestyle())
-                           .Try()
-                           .Catch<NotSupportedException>()
-                           .Invoke();
+            var lifestyle = ExecutionExtensions
+                .Try<Lifestyle, EnLifestyle?>(dependency.Lifestyle, l => l.MapLifestyle())
+                .Catch<NotSupportedException>()
+                .Invoke(_ => default(EnLifestyle?));
 
             var newNodeInfo = new DependencyInfo(
                 dependency,

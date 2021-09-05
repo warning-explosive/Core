@@ -36,15 +36,26 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => Decoratee.Process(producer, context, token))
-                .Catch<Exception>()
-                .Invoke(ex => OnError(context, ex, token));
+                .TryAsync((producer, context), Process)
+                .Catch<Exception>(OnError(context))
+                .Invoke(token);
         }
 
-        private Task OnError(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        private Task Process(
+            (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
+            CancellationToken token)
         {
-            _logger.Error(exception);
-            return _retryPolicy.Apply(context, exception, token);
+            var (producer, context) = state;
+            return Decoratee.Process(producer, context, token);
+        }
+
+        private Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
+        {
+            return (exception, token) =>
+            {
+                _logger.Error(exception);
+                return _retryPolicy.Apply(context, exception, token);
+            };
         }
     }
 }

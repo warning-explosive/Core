@@ -29,9 +29,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         public Task<bool> DoesDatabaseExist(CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => DoesDatabaseExistUnsafe(token))
+                .TryAsync(DoesDatabaseExistUnsafe)
                 .Catch<PostgresException>()
-                .Invoke(DatabaseDoesNotExist);
+                .Invoke(DatabaseDoesNotExist, token);
         }
 
         public async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private static Task<bool> DatabaseDoesNotExist(Exception ex)
+        private static Task<bool> DatabaseDoesNotExist(Exception ex, CancellationToken token)
         {
             return ex.Data.Contains(SqlState)
                    && ex.Data[SqlState] is string sqlStateCode

@@ -72,12 +72,11 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
             if (message.ReadHeader<DeferredUntil>() != null)
             {
-                _delayedDeliveryQueue.Enqueue(message);
+                await _delayedDeliveryQueue.Enqueue(message, token).ConfigureAwait(false);
             }
             else
             {
-                message.WriteHeader(new ActualDeliveryDate(DateTime.Now));
-                _inputQueue.Enqueue(message);
+                await EnqueueInput(message, token).ConfigureAwait(false);
             }
         }
 
@@ -92,7 +91,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             Status = EnIntegrationTransportStatus.Starting;
 
             var messageProcessingTask = Task.WhenAll(
-                _delayedDeliveryQueue.Run(Enqueue, token),
+                _delayedDeliveryQueue.Run(EnqueueInput, token),
                 _inputQueue.Run(MessageProcessingCallback, token));
 
             _ready.Set();
@@ -101,15 +100,26 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             return messageProcessingTask;
         }
 
+        private Task EnqueueInput(IntegrationMessage message, CancellationToken token)
+        {
+            message.OverwriteHeader(new ActualDeliveryDate(DateTime.Now));
+            return _inputQueue.Enqueue(message, token);
+        }
+
+        private Func<Exception, CancellationToken, Task> EnqueueError(IntegrationMessage message)
+        {
+            return (exception, token) => EnqueueError(message, exception, token);
+        }
+
         private Task MessageProcessingCallback(IntegrationMessage message, CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(() => DispatchToEndpoint(message))
-                .Catch<Exception>()
-                .Invoke(ex => EnqueueError(message, ex, token));
+                .TryAsync(message, DispatchToEndpoint)
+                .Catch<Exception>(EnqueueError(message))
+                .Invoke(token);
         }
 
-        private Task DispatchToEndpoint(IntegrationMessage message)
+        private Task DispatchToEndpoint(IntegrationMessage message, CancellationToken token)
         {
             if (_topology.TryGetValue(message.ReflectedType, out var logicalGroups))
             {

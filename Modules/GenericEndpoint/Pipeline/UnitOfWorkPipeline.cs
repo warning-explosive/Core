@@ -24,14 +24,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            return context.UnitOfWork.StartTransaction(
+            return context.UnitOfWork.ExecuteInTransaction(
                 context,
-                ProcessWithinTransaction(producer),
+                Process(producer),
                 true,
                 token);
         }
 
-        private Func<IAdvancedIntegrationContext, CancellationToken, Task> ProcessWithinTransaction(
+        private Func<IAdvancedIntegrationContext, CancellationToken, Task> Process(
             Func<IAdvancedIntegrationContext, CancellationToken, Task> messageHandler)
         {
             return (context, token) => Decoratee.Process(messageHandler, context, token);

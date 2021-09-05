@@ -39,11 +39,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             foreach (var action in _startupActions.OrderByDependencyAttribute(action => action.GetType()))
             {
-                await action.Run(Token).ConfigureAwait(false);
+                await Run(action.Run, Token).ConfigureAwait(false);
             }
 
             _backgroundWorkersTask = _backgroundWorkers
-                .Select(worker => worker.Run(Token))
+                .Select(worker => Run(worker.Run, Token))
                 .WhenAll();
         }
 
@@ -83,6 +83,23 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             {
                 _cts?.Dispose();
             }
+        }
+
+        private Task Run(Func<CancellationToken, Task> action, CancellationToken token)
+        {
+            return ExecutionExtensions
+                .TryAsync(action)
+                .Catch<Exception>(OnUnhandledException(Logger))
+                .Invoke(token);
+        }
+
+        private Func<Exception, CancellationToken, Task> OnUnhandledException(ILogger<HostedService> logger)
+        {
+            return async (exception, token) =>
+            {
+                logger.Error(exception);
+                await StopAsync(token).ConfigureAwait(false);
+            };
         }
     }
 }

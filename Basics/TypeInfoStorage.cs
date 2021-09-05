@@ -55,11 +55,7 @@ namespace SpaceEngineers.Core.Basics
             return AssembliesExtensions
                 .AllAssembliesFromCurrentDomain()
                 .Where(assembly => !assembly.IsDynamic)
-                .SelectMany(assembly => new Func<IEnumerable<Type>>(assembly.GetTypes)
-                    .Try()
-                    .Catch<ReflectionTypeLoadException>()
-                    .Catch<FileNotFoundException>()
-                    .Invoke(_ => Enumerable.Empty<Type>()))
+                .SelectMany(GetTypes)
                 .Select(type =>
                 {
                     var attribute = type.GetCustomAttribute<DependentAttribute>();
@@ -69,6 +65,15 @@ namespace SpaceEngineers.Core.Basics
                 .SelectMany(pair => pair.attribute.Dependents.Select(dependent => (dependent, pair.type)))
                 .GroupBy(pair => pair.dependent, pair => pair.type)
                 .ToDictionary(grp => grp.Key, grp => grp.ToList() as IReadOnlyCollection<Type>);
+
+            static IEnumerable<Type> GetTypes(Assembly assembly)
+            {
+                return ExecutionExtensions
+                    .Try<IEnumerable<Type>>(assembly.GetTypes)
+                    .Catch<ReflectionTypeLoadException>()
+                    .Catch<FileNotFoundException>()
+                    .Invoke(_ => Enumerable.Empty<Type>());
+            }
         }
     }
 }

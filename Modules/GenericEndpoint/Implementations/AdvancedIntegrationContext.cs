@@ -87,8 +87,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
         {
             var copy = Message.Clone();
 
-            copy.IncrementRetryCounter();
-            copy.DeferDelivery(dueTime);
+            copy.OverwriteHeader(new RetryCounter((copy.ReadHeader<RetryCounter>()?.Value ?? 0) + 1));
+            copy.OverwriteHeader(new DeferredUntil(DateTime.Now + dueTime));
 
             return _transport.Enqueue(copy, token);
         }

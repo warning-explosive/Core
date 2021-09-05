@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
     using System.Data;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -24,17 +25,20 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// <param name="rowIndex">Row index (relative)</param>
         /// <param name="propertyToColumn">Property to column map (PropertyInfo.Name -> DataTable.ColumnId)</param>
         /// <param name="tableMeta">DataTable meta</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Element or null if row isn't valid</returns>
         Task<TElement?> ReadRow(
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
-            TTableMeta tableMeta);
+            TTableMeta tableMeta,
+            CancellationToken token);
 
         /// <summary>
         /// After table read
         /// </summary>
         /// <returns>Ongoing operation</returns>
-        Task AfterTableRead();
+        /// <param name="token">Cancellation token</param>
+        Task AfterTableRead(CancellationToken token);
     }
 }

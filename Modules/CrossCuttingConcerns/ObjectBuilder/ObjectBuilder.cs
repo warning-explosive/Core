@@ -103,17 +103,17 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             }
 
             return ExecutionExtensions
-                .Try(() => Convert(value, targetType))
+                .Try((value, targetType), Convert)
                 .Catch<Exception>()
                 .Invoke(convertEx =>
                 {
                     return ExecutionExtensions
-                        .Try(() => Cast(value, targetType))
+                        .Try((value, targetType), Cast)
                         .Catch<Exception>()
                         .Invoke(castEx =>
                         {
                             return ExecutionExtensions
-                                .Try(() => Transform(value, targetType))
+                                .Try((value, targetType), Transform)
                                 .Catch<Exception>()
                                 .Invoke(transformEx
                                     => throw new AggregateException($"Unable to convert value {value} from {value.GetType().FullName} to {targetType.FullName}", convertEx, castEx, transformEx));
@@ -121,8 +121,10 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
                 });
         }
 
-        private static object? Convert(object value, Type targetType)
+        private static object? Convert((object, Type) state)
         {
+            var (value, targetType) = state;
+
             var fromConverter = TypeDescriptor.GetConverter(targetType);
 
             if (fromConverter.CanConvertFrom(value.GetType()))
@@ -140,15 +142,19 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             return System.Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
         }
 
-        private static object? Cast(object value, Type targetType)
+        private static object? Cast((object, Type) state)
         {
+            var (value, targetType) = state;
+
             var constant = Expression.Constant(value);
             var convert = Expression.ConvertChecked(constant, targetType);
             return Expression.Lambda(convert).Compile().DynamicInvoke();
         }
 
-        private object? Transform(object value, Type targetType)
+        private object? Transform((object, Type) state)
         {
+            var (value, targetType) = state;
+
             return this
                 .CallMethod(nameof(Transform))
                 .WithTypeArgument(value.GetType())

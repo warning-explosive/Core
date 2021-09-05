@@ -36,11 +36,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
             var context = new TestIntegrationContext();
 
             var exception = ExecutionExtensions
-                .Try(() =>
-                {
-                    _messageHandler.Handle(_message, context, CancellationToken.None).Wait();
-                    return (Exception?)null;
-                })
+                .Try((_message, context, CancellationToken.None), Handle(_messageHandler))
                 .Catch<Exception>()
                 .Invoke(ex => ex);
 
@@ -58,6 +54,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
                     var error = errors.Single();
                     throw error.Rethrow();
                 }
+            }
+
+            static Func<(TMessage, TestIntegrationContext, CancellationToken), Exception?> Handle(
+                IMessageHandler<TMessage> messageHandler)
+            {
+                return state =>
+                {
+                    var (message, context, token) = state;
+                    messageHandler.Handle(message, context, token).Wait();
+                    return default;
+                };
             }
         }
 

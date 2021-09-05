@@ -8,14 +8,20 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// IAsyncQueue abstraction
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
-    public interface IAsyncQueue<out TElement>
+    public interface IAsyncQueue<TElement>
     {
-        /// <summary>
-        /// Starts message processing
-        /// </summary>
-        /// <param name="callback">Callback function for future message</param>
+        /// <summary> Enqueue </summary>
+        /// <param name="element">Element</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing scheduler operation</returns>
-        public Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token);
+        /// <returns>Ongoing operation</returns>
+        Task Enqueue(TElement element, CancellationToken token);
+
+        /// <summary>
+        /// Starts elements processing
+        /// </summary>
+        /// <param name="callback">Callback function for next element</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token);
     }
 }

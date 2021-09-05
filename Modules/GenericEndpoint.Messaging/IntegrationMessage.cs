@@ -260,6 +260,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             _headers.Add(header);
         }
 
+        /// <summary>
+        /// Overwrites existed header
+        /// </summary>
+        /// <param name="header">Header value</param>
+        /// <typeparam name="THeader">THeader type-argument</typeparam>
+        public void OverwriteHeader<THeader>(THeader header)
+            where THeader : IIntegrationMessageHeader
+        {
+            var existedHeader = ReadHeader<THeader>();
+
+            if (existedHeader != null)
+            {
+                _headers.Remove(existedHeader);
+            }
+
+            _headers.Add(header);
+        }
+
         private string FormatHeaders<THeader>(IEnumerable<THeader> headers)
             where THeader : IIntegrationMessageHeader
         {

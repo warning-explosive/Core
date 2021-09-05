@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
+    using System.Threading;
 
     /// <summary>
     /// Data extractor
@@ -14,7 +15,8 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// Extract data
         /// </summary>
         /// <param name="specification">Data extractor specification</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Extracted elements stream</returns>
-        IAsyncEnumerable<TElement> ExtractData(TSpec specification);
+        IAsyncEnumerable<TElement> ExtractData(TSpec specification, CancellationToken token);
     }
 }

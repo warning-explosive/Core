@@ -24,9 +24,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq.Internals
             var visitor = new TranslationExpressionVisitor(this, _sqlFunctionProviders);
 
             ExecutionExtensions
-                .Try(() => visitor.Visit(expression))
+                .Try(expression, visitor.Visit)
                 .Catch<Exception>()
-                .Invoke(ex => new TranslationException(expression, ex).Rethrow());
+                .Invoke(ex => throw new TranslationException(expression, ex));
 
             return visitor
                 .Context

@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataImport
     using System.Data;
     using System.Globalization;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using Basics;
@@ -39,10 +40,11 @@ namespace SpaceEngineers.Core.DataImport
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
-            TTableMeta tableMeta);
+            TTableMeta tableMeta,
+            CancellationToken token);
 
         /// <inheritdoc />
-        public virtual Task AfterTableRead()
+        public virtual Task AfterTableRead(CancellationToken token)
         {
             return Task.CompletedTask;
         }

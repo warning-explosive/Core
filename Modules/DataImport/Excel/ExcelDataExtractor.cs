@@ -5,6 +5,8 @@
     using System.Data;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using Basics;
@@ -33,7 +35,7 @@
         }
 
         /// <inheritdoc />
-        public IAsyncEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification)
+        public IAsyncEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification, CancellationToken token)
         {
             using (var stream = File.OpenRead(specification.FileInfo.FullName))
             using (var document = SpreadsheetDocument.Open(stream, false))
@@ -47,7 +49,7 @@
 
                 var sharedStrings = SharedStrings(document);
 
-                return ProcessWorksheet(worksheet, sharedStrings, specification);
+                return ProcessWorksheet(worksheet, sharedStrings, specification, token);
             }
         }
 
@@ -66,7 +68,8 @@
         private async IAsyncEnumerable<TElement> ProcessWorksheet(
             Worksheet worksheet,
             IReadOnlyDictionary<int, string> sharedStrings,
-            ExcelDataExtractorSpecification specification)
+            ExcelDataExtractorSpecification specification,
+            [EnumeratorCancellation] CancellationToken token)
         {
             using (var dataTable = new DataTable())
             {
@@ -97,12 +100,12 @@
 
                 var propertyToColumn = MergeColumns(dataTable);
 
-                await foreach (var element in ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ConfigureAwait(false))
+                await foreach (var element in ReadTable(dataTable, propertyToColumn, specification.TableMetadata, token).ConfigureAwait(false))
                 {
                     yield return element;
                 }
 
-                await _dataTableReader.AfterTableRead().ConfigureAwait(false);
+                await _dataTableReader.AfterTableRead(token).ConfigureAwait(false);
             }
         }
 
@@ -145,22 +148,37 @@
         private async IAsyncEnumerable<TElement> ReadTable(
             DataTable dataTable,
             IReadOnlyDictionary<string, string> propertyToColumn,
-            ExcelTableMetadata tableMetadata)
+            ExcelTableMetadata tableMetadata,
+            [EnumeratorCancellation] CancellationToken token)
         {
             for (var i = 0; i < dataTable.Rows.Count; ++i)
             {
                 var row = dataTable.Rows[i];
 
                 var element = await ExecutionExtensions
-                    .TryAsync(() => _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata))
-                    .Catch<Exception>(ex => throw new InvalidOperationException($"Error in row {i}", ex))
-                    .Invoke()
+                    .TryAsync((row, i, propertyToColumn, tableMetadata), ReadRow(_dataTableReader))
+                    .Catch<Exception>()
+                    .Invoke(RowError(i), token)
                     .ConfigureAwait(false);
 
                 if (element != null)
                 {
                     yield return element;
                 }
+            }
+
+            static Func<(DataRow, int, IReadOnlyDictionary<string, string>, ExcelTableMetadata), CancellationToken, Task<TElement?>> ReadRow(IDataTableReader<TElement, ExcelTableMetadata> dataTableReader)
+            {
+                return (state, token) =>
+                {
+                    var (row, i, propertyToColumn, tableMetadata) = state;
+                    return dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata, token);
+                };
+            }
+
+            static Func<Exception, CancellationToken, Task<TElement?>> RowError(int i)
+            {
+                return (exception, _) => throw new InvalidOperationException($"Error in row {i}", exception);
             }
         }
     }

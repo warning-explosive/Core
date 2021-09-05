@@ -22,5 +22,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 
         /// <inheritdoc />
         object IIntegrationMessageHeader.Value => Value;
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"[{nameof(SentFrom)}] - [{Value}]";
+        }
     }
 }

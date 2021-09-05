@@ -34,7 +34,7 @@
     <Compile Update="ActionExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="FunctionExecutionInfo.cs">
+    <Compile Update="StatelessFunctionExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
     <Compile Update="MethodExecutionInfo.cs">
@@ -49,7 +49,7 @@
     <Compile Update="AsyncOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="AsyncGenericOperationExecutionInfo.cs">
+    <Compile Update="GenericAsyncOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
     <Compile Update="Primitives\BinaryHeap.cs">
@@ -87,6 +87,9 @@
     </Compile>
     <Compile Update="Primitives\RootNodeChangedEventArgs.cs">
       <DependentUpon>IHeap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="StatelessActionExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

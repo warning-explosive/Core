@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.Basics.Test
         internal void CommitTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            ExecuteTransaction(unitOfWork, true, EmptyProducer);
+            ExecuteInTransaction(unitOfWork, true, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
             Assert.True(unitOfWork.Committed);
@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.Basics.Test
         internal void RollbackTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            ExecuteTransaction(unitOfWork, false, EmptyProducer);
+            ExecuteInTransaction(unitOfWork, false, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.Basics.Test
         internal void RollbackByExceptionTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            Assert.Throws<TrueException>(() => ExecuteTransaction(unitOfWork, true, ErrorProducer));
+            Assert.Throws<TrueException>(() => ExecuteInTransaction(unitOfWork, true, ErrorProducer));
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.Basics.Test
         internal void SeveralStartsTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork();
-            Assert.Throws<InvalidOperationException>(() => ExecuteTransaction(unitOfWork, true, OuterProducer));
+            Assert.Throws<InvalidOperationException>(() => ExecuteInTransaction(unitOfWork, true, OuterProducer));
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
@@ -72,20 +72,27 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Task OuterProducer(object context, CancellationToken token)
             {
-                ExecuteTransaction(unitOfWork, true, EmptyProducer);
+                ExecuteInTransaction(unitOfWork, true, EmptyProducer);
                 return Task.CompletedTask;
             }
         }
 
-        private static void ExecuteTransaction(
+        private static void ExecuteInTransaction(
             IAsyncUnitOfWork<object> unitOfWork,
             bool saveChanges,
             Func<object, CancellationToken, Task> producer)
         {
             ExecutionExtensions
-                .Try(() => unitOfWork.StartTransaction(new object(), producer, saveChanges, CancellationToken.None).Wait())
+                .Try((unitOfWork, saveChanges, producer), ExecuteInTransaction)
                 .Catch<AggregateException>(ex => throw ex.RealException())
                 .Invoke();
+        }
+
+        private static void ExecuteInTransaction(
+            (IAsyncUnitOfWork<object>, bool, Func<object, CancellationToken, Task>) state)
+        {
+            var (unitOfWork, saveChanges, producer) = state;
+            unitOfWork.ExecuteInTransaction(new object(), producer, saveChanges, CancellationToken.None).Wait();
         }
 
         private class TestAsyncUnitOfWork : AsyncUnitOfWork<object>

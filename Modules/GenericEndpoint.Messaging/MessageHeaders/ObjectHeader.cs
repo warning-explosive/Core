@@ -13,5 +13,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public string Name { get; }
 
         public object Value { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"[{Name}] - [{Value}]";
+        }
     }
 }

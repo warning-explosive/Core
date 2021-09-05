@@ -4,22 +4,25 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
 
     /// <summary>
-    /// Action execution info
+    /// ActionExecutionInfo
     /// </summary>
-    public class ActionExecutionInfo
+    /// <typeparam name="TState">TState type-argument</typeparam>
+    public class ActionExecutionInfo<TState>
     {
-        private static readonly Action<Exception> EmptyExceptionHandler =
-            _ => { };
+        private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
 
-        private readonly Action _clientAction;
+        private readonly TState _state;
+        private readonly Action<TState> _clientAction;
         private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
 
         private Action? _finallyAction;
 
         /// <summary> .ctor </summary>
+        /// <param name="state">State</param>
         /// <param name="clientAction">Client action</param>
-        public ActionExecutionInfo(Action clientAction)
+        public ActionExecutionInfo(TState state, Action<TState> clientAction)
         {
+            _state = state;
             _clientAction = clientAction;
             _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
         }
@@ -31,7 +34,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="exceptionHandler">Exception handler</param>
         /// <typeparam name="TException">Real exception type-argument</typeparam>
         /// <returns>ActionExecutionInfo</returns>
-        public ActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
+        public ActionExecutionInfo<TState> Catch<TException>(Action<Exception>? exceptionHandler = null)
         {
             _exceptionHandlers[typeof(TException)] = exceptionHandler ?? EmptyExceptionHandler;
 
@@ -43,7 +46,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="finallyAction">Finally action</param>
         /// <returns>ActionExecutionInfo</returns>
-        public ActionExecutionInfo Finally(Action finallyAction)
+        public ActionExecutionInfo<TState> Finally(Action finallyAction)
         {
             _finallyAction = finallyAction;
 
@@ -53,17 +56,11 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Invoke client's action
         /// </summary>
-        /// <param name="fallbackExceptionHandler">Fallback exception handler</param>
-        public void Invoke(Action<Exception>? fallbackExceptionHandler = null)
+        public void Invoke()
         {
-            if (fallbackExceptionHandler != null)
-            {
-                _exceptionHandlers[typeof(Exception)] = fallbackExceptionHandler;
-            }
-
             try
             {
-                _clientAction.Invoke();
+                _clientAction.Invoke(_state);
             }
             catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
             {

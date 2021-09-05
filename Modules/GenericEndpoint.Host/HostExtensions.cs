@@ -37,25 +37,26 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return host
                 .Services
                 .GetServices<IDependencyContainer>()
-                .Single(IsTransportContainer());
+                .Single(IsTransportContainer);
 
-            static Func<IDependencyContainer, bool> IsTransportContainer()
+            static bool IsTransportContainer(IDependencyContainer container)
             {
-                return container =>
-                    new Func<bool>(() =>
-                        {
-                            var endpointIdentity = container.Resolve<EndpointIdentity>();
-                            var integrationTransport = container.Resolve<IIntegrationTransport>();
+                return ExecutionExtensions
+                    .Try(container, IsTransportContainerUnsafe)
+                    .Catch<Exception>()
+                    .Invoke(_ => false);
+            }
 
-                            return integrationTransport
-                                .FlattenDecoratedType()
-                                .Any(it => it.Name.Equals(
-                                    endpointIdentity.LogicalName,
-                                    StringComparison.OrdinalIgnoreCase));
-                        })
-                        .Try()
-                        .Catch<Exception>()
-                        .Invoke(_ => false);
+            static bool IsTransportContainerUnsafe(IDependencyContainer container)
+            {
+                var endpointIdentity = container.Resolve<EndpointIdentity>();
+                var integrationTransport = container.Resolve<IIntegrationTransport>();
+
+                return integrationTransport
+                    .FlattenDecoratedType()
+                    .Any(it => it.Name.Equals(
+                        endpointIdentity.LogicalName,
+                        StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -67,19 +68,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// <returns>IDependencyContainer</returns>
         public static IDependencyContainer GetEndpointDependencyContainer(this IHost host, EndpointIdentity endpointIdentity)
         {
-            return host
-                .Services
-                .GetServices<IDependencyContainer>()
-                .Single(IsEndpointContainer(endpointIdentity));
-
-            static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
-            {
-                return container =>
-                    new Func<bool>(() => container.Resolve<EndpointIdentity>().Equals(endpointIdentity))
-                        .Try()
-                        .Catch<Exception>()
-                        .Invoke(_ => false);
-            }
+            return GetEndpointDependencyContainer(host.Services, endpointIdentity);
         }
 
         /// <summary>
@@ -158,17 +147,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
         private static IHostStartupAction BuildStartup(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
         {
-            var dependencyContainer = serviceProvider
-                .GetServices<IDependencyContainer>()
-                .Single(container =>
-                {
-                    return new Func<bool>(() => container.Resolve<EndpointIdentity>().Equals(endpointOptions.Identity))
-                        .Try()
-                        .Catch<Exception>()
-                        .Invoke(_ => false);
-                });
-
+            var dependencyContainer = GetEndpointDependencyContainer(serviceProvider, endpointOptions.Identity);
             return new GenericEndpointHostStartupAction(dependencyContainer);
+        }
+
+        private static IDependencyContainer GetEndpointDependencyContainer(IServiceProvider serviceProvider, EndpointIdentity endpointIdentity)
+        {
+            return serviceProvider
+                .GetServices<IDependencyContainer>()
+                .Single(IsEndpointContainer(endpointIdentity));
+
+            static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
+            {
+                return container => ExecutionExtensions
+                    .Try(endpointIdentity, IsEndpointContainerUnsafe(container))
+                    .Catch<Exception>()
+                    .Invoke(_ => false);
+            }
+
+            static Func<EndpointIdentity, bool> IsEndpointContainerUnsafe(IDependencyContainer container)
+            {
+                return endpointIdentity => container.Resolve<EndpointIdentity>().Equals(endpointIdentity);
+            }
         }
 
         private static IManualRegistration GetTransportInjection(this HostBuilderContext ctx)

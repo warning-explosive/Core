@@ -228,22 +228,24 @@ namespace SpaceEngineers.Core.Modules.Test
                              };
 
             Action action = () => GetShortestStrPath(graph, solverInfo1, sw);
-            action.Try()
-                  .Catch<AmbiguousMatchException>(ex =>
-                                                  {
-                                                      var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
 
-                                                      foreach (var msg in exeptionMessagePathsList)
-                                                      {
-                                                          Output.WriteLine(msg);
-                                                      }
+            ExecutionExtensions
+                .Try(action)
+                .Catch<AmbiguousMatchException>(ex =>
+                {
+                    var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
 
-                                                      CheckCandidates(candidates, exeptionMessagePathsList);
+                    foreach (var msg in exeptionMessagePathsList)
+                    {
+                        Output.WriteLine(msg);
+                    }
 
-                                                      var strPath = GetShortestStrPath(graph, solverInfo2, sw);
-                                                      Assert.Equal("[AC] => [CD] => [DE]", strPath);
-                                                  })
-                  .Invoke();
+                    CheckCandidates(candidates, exeptionMessagePathsList);
+
+                    var strPath = GetShortestStrPath(graph, solverInfo2, sw);
+                    Assert.Equal("[AC] => [CD] => [DE]", strPath);
+                })
+                .Invoke();
         }
 
         /// <summary>
@@ -267,13 +269,15 @@ namespace SpaceEngineers.Core.Modules.Test
             solverInfo.RequiredEdges.EnqueueMany(requiredEdges);
 
             Action action = () => GetShortestStrPath(graph, solverInfo, sw);
-            action.Try()
-                  .Catch<NotFoundException>(ex =>
-                                            {
-                                                Output.WriteLine(ex.Message);
-                                                Assert.Contains("Path not found", ex.Message, StringComparison.Ordinal);
-                                            })
-                  .Invoke();
+
+            ExecutionExtensions
+                .Try(action)
+                .Catch<NotFoundException>(ex =>
+                {
+                    Output.WriteLine(ex.Message);
+                    Assert.Contains("Path not found", ex.Message, StringComparison.Ordinal);
+                })
+                .Invoke();
         }
 
         /// <summary>
@@ -304,13 +308,15 @@ namespace SpaceEngineers.Core.Modules.Test
             solverInfo.NotEmptyCircle = true;
             solverInfo.RequiredEdges.Clear();
             Action action = () => GetShortestStrPath(graph, solverInfo, sw);
-            action.Try()
-                  .Catch<AmbiguousMatchException>(ex =>
-                                                  {
-                                                      Output.WriteLine(ex.Message);
-                                                      Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.Ordinal);
-                                                  })
-                  .Invoke();
+
+            ExecutionExtensions
+                .Try(action)
+                .Catch<AmbiguousMatchException>(ex =>
+                {
+                    Output.WriteLine(ex.Message);
+                    Assert.Contains("(1) => [BB1(1), BB2(1)]", ex.Message, StringComparison.Ordinal);
+                })
+                .Invoke();
 
             // 1.3
             solverInfo.NotEmptyCircle = false;

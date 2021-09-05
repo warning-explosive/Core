@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics
 {
     using System;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -21,10 +22,25 @@ namespace SpaceEngineers.Core.Basics
         /// Try execute client's action
         /// </summary>
         /// <param name="clientAction">Client action</param>
-        /// <returns>ActionExecutionInfo</returns>
-        public static ActionExecutionInfo Try(this Action clientAction)
+        /// <returns>StatelessActionExecutionInfo</returns>
+        public static StatelessActionExecutionInfo Try(
+            Action clientAction)
         {
-            return new ActionExecutionInfo(clientAction);
+            return new StatelessActionExecutionInfo(clientAction);
+        }
+
+        /// <summary>
+        /// Try execute client's action
+        /// </summary>
+        /// <param name="state">State</param>
+        /// <param name="clientAction">Client action</param>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <returns>StatelessActionExecutionInfo</returns>
+        public static ActionExecutionInfo<TState> Try<TState>(
+            TState state,
+            Action<TState> clientAction)
+        {
+            return new ActionExecutionInfo<TState>(state, clientAction);
         }
 
         /// <summary>
@@ -32,10 +48,26 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="clientFunction">Client function</param>
         /// <typeparam name="TResult">Function TResult type-argument</typeparam>
+        /// <returns>StatelessFunctionExecutionInfo</returns>
+        public static StatelessFunctionExecutionInfo<TResult> Try<TResult>(
+            Func<TResult> clientFunction)
+        {
+            return new StatelessFunctionExecutionInfo<TResult>(clientFunction);
+        }
+
+        /// <summary>
+        /// Try execute client's function
+        /// </summary>
+        /// <param name="state">State</param>
+        /// <param name="clientFunction">Client function</param>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
         /// <returns>FunctionExecutionInfo</returns>
-        public static FunctionExecutionInfo<TResult> Try<TResult>(this Func<TResult> clientFunction)
+        public static FunctionExecutionInfo<TState, TResult> Try<TState, TResult>(
+            TState state,
+            Func<TState, TResult> clientFunction)
         {
-            return new FunctionExecutionInfo<TResult>(clientFunction);
+            return new FunctionExecutionInfo<TState, TResult>(state, clientFunction);
         }
 
         /// <summary>
@@ -43,10 +75,28 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
         /// <param name="configureAwait">Configure await option</param>
-        /// <returns>AsyncOperationExecutionInfo</returns>
-        public static AsyncOperationExecutionInfo TryAsync(this Func<Task> clientAsyncOperationFactory, bool configureAwait = false)
+        /// <returns>StatelessAsyncOperationExecutionInfo</returns>
+        public static StatelessAsyncOperationExecutionInfo TryAsync(
+            Func<CancellationToken, Task> clientAsyncOperationFactory,
+            bool configureAwait = false)
         {
-            return new AsyncOperationExecutionInfo(clientAsyncOperationFactory, configureAwait);
+            return new StatelessAsyncOperationExecutionInfo(clientAsyncOperationFactory, configureAwait);
+        }
+
+        /// <summary>
+        /// Try execute client's asynchronous operation
+        /// </summary>
+        /// <param name="state">State</param>
+        /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
+        /// <param name="configureAwait">Configure await option</param>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <returns>AsyncOperationExecutionInfo</returns>
+        public static AsyncOperationExecutionInfo<TState> TryAsync<TState>(
+            TState state,
+            Func<TState, CancellationToken, Task> clientAsyncOperationFactory,
+            bool configureAwait = false)
+        {
+            return new AsyncOperationExecutionInfo<TState>(state, clientAsyncOperationFactory, configureAwait);
         }
 
         /// <summary>
@@ -54,11 +104,30 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
         /// <param name="configureAwait">Configure await option</param>
-        /// <typeparam name="TResult">Async operation result type-argument</typeparam>
-        /// <returns>AsyncOperationExecutionInfo</returns>
-        public static AsyncGenericOperationExecutionInfo<TResult> TryAsync<TResult>(this Func<Task<TResult>> clientAsyncOperationFactory, bool configureAwait = false)
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>StatelessGenericAsyncOperationExecutionInfo</returns>
+        public static StatelessGenericAsyncOperationExecutionInfo<TResult> TryAsync<TResult>(
+            Func<CancellationToken, Task<TResult>> clientAsyncOperationFactory,
+            bool configureAwait = false)
         {
-            return new AsyncGenericOperationExecutionInfo<TResult>(clientAsyncOperationFactory, configureAwait);
+            return new StatelessGenericAsyncOperationExecutionInfo<TResult>(clientAsyncOperationFactory, configureAwait);
+        }
+
+        /// <summary>
+        /// Try execute client's asynchronous operation
+        /// </summary>
+        /// <param name="state">State</param>
+        /// <param name="clientAsyncOperationFactory">Client async operation factory</param>
+        /// <param name="configureAwait">Configure await option</param>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <typeparam name="TResult">TResult type-argument</typeparam>
+        /// <returns>GenericAsyncOperationExecutionInfo</returns>
+        public static GenericAsyncOperationExecutionInfo<TState, TResult> TryAsync<TState, TResult>(
+            TState state,
+            Func<TState, CancellationToken, Task<TResult>> clientAsyncOperationFactory,
+            bool configureAwait = false)
+        {
+            return new GenericAsyncOperationExecutionInfo<TState, TResult>(state, clientAsyncOperationFactory, configureAwait);
         }
 
         /// <summary>

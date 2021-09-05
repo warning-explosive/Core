@@ -28,13 +28,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
             CancellationToken token)
         {
             return ExecutionExtensions
-                .TryAsync(async () =>
-                {
-                    await Decoratee.Process(producer, context, token).ConfigureAwait(false);
-                    await OnSuccess(context, token).ConfigureAwait(false);
-                })
-                .Catch<Exception>()
-                .Invoke(ex => OnError(context, ex, token));
+                .TryAsync((producer, context), Process)
+                .Catch<Exception>(OnError(context))
+                .Invoke(token);
+        }
+
+        private async Task Process(
+            (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
+            CancellationToken token)
+        {
+            var (producer, context) = state;
+            await Decoratee.Process(producer, context, token).ConfigureAwait(false);
+            await OnSuccess(context, token).ConfigureAwait(false);
         }
 
         private static Task OnSuccess(IAdvancedIntegrationContext context, CancellationToken token)
@@ -43,10 +48,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Statistics.Internals
             return context.Send(command, token);
         }
 
-        private static Task OnError(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        private static Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
         {
-            var command = new CaptureMessageStatistics(context.Message) { Exception = exception };
-            return context.Send(command, token);
+            return async (exception, token) =>
+            {
+                var command = new CaptureMessageStatistics(context.Message)
+                {
+                    Exception = exception
+                };
+
+                await context.Send(command, token).ConfigureAwait(false);
+                throw exception.Rethrow();
+            };
         }
     }
 }

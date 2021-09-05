@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.Basics
                 return expected;
             }
 
-            throw new TypeMismatchException(typeof(TExpected), input.GetType()).Rethrow();
+            throw new TypeMismatchException(typeof(TExpected), input.GetType());
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.Basics
         {
             if (input == null)
             {
-                throw exceptionFactory().Rethrow();
+                throw exceptionFactory();
             }
 
             if (input is TExpected expected)
@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.Basics
                 return expected;
             }
 
-            throw new TypeMismatchException(typeof(TExpected), input.GetType()).Rethrow();
+            throw new TypeMismatchException(typeof(TExpected), input.GetType());
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.Basics
         {
             if (input == null)
             {
-                throw exceptionFactory().Rethrow();
+                throw exceptionFactory();
             }
 
             return input;

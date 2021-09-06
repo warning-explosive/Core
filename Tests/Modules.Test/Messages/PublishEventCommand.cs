@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
 
-    [OwnedBy(TestIdentity.Endpoint1)]
-    internal class BaseEvent : IIntegrationEvent
+    [OwnedBy(TestIdentity.Endpoint2)]
+    internal class PublishEventCommand : IIntegrationCommand
     {
-        public BaseEvent(int id)
+        public PublishEventCommand(int id)
         {
             Id = id;
         }

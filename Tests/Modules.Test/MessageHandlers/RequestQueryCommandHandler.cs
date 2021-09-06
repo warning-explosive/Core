@@ -9,10 +9,10 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class MakeSingleQueryCommandHandler : IMessageHandler<MakeSingleQueryCommand>,
-                                                   ICollectionResolvable<IMessageHandler<MakeSingleQueryCommand>>
+    internal class RequestQueryCommandHandler : IMessageHandler<RequestQueryCommand>,
+                                                ICollectionResolvable<IMessageHandler<RequestQueryCommand>>
     {
-        public Task Handle(MakeSingleQueryCommand message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(RequestQueryCommand message, IIntegrationContext context, CancellationToken token)
         {
             var query = new Query(message.Id);
 

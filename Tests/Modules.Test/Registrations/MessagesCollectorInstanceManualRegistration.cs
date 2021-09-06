@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
+    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Registration;
+    using IntegrationTransport.Api.Abstractions;
     using Mocks;
 
     internal class MessagesCollectorInstanceManualRegistration : IManualRegistration
@@ -14,6 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
         public void Register(IManualRegistrationsContainer container)
         {
+            container.RegisterDecorator<IIntegrationTransport, IntegrationTransportMessagesCollectorDecorator>(EnLifestyle.Singleton);
             container.RegisterInstance(_collector);
         }
     }

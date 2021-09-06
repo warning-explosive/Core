@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class BaseEvent : IIntegrationEvent
+    internal class RequestQueryCommand : IIntegrationCommand
     {
-        public BaseEvent(int id)
+        public RequestQueryCommand(int id)
         {
             Id = id;
         }

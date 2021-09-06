@@ -163,16 +163,13 @@
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
       <DependentUpon>PersistenceSettings.cs</DependentUpon>
     </Compile>
-    <Compile Update="Messages\SecondInheritedEvent.cs">
-      <DependentUpon>BaseEvent.cs</DependentUpon>
-    </Compile>
-    <Compile Update="MessageHandlers\FirstInheritedEventEmptyMessageHandler.cs">
+    <Compile Update="MessageHandlers\InheritedEventEmptyMessageHandler.cs">
       <DependentUpon>BaseEventEmptyMessageHandler.cs</DependentUpon>
     </Compile>
     <Compile Update="MessageHandlers\InheritedEventMessageHandler.cs">
       <DependentUpon>BaseEventEmptyMessageHandler.cs</DependentUpon>
     </Compile>
-    <Compile Update="Messages\FirstInheritedEvent.cs">
+    <Compile Update="Messages\InheritedEvent.cs">
       <DependentUpon>BaseEvent.cs</DependentUpon>
     </Compile>
     <Compile Update="AutoRegistrationTest\ScopedServiceOverride.cs">
@@ -213,6 +210,9 @@
     </Compile>
     <Compile Update="AutoRegistrationTest\ManuallyRegisteredServiceOverride.cs">
       <DependentUpon>IManuallyRegisteredService.cs</DependentUpon>
+    </Compile>
+    <Compile Update="MessageHandlers\BaseEventEmptyMessageHandler.cs">
+      <DependentUpon>IntegrationEventEmptyMessageHandler.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

@@ -43,18 +43,18 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            var isOwnedByCurrentEndpoint = typeof(TEvent)
+            var actualOwner = typeof(TEvent)
                 .GetRequiredAttribute<OwnedByAttribute>()
-                .EndpointName.Equals(
-                    _endpointIdentity.LogicalName,
-                    StringComparison.OrdinalIgnoreCase);
+                .EndpointName;
+
+            var isOwnedByCurrentEndpoint = actualOwner.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
 
             if (isOwnedByCurrentEndpoint)
             {
                 return Deliver(CreateGeneralMessage(integrationEvent), token);
             }
 
-            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Required owner: {_endpointIdentity}");
+            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Owner: {actualOwner}; Required owner: {_endpointIdentity.LogicalName}");
         }
 
         public async Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)

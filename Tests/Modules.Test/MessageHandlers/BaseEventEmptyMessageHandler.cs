@@ -6,16 +6,23 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.Contract;
     using Messages;
 
     [Component(EnLifestyle.Transient)]
     internal class BaseEventEmptyMessageHandler : IMessageHandler<BaseEvent>,
                                                   ICollectionResolvable<IMessageHandler<BaseEvent>>
     {
-        public async Task Handle(BaseEvent message, IIntegrationContext context, CancellationToken token)
+        private readonly EndpointIdentity _endpointIdentity;
+
+        public BaseEventEmptyMessageHandler(EndpointIdentity endpointIdentity)
         {
-            await context.Publish(new FirstInheritedEvent(), token).ConfigureAwait(false);
-            await context.Publish(new SecondInheritedEvent(), token).ConfigureAwait(false);
+            _endpointIdentity = endpointIdentity;
+        }
+
+        public Task Handle(BaseEvent message, IIntegrationContext context, CancellationToken token)
+        {
+            return context.Publish(new Endpoint1HandlerInvoked(typeof(BaseEventEmptyMessageHandler), _endpointIdentity), token);
         }
     }
 }

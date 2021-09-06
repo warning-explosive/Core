@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using Implementations;
+    using IntegrationTransport.Api.Abstractions;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -24,18 +25,24 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
         /// Use in-memory integration transport inside specified host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="modifier">Optional transport dependency container options modifier</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseInMemoryIntegrationTransport(this IHostBuilder hostBuilder)
+        public static IHostBuilder UseInMemoryIntegrationTransport(
+            this IHostBuilder hostBuilder,
+            Func<DependencyContainerOptions, DependencyContainerOptions>? modifier = null)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseInMemoryIntegrationTransport));
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, serviceCollection));
+                serviceCollection.AddSingleton<IDependencyContainer>(BuildTransportContainer(ctx, serviceCollection, modifier));
             });
         }
 
-        private static IDependencyContainer BuildTransportContainer(HostBuilderContext context, IServiceCollection serviceCollection)
+        private static IDependencyContainer BuildTransportContainer(
+            HostBuilderContext context,
+            IServiceCollection serviceCollection,
+            Func<DependencyContainerOptions, DependencyContainerOptions>? modifier)
         {
             var assemblies = new[]
             {
@@ -48,22 +55,27 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host
 
             var endpointIdentity = new EndpointIdentity(nameof(InMemoryIntegrationTransport), Guid.NewGuid());
 
-            var containerOptions = new DependencyContainerOptions()
+            var options = new DependencyContainerOptions()
                 .WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration())
                 .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity));
+
+            if (modifier != null)
+            {
+                options = modifier(options);
+            }
 
             var containerImplementationProducer = GetContainerImplementationProducer(context);
 
             var dependencyContainer = DependencyContainer.CreateBoundedAbove(
-                containerOptions,
-                containerImplementationProducer(containerOptions),
+                options,
+                containerImplementationProducer(options),
                 assemblies);
 
             var injection = dependencyContainer.Resolve<IManualRegistration>();
 
             context.Properties.Add(GenericHost.Api.HostExtensions.TransportInjectionKey, injection);
 
-            var transport = dependencyContainer.Resolve<InMemoryIntegrationTransport>();
+            var transport = dependencyContainer.Resolve<IIntegrationTransport>();
 
             serviceCollection.AddSingleton<IHostBackgroundWorker>(new IntegrationTransportHostBackgroundWorker(transport));
 

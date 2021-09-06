@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class MakeSingleQueryCommand : IIntegrationCommand
+    internal class PublishInheritedEventCommand : IIntegrationCommand
     {
-        public MakeSingleQueryCommand(int id)
+        public PublishInheritedEventCommand(int id)
         {
             Id = id;
         }

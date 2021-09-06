@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
     using Basics;
     using Contract;
     using Contract.Abstractions;
+    using Contract.Attributes;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Messaging.Abstractions;
@@ -54,7 +55,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Implementations
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            return Collect(CreateGeneralMessage(integrationEvent), token);
+            var actualOwner = typeof(TEvent)
+                .GetRequiredAttribute<OwnedByAttribute>()
+                .EndpointName;
+
+            var isOwnedByCurrentEndpoint = actualOwner.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
+
+            if (isOwnedByCurrentEndpoint)
+            {
+                return Collect(CreateGeneralMessage(integrationEvent), token);
+            }
+
+            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Owner: {actualOwner}; Required owner: {_endpointIdentity.LogicalName}");
         }
 
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)

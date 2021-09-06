@@ -10,19 +10,19 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class ReplyEmptyMessageHandler : IMessageHandler<Reply>,
-                                              ICollectionResolvable<IMessageHandler<Reply>>
+    internal class InheritedEventEmptyMessageHandler : IMessageHandler<InheritedEvent>,
+                                                       ICollectionResolvable<IMessageHandler<InheritedEvent>>
     {
         private readonly EndpointIdentity _endpointIdentity;
 
-        public ReplyEmptyMessageHandler(EndpointIdentity endpointIdentity)
+        public InheritedEventEmptyMessageHandler(EndpointIdentity endpointIdentity)
         {
             _endpointIdentity = endpointIdentity;
         }
 
-        public Task Handle(Reply message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(InheritedEvent message, IIntegrationContext context, CancellationToken token)
         {
-            return context.Publish(new Endpoint1HandlerInvoked(typeof(ReplyEmptyMessageHandler), _endpointIdentity), token);
+            return context.Publish(new Endpoint1HandlerInvoked(typeof(InheritedEventEmptyMessageHandler), _endpointIdentity), token);
         }
     }
 }

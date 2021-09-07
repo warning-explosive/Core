@@ -182,8 +182,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
             Task delay;
             CancellationTokenSource? cts;
 
-            var now = DateTime.Now;
-            var planned = _prioritySelector(element);
+            var now = DateTime.UtcNow;
+            var planned = _prioritySelector(element).ToUniversalTime();
 
             if (planned <= now)
             {
@@ -225,7 +225,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
         private async Task WaitForBreadcrumbs(DateTime planned, CancellationToken token)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             if (planned <= now)
             {

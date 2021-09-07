@@ -47,20 +47,20 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(queue.IsEmpty);
 
             var step = TimeSpan.FromMilliseconds(100);
-            var startFrom = DateTime.Now.Add(step);
+            var startFrom = DateTime.UtcNow.Add(step);
 
             queue.Enqueue(new Entry(0, startFrom));
             queue.Enqueue(new Entry(2, startFrom.Add(2 * step)));
             queue.Enqueue(new Entry(4, startFrom.Add(4 * step)));
 
             var entries = new List<Entry>();
-            var started = DateTime.Now;
+            var started = DateTime.UtcNow;
             Output.WriteLine($"Started at: {started:O}");
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 var backgroundPublisher = Task.Run(async () =>
                     {
-                        var corrected = startFrom.Add(step / 2) - DateTime.Now;
+                        var corrected = startFrom.Add(step / 2) - DateTime.UtcNow;
 
                         await Task.Delay(corrected, cts.Token).ConfigureAwait(false);
                         queue.Enqueue(new Entry(1, startFrom.Add(1 * step)));
@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Task Callback(Entry entry, CancellationToken token)
             {
-                entry.Actual = DateTime.Now;
+                entry.Actual = DateTime.UtcNow;
                 entries.Add(entry);
 
                 return Task.CompletedTask;
@@ -120,9 +120,9 @@ namespace SpaceEngineers.Core.Basics.Test
             var count = 100;
             var actualCount = 0;
             var step = TimeSpan.FromMilliseconds(1);
-            var startFrom = DateTime.Now.Add(TimeSpan.FromMilliseconds(100));
-
-            var started = DateTime.Now;
+            var now = DateTime.UtcNow;
+            var startFrom = now.Add(TimeSpan.FromMilliseconds(100));
+            var started = now;
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
@@ -147,7 +147,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 }
             }
 
-            var finished = DateTime.Now;
+            var finished = DateTime.UtcNow;
             var duration = finished - started;
             Output.WriteLine(duration.ToString());
 

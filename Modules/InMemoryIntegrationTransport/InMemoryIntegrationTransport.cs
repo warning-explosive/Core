@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         private Task EnqueueInput(IntegrationMessage message, CancellationToken token)
         {
-            message.OverwriteHeader(new ActualDeliveryDate(DateTime.Now));
+            message.OverwriteHeader(new ActualDeliveryDate(DateTime.UtcNow));
             return _inputQueue.Enqueue(message, token);
         }
 

@@ -8,6 +8,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.Settings
     /// </summary>
     public class IntegrationTransportSettings : IYamlSettings
     {
+        /// <summary> .cctor </summary>
+        public IntegrationTransportSettings()
+        {
+            RpcRequestSecondsTimeout = 60;
+        }
+
         /// <summary>
         /// Rpc request timeout (seconds)
         /// </summary>

@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Messaging;
 
     /// <summary>
     /// IRpcRequestRegistry
@@ -17,19 +18,15 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <param name="requestId">Request identifier</param>
         /// <param name="tcs">TaskCompletionSource</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing enroll operation</returns>
-        public Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs, CancellationToken token)
-            where TReply : IIntegrationMessage;
+        public Task<bool> TryEnroll(Guid requestId, TaskCompletionSource<IntegrationMessage> tcs, CancellationToken token);
 
         /// <summary>
         /// Try set RPC request result
         /// </summary>
         /// <param name="requestId">Request identifier</param>
         /// <param name="reply">Reply</param>
-        /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Result</returns>
-        bool TrySetResult<TReply>(Guid requestId, TReply reply)
-            where TReply : IIntegrationMessage;
+        bool TrySetResult(Guid requestId, IntegrationMessage reply);
     }
 }

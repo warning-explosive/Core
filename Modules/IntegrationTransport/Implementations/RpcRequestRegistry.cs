@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
-    using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Messaging;
     using Settings;
 
     [Component(EnLifestyle.Singleton)]
@@ -28,8 +28,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
             _memoryCache.Dispose();
         }
 
-        public async Task<bool> TryEnroll<TReply>(Guid requestId, TaskCompletionSource<TReply> tcs, CancellationToken token)
-            where TReply : IIntegrationMessage
+        public async Task<bool> TryEnroll(Guid requestId, TaskCompletionSource<IntegrationMessage> tcs, CancellationToken token)
         {
             var settings = await _integrationTransportSettings
                 .Get(token)
@@ -44,21 +43,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
             };
 
             return _memoryCache.Add(cacheItem, cacheItemPolicy);
+
+            static CacheEntryRemovedCallback RemovedCallback(TaskCompletionSource<IntegrationMessage> tcs)
+            {
+                return _ => tcs.TrySetCanceled();
+            }
         }
 
-        public bool TrySetResult<TReply>(Guid requestId, TReply reply)
-            where TReply : IIntegrationMessage
+        public bool TrySetResult(Guid requestId, IntegrationMessage reply)
         {
             var cacheItem = _memoryCache.GetCacheItem(requestId.ToString());
 
-            return cacheItem?.Value is TaskCompletionSource<TReply> tcs
+            return cacheItem?.Value is TaskCompletionSource<IntegrationMessage> tcs
                    && tcs.TrySetResult(reply);
-        }
-
-        private static CacheEntryRemovedCallback RemovedCallback<TReply>(TaskCompletionSource<TReply> tcs)
-            where TReply : IIntegrationMessage
-        {
-            return _ => tcs.TrySetCanceled();
         }
     }
 }

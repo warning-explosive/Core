@@ -67,15 +67,29 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
 
             var requestId = message.Id;
 
-            var tcs = new TaskCompletionSource<TReply>();
+            var tcs = new TaskCompletionSource<IntegrationMessage>();
 
             await _registry.TryEnroll(requestId, tcs, token).ConfigureAwait(false);
 
-            _transport.Bind(typeof(TReply), _endpointIdentity, RpcReplyMessageHandler<TReply>(_registry));
+            _transport.Bind(typeof(TReply), _endpointIdentity, RpcReplyMessageHandler(_registry));
 
             await Deliver(message, token).ConfigureAwait(false);
 
-            return await tcs.Task.ConfigureAwait(false);
+            var reply = await tcs.Task.ConfigureAwait(false);
+
+            return (TReply)reply.Payload;
+
+            static Func<IntegrationMessage, Task> RpcReplyMessageHandler(IRpcRequestRegistry registry)
+            {
+                return message =>
+                {
+                    var requestId = message.ReadRequiredHeader<InitiatorMessageId>().Value;
+
+                    registry.TrySetResult(requestId, message);
+
+                    return Task.CompletedTask;
+                };
+            }
         }
 
         private Task Deliver(IntegrationMessage message, CancellationToken token)
@@ -87,20 +101,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Implementations
             where TMessage : IIntegrationMessage
         {
             return _factory.CreateGeneralMessage(message, null, null);
-        }
-
-        private static Func<IntegrationMessage, Task> RpcReplyMessageHandler<TReply>(IRpcRequestRegistry registry)
-            where TReply : IIntegrationMessage
-        {
-            return message =>
-            {
-                var requestId = message.ReadRequiredHeader<InitiatorMessageId>().Value;
-
-                // TODO: #137 - think about lost headers
-                registry.TrySetResult(requestId, (TReply)message.Payload);
-
-                return Task.CompletedTask;
-            };
         }
     }
 }

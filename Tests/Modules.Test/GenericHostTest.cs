@@ -688,7 +688,9 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             new CommandEmptyMessageHandler(TestIdentity.Endpoint10)
                 .OnMessage(new Command(42))
-                .ProducesNothing()
+                .Publishes<Endpoint1HandlerInvoked>(invoked =>
+                    invoked.EndpointIdentity.Equals(TestIdentity.Endpoint10)
+                    && invoked.HandlerType == typeof(CommandEmptyMessageHandler))
                 .DoesNotThrow()
                 .Invoke();
 
@@ -700,7 +702,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             new EventEmptyMessageHandler(TestIdentity.Endpoint20)
                 .OnMessage(new Event(42))
-                .ProducesNothing()
+                .Publishes<Endpoint2HandlerInvoked>(invoked =>
+                    invoked.EndpointIdentity.Equals(TestIdentity.Endpoint20)
+                    && invoked.HandlerType == typeof(EventEmptyMessageHandler))
                 .DoesNotThrow()
                 .Invoke();
 

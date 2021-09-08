@@ -178,7 +178,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         /// <returns>MessageHandlerTestBuilder</returns>
         public MessageHandlerTestBuilder<TMessage> ProducesNothing()
         {
-            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TMessage>());
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<IIntegrationMessage>());
             return this;
         }
 

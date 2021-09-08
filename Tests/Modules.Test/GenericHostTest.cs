@@ -231,22 +231,20 @@ namespace SpaceEngineers.Core.Modules.Test
                     .Send(command, cts.Token)
                     .ConfigureAwait(false);
 
-                await collector.WaitUntilMessageIsNotReceived<Reply>(reply => reply.Id == command.Id).ConfigureAwait(false);
+                await Task.WhenAll(
+                        collector.WaitUntilMessageIsNotReceived<Reply>(reply => reply.Id == command.Id),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.HandlerType == typeof(ReplyEmptyMessageHandler)))
+                    .ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
-                collector.ShowErrorMessages(Output.WriteLine);
-                collector.ShowMessages(Output.WriteLine);
-
-                var expectedMessageTypes = new[]
-                {
-                    typeof(RequestQueryCommand),
-                    typeof(Query),
-                    typeof(Reply)
-                };
-
                 Assert.Empty(collector.ErrorMessages);
-                Assert.Equal(expectedMessageTypes, collector.Messages.Select(message => message.Payload.GetType()).ToList());
+                var messages = collector.Messages.ToArray();
+                Assert.Equal(4, messages.Length);
+                Assert.Equal(typeof(RequestQueryCommand), messages[0].Payload.GetType());
+                Assert.Equal(typeof(Query), messages[1].Payload.GetType());
+                Assert.Equal(typeof(Reply), messages[2].Payload.GetType());
+                Assert.Equal(typeof(Endpoint1HandlerInvoked), messages[3].Payload.GetType());
             }
         }
 
@@ -301,18 +299,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
-                collector.ShowErrorMessages(Output.WriteLine);
-                collector.ShowMessages(Output.WriteLine);
-
                 Assert.Empty(collector.ErrorMessages);
-
-                var expectedMessages = new[]
-                {
-                    typeof(Query),
-                    typeof(Reply)
-                };
-
-                Assert.Equal(expectedMessages, collector.Messages.Select(message => message.Payload.GetType()).ToList());
+                Assert.Equal(2, collector.Messages.Count);
+                var messages = collector.Messages.ToArray();
+                Assert.Equal(typeof(Query), messages[0].Payload.GetType());
+                Assert.Equal(typeof(Reply), messages[1].Payload.GetType());
             }
         }
 
@@ -374,10 +365,39 @@ namespace SpaceEngineers.Core.Modules.Test
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 Assert.Single(collector.ErrorMessages);
-                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), collector.ErrorMessages.Single().exception.Message);
-                Assert.Equal(3, collector.ErrorMessages.Single().message.ReadHeader<RetryCounter>().Value);
-                Assert.Equal(new[] { 0, 1, 2, 3 }, collector.Messages.Where(message => message.Payload is Command).Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int)).ToList());
-                Assert.Equal(4, collector.Messages.Count(message => message.Payload is Endpoint1HandlerInvoked handlerInvoked && handlerInvoked.HandlerType == typeof(CommandEmptyMessageHandler)));
+                var (errorMessage, exception) = collector.ErrorMessages.Single();
+                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
+                Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>().Value);
+
+                var expectedRetryCounts = new[] { 0, 1, 2, 3 };
+
+                var actualRetryCounts = collector
+                    .Messages
+                    .Where(message => message.Payload is Command)
+                    .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
+                    .ToList();
+
+                var commandEmptyMessageHandlerInvokesCount = collector
+                    .Messages
+                    .Count(message => message.Payload is Endpoint1HandlerInvoked handlerInvoked
+                                      && handlerInvoked.HandlerType == typeof(CommandEmptyMessageHandler));
+
+                var commandThrowingMessageHandlerInvokesCount = collector
+                    .Messages
+                    .Count(message => message.Payload is Endpoint1HandlerInvoked handlerInvoked
+                                      && handlerInvoked.HandlerType == typeof(CommandThrowingMessageHandler));
+
+                var handlerInvokedCount = collector
+                    .Messages
+                    .Select(message => message.Payload)
+                    .OfType<Endpoint1HandlerInvoked>()
+                    .Count();
+
+                Assert.Equal(expectedRetryCounts, actualRetryCounts);
+                Assert.Equal(8, collector.Messages.Count);
+                Assert.Equal(4, handlerInvokedCount);
+                Assert.Equal(4, commandEmptyMessageHandlerInvokesCount);
+                Assert.Equal(0, commandThrowingMessageHandlerInvokesCount);
             }
         }
 
@@ -438,18 +458,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
-                collector.ShowErrorMessages(Output.WriteLine);
-                collector.ShowMessages(Output.WriteLine);
-
                 Assert.Empty(collector.ErrorMessages);
-
-                var expectedMessageTypes = new[]
-                {
-                    typeof(PublishInheritedEventCommand),
-                    typeof(InheritedEvent)
-                };
-
-                Assert.Equal(expectedMessageTypes, collector.Messages.Take(2).Select(message => message.Payload.GetType()).ToList());
+                Assert.Equal(5, collector.Messages.Count);
+                var messages = collector.Messages.Take(2).ToArray();
+                Assert.Equal(typeof(PublishInheritedEventCommand), messages[0].Payload.GetType());
+                Assert.Equal(typeof(InheritedEvent), messages[1].Payload.GetType());
+                Assert.True(messages.Skip(2).All(message => message.Payload is Endpoint1HandlerInvoked));
             }
         }
 
@@ -512,9 +526,52 @@ namespace SpaceEngineers.Core.Modules.Test
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 Assert.Single(collector.ErrorMessages);
-                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), collector.ErrorMessages.Single().exception.Message);
-                Assert.Equal(3, collector.ErrorMessages.Single().message.ReadHeader<RetryCounter>()?.Value);
-                Assert.Equal(new[] { 0, 1, 2, 3 }, collector.Messages.Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int)).ToList());
+                var (errorMessage, exception) = collector.ErrorMessages.Single();
+                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
+                Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>()?.Value);
+
+                var expectedRetryCounters = new[] { 0, 1, 2, 3 };
+                var actualRetryCounters = collector
+                    .Messages
+                    .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
+                    .ToList();
+
+                Assert.Equal(expectedRetryCounters, actualRetryCounters);
+
+                var actualDeliveries = collector
+                    .Messages
+                    .Select(message => message.ReadHeader<ActualDeliveryDate>()?.Value ?? default(DateTime))
+                    .ToList();
+
+                var latency = 200;
+
+                var expectedDeliveryDelays = new[]
+                {
+                    0,
+                    1000,
+                    2000
+                };
+
+                var actualDeliveryDelays = actualDeliveries
+                    .Zip(actualDeliveries.Skip(1))
+                    .Select(period => period.Second - period.First)
+                    .Select(span => span.TotalMilliseconds)
+                    .ToList();
+
+                Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
+
+                Assert.True(actualDeliveryDelays
+                    .Zip(expectedDeliveryDelays)
+                    .All(delays =>
+                    {
+                        var actualDelay = (int)delays.First;
+                        var expectedDelay = delays.Second;
+                        var leftBorder = expectedDelay;
+                        var rightBorder = expectedDelay + latency;
+
+                        Output.WriteLine($"{leftBorder} - {actualDelay} - {rightBorder}");
+                        return leftBorder <= actualDelay && actualDelay <= rightBorder;
+                    }));
             }
         }
 

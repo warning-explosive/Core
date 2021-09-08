@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using Basics;
     using Basics.Primitives;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
@@ -42,16 +41,6 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
             OnCollected?.Invoke(this, new MessageCollectedEventArgs(message, exception));
 
             return Task.CompletedTask;
-        }
-
-        public void ShowMessages(Action<string> log)
-        {
-            Messages.Each(message => log(message.ToString()));
-        }
-
-        public void ShowErrorMessages(Action<string> log)
-        {
-            ErrorMessages.Each(message => log($"{message.message} [Exception, {message.exception?.Message}]"));
         }
 
         public async Task WaitUntilErrorMessageIsNotReceived(

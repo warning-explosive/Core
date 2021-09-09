@@ -131,6 +131,8 @@ build:
 before_build:
 - nuget restore
 - ps: gitversion /l console /output buildserver /updateAssemblyInfo
+- choco install opencover.portable
+- choco install codecov
 
 # scripts to run after build (working directory and environment changes are persisted from the previous steps)
 after_build:
@@ -209,25 +211,64 @@ test_script:
       # patterns
       $test = "(.)+.Test"
       $benchmark = "(.)+.Benchmark"
+      $csproj = "*.csproj"
 
-      $artifact = ".\xunit-results.xml"
+      # constants
+      $bin = "bin"
+      $targetFramework = "net5.0"
+      $location = Get-Location
+      $configuration = $env:CONFIGURATION
       $isReleaseConfiguration = ($env:CONFIGURATION -eq "Release")
-      $loc = Get-Location
-      Show $loc
+
+      Show "Location: ${location}"
+      Show "Configuration: ${configuration}"
+      Show "Is release configuration: ${isReleaseConfiguration}"
 
       $errorState = $LastExitCode
 
-      Get-ChildItem -Path $loc -Filter *.csproj -Recurse -File -Name| ForEach-Object {
-          $fileName = [System.IO.Path]::GetFileName($_)
-          $projectRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
-          $isTest = $fileName -match $test
-          $isBenchmark = $fileName -match $benchmark
+      Get-ChildItem -Path $location -Filter $csproj -Recurse -File -Name | ForEach-Object {
 
-          if ($isTest -or ($isBenchmark -and $isReleaseConfiguration)) {
-              $csprojAbsolutePath = [System.IO.Path]::Combine($loc, $projectRelativeDirectory, $fileName)
-              $runTests = "dotnet test '$csprojAbsolutePath' --configuration '$env:CONFIGURATION' --no-build /property:Platform=AnyCPU"
+          # .csproj
+          $csprojFileName = [System.IO.Path]::GetFileName($_)
+          $csprojRelativeDirectory = [System.IO.Path]::GetDirectoryName($_)
+          $csprojAbsolutePath = [System.IO.Path]::Combine($location, $csprojRelativeDirectory, $csprojFileName)
+
+          # .dll
+          $dllFileName = [System.IO.Path]::GetFileNameWithoutExtension($csprojFileName)
+          $dllRelativeDirectory = [System.IO.Path]::Combine($csprojRelativeDirectory, $bin, $configuration, $targetFramework)
+          $dllAbsoluteDirectory = [System.IO.Path]::Combine($location, $csprojRelativeDirectory, $bin, $configuration, $targetFramework)
+
+          $isTest = $csprojFileName -match $test
+          $isBenchmark = $csprojFileName -match $benchmark
+
+          if ([System.IO.Directory]::Exists($dllAbsoluteDirectory) -and ($isTest -or ($isBenchmark -and $isReleaseConfiguration))) {
+
+              # run tests or benchmarks
+              $runTests = "dotnet test '${csprojAbsolutePath}' --configuration '${configuration}' --no-build /property:Platform=AnyCPU"
               Show $runTests
               Invoke-Expression $runTests
+
+              if ($LastExitCode -ne 0) {
+                  $errorState = $LastExitCode
+              }
+
+              # run code coverage
+              $dllSearchPattern = "*${dllFileName}.dll"
+
+              Get-ChildItem -Path $dllAbsoluteDirectory -Filter $dllSearchPattern -File -Name | ForEach-Object {
+
+                  $actualdllFileName = [System.IO.Path]::GetFileName($_)
+                  $actualDllRelativePath = [System.IO.Path]::Combine($dllRelativeDirectory, $actualdllFileName)
+
+                  $runCodeCoverage = "OpenCover.Console.exe -register:user -target:""%xunit20%\xunit.console.x86.exe"" -targetargs:"".\${actualDllRelativePath} -noshadow"" -output:"".\${dllFileName}_coverage.xml"""
+                  Show $runCodeCoverage
+                  Invoke-Expression $runCodeCoverage
+
+                  $publishCodeCoverage = "codecov -f ""${dllFileName}_coverage.xml"""
+                  Show $publishCodeCoverage
+                  Invoke-Expression $publishCodeCoverage
+              }
+
               if ($LastExitCode -ne 0) {
                   $errorState = $LastExitCode
               }

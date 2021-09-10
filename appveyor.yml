@@ -91,9 +91,6 @@ for:
       - /release-(\d)+.(\d)+.(\d)+/
       - /hotfix-(\d)+.(\d)+.(\d)+/
       - /support-(\d)+.(\d)+.(\d)+/
-      - develop
-      - /feature-(\d)+/
-      - /pull-request-(\d)+/
 
 # debug job filter
 -
@@ -247,10 +244,13 @@ test_script:
               $runTests = "dotnet test '${csprojAbsolutePath}' --configuration '${configuration}' --no-build /property:Platform=AnyCPU"
               Show $runTests
               Invoke-Expression $runTests
+          }
 
-              if ($LastExitCode -ne 0) {
-                  $errorState = $LastExitCode
-              }
+          if ($LastExitCode -ne 0) {
+              $errorState = $LastExitCode
+          }
+
+          if ([System.IO.Directory]::Exists($dllAbsoluteDirectory) -and $isTest) {
 
               # run code coverage
               $dllSearchPattern = "*${dllFileName}.dll"
@@ -260,7 +260,7 @@ test_script:
                   $actualdllFileName = [System.IO.Path]::GetFileName($_)
                   $actualDllRelativePath = [System.IO.Path]::Combine($dllRelativeDirectory, $actualdllFileName)
 
-                  $runCodeCoverage = "OpenCover.Console.exe -register:user -target:""%xunit20%\xunit.console.x86.exe"" -targetargs:"".\${actualDllRelativePath} -noshadow"" -output:"".\${dllFileName}_coverage.xml"""
+                  $runCodeCoverage = "OpenCover.Console.exe ""-register:user"" ""-target:dotnet.exe"" ""-targetargs:test .\${actualDllRelativePath}"" ""-filter:+[SpaceEngineers.Core.*]*"" ""-output:.\${dllFileName}_coverage.xml"" ""-skipautoprops"" ""-oldstyle"""
                   Show $runCodeCoverage
                   Invoke-Expression $runCodeCoverage
 
@@ -268,10 +268,10 @@ test_script:
                   Show $publishCodeCoverage
                   Invoke-Expression $publishCodeCoverage
               }
+          }
 
-              if ($LastExitCode -ne 0) {
-                  $errorState = $LastExitCode
-              }
+          if ($LastExitCode -ne 0) {
+              $errorState = $LastExitCode
           }
       }
 

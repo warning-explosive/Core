@@ -117,29 +117,29 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(queue.IsEmpty);
 
             var publishersCount = 10;
-            var count = 100;
+            var publicationsCount = 100;
+
+            var step = TimeSpan.FromMilliseconds(10);
+            var startFrom = DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(100));
+
             var actualCount = 0;
-            var step = TimeSpan.FromMilliseconds(1);
-            var now = DateTime.UtcNow;
-            var startFrom = now.Add(TimeSpan.FromMilliseconds(100));
-            var started = now;
+            var expectedCount = publishersCount * publicationsCount;
+
+            var started = DateTime.UtcNow;
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 var token = cts.Token;
 
-                var deferredDeliveryOperation = queue.Run(Callback, token);
+                var deferredDeliveryOperation = queue.Run(Callback(cts), token);
+
                 var publishers = Enumerable.Range(0, publishersCount)
-                    .Select(i => Task.Run(() => StartPublishing(queue, count, startFrom.Add(i * step / publishersCount), step, token), token))
+                    .Select(i => Task.Run(() => StartPublishing(queue, publicationsCount, startFrom.Add(step * i), step, token), token))
                     .ToList();
-
-                await Task.WhenAll(publishers).ConfigureAwait(false);
-                await Task.Delay(TimeSpan.FromMilliseconds(100), token).ConfigureAwait(false);
-
-                cts.Cancel();
 
                 try
                 {
+                    await Task.WhenAll(publishers).ConfigureAwait(false);
                     await deferredDeliveryOperation.ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
@@ -152,26 +152,34 @@ namespace SpaceEngineers.Core.Basics.Test
             Output.WriteLine(duration.ToString());
 
             Assert.True(queue.IsEmpty);
-            Assert.Equal(publishersCount * count, actualCount);
+            Assert.Equal(expectedCount, actualCount);
 
-            Task Callback(Entry entry, CancellationToken token)
+            Func<Entry, CancellationToken, Task> Callback(CancellationTokenSource cts)
             {
-                Interlocked.Increment(ref actualCount);
-                return Task.CompletedTask;
+                return (_, _) =>
+                {
+                    Interlocked.Increment(ref actualCount);
+
+                    if (expectedCount == actualCount)
+                    {
+                        cts.Cancel();
+                    }
+
+                    return Task.CompletedTask;
+                };
             }
-        }
 
-        private static async Task StartPublishing(
-            DeferredQueue<Entry> queue,
-            int count,
-            DateTime startFrom,
-            TimeSpan step,
-            CancellationToken token)
-        {
-            for (var i = 1; i <= count; i++)
+            static async Task StartPublishing(
+                IAsyncQueue<Entry> queue,
+                int publicationsCount,
+                DateTime startFrom,
+                TimeSpan step,
+                CancellationToken token)
             {
-                await Task.Delay(step, token).ConfigureAwait(false);
-                queue.Enqueue(new Entry(i, startFrom.Add(i * step)));
+                for (var i = 1; i <= publicationsCount; i++)
+                {
+                    await queue.Enqueue(new Entry(i, startFrom.Add(step * i)), token).ConfigureAwait(false);
+                }
             }
         }
 

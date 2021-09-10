@@ -25,6 +25,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TieredCompilation>true</TieredCompilation>
+    <DebugType>full</DebugType>
     <Library />
 </PropertyGroup>
 <ItemGroup>

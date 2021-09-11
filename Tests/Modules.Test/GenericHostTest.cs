@@ -15,7 +15,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using DataAccess.PostgreSql.Host;
+    using DataAccess.Orm;
+    using DataAccess.Orm.InMemoryDatabase;
+    using DataAccess.Orm.PostgreSql;
     using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -26,6 +28,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.TestExtensions;
+    using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
     using GenericHost.Api.Abstractions;
     using InMemoryIntegrationTransport.Host;
@@ -38,7 +41,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using Microsoft.Extensions.Hosting;
     using Mocks;
     using Registrations;
-    using StatisticsEndpoint.Contract.Messages;
+    using TracingEndpoint.Contract;
+    using TracingEndpoint.Contract.Messages;
+    using TracingEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
     using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
@@ -83,7 +88,8 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             return DependencyContainerTestData()
-                .SelectMany(it => integrationTransportProviders.Select(provider => it.Concat(new[] { provider }).ToArray()));
+                .SelectMany(useContainer => integrationTransportProviders
+                    .Select(useTransport => useContainer.Concat(new[] { useTransport }).ToArray()));
         }
 
         /// <summary>
@@ -94,18 +100,19 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var collector = new MessagesCollector();
+            var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
                 .UseInMemoryIntegrationTransport(options => options
-                    .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(collector))));
+                    .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector))));
 
-            var integrationTransportProviders = new object[]
+            var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport
+                new object[] { useInMemoryIntegrationTransport, inMemoryIntegrationTransportCollector }
             };
 
             return DependencyContainerTestData()
-                .SelectMany(it => integrationTransportProviders.Select(provider => it.Concat(new[] { provider, collector, timeout }).ToArray()));
+                .SelectMany(useContainer => integrationTransportProviders
+                    .Select(useTransport => useContainer.Concat(useTransport).Concat(new object[] { timeout }).ToArray()));
         }
 
         /// <summary>
@@ -116,52 +123,65 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var databaseProviders = new object[]
+            var inMemoryIntegrationTransportCollector = new MessagesCollector();
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
+                .UseInMemoryIntegrationTransport(options => options
+                    .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector))));
+
+            var integrationTransportProviders = new[]
             {
-                new PostgreSqlDatabaseProvider()
+                new object[] { useInMemoryIntegrationTransport, inMemoryIntegrationTransportCollector }
             };
 
-            return BuildHostTestData()
-                .SelectMany(it => databaseProviders.Select(provider => it.Concat(new[] { provider, timeout }).ToArray()));
+            var databaseProviders = new object[]
+            {
+                new PostgreSqlDatabaseProvider(),
+                new InMemoryDatabaseProvider()
+            };
+
+            return DependencyContainerTestData()
+                .SelectMany(useContainer => integrationTransportProviders
+                    .SelectMany(useTransport => databaseProviders
+                        .Select(databaseProvider => useContainer.Concat(useTransport).Concat(new[] { databaseProvider, timeout }).ToArray())));
         }
 
         [Fact(Timeout = 60_000)]
         /*[MemberData(nameof(RunHostWithDataAccessTestData))]*/
         internal void BuildDatabaseModelTest()
         {
-            /* TODO: #110
-            var statisticsEndpointIdentity = new EndpointIdentity(StatisticsEndpointIdentity.LogicalName, 0);
+            // TODO: #110
+            /*var tracingEndpointIdentity = new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0);
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
-                .UseStatisticsEndpoint(builder => builder
+                .UseTracingEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
-                    .BuildOptions(statisticsEndpointIdentity))
+                    .BuildOptions(tracingEndpointIdentity))
                 .BuildHost();
 
-            _ = timeout;
-            return Task.CompletedTask;
+            var tracingEndpointContainer = host.GetEndpointDependencyContainer(tracingEndpointIdentity);
+
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
-                var container = host.GetEndpointDependencyContainer(statisticsEndpointIdentity);
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                var actualModel = await container
+                var actualModel = await tracingEndpointContainer
                     .Resolve<IDatabaseModelBuilder>()
                     .BuildModel(cts.Token)
                     .ConfigureAwait(false);
 
-                var expectedModel = await container
+                var expectedModel = await tracingEndpointContainer
                     .Resolve<ICodeModelBuilder>()
                     .BuildModel(cts.Token)
                     .ConfigureAwait(false);
 
-                var modelChanges = host
-                    .GetEndpointDependencyContainer(statisticsEndpointIdentity)
+                var modelChanges = tracingEndpointContainer
                     .Resolve<IDatabaseModelComparator>()
                     .ExtractDiff(actualModel, expectedModel)
                     .ToList();
@@ -169,16 +189,58 @@ namespace SpaceEngineers.Core.Modules.Test
                 modelChanges.Each(change => Output.WriteLine(change.ToString()));
                 Assert.NotEmpty(modelChanges);
 
-                var createDatabase = modelChanges.OfType<CreateDatabase>().Single();
-                Assert.Equal("SpaceEngineersDatabase", createDatabase.Name);
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }*/
+        }
 
-                var upsertViewChanges = modelChanges.OfType<UpsertView>().ToList();
-                Assert.NotNull(upsertViewChanges.SingleOrDefault(change => change.Type == typeof(DatabaseColumn)));
-                Assert.NotNull(upsertViewChanges.SingleOrDefault(change => change.Type == typeof(DatabaseView)));
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        internal async Task GetConversationTraceTest(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            MessagesCollector collector,
+            IDatabaseProvider databaseProvider,
+            TimeSpan timeout)
+        {
+            Output.WriteLine(databaseProvider.GetType().FullName);
+
+            var tracingEndpointIdentity = new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0);
+
+            var host = useTransport(Host.CreateDefaultBuilder())
+                .UseContainer(useContainer)
+                .UseTracingEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithDataAccess(databaseProvider)
+                    .BuildOptions(tracingEndpointIdentity))
+                .BuildHost();
+
+            var container = host.GetTransportDependencyContainer();
+
+            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+
+            using (host)
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                // TODO: capture several messages
+                /*var integrationContext = container.Resolve<IIntegrationContext>();*/
+
+                /*var conversationId = Guid.NewGuid();
+
+                var trace = await container
+                    .Resolve<IIntegrationContext>()
+                    .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
+                    .ConfigureAwait(false);
+
+                Output.WriteLine(trace.ToString());*/
+
+                _ = collector;
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
-            */
         }
 
         [Theory(Timeout = 60_000)]
@@ -662,11 +724,11 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
+                    .WithTracing()
                     .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
+                    .WithTracing()
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
@@ -759,7 +821,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
+                    .WithTracing()
                     .ModifyContainerOptions(options => options
                         .WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(endpointIdentity))
@@ -827,7 +889,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     {
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.ErrorHandlingPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.UnitOfWorkPipeline),
-                        typeof(SpaceEngineers.Core.GenericEndpoint.Statistics.Internals.StatisticsPipeline),
+                        typeof(TracingPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.QueryReplyValidationPipeline),
                         typeof(SpaceEngineers.Core.GenericEndpoint.Pipeline.MessageHandlerPipeline),
                     };
@@ -855,9 +917,9 @@ namespace SpaceEngineers.Core.Modules.Test
                         typeof(OpenGenericHandlerCommand),
                         typeof(Query),
                         typeof(Reply),
-                        typeof(CaptureMessageStatistics),
-                        typeof(GetEndpointStatistics),
-                        typeof(EndpointStatisticsReply)
+                        typeof(CaptureTrace),
+                        typeof(GetConversationTrace),
+                        typeof(ConversationTrace)
                     };
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
@@ -1022,7 +1084,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
+                    .WithTracing()
                     .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
                 .BuildHost();
 
@@ -1053,7 +1115,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
-                    .WithStatistics()
+                    .WithTracing()
                     .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
                 .BuildHost();
 

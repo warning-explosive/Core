@@ -7,3 +7,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.InMemoryIntegrationTransport.Host")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.InMemoryIntegrationTransport.Endpoint")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]

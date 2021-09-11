@@ -6,3 +6,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.CompositionRoot")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]

@@ -4,14 +4,14 @@
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
     using Npgsql;
-    using Orm.Connection;
     using Settings;
+    using Sql.Connection;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IDatabaseTransaction, IDisposable
@@ -32,8 +32,15 @@
 
         public bool HasChanges => throw new NotImplementedException("#131 - track domain entities");
 
+        public Task Track(IAggregate aggregate, CancellationToken token)
+        {
+            throw new NotImplementedException("#131 - track domain entities");
+        }
+
         public async Task<IDbTransaction> Open(CancellationToken token)
         {
+            // TODO: #150 - support manually opened nested transactions
+            // TODO: #151 - work with single, app wide connection
             if (_connection?.State == ConnectionState.Open
                 && _transaction != null)
             {
@@ -81,12 +88,6 @@
         public void Dispose()
         {
             Close(false, CancellationToken.None).Wait();
-        }
-
-        public void Track<TAggregate>(TAggregate aggregate)
-            where TAggregate : class, IAggregate
-        {
-            throw new NotImplementedException("#131 - track domain entities");
         }
     }
 }

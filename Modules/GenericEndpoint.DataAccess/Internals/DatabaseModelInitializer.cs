@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Core.DataAccess.Orm.Model.Abstractions;
+    using Core.DataAccess.Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelInitializer : IEndpointInitializer,

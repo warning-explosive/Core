@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Abstractions
     using System.Reflection;
     using CompositionRoot;
     using Contract;
+    using Core.DataAccess.Orm;
 
     /// <summary>
     /// IEndpointBuilder
@@ -31,10 +32,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Abstractions
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider);
 
         /// <summary>
-        /// Adds statistics pipeline into message processing in order to grab and store processing results
+        /// Adds tracing pipeline into message processing so as to collect and store message processing information
         /// </summary>
         /// <returns>IEndpointBuilder</returns>
-        public IEndpointBuilder WithStatistics();
+        public IEndpointBuilder WithTracing();
 
         /// <summary>
         /// Modify container options

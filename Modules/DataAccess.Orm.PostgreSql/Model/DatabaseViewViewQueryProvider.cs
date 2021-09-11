@@ -1,20 +1,23 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Contract.Abstractions;
     using CrossCuttingConcerns.Api.Abstractions;
     using Settings;
+    using Sql.Model;
+    using Sql.Views;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseViewViewQueryProvider : IViewQueryProvider<DatabaseView>
+    internal class DatabaseViewViewQueryProvider : ISqlViewQueryProvider<DatabaseView, Guid>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
+    TODO as ""{nameof(DatabaseView.PrimaryKey)}"",
     substring(table_name, {{0}}) as ""{nameof(DatabaseView.Name)}"",
 	view_definition as ""{nameof(DatabaseView.Query)}""
 from INFORMATION_SCHEMA.views

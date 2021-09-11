@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Implementations
     using Basics;
     using CompositionRoot;
     using Contract;
+    using Core.DataAccess.Orm;
     using Overrides;
 
     internal class EndpointBuilder : IEndpointBuilder
@@ -66,13 +67,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Implementations
             };
         }
 
-        public IEndpointBuilder WithStatistics()
+        public IEndpointBuilder WithTracing()
         {
-            var genericEndpointStatisticsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Statistics)));
+            var genericEndpointTracingAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Tracing)));
 
             return new EndpointBuilder
             {
-                EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(new[] { genericEndpointStatisticsAssembly }).ToList(),
+                EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(new[] { genericEndpointTracingAssembly }).ToList(),
                 Modifiers = Modifiers
             };
         }

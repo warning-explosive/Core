@@ -45,10 +45,10 @@
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.SimpleInjector\CompositionRoot.SimpleInjector.csproj" />
     <ProjectReference Include="..\..\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
     <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-    <ProjectReference Include="..\..\Modules\DataAccess.Contract\DataAccess.Contract.csproj" />
+    <ProjectReference Include="..\..\Modules\DataAccess.Api\DataAccess.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\DataAccess.Orm.InMemoryDatabase\DataAccess.Orm.InMemoryDatabase.csproj" />
     <ProjectReference Include="..\..\Modules\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
     <ProjectReference Include="..\..\Modules\DataAccess.Orm\DataAccess.Orm.csproj" />
-    <ProjectReference Include="..\..\Modules\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj" />
     <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
     <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
     <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
@@ -60,8 +60,8 @@
     <ProjectReference Include="..\..\Modules\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
     <ProjectReference Include="..\..\Modules\IntegrationTransport\IntegrationTransport.csproj" />
     <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
-    <ProjectReference Include="..\..\Modules\StatisticsEndpoint.Host\StatisticsEndpoint.Host.csproj" />
-    <ProjectReference Include="..\..\Modules\StatisticsEndpoint\StatisticsEndpoint.csproj" />
+    <ProjectReference Include="..\..\Modules\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
+    <ProjectReference Include="..\..\Modules\TracingEndpoint\TracingEndpoint.csproj" />
     <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -29,19 +29,19 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-        <HintPath>..\..\packages\microsoft.extensions.dependencyinjection.abstractions\5.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
-      </Reference>
-      <Reference Include="Microsoft.Extensions.Hosting.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-        <HintPath>..\..\packages\microsoft.extensions.hosting.abstractions\5.0.0\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-    <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Statistics\GenericEndpoint.Statistics.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Tracing\GenericEndpoint.Tracing.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+            <HintPath>..\..\packages\microsoft.extensions.dependencyinjection.abstractions\5.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Extensions.Hosting.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+            <HintPath>..\..\packages\microsoft.extensions.hosting.abstractions\5.0.0\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+        </Reference>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

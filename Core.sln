@@ -37,19 +37,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PathResolver", "Modules\Pat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataImport", "Modules\DataImport\DataImport.csproj", "{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Contract", "Modules\DataAccess.Contract\DataAccess.Contract.csproj", "{A2C1EE02-85B4-402D-B9FC-7108D78505DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Api", "Modules\DataAccess.Api\DataAccess.Api.csproj", "{A2C1EE02-85B4-402D-B9FC-7108D78505DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Orm", "Modules\DataAccess.Orm\DataAccess.Orm.csproj", "{649C195C-64ED-45F7-9C52-C43E629785FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Orm.PostgreSql", "Modules\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj", "{53D32B77-0EE7-4EB0-ADEE-529E2A600E86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.PostgreSql.Host", "Modules\DataAccess.PostgreSql.Host\DataAccess.PostgreSql.Host.csproj", "{6CE85142-75B1-45D3-9005-C01DD43BA64F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Orm.InMemoryDatabase", "Modules\DataAccess.Orm.InMemoryDatabase\DataAccess.Orm.InMemoryDatabase.csproj", "{6CE85142-75B1-45D3-9005-C01DD43BA64F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dynamic", "Modules\Dynamic\Dynamic.csproj", "{AD537FBF-58EC-472A-B770-50FFCFB962CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericDomain.Api", "Modules\GenericDomain.Api\GenericDomain.Api.csproj", "{7AAB33F4-ADE8-44E2-A9F1-AF28D8B3E0CB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericDomain", "Modules\GenericDomain\GenericDomain.csproj", "{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint", "Modules\GenericEndpoint\GenericEndpoint.csproj", "{5AE81410-00A5-498F-98DD-1EAC0DC7F62E}"
 EndProject
@@ -61,7 +59,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Messaging",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.DataAccess", "Modules\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj", "{9C1F2333-2934-48CB-8600-43AE14AAF4C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Statistics", "Modules\GenericEndpoint.Statistics\GenericEndpoint.Statistics.csproj", "{7B786860-81DD-4B5C-88AD-DC62EC0FE07D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Tracing", "Modules\GenericEndpoint.Tracing\GenericEndpoint.Tracing.csproj", "{7B786860-81DD-4B5C-88AD-DC62EC0FE07D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Host", "Modules\GenericEndpoint.Host\GenericEndpoint.Host.csproj", "{13D73582-68CF-43A1-B340-59BDB56AF69F}"
 EndProject
@@ -79,11 +77,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InMemoryIntegrationTranspor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InMemoryIntegrationTransport.Host", "Modules\InMemoryIntegrationTransport.Host\InMemoryIntegrationTransport.Host.csproj", "{473B3C8F-7CCB-4755-BA37-3641D6702D8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatisticsEndpoint", "Modules\StatisticsEndpoint\StatisticsEndpoint.csproj", "{B1EF4BE8-DEF9-4AA8-B3E2-0C76A3CAE229}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TracingEndpoint", "Modules\TracingEndpoint\TracingEndpoint.csproj", "{B1EF4BE8-DEF9-4AA8-B3E2-0C76A3CAE229}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatisticsEndpoint.Contract", "Modules\StatisticsEndpoint.Contract\StatisticsEndpoint.Contract.csproj", "{4302B7D0-7E03-4326-AB76-BCE26D3D0E9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TracingEndpoint.Contract", "Modules\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj", "{4302B7D0-7E03-4326-AB76-BCE26D3D0E9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatisticsEndpoint.Host", "Modules\StatisticsEndpoint.Host\StatisticsEndpoint.Host.csproj", "{B2767F31-E791-4C16-8527-AF5B4B545A51}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TracingEndpoint.Host", "Modules\TracingEndpoint.Host\TracingEndpoint.Host.csproj", "{B2767F31-E791-4C16-8527-AF5B4B545A51}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{765D12D8-3CE5-4292-B159-81A6DF3869C7}"
 EndProject
@@ -100,6 +98,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modules.Test", "Tests\Modules.Test\Modules.Test.csproj", "{E5845FF6-CBAD-433A-A739-EA800F37BC7F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Roslyn.Test", "Tests\Roslyn.Test\Roslyn.Test.csproj", "{33D10043-5F94-4A0A-9C11-6DA21FF8310F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Orm.Sql", "Modules\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj", "{374CF98E-55C9-4493-9210-9175F55FD4BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -155,10 +155,6 @@ Global
 		{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -275,6 +271,10 @@ Global
 		{7AAB33F4-ADE8-44E2-A9F1-AF28D8B3E0CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AAB33F4-ADE8-44E2-A9F1-AF28D8B3E0CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AAB33F4-ADE8-44E2-A9F1-AF28D8B3E0CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{374CF98E-55C9-4493-9210-9175F55FD4BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{374CF98E-55C9-4493-9210-9175F55FD4BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{374CF98E-55C9-4493-9210-9175F55FD4BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{374CF98E-55C9-4493-9210-9175F55FD4BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -285,7 +285,6 @@ Global
 		{168E7C2A-6CAC-4CCC-AFBD-7F123FC43E31} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{5AE81410-00A5-498F-98DD-1EAC0DC7F62E} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{C12B52D3-D0D8-4344-BF61-1C7CEB80EC64} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
-		{A584F8D8-F296-4EE3-8216-55B1EC7CFF85} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{BF9BA36A-8F87-4EB0-BBBA-AE0A18B867CD} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{A2C1EE02-85B4-402D-B9FC-7108D78505DC} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 		{96093DD9-5D07-44B3-9BF5-BE099E8EAF91} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
@@ -321,6 +320,7 @@ Global
 		{6C377719-AD3D-40F7-B8BB-D7F4040B7233} = {CAB2EF9F-1D44-4B12-AA3D-BE2E508E0351}
 		{220266BC-E486-4D32-A470-5913CB3C9228} = {CAB2EF9F-1D44-4B12-AA3D-BE2E508E0351}
 		{7AAB33F4-ADE8-44E2-A9F1-AF28D8B3E0CB} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
+		{374CF98E-55C9-4493-9210-9175F55FD4BD} = {C01667ED-90ED-4F1E-9356-18F76E16BDFE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

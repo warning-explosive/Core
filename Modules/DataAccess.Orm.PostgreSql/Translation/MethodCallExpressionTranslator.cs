@@ -8,9 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Expressions;
-    using Linq.Internals;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class MethodCallExpressionTranslator : IExpressionTranslator<MethodCallExpression>

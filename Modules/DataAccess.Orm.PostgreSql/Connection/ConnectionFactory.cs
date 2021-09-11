@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
-    using Orm.Connection;
     using Settings;
+    using Sql.Connection;
 
     [Component(EnLifestyle.Singleton)]
     internal class ConnectionFactory : IConnectionFactory
@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return connection;
         }
 
-        public async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
+        private async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
         {
             using (await OpenConnection(token).ConfigureAwait(false))
             {

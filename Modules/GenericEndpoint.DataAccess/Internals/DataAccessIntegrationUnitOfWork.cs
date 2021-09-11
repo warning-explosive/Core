@@ -3,10 +3,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics.Primitives;
-    using Core.DataAccess.Contract.Abstractions;
-    using GenericEndpoint.Abstractions;
+    using Core.DataAccess.Api.Abstractions;
     using Messaging;
 
     [ComponentOverride]

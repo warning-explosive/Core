@@ -6,5 +6,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Host")]
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Statistics")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Tracing")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]

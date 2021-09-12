@@ -67,12 +67,20 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         private Type CloseByConstraintsInternal(Type type, Func<TypeArgumentSelectionContext, Type?> selector)
         {
-            var args = type.GetGenericTypeDefinition()
-                           .GetGenericArguments()
-                           .Select((typeArgument, at) => CloseByConstraints(SingleSatisfyingType(type, at, selector), selector))
-                           .ToArray();
+            var resolved = new List<Type>();
 
-            var closed = type.MakeGenericType(args);
+            var argsCount = type
+                .GetGenericTypeDefinition()
+                .GetGenericArguments()
+                .Length;
+
+            for (var at = 0; at < argsCount; at++)
+            {
+                var typeArgument = CloseByConstraints(SingleSatisfyingType(type, at, selector, resolved), selector);
+                resolved.Add(typeArgument);
+            }
+
+            var closed = type.MakeGenericType(resolved.ToArray());
 
             if (!AlreadyClosed(closed))
             {
@@ -88,11 +96,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
                    || type.IsConstructedGenericType;
         }
 
-        private Type SingleSatisfyingType(Type genericType, int at, Func<TypeArgumentSelectionContext, Type?> selector)
+        private Type SingleSatisfyingType(
+            Type genericType,
+            int at,
+            Func<TypeArgumentSelectionContext, Type?> selector,
+            IReadOnlyCollection<Type> resolved)
         {
-            var matches = AllSatisfyingTypesAt(genericType, at);
+            var matches = AllSatisfyingTypesAt(genericType, at).ToList();
             var typeArgument = genericType.GetGenericArguments()[at];
-            var selectionContext = new TypeArgumentSelectionContext(genericType, typeArgument, matches);
+            var selectionContext = new TypeArgumentSelectionContext(genericType, typeArgument, matches, resolved);
 
             return selector(selectionContext).EnsureNotNull($"Satisfying type for type argument {typeArgument} in {genericType} not found");
         }

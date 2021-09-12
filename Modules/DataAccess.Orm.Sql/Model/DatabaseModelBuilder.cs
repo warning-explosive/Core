@@ -17,21 +17,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
-        private readonly IConnectionFactory _connectionFactory;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public DatabaseModelBuilder(
             IDependencyContainer dependencyContainer,
             IDatabaseTypeProvider databaseTypeProvider,
-            IConnectionFactory connectionFactory)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
             _databaseTypeProvider = databaseTypeProvider;
-            _connectionFactory = connectionFactory;
+            _connectionProvider = connectionProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
-            var databaseExists = await _connectionFactory
+            var databaseExists = await _connectionProvider
                 .DoesDatabaseExist(token)
                 .ConfigureAwait(false);
 
@@ -39,10 +39,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             {
                 return default;
             }
-
-            var database = await _connectionFactory
-                .GetDatabaseName(token)
-                .ConfigureAwait(false);
 
             await using (_dependencyContainer.OpenScopeAsync())
             {
@@ -65,7 +61,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .Select(BuildViewNode)
                     .ToList();
 
-                return new DatabaseNode(database, tables, views);
+                return new DatabaseNode(_connectionProvider.Database, tables, views);
             }
         }
 

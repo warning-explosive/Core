@@ -1,29 +1,31 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Connection
+namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System.Data;
-    using System.Data.Common;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
 
     /// <summary>
-    /// IConnectionFactory
+    /// IDatabaseConnectionProvider
     /// </summary>
-    public interface IConnectionFactory : IResolvable
+    public interface IDatabaseConnectionProvider : IResolvable
     {
+        /// <summary>
+        /// Database
+        /// </summary>
+        string Database { get; }
+
+        /// <summary>
+        /// Isolation level
+        /// </summary>
+        IsolationLevel IsolationLevel { get; }
+
         /// <summary>
         /// Checks does the database exist
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing check operation</returns>
         Task<bool> DoesDatabaseExist(CancellationToken token);
-
-        /// <summary>
-        /// Gets connection string
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token);
 
         /// <summary>
         /// Opens DB connection

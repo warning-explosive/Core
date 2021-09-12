@@ -10,21 +10,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
+    using Orm.Connection;
     using Settings;
-    using Sql.Connection;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ConnectionFactory : IConnectionFactory
+    internal class DatabaseConnectionProvider : IDatabaseConnectionProvider
     {
         private const string SqlState = nameof(SqlState);
         private const string DatabaseDoesNotExistCode = "3D000";
 
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
+        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _settingsProvider;
 
-        public ConnectionFactory(ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
+        public DatabaseConnectionProvider(ISettingsProvider<PostgreSqlDatabaseSettings> settingsProvider)
         {
-            _databaseSettings = databaseSettings;
+            _settingsProvider = settingsProvider;
         }
+
+        public string Database => Settings(CancellationToken.None).Result.Database;
+
+        public IsolationLevel IsolationLevel => Settings(CancellationToken.None).Result.IsolationLevel;
 
         public Task<bool> DoesDatabaseExist(CancellationToken token)
         {
@@ -32,22 +36,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .TryAsync(DoesDatabaseExistUnsafe)
                 .Catch<PostgresException>()
                 .Invoke(DatabaseDoesNotExist, token);
-        }
-
-        public async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
-        {
-            var databaseSettings = await _databaseSettings
-                .Get(token)
-                .ConfigureAwait(false);
-
-            return new NpgsqlConnectionStringBuilder
-            {
-                Host = databaseSettings.Host,
-                Port = databaseSettings.Port,
-                Database = databaseSettings.Database,
-                Username = databaseSettings.Username,
-                Password = databaseSettings.Password
-            };
         }
 
         public async Task<IDbConnection> OpenConnection(CancellationToken token)
@@ -76,6 +64,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                    && sqlStateCode.Equals(DatabaseDoesNotExistCode, StringComparison.OrdinalIgnoreCase)
                 ? Task.FromResult(false)
                 : Task.FromResult(true);
+        }
+
+        private Task<PostgreSqlDatabaseSettings> Settings(CancellationToken token)
+        {
+            return _settingsProvider.Get(token);
+        }
+
+        private async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
+        {
+            var databaseSettings = await Settings(token).ConfigureAwait(false);
+
+            return new NpgsqlConnectionStringBuilder
+            {
+                Host = databaseSettings.Host,
+                Port = databaseSettings.Port,
+                Database = databaseSettings.Database,
+                Username = databaseSettings.Username,
+                Password = databaseSettings.Password
+            };
         }
     }
 }

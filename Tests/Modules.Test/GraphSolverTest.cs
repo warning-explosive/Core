@@ -69,10 +69,7 @@ namespace SpaceEngineers.Core.Modules.Test
             DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// Test1 - All paths

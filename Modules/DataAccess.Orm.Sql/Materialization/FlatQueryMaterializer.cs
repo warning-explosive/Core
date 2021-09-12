@@ -36,9 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var transaction = await _transaction
-                .Open(token)
-                .ConfigureAwait(false);
+            var transaction = _transaction.UnderlyingDbTransaction;
 
             var dynamicResult = await transaction
                 .Connection

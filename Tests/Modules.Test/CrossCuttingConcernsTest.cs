@@ -30,10 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
             DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void ObjectBuilderTest()

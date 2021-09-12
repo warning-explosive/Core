@@ -30,10 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
             DependencyContainer = fixture.ModulesContainer();
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         /// <summary> ReadWriteTest data member </summary>
         /// <returns>Test data</returns>

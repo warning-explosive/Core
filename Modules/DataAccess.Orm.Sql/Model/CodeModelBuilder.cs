@@ -19,16 +19,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseTypeProvider _domainTypeProvider;
-        private readonly IConnectionFactory _connectionFactory;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public CodeModelBuilder(
             IDependencyContainer dependencyContainer,
             IDatabaseTypeProvider domainTypeProvider,
-            IConnectionFactory connectionFactory)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
             _domainTypeProvider = domainTypeProvider;
-            _connectionFactory = connectionFactory;
+            _connectionProvider = connectionProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
@@ -47,9 +47,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .ConfigureAwait(false))
                 .ToList();
 
-            var database = await _connectionFactory.GetDatabaseName(token).ConfigureAwait(false);
-
-            return new DatabaseNode(database, tables, views);
+            return new DatabaseNode(_connectionProvider.Database, tables, views);
         }
 
         private static TableNode BuildTableNode(Type tableType)

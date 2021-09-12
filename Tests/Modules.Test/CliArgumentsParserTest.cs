@@ -30,10 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
             DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
 

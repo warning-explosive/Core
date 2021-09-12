@@ -15,6 +15,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api.Exceptions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Api.Abstractions;
+    using DataAccess.Api.Abstractions;
+    using DataAccess.Orm.Linq;
+    using DataAccess.Orm.Sql.ObjectTransformers;
     using Registrations;
     using Xunit;
     using Xunit.Abstractions;
@@ -33,10 +37,7 @@ namespace SpaceEngineers.Core.Modules.Test
             DependencyContainer = fixture.ModulesContainer();
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// ResolveRegisteredServicesTest Data
@@ -337,10 +338,29 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Throws<ComponentResolutionException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
         }
 
-        internal static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
+        private static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
         {
-            return ctx => FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
-                          ?? FromMatchesTypeArgumentSelector(ctx);
+            return ctx =>
+                FromBypassedTypes(ctx)
+                ?? FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
+                ?? FromMatchesTypeArgumentSelector(ctx);
+        }
+
+        private static Type? FromBypassedTypes(TypeArgumentSelectionContext ctx)
+        {
+            if ((ctx.OpenGeneric == typeof(IReadRepository<,>)
+                 || ctx.OpenGeneric == typeof(ReadRepository<,>)
+                 || ctx.OpenGeneric == typeof(IObjectTransformer<,>)
+                 || ctx.OpenGeneric == typeof(EntityToPrimaryKeyObjectTransformer<,>)
+                 || ctx.OpenGeneric == typeof(PrimaryKeyToEntityObjectTransformer<,>))
+                && ctx.TypeArgument.GenericParameterPosition == 1)
+            {
+                return ctx.Resolved.Single()
+                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
+                    .Single();
+            }
+
+            return default;
         }
 
         private static Type? FromExistedClosedTypesTypeArgumentSelector(IEnumerable<Type> source, TypeArgumentSelectionContext ctx)

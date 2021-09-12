@@ -35,14 +35,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Internals
         {
             var isCommand = context.Message.IsCommand();
 
-            if (_databaseTransaction.HasChanges
-                && !isCommand)
+            if (_databaseTransaction.HasChanges && !isCommand)
             {
                 throw new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
             }
 
+            var commit = _databaseTransaction.HasChanges && isCommand;
+
             await _databaseTransaction
-                .Close(isCommand, token)
+                .Close(commit, token)
                 .ConfigureAwait(false);
         }
 

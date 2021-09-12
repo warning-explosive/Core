@@ -225,7 +225,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                // TODO: capture several messages
+                // TODO: #112 - capture several messages
                 /*var integrationContext = container.Resolve<IIntegrationContext>();*/
 
                 /*var conversationId = Guid.NewGuid();

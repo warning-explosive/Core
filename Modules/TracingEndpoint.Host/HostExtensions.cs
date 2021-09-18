@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Host
     using System;
     using Basics;
     using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Abstractions;
+    using GenericEndpoint.Host.Builder;
     using Microsoft.Extensions.Hosting;
 
     /// <summary>

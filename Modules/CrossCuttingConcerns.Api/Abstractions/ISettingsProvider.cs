@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
     /// Settings provider
     /// </summary>
     /// <typeparam name="TSettings">ISettings</typeparam>
-    [SuppressMessage("Analysis", "CA1716", Justification = "Reviewed")]
+    [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
     public interface ISettingsProvider<TSettings> : IResolvable
         where TSettings : class, ISettings
     {

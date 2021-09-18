@@ -18,15 +18,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Orm;
     using DataAccess.Orm.InMemoryDatabase;
     using DataAccess.Orm.PostgreSql;
-    using GenericEndpoint.Abstractions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Defaults;
+    using GenericEndpoint.DataAccess;
+    using GenericEndpoint.Endpoint;
     using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Implementations;
+    using GenericEndpoint.Host.StartupActions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
+    using GenericEndpoint.Pipeline;
     using GenericEndpoint.TestExtensions;
     using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
@@ -838,25 +839,34 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 _ = host.Services.GetRequiredService<IHostedService>();
 
-                var hostStartupActions = host
+                var expectedHostStartupActions = new[]
+                {
+                    typeof(GenericEndpointHostStartupAction)
+                };
+
+                var actualHostStartupActions = host
                     .Services
                     .GetServices<IHostStartupAction>()
+                    .Select(startup => startup.GetType())
+                    .OrderBy(type => type.FullName)
                     .ToList();
 
-                Assert.Single(hostStartupActions);
-                var hostStartupAction = hostStartupActions.Single();
+                Assert.Equal(expectedHostStartupActions.OrderBy(type => type.FullName).ToList(), actualHostStartupActions);
 
-                Assert.Equal(typeof(GenericEndpointHostStartupAction), hostStartupAction.GetType());
+                var expectedHostBackgroundWorkers = new[]
+                {
+                    typeof(IntegrationTransportHostBackgroundWorker),
+                    typeof(GenericEndpointOutboxHostBackgroundWorker)
+                };
 
-                var hostBackgroundWorkers = host
+                var actualHostBackgroundWorkers = host
                     .Services
                     .GetServices<IHostBackgroundWorker>()
+                    .Select(startup => startup.GetType())
+                    .OrderBy(type => type.FullName)
                     .ToList();
 
-                Assert.Single(hostBackgroundWorkers);
-                var hostBackgroundWorker = hostBackgroundWorkers.Single();
-
-                Assert.Equal(typeof(IntegrationTransportHostBackgroundWorker), hostBackgroundWorker.GetType());
+                Assert.Equal(expectedHostBackgroundWorkers.OrderBy(type => type.FullName).ToList(), actualHostBackgroundWorkers);
             }
 
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
@@ -875,7 +885,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                     var expected = new[]
                     {
-                        typeof(SpaceEngineers.Core.GenericEndpoint.Implementations.AdvancedIntegrationContext)
+                        typeof(AdvancedIntegrationContext)
                     };
 
                     var actual = advancedIntegrationContext

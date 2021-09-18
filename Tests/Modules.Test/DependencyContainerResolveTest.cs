@@ -338,11 +338,11 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.Throws<ComponentResolutionException>(() => localContainer.Resolve<IOpenGenericTestService<string>>());
         }
 
-        private static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer container)
+        private static Func<TypeArgumentSelectionContext, Type?> HybridTypeArgumentSelector(IDependencyContainer dependencyContainer)
         {
             return ctx =>
                 FromBypassedTypes(ctx)
-                ?? FromExistedClosedTypesTypeArgumentSelector(container.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
+                ?? FromExistedClosedTypesTypeArgumentSelector(dependencyContainer.Resolve<ITypeProvider>().AllLoadedTypes, ctx)
                 ?? FromMatchesTypeArgumentSelector(ctx);
         }
 

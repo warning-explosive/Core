@@ -32,12 +32,14 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
 
         public EnIntegrationTransportStatus Status => Decoratee.Status;
 
-        public void Bind(
-            Type message,
-            EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, Task> messageHandler)
+        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> messageHandler)
         {
             Decoratee.Bind(message, endpointIdentity, messageHandler);
+        }
+
+        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> errorMessageHandler)
+        {
+            Decoratee.BindErrorHandler(endpointIdentity, errorMessageHandler);
         }
 
         public async Task Enqueue(IntegrationMessage message, CancellationToken token)

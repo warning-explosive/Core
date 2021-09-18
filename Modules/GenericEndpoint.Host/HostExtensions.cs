@@ -3,20 +3,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
     using Basics;
+    using Builder;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Abstractions.Registration;
     using CompositionRoot.Api.Extensions;
     using Contract;
+    using DataAccess;
     using GenericHost.Api.Abstractions;
-    using Implementations;
     using IntegrationTransport.Api.Abstractions;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using StartupActions;
 
     /// <summary>
     /// HostExtensions
@@ -39,18 +40,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 .GetServices<IDependencyContainer>()
                 .Single(IsTransportContainer);
 
-            static bool IsTransportContainer(IDependencyContainer container)
+            static bool IsTransportContainer(IDependencyContainer dependencyContainer)
             {
                 return ExecutionExtensions
-                    .Try(container, IsTransportContainerUnsafe)
+                    .Try(dependencyContainer, IsTransportContainerUnsafe)
                     .Catch<Exception>()
                     .Invoke(_ => false);
             }
 
-            static bool IsTransportContainerUnsafe(IDependencyContainer container)
+            static bool IsTransportContainerUnsafe(IDependencyContainer dependencyContainer)
             {
-                var endpointIdentity = container.Resolve<EndpointIdentity>();
-                var integrationTransport = container.Resolve<IIntegrationTransport>();
+                var endpointIdentity = dependencyContainer.Resolve<EndpointIdentity>();
+                var integrationTransport = dependencyContainer.Resolve<IIntegrationTransport>();
 
                 return integrationTransport
                     .FlattenDecoratedType()
@@ -88,7 +89,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
                 serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ctx, ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions)));
-                serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildStartup(serviceProvider, endpointOptions));
+                /*TODO: #100: provide api so as to setup user defined IHostStartupActions & IHostBackgroundWorkers*/
+                serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildEndpointStartup(serviceProvider, endpointOptions));
+                serviceCollection.AddSingleton<IHostBackgroundWorker>(serviceProvider => BuildEndpointOutboxBackgroundWorker(serviceProvider, endpointOptions));
             });
         }
 
@@ -145,10 +148,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return endpointOptions.WithContainerOptions(containerOptions);
         }
 
-        private static IHostStartupAction BuildStartup(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
+        private static IHostStartupAction BuildEndpointStartup(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
         {
             var dependencyContainer = GetEndpointDependencyContainer(serviceProvider, endpointOptions.Identity);
             return new GenericEndpointHostStartupAction(dependencyContainer);
+        }
+
+        private static IHostBackgroundWorker BuildEndpointOutboxBackgroundWorker(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
+        {
+            var dependencyContainer = GetEndpointDependencyContainer(serviceProvider, endpointOptions.Identity);
+            return new GenericEndpointOutboxHostBackgroundWorker(dependencyContainer);
         }
 
         private static IDependencyContainer GetEndpointDependencyContainer(IServiceProvider serviceProvider, EndpointIdentity endpointIdentity)
@@ -165,9 +174,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                     .Invoke(_ => false);
             }
 
-            static Func<EndpointIdentity, bool> IsEndpointContainerUnsafe(IDependencyContainer container)
+            static Func<EndpointIdentity, bool> IsEndpointContainerUnsafe(IDependencyContainer dependencyContainer)
             {
-                return endpointIdentity => container.Resolve<EndpointIdentity>().Equals(endpointIdentity);
+                return endpointIdentity => dependencyContainer.Resolve<EndpointIdentity>().Equals(endpointIdentity);
             }
         }
 

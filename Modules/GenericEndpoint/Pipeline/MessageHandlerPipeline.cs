@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 

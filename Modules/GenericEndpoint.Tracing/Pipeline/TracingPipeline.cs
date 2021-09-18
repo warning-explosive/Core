@@ -3,11 +3,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
+    using GenericEndpoint.Pipeline;
     using TracingEndpoint.Contract.Messages;
 
     [Component(EnLifestyle.Singleton)]

@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
         {
             var capturedMessage = new CapturedMessage(command.IntegrationMessage, command.Exception?.ToString());
 
-            return _databaseContext.Track(capturedMessage, token);
+            return _databaseContext.Insert(capturedMessage, token);
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 {
+    using System.Threading;
     using Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -18,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 
         public TEntity Transform(TKey value)
         {
-            return _readRepository.Single(value);
+            return _readRepository.SingleAsync(value, CancellationToken.None).Result;
         }
     }
 }

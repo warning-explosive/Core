@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
-    using GenericEndpoint.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
+    using GenericEndpoint.Pipeline;
 
     [ComponentOverride]
     internal class RetryPolicyMock : IRetryPolicy

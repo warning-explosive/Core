@@ -7,4 +7,5 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Host")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Tracing")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.DataAccess")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]

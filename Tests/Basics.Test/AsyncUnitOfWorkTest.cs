@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics.Test
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Enumerations;
     using Primitives;
     using Xunit;
     using Xunit.Abstractions;
@@ -26,7 +27,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void CommitTest()
         {
-            var unitOfWork = new TestAsyncUnitOfWork();
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.Regular);
             ExecuteInTransaction(unitOfWork, true, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
@@ -38,7 +39,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void RollbackTest()
         {
-            var unitOfWork = new TestAsyncUnitOfWork();
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.Regular);
             ExecuteInTransaction(unitOfWork, false, EmptyProducer);
 
             Assert.True(unitOfWork.Started);
@@ -50,7 +51,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void RollbackByExceptionTest()
         {
-            var unitOfWork = new TestAsyncUnitOfWork();
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.Regular);
             Assert.Throws<TrueException>(() => ExecuteInTransaction(unitOfWork, true, ErrorProducer));
 
             Assert.True(unitOfWork.Started);
@@ -62,7 +63,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void SeveralStartsTest()
         {
-            var unitOfWork = new TestAsyncUnitOfWork();
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.Regular);
             Assert.Throws<InvalidOperationException>(() => ExecuteInTransaction(unitOfWork, true, OuterProducer));
 
             Assert.True(unitOfWork.Started);
@@ -73,6 +74,62 @@ namespace SpaceEngineers.Core.Basics.Test
             Task OuterProducer(object context, CancellationToken token)
             {
                 ExecuteInTransaction(unitOfWork, true, EmptyProducer);
+                return Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        internal void DoNotRunBehaviorTest()
+        {
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.DoNotRun);
+            ExecuteInTransaction(unitOfWork, true, EmptyProducer);
+
+            Assert.False(unitOfWork.Started);
+            Assert.False(unitOfWork.Committed);
+            Assert.False(unitOfWork.RolledBack);
+            Assert.False(unitOfWork.RolledBackByException);
+        }
+
+        [Fact]
+        internal void SkipProducerBehaviorCommitTest()
+        {
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.SkipProducer);
+
+            var producerExecuted = false;
+
+            ExecuteInTransaction(unitOfWork, true, TrackableProducer);
+
+            Assert.True(unitOfWork.Started);
+            Assert.True(unitOfWork.Committed);
+            Assert.False(unitOfWork.RolledBack);
+            Assert.False(unitOfWork.RolledBackByException);
+            Assert.False(producerExecuted);
+
+            Task TrackableProducer(object state, CancellationToken token)
+            {
+                producerExecuted = true;
+                return Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        internal void SkipProducerBehaviorRollbackTest()
+        {
+            var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.SkipProducer);
+
+            var producerExecuted = false;
+
+            ExecuteInTransaction(unitOfWork, false, TrackableProducer);
+
+            Assert.True(unitOfWork.Started);
+            Assert.False(unitOfWork.Committed);
+            Assert.True(unitOfWork.RolledBack);
+            Assert.False(unitOfWork.RolledBackByException);
+            Assert.False(producerExecuted);
+
+            Task TrackableProducer(object state, CancellationToken token)
+            {
+                producerExecuted = true;
                 return Task.CompletedTask;
             }
         }
@@ -97,6 +154,13 @@ namespace SpaceEngineers.Core.Basics.Test
 
         private class TestAsyncUnitOfWork : AsyncUnitOfWork<object>
         {
+            private readonly EnUnitOfWorkBehavior _behavior;
+
+            public TestAsyncUnitOfWork(EnUnitOfWorkBehavior behavior)
+            {
+                _behavior = behavior;
+            }
+
             internal bool Started { get; private set; }
 
             internal bool Committed { get; private set; }
@@ -105,10 +169,10 @@ namespace SpaceEngineers.Core.Basics.Test
 
             internal bool RolledBackByException { get; private set; }
 
-            protected override Task Start(object context, CancellationToken token)
+            protected override Task<EnUnitOfWorkBehavior> Start(object context, CancellationToken token)
             {
-                Started = true;
-                return Task.CompletedTask;
+                Started = _behavior != EnUnitOfWorkBehavior.DoNotRun;
+                return Task.FromResult(_behavior);
             }
 
             protected override Task Commit(object context, CancellationToken token)

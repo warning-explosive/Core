@@ -49,14 +49,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             where TEntity : IUniqueIdentified<TKey>
         {
             return typeof(IReadRepository<TEntity, TKey>)
-                .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.Single), new[] { typeof(TKey) });
+                .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleAsync), new[] { typeof(TKey) });
         }
 
         private static MethodInfo SingleOrDefault<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
         {
             return typeof(IReadRepository<TEntity, TKey>)
-                .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleOrDefault), new[] { typeof(TKey) });
+                .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleOrDefaultAsync), new[] { typeof(TKey) });
         }
     }
 }

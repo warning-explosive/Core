@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -13,6 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using CompositionRoot.Api.Abstractions.Registration;
     using Contract.Abstractions;
     using Contract.Attributes;
+    using Endpoint;
     using Extensions;
 
     [Component(EnLifestyle.Singleton)]

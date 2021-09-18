@@ -23,16 +23,16 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     [Component(EnLifestyle.Singleton)]
     internal class ConventionalProvider : IConventionalProvider
     {
-        private readonly IDependencyContainer _container;
+        private readonly IDependencyContainer _dependencyContainer;
 
         private readonly ISourceTransformer _transformer;
 
         /// <summary> .cctor </summary>
-        /// <param name="container">IDependencyContainer</param>
+        /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <param name="transformer">ISourceTransformer</param>
-        public ConventionalProvider(IDependencyContainer container, ISourceTransformer transformer)
+        public ConventionalProvider(IDependencyContainer dependencyContainer, ISourceTransformer transformer)
         {
-            _container = container;
+            _dependencyContainer = dependencyContainer;
             _transformer = transformer;
         }
 
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var count = analyzerTypeName.Length - Conventions.Analyzer.Length;
             var codeFixProviderTypeName = analyzerTypeName.Substring(0, count) + Conventions.CodeFix;
 
-            return _container
+            return _dependencyContainer
                   .ResolveCollection<CodeFixProvider>()
                   .SingleOrDefault(c => c.GetType().Name == codeFixProviderTypeName);
         }
@@ -56,13 +56,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var analyzerTypeName = AnalyzerTypeName(analyzer);
             var providerTypeName = analyzerTypeName + Conventions.ExpectedDiagnosticsProviderSuffix;
 
-            var providerType = _container
+            var providerType = _dependencyContainer
                               .Resolve<ITypeProvider>()
                               .OurTypes
                               .SingleOrDefault(t => t.Name == providerTypeName)
                             ?? throw new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzerTypeName} or place it in directory different from source directory");
 
-            return (IExpectedDiagnosticsProvider)_container.Resolve(providerType);
+            return (IExpectedDiagnosticsProvider)_dependencyContainer.Resolve(providerType);
         }
 
         /// <inheritdoc />

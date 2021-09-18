@@ -16,24 +16,17 @@ namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
         /// <summary>
         /// .cctor
         /// </summary>
-        protected BaseDatabaseEntity()
+        /// <param name="primaryKey">Primary key</param>
+        protected BaseDatabaseEntity(TKey primaryKey)
         {
             // TODO: #149 - generate primary key in database
-            PrimaryKey = default !;
-            Version = 0;
+            PrimaryKey = primaryKey;
         }
 
         /// <summary>
         /// Primary key
         /// </summary>
         public TKey PrimaryKey { get; private set; }
-
-        /// <summary>
-        /// Entity identifier
-        /// TODO: #133 - Versions, optimistic / pessimistic concurrency
-        /// TODO: #132 - historical entities
-        /// </summary>
-        public ulong Version { get; private set; }
 
         #region IEquatable
 
@@ -62,7 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(PrimaryKey, Version, GetType());
+            return HashCode.Combine(PrimaryKey, GetType());
         }
 
         /// <inheritdoc />
@@ -81,7 +74,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
         public bool SafeEquals(BaseDatabaseEntity<TKey> other)
         {
             return PrimaryKey.Equals(other.PrimaryKey)
-                   && Version.Equals(other.Version)
                    && GetType() == other.GetType();
         }
 

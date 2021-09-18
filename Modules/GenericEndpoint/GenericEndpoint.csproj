@@ -42,7 +42,31 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Abstractions\IMessagePipelineStep.cs">
+    <Compile Update="Pipeline\UnitOfWorkPipeline.cs">
+      <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\QueryReplyValidationPipeline.cs">
+      <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\MessageHandlerPipeline.cs">
+      <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\ErrorHandlingPipeline.cs">
+      <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
+    <Compile Update="UnitOfWork\IntegrationUnitOfWork.cs">
+      <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\DefaultRetryPolicy.cs">
+      <DependentUpon>IRetryPolicy.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\IRetryPolicy.cs">
+      <DependentUpon>ErrorHandlingPipeline.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\AdvancedIntegrationContext.cs">
+      <DependentUpon>IAdvancedIntegrationContext.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
   </ItemGroup>

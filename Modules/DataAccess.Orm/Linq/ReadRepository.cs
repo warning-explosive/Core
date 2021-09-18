@@ -1,7 +1,10 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Api.Abstractions;
+    using Api.Extensions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
@@ -22,18 +25,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .CreateQuery<TEntity>(this.QueryAll());
         }
 
-        public TEntity Single(TKey key)
+        public Task<TEntity> SingleAsync(TKey key, CancellationToken token)
         {
             return _queryProvider
                 .CreateQuery<TEntity>(this.QuerySingle(key))
-                .Single();
+                .SingleAsync(token);
         }
 
-        public TEntity? SingleOrDefault(TKey key)
+        public Task<TEntity?> SingleOrDefaultAsync(TKey key, CancellationToken token)
         {
             return _queryProvider
                 .CreateQuery<TEntity>(this.QuerySingleOrDefault(key))
-                .SingleOrDefault();
+                .SingleOrDefaultAsync(token);
         }
     }
 }

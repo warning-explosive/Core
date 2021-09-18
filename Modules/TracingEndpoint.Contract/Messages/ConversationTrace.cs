@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
     {
         /// <summary> .cctor </summary>
         /// <param name="correlationId">Conversation id</param>
-        /// <param name="message">Message</param>
+        /// <param name="message">Integration message</param>
         /// <param name="refuseReason">Refuse reason</param>
         /// <param name="subsequentTrace">Subsequent trace</param>
         public ConversationTrace(

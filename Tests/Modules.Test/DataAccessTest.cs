@@ -531,7 +531,11 @@ namespace SpaceEngineers.Core.Modules.Test
 
         internal class DatabaseEntity : BaseDatabaseEntity<Guid>
         {
-            public DatabaseEntity(bool booleanField, string stringField)
+            public DatabaseEntity(
+                Guid primaryKey,
+                bool booleanField,
+                string stringField)
+                : base(primaryKey)
             {
                 BooleanField = booleanField;
                 StringField = stringField;

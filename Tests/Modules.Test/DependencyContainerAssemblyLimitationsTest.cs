@@ -170,9 +170,9 @@ namespace SpaceEngineers.Core.Modules.Test
                 return satisfies;
             }
 
-            static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer container, bool mode)
+            static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer dependencyContainer, bool mode)
             {
-                return container.Resolve<ICompositionInfoExtractor>().GetCompositionInfo(mode);
+                return dependencyContainer.Resolve<ICompositionInfoExtractor>().GetCompositionInfo(mode);
             }
         }
 

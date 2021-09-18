@@ -16,11 +16,35 @@ namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
         bool HasChanges { get; }
 
         /// <summary>
-        /// Start tracking specified aggregate root
+        /// Starts tracking specified aggregate root with insert semantics
         /// </summary>
         /// <param name="aggregate">Aggregate root</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Track(IAggregate aggregate, CancellationToken token);
+        Task Insert(IAggregate aggregate, CancellationToken token);
+
+        /// <summary>
+        /// Starts tracking specified aggregate root with upsert update semantics
+        /// </summary>
+        /// <param name="aggregate">Aggregate root</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Update(IAggregate aggregate, CancellationToken token);
+
+        /// <summary>
+        /// Starts tracking specified aggregate root with upsert (insert | update) semantics
+        /// </summary>
+        /// <param name="aggregate">Aggregate root</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Upsert(IAggregate aggregate, CancellationToken token);
+
+        /// <summary>
+        /// Starts tracking specified aggregate root with remove semantics
+        /// </summary>
+        /// <param name="aggregate">Aggregate root</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Delete(IAggregate aggregate, CancellationToken token);
     }
 }

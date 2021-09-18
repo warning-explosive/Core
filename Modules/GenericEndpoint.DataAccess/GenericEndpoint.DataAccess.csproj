@@ -31,6 +31,7 @@
     <ItemGroup>
       <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
+      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
@@ -41,5 +42,16 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Model\InboxFactorySpecification.cs">
+        <DependentUpon>InboxFactory.cs</DependentUpon>
+      </Compile>
+      <Compile Update="UnitOfWork\InboxAggregateSpecification.cs">
+        <DependentUpon>InboxAggregateFactory.cs</DependentUpon>
+      </Compile>
+      <Compile Update="UnitOfWork\InboxAggregateFactory.cs">
+        <DependentUpon>Inbox.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

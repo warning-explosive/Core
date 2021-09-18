@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -15,6 +16,8 @@
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         private static IDbConnection? _connection;
+
+        [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
 
         public DatabaseTransaction(IDatabaseConnectionProvider connectionProvider)
@@ -42,7 +45,8 @@
                     return _connection;
                 }
 
-                _connection?.Dispose();
+                Interlocked.Exchange(ref _connection, default)?.Dispose();
+
                 _connection = _connectionProvider
                     .OpenConnection(CancellationToken.None)
                     .Result;
@@ -72,7 +76,8 @@
         public Task Close(bool commit, CancellationToken token)
         {
             // TODO: #132 - commit changes
-            _transaction?.Dispose();
+            Interlocked.Exchange(ref _transaction, default)?.Dispose();
+
             return Task.CompletedTask;
         }
 
@@ -81,7 +86,22 @@
             Close(false, CancellationToken.None).Wait();
         }
 
-        public Task Track(IAggregate aggregate, CancellationToken token)
+        public Task Insert(IAggregate aggregate, CancellationToken token)
+        {
+            throw new NotImplementedException("#131 - track domain entities");
+        }
+
+        public Task Update(IAggregate aggregate, CancellationToken token)
+        {
+            throw new NotImplementedException("#131 - track domain entities");
+        }
+
+        public Task Upsert(IAggregate aggregate, CancellationToken token)
+        {
+            throw new NotImplementedException("#131 - track domain entities");
+        }
+
+        public Task Delete(IAggregate aggregate, CancellationToken token)
         {
             throw new NotImplementedException("#131 - track domain entities");
         }

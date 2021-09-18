@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.Basics
                     {
                         if (original != default)
                         {
-                            throw new InvalidOperationException("You have already started this operation");
+                            throw new InvalidOperationException("Operation has already been started");
                         }
 
                         return int.MaxValue;

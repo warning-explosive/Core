@@ -30,6 +30,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
@@ -62,6 +63,9 @@
       </Compile>
       <Compile Update="Abstractions\BaseEntity.cs">
         <DependentUpon>IEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IAggregateSpecification.cs">
+        <DependentUpon>IAggregateFactory.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

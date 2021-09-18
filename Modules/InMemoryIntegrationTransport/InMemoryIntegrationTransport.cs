@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -27,6 +28,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         private readonly IEndpointInstanceSelectionBehavior _instanceSelectionBehavior;
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>> _topology;
+        private readonly ICollection<Func<IntegrationMessage, Task>> _errorMessageHandlers;
 
         private EnIntegrationTransportStatus _status;
 
@@ -43,6 +45,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             _instanceSelectionBehavior = instanceSelectionBehavior;
 
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>();
+            _errorMessageHandlers = new List<Func<IntegrationMessage, Task>>();
         }
 
         public event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
@@ -67,6 +70,14 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
             physicalGroup.Add(endpointIdentity, messageHandler);
         }
 
+        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> errorMessageHandler)
+        {
+            lock (_errorMessageHandlers)
+            {
+                _errorMessageHandlers.Add(errorMessageHandler);
+            }
+        }
+
         public async Task Enqueue(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
@@ -83,8 +94,16 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
 
         public Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token)
         {
-            /* TODO: #112 - collect trace */
-            return Task.CompletedTask;
+            IReadOnlyCollection<Func<IntegrationMessage, Task>> errorHandlers;
+
+            lock (_errorMessageHandlers)
+            {
+                errorHandlers = _errorMessageHandlers.ToList();
+            }
+
+            return errorHandlers
+                .Select(handler => handler(message.Clone()))
+                .WhenAll();
         }
 
         public Task StartBackgroundMessageProcessing(CancellationToken token)

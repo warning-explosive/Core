@@ -105,5 +105,8 @@
       <Compile Update="Model\DatabaseModelComparator.cs">
         <DependentUpon>IDatabaseModelComparator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\Queryable.cs">
+        <DependentUpon>IAsyncQueryable.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

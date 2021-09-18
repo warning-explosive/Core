@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using Api.Extensions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
@@ -46,18 +47,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .DatabaseEntities()
                     .ToDictionary(entity => entity.Name, StringComparer.OrdinalIgnoreCase);
 
-                var tables = _dependencyContainer
-                    .Resolve<IReadRepository<DatabaseColumn, Guid>>()
-                    .All()
-                    .GroupBy(column => column.TableName)
-                    .ToDictionary(grp => grp.Key, grp => grp.ToList())
+                var tables = (await _dependencyContainer
+                        .Resolve<IReadRepository<DatabaseColumn, Guid>>()
+                        .All()
+                        .GroupBy(column => column.TableName)
+                        .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
+                        .ConfigureAwait(false))
                     .Select(grp => BuildTableNode(grp.Key, grp.Value, entitiesShortNameMap))
                     .ToList();
 
-                var views = _dependencyContainer
-                    .Resolve<IReadRepository<DatabaseView, Guid>>()
-                    .All()
-                    .AsEnumerable()
+                var views = (await _dependencyContainer
+                        .Resolve<IReadRepository<DatabaseView, Guid>>()
+                        .All()
+                        .ToListAsync(token)
+                        .ConfigureAwait(false))
                     .Select(BuildViewNode)
                     .ToList();
 

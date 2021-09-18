@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
                     AllowOverridingRegistrations = false,
                     SuppressLifestyleMismatchVerification = false,
                     UseStrictLifestyleMismatchBehavior = true,
-                    EnableAutoVerification = true,
+                    EnableAutoVerification = false
                 }
             };
         }

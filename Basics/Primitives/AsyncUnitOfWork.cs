@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Enumerations;
 
     /// <inheritdoc />
     public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
@@ -18,23 +19,44 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             using (_state.StartExclusiveOperation())
             {
-                var startError = await ExecutionExtensions
-                    .TryAsync((context, producer), StartTransactionUnsafe)
+                var (behavior, startError) = await ExecutionExtensions
+                    .TryAsync(context, StartTransactionUnsafe)
                     .Catch<Exception>()
-                    .Invoke(ExceptionResult, token)
+                    .Invoke(StartExceptionResult, token)
                     .ConfigureAwait(false);
+
+                if (startError != null)
+                {
+                    throw startError.Rethrow();
+                }
+
+                if (behavior is EnUnitOfWorkBehavior.DoNotRun)
+                {
+                    return;
+                }
+
+                Exception? executionError = default;
+
+                if (behavior is not EnUnitOfWorkBehavior.SkipProducer)
+                {
+                    executionError = await ExecutionExtensions
+                        .TryAsync((context, producer), ExecuteProducerUnsafe)
+                        .Catch<Exception>()
+                        .Invoke(ExceptionResult, token)
+                        .ConfigureAwait(false);
+                }
 
                 var finishError = await ExecutionExtensions
-                    .TryAsync((context, saveChanges, startError), FinishTransactionUnsafe)
+                    .TryAsync((context, saveChanges, executionError), FinishTransactionUnsafe)
                     .Catch<Exception>()
                     .Invoke(ExceptionResult, token)
                     .ConfigureAwait(false);
 
-                var exception = startError ?? finishError;
+                var error = executionError ?? finishError;
 
-                if (exception != null)
+                if (error != null)
                 {
-                    throw exception.Rethrow();
+                    throw error.Rethrow();
                 }
             }
         }
@@ -44,10 +66,10 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// </summary>
         /// <param name="context">Context</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing on start operations</returns>
-        protected virtual Task Start(TContext context, CancellationToken token)
+        /// <returns>Ongoing operations</returns>
+        protected virtual Task<EnUnitOfWorkBehavior> Start(TContext context, CancellationToken token)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(EnUnitOfWorkBehavior.Regular);
         }
 
         /// <summary>
@@ -73,11 +95,15 @@ namespace SpaceEngineers.Core.Basics.Primitives
             return Task.CompletedTask;
         }
 
-        private async Task<Exception?> StartTransactionUnsafe((TContext, Func<TContext, CancellationToken, Task>) state, CancellationToken token)
+        private async Task<(EnUnitOfWorkBehavior, Exception?)> StartTransactionUnsafe(TContext context, CancellationToken token)
+        {
+            var behavior = await Start(context, token).ConfigureAwait(false);
+            return (behavior, null);
+        }
+
+        private static async Task<Exception?> ExecuteProducerUnsafe((TContext, Func<TContext, CancellationToken, Task>) state, CancellationToken token)
         {
             var (context, producer) = state;
-
-            await Start(context, token).ConfigureAwait(false);
 
             await producer.Invoke(context, token).ConfigureAwait(false);
 
@@ -95,6 +121,11 @@ namespace SpaceEngineers.Core.Basics.Primitives
             await finishOperation.ConfigureAwait(false);
 
             return null;
+        }
+
+        private static Task<(EnUnitOfWorkBehavior, Exception?)> StartExceptionResult(Exception exception, CancellationToken token)
+        {
+            return Task.FromResult((EnUnitOfWorkBehavior.DoNotRun, (Exception?)exception));
         }
 
         private static Task<Exception?> ExceptionResult(Exception exception, CancellationToken token)

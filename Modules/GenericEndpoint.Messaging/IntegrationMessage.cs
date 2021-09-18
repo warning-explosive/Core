@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             _headers = new List<IIntegrationMessageHeader>();
         }
 
-        private IntegrationMessage(
+        internal IntegrationMessage(
             Guid id,
             IIntegrationMessage payload,
             Type reflectedType,

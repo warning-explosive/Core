@@ -52,5 +52,8 @@
       <Compile Update="Abstractions\IDatabaseEntity.cs">
         <DependentUpon>IUniqueIdentified.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\IAdvancedDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

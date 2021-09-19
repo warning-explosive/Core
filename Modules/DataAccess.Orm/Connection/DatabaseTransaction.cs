@@ -8,10 +8,11 @@
     using Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics.Primitives;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class DatabaseTransaction : IDatabaseTransaction, IDisposable
+    internal class DatabaseTransaction : IAdvancedDatabaseTransaction, IDisposable
     {
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
@@ -71,6 +72,18 @@
 
             _transaction = Connection.BeginTransaction(isolationLevel);
             return Task.FromResult(_transaction);
+        }
+
+        public async Task<IAsyncDisposable> Open(bool commit, CancellationToken token)
+        {
+            await Open(token).ConfigureAwait(false);
+            return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
+        }
+
+        public async Task<IAsyncDisposable> Open(bool commit, IsolationLevel isolationLevel, CancellationToken token)
+        {
+            await Open(isolationLevel, token).ConfigureAwait(false);
+            return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
         }
 
         public Task Close(bool commit, CancellationToken token)

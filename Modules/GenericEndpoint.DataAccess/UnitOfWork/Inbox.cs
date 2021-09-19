@@ -14,6 +14,7 @@
         {
             Message = message;
             Handled = false;
+            IsError = false;
         }
 
         /// <summary>
@@ -27,11 +28,24 @@
         public bool Handled { get; private set; }
 
         /// <summary>
+        /// Has the integration message been put into error queue
+        /// </summary>
+        public bool IsError { get; private set; }
+
+        /// <summary>
         /// Marks the inbox integration message as handled
         /// </summary>
         public void MarkAsHandled()
         {
             Handled = true;
+        }
+
+        /// <summary>
+        /// Marks the inbox integration message as handled
+        /// </summary>
+        public void MarkAsError()
+        {
+            IsError = true;
         }
     }
 }

@@ -53,6 +53,11 @@
                 {
                     inbox.MarkAsHandled();
                 }
+
+                if (integrationMessageDatabaseEntity.IsError)
+                {
+                    inbox.MarkAsError();
+                }
             }
 
             return inbox;

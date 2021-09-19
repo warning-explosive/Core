@@ -17,12 +17,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>
     {
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IObjectBuilder _objectBuilder;
 
         public FlatQueryMaterializer(
             ISettingsProvider<OrmSettings> ormSettingsProvider,
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             IObjectBuilder objectBuilder)
         {
             _ormSettingsProvider = ormSettingsProvider;

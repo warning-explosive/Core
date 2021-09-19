@@ -87,13 +87,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         {
             var genericEndpointDataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
             var dataAccessModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithOverrides(new DataAccessOverrides()));
+            var startupActionProducer = new Func<IDependencyContainer, IHostStartupAction>(dependencyContainer => new GenericEndpointOutboxHostStartupAction(dependencyContainer));
             var backgroundWorkerProducer = new Func<IDependencyContainer, IHostBackgroundWorker>(dependencyContainer => new GenericEndpointOutboxHostBackgroundWorker(dependencyContainer));
 
             return new EndpointBuilder(
                 _rootAssemblies,
                 EndpointPluginAssemblies.Concat(new[] { genericEndpointDataAccessAssembly }).Concat(databaseProvider.Implementation()).ToList(),
                 Modifiers.Concat(new[] { dataAccessModifier }).ToList(),
-                StartupActions,
+                StartupActions.Concat(new[] { startupActionProducer }).ToList(),
                 BackgroundWorkers.Concat(new[] { backgroundWorkerProducer }).ToList());
         }
 

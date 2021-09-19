@@ -21,13 +21,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IAggregateFactory<Inbox, InboxAggregateSpecification> _inboxAggregateFactory;
 
         public IntegrationUnitOfWork(
             EndpointIdentity endpointIdentity,
             IIntegrationTransport transport,
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             IAggregateFactory<Inbox, InboxAggregateSpecification> inboxAggregateFactory,
             IOutboxStorage outboxStorage)
         {
@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
             Inbox = await _inboxAggregateFactory.Build(spec, token).ConfigureAwait(false);
 
-            return Inbox.Handled
+            return Inbox.Handled || Inbox.IsError
                 ? EnUnitOfWorkBehavior.SkipProducer
                 : EnUnitOfWorkBehavior.Regular;
         }
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             var inbox = Inbox.EnsureNotNull("You should start the unit of work before commit it");
 
-            if (inbox.Handled)
+            if (inbox.Handled || Inbox.IsError)
             {
                 await Rollback(context, default, token).ConfigureAwait(false);
                 return;

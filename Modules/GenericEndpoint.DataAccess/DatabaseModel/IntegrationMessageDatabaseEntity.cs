@@ -17,6 +17,7 @@
             JsonObject payload,
             IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> headers,
             IntegrationMessageDatabaseEntity? initiator,
+            bool isError,
             bool sent,
             bool handled,
             string handledByEndpoint)
@@ -25,6 +26,7 @@
             Payload = payload;
             Headers = headers;
             Initiator = initiator;
+            IsError = isError;
             Sent = sent;
             Handled = handled;
             HandledByEndpoint = handledByEndpoint;
@@ -35,6 +37,8 @@
         public IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> Headers { get; }
 
         public IntegrationMessageDatabaseEntity? Initiator { get; }
+
+        public bool IsError { get; }
 
         public bool Sent { get; }
 

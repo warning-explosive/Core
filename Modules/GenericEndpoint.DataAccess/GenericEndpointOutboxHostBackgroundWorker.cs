@@ -6,6 +6,8 @@
     using System.Threading.Tasks;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
+    using Contract.Abstractions;
+    using Contract.Attributes;
     using Core.DataAccess.Api.Abstractions;
     using Core.DataAccess.Api.Extensions;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -28,7 +30,7 @@
         {
             while (!token.IsCancellationRequested)
             {
-                // TODO: #100 - add polling timeout
+                // TODO: #154 - add polling timeout
                 await Task.Delay(TimeSpan.FromSeconds(42), token).ConfigureAwait(false);
                 await DeliverMessages(token).ConfigureAwait(false);
             }
@@ -50,24 +52,34 @@
 
             await using (_dependencyContainer.OpenScopeAsync())
             {
-                // TODO: not from error queue
-                var subsequentMessages = (await _dependencyContainer
-                        .Resolve<IReadRepository<IntegrationMessageDatabaseEntity, Guid>>()
-                        .All()
-                        .Where(message => !message.Sent)
-                        .ToListAsync(token)
-                        .ConfigureAwait(false))
-                    .Select(message => message.BuildIntegrationMessage(serializer, formatter))
-                    .ToList();
+                var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                var outbox = new Outbox(new IntegrationMessage(default!, typeof(object), formatter), subsequentMessages);
+                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                {
+                    var subsequentMessages = (await _dependencyContainer
+                            .Resolve<IReadRepository<IntegrationMessageDatabaseEntity, Guid>>()
+                            .All()
+                            .Where(message => !message.Sent && !message.Handled && !message.IsError)
+                            .ToListAsync(token)
+                            .ConfigureAwait(false))
+                        .Select(message => message.BuildIntegrationMessage(serializer, formatter))
+                        .ToList();
 
-                await outbox.DeliverMessages(
-                        transport,
-                        _dependencyContainer.Resolve<IDatabaseTransaction>(),
-                        token)
-                    .ConfigureAwait(false);
+                    var fakeInitiator = new IntegrationMessage(new DeliverOutboxMessages(), typeof(DeliverOutboxMessages), formatter);
+                    var outbox = new Outbox(fakeInitiator, subsequentMessages);
+
+                    await outbox.DeliverMessages(
+                            transport,
+                            transaction,
+                            token)
+                        .ConfigureAwait(false);
+                }
             }
+        }
+
+        [OwnedBy(nameof(Outbox))]
+        private class DeliverOutboxMessages : IIntegrationCommand
+        {
         }
     }
 }

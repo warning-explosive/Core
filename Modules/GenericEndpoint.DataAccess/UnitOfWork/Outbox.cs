@@ -67,11 +67,10 @@
 
             MarkAsSent();
 
-            await transaction.Open(token).ConfigureAwait(false);
-
-            await transaction.Update(this, token).ConfigureAwait(false);
-
-            await transaction.Close(true, token).ConfigureAwait(false);
+            await using (await transaction.Open(true, token).ConfigureAwait(false))
+            {
+                await transaction.Update(this, token).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -4,6 +4,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 
     internal interface ITestCase
     {
-        string? Assert(TestIntegrationContext integrationContext, Exception? exception);
+        string? Assert(ITestIntegrationContext integrationContext, Exception? exception);
     }
 }

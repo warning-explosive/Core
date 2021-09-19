@@ -14,15 +14,17 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
                                                        ICollectionResolvable<IMessageHandler<InheritedEvent>>
     {
         private readonly EndpointIdentity _endpointIdentity;
+        private readonly IIntegrationContext _context;
 
-        public InheritedEventEmptyMessageHandler(EndpointIdentity endpointIdentity)
+        public InheritedEventEmptyMessageHandler(EndpointIdentity endpointIdentity, IIntegrationContext context)
         {
             _endpointIdentity = endpointIdentity;
+            _context = context;
         }
 
-        public Task Handle(InheritedEvent message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(InheritedEvent message, CancellationToken token)
         {
-            return context.Publish(new Endpoint1HandlerInvoked(typeof(InheritedEventEmptyMessageHandler), _endpointIdentity), token);
+            return _context.Publish(new Endpoint1HandlerInvoked(typeof(InheritedEventEmptyMessageHandler), _endpointIdentity), token);
         }
     }
 }

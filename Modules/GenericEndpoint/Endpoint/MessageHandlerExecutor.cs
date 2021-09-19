@@ -68,7 +68,7 @@
             TMessage message,
             IMessageHandler<TMessage> messageHandler)
         {
-            return (context, token) => messageHandler.Handle(message, context, token);
+            return (_, token) => messageHandler.Handle(message, token);
         }
     }
 }

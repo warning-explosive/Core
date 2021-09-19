@@ -31,12 +31,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         /// <summary>
         /// Invokes message handler and applies test assertions
         /// </summary>
-        public void Invoke()
+        /// <param name="context">TestIntegrationContext</param>
+        public void Invoke(ITestIntegrationContext context)
         {
-            var context = new TestIntegrationContext();
-
             var exception = ExecutionExtensions
-                .Try((_message, context, CancellationToken.None), Handle(_messageHandler))
+                .Try((_message, CancellationToken.None), Handle(_messageHandler))
                 .Catch<Exception>()
                 .Invoke(ex => ex);
 
@@ -56,13 +55,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
                 }
             }
 
-            static Func<(TMessage, TestIntegrationContext, CancellationToken), Exception?> Handle(
+            static Func<(TMessage, CancellationToken), Exception?> Handle(
                 IMessageHandler<TMessage> messageHandler)
             {
                 return state =>
                 {
-                    var (message, context, token) = state;
-                    messageHandler.Handle(message, context, token).Wait();
+                    var (message, token) = state;
+                    messageHandler.Handle(message, token).Wait();
                     return default;
                 };
             }

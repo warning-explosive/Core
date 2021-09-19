@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     {
         private const string Format = "Message handler doesn't have to {0} any {1} of type {2}";
 
-        public string? Assert(TestIntegrationContext integrationContext, Exception? exception)
+        public string? Assert(ITestIntegrationContext integrationContext, Exception? exception)
         {
             return !integrationContext.Messages.OfType<TMessage>().Any()
                 ? null

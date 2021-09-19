@@ -16,18 +16,12 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     {
         private readonly IDatabaseContext _databaseContext;
 
-        // TODO: #152 - remove IIntegrationContext from the handle method and inject it where it is necessary
-        private IIntegrationContext _integrationContext;
-
-        public CaptureTraceMessageHandler(
-            IDatabaseContext databaseContext,
-            IIntegrationContext integrationContext)
+        public CaptureTraceMessageHandler(IDatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            _integrationContext = integrationContext;
         }
 
-        public Task Handle(CaptureTrace command, IIntegrationContext context, CancellationToken token)
+        public Task Handle(CaptureTrace command, CancellationToken token)
         {
             var capturedMessage = new CapturedMessage(command.IntegrationMessage, command.Exception?.ToString());
 

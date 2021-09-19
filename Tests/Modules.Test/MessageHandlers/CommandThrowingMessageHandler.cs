@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     internal class CommandThrowingMessageHandler : IMessageHandler<Command>,
                                                    ICollectionResolvable<IMessageHandler<Command>>
     {
-        public Task Handle(Command message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(Command message, CancellationToken token)
         {
             throw new InvalidOperationException(message.Id.ToString(CultureInfo.InvariantCulture));
         }

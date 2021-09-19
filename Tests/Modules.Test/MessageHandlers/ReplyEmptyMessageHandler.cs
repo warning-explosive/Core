@@ -14,15 +14,17 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
                                               ICollectionResolvable<IMessageHandler<Reply>>
     {
         private readonly EndpointIdentity _endpointIdentity;
+        private readonly IIntegrationContext _context;
 
-        public ReplyEmptyMessageHandler(EndpointIdentity endpointIdentity)
+        public ReplyEmptyMessageHandler(EndpointIdentity endpointIdentity, IIntegrationContext context)
         {
             _endpointIdentity = endpointIdentity;
+            _context = context;
         }
 
-        public Task Handle(Reply message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(Reply message, CancellationToken token)
         {
-            return context.Publish(new Endpoint1HandlerInvoked(typeof(ReplyEmptyMessageHandler), _endpointIdentity), token);
+            return _context.Publish(new Endpoint1HandlerInvoked(typeof(ReplyEmptyMessageHandler), _endpointIdentity), token);
         }
     }
 }

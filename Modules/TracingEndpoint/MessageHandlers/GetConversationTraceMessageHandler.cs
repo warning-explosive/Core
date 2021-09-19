@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
             _repository = repository;
         }
 
-        public Task Handle(GetConversationTrace query, IIntegrationContext context, CancellationToken token)
+        public Task Handle(GetConversationTrace query, CancellationToken token)
         {
             var capturedMessages = _repository
                 .Read(query.ConversationId)

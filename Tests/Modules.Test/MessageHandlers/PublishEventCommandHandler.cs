@@ -12,9 +12,16 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     internal class PublishEventCommandHandler : IMessageHandler<PublishEventCommand>,
                                                 ICollectionResolvable<IMessageHandler<PublishEventCommand>>
     {
-        public Task Handle(PublishEventCommand message, IIntegrationContext context, CancellationToken token)
+        private readonly IIntegrationContext _context;
+
+        public PublishEventCommandHandler(IIntegrationContext context)
         {
-            return context.Publish(new Event(message.Id), token);
+            _context = context;
+        }
+
+        public Task Handle(PublishEventCommand message, CancellationToken token)
+        {
+            return _context.Publish(new Event(message.Id), token);
         }
     }
 }

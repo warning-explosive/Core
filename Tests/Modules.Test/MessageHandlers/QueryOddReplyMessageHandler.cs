@@ -12,11 +12,18 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     internal class QueryOddReplyMessageHandler : IMessageHandler<Query>,
                                                  ICollectionResolvable<IMessageHandler<Query>>
     {
-        public Task Handle(Query message, IIntegrationContext context, CancellationToken token)
+        private readonly IIntegrationContext _context;
+
+        public QueryOddReplyMessageHandler(IIntegrationContext context)
+        {
+            _context = context;
+        }
+
+        public Task Handle(Query message, CancellationToken token)
         {
             return message.Id % 2 == 0
                 ? Task.CompletedTask
-                : context.Reply(message, new Reply(message.Id), token);
+                : _context.Reply(message, new Reply(message.Id), token);
         }
     }
 }

@@ -44,6 +44,9 @@
       <Compile Update="Internals\MessageHandlerDoesNotProduceMessageTestCase.cs">
         <DependentUpon>ITestCase.cs</DependentUpon>
       </Compile>
+      <Compile Update="Internals\TestIntegrationContext.cs">
+        <DependentUpon>ITestIntegrationContext.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

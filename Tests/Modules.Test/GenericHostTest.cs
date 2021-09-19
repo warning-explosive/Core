@@ -28,7 +28,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.Pipeline;
-    using GenericEndpoint.TestExtensions;
     using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
     using GenericHost.Api.Abstractions;
@@ -744,47 +743,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 .All(endpointTransport => ReferenceEquals(transport, endpointTransport));
 
             Assert.True(transportIsSame);
-        }
-
-        [Fact(Timeout = 60_000)]
-        internal void MessageHandlerTestExtensionsTest()
-        {
-            new CommandEmptyMessageHandler(TestIdentity.Endpoint10)
-                .OnMessage(new Command(42))
-                .Publishes<Endpoint1HandlerInvoked>(invoked =>
-                    invoked.EndpointIdentity.Equals(TestIdentity.Endpoint10)
-                    && invoked.HandlerType == typeof(CommandEmptyMessageHandler))
-                .DoesNotThrow()
-                .Invoke();
-
-            new CommandThrowingMessageHandler()
-                .OnMessage(new Command(42))
-                .ProducesNothing()
-                .Throws<InvalidOperationException>(ex => ex.Message == "42")
-                .Invoke();
-
-            new EventEmptyMessageHandler(TestIdentity.Endpoint20)
-                .OnMessage(new Event(42))
-                .Publishes<Endpoint2HandlerInvoked>(invoked =>
-                    invoked.EndpointIdentity.Equals(TestIdentity.Endpoint20)
-                    && invoked.HandlerType == typeof(EventEmptyMessageHandler))
-                .DoesNotThrow()
-                .Invoke();
-
-            new QueryOddReplyMessageHandler()
-                .OnMessage(new Query(42))
-                .ProducesNothing()
-                .DoesNotThrow()
-                .Invoke();
-
-            new QueryOddReplyMessageHandler()
-                .OnMessage(new Query(43))
-                .DoesNotSend<IIntegrationCommand>()
-                .DoesNotPublish<IIntegrationEvent>()
-                .DoesNotRequest<Query, Reply>()
-                .Replies<Reply>(reply => reply.Id == 43)
-                .DoesNotThrow()
-                .Invoke();
         }
 
         [Theory(Timeout = 60_000)]

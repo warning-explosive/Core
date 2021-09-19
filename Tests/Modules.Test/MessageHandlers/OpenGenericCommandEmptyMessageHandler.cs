@@ -15,15 +15,17 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
         where TCommand : OpenGenericHandlerCommand
     {
         private readonly EndpointIdentity _endpointIdentity;
+        private readonly IIntegrationContext _context;
 
-        public OpenGenericCommandEmptyMessageHandler(EndpointIdentity endpointIdentity)
+        public OpenGenericCommandEmptyMessageHandler(EndpointIdentity endpointIdentity, IIntegrationContext context)
         {
             _endpointIdentity = endpointIdentity;
+            _context = context;
         }
 
-        public Task Handle(TCommand message, IIntegrationContext context, CancellationToken token)
+        public Task Handle(TCommand message, CancellationToken token)
         {
-            return context.Publish(new Endpoint1HandlerInvoked(typeof(OpenGenericCommandEmptyMessageHandler<TCommand>), _endpointIdentity), token);
+            return _context.Publish(new Endpoint1HandlerInvoked(typeof(OpenGenericCommandEmptyMessageHandler<TCommand>), _endpointIdentity), token);
         }
     }
 }

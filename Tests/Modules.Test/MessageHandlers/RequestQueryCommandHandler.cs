@@ -12,11 +12,18 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     internal class RequestQueryCommandHandler : IMessageHandler<RequestQueryCommand>,
                                                 ICollectionResolvable<IMessageHandler<RequestQueryCommand>>
     {
-        public Task Handle(RequestQueryCommand message, IIntegrationContext context, CancellationToken token)
+        private readonly IIntegrationContext _context;
+
+        public RequestQueryCommandHandler(IIntegrationContext context)
+        {
+            _context = context;
+        }
+
+        public Task Handle(RequestQueryCommand message, CancellationToken token)
         {
             var query = new Query(message.Id);
 
-            return context.Request<Query, Reply>(query, token);
+            return _context.Request<Query, Reply>(query, token);
         }
     }
 }

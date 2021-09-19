@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             _predicate = predicate;
         }
 
-        public string? Assert(TestIntegrationContext integrationContext, Exception? exception)
+        public string? Assert(ITestIntegrationContext integrationContext, Exception? exception)
         {
             var predicateFunc = _predicate.Compile();
 

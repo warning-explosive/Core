@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             _assertion = assertion;
         }
 
-        public string? Assert(TestIntegrationContext integrationContext, Exception? exception)
+        public string? Assert(ITestIntegrationContext integrationContext, Exception? exception)
         {
             return exception is TException exactException && _assertion(exactException)
                 ? null

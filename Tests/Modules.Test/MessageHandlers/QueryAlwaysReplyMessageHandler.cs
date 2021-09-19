@@ -12,9 +12,16 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
     internal class QueryAlwaysReplyMessageHandler : IMessageHandler<Query>,
                                                     ICollectionResolvable<IMessageHandler<Query>>
     {
-        public Task Handle(Query message, IIntegrationContext context, CancellationToken token)
+        private readonly IIntegrationContext _context;
+
+        public QueryAlwaysReplyMessageHandler(IIntegrationContext context)
         {
-            return context.Reply(message, new Reply(message.Id), token);
+            _context = context;
+        }
+
+        public Task Handle(Query message, CancellationToken token)
+        {
+            return _context.Reply(message, new Reply(message.Id), token);
         }
     }
 }

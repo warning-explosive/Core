@@ -8,17 +8,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using AutoRegistration.Api.Attributes;
     using Contract.Abstractions;
 
+    /// <summary>
+    /// TestIntegrationContext
+    /// </summary>
     [UnregisteredComponent]
-    internal class TestIntegrationContext : IIntegrationContext
+    public class TestIntegrationContext : ITestIntegrationContext, IIntegrationContext
     {
         private readonly List<IIntegrationMessage> _messages;
 
+        /// <summary> .cctor </summary>
         public TestIntegrationContext()
         {
             _messages = new List<IIntegrationMessage>();
         }
 
-        internal IReadOnlyCollection<IIntegrationMessage> Messages
+        /// <inheritdoc />
+        public IReadOnlyCollection<IIntegrationMessage> Messages
         {
             get
             {
@@ -29,18 +34,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             }
         }
 
+        /// <inheritdoc />
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
             return Collect(command);
         }
 
+        /// <inheritdoc />
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
             return Collect(integrationEvent);
         }
 
+        /// <inheritdoc />
         public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
@@ -48,6 +56,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             return Collect(query);
         }
 
+        /// <inheritdoc />
         public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply

@@ -40,16 +40,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 .Concat(_integrationTypeProvider.EndpointQueries())
                 .Concat(_integrationTypeProvider.RepliesSubscriptions())
                 .Concat(_integrationTypeProvider.EventsSubscriptions())
-                .Each(message => _transport.Bind(message, _endpointIdentity, ProcessMessage));
+                .Each(message => _transport.Bind(message, _endpointIdentity, ExecuteMessageHandlers));
 
             return Task.CompletedTask;
         }
 
-        private Task ProcessMessage(IntegrationMessage message)
+        private Task ExecuteMessageHandlers(IntegrationMessage message)
         {
             return _dependencyContainer
                 .Resolve<IExecutableEndpoint>()
-                .ProcessMessage(message);
+                .ExecuteMessageHandlers(message);
         }
     }
 }

@@ -69,6 +69,15 @@
     <Compile Update="Pipeline\IMessagePipelineStep.cs">
       <DependentUpon>IMessagePipeline.cs</DependentUpon>
     </Compile>
+    <Compile Update="Endpoint\IExecutableEndpoint.cs">
+      <DependentUpon>IRunnableEndpoint.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Endpoint\GenericEndpoint.cs">
+      <DependentUpon>IExecutableEndpoint.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Endpoint\MessageHandlerExecutor.cs">
+      <DependentUpon>IMessageHandlerExecutor.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />

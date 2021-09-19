@@ -10,10 +10,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     public interface IExecutableEndpoint : IResolvable
     {
         /// <summary>
-        /// Process message
+        /// Executes message handlers
         /// </summary>
         /// <param name="message">Integration message</param>
         /// <returns>Ongoing operation</returns>
-        Task ProcessMessage(IntegrationMessage message);
+        Task ExecuteMessageHandlers(IntegrationMessage message);
     }
 }

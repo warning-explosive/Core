@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Contract;
     using Contract.Abstractions;
     using Messaging;
-    using Pipeline;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpoint : IRunnableEndpoint,
@@ -26,13 +24,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         public GenericEndpoint(
             EndpointIdentity endpointIdentity,
             IDependencyContainer dependencyContainer,
-            IEnumerable<IEndpointInitializer> initializers,
-            IMessagePipeline messagePipeline)
+            IEnumerable<IEndpointInitializer> initializers)
         {
             Identity = endpointIdentity;
             DependencyContainer = dependencyContainer;
             Initializers = initializers;
-            MessagePipeline = messagePipeline;
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new AsyncCountdownEvent(0);
@@ -44,21 +40,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         public IEnumerable<IEndpointInitializer> Initializers { get; }
 
-        public IMessagePipeline MessagePipeline { get; }
-
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
-
-        public async Task ProcessMessage(IntegrationMessage message)
-        {
-            await _ready.WaitAsync(Token).ConfigureAwait(false);
-
-            var handlerServiceType = typeof(IMessageHandler<>).MakeGenericType(message.ReflectedType);
-            var messageHandlers = DependencyContainer.ResolveCollection(handlerServiceType);
-
-            await InvokeMessageHandlers(messageHandlers, message)
-                .WhenAll()
-                .ConfigureAwait(false);
-        }
 
         public async Task StartAsync(CancellationToken token)
         {
@@ -90,40 +72,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        private IEnumerable<Task> InvokeMessageHandlers(IEnumerable<object> messageHandlers, IntegrationMessage message)
+        public async Task ExecuteMessageHandlers(IntegrationMessage message)
         {
-            foreach (var messageHandler in messageHandlers)
+            await _ready.WaitAsync(Token).ConfigureAwait(false);
+
+            var handlerServiceType = typeof(IMessageHandlerExecutor<>).MakeGenericType(message.ReflectedType);
+            var executor = DependencyContainer.Resolve(handlerServiceType);
+
+            using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
             {
-                var copy = message.Clone();
-                yield return InvokeMessageHandler(copy, messageHandler, Token);
+                await executor
+                    .CallMethod(nameof(IMessageHandlerExecutor<IIntegrationMessage>.Invoke))
+                    .WithArguments(message, _cts.Token)
+                    .Invoke<Task>()
+                    .ConfigureAwait(false);
             }
-        }
-
-        private async Task InvokeMessageHandler(IntegrationMessage message, object messageHandler, CancellationToken token)
-        {
-            var producer = InvokeMessageHandler(messageHandler);
-
-            await using (DependencyContainer.OpenScopeAsync())
-            {
-                var exclusiveContext = DependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
-
-                using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
-                {
-                    await MessagePipeline
-                        .Process(producer, exclusiveContext, token)
-                        .ConfigureAwait(false);
-                }
-            }
-        }
-
-        private static Func<IAdvancedIntegrationContext, CancellationToken, Task> InvokeMessageHandler(object messageHandler)
-        {
-            return (context, token) => messageHandler
-                .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
-                .WithArgument(context.Message.ReflectedType, context.Message.Payload)
-                .WithArgument<IIntegrationContext>(context)
-                .WithArgument(token)
-                .Invoke<Task>();
         }
     }
 }

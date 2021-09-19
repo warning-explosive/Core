@@ -76,8 +76,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            var handlerServiceType = typeof(IMessageHandlerExecutor<>).MakeGenericType(message.ReflectedType);
-            var executor = DependencyContainer.Resolve(handlerServiceType);
+            await this
+                .CallMethod(nameof(ExecuteMessageHandlers))
+                .WithTypeArgument(message.ReflectedType)
+                .WithArgument(message)
+                .Invoke<Task>()
+                .ConfigureAwait(false);
+        }
+
+        private async Task ExecuteMessageHandlers<TMessage>(IntegrationMessage message)
+            where TMessage : IIntegrationMessage
+        {
+            var executor = DependencyContainer.Resolve<IMessageHandlerExecutor<TMessage>>();
 
             using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
             {

@@ -5,28 +5,33 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
+    using ChangesTracking;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction, IDisposable
     {
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IChangesTracker _changesTracker;
 
         private static IDbConnection? _connection;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
 
-        public DatabaseTransaction(IDatabaseConnectionProvider connectionProvider)
+        public DatabaseTransaction(
+            IDatabaseConnectionProvider connectionProvider,
+            IChangesTracker changesTracker)
         {
             _connectionProvider = connectionProvider;
+            _changesTracker = changesTracker;
         }
 
-        public bool HasChanges => throw new NotImplementedException("#131 - track domain entities");
+        public bool HasChanges => _changesTracker.HasChanges;
 
         public IDbTransaction UnderlyingDbTransaction
         {
@@ -86,12 +91,24 @@
             return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
         }
 
-        public Task Close(bool commit, CancellationToken token)
+        public async Task Close(bool commit, CancellationToken token)
         {
-            // TODO: #132 - commit changes
-            Interlocked.Exchange(ref _transaction, default)?.Dispose();
-
-            return Task.CompletedTask;
+            try
+            {
+                if (commit)
+                {
+                    await _changesTracker.SaveChanges(token).ConfigureAwait(false);
+                    _transaction?.Commit();
+                }
+                else
+                {
+                    _transaction?.Dispose();
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _transaction, default)?.Dispose();
+            }
         }
 
         public void Dispose()
@@ -99,24 +116,9 @@
             Close(false, CancellationToken.None).Wait();
         }
 
-        public Task Insert(IAggregate aggregate, CancellationToken token)
+        public Task Track(IAggregate aggregate, CancellationToken token)
         {
-            throw new NotImplementedException("#131 - track domain entities");
-        }
-
-        public Task Update(IAggregate aggregate, CancellationToken token)
-        {
-            throw new NotImplementedException("#131 - track domain entities");
-        }
-
-        public Task Upsert(IAggregate aggregate, CancellationToken token)
-        {
-            throw new NotImplementedException("#131 - track domain entities");
-        }
-
-        public Task Delete(IAggregate aggregate, CancellationToken token)
-        {
-            throw new NotImplementedException("#131 - track domain entities");
+            return _changesTracker.Track(aggregate, token);
         }
     }
 }

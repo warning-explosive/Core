@@ -8,7 +8,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Basics.Enumerations;
     using Basics.Primitives;
     using Contract;
-    using Core.DataAccess.Api.Abstractions;
+    using Core.DataAccess.Api.Transaction;
+    using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.UnitOfWork;
     using IntegrationTransport.Api.Abstractions;
@@ -57,7 +58,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             var inbox = Inbox.EnsureNotNull("You should start the unit of work before commit it");
 
-            if (inbox.Handled || Inbox.IsError)
+            if (inbox.Handled || inbox.IsError)
             {
                 await Rollback(context, default, token).ConfigureAwait(false);
                 return;
@@ -71,10 +72,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
 
             inbox.MarkAsHandled();
-            await _transaction.Upsert(inbox, token).ConfigureAwait(false);
+            await _transaction.Track(inbox, token).ConfigureAwait(false);
 
             var outbox = new Outbox(inbox.Message, OutboxStorage.All());
-            await _transaction.Insert(outbox, token).ConfigureAwait(false);
+            await _transaction.Track(outbox, token).ConfigureAwait(false);
 
             await Commit(token).ConfigureAwait(false);
 

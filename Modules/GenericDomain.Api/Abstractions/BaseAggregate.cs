@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary> .cctor </summary>
         protected BaseAggregate()
         {
-            // TODO: #132 - generate BaseAggregateCreated event
             _events = new List<IDomainEvent>();
         }
 
@@ -22,11 +21,10 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary>
         /// Populates domain event
         /// </summary>
-        /// <param name="events">Domain events</param>
-        protected void PopulateEvent(params IDomainEvent[] events)
+        /// <param name="domainEvent">Domain event</param>
+        protected void PopulateEvent(IDomainEvent domainEvent)
         {
-            // TODO: #132 - publish domain events during transaction committing
-            _events.AddRange(events);
+            _events.Add(domainEvent);
         }
     }
 }

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase
     using System.Collections.Generic;
     using System.Reflection;
     using Basics;
+    using Orm.Connection;
 
     /// <summary>
     /// InMemoryDatabaseProvider

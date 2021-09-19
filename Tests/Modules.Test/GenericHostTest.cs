@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using DataAccess.Orm;
+    using DataAccess.Orm.Connection;
     using DataAccess.Orm.InMemoryDatabase;
     using DataAccess.Orm.PostgreSql;
     using GenericEndpoint.Api.Abstractions;

@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
-    using Api.Extensions;
+    using Api.DatabaseEntity;
+    using Api.Reading;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 

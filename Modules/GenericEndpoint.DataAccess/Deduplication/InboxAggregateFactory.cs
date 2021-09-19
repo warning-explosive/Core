@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
     using System;
     using System.Linq;
@@ -6,8 +6,7 @@
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Core.DataAccess.Api.Abstractions;
-    using Core.DataAccess.Api.Extensions;
+    using Core.DataAccess.Api.Reading;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
@@ -37,30 +36,9 @@
                 .SingleOrDefaultAsync(token)
                 .ConfigureAwait(false);
 
-            Inbox inbox;
-
-            if (integrationMessageDatabaseEntity == null)
-            {
-                inbox = new Inbox(spec.Message);
-            }
-            else
-            {
-                var message = integrationMessageDatabaseEntity.BuildIntegrationMessage(_serializer, _formatter);
-
-                inbox = new Inbox(message);
-
-                if (integrationMessageDatabaseEntity.Handled)
-                {
-                    inbox.MarkAsHandled();
-                }
-
-                if (integrationMessageDatabaseEntity.IsError)
-                {
-                    inbox.MarkAsError();
-                }
-            }
-
-            return inbox;
+            return integrationMessageDatabaseEntity == null
+                ? new Inbox(spec.Message)
+                : new Inbox(integrationMessageDatabaseEntity, _serializer, _formatter);
         }
     }
 }

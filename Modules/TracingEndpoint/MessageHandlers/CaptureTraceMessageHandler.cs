@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract.Messages;
-    using DataAccess.Api.Abstractions;
+    using DataAccess.Api.Transaction;
     using Domain;
     using GenericEndpoint.Api.Abstractions;
 
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
         {
             var capturedMessage = new CapturedMessage(command.IntegrationMessage, command.Exception?.ToString());
 
-            return _databaseContext.Insert(capturedMessage, token);
+            return _databaseContext.Track(capturedMessage, token);
         }
     }
 }

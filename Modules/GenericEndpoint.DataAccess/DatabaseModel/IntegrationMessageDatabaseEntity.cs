@@ -4,8 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Contract.Abstractions;
-    using Core.DataAccess.Api;
-    using Core.DataAccess.Api.Abstractions;
+    using Core.DataAccess.Api.DatabaseEntity;
     using CrossCuttingConcerns.Api.Abstractions;
     using Messaging;
     using Messaging.Abstractions;

@@ -108,5 +108,8 @@
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
       </Compile>
+      <Compile Update="ChangesTracking\ChangesTracker.cs">
+        <DependentUpon>IChangesTracker.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

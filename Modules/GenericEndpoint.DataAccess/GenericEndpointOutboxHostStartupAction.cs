@@ -5,12 +5,12 @@
     using System.Threading.Tasks;
     using CompositionRoot.Api.Abstractions.Container;
     using Contract;
-    using Core.DataAccess.Api.Abstractions;
+    using Core.DataAccess.Api.Transaction;
+    using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
-    using UnitOfWork;
 
     internal class GenericEndpointOutboxHostStartupAction : IHostStartupAction
     {
@@ -49,7 +49,7 @@
                         if (!inbox.IsError)
                         {
                             inbox.MarkAsError();
-                            await transaction.Upsert(inbox, token).ConfigureAwait(false);
+                            await transaction.Track(inbox, token).ConfigureAwait(false);
                         }
                     }
                 }

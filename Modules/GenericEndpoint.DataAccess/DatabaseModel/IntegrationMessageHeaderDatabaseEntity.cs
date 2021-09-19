@@ -1,8 +1,7 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
 {
     using System;
-    using Core.DataAccess.Api;
-    using Core.DataAccess.Api.Abstractions;
+    using Core.DataAccess.Api.DatabaseEntity;
 
     internal class IntegrationMessageHeaderDatabaseEntity : BaseDatabaseEntity<Guid>
     {

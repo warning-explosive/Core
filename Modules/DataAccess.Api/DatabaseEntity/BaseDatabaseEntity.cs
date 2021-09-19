@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Api.DatabaseEntity
 {
     using System;
     using System.Diagnostics.CodeAnalysis;

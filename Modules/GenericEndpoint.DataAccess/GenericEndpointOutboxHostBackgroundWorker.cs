@@ -8,14 +8,14 @@
     using CompositionRoot.Api.Abstractions.Container;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Core.DataAccess.Api.Abstractions;
-    using Core.DataAccess.Api.Extensions;
+    using Core.DataAccess.Api.Reading;
+    using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
+    using Deduplication;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
-    using UnitOfWork;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {

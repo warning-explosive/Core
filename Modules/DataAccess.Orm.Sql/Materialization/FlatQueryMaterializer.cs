@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Data;
     using System.Runtime.CompilerServices;
     using System.Threading;
-    using Api.Abstractions;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;

@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using DataAccess.Api.Abstractions;
+    using DataAccess.Api.DatabaseEntity;
+    using DataAccess.Api.Reading;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Translation;
     using Xunit;

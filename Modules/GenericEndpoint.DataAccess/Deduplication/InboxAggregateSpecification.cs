@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
     using Contract;
     using GenericDomain.Api.Abstractions;

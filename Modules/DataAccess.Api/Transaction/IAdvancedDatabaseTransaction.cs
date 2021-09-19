@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
+﻿namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
     using System.Data;
     using System.Threading;

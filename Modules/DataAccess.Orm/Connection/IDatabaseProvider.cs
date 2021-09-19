@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm
+namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System.Collections.Generic;
     using System.Reflection;

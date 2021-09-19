@@ -47,10 +47,25 @@
       <Compile Update="Model\InboxFactorySpecification.cs">
         <DependentUpon>InboxFactory.cs</DependentUpon>
       </Compile>
-      <Compile Update="UnitOfWork\InboxAggregateSpecification.cs">
+      <Compile Update="Deduplication\InboxMessageReceived.cs">
+        <DependentUpon>Inbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\InboxMessageWasHandled.cs">
+        <DependentUpon>Inbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\InboxMessageWasMovedToErrorQueue.cs">
+        <DependentUpon>Inbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\OutboxMessagesAreReadyToBeSent.cs">
+        <DependentUpon>Outbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\OutboxMessagesWereSent.cs">
+        <DependentUpon>Outbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\InboxAggregateSpecification.cs">
         <DependentUpon>InboxAggregateFactory.cs</DependentUpon>
       </Compile>
-      <Compile Update="UnitOfWork\InboxAggregateFactory.cs">
+      <Compile Update="Deduplication\InboxAggregateFactory.cs">
         <DependentUpon>Inbox.cs</DependentUpon>
       </Compile>
     </ItemGroup>

@@ -1,9 +1,9 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Core.DataAccess.Api.Abstractions;
+    using Core.DataAccess.Api.Transaction;
     using GenericDomain.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
@@ -23,6 +23,7 @@
             Initiator = initiator;
             SubsequentMessages = subsequentMessages;
             Sent = false;
+            PopulateEvent(new OutboxMessagesAreReadyToBeSent());
         }
 
         /// <summary>
@@ -46,6 +47,7 @@
         public void MarkAsSent()
         {
             Sent = true;
+            PopulateEvent(new OutboxMessagesWereSent());
         }
 
         /// <summary>
@@ -69,7 +71,7 @@
 
             await using (await transaction.Open(true, token).ConfigureAwait(false))
             {
-                await transaction.Update(this, token).ConfigureAwait(false);
+                await transaction.Track(this, token).ConfigureAwait(false);
             }
         }
     }

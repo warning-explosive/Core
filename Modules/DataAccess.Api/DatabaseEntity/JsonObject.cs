@@ -1,7 +1,6 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api
+﻿namespace SpaceEngineers.Core.DataAccess.Api.DatabaseEntity
 {
     using System;
-    using Abstractions;
 
     /// <summary>
     /// Json object

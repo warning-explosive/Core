@@ -46,14 +46,23 @@
       <Compile Update="Abstractions\IDatabaseTransaction.cs">
         <DependentUpon>IDatabaseContext.cs</DependentUpon>
       </Compile>
-      <Compile Update="Abstractions\BaseDatabaseEntity.cs">
-        <DependentUpon>IDatabaseEntity.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\IDatabaseEntity.cs">
-        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
-      </Compile>
       <Compile Update="Abstractions\IAdvancedDatabaseTransaction.cs">
         <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DatabaseEntity\BaseDatabaseEntity.cs">
+        <DependentUpon>IDatabaseEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DatabaseEntity\IDatabaseEntity.cs">
+        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DatabaseEntity\JsonObject.cs">
+        <DependentUpon>IInlinedObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseContext.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

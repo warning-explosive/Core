@@ -1,10 +1,11 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Abstractions
+namespace SpaceEngineers.Core.DataAccess.Api.Reading
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
+    using DatabaseEntity;
 
     /// <summary>
     /// IReadRepository

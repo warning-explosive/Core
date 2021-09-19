@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Extensions
+﻿namespace SpaceEngineers.Core.DataAccess.Api.Reading
 {
     using System;
     using System.Collections.Generic;

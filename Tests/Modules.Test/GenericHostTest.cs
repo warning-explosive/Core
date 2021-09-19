@@ -21,7 +21,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.DataAccess;
     using GenericEndpoint.Endpoint;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.StartupActions;
@@ -813,8 +812,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var expectedHostBackgroundWorkers = new[]
                 {
-                    typeof(IntegrationTransportHostBackgroundWorker),
-                    typeof(GenericEndpointOutboxHostBackgroundWorker)
+                    typeof(IntegrationTransportHostBackgroundWorker)
                 };
 
                 var actualHostBackgroundWorkers = host

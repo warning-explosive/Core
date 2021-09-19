@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot.Api.Abstractions.Registration;
     using CompositionRoot.Api.Extensions;
     using Contract;
-    using DataAccess;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using ManualRegistrations;
@@ -82,16 +81,25 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             this IHostBuilder hostBuilder,
             Func<IEndpointBuilder, EndpointOptions> factory)
         {
-            var endpointOptions = factory(new EndpointBuilder());
+            var builder = new EndpointBuilder().WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer));
+
+            var endpointOptions = factory(builder);
 
             hostBuilder.ApplyOptions(endpointOptions);
 
             return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
             {
                 serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ctx, ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions)));
-                /*TODO: #100: provide api so as to setup user defined IHostStartupActions & IHostBackgroundWorkers*/
-                serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildEndpointStartup(serviceProvider, endpointOptions));
-                serviceCollection.AddSingleton<IHostBackgroundWorker>(serviceProvider => BuildEndpointOutboxBackgroundWorker(serviceProvider, endpointOptions));
+
+                foreach (var producer in builder.StartupActions)
+                {
+                    serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildEndpointStartupAction(serviceProvider, endpointOptions, producer));
+                }
+
+                foreach (var producer in builder.BackgroundWorkers)
+                {
+                    serviceCollection.AddSingleton<IHostBackgroundWorker>(serviceProvider => BuildEndpointBackgroundWorker(serviceProvider, endpointOptions, producer));
+                }
             });
         }
 
@@ -148,19 +156,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return endpointOptions.WithContainerOptions(containerOptions);
         }
 
-        private static IHostStartupAction BuildEndpointStartup(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
+        private static IHostStartupAction BuildEndpointStartupAction(
+            IServiceProvider serviceProvider,
+            EndpointOptions endpointOptions,
+            Func<IDependencyContainer, IHostStartupAction> producer)
         {
             var dependencyContainer = GetEndpointDependencyContainer(serviceProvider, endpointOptions.Identity);
-            return new GenericEndpointHostStartupAction(dependencyContainer);
+            return producer(dependencyContainer);
         }
 
-        private static IHostBackgroundWorker BuildEndpointOutboxBackgroundWorker(IServiceProvider serviceProvider, EndpointOptions endpointOptions)
+        private static IHostBackgroundWorker BuildEndpointBackgroundWorker(
+            IServiceProvider serviceProvider,
+            EndpointOptions endpointOptions,
+            Func<IDependencyContainer, IHostBackgroundWorker> producer)
         {
             var dependencyContainer = GetEndpointDependencyContainer(serviceProvider, endpointOptions.Identity);
-            return new GenericEndpointOutboxHostBackgroundWorker(dependencyContainer);
+            return producer(dependencyContainer);
         }
 
-        private static IDependencyContainer GetEndpointDependencyContainer(IServiceProvider serviceProvider, EndpointIdentity endpointIdentity)
+        private static IDependencyContainer GetEndpointDependencyContainer(
+            IServiceProvider serviceProvider,
+            EndpointIdentity endpointIdentity)
         {
             return serviceProvider
                 .GetServices<IDependencyContainer>()

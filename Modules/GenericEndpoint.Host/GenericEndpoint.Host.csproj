@@ -53,4 +53,9 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Builder\EndpointBuilder.cs">
+        <DependentUpon>IEndpointBuilder.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

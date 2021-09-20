@@ -91,9 +91,6 @@
       <Compile Update="Translation\IIntermediateQueryTranslator.cs">
         <DependentUpon>QueryTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\LinqMethods.cs">
-        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\DatabaseColumn.cs">
         <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
       </Compile>

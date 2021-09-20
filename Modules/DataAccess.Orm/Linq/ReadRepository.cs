@@ -28,14 +28,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         public Task<TEntity> SingleAsync(TKey key, CancellationToken token)
         {
             return _queryProvider
-                .CreateQuery<TEntity>(this.QuerySingle(key))
+                .CreateQuery<TEntity>(this.QuerySingleAsync(key))
                 .SingleAsync(token);
         }
 
         public Task<TEntity?> SingleOrDefaultAsync(TKey key, CancellationToken token)
         {
             return _queryProvider
-                .CreateQuery<TEntity>(this.QuerySingleOrDefault(key))
+                .CreateQuery<TEntity>(this.QuerySingleOrDefaultAsync(key))
                 .SingleOrDefaultAsync(token);
         }
     }

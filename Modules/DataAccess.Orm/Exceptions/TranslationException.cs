@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Exceptions
+namespace SpaceEngineers.Core.DataAccess.Orm.Exceptions
 {
     using System;
     using System.Linq.Expressions;

@@ -22,7 +22,6 @@
         {
             Initiator = initiator;
             SubsequentMessages = subsequentMessages;
-            Sent = false;
             PopulateEvent(new OutboxMessagesAreReadyToBeSent());
         }
 
@@ -44,10 +43,11 @@
         /// <summary>
         /// Marks subsequent integration messages as sent
         /// </summary>
-        public void MarkAsSent()
+        /// <param name="integrationMessage">Integration message</param>
+        public void MarkAsSent(IntegrationMessage integrationMessage)
         {
             Sent = true;
-            PopulateEvent(new OutboxMessagesWereSent());
+            PopulateEvent(new OutboxMessageWereSent(integrationMessage));
         }
 
         /// <summary>
@@ -65,13 +65,13 @@
             foreach (var message in SubsequentMessages)
             {
                 await transport.Enqueue(message, token).ConfigureAwait(false);
-            }
 
-            MarkAsSent();
+                MarkAsSent(message);
 
-            await using (await transaction.Open(true, token).ConfigureAwait(false))
-            {
-                await transaction.Track(this, token).ConfigureAwait(false);
+                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                {
+                    await transaction.Track(this, token).ConfigureAwait(false);
+                }
             }
         }
     }

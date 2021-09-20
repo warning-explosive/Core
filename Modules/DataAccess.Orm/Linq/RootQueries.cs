@@ -17,25 +17,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 All<TEntity, TKey>());
         }
 
-        internal static Expression QuerySingle<TEntity, TKey>(
+        internal static Expression QuerySingleAsync<TEntity, TKey>(
             this IReadRepository<TEntity, TKey> readRepository,
             TKey key)
             where TEntity : IUniqueIdentified<TKey>
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
-                Single<TEntity, TKey>(),
+                SingleAsync<TEntity, TKey>(),
                 Expression.Constant(key));
         }
 
-        internal static Expression QuerySingleOrDefault<TEntity, TKey>(
+        internal static Expression QuerySingleOrDefaultAsync<TEntity, TKey>(
             this IReadRepository<TEntity, TKey> readRepository,
             TKey key)
             where TEntity : IUniqueIdentified<TKey>
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
-                SingleOrDefault<TEntity, TKey>(),
+                SingleOrDefaultAsync<TEntity, TKey>(),
                 Expression.Constant(key));
         }
 
@@ -46,14 +46,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.All), Array.Empty<Type>());
         }
 
-        private static MethodInfo Single<TEntity, TKey>()
+        private static MethodInfo SingleAsync<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
         {
             return typeof(IReadRepository<TEntity, TKey>)
                 .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleAsync), new[] { typeof(TKey) });
         }
 
-        private static MethodInfo SingleOrDefault<TEntity, TKey>()
+        private static MethodInfo SingleOrDefaultAsync<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
         {
             return typeof(IReadRepository<TEntity, TKey>)

@@ -56,10 +56,7 @@
       <Compile Update="Deduplication\InboxMessageWasMovedToErrorQueue.cs">
         <DependentUpon>Inbox.cs</DependentUpon>
       </Compile>
-      <Compile Update="Deduplication\OutboxMessagesAreReadyToBeSent.cs">
-        <DependentUpon>Outbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\OutboxMessagesWereSent.cs">
+      <Compile Update="Deduplication\OutboxMessageWereSent.cs">
         <DependentUpon>Outbox.cs</DependentUpon>
       </Compile>
       <Compile Update="Deduplication\InboxAggregateSpecification.cs">
@@ -67,6 +64,9 @@
       </Compile>
       <Compile Update="Deduplication\InboxAggregateFactory.cs">
         <DependentUpon>Inbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\OutboxMessagesAreReadyToBeSent.cs">
+        <DependentUpon>Outbox.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
+    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -29,6 +30,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             _valuesQueryMaterializer = valuesQueryMaterializer;
         }
 
+        public async Task<IGrouping<TKey, TValue>> MaterializeScalar(GroupedQuery query, CancellationToken token)
+        {
+            var key = await MaterializeScalarKey(query, token).ConfigureAwait(false);
+            var values = MaterializeValues(key, query, token).AsEnumerable(token);
+
+            return new Grouping<TKey, TValue>(key, values);
+        }
+
         public async IAsyncEnumerable<IGrouping<TKey, TValue>> Materialize(GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
         {
             await foreach (var key in MaterializeKeys(query, token))
@@ -37,6 +46,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
                 yield return new Grouping<TKey, TValue>(key, values);
             }
+        }
+
+        private Task<TKey> MaterializeScalarKey(GroupedQuery query, CancellationToken token)
+        {
+            var keysQuery = new FlatQuery(query.KeysQuery, query.KeysQueryParameters);
+
+            return _keysQueryMaterializer.MaterializeScalar(keysQuery, token);
         }
 
         private IAsyncEnumerable<TKey> MaterializeKeys(GroupedQuery query, CancellationToken token)

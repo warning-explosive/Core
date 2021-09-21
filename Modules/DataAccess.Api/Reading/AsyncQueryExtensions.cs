@@ -52,6 +52,7 @@
         /// <typeparam name="TSource">TSource type-argument</typeparam>
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
+        [Pure]
         public static Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
             this IQueryable<TSource> query,
             Func<TSource, TKey> keySelector,
@@ -74,6 +75,7 @@
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <typeparam name="TElement">TElement type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
+        [Pure]
         public static Task<Dictionary<TKey, TElement>> ToDictionaryAsync<TSource, TKey, TElement>(
             this IQueryable<TSource> query,
             Func<TSource, TKey> keySelector,

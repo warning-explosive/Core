@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq.Expressions;
     using System.Runtime.CompilerServices;
     using System.Threading;
+    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -53,6 +54,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
 
+            var isScalar = typeof(TResult) == itemType;
+
+            if (isScalar)
+            {
+                var task = this
+                    .CallMethod(nameof(ExecuteScalarAsync))
+                    .WithTypeArgument(itemType)
+                    .WithArgument(expression)
+                    .WithArgument(CancellationToken.None)
+                    .Invoke<Task>();
+
+                var scalar = GetType()
+                    .CallMethod(nameof(AsScalar))
+                    .WithTypeArgument(itemType)
+                    .WithArgument(task)
+                    .Invoke();
+
+                return (TResult)scalar!;
+            }
+
             var asyncEnumerable = this
                 .CallMethod(nameof(ExecuteAsync))
                 .WithTypeArgument(itemType)
@@ -65,14 +86,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .WithTypeArgument(itemType)
                 .WithArgument(asyncEnumerable)
                 .WithArgument(CancellationToken.None)
-                .Invoke<object>();
+                .Invoke();
 
-            return (TResult)enumerable;
+            return (TResult)enumerable!;
         }
 
-        public async IAsyncEnumerable<T> ExecuteAsync<T>(
-            Expression expression,
-            [EnumeratorCancellation] CancellationToken token)
+        public async Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token)
+        {
+            var query = await _translator.Translate(expression, token).ConfigureAwait(false);
+
+            return await MaterializeScalar<T>(query, token).ConfigureAwait(false);
+        }
+
+        public async IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, [EnumeratorCancellation] CancellationToken token)
         {
             var query = await _translator.Translate(expression, token).ConfigureAwait(false);
 
@@ -80,6 +106,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             {
                 yield return item;
             }
+        }
+
+        private Task<T> MaterializeScalar<T>(IQuery query, CancellationToken token)
+        {
+            return this
+                .CallMethod(nameof(MaterializeScalar))
+                .WithTypeArgument(query.GetType())
+                .WithTypeArgument<T>()
+                .WithArgument(query)
+                .WithArgument(token)
+                .Invoke<Task<T>>();
+        }
+
+        private Task<TItem> MaterializeScalar<TQuery, TItem>(TQuery query, CancellationToken token)
+            where TQuery : IQuery
+        {
+            return _dependencyContainer
+                .Resolve<IQueryMaterializer<TQuery, TItem>>()
+                .MaterializeScalar(query, token);
+        }
+
+        private static T AsScalar<T>(Task<T> task)
+        {
+            return task.Result;
         }
 
         private IAsyncEnumerable<T> Materialize<T>(IQuery query, CancellationToken token)

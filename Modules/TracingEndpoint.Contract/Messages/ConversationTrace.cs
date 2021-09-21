@@ -27,6 +27,13 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
             SubsequentTrace = subsequentTrace ?? Array.Empty<ConversationTrace>();
         }
 
+        /// <summary> .cctor </summary>
+        /// <param name="correlationId">Conversation id</param>
+        public ConversationTrace(Guid correlationId)
+        {
+            ConversationId = correlationId;
+        }
+
         /// <summary>
         /// Conversation id
         /// </summary>
@@ -35,7 +42,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
         /// <summary>
         /// Message
         /// </summary>
-        public IntegrationMessage Message { get; }
+        public IntegrationMessage? Message { get; }
 
         /// <summary>
         /// Refuse reason
@@ -45,6 +52,6 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
         /// <summary>
         /// Subsequent trace
         /// </summary>
-        public IReadOnlyCollection<ConversationTrace> SubsequentTrace { get; }
+        public IReadOnlyCollection<ConversationTrace>? SubsequentTrace { get; }
     }
 }

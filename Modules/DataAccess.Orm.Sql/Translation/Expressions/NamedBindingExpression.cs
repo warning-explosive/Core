@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using System.Reflection;
+    using Api.Exceptions;
     using Basics;
-    using Exceptions;
 
     /// <summary>
     /// NamedBindingExpression

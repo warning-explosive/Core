@@ -3,10 +3,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
+    using Api.Exceptions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Exceptions;
 
     [Component(EnLifestyle.Scoped)]
     internal class ExpressionTranslator : IExpressionTranslator

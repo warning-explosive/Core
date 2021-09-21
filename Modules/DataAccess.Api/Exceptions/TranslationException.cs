@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Exceptions
+namespace SpaceEngineers.Core.DataAccess.Api.Exceptions
 {
     using System;
     using System.Linq.Expressions;

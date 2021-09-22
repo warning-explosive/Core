@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal FilterExpression(Type type)
-            : this(type, null !, null !)
+            : this(type, null!, null!)
         {
         }
 
@@ -46,12 +46,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression which we want to filter
         /// </summary>
-        public IIntermediateExpression Source { get; private set; } = null!;
+        public IIntermediateExpression Source { get; private set; }
 
         /// <summary>
         /// Filtering expression
         /// </summary>
-        public IIntermediateExpression Expression { get; private set; } = null!;
+        public IIntermediateExpression Expression { get; private set; }
 
         #region IEquatable
 

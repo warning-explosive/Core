@@ -14,30 +14,32 @@
     [Component(EnLifestyle.Scoped)]
     internal class InboxAggregateFactory : IAggregateFactory<Inbox, InboxAggregateSpecification>
     {
-        private readonly IReadRepository<IntegrationMessageDatabaseEntity, Guid> _integrationMessageReadRepository;
+        private readonly IReadRepository<InboxMessageDatabaseEntity, Guid> _inboxMessageReadRepository;
         private readonly IJsonSerializer _serializer;
         private readonly IStringFormatter _formatter;
 
         public InboxAggregateFactory(
-            IReadRepository<IntegrationMessageDatabaseEntity, Guid> integrationMessageReadRepository,
+            IReadRepository<InboxMessageDatabaseEntity, Guid> inboxMessageReadRepository,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {
-            _integrationMessageReadRepository = integrationMessageReadRepository;
+            _inboxMessageReadRepository = inboxMessageReadRepository;
             _serializer = serializer;
             _formatter = formatter;
         }
 
         public async Task<Inbox> Build(InboxAggregateSpecification spec, CancellationToken token)
         {
-            var integrationMessageDatabaseEntity = await _integrationMessageReadRepository
+            var integrationMessageDatabaseEntity = await _inboxMessageReadRepository
                 .All()
-                .Where(message => message.PrimaryKey == spec.Message.Id && message.HandledByEndpoint == spec.EndpointIdentity.LogicalName)
+                .Where(message => message.Message.PrimaryKey == spec.Message.Id
+                                  && message.EndpointIdentity.LogicalName == spec.EndpointIdentity.LogicalName
+                                  && message.EndpointIdentity.InstanceName == spec.EndpointIdentity.InstanceName)
                 .SingleOrDefaultAsync(token)
                 .ConfigureAwait(false);
 
             return integrationMessageDatabaseEntity == null
-                ? new Inbox(spec.Message)
+                ? new Inbox(spec.Message, spec.EndpointIdentity)
                 : new Inbox(integrationMessageDatabaseEntity, _serializer, _formatter);
         }
     }

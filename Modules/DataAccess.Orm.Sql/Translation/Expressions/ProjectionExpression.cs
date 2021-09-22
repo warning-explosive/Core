@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal ProjectionExpression(Type type)
-            : this(type, null !, new List<IIntermediateExpression>())
+            : this(type, null!, new List<IIntermediateExpression>())
         {
         }
 
@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression which we want to transform
         /// </summary>
-        public IIntermediateExpression Source { get; private set; } = null!;
+        public IIntermediateExpression Source { get; private set; }
 
         #region IEquatable
 

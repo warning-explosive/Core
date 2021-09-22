@@ -3,12 +3,12 @@
     using System;
     using DataAccess.Api.DatabaseEntity;
 
-    internal class RefusedIntegrationMessages : BaseDatabaseEntity<Guid>
+    internal class CapturedMessageDatabaseEntity : BaseDatabaseEntity<Guid>
     {
-        public RefusedIntegrationMessages(
+        public CapturedMessageDatabaseEntity(
             Guid primaryKey,
             IntegrationMessageDatabaseEntity message,
-            string refuseReason)
+            string? refuseReason)
             : base(primaryKey)
         {
             Message = message;
@@ -17,6 +17,6 @@
 
         public IntegrationMessageDatabaseEntity Message { get; }
 
-        public string RefuseReason { get; }
+        public string? RefuseReason { get; }
     }
 }

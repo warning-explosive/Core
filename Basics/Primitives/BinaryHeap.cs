@@ -273,7 +273,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
         private void RemoveLast()
         {
-            _array[_last] = default(TElement) !;
+            _array[_last] = default!;
             _last--;
 
             Contract();

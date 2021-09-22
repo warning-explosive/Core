@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Basics
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Primitives;
 
     /// <summary>
     /// Task class extensions
@@ -28,9 +27,18 @@ namespace SpaceEngineers.Core.Basics
 
             static async Task WaitAsyncInternal(Task task, CancellationToken token)
             {
-                using var cancelCompletionSource = new TaskCancellationCompletionSource<object>(token);
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                await Task.WhenAny(task, cancelCompletionSource.Task).ConfigureAwait(false);
+                if (token.IsCancellationRequested)
+                {
+                    tcs.SetCanceled();
+                    return;
+                }
+
+                using (token.Register(() => tcs.TrySetCanceled(token), useSynchronizationContext: false))
+                {
+                    await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+                }
             }
         }
     }

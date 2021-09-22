@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal ConditionalExpression(Type type)
-            : this(type, null !, null !, null !)
+            : this(type, null!, null!, null!)
         {
         }
 
@@ -42,17 +42,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// When condition
         /// </summary>
-        public IIntermediateExpression When { get; private set; } = null!;
+        public IIntermediateExpression When { get; private set; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public IIntermediateExpression Then { get; private set; } = null!;
+        public IIntermediateExpression Then { get; private set; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public IIntermediateExpression Else { get; private set; } = null!;
+        public IIntermediateExpression Else { get; private set; }
 
         #region IEquatable
 

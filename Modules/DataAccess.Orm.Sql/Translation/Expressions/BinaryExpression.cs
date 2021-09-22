@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal BinaryExpression(Type type, ExpressionType @operator)
-            : this(type, @operator, null !, null !)
+            : this(type, @operator, null!, null!)
         {
         }
 
@@ -47,12 +47,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Left expression
         /// </summary>
-        public IIntermediateExpression Left { get; private set; } = null!;
+        public IIntermediateExpression Left { get; private set; }
 
         /// <summary>
         /// Right expression
         /// </summary>
-        public IIntermediateExpression Right { get; private set; } = null!;
+        public IIntermediateExpression Right { get; private set; }
 
         #region IEquatable
 

@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public string Name { get; }
 
         /// <inheritdoc />
-        public IIntermediateExpression Source { get; private set; } = null!;
+        public IIntermediateExpression Source { get; private set; }
 
         #region IEquatable
 

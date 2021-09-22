@@ -47,10 +47,10 @@
       <Compile Update="Repositories\CapturedMessageReadRepository.cs">
         <DependentUpon>ICapturedMessageReadRepository.cs</DependentUpon>
       </Compile>
-      <Compile Update="Domain\CapturedMessageAggregateFactory.cs">
-        <DependentUpon>CapturedMessage.cs</DependentUpon>
+      <Compile Update="Domain\InsertCapturedMessage.cs">
+        <DependentUpon>MessageCaptured.cs</DependentUpon>
       </Compile>
-      <Compile Update="Domain\CapturedMessageSpecification.cs">
+      <Compile Update="Domain\MessageCaptured.cs">
         <DependentUpon>CapturedMessage.cs</DependentUpon>
       </Compile>
     </ItemGroup>

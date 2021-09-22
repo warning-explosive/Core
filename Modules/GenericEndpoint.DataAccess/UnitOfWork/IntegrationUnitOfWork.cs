@@ -74,7 +74,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             inbox.MarkAsHandled();
             await _transaction.Track(inbox, token).ConfigureAwait(false);
 
-            var outbox = new Outbox(inbox.Message, OutboxStorage.All());
+            var outbox = new Outbox(OutboxStorage.All());
             await _transaction.Track(outbox, token).ConfigureAwait(false);
 
             await Commit(token).ConfigureAwait(false);

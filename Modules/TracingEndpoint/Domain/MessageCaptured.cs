@@ -1,14 +1,18 @@
 ﻿namespace SpaceEngineers.Core.TracingEndpoint.Domain
 {
     using GenericDomain.Api.Abstractions;
+    using GenericEndpoint.Messaging;
 
     internal class MessageCaptured : IDomainEvent
     {
-        public MessageCaptured(CapturedMessage capturedMessage)
+        public MessageCaptured(IntegrationMessage message, string? refuseReason)
         {
-            CapturedMessage = capturedMessage;
+            Message = message;
+            RefuseReason = refuseReason;
         }
 
-        public CapturedMessage CapturedMessage { get; }
+        public IntegrationMessage Message { get; }
+
+        public string? RefuseReason { get; }
     }
 }

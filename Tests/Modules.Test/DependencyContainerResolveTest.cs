@@ -17,6 +17,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.DatabaseEntity;
+    using DataAccess.Api.Persisting;
     using DataAccess.Api.Reading;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.ObjectTransformers;
@@ -104,8 +105,6 @@ namespace SpaceEngineers.Core.Modules.Test
                             : type;
 
                         Output.WriteLine(service.FullName);
-
-                        var component = type.GetRequiredAttribute<ComponentAttribute>();
 
                         if (service.IsSubclassOfOpenGeneric(typeof(IInitializable<>)))
                         {
@@ -353,7 +352,13 @@ namespace SpaceEngineers.Core.Modules.Test
                  || ctx.OpenGeneric == typeof(ReadRepository<,>)
                  || ctx.OpenGeneric == typeof(IObjectTransformer<,>)
                  || ctx.OpenGeneric == typeof(EntityToPrimaryKeyObjectTransformer<,>)
-                 || ctx.OpenGeneric == typeof(PrimaryKeyToEntityObjectTransformer<,>))
+                 || ctx.OpenGeneric == typeof(PrimaryKeyToEntityObjectTransformer<,>)
+                 || ctx.OpenGeneric == typeof(IRepository<,>)
+                 || ctx.OpenGeneric == typeof(IBulkRepository<,>)
+                 || ctx.OpenGeneric == typeof(DataAccess.Orm.InMemoryDatabase.Persisting.Repository<,>)
+                 || ctx.OpenGeneric == typeof(DataAccess.Orm.InMemoryDatabase.Persisting.BulkRepository<,>)
+                 || ctx.OpenGeneric == typeof(DataAccess.Orm.Sql.Persisting.Repository<,>)
+                 || ctx.OpenGeneric == typeof(DataAccess.Orm.Sql.Persisting.BulkRepository<,>))
                 && ctx.TypeArgument.GenericParameterPosition == 1)
             {
                 return ctx.Resolved.Single()

@@ -6,8 +6,6 @@
     using System.Threading.Tasks;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
-    using Contract.Abstractions;
-    using Contract.Attributes;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -15,7 +13,6 @@
     using Deduplication;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
-    using Messaging;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -54,32 +51,34 @@
             {
                 var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
-                {
-                    var subsequentMessages = (await _dependencyContainer
-                            .Resolve<IReadRepository<IntegrationMessageDatabaseEntity, Guid>>()
-                            .All()
-                            .Where(message => !message.Sent && !message.Handled && !message.IsError)
-                            .ToListAsync(token)
-                            .ConfigureAwait(false))
-                        .Select(message => message.BuildIntegrationMessage(serializer, formatter))
-                        .ToList();
+                var outbox = await AllUnsent(transaction, serializer, formatter, token)
+                    .ConfigureAwait(false);
 
-                    var fakeInitiator = new IntegrationMessage(new DeliverOutboxMessages(), typeof(DeliverOutboxMessages), formatter);
-                    var outbox = new Outbox(fakeInitiator, subsequentMessages);
-
-                    await outbox.DeliverMessages(
-                            transport,
-                            transaction,
-                            token)
-                        .ConfigureAwait(false);
-                }
+                await outbox
+                    .DeliverMessages(transport, transaction, token)
+                    .ConfigureAwait(false);
             }
         }
 
-        [OwnedBy(nameof(Outbox))]
-        private class DeliverOutboxMessages : IIntegrationCommand
+        private async Task<Outbox> AllUnsent(
+            IDatabaseTransaction transaction,
+            IJsonSerializer serializer,
+            IStringFormatter formatter,
+            CancellationToken token)
         {
+            await using (await transaction.Open(true, token).ConfigureAwait(false))
+            {
+                var subsequentMessages = (await _dependencyContainer
+                        .Resolve<IReadRepository<OutboxMessageDatabaseEntity, Guid>>()
+                        .All()
+                        .Where(outbox => !outbox.Sent)
+                        .ToListAsync(token)
+                        .ConfigureAwait(false))
+                    .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
+                    .ToList();
+
+                return new Outbox(subsequentMessages);
+            }
         }
     }
 }

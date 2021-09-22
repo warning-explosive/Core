@@ -3,18 +3,16 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Contract.Messages;
+    using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Reading;
     using DatabaseModel;
     using Domain;
-    using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
 
@@ -23,48 +21,43 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
                                                         ICollectionResolvable<IMessageHandler<GetConversationTrace>>
     {
         private readonly IIntegrationContext _integrationContext;
-        private readonly IReadRepository<IntegrationMessageDatabaseEntity, Guid> _integrationMessageReadRepository;
-        private readonly IAggregateFactory<CapturedMessage, CapturedMessageSpecification> _capturedMessageFactory;
+        private readonly IReadRepository<CapturedMessageDatabaseEntity, Guid> _capturedMessageReadRepository;
+        private readonly IJsonSerializer _serializer;
+        private readonly IStringFormatter _formatter;
 
         public GetConversationTraceMessageHandler(
             IIntegrationContext integrationContext,
-            IReadRepository<IntegrationMessageDatabaseEntity, Guid> integrationMessageReadRepository,
-            IAggregateFactory<CapturedMessage, CapturedMessageSpecification> capturedMessageFactory)
+            IReadRepository<CapturedMessageDatabaseEntity, Guid> capturedMessageReadRepository,
+            IJsonSerializer serializer,
+            IStringFormatter formatter)
         {
             _integrationContext = integrationContext;
-            _integrationMessageReadRepository = integrationMessageReadRepository;
-            _capturedMessageFactory = capturedMessageFactory;
+            _capturedMessageReadRepository = capturedMessageReadRepository;
+            _serializer = serializer;
+            _formatter = formatter;
         }
 
         public async Task Handle(GetConversationTrace query, CancellationToken token)
         {
-            var primaryKeys = await _integrationMessageReadRepository
-                .All()
-                .Where(message => message.ConversationId == query.ConversationId)
-                .Select(message => message.PrimaryKey)
-                .ToListAsync(token)
-                .ConfigureAwait(false);
-
-            var capturedMessages = BuildCapturedMessages(primaryKeys, token)
-                .AsEnumerable(token)
+            var capturedMessages = (await _capturedMessageReadRepository
+                    .All()
+                    .Where(captured => captured.Message.ConversationId == query.ConversationId)
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(captured => new CapturedMessage(captured, _serializer, _formatter))
+                .Select(captured => (captured, initiatorMessageId: captured.Message.ReadHeader<InitiatorMessageId>()?.Value))
                 .ToList();
 
             if (capturedMessages.Any())
             {
+                var entryPoint = capturedMessages
+                    .Single(captured => captured.initiatorMessageId == null)
+                    .captured;
+
                 var groupByInitiatorId = capturedMessages
-                    .Select(captured =>
-                    {
-                        var initiatorMessageId = captured.Message.ReadHeader<InitiatorMessageId>()?.Value;
-                        var message = captured;
-
-                        return (initiatorMessageId, message);
-                    })
-                    .Where(info => info.initiatorMessageId != null)
-                    .GroupBy(info => info.initiatorMessageId, info => info.message)
+                    .Where(captured => captured.initiatorMessageId != null)
+                    .GroupBy(info => info.initiatorMessageId, info => info.captured)
                     .ToDictionary(grp => grp.Key!.Value, grp => grp.ToArray());
-
-                var entryPoint =
-                    capturedMessages.Single(captured => captured.Message.ReadHeader<InitiatorMessageId>() == null);
 
                 var reply = BuildTraceTree(query, entryPoint, groupByInitiatorId);
 
@@ -78,16 +71,6 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
                 await _integrationContext
                     .Reply(query, reply, token)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private async IAsyncEnumerable<CapturedMessage> BuildCapturedMessages(List<Guid> primaryKeys, [EnumeratorCancellation] CancellationToken token)
-        {
-            foreach (var primaryKey in primaryKeys)
-            {
-                yield return await _capturedMessageFactory
-                    .Build(new CapturedMessageSpecification(primaryKey), token)
                     .ConfigureAwait(false);
             }
         }

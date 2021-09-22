@@ -14,26 +14,17 @@
     public class Outbox : BaseAggregate
     {
         /// <summary> .cctor </summary>
-        /// <param name="initiator">Initiator integration message</param>
-        /// <param name="subsequentMessages">Subsequent integration messages</param>
-        public Outbox(
-            IntegrationMessage initiator,
-            IReadOnlyCollection<IntegrationMessage> subsequentMessages)
+        /// <param name="outgoingMessages">Subsequent integration messages</param>
+        public Outbox(IReadOnlyCollection<IntegrationMessage> outgoingMessages)
         {
-            Initiator = initiator;
-            SubsequentMessages = subsequentMessages;
-            PopulateEvent(new OutboxMessagesAreReadyToBeSent());
+            OutgoingMessages = outgoingMessages;
+            PopulateEvent(new OutboxMessagesAreReadyToBeSent(outgoingMessages));
         }
-
-        /// <summary>
-        /// Initiator integration message
-        /// </summary>
-        public IntegrationMessage Initiator { get; }
 
         /// <summary>
         /// Subsequent integration messages
         /// </summary>
-        public IReadOnlyCollection<IntegrationMessage> SubsequentMessages { get; }
+        public IReadOnlyCollection<IntegrationMessage> OutgoingMessages { get; }
 
         /// <summary>
         /// Have subsequent integration messages been sent
@@ -47,7 +38,7 @@
         public void MarkAsSent(IntegrationMessage integrationMessage)
         {
             Sent = true;
-            PopulateEvent(new OutboxMessageWereSent(integrationMessage));
+            PopulateEvent(new OutboxMessageHaveBeenSent(integrationMessage.Id));
         }
 
         /// <summary>
@@ -62,7 +53,7 @@
             IDatabaseTransaction transaction,
             CancellationToken token)
         {
-            foreach (var message in SubsequentMessages)
+            foreach (var message in OutgoingMessages)
             {
                 await transport.Enqueue(message, token).ConfigureAwait(false);
 

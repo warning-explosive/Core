@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             if (_heap.TryExtract(out var entry))
             {
-                element = entry.Element !;
+                element = entry.Element!;
                 return true;
             }
 
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             if (_heap.TryPeek(out var entry))
             {
-                element = entry.Element !;
+                element = entry.Element!;
                 return true;
             }
 

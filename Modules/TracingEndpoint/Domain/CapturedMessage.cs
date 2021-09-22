@@ -14,17 +14,16 @@ namespace SpaceEngineers.Core.TracingEndpoint.Domain
             Message = message;
             RefuseReason = refuseReason;
 
-            PopulateEvent(new MessageCaptured(this));
+            PopulateEvent(new MessageCaptured(message, refuseReason));
         }
 
         public CapturedMessage(
-            IntegrationMessageDatabaseEntity message,
-            string? refuseReason,
+            CapturedMessageDatabaseEntity captured,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {
-            Message = message.BuildIntegrationMessage(serializer, formatter);
-            RefuseReason = refuseReason;
+            Message = captured.Message.BuildIntegrationMessage(serializer, formatter);
+            RefuseReason = captured.RefuseReason;
         }
 
         public IntegrationMessage Message { get; }

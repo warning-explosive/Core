@@ -3,9 +3,9 @@
     using System;
     using GenericDomain.Api.Abstractions;
 
-    internal class InboxMessageWasHandled : IDomainEvent
+    internal class OutboxMessageHaveBeenSent : IDomainEvent
     {
-        public InboxMessageWasHandled(Guid messageId)
+        public OutboxMessageHaveBeenSent(Guid messageId)
         {
             MessageId = messageId;
         }

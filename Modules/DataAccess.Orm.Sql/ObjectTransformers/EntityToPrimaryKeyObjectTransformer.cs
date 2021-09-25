@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 {
-    using Api.DatabaseEntity;
+    using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;

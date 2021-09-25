@@ -45,5 +45,8 @@
       <Compile Update="Database\InMemoryDatabase.cs">
         <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
       </Compile>
+      <Compile Update="Connection\InMemoryDbTransaction.cs">
+        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

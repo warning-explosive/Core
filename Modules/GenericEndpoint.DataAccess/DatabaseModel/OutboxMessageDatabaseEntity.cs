@@ -1,9 +1,11 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
 {
     using System;
-    using Core.DataAccess.Api.DatabaseEntity;
+    using System.Diagnostics.CodeAnalysis;
+    using Core.DataAccess.Api.Model;
 
-    internal class OutboxMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    internal record OutboxMessageDatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public OutboxMessageDatabaseEntity(
             Guid primaryKey,
@@ -15,8 +17,8 @@
             Sent = sent;
         }
 
-        public IntegrationMessageDatabaseEntity Message { get; }
+        public IntegrationMessageDatabaseEntity Message { get; private init; }
 
-        public bool Sent { get; }
+        public bool Sent { get; private init; }
     }
 }

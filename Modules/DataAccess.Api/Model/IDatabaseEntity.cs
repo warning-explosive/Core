@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Api.DatabaseEntity
+namespace SpaceEngineers.Core.DataAccess.Api.Model
 {
     /// <summary>
     /// IDatabaseEntity

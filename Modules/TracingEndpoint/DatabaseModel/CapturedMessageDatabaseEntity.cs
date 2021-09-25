@@ -1,9 +1,11 @@
 ﻿namespace SpaceEngineers.Core.TracingEndpoint.DatabaseModel
 {
     using System;
-    using DataAccess.Api.DatabaseEntity;
+    using System.Diagnostics.CodeAnalysis;
+    using DataAccess.Api.Model;
 
-    internal class CapturedMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    internal record CapturedMessageDatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public CapturedMessageDatabaseEntity(
             Guid primaryKey,
@@ -15,8 +17,8 @@
             RefuseReason = refuseReason;
         }
 
-        public IntegrationMessageDatabaseEntity Message { get; }
+        public IntegrationMessageDatabaseEntity Message { get; private init; }
 
-        public string? RefuseReason { get; }
+        public string? RefuseReason { get; private init; }
     }
 }

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Reading
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
-    using DatabaseEntity;
+    using Model;
 
     /// <summary>
     /// IReadRepository

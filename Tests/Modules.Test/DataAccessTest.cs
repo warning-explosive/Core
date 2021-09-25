@@ -9,10 +9,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using DataAccess.Api.DatabaseEntity;
     using DataAccess.Api.Reading;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Translation;
+    using DatabaseEntities;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -528,27 +528,6 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Assert.Equal(expected.Value, actual.Value);
             }
-        }
-
-        internal class DatabaseEntity : BaseDatabaseEntity<Guid>
-        {
-            public DatabaseEntity(
-                Guid primaryKey,
-                bool booleanField,
-                string stringField)
-                : base(primaryKey)
-            {
-                BooleanField = booleanField;
-                StringField = stringField;
-            }
-
-            public bool BooleanField { get; private set; }
-
-            public string StringField { get; private set; }
-
-            public string? NullableStringField { get; set; }
-
-            public int IntField { get; set; }
         }
     }
 }

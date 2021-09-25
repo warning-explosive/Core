@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Translation
 {
     using System.Linq.Expressions;
-    using Linq;
+    using Orm.Linq;
 
     internal class InMemoryQuery : IQuery
     {

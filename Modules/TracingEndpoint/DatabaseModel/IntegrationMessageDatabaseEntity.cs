@@ -2,14 +2,16 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using CrossCuttingConcerns.Api.Abstractions;
-    using DataAccess.Api.DatabaseEntity;
+    using DataAccess.Api.Model;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
 
-    internal class IntegrationMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    internal record IntegrationMessageDatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public IntegrationMessageDatabaseEntity(
             Guid primaryKey,
@@ -23,15 +25,17 @@
             ConversationId = conversationId;
             Payload = payload;
             Headers = headers;
+
+            var x = this with { MessageId = Guid.NewGuid() };
         }
 
-        public Guid MessageId { get; }
+        public Guid MessageId { get; private init; }
 
-        public Guid ConversationId { get; }
+        public Guid ConversationId { get; private init; }
 
-        public JsonObject Payload { get; }
+        public JsonObject Payload { get; private init; }
 
-        public IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> Headers { get; }
+        public IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> Headers { get; private init; }
 
         public IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer, IStringFormatter formatter)
         {

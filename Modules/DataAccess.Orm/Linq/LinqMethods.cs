@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Reading;
     using Basics;
 

@@ -1,7 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Exceptions
 {
     using System;
-    using DatabaseEntity;
+    using Model;
 
     /// <summary>
     /// EntityNotFoundException
@@ -9,7 +9,7 @@
     /// <typeparam name="TEntity">TEntity type-argument</typeparam>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public class EntityNotFoundException<TEntity, TKey> : Exception
-        where TEntity : IDatabaseEntity<TKey>
+        where TEntity : IUniqueIdentified<TKey>
     {
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>

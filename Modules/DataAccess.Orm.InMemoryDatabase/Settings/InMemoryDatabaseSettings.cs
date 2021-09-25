@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Settings
         public InMemoryDatabaseSettings()
         {
             Database = "SpaceEngineersDatabase";
-            IsolationLevel = IsolationLevel.ReadCommitted;
+            IsolationLevel = IsolationLevel.Snapshot;
         }
 
         /// <summary>

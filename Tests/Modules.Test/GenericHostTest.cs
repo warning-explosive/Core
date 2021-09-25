@@ -17,7 +17,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.InMemoryDatabase;
-    using DataAccess.Orm.PostgreSql;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
@@ -134,7 +133,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var databaseProviders = new object[]
             {
-                new PostgreSqlDatabaseProvider(),
+                // TODO: #135 - new PostgreSqlDatabaseProvider(),
                 new InMemoryDatabaseProvider()
             };
 

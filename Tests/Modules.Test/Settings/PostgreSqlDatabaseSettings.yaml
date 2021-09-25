@@ -3,4 +3,4 @@ Port: 5432
 Database: SpaceEngineersDatabase
 Username: SpaceEngineer
 Password: 1234
-IsolationLevel: ReadCommitted
+IsolationLevel: Snapshot

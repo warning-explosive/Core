@@ -1,8 +1,10 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
 {
-    using Core.DataAccess.Api.DatabaseEntity;
+    using System.Diagnostics.CodeAnalysis;
+    using Core.DataAccess.Api.Model;
 
-    internal class EndpointIdentityInlinedObject : IInlinedObject
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    internal record EndpointIdentityInlinedObject : IInlinedObject
     {
         public EndpointIdentityInlinedObject(string logicalName, string instanceName)
         {
@@ -10,8 +12,8 @@
             InstanceName = instanceName;
         }
 
-        public string LogicalName { get; }
+        public string LogicalName { get; private init; }
 
-        public string InstanceName { get; }
+        public string InstanceName { get; private init; }
     }
 }

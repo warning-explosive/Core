@@ -1,11 +1,14 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.DatabaseEntity
+﻿namespace SpaceEngineers.Core.DataAccess.Api.Model
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Json object
     /// </summary>
-    public class JsonObject : IInlinedObject
+
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    public record JsonObject : IInlinedObject
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Value</param>
@@ -19,11 +22,11 @@
         /// <summary>
         /// Value
         /// </summary>
-        public string Value { get; }
+        public string Value { get; private init; }
 
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type Type { get; private init; }
     }
 }

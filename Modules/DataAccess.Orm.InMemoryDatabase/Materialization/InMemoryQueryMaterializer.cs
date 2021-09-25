@@ -8,26 +8,26 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Exceptions;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Database;
-    using Linq;
+    using Orm.Linq;
     using Translation;
 
     [Component(EnLifestyle.Scoped)]
     internal class InMemoryQueryMaterializer<T> : IQueryMaterializer<InMemoryQuery, T>
     {
-        private readonly IInMemoryDatabase _database;
+        private readonly IAdvancedDatabaseTransaction _transaction;
 
-        public InMemoryQueryMaterializer(IInMemoryDatabase database)
+        public InMemoryQueryMaterializer(IAdvancedDatabaseTransaction transaction)
         {
-            _database = database;
+            _transaction = transaction;
         }
 
         public async Task<T> MaterializeScalar(InMemoryQuery query, CancellationToken token)
         {
-            var expression = new TranslationExpressionVisitor(_database)
+            var expression = new TranslationExpressionVisitor(_transaction)
                 .Visit(query.Expression)
                 .EnsureNotNull(() => new TranslationException(query.Expression));
 
@@ -38,7 +38,7 @@
 
         public async IAsyncEnumerable<T> Materialize(InMemoryQuery query, [EnumeratorCancellation] CancellationToken token)
         {
-            var expression = new TranslationExpressionVisitor(_database).Visit(query.Expression);
+            var expression = new TranslationExpressionVisitor(_transaction).Visit(query.Expression);
 
             var enumerableQuery = new EnumerableQuery<T>(expression);
 

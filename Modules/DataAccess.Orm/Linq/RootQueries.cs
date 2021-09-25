@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Reading;
 
     internal static class RootQueries

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Reading;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

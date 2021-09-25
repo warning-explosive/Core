@@ -2,13 +2,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
 {
     using System;
     using System.Data;
+    using Database;
 
     internal class InMemoryDbConnection : IDbConnection
     {
-        public InMemoryDbConnection(
-            string database,
-            IsolationLevel isolationLevel)
+        private readonly IInMemoryDatabase _inMemoryDatabase;
+
+        public InMemoryDbConnection(string database,
+            IsolationLevel isolationLevel,
+            IInMemoryDatabase inMemoryDatabase)
         {
+            _inMemoryDatabase = inMemoryDatabase;
             Database = database;
             ConnectionString = $"Database={database};IsolationLevel={isolationLevel}";
             IsolationLevel = isolationLevel;
@@ -51,7 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
                 throw new InvalidOperationException("Connection is not open");
             }
 
-            return new InMemoryDbTransaction(this, isolationLevel);
+            return _inMemoryDatabase.BeginTransaction(this, isolationLevel);
         }
 
         public void ChangeDatabase(string databaseName)

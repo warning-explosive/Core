@@ -64,5 +64,14 @@
       <Compile Update="Transaction\IDatabaseTransaction.cs">
         <DependentUpon>IDatabaseContext.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\BaseDatabaseEntity.cs">
+        <DependentUpon>IDatabaseEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IDatabaseEntity.cs">
+        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\JsonObject.cs">
+        <DependentUpon>IInlinedObject.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

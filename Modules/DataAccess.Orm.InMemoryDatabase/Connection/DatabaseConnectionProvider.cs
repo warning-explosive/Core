@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
+    using Database;
     using Orm.Connection;
     using Settings;
 
@@ -13,10 +14,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider
     {
         private readonly ISettingsProvider<InMemoryDatabaseSettings> _settingsProvider;
+        private readonly InMemoryDatabase _inMemoryDatabase;
 
-        public DatabaseConnectionProvider(ISettingsProvider<InMemoryDatabaseSettings> settingsProvider)
+        public DatabaseConnectionProvider(
+            ISettingsProvider<InMemoryDatabaseSettings> settingsProvider,
+            InMemoryDatabase inMemoryDatabase)
         {
             _settingsProvider = settingsProvider;
+            _inMemoryDatabase = inMemoryDatabase;
         }
 
         public string Database => Settings(CancellationToken.None).Result.Database;
@@ -32,7 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
         {
             var settings = await Settings(token).ConfigureAwait(false);
 
-            var connection = new InMemoryDbConnection(settings.Database, settings.IsolationLevel);
+            var connection = new InMemoryDbConnection(settings.Database, settings.IsolationLevel, _inMemoryDatabase);
             connection.Open();
 
             return connection;

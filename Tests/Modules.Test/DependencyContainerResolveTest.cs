@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
-    using DataAccess.Api.DatabaseEntity;
+    using DataAccess.Api.Model;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Reading;
     using DataAccess.Orm.Linq;

@@ -1,11 +1,13 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
 {
     using System;
-    using Core.DataAccess.Api.DatabaseEntity;
+    using System.Diagnostics.CodeAnalysis;
+    using Core.DataAccess.Api.Model;
     using CrossCuttingConcerns.Api.Abstractions;
     using Messaging.Abstractions;
 
-    internal class IntegrationMessageHeaderDatabaseEntity : BaseDatabaseEntity<Guid>
+    [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    internal record IntegrationMessageHeaderDatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public IntegrationMessageHeaderDatabaseEntity(Guid primaryKey, JsonObject value)
             : base(primaryKey)
@@ -13,7 +15,7 @@
             Value = value;
         }
 
-        public JsonObject Value { get; }
+        public JsonObject Value { get; private init; }
 
         public IIntegrationMessageHeader BuildIntegrationMessageHeader(IJsonSerializer serializer)
         {

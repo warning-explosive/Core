@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
             Username = "SpaceEngineer";
             Password = "1234";
 
-            IsolationLevel = IsolationLevel.ReadCommitted;
+            IsolationLevel = IsolationLevel.Snapshot;
         }
 
         /// <summary>

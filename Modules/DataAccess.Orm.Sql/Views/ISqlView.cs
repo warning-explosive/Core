@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
 {
-    using Api.DatabaseEntity;
+    using Api.Model;
 
     /// <summary>
     /// ISqlView

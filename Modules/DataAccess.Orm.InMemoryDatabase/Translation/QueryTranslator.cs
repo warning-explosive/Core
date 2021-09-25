@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Translation
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Linq;
+    using Orm.Linq;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryTranslator : IQueryTranslator

@@ -2,18 +2,18 @@
 {
     using System.Linq;
     using System.Linq.Expressions;
-    using Api.DatabaseEntity;
+    using Api.Model;
+    using Api.Transaction;
     using Basics;
-    using Database;
-    using Linq;
+    using Orm.Linq;
 
     internal class TranslationExpressionVisitor : ExpressionVisitor
     {
-        private readonly IInMemoryDatabase _database;
+        private readonly IAdvancedDatabaseTransaction _transaction;
 
-        public TranslationExpressionVisitor(IInMemoryDatabase database)
+        public TranslationExpressionVisitor(IAdvancedDatabaseTransaction transaction)
         {
-            _database = database;
+            _transaction = transaction;
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -28,7 +28,7 @@
                 && itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
                 && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single()))
             {
-                return Expression.Constant(_database.All(itemType));
+                return Expression.Constant(_transaction.All(itemType));
             }
 
             return base.VisitMethodCall(node);

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 {
     using System.Threading;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Reading;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

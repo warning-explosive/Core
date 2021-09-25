@@ -2,50 +2,54 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Persisting;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
 
     [Component(EnLifestyle.Scoped)]
     internal class BulkRepository<TEntity, TKey> : IBulkRepository<TEntity, TKey>
         where TEntity : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
-        public Task Insert(IEnumerable<TEntity> entity, CancellationToken token)
+        private readonly IRepository<TEntity, TKey> _repository;
+
+        public BulkRepository(IRepository<TEntity, TKey> repository)
         {
-            throw new NotImplementedException();
+            _repository = repository;
         }
 
-        public Task Update<TValue>(IEnumerable<TEntity> entity, Func<TEntity, TValue> accessor, TValue value, CancellationToken token)
+        public Task Insert(IEnumerable<TEntity> entities, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return entities
+                .Select(entity => _repository.Insert(entity, token))
+                .WhenAll();
         }
 
-        public Task Update<TValue>(IEnumerable<TEntity> entity, Func<TEntity, TValue> accessor, Func<TEntity, TValue> valueProducer, CancellationToken token)
+        public Task Update<TValue>(IEnumerable<TKey> primaryKeys, Expression<Func<TEntity, TValue>> accessor, TValue value, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return primaryKeys
+                .Select(primaryKey => _repository.Update(primaryKey, accessor, value, token))
+                .WhenAll();
         }
 
-        public Task Update<TValue>(IEnumerable<TKey> primaryKey, Func<TEntity, TValue> accessor, TValue value, CancellationToken token)
+        public Task Update<TValue>(IEnumerable<TKey> primaryKeys, Expression<Func<TEntity, TValue>> accessor, Expression<Func<TEntity, TValue>> valueProducer, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return primaryKeys
+                .Select(primaryKey => _repository.Update(primaryKey, accessor, valueProducer, token))
+                .WhenAll();
         }
 
-        public Task Update<TValue>(IEnumerable<TKey> primaryKey, Func<TEntity, TValue> accessor, Func<TEntity, TValue> valueProducer, CancellationToken token)
+        public Task Delete(IEnumerable<TKey> primaryKeys, CancellationToken token)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task Delete(IEnumerable<TEntity> entity, CancellationToken token)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Delete(IEnumerable<TKey> primaryKey, CancellationToken token)
-        {
-            throw new NotImplementedException();
+            return primaryKeys
+                .Select(primaryKey => _repository.Delete(primaryKey, token))
+                .WhenAll();
         }
     }
 }

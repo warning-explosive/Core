@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Connection
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Data;
@@ -10,6 +10,7 @@
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
     using ChangesTracking;
+    using Connection;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
@@ -102,6 +103,7 @@
                 }
                 else
                 {
+                    _transaction?.Rollback();
                     _transaction?.Dispose();
                 }
             }

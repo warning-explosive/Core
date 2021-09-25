@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.DatabaseEntity;
+    using Api.Model;
     using Api.Reading;
     using Basics;
     using Expressions;

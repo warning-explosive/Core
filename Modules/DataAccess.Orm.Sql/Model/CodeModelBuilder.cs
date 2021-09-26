@@ -18,28 +18,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     internal class CodeModelBuilder : ICodeModelBuilder
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseTypeProvider _domainTypeProvider;
+        private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public CodeModelBuilder(
             IDependencyContainer dependencyContainer,
-            IDatabaseTypeProvider domainTypeProvider,
+            IDatabaseTypeProvider databaseTypeProvider,
             IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _domainTypeProvider = domainTypeProvider;
+            _databaseTypeProvider = databaseTypeProvider;
             _connectionProvider = connectionProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
-            var tables = _domainTypeProvider
+            var tables = _databaseTypeProvider
                 .DatabaseEntities()
                 .Where(entity => !entity.IsSqlView())
                 .Select(BuildTableNode)
                 .ToList();
 
-            var views = (await _domainTypeProvider
+            var views = (await _databaseTypeProvider
                     .DatabaseEntities()
                     .Where(DatabaseModelExtensions.IsSqlView)
                     .Select(view => BuildViewNode(view, token))

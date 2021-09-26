@@ -30,8 +30,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             {
                 return _typeProvider
                     .OurTypes
-                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                                   && IsNotAbstraction(type))
                     .ToList();
+            }
+
+            static bool IsNotAbstraction(Type type)
+            {
+                return type != typeof(BaseDatabaseEntity<>)
+                       && type != typeof(IDatabaseEntity<>);
             }
         }
     }

@@ -6,20 +6,19 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class InsertInboxMessage : IDatabaseStateTransformer<InboxMessageReceived>
     {
-        private readonly IRepository<InboxMessageDatabaseEntity, Guid> _inboxMessageRepository;
+        private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
 
-        public InsertInboxMessage(
-            IRepository<InboxMessageDatabaseEntity, Guid> inboxMessageRepository,
-            IJsonSerializer serializer)
+        public InsertInboxMessage(IDatabaseContext databaseContext, IJsonSerializer serializer)
         {
-            _inboxMessageRepository = inboxMessageRepository;
+            _databaseContext = databaseContext;
             _serializer = serializer;
         }
 
@@ -31,7 +30,9 @@
 
             var inbox = new InboxMessageDatabaseEntity(domainEvent.InboxId, message, endpointIdentity, false, false);
 
-            return _inboxMessageRepository.Insert(inbox, token);
+            return _databaseContext
+                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Insert(inbox, token);
         }
     }
 }

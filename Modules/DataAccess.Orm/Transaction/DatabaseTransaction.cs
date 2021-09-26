@@ -5,17 +5,22 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Model;
+    using Api.Persisting;
+    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
     using ChangesTracking;
+    using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction, IDisposable
     {
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IChangesTracker _changesTracker;
 
@@ -25,9 +30,11 @@
         private IDbTransaction? _transaction;
 
         public DatabaseTransaction(
+            IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
             IChangesTracker changesTracker)
         {
+            _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
             _changesTracker = changesTracker;
         }
@@ -60,6 +67,27 @@
 
                 return _connection;
             }
+        }
+
+        public IReadRepository<TEntity, TKey> Read<TEntity, TKey>()
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            return _dependencyContainer.Resolve<IReadRepository<TEntity, TKey>>();
+        }
+
+        public IRepository<TEntity, TKey> Write<TEntity, TKey>()
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            return _dependencyContainer.Resolve<IRepository<TEntity, TKey>>();
+        }
+
+        public IBulkRepository<TEntity, TKey> BulkWrite<TEntity, TKey>()
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            return _dependencyContainer.Resolve<IBulkRepository<TEntity, TKey>>();
         }
 
         public Task<IDbTransaction> Open(CancellationToken token)

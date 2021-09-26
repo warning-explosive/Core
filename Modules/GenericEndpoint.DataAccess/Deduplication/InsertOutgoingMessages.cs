@@ -7,21 +7,20 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class InsertOutgoingMessages : IDatabaseStateTransformer<OutboxMessagesAreReadyToBeSent>
     {
+        private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
-        private readonly IBulkRepository<OutboxMessageDatabaseEntity, Guid> _outboxMessageBulkRepository;
 
-        public InsertOutgoingMessages(
-            IJsonSerializer serializer,
-            IBulkRepository<OutboxMessageDatabaseEntity, Guid> outboxMessageBulkRepository)
+        public InsertOutgoingMessages(IDatabaseContext databaseContext, IJsonSerializer serializer)
         {
+            _databaseContext = databaseContext;
             _serializer = serializer;
-            _outboxMessageBulkRepository = outboxMessageBulkRepository;
         }
 
         public async Task Persist(OutboxMessagesAreReadyToBeSent domainEvent, CancellationToken token)
@@ -32,7 +31,8 @@
                 .Select(message => new OutboxMessageDatabaseEntity(message.PrimaryKey, message, false))
                 .ToList();
 
-            await _outboxMessageBulkRepository
+            await _databaseContext
+                .BulkWrite<OutboxMessageDatabaseEntity, Guid>()
                 .Insert(messages, token)
                 .ConfigureAwait(false);
         }

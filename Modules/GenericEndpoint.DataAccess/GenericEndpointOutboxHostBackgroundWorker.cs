@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,6 +14,7 @@
     using Deduplication;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
+    using Messaging;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -51,33 +53,23 @@
             {
                 var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                var outbox = await AllUnsent(transaction, serializer, formatter, token)
+                IEnumerable<IntegrationMessage> unsent;
+
+                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                {
+                    unsent = (await transaction
+                            .Read<OutboxMessageDatabaseEntity, Guid>()
+                            .All()
+                            .Where(outbox => !outbox.Sent)
+                            .ToListAsync(token)
+                            .ConfigureAwait(false))
+                        .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
+                        .ToList();
+                }
+
+                await Outbox
+                    .DeliverMessages(unsent, transport, transaction, token)
                     .ConfigureAwait(false);
-
-                await outbox
-                    .DeliverMessages(transport, transaction, token)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private async Task<Outbox> AllUnsent(
-            IDatabaseTransaction transaction,
-            IJsonSerializer serializer,
-            IStringFormatter formatter,
-            CancellationToken token)
-        {
-            await using (await transaction.Open(true, token).ConfigureAwait(false))
-            {
-                var subsequentMessages = (await _dependencyContainer
-                        .Resolve<IReadRepository<OutboxMessageDatabaseEntity, Guid>>()
-                        .All()
-                        .Where(outbox => !outbox.Sent)
-                        .ToListAsync(token)
-                        .ConfigureAwait(false))
-                    .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
-                    .ToList();
-
-                return new Outbox(subsequentMessages);
             }
         }
     }

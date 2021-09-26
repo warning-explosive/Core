@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using Contract.Messages;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Reading;
+    using DataAccess.Api.Transaction;
     using DatabaseModel;
     using Domain;
     using GenericEndpoint.Api.Abstractions;
@@ -21,25 +22,26 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
                                                         ICollectionResolvable<IMessageHandler<GetConversationTrace>>
     {
         private readonly IIntegrationContext _integrationContext;
-        private readonly IReadRepository<CapturedMessageDatabaseEntity, Guid> _capturedMessageReadRepository;
+        private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
         private readonly IStringFormatter _formatter;
 
         public GetConversationTraceMessageHandler(
             IIntegrationContext integrationContext,
-            IReadRepository<CapturedMessageDatabaseEntity, Guid> capturedMessageReadRepository,
+            IDatabaseContext databaseContext,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {
             _integrationContext = integrationContext;
-            _capturedMessageReadRepository = capturedMessageReadRepository;
+            _databaseContext = databaseContext;
             _serializer = serializer;
             _formatter = formatter;
         }
 
         public async Task Handle(GetConversationTrace query, CancellationToken token)
         {
-            var capturedMessages = (await _capturedMessageReadRepository
+            var capturedMessages = (await _databaseContext
+                    .Read<CapturedMessageDatabaseEntity, Guid>()
                     .All()
                     .Where(captured => captured.Message.ConversationId == query.ConversationId)
                     .ToListAsync(token)

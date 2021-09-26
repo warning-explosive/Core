@@ -15,7 +15,7 @@
         /// <param name="actualVersion">Actual version</param>
         /// <param name="expectedVersion">Expected version</param>
         public ConcurrencyControlException(string violationType, DateTime actualVersion, DateTime expectedVersion)
-            : base(string.Format(CultureInfo.InvariantCulture, Format, violationType, actualVersion, expectedVersion))
+            : base(string.Format(CultureInfo.InvariantCulture, Format, violationType, actualVersion.ToString("O"), expectedVersion.ToString("O")))
         {
         }
     }

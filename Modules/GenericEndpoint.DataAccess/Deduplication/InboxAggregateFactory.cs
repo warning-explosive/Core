@@ -7,6 +7,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Reading;
+    using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
@@ -14,23 +15,24 @@
     [Component(EnLifestyle.Scoped)]
     internal class InboxAggregateFactory : IAggregateFactory<Inbox, InboxAggregateSpecification>
     {
-        private readonly IReadRepository<InboxMessageDatabaseEntity, Guid> _inboxMessageReadRepository;
+        private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
         private readonly IStringFormatter _formatter;
 
         public InboxAggregateFactory(
-            IReadRepository<InboxMessageDatabaseEntity, Guid> inboxMessageReadRepository,
+            IDatabaseContext databaseContext,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {
-            _inboxMessageReadRepository = inboxMessageReadRepository;
+            _databaseContext = databaseContext;
             _serializer = serializer;
             _formatter = formatter;
         }
 
         public async Task<Inbox> Build(InboxAggregateSpecification spec, CancellationToken token)
         {
-            var integrationMessageDatabaseEntity = await _inboxMessageReadRepository
+            var integrationMessageDatabaseEntity = await _databaseContext
+                .Read<InboxMessageDatabaseEntity, Guid>()
                 .All()
                 .Where(message => message.Message.PrimaryKey == spec.Message.Id
                                   && message.EndpointIdentity.LogicalName == spec.EndpointIdentity.LogicalName

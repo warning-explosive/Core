@@ -16,9 +16,14 @@
         /// <summary> .cctor </summary>
         /// <param name="outgoingMessages">Subsequent integration messages</param>
         public Outbox(IReadOnlyCollection<IntegrationMessage> outgoingMessages)
+            : this(outgoingMessages, new OutboxMessagesAreReadyToBeSent(outgoingMessages))
+        {
+        }
+
+        private Outbox(IReadOnlyCollection<IntegrationMessage> outgoingMessages, IDomainEvent domainEvent)
         {
             OutgoingMessages = outgoingMessages;
-            PopulateEvent(new OutboxMessagesAreReadyToBeSent(outgoingMessages));
+            PopulateEvent(domainEvent);
         }
 
         /// <summary>
@@ -27,41 +32,28 @@
         public IReadOnlyCollection<IntegrationMessage> OutgoingMessages { get; }
 
         /// <summary>
-        /// Have subsequent integration messages been sent
-        /// </summary>
-        public bool Sent { get; private set; }
-
-        /// <summary>
-        /// Marks subsequent integration messages as sent
-        /// </summary>
-        /// <param name="integrationMessage">Integration message</param>
-        public void MarkAsSent(IntegrationMessage integrationMessage)
-        {
-            Sent = true;
-            PopulateEvent(new OutboxMessageHaveBeenSent(integrationMessage.Id));
-        }
-
-        /// <summary>
         /// Delivers outgoing messages Messages
         /// </summary>
+        /// <param name="outgoingMessages">Outgoing integration messages</param>
         /// <param name="transport">IIntegrationTransport</param>
         /// <param name="transaction">IDatabaseTransaction</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public async Task DeliverMessages(
+        public static async Task DeliverMessages(
+            IEnumerable<IntegrationMessage> outgoingMessages,
             IIntegrationTransport transport,
             IDatabaseTransaction transaction,
             CancellationToken token)
         {
-            foreach (var message in OutgoingMessages)
+            foreach (var message in outgoingMessages)
             {
                 await transport.Enqueue(message, token).ConfigureAwait(false);
 
-                MarkAsSent(message);
-
                 await using (await transaction.Open(true, token).ConfigureAwait(false))
                 {
-                    await transaction.Track(this, token).ConfigureAwait(false);
+                    var outbox = new Outbox(new[] { message }, new OutboxMessageHaveBeenSent(message.Id));
+
+                    await transaction.Track(outbox, token).ConfigureAwait(false);
                 }
             }
         }

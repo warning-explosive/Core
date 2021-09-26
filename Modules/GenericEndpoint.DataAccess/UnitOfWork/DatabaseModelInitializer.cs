@@ -16,15 +16,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;
         private readonly IDatabaseModelComparator _databaseModelComparator;
+        private readonly IDatabaseModelMigrator _databaseModelMigrator;
 
         public DatabaseModelInitializer(
             IDatabaseModelBuilder databaseModelBuilder,
             ICodeModelBuilder codeModelBuilder,
-            IDatabaseModelComparator databaseModelComparator)
+            IDatabaseModelComparator databaseModelComparator,
+            IDatabaseModelMigrator databaseModelMigrator)
         {
             _databaseModelBuilder = databaseModelBuilder;
             _codeModelBuilder = codeModelBuilder;
             _databaseModelComparator = databaseModelComparator;
+            _databaseModelMigrator = databaseModelMigrator;
         }
 
         public async Task Initialize(CancellationToken token)
@@ -41,8 +44,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .ExtractDiff(actualModel, expectedModel)
                 .ToList();
 
-            // TODO: #110 - generate migration
-            // TODO: #110 - Apply migration (initial migration or regular migration)
+            await _databaseModelMigrator
+                .Migrate(modelChanges, token)
+                .ConfigureAwait(false);
         }
     }
 }

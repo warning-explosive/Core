@@ -6,21 +6,23 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Transaction;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class MarkOutgoingMessageAsSent : IDatabaseStateTransformer<OutboxMessageHaveBeenSent>
     {
-        private readonly IRepository<OutboxMessageDatabaseEntity, Guid> _outboxMessageRepository;
+        private readonly IDatabaseContext _databaseContext;
 
-        public MarkOutgoingMessageAsSent(IRepository<OutboxMessageDatabaseEntity, Guid> outboxMessageRepository)
+        public MarkOutgoingMessageAsSent(IDatabaseContext databaseContext)
         {
-            _outboxMessageRepository = outboxMessageRepository;
+            _databaseContext = databaseContext;
         }
 
         public async Task Persist(OutboxMessageHaveBeenSent domainEvent, CancellationToken token)
         {
-            await _outboxMessageRepository
+            await _databaseContext
+                .Write<OutboxMessageDatabaseEntity, Guid>()
                 .Update(domainEvent.MessageId, message => message.Sent, true, token)
                 .ConfigureAwait(false);
         }

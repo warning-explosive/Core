@@ -72,14 +72,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
 
             inbox.MarkAsHandled();
-            await _transaction.Track(inbox, token).ConfigureAwait(false);
+
+            await _transaction
+                .Track(inbox, token)
+                .ConfigureAwait(false);
 
             var outbox = new Outbox(OutboxStorage.All());
-            await _transaction.Track(outbox, token).ConfigureAwait(false);
+
+            await _transaction
+                .Track(outbox, token)
+                .ConfigureAwait(false);
 
             await Commit(token).ConfigureAwait(false);
 
-            await outbox.DeliverMessages(_transport, _transaction, token).ConfigureAwait(false);
+            await Outbox
+                .DeliverMessages(outbox.OutgoingMessages, _transport, _transaction, token)
+                .ConfigureAwait(false);
         }
 
         protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)

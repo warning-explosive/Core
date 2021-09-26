@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 {
     using System.Threading;
     using Api.Model;
-    using Api.Reading;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -10,17 +10,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
     [Component(EnLifestyle.Scoped)]
     internal class PrimaryKeyToEntityObjectTransformer<TEntity, TKey> : IObjectTransformer<TKey, TEntity>
         where TEntity : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
-        private readonly IReadRepository<TEntity, TKey> _readRepository;
+        private readonly IDatabaseContext _databaseContext;
 
-        public PrimaryKeyToEntityObjectTransformer(IReadRepository<TEntity, TKey> readRepository)
+        public PrimaryKeyToEntityObjectTransformer(IDatabaseContext databaseContext)
         {
-            _readRepository = readRepository;
+            _databaseContext = databaseContext;
         }
 
         public TEntity Transform(TKey value)
         {
-            return _readRepository.SingleAsync(value, CancellationToken.None).Result;
+            return _databaseContext
+                .Read<TEntity, TKey>()
+                .SingleAsync(value, CancellationToken.None)
+                .Result;
         }
     }
 }

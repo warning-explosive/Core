@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         internal static Expression QueryAll<TEntity, TKey>(
             this IReadRepository<TEntity, TKey> readRepository)
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
@@ -21,6 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             this IReadRepository<TEntity, TKey> readRepository,
             TKey key)
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
@@ -32,6 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             this IReadRepository<TEntity, TKey> readRepository,
             TKey key)
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
@@ -41,6 +44,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private static MethodInfo All<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return typeof(IReadRepository<TEntity, TKey>)
                 .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.All), Array.Empty<Type>());
@@ -48,6 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private static MethodInfo SingleAsync<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return typeof(IReadRepository<TEntity, TKey>)
                 .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleAsync), new[] { typeof(TKey) });
@@ -55,6 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private static MethodInfo SingleOrDefaultAsync<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
         {
             return typeof(IReadRepository<TEntity, TKey>)
                 .GetRuntimeMethod(nameof(IReadRepository<TEntity, TKey>.SingleOrDefaultAsync), new[] { typeof(TKey) });

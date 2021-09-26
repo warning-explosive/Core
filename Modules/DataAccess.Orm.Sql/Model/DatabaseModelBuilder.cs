@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Threading.Tasks;
     using Api.Model;
     using Api.Reading;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
@@ -43,28 +44,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
             await using (_dependencyContainer.OpenScopeAsync())
             {
-                var entitiesShortNameMap = _databaseTypeProvider
-                    .DatabaseEntities()
-                    .ToDictionary(entity => entity.Name, StringComparer.OrdinalIgnoreCase);
+                var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                var tables = (await _dependencyContainer
-                        .Resolve<IReadRepository<DatabaseColumn, Guid>>()
-                        .All()
-                        .GroupBy(column => column.TableName)
-                        .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
-                        .ConfigureAwait(false))
-                    .Select(grp => BuildTableNode(grp.Key, grp.Value, entitiesShortNameMap))
-                    .ToList();
+                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                {
+                    var entitiesShortNameMap = _databaseTypeProvider
+                        .DatabaseEntities()
+                        .ToDictionary(entity => entity.Name, StringComparer.OrdinalIgnoreCase);
 
-                var views = (await _dependencyContainer
-                        .Resolve<IReadRepository<DatabaseView, Guid>>()
-                        .All()
-                        .ToListAsync(token)
-                        .ConfigureAwait(false))
-                    .Select(BuildViewNode)
-                    .ToList();
+                    var tables = (await transaction
+                            .Read<DatabaseColumn, Guid>()
+                            .All()
+                            .GroupBy(column => column.TableName)
+                            .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
+                            .ConfigureAwait(false))
+                        .Select(grp => BuildTableNode(grp.Key, grp.Value, entitiesShortNameMap))
+                        .ToList();
 
-                return new DatabaseNode(_connectionProvider.Database, tables, views);
+                    var views = (await transaction
+                            .Read<DatabaseView, Guid>()
+                            .All()
+                            .ToListAsync(token)
+                            .ConfigureAwait(false))
+                        .Select(BuildViewNode)
+                        .ToList();
+
+                    return new DatabaseNode(_connectionProvider.Database, tables, views);
+                }
             }
         }
 

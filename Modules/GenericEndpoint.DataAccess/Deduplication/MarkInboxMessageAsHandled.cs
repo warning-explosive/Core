@@ -6,21 +6,24 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Transaction;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class MarkInboxMessageAsHandled : IDatabaseStateTransformer<InboxMessageWasHandled>
     {
-        private readonly IRepository<InboxMessageDatabaseEntity, Guid> _inboxMessageRepository;
+        private readonly IDatabaseContext _databaseContext;
 
-        public MarkInboxMessageAsHandled(IRepository<InboxMessageDatabaseEntity, Guid> inboxMessageRepository)
+        public MarkInboxMessageAsHandled(IDatabaseContext databaseContext)
         {
-            _inboxMessageRepository = inboxMessageRepository;
+            _databaseContext = databaseContext;
         }
 
         public Task Persist(InboxMessageWasHandled domainEvent, CancellationToken token)
         {
-            return _inboxMessageRepository.Update(domainEvent.InboxId, message => message.Handled, true, token);
+            return _databaseContext
+                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Update(domainEvent.InboxId, message => message.Handled, true, token);
         }
     }
 }

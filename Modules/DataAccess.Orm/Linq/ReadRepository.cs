@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     [Component(EnLifestyle.Scoped)]
     internal class ReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
         where TEntity : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
         private readonly IAsyncQueryProvider _queryProvider;
 

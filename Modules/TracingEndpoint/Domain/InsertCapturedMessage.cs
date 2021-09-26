@@ -7,26 +7,28 @@
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Persisting;
+    using DataAccess.Api.Transaction;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class InsertCapturedMessage : IDatabaseStateTransformer<MessageCaptured>
     {
-        private readonly IRepository<IntegrationMessageDatabaseEntity, Guid> _integrationMessageReadRepository;
+        private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
 
-        public InsertCapturedMessage(
-            IRepository<IntegrationMessageDatabaseEntity, Guid> integrationMessageReadRepository,
-            IJsonSerializer serializer)
+        public InsertCapturedMessage(IDatabaseContext databaseContext, IJsonSerializer serializer)
         {
             _serializer = serializer;
-            _integrationMessageReadRepository = integrationMessageReadRepository;
+            _databaseContext = databaseContext;
         }
 
         public Task Persist(MessageCaptured domainEvent, CancellationToken token)
         {
             var message = IntegrationMessageDatabaseEntity.Build(domainEvent.Message, _serializer);
-            return _integrationMessageReadRepository.Insert(message, token);
+
+            return _databaseContext
+                .Write<IntegrationMessageDatabaseEntity, Guid>()
+                .Insert(message, token);
         }
     }
 }

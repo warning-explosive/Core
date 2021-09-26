@@ -6,21 +6,24 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Transaction;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
     internal class MarkInboxMessageAsRefused : IDatabaseStateTransformer<InboxMessageWasMovedToErrorQueue>
     {
-        private readonly IRepository<InboxMessageDatabaseEntity, Guid> _inboxMessageRepository;
+        private readonly IDatabaseContext _databaseContext;
 
-        public MarkInboxMessageAsRefused(IRepository<InboxMessageDatabaseEntity, Guid> inboxMessageRepository)
+        public MarkInboxMessageAsRefused(IDatabaseContext databaseContext)
         {
-            _inboxMessageRepository = inboxMessageRepository;
+            _databaseContext = databaseContext;
         }
 
         public Task Persist(InboxMessageWasMovedToErrorQueue domainEvent, CancellationToken token)
         {
-            return _inboxMessageRepository.Update(domainEvent.InboxId, message => message.IsError, true, token);
+            return _databaseContext
+                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Update(domainEvent.InboxId, message => message.IsError, true, token);
         }
     }
 }

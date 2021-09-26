@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Reading
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public interface IReadRepository<TEntity, TKey> : IResolvable
         where TEntity : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
         /// <summary>
         /// Creates entry point for every linq query

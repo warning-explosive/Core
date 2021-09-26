@@ -20,7 +20,7 @@
 
         public Task Persist(InboxMessageWasMovedToErrorQueue domainEvent, CancellationToken token)
         {
-            return _inboxMessageRepository.Update(domainEvent.MessageId, message => message.IsError, true, token);
+            return _inboxMessageRepository.Update(domainEvent.InboxId, message => message.IsError, true, token);
         }
     }
 }

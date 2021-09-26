@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         }
 
         /// <inheritdoc />
-        public Guid Id { get; private set; }
+        public Guid Id { get; protected set; }
 
         #region IEquatable
 

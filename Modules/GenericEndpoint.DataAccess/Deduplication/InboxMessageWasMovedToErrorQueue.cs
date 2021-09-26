@@ -5,10 +5,13 @@
 
     internal class InboxMessageWasMovedToErrorQueue : IDomainEvent
     {
-        public InboxMessageWasMovedToErrorQueue(Guid messageId)
+        public InboxMessageWasMovedToErrorQueue(Guid inboxId, Guid messageId)
         {
+            InboxId = inboxId;
             MessageId = messageId;
         }
+
+        public Guid InboxId { get; }
 
         public Guid MessageId { get; }
     }

@@ -5,10 +5,13 @@
 
     internal class InboxMessageWasHandled : IDomainEvent
     {
-        public InboxMessageWasHandled(Guid messageId)
+        public InboxMessageWasHandled(Guid inboxId, Guid messageId)
         {
+            InboxId = inboxId;
             MessageId = messageId;
         }
+
+        public Guid InboxId { get; }
 
         public Guid MessageId { get; }
     }

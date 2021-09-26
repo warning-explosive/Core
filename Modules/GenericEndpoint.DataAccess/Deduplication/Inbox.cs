@@ -14,7 +14,7 @@
             IsError = false;
             Handled = false;
 
-            PopulateEvent(new InboxMessageReceived(message, endpointIdentity));
+            PopulateEvent(new InboxMessageReceived(Id, message, endpointIdentity));
         }
 
         public Inbox(
@@ -22,6 +22,7 @@
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {
+            Id = message.PrimaryKey;
             Message = message.Message.BuildIntegrationMessage(serializer, formatter);
             IsError = message.IsError;
             Handled = message.Handled;
@@ -37,14 +38,14 @@
         {
             Handled = true;
 
-            PopulateEvent(new InboxMessageWasHandled(Message.Id));
+            PopulateEvent(new InboxMessageWasHandled(Id, Message.Id));
         }
 
         public void MarkAsError()
         {
             IsError = true;
 
-            PopulateEvent(new InboxMessageWasMovedToErrorQueue(Message.Id));
+            PopulateEvent(new InboxMessageWasMovedToErrorQueue(Id, Message.Id));
         }
     }
 }

@@ -20,7 +20,7 @@
 
         public Task Persist(InboxMessageWasHandled domainEvent, CancellationToken token)
         {
-            return _inboxMessageRepository.Update(domainEvent.MessageId, message => message.Handled, true, token);
+            return _inboxMessageRepository.Update(domainEvent.InboxId, message => message.Handled, true, token);
         }
     }
 }

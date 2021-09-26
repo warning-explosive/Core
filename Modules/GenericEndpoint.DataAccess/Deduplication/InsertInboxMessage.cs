@@ -29,7 +29,7 @@
 
             var endpointIdentity = new EndpointIdentityInlinedObject(domainEvent.EndpointIdentity.LogicalName, domainEvent.EndpointIdentity.InstanceName);
 
-            var inbox = new InboxMessageDatabaseEntity(Guid.NewGuid(), message, endpointIdentity, false, false);
+            var inbox = new InboxMessageDatabaseEntity(domainEvent.InboxId, message, endpointIdentity, false, false);
 
             return _inboxMessageRepository.Insert(inbox, token);
         }

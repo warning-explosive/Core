@@ -4,13 +4,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.InMemoryIntegrationTransport</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.InMemoryIntegrationTransport</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.IntegrationTransport.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.IntegrationTransport.Host</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.InMemoryIntegrationTransport</Title>
+        <Title>SpaceEngineers.Core.IntegrationTransport.Host</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.InMemoryIntegrationTransport</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.IntegrationTransport.Host</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -29,16 +29,25 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
+      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
+      <ProjectReference Include="..\IntegrationTransport.InMemory\IntegrationTransport.InMemory.csproj" />
+      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
       <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Builder\TransportEndpointBuilder.cs">
+        <DependentUpon>ITransportEndpointBuilder.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

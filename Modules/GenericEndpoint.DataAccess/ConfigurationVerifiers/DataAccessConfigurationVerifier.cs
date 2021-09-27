@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.ConfigurationVerifiers
 {
     using System;
     using System.Collections.Generic;

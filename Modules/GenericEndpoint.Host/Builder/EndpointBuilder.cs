@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     using CompositionRoot.Api.Abstractions.Container;
     using Contract;
     using Core.DataAccess.Orm.Connection;
-    using DataAccess;
+    using DataAccess.BackgroundWorkers;
+    using DataAccess.StartupActions;
     using GenericHost.Api.Abstractions;
     using Overrides;
 

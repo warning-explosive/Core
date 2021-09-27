@@ -26,7 +26,7 @@
 
             if (itemType.IsClass
                 && itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single()))
+                && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
             {
                 return Expression.Constant(_transaction.All(itemType));
             }

@@ -22,13 +22,21 @@
             _databaseContext = databaseContext;
         }
 
-        public Task Persist(MessageCaptured domainEvent, CancellationToken token)
+        public async Task Persist(MessageCaptured domainEvent, CancellationToken token)
         {
             var message = IntegrationMessageDatabaseEntity.Build(domainEvent.Message, _serializer);
 
-            return _databaseContext
+            await _databaseContext
                 .Write<IntegrationMessageDatabaseEntity, Guid>()
-                .Insert(message, token);
+                .Insert(message, token)
+                .ConfigureAwait(false);
+
+            var capturedMessage = new CapturedMessageDatabaseEntity(Guid.NewGuid(), message, domainEvent.RefuseReason);
+
+            await _databaseContext
+                .Write<CapturedMessageDatabaseEntity, Guid>()
+                .Insert(capturedMessage, token)
+                .ConfigureAwait(false);
         }
     }
 }

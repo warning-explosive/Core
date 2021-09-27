@@ -8,10 +8,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Abstractions.Registration;
-    using CompositionRoot.Api.Extensions;
     using Contract;
     using GenericHost.Api.Abstractions;
-    using IntegrationTransport.Api.Abstractions;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -26,39 +24,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         private const string RequireUseTransportCall = ".UseTransport() should be called before any endpoint declarations";
         private const string RequireUseContainerCall = ".UseContainer() should be called before any endpoint declarations";
         private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}";
-
-        /// <summary>
-        /// Gets endpoint dependency container
-        /// </summary>
-        /// <param name="host">IHost</param>
-        /// <returns>IDependencyContainer</returns>
-        public static IDependencyContainer GetTransportDependencyContainer(this IHost host)
-        {
-            return host
-                .Services
-                .GetServices<IDependencyContainer>()
-                .Single(IsTransportContainer);
-
-            static bool IsTransportContainer(IDependencyContainer dependencyContainer)
-            {
-                return ExecutionExtensions
-                    .Try(dependencyContainer, IsTransportContainerUnsafe)
-                    .Catch<Exception>()
-                    .Invoke(_ => false);
-            }
-
-            static bool IsTransportContainerUnsafe(IDependencyContainer dependencyContainer)
-            {
-                var endpointIdentity = dependencyContainer.Resolve<EndpointIdentity>();
-                var integrationTransport = dependencyContainer.Resolve<IIntegrationTransport>();
-
-                return integrationTransport
-                    .FlattenDecoratedType()
-                    .Any(it => it.Name.Equals(
-                        endpointIdentity.LogicalName,
-                        StringComparison.OrdinalIgnoreCase));
-            }
-        }
 
         /// <summary>
         /// Gets endpoint dependency container

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
+namespace SpaceEngineers.Core.IntegrationTransport.Host.ManualRegistrations
 {
     using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Contract;

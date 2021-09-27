@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (itemType.IsClass
                 && itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single()))
+                && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
             {
                 Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
                     () => Context.WithinScope(new NamedSourceExpression(itemType, new QuerySourceExpression(itemType), Context.GetParameterExpression(itemType)),

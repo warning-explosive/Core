@@ -28,13 +28,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// With endpoint plugin assemblies
         /// </summary>
         /// <param name="assemblies">Endpoint plugin assemblies</param>
-        /// <returns>EndpointBuilder</returns>
+        /// <returns>IEndpointBuilder</returns>
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies);
 
         /// <summary>
-        /// With default cross cutting concerns
+        /// With default cross-cutting concerns
         /// </summary>
-        /// <returns>EndpointBuilder</returns>
+        /// <returns>IEndpointBuilder</returns>
         public IEndpointBuilder WithDefaultCrossCuttingConcerns();
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// With data access
         /// </summary>
         /// <param name="databaseProvider">Database provider</param>
-        /// <returns>EndpointBuilder</returns>
+        /// <returns>IEndpointBuilder</returns>
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider);
 
         /// <summary>

@@ -1,10 +1,8 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
+namespace SpaceEngineers.Core.IntegrationTransport.InMemory.ManualRegistrations
 {
-    using Abstractions;
+    using Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Abstractions.Registration;
-    using Defaults;
-    using IntegrationTransport.Api.Abstractions;
 
     internal class InMemoryIntegrationTransportInjectionManualRegistration : IManualRegistration
     {
@@ -22,7 +20,7 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrati
             container.RegisterInstance(_dependencyContainer.Resolve<InMemoryIntegrationTransport>());
 
             container.RegisterInstance(_dependencyContainer.Resolve<IEndpointInstanceSelectionBehavior>());
-            container.RegisterInstance(_dependencyContainer.Resolve<DefaultEndpointInstanceSelectionBehavior>());
+            container.RegisterInstance(_dependencyContainer.Resolve<EndpointInstanceSelectionBehavior>());
         }
     }
 }

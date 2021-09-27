@@ -73,7 +73,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         private Task<ViewNode> BuildViewNode(Type viewType, CancellationToken token)
         {
-            var viewKeyType = viewType.ExtractGenericArgumentsAt(typeof(ISqlView<>)).Single();
+            var viewKeyType = viewType.UnwrapTypeParameter(typeof(ISqlView<>));
 
             return this
                 .CallMethod(nameof(BuildViewNodeGeneric))

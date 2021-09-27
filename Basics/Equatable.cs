@@ -53,9 +53,15 @@ namespace SpaceEngineers.Core.Basics
             }
 
             var typeMatches = source.GetType() == obj.GetType();
+
+            if (!typeMatches)
+            {
+                return false;
+            }
+
             var valueMatches = source.SafeEquals((T)obj);
 
-            return typeMatches && valueMatches;
+            return valueMatches;
         }
     }
 }

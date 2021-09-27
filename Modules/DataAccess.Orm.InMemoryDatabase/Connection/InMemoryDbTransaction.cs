@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
             return _database
                 .CallMethod(nameof(_database.All))
                 .WithTypeArgument(entityType)
-                .WithTypeArgument(entityType.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single())
+                .WithTypeArgument(entityType.UnwrapTypeParameter(typeof(IUniqueIdentified<>)))
                 .WithArgument(this)
                 .Invoke<IQueryable>();
         }

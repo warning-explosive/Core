@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport
+namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 {
     using System;
     using System.Collections.Concurrent;
@@ -6,7 +6,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Abstractions;
+    using Api.Abstractions;
+    using Api.Enumerations;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Enumerations;
@@ -16,8 +17,6 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
-    using IntegrationTransport.Api.Abstractions;
-    using IntegrationTransport.Api.Enumerations;
 
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     internal class InMemoryIntegrationTransport : IIntegrationTransport
@@ -143,11 +142,25 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport
         {
             if (_topology.TryGetValue(message.ReflectedType, out var logicalGroups))
             {
+                Func<KeyValuePair<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>, bool> predicate;
+
+                if (message.Payload is IIntegrationReply)
+                {
+                    var replyTo = message.ReadRequiredHeader<ReplyTo>().Value;
+                    predicate = logicalGroup => logicalGroup.Key.Equals(replyTo.LogicalName, StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    predicate = _ => true;
+                }
+
                 var messageHandlers = logicalGroups
+                    .Where(predicate)
                     .Select(logicalGroup =>
                     {
-                        var selectedEndpointInstanceIdentity = SelectedEndpointInstanceIdentity(message, logicalGroup.Value);
-                        return logicalGroup.Value[selectedEndpointInstanceIdentity];
+                        var (_, instanceGroup) = logicalGroup;
+                        var selectedEndpointInstanceIdentity = SelectedEndpointInstanceIdentity(message, instanceGroup);
+                        return instanceGroup[selectedEndpointInstanceIdentity];
                     })
                     .ToList();
 

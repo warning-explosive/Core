@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.GenericHost.Api
 
             if (!added)
             {
-                throw new InvalidOperationException($"Method `{key}` should be used once in order to configure the same host instance");
+                throw new InvalidOperationException($"Method `{key}` should be used once so as to correctly configure the host instance");
             }
         }
     }

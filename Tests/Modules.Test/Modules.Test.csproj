@@ -56,9 +56,9 @@
     <ProjectReference Include="..\..\Modules\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     <ProjectReference Include="..\..\Modules\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
     <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
-    <ProjectReference Include="..\..\Modules\InMemoryIntegrationTransport.Host\InMemoryIntegrationTransport.Host.csproj" />
-    <ProjectReference Include="..\..\Modules\InMemoryIntegrationTransport\InMemoryIntegrationTransport.csproj" />
-    <ProjectReference Include="..\..\Modules\IntegrationTransport\IntegrationTransport.csproj" />
+    <ProjectReference Include="..\..\Modules\IntegrationTransport.InMemory\IntegrationTransport.InMemory.csproj" />
+    <ProjectReference Include="..\..\Modules\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
+    <ProjectReference Include="..\..\Modules\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
     <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\..\Modules\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
     <ProjectReference Include="..\..\Modules\TracingEndpoint\TracingEndpoint.csproj" />

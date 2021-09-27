@@ -1,10 +1,8 @@
-namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrations
+namespace SpaceEngineers.Core.IntegrationTransport.InMemory.ManualRegistrations
 {
-    using Abstractions;
+    using Api.Abstractions;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Registration;
-    using Defaults;
-    using IntegrationTransport.Api.Abstractions;
 
     internal class InMemoryIntegrationTransportManualRegistration : IManualRegistration
     {
@@ -13,8 +11,8 @@ namespace SpaceEngineers.Core.InMemoryIntegrationTransport.Host.ManualRegistrati
             container.Register<IIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
             container.Register<InMemoryIntegrationTransport, InMemoryIntegrationTransport>(EnLifestyle.Singleton);
 
-            container.Register<IEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
-            container.Register<DefaultEndpointInstanceSelectionBehavior, DefaultEndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
+            container.Register<IEndpointInstanceSelectionBehavior, EndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
+            container.Register<EndpointInstanceSelectionBehavior, EndpointInstanceSelectionBehavior>(EnLifestyle.Singleton);
 
             container.Register<IManualRegistration, InMemoryIntegrationTransportInjectionManualRegistration>(EnLifestyle.Singleton);
         }

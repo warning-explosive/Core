@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Enumerations;
-    using Basics.Primitives;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
@@ -29,10 +28,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
     using GenericHost.Api.Abstractions;
-    using InMemoryIntegrationTransport.Host;
-    using InMemoryIntegrationTransport.Host.Implementations;
     using IntegrationTransport.Api.Abstractions;
-    using IntegrationTransport.Api.Enumerations;
+    using IntegrationTransport.Host;
+    using IntegrationTransport.Host.BackgroundWorkers;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
@@ -82,7 +80,11 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var integrationTransportProviders = new object[]
             {
-                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder.UseInMemoryIntegrationTransport()),
+                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
+                    .UseIntegrationTransport(builder => builder
+                        .WithInMemoryIntegrationTransport()
+                        .WithDefaultCrossCuttingConcerns()
+                        .BuildOptions())),
             };
 
             return DependencyContainerTestData()
@@ -100,8 +102,12 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseInMemoryIntegrationTransport(options => options
-                    .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector))));
+                .UseIntegrationTransport(builder => builder
+                    .WithInMemoryIntegrationTransport()
+                    .WithDefaultCrossCuttingConcerns()
+                    .ModifyContainerOptions(options => options
+                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -119,12 +125,16 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> RunHostWithDataAccessTestData()
         {
-            var timeout = TimeSpan.FromSeconds(60);
+            var timeout = TimeSpan.FromSeconds(300);
 
             var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseInMemoryIntegrationTransport(options => options
-                    .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector))));
+                .UseIntegrationTransport(builder => builder
+                    .WithInMemoryIntegrationTransport()
+                    .WithDefaultCrossCuttingConcerns()
+                    .ModifyContainerOptions(options => options
+                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -160,7 +170,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var tracingEndpointContainer = host.GetEndpointDependencyContainer(tracingEndpointIdentity);
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -202,10 +212,29 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
+            var messageTypes = new[]
+            {
+                typeof(Query),
+                typeof(Reply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(QueryAlwaysReplyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
             var tracingEndpointIdentity = new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0);
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
+                .UseEndpoint(builder => builder
+                    .WithDefaultCrossCuttingConcerns()
+                    .WithTracing()
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(additionalOurTypes))
+                    .BuildOptions(TestIdentity.Endpoint10))
                 .UseTracingEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
@@ -214,7 +243,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var container = host.GetTransportDependencyContainer();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -223,19 +252,62 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                // TODO: #112 - capture several messages
-                /*var integrationContext = container.Resolve<IIntegrationContext>();*/
+                var integrationContext = container.Resolve<IIntegrationContext>();
 
-                /*var conversationId = Guid.NewGuid();
+                var conversationId = Guid.NewGuid();
 
-                var trace = await container
-                    .Resolve<IIntegrationContext>()
+                var trace = await integrationContext
                     .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
                     .ConfigureAwait(false);
 
-                Output.WriteLine(trace.ToString());*/
+                Assert.Empty(collector.ErrorMessages);
+                Assert.Equal(2, collector.Messages.Count);
+                var messages = collector.Messages.ToArray();
+                Assert.Equal(typeof(GetConversationTrace), messages[0].Payload.GetType());
+                Assert.Equal(typeof(ConversationTrace), messages[1].Payload.GetType());
 
-                _ = collector;
+                Assert.Equal(conversationId, trace.ConversationId);
+                Assert.Null(trace.Message);
+                Assert.Null(trace.RefuseReason);
+                Assert.Null(trace.SubsequentTrace);
+
+                var query = new Query(42);
+
+                var awaiter = Task.WhenAll(collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Query)));
+
+                /*
+                 * TODO: #157 - capture trace of RPC replies on the host side
+                 * collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Reply))
+                 */
+
+                var reply = await integrationContext
+                    .RpcRequest<Query, Reply>(query, cts.Token)
+                    .ConfigureAwait(false);
+
+                await awaiter.ConfigureAwait(false);
+
+                Assert.Empty(collector.ErrorMessages);
+                Assert.Equal(5, collector.Messages.Count);
+                messages = collector.Messages.ToArray();
+                Assert.Equal(typeof(GetConversationTrace), messages[0].Payload.GetType());
+                Assert.Equal(typeof(ConversationTrace), messages[1].Payload.GetType());
+                Assert.Equal(typeof(Query), messages[2].Payload.GetType());
+                Assert.Equal(typeof(Reply), messages[3].Payload.GetType());
+                Assert.Equal(typeof(CaptureTrace), messages[4].Payload.GetType());
+
+                conversationId = messages[2].ReadRequiredHeader<ConversationId>().Value;
+
+                trace = await integrationContext
+                    .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
+                    .ConfigureAwait(false);
+
+                Assert.Equal(conversationId, trace.ConversationId);
+                Assert.NotNull(trace.Message);
+                Assert.Equal(typeof(Query), trace.Message.ReflectedType);
+                Assert.Equal(query.Id, ((Query)trace.Message.Payload).Id);
+                Assert.Null(trace.RefuseReason);
+                Assert.NotNull(trace.SubsequentTrace);
+                Assert.Empty(trace.SubsequentTrace);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
@@ -274,7 +346,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -292,8 +364,8 @@ namespace SpaceEngineers.Core.Modules.Test
                     .ConfigureAwait(false);
 
                 await Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Reply>(reply => reply.Id == command.Id),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.HandlerType == typeof(ReplyEmptyMessageHandler)))
+                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler)))
                     .ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
@@ -338,7 +410,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -403,7 +475,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -495,7 +567,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -511,9 +583,9 @@ namespace SpaceEngineers.Core.Modules.Test
                     .ConfigureAwait(false);
 
                 await Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.HandlerType == typeof(IntegrationEventEmptyMessageHandler)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.HandlerType == typeof(BaseEventEmptyMessageHandler)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.HandlerType == typeof(InheritedEventEmptyMessageHandler)))
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(IntegrationEventEmptyMessageHandler)),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler)))
                     .ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
@@ -564,7 +636,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -687,7 +759,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -704,8 +776,8 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 await Task.WhenAll(
                         collector.WaitUntilMessageIsNotReceived<Event>(),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(invoked => invoked.EndpointIdentity.Equals(TestIdentity.Endpoint10) || invoked.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(invoked => invoked.EndpointIdentity.Equals(TestIdentity.Endpoint20)))
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10) || message.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)))
                     .ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
@@ -1008,11 +1080,6 @@ namespace SpaceEngineers.Core.Modules.Test
                         .ToList();
 
                     Assert.Equal(expectedFirstInheritedEventHandlers.OrderBy(type => type.FullName).ToList(), actualFirstInheritedEventHandlers);
-
-                    var expectedSecondInheritedEventHandlers = new[]
-                    {
-                        typeof(BaseEventEmptyMessageHandler)
-                    };
                 }
             }
 
@@ -1025,7 +1092,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var expected = new[]
                 {
-                    typeof(SpaceEngineers.Core.IntegrationTransport.Implementations.IntegrationContext)
+                    typeof(SpaceEngineers.Core.IntegrationTransport.Integration.IntegrationContext)
                 };
 
                 var actual = integrationContext
@@ -1053,7 +1120,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -1084,7 +1151,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = WaitUntilTransportIsNotRunning(host, Output.WriteLine);
+            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -1095,47 +1162,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 Assert.Empty(collector.ErrorMessages);
                 Assert.Empty(collector.Messages);
-            }
-        }
-
-        private static async Task WaitUntilTransportIsNotRunning(IHost host, Action<string> log)
-        {
-            var tcs = new TaskCompletionSource();
-            var subscription = MakeSubscription(tcs, log);
-
-            var integrationTransport = host
-                .GetTransportDependencyContainer()
-                .Resolve<IIntegrationTransport>();
-
-            using (Disposable.Create((integrationTransport, subscription), Subscribe, Unsubscribe))
-            {
-                log("Wait until transport is not started");
-                await tcs.Task.ConfigureAwait(false);
-            }
-
-            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(TaskCompletionSource tcs, Action<string> log)
-            {
-                return (s, e) =>
-                {
-                    log($"{s.GetType().Name}: {e.PreviousStatus} -> {e.CurrentStatus}");
-
-                    if (e.CurrentStatus == EnIntegrationTransportStatus.Running)
-                    {
-                        tcs.TrySetResult();
-                    }
-                };
-            }
-
-            static void Subscribe((IIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (integrationTransport, subscription) = state;
-                integrationTransport.StatusChanged += subscription;
-            }
-
-            static void Unsubscribe((IIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (integrationTransport, subscription) = state;
-                integrationTransport.StatusChanged -= subscription;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.StartupActions
 {
     using System;
     using System.Threading;

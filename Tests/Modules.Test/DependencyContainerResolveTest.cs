@@ -361,9 +361,10 @@ namespace SpaceEngineers.Core.Modules.Test
                  || ctx.OpenGeneric == typeof(DataAccess.Orm.Sql.Persisting.BulkRepository<,>))
                 && ctx.TypeArgument.GenericParameterPosition == 1)
             {
-                return ctx.Resolved.Single()
-                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
-                    .Single();
+                return ctx
+                    .Resolved
+                    .Single()
+                    .UnwrapTypeParameter(typeof(IUniqueIdentified<>));
             }
 
             return default;

@@ -106,14 +106,29 @@
                 return original;
             }
 
-            var clone = original.ShallowCopy();
+            var isCloneable = typeToReflect.IsSubclassOfOpenGeneric(typeof(ICloneable<>));
 
-            /*
-             * prevent cyclic reference on yourself
-             */
-            visited.Add(original, clone);
+            object clone;
 
-            clone.ProcessClone(original, typeToReflect, visited);
+            if (isCloneable)
+            {
+                clone = original
+                    .CallMethod(nameof(ICloneable<object>.Clone))
+                    .Invoke<object>();
+
+                visited.Add(original, clone);
+            }
+            else
+            {
+                clone = original.ShallowCopy();
+
+                /*
+                 * prevent cyclic reference on yourself
+                 */
+                visited.Add(original, clone);
+
+                clone.ProcessClone(original, typeToReflect, visited);
+            }
 
             return clone;
         }

@@ -27,6 +27,8 @@ namespace SpaceEngineers.Core.GenericHost
             this IHostBuilder hostBuilder,
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
         {
+            hostBuilder.CheckMultipleCalls(nameof(UseContainer));
+
             if (!hostBuilder.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out _))
             {
                 hostBuilder.Properties[nameof(IDependencyContainerImplementation)] = containerImplementationProducer;

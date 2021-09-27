@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.IntegrationTransport.Implementations
+namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
 {
     using System;
     using System.Runtime.Caching;

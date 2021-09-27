@@ -24,7 +24,7 @@
             _dependencyContainer = dependencyContainer;
         }
 
-        public bool HasChanges => _trackedAggregates.Any();
+        public bool HasChanges => _trackedAggregates.Values.SelectMany(aggregate => aggregate.Events).Any();
 
         public Task Track(IAggregate aggregate, CancellationToken token)
         {
@@ -38,17 +38,24 @@
 
         public async Task SaveChanges(CancellationToken token)
         {
-            foreach (var (_, aggregate) in _trackedAggregates)
+            try
             {
-                foreach (var domainEvent in aggregate.Events)
+                foreach (var (_, aggregate) in _trackedAggregates)
                 {
-                    await this
-                        .CallMethod(nameof(Persist))
-                        .WithTypeArgument(domainEvent.GetType())
-                        .WithArguments(domainEvent, token)
-                        .Invoke<Task>()
-                        .ConfigureAwait(false);
+                    foreach (var domainEvent in aggregate.Events)
+                    {
+                        await this
+                            .CallMethod(nameof(Persist))
+                            .WithTypeArgument(domainEvent.GetType())
+                            .WithArguments(domainEvent, token)
+                            .Invoke<Task>()
+                            .ConfigureAwait(false);
+                    }
                 }
+            }
+            finally
+            {
+                _trackedAggregates.Clear();
             }
         }
 

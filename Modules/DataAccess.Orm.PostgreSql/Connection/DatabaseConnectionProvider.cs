@@ -26,9 +26,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             _settingsProvider = settingsProvider;
         }
 
-        public string Database => Settings(CancellationToken.None).Result.Database;
+        public string Database => _settingsProvider.Get(CancellationToken.None).Result.Database;
 
-        public IsolationLevel IsolationLevel => Settings(CancellationToken.None).Result.IsolationLevel;
+        public IsolationLevel IsolationLevel => _settingsProvider.Get(CancellationToken.None).Result.IsolationLevel;
 
         public Task<bool> DoesDatabaseExist(CancellationToken token)
         {
@@ -66,14 +66,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 : Task.FromResult(true);
         }
 
-        private Task<PostgreSqlDatabaseSettings> Settings(CancellationToken token)
-        {
-            return _settingsProvider.Get(token);
-        }
-
         private async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
         {
-            var databaseSettings = await Settings(token).ConfigureAwait(false);
+            var databaseSettings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
 
             return new NpgsqlConnectionStringBuilder
             {

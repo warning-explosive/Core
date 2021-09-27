@@ -34,7 +34,7 @@
         {
             var entity = await _transaction
                 .UnderlyingDbTransaction
-                .ReadSingle<TEntity, TKey>(primaryKey, token)
+                .Single<TEntity, TKey>(primaryKey, token)
                 .ConfigureAwait(false);
 
             var updated = UpdateRecord(entity, accessor, value);
@@ -49,7 +49,7 @@
         {
             var entity = await _transaction
                 .UnderlyingDbTransaction
-                .ReadSingle<TEntity, TKey>(primaryKey, token)
+                .Single<TEntity, TKey>(primaryKey, token)
                 .ConfigureAwait(false);
 
             var updated = UpdateRecord(entity, accessor, valueProducer.Compile().Invoke(entity));

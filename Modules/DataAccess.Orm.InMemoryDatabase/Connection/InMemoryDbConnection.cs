@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
 
     internal class InMemoryDbConnection : IDbConnection
     {
-        private readonly IInMemoryDatabase _inMemoryDatabase;
+        private readonly ITransactionalDatabase _inMemoryDatabase;
 
         public InMemoryDbConnection(string database,
             IsolationLevel isolationLevel,
-            IInMemoryDatabase inMemoryDatabase)
+            ITransactionalDatabase inMemoryDatabase)
         {
             _inMemoryDatabase = inMemoryDatabase;
             Database = database;

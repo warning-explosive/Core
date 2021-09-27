@@ -42,11 +42,38 @@
       </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Database\InMemoryDatabase.cs">
+      <Compile Update="Connection\ITrackableDbTransaction.cs">
+        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Connection\IIdentifiedDbTransaction.cs">
+        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Connection\IAdvancedDbTransaction.cs">
+        <DependentUpon>InMemoryDbTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Connection\IWritableDbTransaction.cs">
+        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Connection\IReadableDbTransaction.cs">
+        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Database\IReadableDatabase.cs">
         <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
       </Compile>
-      <Compile Update="Connection\InMemoryDbTransaction.cs">
-        <DependentUpon>IAdvancedDbTransaction.cs</DependentUpon>
+      <Compile Update="Database\IWritableDatabase.cs">
+        <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Database\IInMemoryDatabase.cs">
+        <DependentUpon>InMemoryDatabase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Database\ITransactionalDatabase.cs">
+        <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Database\IInitializableDatabase.cs">
+        <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Database\IIdentifiedDatabase.cs">
+        <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

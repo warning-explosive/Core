@@ -4,16 +4,22 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Api.Exceptions;
     using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Connection;
+    using CrossCuttingConcerns.Api.Abstractions;
     using Exceptions;
     using Linq;
+    using Settings;
 
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [Component(EnLifestyle.Singleton)]
     internal class InMemoryDatabase : IInMemoryDatabase
     {
@@ -24,6 +30,8 @@
             IsolationLevel.Snapshot
         };
 
+        private readonly ISettingsProvider<InMemoryDatabaseSettings> _settingsProvider;
+
         private readonly ConcurrentDictionary<Guid, IAdvancedDbTransaction> _transactions;
 
         private readonly object _sync;
@@ -32,14 +40,34 @@
 
         private ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>> _store;
 
-        public InMemoryDatabase()
+        public InMemoryDatabase(ISettingsProvider<InMemoryDatabaseSettings> settingsProvider)
         {
+            _settingsProvider = settingsProvider;
+
             _transactions = new ConcurrentDictionary<Guid, IAdvancedDbTransaction>();
             _sync = new object();
 
             _timestamp = DateTime.UtcNow;
             _store = new ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>>();
         }
+
+        #region IIdentifiedDatabase
+
+        public string Name => _settingsProvider.Get(CancellationToken.None).Result.Database;
+
+        #endregion
+
+        #region IInitializableDatabase
+
+        public Task CreateTable(Type table, CancellationToken token)
+        {
+            _store.GetOrAdd(table, _ => new ConcurrentDictionary<object, ConcurrentStack<Entry>>());
+            return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region ITransactionalDatabase
 
         public IAdvancedDbTransaction BeginTransaction(InMemoryDbConnection connection, IsolationLevel isolationLevel)
         {
@@ -67,21 +95,11 @@
             }
         }
 
-        public Entry Create<TEntity, TKey>(TEntity entity, IAdvancedDbTransaction transaction)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
-        {
-            var entry = Read<TEntity, TKey>(entity.PrimaryKey, transaction);
+        #endregion
 
-            if (entry != default)
-            {
-                throw new ConstraintViolationException(typeof(TEntity), entity.PrimaryKey);
-            }
+        #region IReadableDatabase
 
-            return new Entry(entity.PrimaryKey, entity, typeof(TEntity), transaction.Timestamp, EnEntryType.Created);
-        }
-
-        public Entry? Read<TEntity, TKey>(TKey primaryKey, IAdvancedDbTransaction transaction)
+        public Entry? SingleOrDefault<TEntity, TKey>(TKey primaryKey, IAdvancedDbTransaction transaction)
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
@@ -104,7 +122,7 @@
             }
 
             static IEnumerable<Entry> ReadFromTransactions(
-                IEnumerable<IAdvancedDbTransaction> transactions,
+                IEnumerable<ITrackableDbTransaction> transactions,
                 TKey primaryKey,
                 DateTime timestamp)
             {
@@ -161,7 +179,7 @@
             }
         }
 
-        public IQueryable<TEntity> ReadAll<TEntity, TKey>(InMemoryDbTransaction transaction)
+        public IQueryable<TEntity> All<TEntity, TKey>(InMemoryDbTransaction transaction)
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
@@ -189,7 +207,7 @@
 
             static IEnumerable<Entry> ReadFromTransactions(
                 DateTime timestamp,
-                IEnumerable<IAdvancedDbTransaction> transactions)
+                IEnumerable<ITrackableDbTransaction> transactions)
             {
                 return transactions
                     .Select(transaction =>
@@ -235,11 +253,29 @@
             }
         }
 
+        #endregion
+
+        #region IWritableDatabase
+
+        public Entry Create<TEntity, TKey>(TEntity entity, IAdvancedDbTransaction transaction)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            var entry = SingleOrDefault<TEntity, TKey>(entity.PrimaryKey, transaction);
+
+            if (entry != default)
+            {
+                throw new ConstraintViolationException(typeof(TEntity), entity.PrimaryKey);
+            }
+
+            return new Entry(entity.PrimaryKey, entity, typeof(TEntity), transaction.Timestamp, EnEntryType.Created);
+        }
+
         public Entry Update<TEntity, TKey>(TEntity entity, IAdvancedDbTransaction transaction)
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
-            var entry = Read<TEntity, TKey>(entity.PrimaryKey, transaction);
+            var entry = SingleOrDefault<TEntity, TKey>(entity.PrimaryKey, transaction);
 
             if (entry == default)
             {
@@ -253,7 +289,7 @@
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
-            var entry = Read<TEntity, TKey>(primaryKey, transaction);
+            var entry = SingleOrDefault<TEntity, TKey>(primaryKey, transaction);
 
             if (entry == default)
             {
@@ -263,14 +299,19 @@
             return new Entry(primaryKey, entry.Entity, typeof(TEntity), transaction.Timestamp, EnEntryType.Deleted);
         }
 
-        private void ApplyChanges(IAdvancedDbTransaction transaction)
+        #endregion
+
+        #region Internals
+
+        private void ApplyChanges(ITrackableDbTransaction transaction)
         {
             DateTime timestamp;
             ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>> snapshot;
 
             lock (_sync)
             {
-                (timestamp, snapshot) = TakeSnapshot(_store);
+                timestamp = _timestamp;
+                snapshot = TakeSnapshot(_store);
             }
 
             Apply(snapshot, transaction.Changes);
@@ -281,21 +322,28 @@
                 {
                     _store = snapshot;
                     _timestamp = timestamp;
-                    return;
+                }
+                else
+                {
+                    throw new ConcurrencyControlException("Storage", _timestamp, timestamp);
                 }
             }
 
-            throw new ConcurrencyControlException("Storage", _timestamp, timestamp);
-
-            static (DateTime, ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>>) TakeSnapshot(
+            static ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>> TakeSnapshot(
                 ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>> store)
             {
-                var timestamp = DateTime.UtcNow;
                 var snapshot = new ConcurrentDictionary<Type, ConcurrentDictionary<object, ConcurrentStack<Entry>>>();
 
                 var flatten = store
                     .SelectMany(collections => collections.Value
                         .SelectMany(versions => versions.Value.Reverse()));
+
+                foreach (var collectionType in store.Keys)
+                {
+                    _ = snapshot.GetOrAdd(
+                        collectionType,
+                        static _ => new ConcurrentDictionary<object, ConcurrentStack<Entry>>());
+                }
 
                 foreach (var entry in flatten)
                 {
@@ -310,7 +358,7 @@
                     versions.Push(entry);
                 }
 
-                return (timestamp, snapshot);
+                return snapshot;
             }
 
             static void Apply(
@@ -341,5 +389,7 @@
                 }
             }
         }
+
+        #endregion
     }
 }

@@ -24,9 +24,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
             _inMemoryDatabase = inMemoryDatabase;
         }
 
-        public string Database => Settings(CancellationToken.None).Result.Database;
+        public string Database => _settingsProvider.Get(CancellationToken.None).Result.Database;
 
-        public IsolationLevel IsolationLevel => Settings(CancellationToken.None).Result.IsolationLevel;
+        public IsolationLevel IsolationLevel => _settingsProvider.Get(CancellationToken.None).Result.IsolationLevel;
 
         public Task<bool> DoesDatabaseExist(CancellationToken token)
         {
@@ -35,17 +35,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
 
         public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
-            var settings = await Settings(token).ConfigureAwait(false);
+            var settings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
 
             var connection = new InMemoryDbConnection(settings.Database, settings.IsolationLevel, _inMemoryDatabase);
             connection.Open();
 
             return connection;
-        }
-
-        private Task<InMemoryDatabaseSettings> Settings(CancellationToken token)
-        {
-            return _settingsProvider.Get(token);
         }
     }
 }

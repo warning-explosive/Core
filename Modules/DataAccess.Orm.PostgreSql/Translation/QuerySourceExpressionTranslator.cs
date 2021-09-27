@@ -22,7 +22,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
         public async Task<string> Translate(QuerySourceExpression expression, int depth, CancellationToken token)
         {
-            var databaseSettings = await _databaseSettings.Get(token).ConfigureAwait(false);
+            var databaseSettings = await _databaseSettings
+                .Get(token)
+                .ConfigureAwait(false);
 
             var sb = new StringBuilder();
 

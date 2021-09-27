@@ -20,7 +20,7 @@
             _database = database;
         }
 
-        public Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token)
+        public async Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token)
         {
             var databaseName = modelChanges
                 .OfType<CreateDatabase>()
@@ -38,10 +38,10 @@
 
             foreach (var table in tables)
             {
-                _database.CreateTable(table);
+                await _database
+                    .CreateTable(table, token)
+                    .ConfigureAwait(false);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

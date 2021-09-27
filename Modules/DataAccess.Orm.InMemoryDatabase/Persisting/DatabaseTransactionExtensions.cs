@@ -15,11 +15,11 @@
             return ((IAdvancedDbTransaction)transaction).Insert<TEntity, TKey>(entity, token);
         }
 
-        internal static Task<TEntity> ReadSingle<TEntity, TKey>(this IDbTransaction transaction, TKey primaryKey, CancellationToken token)
+        internal static Task<TEntity> Single<TEntity, TKey>(this IDbTransaction transaction, TKey primaryKey, CancellationToken token)
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
-            return ((IAdvancedDbTransaction)transaction).Read<TEntity, TKey>(primaryKey, token);
+            return ((IAdvancedDbTransaction)transaction).Single<TEntity, TKey>(primaryKey, token);
         }
 
         internal static Task Update<TEntity, TKey, TValue>(this IDbTransaction transaction, TEntity entity, CancellationToken token)

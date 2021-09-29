@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 
         public async Task Run(CancellationToken token)
         {
-            await BindRpcReplyMessageHandlers()
+            await BindRpcReplyMessageHandlers(token)
                 .ConfigureAwait(false);
 
             await _dependencyContainer
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                 .ConfigureAwait(false);
         }
 
-        private Task BindRpcReplyMessageHandlers()
+        private Task BindRpcReplyMessageHandlers(CancellationToken token)
         {
             var replies = AssembliesExtensions
                 .AllOurAssembliesFromCurrentDomain()
@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                 this
                     .CallMethod(nameof(Bind))
                     .WithTypeArgument(reply)
-                    .WithArguments(transport, transportEndpointIdentity)
+                    .WithArguments(transport, transportEndpointIdentity, token)
                     .Invoke();
             }
 
@@ -66,19 +66,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                    || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
         }
 
-        private void Bind<TReply>(IIntegrationTransport transport, EndpointIdentity transportEndpointIdentity)
+        private void Bind<TReply>(
+            IIntegrationTransport transport,
+            EndpointIdentity transportEndpointIdentity,
+            CancellationToken token)
             where TReply : IIntegrationReply
         {
-            transport.Bind(typeof(TReply), transportEndpointIdentity, ExecuteMessageHandlers<TReply>);
+            transport.Bind(typeof(TReply), transportEndpointIdentity, ExecuteMessageHandlers<TReply>(token));
         }
 
-        private Task ExecuteMessageHandlers<TReply>(IntegrationMessage message)
+        private Func<IntegrationMessage, Task> ExecuteMessageHandlers<TReply>(CancellationToken token)
             where TReply : IIntegrationReply
         {
-            // TODO: #157 - capture trace of RPC replies on the host side
-            return _dependencyContainer
+            return message => _dependencyContainer
                 .Resolve<IRpcReplyMessageHandler<TReply>>()
-                .Handle(message);
+                .Handle(message, token);
         }
     }
 }

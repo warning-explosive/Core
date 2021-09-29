@@ -78,6 +78,18 @@
                 BackgroundWorkers);
         }
 
+        public ITransportEndpointBuilder WithTracing()
+        {
+            var integrationTransportTracingAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.IntegrationTransport), nameof(Core.IntegrationTransport.Tracing)));
+
+            return new TransportEndpointBuilder(
+                _rootAssemblies,
+                EndpointPluginAssemblies.Concat(new[] { integrationTransportTracingAssembly }).ToList(),
+                Modifiers,
+                StartupActions,
+                BackgroundWorkers);
+        }
+
         public ITransportEndpointBuilder WithInMemoryIntegrationTransport()
         {
             var inMemoryIntegrationTransportAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.IntegrationTransport), nameof(Core.IntegrationTransport.InMemory)));

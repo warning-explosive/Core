@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using IntegrationTransport.Api.Abstractions;
     using IntegrationTransport.Api.Enumerations;
 
-    [ManuallyRegisteredComponent(nameof(GenericHostTest))]
+    [ManuallyRegisteredComponent(nameof(GenericHost))]
     internal class IntegrationTransportMessagesCollectorDecorator : IIntegrationTransport,
                                                                     IDecorator<IIntegrationTransport>
     {

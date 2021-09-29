@@ -44,16 +44,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
 
         private static Task OnSuccess(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            var command = new CaptureTrace(context.Message, null);
-            return context.Send(command, token);
+            if (context.Message.Payload is not CaptureTrace)
+            {
+                var command = new CaptureTrace(context.Message, null);
+                return context.Send(command, token);
+            }
+
+            return Task.CompletedTask;
         }
 
         private static Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
         {
             return async (exception, token) =>
             {
-                var command = new CaptureTrace(context.Message, exception);
-                await context.Send(command, token).ConfigureAwait(false);
+                if (context.Message.Payload is not CaptureTrace)
+                {
+                    var command = new CaptureTrace(context.Message, exception);
+                    await context.Send(command, token).ConfigureAwait(false);
+                }
 
                 throw exception.Rethrow();
             };

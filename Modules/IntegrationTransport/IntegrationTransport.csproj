@@ -43,5 +43,8 @@
       <Compile Update="RpcRequest\RpcReplyMessageHandler.cs">
         <DependentUpon>IRpcReplyMessageHandler.cs</DependentUpon>
       </Compile>
+      <Compile Update="RpcRequest\ErrorHandlingRpcReplyMessageHandler.cs">
+        <DependentUpon>IRpcReplyMessageHandler.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

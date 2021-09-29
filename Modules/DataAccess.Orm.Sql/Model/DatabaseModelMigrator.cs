@@ -12,7 +12,7 @@
     {
         public Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token)
         {
-            throw new System.NotImplementedException("#110");
+            throw new System.NotImplementedException("#110 - Model builder & migrations");
         }
     }
 }

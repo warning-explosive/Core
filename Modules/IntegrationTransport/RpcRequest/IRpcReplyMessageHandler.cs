@@ -1,13 +1,24 @@
 ﻿namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
 
-    internal interface IRpcReplyMessageHandler<TReply> : IResolvable
+    /// <summary>
+    /// IRpcReplyMessageHandler
+    /// </summary>
+    /// <typeparam name="TReply">TReply type-argument</typeparam>
+    public interface IRpcReplyMessageHandler<TReply> : IResolvable
         where TReply : IIntegrationReply
     {
-        Task Handle(IntegrationMessage message);
+        /// <summary>
+        /// Handles incoming RPC-reply
+        /// </summary>
+        /// <param name="message">message</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Handle(IntegrationMessage message, CancellationToken token);
     }
 }

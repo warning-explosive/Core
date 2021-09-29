@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -19,7 +20,7 @@
             _registry = registry;
         }
 
-        public Task Handle(IntegrationMessage message)
+        public Task Handle(IntegrationMessage message, CancellationToken token)
         {
             var requestId = message.ReadRequiredHeader<InitiatorMessageId>().Value;
 

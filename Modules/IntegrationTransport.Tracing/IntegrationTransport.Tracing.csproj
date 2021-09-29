@@ -4,13 +4,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.DataImport</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.DataImport</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.IntegrationTransport.Tracing</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.IntegrationTransport.Tracing</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.DataImport</Title>
+        <Title>SpaceEngineers.Core.IntegrationTransport.Tracing</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.DataImport</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.IntegrationTransport.Tracing</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -29,18 +29,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="DocumentFormat.OpenXml" Version="2.13.1" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\..\Basics\Basics.csproj" />
-      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
+      <ProjectReference Include="..\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj" />
     </ItemGroup>
 </Project>

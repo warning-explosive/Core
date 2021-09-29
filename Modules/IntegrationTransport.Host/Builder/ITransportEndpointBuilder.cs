@@ -36,6 +36,12 @@
         public ITransportEndpointBuilder WithDefaultCrossCuttingConcerns();
 
         /// <summary>
+        /// Adds tracing pipeline into message processing so as to collect and store message processing information
+        /// </summary>
+        /// <returns>ITransportEndpointBuilder</returns>
+        public ITransportEndpointBuilder WithTracing();
+
+        /// <summary>
         /// With in-memory integration transport
         /// </summary>
         /// <returns>ITransportEndpointBuilder</returns>

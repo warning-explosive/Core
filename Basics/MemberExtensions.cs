@@ -129,13 +129,18 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="target">Target object</param>
         /// <returns>Property dictionary</returns>
-        public static Dictionary<string, object?> ToPropertyDictionary(this object target)
+        public static Dictionary<string, (Type Type, object? Value)> ToPropertyDictionary(this object target)
         {
             return target.GetType()
-                         .GetProperties(Flags | BindingFlags.GetProperty)
-                         .ToDictionary(prop => prop.Name,
-                                       prop => (object?)prop.GetValue(target),
-                                       StringComparer.OrdinalIgnoreCase);
+                .GetProperties(Flags | BindingFlags.GetProperty)
+                .ToDictionary(
+                    info => info.Name,
+                    info =>
+                    {
+                        var value = (object?)info.GetValue(target);
+                        return (value?.GetType() ?? info.PropertyType, value);
+                    },
+                    StringComparer.OrdinalIgnoreCase);
         }
     }
 }

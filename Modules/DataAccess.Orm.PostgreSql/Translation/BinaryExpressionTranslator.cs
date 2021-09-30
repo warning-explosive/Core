@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Collections.Generic;
-    using System.Linq.Expressions;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -9,37 +8,41 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
     using Sql.Translation;
+    using Sql.Translation.Expressions;
+    using Sql.Translation.Extensions;
     using BinaryExpression = Sql.Translation.Expressions.BinaryExpression;
     using ConstantExpression = Sql.Translation.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
     {
-        private static readonly IReadOnlyDictionary<ExpressionType, string> FunctionalOperators
-            = new Dictionary<ExpressionType, string>
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> FunctionalOperators
+            = new Dictionary<BinaryOperator, string>
             {
-                [ExpressionType.Coalesce] = "COALESCE"
+                [BinaryOperator.Coalesce] = "COALESCE"
             };
 
-        private static readonly IReadOnlyDictionary<ExpressionType, string> Operators
-            = new Dictionary<ExpressionType, string>
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> Operators
+            = new Dictionary<BinaryOperator, string>
             {
-                [ExpressionType.Equal] = "=",
-                [ExpressionType.NotEqual] = "!=",
-                [ExpressionType.GreaterThanOrEqual] = ">=",
-                [ExpressionType.GreaterThan] = ">",
-                [ExpressionType.LessThan] = "<",
-                [ExpressionType.LessThanOrEqual] = "<=",
-                [ExpressionType.AndAlso] = "AND",
-                [ExpressionType.OrElse] = "OR",
-                [ExpressionType.ExclusiveOr] = "XOR"
+                [BinaryOperator.Equal] = "=",
+                [BinaryOperator.NotEqual] = "!=",
+                [BinaryOperator.GreaterThanOrEqual] = ">=",
+                [BinaryOperator.GreaterThan] = ">",
+                [BinaryOperator.LessThan] = "<",
+                [BinaryOperator.LessThanOrEqual] = "<=",
+                [BinaryOperator.AndAlso] = "AND",
+                [BinaryOperator.OrElse] = "OR",
+                [BinaryOperator.ExclusiveOr] = "XOR",
+                [BinaryOperator.Contains] = "IN",
+                [BinaryOperator.Like] = "LIKE"
             };
 
-        private static readonly IReadOnlyDictionary<ExpressionType, string> AltOperators
-            = new Dictionary<ExpressionType, string>
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> AltOperators
+            = new Dictionary<BinaryOperator, string>
             {
-                [ExpressionType.Equal] = "IS",
-                [ExpressionType.NotEqual] = "IS NOT"
+                [BinaryOperator.Equal] = "IS",
+                [BinaryOperator.NotEqual] = "IS NOT"
             };
 
         private readonly IDependencyContainer _dependencyContainer;

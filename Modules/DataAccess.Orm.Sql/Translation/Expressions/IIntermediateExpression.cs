@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Linq.Expressions;

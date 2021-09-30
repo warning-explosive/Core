@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
     using Expressions;
+    using Extensions;
     using Orm.Linq;
 
     [Component(EnLifestyle.Scoped)]
@@ -21,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public async Task<IQuery> Translate(GroupByExpression intermediateExpression, CancellationToken token)
         {
             var keysQuery = await intermediateExpression.KeysExpression.Translate(_dependencyContainer, 0, token).ConfigureAwait(false);
-            var keysQueryParameters = intermediateExpression.KeysExpression.ExtractQueryParameters(_dependencyContainer);
+            var keysQueryParameters = intermediateExpression.KeysExpression.ExtractQueryParameters();
 
             return new GroupedQuery(keysQuery, keysQueryParameters, intermediateExpression.ValuesExpressionProducer);
         }

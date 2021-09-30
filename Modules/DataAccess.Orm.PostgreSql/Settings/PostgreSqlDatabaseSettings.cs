@@ -17,7 +17,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
             Host = "localhost";
             Port = 5432;
             Database = "SpaceEngineersDatabase";
-            Schema = "public";
 
             /* TODO: #130 - use secrets or credentials vault */
             Username = "SpaceEngineer";
@@ -42,11 +41,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
         public string Database { get; set; }
 
         /// <summary>
-        /// Schema
-        /// </summary>
-        public string Schema { get; set; }
-
-        /// <summary>
         /// Username
         /// </summary>
         public string Username { get; set; }
@@ -66,7 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
         {
             return this
                 .ToPropertyDictionary()
-                .ToString(";", pair => Format.Format(pair.Key, pair.Value?.ToString() ?? "null"));
+                .ToString(";", pair => Format.Format(pair.Key, pair.Value.Value?.ToString() ?? "null"));
         }
     }
 }

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using CompositionRoot.Api.Abstractions.Container;
     using Sql.Translation;
     using Sql.Translation.Expressions;
+    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ProjectionExpressionTranslator : IExpressionTranslator<ProjectionExpression>
@@ -25,14 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            if (expression.IsDistinct)
-            {
-                sb.AppendLine("SELECT DISTINCT");
-            }
-            else
-            {
-                sb.AppendLine("SELECT");
-            }
+            sb.AppendLine(expression.IsDistinct ? "SELECT DISTINCT" : "SELECT");
 
             var lastBindingIndex = expression.Bindings.Count - 1;
 

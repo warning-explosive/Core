@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using CompositionRoot.Api.Abstractions.Container;
     using Sql.Translation;
     using Sql.Translation.Expressions;
+    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class NamedBindingExpressionTranslator : IExpressionTranslator<NamedBindingExpression>

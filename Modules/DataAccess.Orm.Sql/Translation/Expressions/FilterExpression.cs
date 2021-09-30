@@ -163,7 +163,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             }
 
             Expression = Expression != null
-                ? new BinaryExpression(typeof(bool), ExpressionType.AndAlso, Expression, expression)
+                ? new BinaryExpression(typeof(bool), BinaryOperator.AndAlso, Expression, expression)
                 : expression;
         }
 

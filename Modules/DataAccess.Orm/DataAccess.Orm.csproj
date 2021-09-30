@@ -67,10 +67,10 @@
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\TableNode.cs">
-        <DependentUpon>DatabaseNode.cs</DependentUpon>
+        <DependentUpon>SchemaNode.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\ViewNode.cs">
-        <DependentUpon>DatabaseNode.cs</DependentUpon>
+        <DependentUpon>SchemaNode.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\ColumnNode.cs">
         <DependentUpon>TableNode.cs</DependentUpon>
@@ -113,6 +113,12 @@
       </Compile>
       <Compile Update="Linq\LinqMethods.cs">
         <DependentUpon>ReadRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\SchemaNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateSchema.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -44,12 +44,12 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
             _options = ModulesTestFixtureExtensions.ModulesOptions;
         }
 
-        /// <summary> CreateBoundedAbove </summary>
+        /// <summary> CreateExactlyBounded </summary>
         /// <returns>IDependencyContainer</returns>
-        [Benchmark(Description = nameof(CreateBoundedAbove), Baseline = true)]
-        public IDependencyContainer CreateBoundedAbove()
+        [Benchmark(Description = nameof(CreateExactlyBounded), Baseline = true)]
+        public IDependencyContainer CreateExactlyBounded()
         {
-            return DependencyContainer.CreateBoundedAbove(
+            return DependencyContainer.CreateExactlyBounded(
                 Options,
                 Options.UseGenericContainer(),
                 Assemblies);

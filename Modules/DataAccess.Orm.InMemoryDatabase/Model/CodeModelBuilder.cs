@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -8,37 +9,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
     using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
     using Orm.Connection;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public CodeModelBuilder(
-            IDependencyContainer dependencyContainer,
             IDatabaseTypeProvider databaseTypeProvider,
             IDatabaseConnectionProvider connectionProvider)
         {
-            _dependencyContainer = dependencyContainer;
             _databaseTypeProvider = databaseTypeProvider;
             _connectionProvider = connectionProvider;
         }
 
         public Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
-            var tables = _databaseTypeProvider
+            var schemas = _databaseTypeProvider
                 .DatabaseEntities()
+                .GroupBy(entity => entity.SchemaName())
+                .Select(grp => BuildSchemaNode(grp.Key, grp))
+                .ToList();
+
+            var database = new DatabaseNode(_connectionProvider.Database, schemas);
+
+            return Task.FromResult((DatabaseNode?)database);
+        }
+
+        private static SchemaNode BuildSchemaNode(string schema, IEnumerable<Type> entities)
+        {
+            var tables = entities
                 .Select(BuildTableNode)
                 .ToList();
 
-            var database = new DatabaseNode(_connectionProvider.Database, tables, Array.Empty<ViewNode>());
-
-            return Task.FromResult((DatabaseNode?)database);
+            return new SchemaNode(schema, tables, Array.Empty<ViewNode>());
         }
 
         private static TableNode BuildTableNode(Type tableType)
@@ -49,17 +56,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
                 .ToList();
 
             return new TableNode(tableType, columns);
-        }
+            static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
+            {
+                var tableName = tableType.Name;
+                var columnType = propertyInfo.PropertyType;
+                var columnName = propertyInfo.Name;
 
-        private static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
-        {
-            var tableName = tableType.Name;
-            var columnType = propertyInfo.PropertyType;
-            var columnName = propertyInfo.Name;
-
-            return columnType.IsTypeSupported()
-                ? new ColumnNode(columnType, columnName)
-                : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+                return columnType.IsTypeSupported()
+                    ? new ColumnNode(columnType, columnName)
+                    : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+            }
         }
     }
 }

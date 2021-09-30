@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="right">Right IIntermediateExpression</param>
         public BinaryExpression(
             Type type,
-            ExpressionType @operator,
+            BinaryOperator @operator,
             IIntermediateExpression left,
             IIntermediateExpression right)
         {
@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Right = right;
         }
 
-        internal BinaryExpression(Type type, ExpressionType @operator)
+        internal BinaryExpression(Type type, BinaryOperator @operator)
             : this(type, @operator, null!, null!)
         {
         }
@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Binary operator
         /// </summary>
-        public ExpressionType Operator { get; }
+        public BinaryOperator Operator { get; }
 
         /// <summary>
         /// Left expression
@@ -110,7 +110,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.MakeBinary(Operator, Left.AsExpressionTree(), Right.AsExpressionTree());
+            return System.Linq.Expressions.Expression.MakeBinary(Operator.AsExpressionType(), Left.AsExpressionTree(), Right.AsExpressionTree());
         }
 
         #region IApplicable
@@ -118,7 +118,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public void Apply(TranslationContext context, IIntermediateExpression expression)
         {
-            if (Left == null)
+            if (expression is QueryParameterExpression
+                && Operator == BinaryOperator.Contains
+                && Right == null)
+            {
+                Right = expression;
+            }
+            else if (Left == null)
             {
                 Left = expression;
             }

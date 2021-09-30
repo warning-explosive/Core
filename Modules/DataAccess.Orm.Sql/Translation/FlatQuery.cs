@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using System;
+    using System.Collections.Generic;
     using Orm.Linq;
 
     /// <summary>
@@ -10,7 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary> .cctor </summary>
         /// <param name="query">Query</param>
         /// <param name="queryParameters">Query parameters object</param>
-        public FlatQuery(string query, object? queryParameters)
+        public FlatQuery(string query, IReadOnlyDictionary<string, (Type, object?)> queryParameters)
         {
             Query = query;
             QueryParameters = queryParameters;
@@ -24,6 +26,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary>
         /// Query parameters object
         /// </summary>
-        public object? QueryParameters { get; }
+        public IReadOnlyDictionary<string, (Type, object?)> QueryParameters { get; }
     }
 }

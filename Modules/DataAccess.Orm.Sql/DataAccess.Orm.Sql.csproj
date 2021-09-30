@@ -97,5 +97,80 @@
       <Compile Update="Model\DatabaseView.cs">
         <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\DatabaseSchema.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\CollapseConstantsExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\EnumerableContainsMemberInfoTranslator.cs">
+        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryOperator.cs">
+        <DependentUpon>BinaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryOperatorConversions.cs">
+        <DependentUpon>BinaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\LikeMemberInfoTranslator.cs">
+        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\EnumerableQueryParameterTranslator.cs">
+        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\StringQueryParameterTranslator.cs">
+        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ISubsequentIntermediateExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\FilterExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ProjectionExpression.cs">
+        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\NamedBindingExpression.cs">
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\SimpleBindingExpression.cs">
+        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\GroupByExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\NewExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ConditionalExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ConstantExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\MethodCallExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ParameterExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\QueryParameterExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\QuerySourceExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\IBindingIntermediateExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\FallbackQueryParameterTranslator.cs">
+        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

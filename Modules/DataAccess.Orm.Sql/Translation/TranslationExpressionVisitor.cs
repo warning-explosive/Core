@@ -10,7 +10,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Api.Reading;
     using Basics;
     using Expressions;
+    using Extensions;
     using Orm.Linq;
+    using Views;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using ConstantExpression = System.Linq.Expressions.ConstantExpression;
@@ -49,8 +51,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
 
             if (itemType.IsClass
-                && itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
+                && ((itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                     && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
+                || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
+                    && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>))))))
             {
                 Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
                     () => Context.WithinScope(new NamedSourceExpression(itemType, new QuerySourceExpression(itemType), Context.GetParameterExpression(itemType)),
@@ -140,7 +144,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitBinary(BinaryExpression node)
         {
-            Context.WithinScope(new Expressions.BinaryExpression(node.Type, node.NodeType), () => base.VisitBinary(node));
+            Context.WithinScope(new Expressions.BinaryExpression(node.Type, node.NodeType.AsBinaryOperator()), () => base.VisitBinary(node));
 
             return node;
         }
@@ -261,7 +265,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 TranslationContext context,
                 Type sourceType,
                 ProjectionExpression keyExpression,
-                IReadOnlyDictionary<string, object?> keyValues)
+                IReadOnlyDictionary<string, (Type, object?)> keyValues)
             {
                 Expressions.ParameterExpression parameterExpression = context.GetParameterExpression(sourceType);
 
@@ -289,25 +293,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 static Func<IIntermediateExpression, Expressions.BinaryExpression> BindingFilter(
                     TranslationContext context,
                     ProjectionExpression keyExpression,
-                    IReadOnlyDictionary<string, object?> keyValues)
+                    IReadOnlyDictionary<string, (Type, object? Value)> keyValues)
                 {
                     return expression =>
                     {
                         var value = keyExpression.IsProjectionToClass
                                     && expression is IBindingIntermediateExpression binding
-                            ? keyValues[binding.Name]
-                            : keyValues.Single().Value;
+                            ? keyValues[binding.Name].Value
+                            : keyValues.Single().Value.Value;
 
                         return new Expressions.BinaryExpression(
                             typeof(bool),
-                            ExpressionType.Equal,
+                            BinaryOperator.Equal,
                             expression,
                             QueryParameterExpression.Create(context, expression.Type, value, true));
                     };
                 }
             }
 
-            static Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer(
+            static Func<IReadOnlyDictionary<string, (Type, object?)>, IIntermediateExpression> ValuesExpressionProducer(
                 IExpressionTranslator translator,
                 TranslationContext context,
                 MethodCallExpression node,

@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Linq;
     using Orm.Linq;
     using Translation;
+    using Translation.Extensions;
 
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>
@@ -64,12 +65,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
         private async IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
         {
-            var keyValues = key.GetQueryParametersValues();
+            var keyValues = key.AsQueryParametersValues();
 
             var valuesExpression = query.ValuesExpressionProducer(keyValues);
 
             var valuesQuery = await valuesExpression.Translate(_dependencyContainer, 0, token).ConfigureAwait(false);
-            var valuesQueryParameters = valuesExpression.ExtractQueryParameters(_dependencyContainer);
+            var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
 
             await foreach (var item in _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token))
             {

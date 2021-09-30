@@ -5,29 +5,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Orm.Model;
+    using Reading;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelBuilder : IDatabaseModelBuilder
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public DatabaseModelBuilder(
             IDependencyContainer dependencyContainer,
-            IDatabaseTypeProvider databaseTypeProvider,
             IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseTypeProvider = databaseTypeProvider;
             _connectionProvider = connectionProvider;
         }
 
@@ -48,60 +46,94 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
                 await using (await transaction.Open(true, token).ConfigureAwait(false))
                 {
-                    var entitiesShortNameMap = _databaseTypeProvider
-                        .DatabaseEntities()
-                        .ToDictionary(entity => entity.Name, StringComparer.OrdinalIgnoreCase);
+                    var defaultSchemas = new[]
+                    {
+                        "information_schema",
+                        "public"
+                    };
 
-                    var tables = (await transaction
-                            .Read<DatabaseColumn, Guid>()
+                    var schemas = await (await transaction
+                            .Read<DatabaseSchema, Guid>()
                             .All()
-                            .GroupBy(column => column.TableName)
-                            .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
+                            .Select(schema => schema.Name)
+                            .Where(schema => !defaultSchemas.Contains(schema) && !schema.Like("pg_%"))
+                            .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                             .ConfigureAwait(false))
-                        .Select(grp => BuildTableNode(grp.Key, grp.Value, entitiesShortNameMap))
-                        .ToList();
+                        .Select(schema => BuildSchemaNode(transaction, schema, token))
+                        .WhenAll()
+                        .ConfigureAwait(false);
 
-                    var views = (await transaction
-                            .Read<DatabaseView, Guid>()
-                            .All()
-                            .ToListAsync(token)
-                            .ConfigureAwait(false))
-                        .Select(BuildViewNode)
-                        .ToList();
-
-                    return new DatabaseNode(_connectionProvider.Database, tables, views);
+                    return new DatabaseNode(_connectionProvider.Database, schemas);
                 }
             }
         }
 
-        private static TableNode BuildTableNode(string tableName,
-            IReadOnlyCollection<DatabaseColumn> databaseColumns,
-            IReadOnlyDictionary<string, Type> entitiesShortNameMap)
+        private static async Task<SchemaNode> BuildSchemaNode(
+            IDatabaseContext transaction,
+            string schema,
+            CancellationToken token)
         {
-            var columns = databaseColumns
-                .Select(BuildColumnNode)
+            var tables = await BuildTableNodes(transaction, schema, token).ConfigureAwait(false);
+            var views = await BuildViewNodes(transaction, schema, token).ConfigureAwait(false);
+
+            return new SchemaNode(schema, tables, views);
+        }
+
+        private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
+            IDatabaseContext transaction,
+            string schema,
+            CancellationToken token)
+        {
+            return (await transaction
+                    .Read<DatabaseColumn, Guid>()
+                    .All()
+                    .Where(column => column.Schema == schema)
+                    .GroupBy(column => column.TableName)
+                    .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
+                    .ConfigureAwait(false))
+                .Select(grp => BuildTableNode(grp.Key, grp.Value))
                 .ToList();
 
-            return entitiesShortNameMap.TryGetValue(tableName, out var entity)
-                ? new TableNode(entity, columns)
-                : new TableNode(tableName, columns);
+            static TableNode BuildTableNode(string tableName, IReadOnlyCollection<DatabaseColumn> databaseColumns)
+            {
+                var columns = databaseColumns
+                    .Select(BuildColumnNode)
+                    .ToList();
+
+                return new TableNode(tableName, columns);
+            }
+
+            static ColumnNode BuildColumnNode(DatabaseColumn column)
+            {
+                var columnType = GetColumnType(column);
+
+                return new ColumnNode(columnType, column.ColumnName);
+
+                static Type GetColumnType(DatabaseColumn column)
+                {
+                    throw new NotImplementedException($"#110 - Model builder & migrations - {column}");
+                }
+            }
         }
 
-        private static ColumnNode BuildColumnNode(DatabaseColumn column)
+        private static async Task<List<ViewNode>> BuildViewNodes(
+            IDatabaseContext transaction,
+            string schema,
+            CancellationToken token)
         {
-            var columnType = GetColumnType(column);
+            return (await transaction
+                    .Read<DatabaseView, Guid>()
+                    .All()
+                    .Where(view => view.Schema == schema)
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(BuildViewNode)
+                .ToList();
 
-            return new ColumnNode(columnType, column.ColumnName);
-        }
-
-        private static Type GetColumnType(DatabaseColumn column)
-        {
-            throw new NotImplementedException("#110 - Model builder & migrations");
-        }
-
-        private static ViewNode BuildViewNode(DatabaseView view)
-        {
-            return new ViewNode(view.Name, view.Query);
+            static ViewNode BuildViewNode(DatabaseView view)
+            {
+                return new ViewNode(view.Name, view.Query);
+            }
         }
     }
 }

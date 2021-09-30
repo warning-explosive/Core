@@ -2,13 +2,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using Settings;
     using Sql.Model;
     using Sql.Views;
 
@@ -17,8 +12,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
-    TODO as ""{nameof(DatabaseView.PrimaryKey)}"",
+    gen_random_uuid() as ""{nameof(DatabaseView.PrimaryKey)}"",
     table_name as ""{nameof(DatabaseColumn.TableName)}"",
+    table_schema as ""{nameof(DatabaseColumn.Schema)}"",
     column_name as ""{nameof(DatabaseColumn.ColumnName)}"",
 	ordinal_position as {nameof(DatabaseColumn.Position)},
 	data_type as ""{nameof(DatabaseColumn.DataType)}"",
@@ -28,23 +24,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 	numeric_precision as ""{nameof(DatabaseColumn.Precision)}"",
 	character_maximum_length as ""{nameof(DatabaseColumn.Length)}""
 from information_schema.columns
-where table_schema = '{{0}}'
-order by table_name, ordinal_position;";
+order by table_name, ordinal_position";
 
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
-
-        public DatabaseColumnViewQueryProvider(ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
+        public string GetQuery()
         {
-            _databaseSettings = databaseSettings;
-        }
-
-        public async Task<string> GetQuery(CancellationToken token)
-        {
-            var databaseSettings = await _databaseSettings
-                .Get(token)
-                .ConfigureAwait(false);
-
-            return Query.Format(databaseSettings.Schema);
+            return Query;
         }
     }
 }

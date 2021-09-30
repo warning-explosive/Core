@@ -41,5 +41,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// Columns
         /// </summary>
         public IReadOnlyCollection<ColumnNode> Columns { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

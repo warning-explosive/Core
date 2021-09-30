@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="valuesExpressionProducer">Values expression producer</param>
         public GroupByExpression(
             Type type,
-            Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer)
+            Func<IReadOnlyDictionary<string, (Type, object?)>, IIntermediateExpression> valuesExpressionProducer)
         {
             Type = type;
             ValuesExpressionProducer = valuesExpressionProducer;
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Values expression producer
         /// </summary>
-        public Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer { get; }
+        public Func<IReadOnlyDictionary<string, (Type, object?)>, IIntermediateExpression> ValuesExpressionProducer { get; }
 
         #region IEquatable
 

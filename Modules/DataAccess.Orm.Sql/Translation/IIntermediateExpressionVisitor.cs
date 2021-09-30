@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using Expressions;
+
     /// <summary>
     /// IIntermediateExpressionVisitor
     /// </summary>

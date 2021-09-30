@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -8,11 +9,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Orm.Model;
-    using Views;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder
@@ -31,23 +30,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             _connectionProvider = connectionProvider;
         }
 
-        public async Task<DatabaseNode?> BuildModel(CancellationToken token)
+        public Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
-            var tables = _databaseTypeProvider
+            var schemas = _databaseTypeProvider
                 .DatabaseEntities()
-                .Where(entity => !entity.IsSqlView())
-                .Select(BuildTableNode)
-                .ToList();
+                .GroupBy(entity => entity.SchemaName())
+                .Select(grp => BuildSchemaNode(grp.Key, grp))
+                .ToArray();
 
-            var views = (await _databaseTypeProvider
-                    .DatabaseEntities()
-                    .Where(DatabaseModelExtensions.IsSqlView)
-                    .Select(view => BuildViewNode(view, token))
-                    .WhenAll()
-                    .ConfigureAwait(false))
-                .ToList();
+            return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Database, schemas));
+        }
 
-            return new DatabaseNode(_connectionProvider.Database, tables, views);
+        private SchemaNode BuildSchemaNode(string schema, IEnumerable<Type> entities)
+        {
+            var tables = new List<TableNode>();
+            var views = new List<ViewNode>();
+
+            foreach (var entity in entities)
+            {
+                if (entity.IsSqlView())
+                {
+                    views.Add(BuildViewNode(entity));
+                }
+                else
+                {
+                    tables.Add(BuildTableNode(entity));
+                }
+            }
+
+            return new SchemaNode(schema, tables, views);
         }
 
         private static TableNode BuildTableNode(Type tableType)
@@ -58,40 +69,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .ToList();
 
             return new TableNode(tableType, columns);
+
+            static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
+            {
+                var tableName = tableType.Name;
+                var columnType = propertyInfo.PropertyType;
+                var columnName = propertyInfo.Name;
+
+                return columnType.IsTypeSupported()
+                    ? new ColumnNode(columnType, columnName)
+                    : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+            }
         }
 
-        private static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
+        private ViewNode BuildViewNode(Type viewType)
         {
-            var tableName = tableType.Name;
-            var columnType = propertyInfo.PropertyType;
-            var columnName = propertyInfo.Name;
-
-            return columnType.IsTypeSupported()
-                ? new ColumnNode(columnType, columnName)
-                : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
-        }
-
-        private Task<ViewNode> BuildViewNode(Type viewType, CancellationToken token)
-        {
-            var viewKeyType = viewType.UnwrapTypeParameter(typeof(ISqlView<>));
-
-            return this
-                .CallMethod(nameof(BuildViewNodeGeneric))
-                .WithTypeArgument(viewType)
-                .WithTypeArgument(viewKeyType)
-                .WithArgument(token)
-                .Invoke<Task<ViewNode>>();
-        }
-
-        private async Task<ViewNode> BuildViewNodeGeneric<TView, TKey>(CancellationToken token)
-            where TView : ISqlView<TKey>
-        {
-            var query = await _dependencyContainer
-                .Resolve<ISqlViewQueryProvider<TView, TKey>>()
-                .GetQuery(token)
-                .ConfigureAwait(false);
-
-            return new ViewNode(typeof(TView), query);
+            return new ViewNode(viewType, viewType.SqlViewQuery(_dependencyContainer));
         }
     }
 }

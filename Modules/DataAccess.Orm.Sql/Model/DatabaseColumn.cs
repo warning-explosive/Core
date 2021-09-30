@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         public DatabaseColumn(
             Guid primaryKey,
             string tableName,
+            string schema,
             string columnName,
             int position,
             string dataType,
@@ -19,6 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         {
             PrimaryKey = primaryKey;
             TableName = tableName;
+            Schema = schema;
             ColumnName = columnName;
             Position = position;
             DataType = dataType;
@@ -32,6 +34,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         public Guid PrimaryKey { get; private set; }
 
         public string TableName { get; private set; }
+
+        public string Schema { get; private set; }
 
         public string ColumnName { get; private set; }
 

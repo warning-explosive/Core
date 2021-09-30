@@ -1,7 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
 {
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
 
     /// <summary>
@@ -15,8 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
         /// <summary>
         /// Gets view query
         /// </summary>
-        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task<string> GetQuery(CancellationToken token);
+        public string GetQuery();
     }
 }

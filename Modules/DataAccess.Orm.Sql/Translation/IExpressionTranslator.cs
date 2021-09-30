@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
+    using Expressions;
 
     /// <summary>
     /// IExpressionTranslator

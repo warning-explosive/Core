@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             var summary = Benchmark.Run<CompositionRootStartupBenchmarkSource>(Output.WriteLine);
 
             var measure = summary.MillisecondMeasure(
-                nameof(CompositionRootStartupBenchmarkSource.CreateBoundedAbove),
+                nameof(CompositionRootStartupBenchmarkSource.CreateExactlyBounded),
                 Measure.Mean,
                 Output.WriteLine);
 

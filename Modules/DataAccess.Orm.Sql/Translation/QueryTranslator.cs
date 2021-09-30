@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
+    using Expressions;
     using Orm.Linq;
 
     [Component(EnLifestyle.Scoped)]

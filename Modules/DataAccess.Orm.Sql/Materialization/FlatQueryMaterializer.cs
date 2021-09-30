@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 {
+    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
@@ -9,24 +10,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using CompositionRoot.Api.Abstractions.Container;
     using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
     using Orm.Linq;
     using Settings;
     using Translation;
+    using Translation.Extensions;
 
     [Component(EnLifestyle.Scoped)]
     internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>
     {
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IObjectBuilder _objectBuilder;
 
         public FlatQueryMaterializer(
+            IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
             IAdvancedDatabaseTransaction transaction,
             IObjectBuilder objectBuilder)
         {
+            _dependencyContainer = dependencyContainer;
             _ormSettingsProvider = ormSettingsProvider;
             _transaction = transaction;
             _objectBuilder = objectBuilder;
@@ -68,10 +74,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var transaction = _transaction.UnderlyingDbTransaction;
 
+            var sqlQuery = InlineQueryParameters(query);
+
             return await transaction
                 .Connection
-                .QueryAsync(query.Query, query.QueryParameters, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
+                .QueryAsync(sqlQuery, null, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
                 .ConfigureAwait(false);
+        }
+
+        private string InlineQueryParameters(FlatQuery query)
+        {
+            var sqlQuery = query.Query;
+
+            foreach (var (name, (type, value)) in query.QueryParameters)
+            {
+                if (!query.Query.Contains($"@{name}", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                sqlQuery = sqlQuery.Replace($"@{name}", value.QueryParameterSqlExpression(type, _dependencyContainer), StringComparison.OrdinalIgnoreCase);
+            }
+
+            return sqlQuery;
         }
     }
 }

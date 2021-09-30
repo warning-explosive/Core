@@ -25,5 +25,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// Column name
         /// </summary>
         public string Name { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

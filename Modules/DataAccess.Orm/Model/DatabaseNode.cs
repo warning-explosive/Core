@@ -9,15 +9,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     {
         /// <summary> .cctor </summary>
         /// <param name="name">Database name</param>
-        /// <param name="tables">Database tables</param>
-        /// <param name="views">Database views</param>
-        public DatabaseNode(string name,
-            IReadOnlyCollection<TableNode> tables,
-            IReadOnlyCollection<ViewNode> views)
+        /// <param name="schemas">Database schemas</param>
+        public DatabaseNode(string name, IReadOnlyCollection<SchemaNode> schemas)
         {
             Name = name;
-            Tables = tables;
-            Views = views;
+            Schemas = schemas;
         }
 
         /// <summary>
@@ -26,13 +22,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         public string Name { get; }
 
         /// <summary>
-        /// Tables
+        /// Database schemas
         /// </summary>
-        public IReadOnlyCollection<TableNode> Tables { get; }
+        public IReadOnlyCollection<SchemaNode> Schemas { get; }
 
-        /// <summary>
-        /// Views
-        /// </summary>
-        public IReadOnlyCollection<ViewNode> Views { get; }
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

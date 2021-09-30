@@ -5,36 +5,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using Settings;
+    using CompositionRoot.Api.Abstractions.Container;
+    using Orm.Model;
+    using Sql.Model;
     using Sql.Translation;
     using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class QuerySourceExpressionTranslator : IExpressionTranslator<QuerySourceExpression>
     {
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _databaseSettings;
+        private readonly IDependencyContainer _dependencyContainer;
 
-        public QuerySourceExpressionTranslator(ISettingsProvider<PostgreSqlDatabaseSettings> databaseSettings)
+        public QuerySourceExpressionTranslator(IDependencyContainer dependencyContainer)
         {
-            _databaseSettings = databaseSettings;
+            _dependencyContainer = dependencyContainer;
         }
 
-        public async Task<string> Translate(QuerySourceExpression expression, int depth, CancellationToken token)
+        public Task<string> Translate(QuerySourceExpression expression, int depth, CancellationToken token)
         {
-            var databaseSettings = await _databaseSettings
-                .Get(token)
-                .ConfigureAwait(false);
-
             var sb = new StringBuilder();
 
-            sb.Append(databaseSettings.Schema);
-            sb.Append('.');
-            sb.Append('\"');
-            sb.Append(expression.Type.Name);
-            sb.Append('\"');
+            if (expression.Type.IsSqlView())
+            {
+                // TODO: #110 - inline only on database model initialisation, after use created view object as normal table
+                sb.Append("(");
+                sb.Append(expression.Type.SqlViewQuery(_dependencyContainer));
+                sb.Append(")");
+            }
+            else
+            {
+                sb.Append(expression.Type.SchemaName());
+                sb.Append('.');
+                sb.Append('\"');
+                sb.Append(expression.Type.Name);
+                sb.Append('\"');
+            }
 
-            return sb.ToString();
+            return Task.FromResult(sb.ToString());
         }
     }
 }

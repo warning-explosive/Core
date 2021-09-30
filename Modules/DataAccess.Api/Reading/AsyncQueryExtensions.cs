@@ -44,6 +44,37 @@
         }
 
         /// <summary>
+        /// Asynchronously materializes query to hashset
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [Pure]
+        public static Task<HashSet<T>> ToHashSetAsync<T>(this IQueryable<T> query, CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            return Task.FromResult(query.ToHashSet());
+        }
+
+        /// <summary>
+        /// Asynchronously materializes query to hashset
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="comparer">Equality comparer</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [Pure]
+        public static Task<HashSet<T>> ToHashSetAsync<T>(this IQueryable<T> query, IEqualityComparer<T> comparer, CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            return Task.FromResult(query.ToHashSet(comparer));
+        }
+
+        /// <summary>
         /// Asynchronously materializes query to dictionary
         /// </summary>
         /// <param name="query">Query</param>

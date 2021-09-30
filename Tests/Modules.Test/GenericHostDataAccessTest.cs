@@ -6,13 +6,15 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.InMemoryDatabase;
-    using GenericEndpoint.Contract;
+    using DataAccess.Orm.Model;
+    using GenericEndpoint.DataAccess.DatabaseModel;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericHost;
@@ -22,8 +24,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using Microsoft.Extensions.Hosting;
     using Mocks;
     using Registrations;
-    using TracingEndpoint.Contract;
     using TracingEndpoint.Contract.Messages;
+    using TracingEndpoint.DatabaseModel;
     using TracingEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
@@ -65,13 +67,42 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             return new[]
             {
-                // TODO: #135 - new object[] { new PostgreSqlDatabaseProvider() },
+                // TODO: #110 - new object[] { new PostgreSqlDatabaseProvider() },
                 new object[] { new InMemoryDatabaseProvider() }
             };
         }
 
         /// <summary>
-        /// useContainer; useTransport; databaseProvider; timeout;
+        /// useContainer; useTransport; databaseProvider;
+        /// </summary>
+        /// <returns>RunHostWithDataAccessTestData</returns>
+        public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
+        {
+            var inMemoryIntegrationTransportCollector = new MessagesCollector();
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
+                .UseIntegrationTransport(builder => builder
+                    .WithInMemoryIntegrationTransport()
+                    .WithDefaultCrossCuttingConcerns()
+                    .ModifyContainerOptions(options => options
+                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .BuildOptions()));
+
+            var integrationTransportProviders = new[]
+            {
+                new object[] { useInMemoryIntegrationTransport }
+            };
+
+            return DependencyContainerImplementations()
+                .SelectMany(useContainer => integrationTransportProviders
+                    .SelectMany(useTransport => DatabaseProviders()
+                        .Select(databaseProvider => useContainer
+                            .Concat(useTransport)
+                            .Concat(databaseProvider)
+                            .ToArray())));
+        }
+
+        /// <summary>
+        /// useContainer; useTransport; collector; databaseProvider; timeout;
         /// </summary>
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> RunHostWithDataAccessTestData()
@@ -95,11 +126,15 @@ namespace SpaceEngineers.Core.Modules.Test
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
                     .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => useContainer.Concat(useTransport).Concat(databaseProvider).Concat(new object[] { timeout }).ToArray())));
+                        .Select(databaseProvider => useContainer
+                            .Concat(useTransport)
+                            .Concat(databaseProvider)
+                            .Concat(new object[] { timeout })
+                            .ToArray())));
         }
 
         /// <summary>
-        /// useContainer; useTransport; databaseProvider; timeout;
+        /// useContainer; useTransport; collector; databaseProvider; timeout;
         /// </summary>
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> RunHostWithDataAccessAndIntegrationTransportTracingTestData()
@@ -124,55 +159,83 @@ namespace SpaceEngineers.Core.Modules.Test
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
                     .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => useContainer.Concat(useTransport).Concat(databaseProvider).Concat(new object[] { timeout }).ToArray())));
+                        .Select(databaseProvider => useContainer
+                            .Concat(useTransport)
+                            .Concat(databaseProvider)
+                            .Concat(new object[] { timeout })
+                            .ToArray())));
         }
 
-        [Fact(Timeout = 60_000)]
-        /*[MemberData(nameof(RunHostWithDataAccessTestData))]*/
-        internal void BuildDatabaseModelTest()
+        [SuppressMessage("Analysis", "CA1502", Justification = "Arrange-Act-Assert")]
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(BuildHostWithDataAccessTestData))]
+        internal async Task ExtractDatabaseModelChangesTest(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
+            Func<IHostBuilder, IHostBuilder> useTransport,
+            IDatabaseProvider databaseProvider)
         {
-            // TODO: #110 - Model builder & migrations
-            /*var tracingEndpointIdentity = new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0);
+            Output.WriteLine(databaseProvider.GetType().FullName);
 
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
                 .UseTracingEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
-                    .BuildOptions(tracingEndpointIdentity))
+                    .BuildOptions(TestIdentity.TracingEndpoint))
                 .BuildHost();
 
-            var tracingEndpointContainer = host.GetEndpointDependencyContainer(tracingEndpointIdentity);
+            var tracingEndpointContainer = host.GetEndpointDependencyContainer(TestIdentity.TracingEndpoint);
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var actualModel = await tracingEndpointContainer
+                .Resolve<IDatabaseModelBuilder>()
+                .BuildModel(CancellationToken.None)
+                .ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
-            {
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
+            var expectedModel = await tracingEndpointContainer
+                .Resolve<ICodeModelBuilder>()
+                .BuildModel(CancellationToken.None)
+                .ConfigureAwait(false);
 
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+            var modelChanges = tracingEndpointContainer
+                .Resolve<IDatabaseModelComparator>()
+                .ExtractDiff(actualModel, expectedModel)
+                .ToArray();
 
-                var actualModel = await tracingEndpointContainer
-                    .Resolve<IDatabaseModelBuilder>()
-                    .BuildModel(cts.Token)
-                    .ConfigureAwait(false);
+            modelChanges.Each((change, i) => Output.WriteLine($"[{i}] {change}"));
 
-                var expectedModel = await tracingEndpointContainer
-                    .Resolve<ICodeModelBuilder>()
-                    .BuildModel(cts.Token)
-                    .ConfigureAwait(false);
-
-                var modelChanges = tracingEndpointContainer
-                    .Resolve<IDatabaseModelComparator>()
-                    .ExtractDiff(actualModel, expectedModel)
-                    .ToList();
-
-                modelChanges.Each(change => Output.WriteLine(change.ToString()));
-                Assert.NotEmpty(modelChanges);
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-            }*/
+            Assert.True(modelChanges[0] is CreateDatabase && ((CreateDatabase)modelChanges[0]).Name.Equals("SpaceEngineersDatabase", StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[1] is CreateSchema && ((CreateSchema)modelChanges[1]).Name.Equals("spaceengineers_core_tracingendpoint", StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[2] is CreateTable && ((CreateTable)modelChanges[2]).Table.Type == typeof(CapturedMessageDatabaseEntity));
+            Assert.True(modelChanges[3] is AddColumn && ((AddColumn)modelChanges[3]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[4] is AddColumn && ((AddColumn)modelChanges[4]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.RefuseReason), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[5] is AddColumn && ((AddColumn)modelChanges[5]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[6] is CreateTable && ((CreateTable)modelChanges[6]).Table.Type == typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
+            Assert.True(modelChanges[7] is AddColumn && ((AddColumn)modelChanges[7]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[8] is AddColumn && ((AddColumn)modelChanges[8]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[9] is AddColumn && ((AddColumn)modelChanges[9]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[10] is AddColumn && ((AddColumn)modelChanges[10]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[11] is AddColumn && ((AddColumn)modelChanges[11]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[12] is CreateTable && ((CreateTable)modelChanges[12]).Table.Type == typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+            Assert.True(modelChanges[13] is AddColumn && ((AddColumn)modelChanges[13]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[14] is AddColumn && ((AddColumn)modelChanges[14]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[15] is CreateSchema && ((CreateSchema)modelChanges[15]).Name.Equals("spaceengineers_core_genericendpoint_dataaccess", StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[16] is CreateTable && ((CreateTable)modelChanges[16]).Table.Type == typeof(InboxMessageDatabaseEntity));
+            Assert.True(modelChanges[17] is AddColumn && ((AddColumn)modelChanges[17]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[18] is AddColumn && ((AddColumn)modelChanges[18]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.EndpointIdentity), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[19] is AddColumn && ((AddColumn)modelChanges[19]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.IsError), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[20] is AddColumn && ((AddColumn)modelChanges[20]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Handled), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[21] is AddColumn && ((AddColumn)modelChanges[21]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[22] is CreateTable && ((CreateTable)modelChanges[22]).Table.Type == typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
+            Assert.True(modelChanges[23] is AddColumn && ((AddColumn)modelChanges[23]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[24] is AddColumn && ((AddColumn)modelChanges[24]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[25] is AddColumn && ((AddColumn)modelChanges[25]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[26] is CreateTable && ((CreateTable)modelChanges[26]).Table.Type == typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+            Assert.True(modelChanges[27] is AddColumn && ((AddColumn)modelChanges[27]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[28] is AddColumn && ((AddColumn)modelChanges[28]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[29] is CreateTable && ((CreateTable)modelChanges[29]).Table.Type == typeof(OutboxMessageDatabaseEntity));
+            Assert.True(modelChanges[30] is AddColumn && ((AddColumn)modelChanges[30]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[31] is AddColumn && ((AddColumn)modelChanges[31]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Sent), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[32] is AddColumn && ((AddColumn)modelChanges[32]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
         }
 
         [Theory(Timeout = 60_000)]
@@ -199,8 +262,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var tracingEndpointIdentity = new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0);
-
             var host = useTransport(Host.CreateDefaultBuilder())
                 .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
@@ -211,7 +272,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseTracingEndpoint(builder => builder
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
-                    .BuildOptions(tracingEndpointIdentity))
+                    .BuildOptions(TestIdentity.TracingEndpoint))
                 .BuildHost();
 
             var container = host.GetTransportDependencyContainer();

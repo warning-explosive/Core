@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Diagnostics.CodeAnalysis;
+    using Expressions;
 
     /// <summary>
     /// IMemberInfoTranslator

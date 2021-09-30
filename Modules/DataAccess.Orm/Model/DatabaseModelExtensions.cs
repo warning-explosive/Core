@@ -80,5 +80,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
 
             return itemType != null;
         }
+
+        /// <summary>
+        /// Gets schema name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        [SuppressMessage("Analysis", "CA1308", Justification = "desired behavior")]
+        public static string SchemaName(this Type type)
+        {
+            return type
+                .Assembly
+                .GetName()
+                .Name
+                .Replace(".", "_", StringComparison.OrdinalIgnoreCase)
+                .ToLowerInvariant();
+        }
     }
 }

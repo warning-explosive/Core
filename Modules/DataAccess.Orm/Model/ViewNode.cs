@@ -40,5 +40,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// View query
         /// </summary>
         public string Query { get; }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

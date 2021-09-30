@@ -14,30 +14,70 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualModel != null && expectedModel != null)
             {
-                foreach (var tableChanges in ExtractTablesDiff(actualModel.Tables, expectedModel.Tables))
+                foreach (var schemaChanges in ExtractSchemasDiff(actualModel.Schemas, expectedModel.Schemas))
                 {
-                    yield return tableChanges;
-                }
-
-                foreach (var viewDiff in ExtractViewsDiff(actualModel.Views, expectedModel.Views))
-                {
-                    yield return viewDiff;
+                    yield return schemaChanges;
                 }
             }
             else if (actualModel != null && expectedModel == null)
             {
-                throw new InvalidOperationException("You can't automatically drop the database");
+                throw new InvalidOperationException($"You can't automatically drop the database {actualModel.Name}");
             }
             else if (actualModel == null && expectedModel != null)
             {
                 yield return new CreateDatabase(expectedModel.Name);
 
-                foreach (var tableChanges in ExtractTablesDiff(Enumerable.Empty<TableNode>(), expectedModel.Tables))
+                foreach (var schemaChanges in ExtractSchemasDiff(Enumerable.Empty<SchemaNode>(), expectedModel.Schemas))
+                {
+                    yield return schemaChanges;
+                }
+            }
+        }
+
+        private static IEnumerable<IDatabaseModelChange> ExtractSchemasDiff(IEnumerable<SchemaNode> actualModel, IEnumerable<SchemaNode> expectedModel)
+        {
+            var modelChanges = actualModel
+                .FullOuterJoin(expectedModel,
+                    actual => actual.Name,
+                    expected => expected.Name,
+                    SchemaChangesSelector,
+                    StringComparer.OrdinalIgnoreCase)
+                .SelectMany(change => change);
+
+            foreach (var modelChange in modelChanges)
+            {
+                yield return modelChange;
+            }
+        }
+
+        private static IEnumerable<IDatabaseModelChange> SchemaChangesSelector(SchemaNode? actualSchema, SchemaNode? expectedSchema)
+        {
+            if (actualSchema != null && expectedSchema != null)
+            {
+                foreach (var tableChanges in ExtractTablesDiff(actualSchema.Tables, expectedSchema.Tables))
                 {
                     yield return tableChanges;
                 }
 
-                foreach (var viewDiff in ExtractViewsDiff(Enumerable.Empty<ViewNode>(), expectedModel.Views))
+                foreach (var viewDiff in ExtractViewsDiff(actualSchema.Views, expectedSchema.Views))
+                {
+                    yield return viewDiff;
+                }
+            }
+            else if (actualSchema != null && expectedSchema == null)
+            {
+                throw new InvalidOperationException($"You can't automatically drop the schema {actualSchema.Name}");
+            }
+            else if (actualSchema == null && expectedSchema != null)
+            {
+                yield return new CreateSchema(expectedSchema.Name);
+
+                foreach (var tableChanges in ExtractTablesDiff(Enumerable.Empty<TableNode>(), expectedSchema.Tables))
+                {
+                    yield return tableChanges;
+                }
+
+                foreach (var viewDiff in ExtractViewsDiff(Enumerable.Empty<ViewNode>(), expectedSchema.Views))
                 {
                     yield return viewDiff;
                 }

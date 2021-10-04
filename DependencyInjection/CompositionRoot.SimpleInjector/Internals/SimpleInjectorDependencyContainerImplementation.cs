@@ -129,6 +129,11 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
             return _container.GetInstance(service);
         }
 
+        public object ResolveGeneric(Type service, params Type[] genericTypeArguments)
+        {
+            return _container.GetInstance(service.MakeGenericType(genericTypeArguments));
+        }
+
         public IEnumerable<TService> ResolveCollection<TService>()
             where TService : class
         {

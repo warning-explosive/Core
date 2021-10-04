@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Linq.Expressions;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using Expressions;
 
@@ -31,8 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="expression">Intermediate expression</param>
         /// <param name="depth">Depth</param>
-        /// <param name="token">Cancellation token</param>
         /// <returns>Translated expression</returns>
-        Task<string> Translate(TExpression expression, int depth, CancellationToken token);
+        string Translate(TExpression expression, int depth);
     }
 }

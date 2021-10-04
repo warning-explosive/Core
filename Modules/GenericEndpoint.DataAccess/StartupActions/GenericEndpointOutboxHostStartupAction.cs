@@ -26,14 +26,14 @@
             var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
             var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
 
-            transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(endpointIdentity, token));
+            transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(endpointIdentity));
 
             return Task.CompletedTask;
         }
 
-        private Func<IntegrationMessage, Task> ErrorMessageHandler(EndpointIdentity endpointIdentity, CancellationToken token)
+        private Func<IntegrationMessage, CancellationToken, Task> ErrorMessageHandler(EndpointIdentity endpointIdentity)
         {
-            return async message =>
+            return async (message, token) =>
             {
                 await using (_dependencyContainer.OpenScopeAsync())
                 {

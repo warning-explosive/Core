@@ -24,8 +24,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 
         public async Task Run(CancellationToken token)
         {
-            await BindRpcReplyMessageHandlers(token)
-                .ConfigureAwait(false);
+            BindRpcReplyMessageHandlers();
 
             await _dependencyContainer
                 .Resolve<IIntegrationTransport>()
@@ -33,7 +32,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                 .ConfigureAwait(false);
         }
 
-        private Task BindRpcReplyMessageHandlers(CancellationToken token)
+        private void BindRpcReplyMessageHandlers()
         {
             var replies = AssembliesExtensions
                 .AllOurAssembliesFromCurrentDomain()
@@ -48,13 +47,27 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
             foreach (Type reply in replies)
             {
                 this
-                    .CallMethod(nameof(Bind))
+                    .CallMethod(nameof(BindRpcReplyMessageHandlers))
                     .WithTypeArgument(reply)
-                    .WithArguments(transport, transportEndpointIdentity, token)
+                    .WithArguments(transport, transportEndpointIdentity)
                     .Invoke();
             }
+        }
 
-            return Task.CompletedTask;
+        private void BindRpcReplyMessageHandlers<TReply>(
+            IIntegrationTransport transport,
+            EndpointIdentity transportEndpointIdentity)
+            where TReply : IIntegrationReply
+        {
+            transport.Bind(typeof(TReply), transportEndpointIdentity, ExecuteRpcReplyMessageHandlers<TReply>);
+        }
+
+        private Task ExecuteRpcReplyMessageHandlers<TReply>(IntegrationMessage message, CancellationToken token)
+            where TReply : IIntegrationReply
+        {
+            return _dependencyContainer
+                .Resolve<IRpcReplyMessageHandler<TReply>>()
+                .Handle(message, token);
         }
 
         private static bool IsMessageContractAbstraction(Type type)
@@ -64,23 +77,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                    || type == typeof(IIntegrationEvent)
                    || type == typeof(IIntegrationReply)
                    || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
-        }
-
-        private void Bind<TReply>(
-            IIntegrationTransport transport,
-            EndpointIdentity transportEndpointIdentity,
-            CancellationToken token)
-            where TReply : IIntegrationReply
-        {
-            transport.Bind(typeof(TReply), transportEndpointIdentity, ExecuteMessageHandlers<TReply>(token));
-        }
-
-        private Func<IntegrationMessage, Task> ExecuteMessageHandlers<TReply>(CancellationToken token)
-            where TReply : IIntegrationReply
-        {
-            return message => _dependencyContainer
-                .Resolve<IRpcReplyMessageHandler<TReply>>()
-                .Handle(message, token);
         }
     }
 }

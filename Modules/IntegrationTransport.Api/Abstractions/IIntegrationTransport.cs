@@ -29,14 +29,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <param name="message">Message type</param>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="messageHandler">Message handler</param>
-        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> messageHandler);
+        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> messageHandler);
 
         /// <summary>
         /// Bind message handler for error messages
         /// </summary>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="errorMessageHandler">Error message handler</param>
-        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, Task> errorMessageHandler);
+        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> errorMessageHandler);
 
         /// <summary>
         /// Enqueue message into input queue

@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(grp => BuildSchemaNode(grp.Key, grp))
                 .ToArray();
 
-            return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Database, schemas));
+            return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas));
         }
 
         private SchemaNode BuildSchemaNode(string schema, IEnumerable<Type> entities)

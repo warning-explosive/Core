@@ -21,17 +21,11 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.StringFormatter
         {
             var type = (value?.GetType() ?? typeof(object)).UnwrapTypeParameter(typeof(Nullable<>));
 
-            return this
-                .CallMethod(nameof(Format))
-                .WithTypeArgument(type)
+            return _dependencyContainer
+                .ResolveGeneric(typeof(IStringFormatter<>), type)
+                .CallMethod(nameof(IStringFormatter<object>.Format))
                 .WithArgument(value)
                 .Invoke<string>();
-        }
-
-        private string Format<T>(T value)
-        {
-            IStringFormatter<T> formatter = _dependencyContainer.Resolve<IStringFormatter<T>>();
-            return formatter.Format(value);
         }
     }
 }

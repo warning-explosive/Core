@@ -19,7 +19,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         /// <summary>
         /// Stops endpoint instance
         /// </summary>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing stop operation</returns>
-        Task StopAsync();
+        Task StopAsync(CancellationToken token);
     }
 }

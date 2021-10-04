@@ -44,10 +44,8 @@
 
         internal static string QueryParameterSqlExpression(this object? value, Type type, IDependencyContainer dependencyContainer)
         {
-            var serviceType = typeof(IQueryParameterTranslator<>).MakeGenericType(type);
-
             return dependencyContainer
-                .Resolve(serviceType)
+                .ResolveGeneric(typeof(IQueryParameterTranslator<>), type)
                 .CallMethod(nameof(IQueryParameterTranslator<object>.Translate))
                 .WithArgument(value)
                 .Invoke<string>();

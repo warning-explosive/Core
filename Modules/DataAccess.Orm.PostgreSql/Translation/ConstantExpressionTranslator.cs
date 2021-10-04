@@ -1,7 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Translation;
@@ -10,9 +8,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     [Component(EnLifestyle.Singleton)]
     internal class ConstantExpressionTranslator : IExpressionTranslator<ConstantExpression>
     {
-        public Task<string> Translate(ConstantExpression expression, int depth, CancellationToken token)
+        public string Translate(ConstantExpression expression, int depth)
         {
-            return Task.FromResult(expression.Value?.ToString() ?? "NULL");
+            return expression.Value?.ToString() ?? "NULL";
         }
     }
 }

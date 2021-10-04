@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var valuesExpression = query.ValuesExpressionProducer(keyValues);
 
-            var valuesQuery = await valuesExpression.Translate(_dependencyContainer, 0, token).ConfigureAwait(false);
+            var valuesQuery = valuesExpression.Translate(_dependencyContainer, 0);
             var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
 
             await foreach (var item in _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token))

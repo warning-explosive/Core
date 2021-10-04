@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
@@ -20,11 +18,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             _dependencyContainer = dependencyContainer;
         }
 
-        public async Task<string> Translate(SimpleBindingExpression expression, int depth, CancellationToken token)
+        public string Translate(SimpleBindingExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.Append(await expression.Source.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
             sb.Append('.');
             sb.Append('\"');
             sb.Append(expression.Name);

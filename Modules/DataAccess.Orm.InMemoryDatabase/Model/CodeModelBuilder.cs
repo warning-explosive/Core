@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
                 .Select(grp => BuildSchemaNode(grp.Key, grp))
                 .ToList();
 
-            var database = new DatabaseNode(_connectionProvider.Database, schemas);
+            var database = new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas);
 
             return Task.FromResult((DatabaseNode?)database);
         }

@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                         .WhenAll()
                         .ConfigureAwait(false);
 
-                    return new DatabaseNode(_connectionProvider.Database, schemas);
+                    return new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas);
                 }
             }
         }

@@ -2,8 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Linq;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -22,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             _dependencyContainer = dependencyContainer;
         }
 
-        public async Task<string> Translate(ProjectionExpression expression, int depth, CancellationToken token)
+        public string Translate(ProjectionExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
@@ -32,22 +30,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             if (expression.Bindings.Any())
             {
-                var bindings = await expression
+                expression
                     .Bindings
-                    .Select(binding => binding.Translate(_dependencyContainer, depth, token))
-                    .WhenAll()
-                    .ConfigureAwait(false);
+                    .Select(binding => binding.Translate(_dependencyContainer, depth))
+                    .Each((binding, i) =>
+                    {
+                        sb.Append(new string('\t', depth + 1));
+                        sb.Append(binding);
+                        var ending = i < lastBindingIndex
+                            ? ","
+                            : string.Empty;
 
-                bindings.Each((binding, i) =>
-                {
-                    sb.Append(new string('\t', depth + 1));
-                    sb.Append(binding);
-                    var ending = i < lastBindingIndex
-                        ? ","
-                        : string.Empty;
-
-                    sb.AppendLine(ending);
-                });
+                        sb.AppendLine(ending);
+                    });
             }
             else
             {
@@ -58,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append($"{await expression.Source.Translate(_dependencyContainer, depth + 1, token).ConfigureAwait(false)}");
+            sb.Append($"{expression.Source.Translate(_dependencyContainer, depth + 1)}");
 
             return sb.ToString();
         }

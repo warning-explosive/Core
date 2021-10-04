@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Model
+namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
 {
     using System;
     using System.Collections.Generic;
@@ -30,15 +30,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             {
                 return _typeProvider
                     .OurTypes
-                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
                                    && IsNotAbstraction(type))
                     .ToList();
             }
 
             static bool IsNotAbstraction(Type type)
             {
-                return type != typeof(BaseDatabaseEntity<>)
-                       && type != typeof(IDatabaseEntity<>);
+                return type != typeof(IUniqueIdentified<>)
+                       && type != typeof(IDatabaseEntity<>)
+                       && type != typeof(BaseDatabaseEntity<>);
             }
         }
     }

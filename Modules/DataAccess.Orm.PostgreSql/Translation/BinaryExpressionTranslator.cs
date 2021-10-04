@@ -2,8 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Collections.Generic;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
@@ -52,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             _dependencyContainer = dependencyContainer;
         }
 
-        public async Task<string> Translate(BinaryExpression expression, int depth, CancellationToken token)
+        public string Translate(BinaryExpression expression, int depth)
         {
             if (FunctionalOperators.ContainsKey(expression.Operator))
             {
@@ -60,9 +58,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
-                sb.Append(await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
                 sb.Append(", ");
-                sb.Append(await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
                 sb.Append(')');
 
                 return sb.ToString();
@@ -74,9 +72,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 : Operators;
 
             return string.Join(" ",
-                await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false),
+                expression.Left.Translate(_dependencyContainer, depth),
                 map[expression.Operator],
-                await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                expression.Right.Translate(_dependencyContainer, depth));
         }
 
         private static bool IsNullConstant(IIntermediateExpression expression)

@@ -44,9 +44,9 @@
                 {
                     foreach (var domainEvent in aggregate.Events)
                     {
-                        await this
-                            .CallMethod(nameof(Persist))
-                            .WithTypeArgument(domainEvent.GetType())
+                        await _dependencyContainer
+                            .ResolveGeneric(typeof(IDatabaseStateTransformer<>), domainEvent.GetType())
+                            .CallMethod(nameof(IDatabaseStateTransformer<IDomainEvent>.Persist))
                             .WithArguments(domainEvent, token)
                             .Invoke<Task>()
                             .ConfigureAwait(false);
@@ -57,14 +57,6 @@
             {
                 _trackedAggregates.Clear();
             }
-        }
-
-        private Task Persist<TEvent>(TEvent domainEvent, CancellationToken token)
-            where TEvent : IDomainEvent
-        {
-            return _dependencyContainer
-                .Resolve<IDatabaseStateTransformer<TEvent>>()
-                .Persist(domainEvent, token);
         }
     }
 }

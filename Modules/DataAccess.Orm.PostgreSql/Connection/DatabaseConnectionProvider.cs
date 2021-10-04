@@ -26,6 +26,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             _settingsProvider = settingsProvider;
         }
 
+        public string Host => _settingsProvider.Get(CancellationToken.None).Result.Host;
+
         public string Database => _settingsProvider.Get(CancellationToken.None).Result.Database;
 
         public IsolationLevel IsolationLevel => _settingsProvider.Get(CancellationToken.None).Result.IsolationLevel;

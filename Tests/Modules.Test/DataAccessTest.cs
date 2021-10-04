@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Threading;
     using Basics;
     using CompositionRoot;
     using Core.Test.Api;
@@ -398,7 +397,6 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
             var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
-            var token = CancellationToken.None;
 
             using (dependencyContainer.OpenScope())
             {
@@ -407,8 +405,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var query = dependencyContainer
                     .Resolve<IQueryTranslator>()
-                    .Translate(queryProducer(readRepository).Expression, token)
-                    .Result;
+                    .Translate(queryProducer(readRepository).Expression);
 
                 checkQuery(query, Output.WriteLine);
 

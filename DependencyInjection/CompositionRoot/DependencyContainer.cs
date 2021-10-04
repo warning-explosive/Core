@@ -196,6 +196,17 @@ namespace SpaceEngineers.Core.CompositionRoot
         }
 
         /// <inheritdoc />
+        public object ResolveGeneric(Type service, params Type[] genericTypeArguments)
+        {
+            return Resolve(service,
+                () =>
+                {
+                    IsNotInitializable(service);
+                    return Container.Resolve(service.MakeGenericType(genericTypeArguments));
+                });
+        }
+
+        /// <inheritdoc />
         public IEnumerable<TService> ResolveCollection<TService>()
             where TService : class
         {

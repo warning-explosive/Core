@@ -1,7 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Translation;
@@ -10,9 +8,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     [Component(EnLifestyle.Singleton)]
     internal class QueryParameterExpressionTranslator : IExpressionTranslator<QueryParameterExpression>
     {
-        public Task<string> Translate(QueryParameterExpression expression, int depth, CancellationToken token)
+        public string Translate(QueryParameterExpression expression, int depth)
         {
-            return Task.FromResult($"@{expression.Name}");
+            return $"@{expression.Name}";
         }
     }
 }

@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
@@ -20,16 +18,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             _dependencyContainer = dependencyContainer;
         }
 
-        public async Task<string> Translate(ConditionalExpression expression, int depth, CancellationToken token)
+        public string Translate(ConditionalExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
             sb.Append("CASE WHEN ");
-            sb.Append(await expression.When.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(expression.When.Translate(_dependencyContainer, depth));
             sb.Append(" THEN ");
-            sb.Append(await expression.Then.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(expression.Then.Translate(_dependencyContainer, depth));
             sb.Append(" ELSE ");
-            sb.Append(await expression.Else.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(expression.Else.Translate(_dependencyContainer, depth));
             sb.Append(" END");
 
             return sb.ToString();

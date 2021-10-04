@@ -14,6 +14,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.InMemoryDatabase;
     using DataAccess.Orm.Model;
+    using DataAccess.Orm.PostgreSql;
+    using DataAccess.Orm.Sql.Model;
     using GenericEndpoint.DataAccess.DatabaseModel;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -169,7 +171,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [SuppressMessage("Analysis", "CA1502", Justification = "Arrange-Act-Assert")]
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
-        internal async Task ExtractDatabaseModelChangesTest(
+        internal async Task ExtractDatabaseModelChangesDiffTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
@@ -203,39 +205,67 @@ namespace SpaceEngineers.Core.Modules.Test
 
             modelChanges.Each((change, i) => Output.WriteLine($"[{i}] {change}"));
 
+            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
+            {
+                Assert.Equal(37, modelChanges.Length);
+            }
+            else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
+            {
+                Assert.Equal(33, modelChanges.Length);
+            }
+            else
+            {
+                throw new NotSupportedException(databaseProvider.GetType().FullName);
+            }
+
             Assert.True(modelChanges[0] is CreateDatabase && ((CreateDatabase)modelChanges[0]).Name.Equals("SpaceEngineersDatabase", StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[1] is CreateSchema && ((CreateSchema)modelChanges[1]).Name.Equals("spaceengineers_core_tracingendpoint", StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[2] is CreateTable && ((CreateTable)modelChanges[2]).Table.Type == typeof(CapturedMessageDatabaseEntity));
-            Assert.True(modelChanges[3] is AddColumn && ((AddColumn)modelChanges[3]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[4] is AddColumn && ((AddColumn)modelChanges[4]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.RefuseReason), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[5] is AddColumn && ((AddColumn)modelChanges[5]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[3] is CreateColumn && ((CreateColumn)modelChanges[3]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[4] is CreateColumn && ((CreateColumn)modelChanges[4]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.RefuseReason), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[5] is CreateColumn && ((CreateColumn)modelChanges[5]).Column.Name.Equals(nameof(CapturedMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[6] is CreateTable && ((CreateTable)modelChanges[6]).Table.Type == typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
-            Assert.True(modelChanges[7] is AddColumn && ((AddColumn)modelChanges[7]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[8] is AddColumn && ((AddColumn)modelChanges[8]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[9] is AddColumn && ((AddColumn)modelChanges[9]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[10] is AddColumn && ((AddColumn)modelChanges[10]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[11] is AddColumn && ((AddColumn)modelChanges[11]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[7] is CreateColumn && ((CreateColumn)modelChanges[7]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[8] is CreateColumn && ((CreateColumn)modelChanges[8]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[9] is CreateColumn && ((CreateColumn)modelChanges[9]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[10] is CreateColumn && ((CreateColumn)modelChanges[10]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[11] is CreateColumn && ((CreateColumn)modelChanges[11]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[12] is CreateTable && ((CreateTable)modelChanges[12]).Table.Type == typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
-            Assert.True(modelChanges[13] is AddColumn && ((AddColumn)modelChanges[13]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[14] is AddColumn && ((AddColumn)modelChanges[14]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[13] is CreateColumn && ((CreateColumn)modelChanges[13]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[14] is CreateColumn && ((CreateColumn)modelChanges[14]).Column.Name.Equals(nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[15] is CreateSchema && ((CreateSchema)modelChanges[15]).Name.Equals("spaceengineers_core_genericendpoint_dataaccess", StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[16] is CreateTable && ((CreateTable)modelChanges[16]).Table.Type == typeof(InboxMessageDatabaseEntity));
-            Assert.True(modelChanges[17] is AddColumn && ((AddColumn)modelChanges[17]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[18] is AddColumn && ((AddColumn)modelChanges[18]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.EndpointIdentity), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[19] is AddColumn && ((AddColumn)modelChanges[19]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.IsError), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[20] is AddColumn && ((AddColumn)modelChanges[20]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Handled), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[21] is AddColumn && ((AddColumn)modelChanges[21]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[17] is CreateColumn && ((CreateColumn)modelChanges[17]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[18] is CreateColumn && ((CreateColumn)modelChanges[18]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.EndpointIdentity), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[19] is CreateColumn && ((CreateColumn)modelChanges[19]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.IsError), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[20] is CreateColumn && ((CreateColumn)modelChanges[20]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.Handled), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[21] is CreateColumn && ((CreateColumn)modelChanges[21]).Column.Name.Equals(nameof(InboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[22] is CreateTable && ((CreateTable)modelChanges[22]).Table.Type == typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
-            Assert.True(modelChanges[23] is AddColumn && ((AddColumn)modelChanges[23]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[24] is AddColumn && ((AddColumn)modelChanges[24]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[25] is AddColumn && ((AddColumn)modelChanges[25]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[23] is CreateColumn && ((CreateColumn)modelChanges[23]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Payload), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[24] is CreateColumn && ((CreateColumn)modelChanges[24]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Headers), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[25] is CreateColumn && ((CreateColumn)modelChanges[25]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[26] is CreateTable && ((CreateTable)modelChanges[26]).Table.Type == typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
-            Assert.True(modelChanges[27] is AddColumn && ((AddColumn)modelChanges[27]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[28] is AddColumn && ((AddColumn)modelChanges[28]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[27] is CreateColumn && ((CreateColumn)modelChanges[27]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[28] is CreateColumn && ((CreateColumn)modelChanges[28]).Column.Name.Equals(nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
             Assert.True(modelChanges[29] is CreateTable && ((CreateTable)modelChanges[29]).Table.Type == typeof(OutboxMessageDatabaseEntity));
-            Assert.True(modelChanges[30] is AddColumn && ((AddColumn)modelChanges[30]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[31] is AddColumn && ((AddColumn)modelChanges[31]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Sent), StringComparison.OrdinalIgnoreCase));
-            Assert.True(modelChanges[32] is AddColumn && ((AddColumn)modelChanges[32]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[30] is CreateColumn && ((CreateColumn)modelChanges[30]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Message), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[31] is CreateColumn && ((CreateColumn)modelChanges[31]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.Sent), StringComparison.OrdinalIgnoreCase));
+            Assert.True(modelChanges[32] is CreateColumn && ((CreateColumn)modelChanges[32]).Column.Name.Equals(nameof(OutboxMessageDatabaseEntity.PrimaryKey), StringComparison.OrdinalIgnoreCase));
+
+            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
+            {
+                Assert.True(modelChanges[33] is CreateSchema && ((CreateSchema)modelChanges[33]).Name.Equals("spaceengineers_core_dataaccess_orm_sql", StringComparison.OrdinalIgnoreCase));
+                Assert.True(modelChanges[34] is CreateView && ((CreateView)modelChanges[34]).Type == typeof(DatabaseColumn));
+                Assert.True(modelChanges[35] is CreateView && ((CreateView)modelChanges[35]).Type == typeof(DatabaseSchema));
+                Assert.True(modelChanges[36] is CreateView && ((CreateView)modelChanges[36]).Type == typeof(DatabaseView));
+            }
+            else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
+            {
+            }
+            else
+            {
+                throw new NotSupportedException(databaseProvider.GetType().FullName);
+            }
         }
 
         [Theory(Timeout = 60_000)]

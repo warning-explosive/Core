@@ -24,6 +24,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Connection
             _inMemoryDatabase = inMemoryDatabase;
         }
 
+        public string Host => nameof(InMemoryDatabase);
+
         public string Database => _settingsProvider.Get(CancellationToken.None).Result.Database;
 
         public IsolationLevel IsolationLevel => _settingsProvider.Get(CancellationToken.None).Result.IsolationLevel;

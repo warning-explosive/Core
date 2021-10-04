@@ -11,6 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     public interface IDatabaseConnectionProvider : IResolvable
     {
         /// <summary>
+        /// Host
+        /// </summary>
+        string Host { get; }
+
+        /// <summary>
         /// Database
         /// </summary>
         string Database { get; }

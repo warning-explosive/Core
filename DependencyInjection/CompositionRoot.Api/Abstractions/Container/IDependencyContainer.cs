@@ -35,6 +35,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Container
         object Resolve(Type service);
 
         /// <summary>
+        /// Resolve untyped service implementation
+        /// </summary>
+        /// <param name="service">Open-generic service</param>
+        /// <param name="genericTypeArguments">Generic type arguments</param>
+        /// <returns>Untyped service implementation</returns>
+        object ResolveGeneric(Type service, params Type[] genericTypeArguments);
+
+        /// <summary>
         /// Resolve service implementations collection
         /// </summary>
         /// <typeparam name="TService">TService type-argument</typeparam>

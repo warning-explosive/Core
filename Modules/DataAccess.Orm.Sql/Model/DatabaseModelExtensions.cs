@@ -35,10 +35,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
             var viewKeyType = type.UnwrapTypeParameter(typeof(ISqlView<>));
 
-            var serviceType = typeof(ISqlViewQueryProvider<,>).MakeGenericType(type, viewKeyType);
-
             return dependencyContainer
-                .Resolve(serviceType)
+                .ResolveGeneric(typeof(ISqlViewQueryProvider<,>), viewKeyType)
                 .CallMethod(nameof(ISqlViewQueryProvider<ISqlView<Guid>, Guid>.GetQuery))
                 .Invoke<string>();
         }

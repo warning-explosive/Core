@@ -93,14 +93,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         public async Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token)
         {
-            var query = await _translator.Translate(expression, token).ConfigureAwait(false);
+            var query = _translator.Translate(expression);
 
             return await MaterializeScalar<T>(query, token).ConfigureAwait(false);
         }
 
         public async IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, [EnumeratorCancellation] CancellationToken token)
         {
-            var query = await _translator.Translate(expression, token).ConfigureAwait(false);
+            var query = _translator.Translate(expression);
 
             await foreach (var item in Materialize<T>(query, token))
             {
@@ -110,21 +110,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private Task<T> MaterializeScalar<T>(IQuery query, CancellationToken token)
         {
-            return this
-                .CallMethod(nameof(MaterializeScalar))
-                .WithTypeArgument(query.GetType())
-                .WithTypeArgument<T>()
-                .WithArgument(query)
-                .WithArgument(token)
-                .Invoke<Task<T>>();
-        }
-
-        private Task<TItem> MaterializeScalar<TQuery, TItem>(TQuery query, CancellationToken token)
-            where TQuery : IQuery
-        {
             return _dependencyContainer
-                .Resolve<IQueryMaterializer<TQuery, TItem>>()
-                .MaterializeScalar(query, token);
+                .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
+                .CallMethod(nameof(IQueryMaterializer<IQuery, T>.MaterializeScalar))
+                .WithArguments(query, token)
+                .Invoke<Task<T>>();
         }
 
         private static T AsScalar<T>(Task<T> task)
@@ -134,21 +124,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         private IAsyncEnumerable<T> Materialize<T>(IQuery query, CancellationToken token)
         {
-            return this
-                .CallMethod(nameof(Materialize))
-                .WithTypeArgument(query.GetType())
-                .WithTypeArgument<T>()
-                .WithArgument(query)
-                .WithArgument(token)
-                .Invoke<IAsyncEnumerable<T>>();
-        }
-
-        private IAsyncEnumerable<TItem> Materialize<TQuery, TItem>(TQuery query, CancellationToken token)
-            where TQuery : IQuery
-        {
             return _dependencyContainer
-                .Resolve<IQueryMaterializer<TQuery, TItem>>()
-                .Materialize(query, token);
+                .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
+                .CallMethod(nameof(IQueryMaterializer<IQuery, T>.Materialize))
+                .WithArguments(query, token)
+                .Invoke<IAsyncEnumerable<T>>();
         }
 
         private static IEnumerable<T> AsEnumerable<T>(IAsyncEnumerable<T> asyncEnumerable, CancellationToken token)

@@ -1,14 +1,14 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// Add column change
+    /// Create column change
     /// </summary>
-    public class AddColumn : IDatabaseModelChange
+    public class CreateColumn : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="table">Table</param>
         /// <param name="column">Column</param>
-        public AddColumn(TableNode table, ColumnNode column)
+        public CreateColumn(TableNode table, ColumnNode column)
         {
             Table = table;
             Column = column;
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(AddColumn)} {Table.Type.Name}.{Column.Name}";
+            return $"{nameof(CreateColumn)} {Table.Type.Name}.{Column.Name}";
         }
     }
 }

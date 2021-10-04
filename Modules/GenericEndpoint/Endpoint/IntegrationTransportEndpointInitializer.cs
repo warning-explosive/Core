@@ -45,11 +45,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             return Task.CompletedTask;
         }
 
-        private Task ExecuteMessageHandlers(IntegrationMessage message)
+        private Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token)
         {
             return _dependencyContainer
                 .Resolve<IExecutableEndpoint>()
-                .ExecuteMessageHandlers(message);
+                .ExecuteMessageHandlers(message, token);
         }
     }
 }

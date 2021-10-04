@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
+    using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using Messaging;
@@ -13,7 +14,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         /// Executes message handlers
         /// </summary>
         /// <param name="message">Integration message</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task ExecuteMessageHandlers(IntegrationMessage message);
+        Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token);
     }
 }

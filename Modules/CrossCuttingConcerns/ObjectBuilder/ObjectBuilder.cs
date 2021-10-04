@@ -155,19 +155,11 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
         {
             var (value, targetType) = state;
 
-            return this
-                .CallMethod(nameof(Transform))
-                .WithTypeArgument(value.GetType())
-                .WithTypeArgument(targetType)
+            return _dependencyContainer
+                .ResolveGeneric(typeof(IObjectTransformer<,>), value.GetType(), targetType)
+                .CallMethod(nameof(IObjectTransformer<object, object>.Transform))
                 .WithArgument(value)
                 .Invoke();
-        }
-
-        private TTarget Transform<TSource, TTarget>(TSource value)
-        {
-            return _dependencyContainer
-                .Resolve<IObjectTransformer<TSource, TTarget>>()
-                .Transform(value);
         }
     }
 }

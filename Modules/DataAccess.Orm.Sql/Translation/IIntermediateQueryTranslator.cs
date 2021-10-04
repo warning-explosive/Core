@@ -1,7 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using Expressions;
     using Orm.Linq;
@@ -17,8 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// Translates intermediate expression to DB query
         /// </summary>
         /// <param name="intermediateExpression">Intermediate expression</param>
-        /// <param name="token">Cancellation token</param>
         /// <returns>Query</returns>
-        Task<IQuery> Translate(TExpression intermediateExpression, CancellationToken token);
+        IQuery Translate(TExpression intermediateExpression);
     }
 }

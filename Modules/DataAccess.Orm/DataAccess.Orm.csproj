@@ -63,7 +63,7 @@
       <Compile Update="Linq\IQueryTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\AddColumn.cs">
+      <Compile Update="Model\CreateColumn.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\TableNode.cs">
@@ -93,7 +93,7 @@
       <Compile Update="Model\DropView.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\UpsertView.cs">
+      <Compile Update="Model\AlterView.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\IDatabaseModelBuilder.cs">
@@ -119,6 +119,9 @@
       </Compile>
       <Compile Update="Model\CreateSchema.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseModelMigrator.cs">
+        <DependentUpon>IDatabaseModelMigrator.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

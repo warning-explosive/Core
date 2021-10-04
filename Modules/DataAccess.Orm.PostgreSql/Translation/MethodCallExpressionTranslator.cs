@@ -2,8 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Linq;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -23,13 +21,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         }
 
         /// <inheritdoc />
-        public async Task<string> Translate(MethodCallExpression expression, int depth, CancellationToken token)
+        public string Translate(MethodCallExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
             if (expression.Source != null)
             {
-                sb.Append(await expression.Source.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                sb.Append(expression.Source.Translate(_dependencyContainer, depth));
                 sb.Append(".");
             }
 
@@ -37,11 +35,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.Append('(');
 
-            var arguments = await expression
+            var arguments = expression
                 .Arguments
-                .Select(argument => argument.Translate(_dependencyContainer, depth, token))
-                .WhenAll()
-                .ConfigureAwait(false);
+                .Select(argument => argument.Translate(_dependencyContainer, depth));
 
             sb.Append(arguments.ToString(", "));
 

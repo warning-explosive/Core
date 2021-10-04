@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Translation
 {
     using System.Linq.Expressions;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Orm.Linq;
@@ -10,9 +8,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Translation
     [Component(EnLifestyle.Scoped)]
     internal class QueryTranslator : IQueryTranslator
     {
-        public Task<IQuery> Translate(Expression expression, CancellationToken token)
+        public IQuery Translate(Expression expression)
         {
-            return Task.FromResult(new InMemoryQuery(expression) as IQuery);
+            return new InMemoryQuery(expression);
         }
     }
 }

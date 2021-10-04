@@ -3,14 +3,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     using System;
 
     /// <summary>
-    /// Upsert view change
+    /// Alter view change
     /// </summary>
-    public class UpsertView : IDatabaseModelChange
+    public class AlterView : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="type">View type</param>
         /// <param name="query">View query</param>
-        public UpsertView(Type type, string query)
+        public AlterView(Type type, string query)
         {
             Type = type;
             Query = query;
@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(UpsertView)} {Type.Name}";
+            return $"{nameof(AlterView)} {Type.Name}";
         }
     }
 }

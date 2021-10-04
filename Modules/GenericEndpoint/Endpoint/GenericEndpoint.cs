@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
+    using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -9,7 +11,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Basics;
     using Basics.Primitives;
     using CompositionRoot.Api.Abstractions.Container;
-    using Contract;
     using Contract.Abstractions;
     using Messaging;
 
@@ -18,23 +19,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                                      IExecutableEndpoint
     {
         private readonly AsyncManualResetEvent _ready;
-        private readonly AsyncCountdownEvent _runningHandlers;
+        private readonly ConcurrentDictionary<Guid, Task> _runningHandlers;
         private CancellationTokenSource? _cts;
 
         public GenericEndpoint(
-            EndpointIdentity endpointIdentity,
             IDependencyContainer dependencyContainer,
             IEnumerable<IEndpointInitializer> initializers)
         {
-            Identity = endpointIdentity;
             DependencyContainer = dependencyContainer;
             Initializers = initializers;
 
             _ready = new AsyncManualResetEvent(false);
-            _runningHandlers = new AsyncCountdownEvent(0);
+            _runningHandlers = new ConcurrentDictionary<Guid, Task>();
         }
-
-        public EndpointIdentity Identity { get; }
 
         public IDependencyContainer DependencyContainer { get; }
 
@@ -54,7 +51,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             _ready.Set();
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken token)
         {
             _ready.Reset();
 
@@ -67,35 +64,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             {
                 // Wait until completes all running handlers or the stop token triggers
                 await Task
-                    .WhenAny(_runningHandlers.WaitAsync(Token), Task.Delay(Timeout.InfiniteTimeSpan, Token))
+                    .WhenAny(_runningHandlers.Values.WhenAll(), Task.Delay(Timeout.InfiniteTimeSpan, token))
                     .ConfigureAwait(false);
             }
         }
 
-        public async Task ExecuteMessageHandlers(IntegrationMessage message)
+        public async Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
-            await this
-                .CallMethod(nameof(ExecuteMessageHandlers))
-                .WithTypeArgument(message.ReflectedType)
-                .WithArgument(message)
-                .Invoke<Task>()
-                .ConfigureAwait(false);
-        }
+            var executionId = Guid.NewGuid();
+            Task? runningHandler = default;
 
-        private async Task ExecuteMessageHandlers<TMessage>(IntegrationMessage message)
-            where TMessage : IIntegrationMessage
-        {
-            var executor = DependencyContainer.Resolve<IMessageHandlerExecutor<TMessage>>();
-
-            using (Disposable.Create(_runningHandlers, e => e.Increment(), e => e.Decrement()))
+            try
             {
-                await executor
+                runningHandler = DependencyContainer
+                    .ResolveGeneric(typeof(IMessageHandlerExecutor<>), message.ReflectedType)
                     .CallMethod(nameof(IMessageHandlerExecutor<IIntegrationMessage>.Invoke))
-                    .WithArguments(message, _cts.Token)
-                    .Invoke<Task>()
-                    .ConfigureAwait(false);
+                    .WithArguments(message, token)
+                    .Invoke<Task>();
+
+                _runningHandlers.Add(executionId, runningHandler);
+
+                await runningHandler.ConfigureAwait(false);
+            }
+            finally
+            {
+                if (runningHandler != null)
+                {
+                    _runningHandlers.Remove(executionId, out _);
+                }
             }
         }
     }

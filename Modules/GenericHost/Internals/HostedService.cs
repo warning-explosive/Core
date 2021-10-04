@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _backgroundWorkers = backgroundWorkers;
         }
 
-        private ILogger<HostedService> Logger { get; }
+        private ILogger Logger { get; }
 
         private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
 
@@ -93,12 +93,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 .Invoke(token);
         }
 
-        private Func<Exception, CancellationToken, Task> OnUnhandledException(ILogger<HostedService> logger)
+        private Func<Exception, CancellationToken, Task> OnUnhandledException(ILogger logger)
         {
             return async (exception, token) =>
             {
                 logger.Error(exception);
                 await StopAsync(token).ConfigureAwait(false);
+                throw exception.Rethrow();
             };
         }
     }

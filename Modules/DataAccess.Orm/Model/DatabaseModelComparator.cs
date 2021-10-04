@@ -154,7 +154,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                 }
                 else if (actualColumn == null && expectedColumn != null)
                 {
-                    return new AddColumn(expectedTable, expectedColumn);
+                    return new CreateColumn(expectedTable, expectedColumn);
                 }
                 else
                 {
@@ -183,7 +183,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualView != null && expectedView != null && expectedView.Type != null)
             {
-                yield return new UpsertView(expectedView.Type, expectedView.Query);
+                yield return new AlterView(expectedView.Type, expectedView.Query);
             }
             else if (actualView != null && expectedView == null)
             {
@@ -191,7 +191,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
             else if (actualView == null && expectedView != null && expectedView.Type != null)
             {
-                yield return new UpsertView(expectedView.Type, expectedView.Query);
+                yield return new CreateView(expectedView.Type, expectedView.Query);
             }
             else
             {

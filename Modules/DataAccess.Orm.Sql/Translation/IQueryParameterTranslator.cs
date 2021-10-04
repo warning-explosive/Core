@@ -13,6 +13,6 @@
         /// </summary>
         /// <param name="value">Value</param>
         /// <returns>Sql expression</returns>
-        string Translate(TValue value); // TODO: use ISqlExpression instead of string
+        string Translate(TValue value); // TODO: #159 - use ISqlExpression instead of string
     }
 }

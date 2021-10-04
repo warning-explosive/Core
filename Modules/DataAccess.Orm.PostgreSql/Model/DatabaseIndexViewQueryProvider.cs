@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -8,15 +8,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     using Sql.Views;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseViewViewQueryProvider : ISqlViewQueryProvider<DatabaseView, Guid>
+    internal class DatabaseIndexViewQueryProvider : ISqlViewQueryProvider<DatabaseIndex, Guid>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
-    gen_random_uuid() as ""{nameof(DatabaseView.PrimaryKey)}"",
-    table_name as ""{nameof(DatabaseView.View)}"",
-	view_definition as ""{nameof(DatabaseView.Query)}"",
-    table_schema as ""{nameof(DatabaseView.Schema)}""
-from information_schema.views";
+    gen_random_uuid() as ""{nameof(DatabaseIndex.PrimaryKey)}"",
+    schemaname as ""{nameof(DatabaseIndex.Schema)}"",
+    tablename as ""{nameof(DatabaseIndex.Table)}"",
+    indexname as ""{nameof(DatabaseIndex.Index)}""
+FROM pg_indexes";
 
         public string GetQuery()
         {

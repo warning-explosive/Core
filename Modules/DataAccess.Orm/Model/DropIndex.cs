@@ -1,17 +1,19 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// DropTable
+    /// DropIndex
     /// </summary>
-    public class DropTable : IDatabaseModelChange
+    public class DropIndex : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
-        public DropTable(string schema, string table)
+        /// <param name="index">Index</param>
+        public DropIndex(string schema, string table, string index)
         {
             Schema = schema;
             Table = table;
+            Index = index;
         }
 
         /// <summary>
@@ -24,10 +26,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// </summary>
         public string Table { get; }
 
+        /// <summary>
+        /// Index
+        /// </summary>
+        public string Index { get; }
+
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(DropTable)} {Schema}.{Table}";
+            return $"{nameof(DropIndex)} {Schema}.{Table}.{Index}";
         }
     }
 }

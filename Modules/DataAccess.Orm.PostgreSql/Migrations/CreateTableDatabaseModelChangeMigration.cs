@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Migrations
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
@@ -11,7 +12,7 @@
     {
         public Task Migrate(CreateTable change, CancellationToken token)
         {
-            throw new System.NotImplementedException("#110");
+            throw new NotImplementedException("#110");
         }
     }
 }

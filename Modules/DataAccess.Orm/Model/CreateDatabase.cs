@@ -1,26 +1,26 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// Create database change
+    /// CreateDatabase
     /// </summary>
     public class CreateDatabase : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
-        /// <param name="name">Database name</param>
-        public CreateDatabase(string name)
+        /// <param name="database">Database</param>
+        public CreateDatabase(string database)
         {
-            Name = name;
+            Database = database;
         }
 
         /// <summary>
-        /// Database name
+        /// Database
         /// </summary>
-        public string Name { get; }
+        public string Database { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateDatabase)} {Name}";
+            return $"{nameof(CreateDatabase)} {Database}";
         }
     }
 }

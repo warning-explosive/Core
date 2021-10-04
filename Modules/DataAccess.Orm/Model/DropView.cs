@@ -1,26 +1,33 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// Drop view change
+    /// DropView
     /// </summary>
     public class DropView : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
-        /// <param name="viewName">View name</param>
-        public DropView(string viewName)
+        /// <param name="schema">Schema</param>
+        /// <param name="view">View</param>
+        public DropView(string schema, string view)
         {
-            ViewName = viewName;
+            Schema = schema;
+            View = view;
         }
 
         /// <summary>
-        /// View name
+        /// Schema
         /// </summary>
-        public string ViewName { get; }
+        public string Schema { get; }
+
+        /// <summary>
+        /// View
+        /// </summary>
+        public string View { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(DropView)} {ViewName}";
+            return $"{nameof(DropView)} {Schema}.{View}";
         }
     }
 }

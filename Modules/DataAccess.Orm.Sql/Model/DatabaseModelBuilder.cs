@@ -75,8 +75,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         {
             var tables = await BuildTableNodes(transaction, schema, token).ConfigureAwait(false);
             var views = await BuildViewNodes(transaction, schema, token).ConfigureAwait(false);
+            var indexes = await BuildIndexNodes(transaction, schema, token).ConfigureAwait(false);
 
-            return new SchemaNode(schema, tables, views);
+            return new SchemaNode(schema, tables, views, indexes);
         }
 
         private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
@@ -88,30 +89,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .Read<DatabaseColumn, Guid>()
                     .All()
                     .Where(column => column.Schema == schema)
-                    .GroupBy(column => column.TableName)
+                    .GroupBy(column => column.Table)
                     .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
                     .ConfigureAwait(false))
-                .Select(grp => BuildTableNode(grp.Key, grp.Value))
+                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value))
                 .ToList();
 
-            static TableNode BuildTableNode(string tableName, IReadOnlyCollection<DatabaseColumn> databaseColumns)
+            static TableNode BuildTableNode(string schema, string table, IReadOnlyCollection<DatabaseColumn> databaseColumns)
             {
                 var columns = databaseColumns
                     .Select(BuildColumnNode)
                     .ToList();
 
-                return new TableNode(tableName, columns);
+                return new TableNode(schema, table, GetTableType(schema, table), columns);
+
+                static Type GetTableType(string schema, string table)
+                {
+                    throw new NotImplementedException($"#110 - {schema}.{table}");
+                }
             }
 
             static ColumnNode BuildColumnNode(DatabaseColumn column)
             {
-                var columnType = GetColumnType(column);
-
-                return new ColumnNode(columnType, column.ColumnName);
+                return new ColumnNode(column.Schema, column.Table, column.Column, GetColumnType(column));
 
                 static Type GetColumnType(DatabaseColumn column)
                 {
-                    throw new NotImplementedException($"#110 - Model builder & migrations - {column}");
+                    throw new NotImplementedException($"#110 - {column.DataType}");
                 }
             }
         }
@@ -127,13 +131,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .Where(view => view.Schema == schema)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(BuildViewNode)
+                .Select(BuildViewNode(schema))
                 .ToList();
 
-            static ViewNode BuildViewNode(DatabaseView view)
+            static Func<DatabaseView, ViewNode> BuildViewNode(string schema)
             {
-                return new ViewNode(view.Name, view.Query);
+                return view => new ViewNode(schema, view.View, view.Query);
             }
+        }
+
+        private static async Task<IReadOnlyCollection<IndexNode>> BuildIndexNodes(
+            IDatabaseContext transaction,
+            string schema,
+            CancellationToken token)
+        {
+            return (await transaction
+                    .Read<DatabaseIndex, Guid>()
+                    .All()
+                    .Where(index => index.Schema == schema)
+                    .Select(index => index.Index)
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(IndexNode.FromName)
+                .ToList();
         }
     }
 }

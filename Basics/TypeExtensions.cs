@@ -241,6 +241,21 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Get specified attributes from type
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        public static IEnumerable<TAttribute> GetAttributes<TAttribute>(this Type type)
+            where TAttribute : Attribute
+        {
+            return TypeInfoStorage
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>();
+        }
+
+        /// <summary>
         /// Get specified attribute from type
         /// </summary>
         /// <param name="type">Type</param>

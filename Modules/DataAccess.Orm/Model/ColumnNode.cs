@@ -12,23 +12,41 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                               ISafelyEquatable<ColumnNode>
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Column type</param>
-        /// <param name="name">Column name</param>
-        public ColumnNode(Type type, string name)
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
+        /// <param name="column">Column</param>
+        /// <param name="type">Type</param>
+        public ColumnNode(
+            string schema,
+            string table,
+            string column,
+            Type type)
         {
+            Schema = schema;
+            Table = table;
+            Column = column;
             Type = type;
-            Name = name;
         }
 
         /// <summary>
-        /// Column type
+        /// Schema
         /// </summary>
-        public Type Type { get; }
+        public string Schema { get; }
 
         /// <summary>
-        /// Column name
+        /// Table
         /// </summary>
-        public string Name { get; }
+        public string Table { get; }
+
+        /// <summary>
+        /// Column
+        /// </summary>
+        public string Column { get; }
+
+        /// <summary>
+        /// Type
+        /// </summary>
+        public Type Type { get; }
 
         #region IEquatable
 
@@ -57,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name);
+            return HashCode.Combine(Schema, Table, Column, Type);
         }
 
         /// <inheritdoc />
@@ -75,8 +93,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public bool SafeEquals(ColumnNode other)
         {
-            return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase)
+                   && Column.Equals(other.Column, StringComparison.OrdinalIgnoreCase)
+                   && Type == other.Type;
         }
 
         #endregion
@@ -84,7 +104,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return Name;
+            return $"{Schema}.{Table}.{Column} ({Type.FullName})";
         }
     }
 }

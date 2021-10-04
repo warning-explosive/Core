@@ -42,28 +42,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
         private static SchemaNode BuildSchemaNode(string schema, IEnumerable<Type> entities)
         {
             var tables = entities
-                .Select(BuildTableNode)
+                .Select(entity => BuildTableNode(schema, entity))
                 .ToList();
 
-            return new SchemaNode(schema, tables, Array.Empty<ViewNode>());
+            return new SchemaNode(schema, tables, Array.Empty<ViewNode>(), Array.Empty<IndexNode>());
         }
 
-        private static TableNode BuildTableNode(Type tableType)
+        private static TableNode BuildTableNode(string schema, Type tableType)
         {
             var columns = tableType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .Select(property => BuildColumnNode(tableType, property))
+                .Select(property => BuildColumnNode(schema, tableType, property))
                 .ToList();
 
-            return new TableNode(tableType, columns);
-            static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
+            return new TableNode(schema, tableType.Name, tableType, columns);
+
+            static ColumnNode BuildColumnNode(string schema, Type tableType, PropertyInfo propertyInfo)
             {
                 var tableName = tableType.Name;
-                var columnType = propertyInfo.PropertyType;
                 var columnName = propertyInfo.Name;
+                var columnType = propertyInfo.PropertyType;
 
                 return columnType.IsTypeSupported()
-                    ? new ColumnNode(columnType, columnName)
+                    ? new ColumnNode(schema, tableName, columnName, columnType)
                     : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
             }
         }

@@ -4,6 +4,7 @@
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
     using Npgsql;
@@ -13,6 +14,8 @@
     [Component(EnLifestyle.Singleton)]
     internal class CreateDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateDatabase>
     {
+        private const string CommandFormat = @"CREATE DATABASE ""{0}""";
+
         private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _settingsProvider;
 
         public CreateDatabaseModelChangeMigration(ISettingsProvider<PostgreSqlDatabaseSettings> settingsProvider)
@@ -25,8 +28,6 @@
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
-
-            var commandText = $"CREATE DATABASE \"{settings.Database}\"";
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -44,7 +45,7 @@
                     .ConfigureAwait(false);
 
                 await connection
-                    .ExecuteAsync(commandText, token) // TODO: timeout
+                    .ExecuteAsync(CommandFormat.Format(settings.Database), token)
                     .ConfigureAwait(false);
             }
         }

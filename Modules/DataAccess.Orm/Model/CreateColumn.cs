@@ -1,33 +1,53 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
+    using System;
+
     /// <summary>
-    /// Create column change
+    /// CreateColumn
     /// </summary>
     public class CreateColumn : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
+        /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="column">Column</param>
-        public CreateColumn(TableNode table, ColumnNode column)
+        /// <param name="type">Type</param>
+        public CreateColumn(
+            string schema,
+            string table,
+            string column,
+            Type type)
         {
+            Schema = schema;
             Table = table;
             Column = column;
+            Type = type;
         }
+
+        /// <summary>
+        /// Schema
+        /// </summary>
+        public string Schema { get; }
 
         /// <summary>
         /// Table
         /// </summary>
-        public TableNode Table { get; }
+        public string Table { get; }
 
         /// <summary>
         /// Column
         /// </summary>
-        public ColumnNode Column { get; }
+        public string Column { get; }
+
+        /// <summary>
+        /// Type
+        /// </summary>
+        public Type Type { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateColumn)} {Table.Type.Name}.{Column.Name}";
+            return $"{nameof(CreateColumn)} {Schema}.{Table}.{Column} ({Type.FullName})";
         }
     }
 }

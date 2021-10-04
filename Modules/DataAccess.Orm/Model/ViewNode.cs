@@ -12,36 +12,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                             ISafelyEquatable<ViewNode>
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">View type</param>
-        /// <param name="query">View query</param>
-        public ViewNode(Type type, string query)
+        /// <param name="schema">Schema</param>
+        /// <param name="view">View</param>
+        /// <param name="query">Query</param>
+        public ViewNode(
+            string schema,
+            string view,
+            string query)
         {
-            Type = type;
-            Name = type.Name;
-            Query = query;
-        }
-
-        /// <summary> .cctor </summary>
-        /// <param name="name">View name</param>
-        /// <param name="query">View query</param>
-        public ViewNode(string name, string query)
-        {
-            Name = name;
+            Schema = schema;
+            View = view;
             Query = query;
         }
 
         /// <summary>
-        /// View type
+        /// Schema
         /// </summary>
-        public Type? Type { get; }
+        public string Schema { get; }
 
         /// <summary>
-        /// View name
+        /// View
         /// </summary>
-        public string Name { get; }
+        public string View { get; }
 
         /// <summary>
-        /// View query
+        /// Query
         /// </summary>
         public string Query { get; }
 
@@ -72,7 +67,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name, Query);
+            return HashCode.Combine(Schema, View, Query);
         }
 
         /// <inheritdoc />
@@ -90,7 +85,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public bool SafeEquals(ViewNode other)
         {
-            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && View.Equals(other.View, StringComparison.OrdinalIgnoreCase)
                    && Query.Equals(other.Query, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -99,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return Name;
+            return $"{Schema}.{View} ({Query})";
         }
     }
 }

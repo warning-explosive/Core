@@ -1,26 +1,26 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// Create schema change
+    /// CreateSchema
     /// </summary>
     public class CreateSchema : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
-        /// <param name="name">Schema name</param>
-        public CreateSchema(string name)
+        /// <param name="schema">Schema</param>
+        public CreateSchema(string schema)
         {
-            Name = name;
+            Schema = schema;
         }
 
         /// <summary>
-        /// Schema name
+        /// Schema
         /// </summary>
-        public string Name { get; }
+        public string Schema { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateSchema)} {Name}";
+            return $"{nameof(CreateSchema)} {Schema}";
         }
     }
 }

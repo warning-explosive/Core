@@ -1,35 +1,43 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
-    using System;
-
     /// <summary>
-    /// Create view change
+    /// CreateView
     /// </summary>
     public class CreateView : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">View type</param>
-        /// <param name="query">View query</param>
-        public CreateView(Type type, string query)
+        /// <param name="schema">Schema</param>
+        /// <param name="view">View</param>
+        /// <param name="query">Query</param>
+        public CreateView(
+            string schema,
+            string view,
+            string query)
         {
-            Type = type;
+            Schema = schema;
+            View = view;
             Query = query;
         }
 
         /// <summary>
-        /// View type
+        /// Schema
         /// </summary>
-        public Type Type { get; }
+        public string Schema { get; }
 
         /// <summary>
-        /// View query
+        /// View
+        /// </summary>
+        public string View { get; }
+
+        /// <summary>
+        /// Query
         /// </summary>
         public string Query { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateView)} {Type.Name}";
+            return $"{nameof(CreateView)} {Schema}.{View}";
         }
     }
 }

@@ -13,9 +13,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
     gen_random_uuid() as ""{nameof(DatabaseView.PrimaryKey)}"",
-    table_name as ""{nameof(DatabaseColumn.TableName)}"",
     table_schema as ""{nameof(DatabaseColumn.Schema)}"",
-    column_name as ""{nameof(DatabaseColumn.ColumnName)}"",
+    table_name as ""{nameof(DatabaseColumn.Table)}"",
+    column_name as ""{nameof(DatabaseColumn.Column)}"",
 	ordinal_position as {nameof(DatabaseColumn.Position)},
 	data_type as ""{nameof(DatabaseColumn.DataType)}"",
 	case is_nullable when 'NO' then false when 'YES' then true end as ""{nameof(DatabaseColumn.Nullable)}"",

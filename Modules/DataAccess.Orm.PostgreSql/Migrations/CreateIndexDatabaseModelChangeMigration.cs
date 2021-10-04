@@ -8,9 +8,9 @@
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateColumnDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateColumn>
+    internal class CreateIndexDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateIndex>
     {
-        public Task Migrate(CreateColumn change, CancellationToken token)
+        public Task Migrate(CreateIndex change, CancellationToken token)
         {
             throw new NotImplementedException("#110");
         }

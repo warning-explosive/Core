@@ -1,15 +1,17 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using Api.Model;
     using Views;
 
+    [Index(nameof(Schema), nameof(Table), nameof(Column), Unique = true)]
     internal class DatabaseColumn : ISqlView<Guid>
     {
         public DatabaseColumn(
             Guid primaryKey,
-            string tableName,
             string schema,
-            string columnName,
+            string table,
+            string column,
             int position,
             string dataType,
             bool nullable,
@@ -19,9 +21,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             int? length)
         {
             PrimaryKey = primaryKey;
-            TableName = tableName;
             Schema = schema;
-            ColumnName = columnName;
+            Table = table;
+            Column = column;
             Position = position;
             DataType = dataType;
             Nullable = nullable;
@@ -33,11 +35,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public Guid PrimaryKey { get; private set; }
 
-        public string TableName { get; private set; }
-
         public string Schema { get; private set; }
 
-        public string ColumnName { get; private set; }
+        public string Table { get; private set; }
+
+        public string Column { get; private set; }
 
         public int Position { get; private set; }
 

@@ -93,9 +93,6 @@
       <Compile Update="Model\DropView.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\AlterView.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\IDatabaseModelBuilder.cs">
         <DependentUpon>IModelBuilder.cs</DependentUpon>
       </Compile>
@@ -122,6 +119,18 @@
       </Compile>
       <Compile Update="Model\DatabaseModelMigrator.cs">
         <DependentUpon>IDatabaseModelMigrator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateView.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IndexNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateIndex.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropIndex.cs">
+        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

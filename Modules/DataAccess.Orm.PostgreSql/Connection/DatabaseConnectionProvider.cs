@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
     using System.Data;
-    using System.Data.Common;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
@@ -42,10 +41,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
-            var connectionStringBuilder = await GetConnectionString(token).ConfigureAwait(false);
-            var connectionString = connectionStringBuilder.ConnectionString;
+            var databaseSettings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
 
-            var connection = new NpgsqlConnection(connectionString);
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            {
+                Host = databaseSettings.Host,
+                Port = databaseSettings.Port,
+                Database = databaseSettings.Database,
+                Username = databaseSettings.Username,
+                Password = databaseSettings.Password
+            };
+
+            var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
             await connection.OpenAsync(token).ConfigureAwait(false);
 
             return connection;
@@ -66,22 +75,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                    && sqlStateCode.Equals(DatabaseDoesNotExistCode, StringComparison.OrdinalIgnoreCase)
                 ? Task.FromResult(false)
                 : Task.FromResult(true);
-        }
-
-        private async Task<DbConnectionStringBuilder> GetConnectionString(CancellationToken token)
-        {
-            var databaseSettings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            return new NpgsqlConnectionStringBuilder
-            {
-                Host = databaseSettings.Host,
-                Port = databaseSettings.Port,
-                Database = databaseSettings.Database,
-                Username = databaseSettings.Username,
-                Password = databaseSettings.Password
-            };
         }
     }
 }

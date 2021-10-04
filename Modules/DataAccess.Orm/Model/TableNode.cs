@@ -13,33 +13,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                              ISafelyEquatable<TableNode>
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Table type</param>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
+        /// <param name="type">Type</param>
         /// <param name="columns">Columns</param>
-        public TableNode(Type type, IReadOnlyCollection<ColumnNode> columns)
+        public TableNode(
+            string schema,
+            string table,
+            Type type,
+            IReadOnlyCollection<ColumnNode> columns)
         {
+            Schema = schema;
+            Table = table;
             Type = type;
-            Name = type.Name;
-            Columns = columns;
-        }
-
-        /// <summary> .cctor </summary>
-        /// <param name="name">Table name</param>
-        /// <param name="columns">Columns</param>
-        public TableNode(string name, IReadOnlyCollection<ColumnNode> columns)
-        {
-            Name = name;
             Columns = columns;
         }
 
         /// <summary>
-        /// Table type
+        /// Schema
         /// </summary>
-        public Type? Type { get; }
+        public string Schema { get; }
 
         /// <summary>
-        /// Table name
+        /// Table
         /// </summary>
-        public string Name { get; }
+        public string Table { get; }
+
+        /// <summary>
+        /// Type
+        /// </summary>
+        public Type Type { get; }
 
         /// <summary>
         /// Columns
@@ -73,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name);
+            return HashCode.Combine(Schema, Table, Type);
         }
 
         /// <inheritdoc />
@@ -91,8 +94,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public bool SafeEquals(TableNode other)
         {
-            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && ((Type == null && other.Type == null) || (Type == other.Type));
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase)
+                   && Type == other.Type;
         }
 
         #endregion
@@ -100,7 +104,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return Name;
+            return $"{Schema}.{Table} ({Type.FullName})";
         }
     }
 }

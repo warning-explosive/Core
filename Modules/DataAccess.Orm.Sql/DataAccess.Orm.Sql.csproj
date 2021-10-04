@@ -172,5 +172,8 @@
       <Compile Update="Translation\FallbackQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\DatabaseIndex.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

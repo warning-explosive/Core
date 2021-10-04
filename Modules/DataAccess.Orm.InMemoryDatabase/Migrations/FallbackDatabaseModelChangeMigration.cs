@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Migrations
 {
     using System.Threading;
     using System.Threading.Tasks;

@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Migrations
 {
     using System;
     using System.Threading;
@@ -20,9 +20,9 @@
 
         public Task Migrate(CreateDatabase change, CancellationToken token)
         {
-            if (!_database.Name.Equals(change.Name, StringComparison.OrdinalIgnoreCase))
+            if (!_database.Name.Equals(change.Database, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException($"Expected to create {_database.Name} instead of {change.Name}");
+                throw new InvalidOperationException($"Expected to create {_database.Name} instead of {change.Database}");
             }
 
             return Task.CompletedTask;

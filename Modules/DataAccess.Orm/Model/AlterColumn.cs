@@ -1,51 +1,53 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
+    using System;
+
     /// <summary>
-    /// Alter column change
+    /// AlterColumn
     /// </summary>
     public class AlterColumn : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
-        /// <param name="actualTable">Actual table</param>
-        /// <param name="expectedTable">Expected table</param>
-        /// <param name="actualColumn">Actual column</param>
-        /// <param name="expectedColumn">Expected column</param>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
+        /// <param name="column">Column</param>
+        /// <param name="type">Type</param>
         public AlterColumn(
-            TableNode actualTable,
-            TableNode expectedTable,
-            ColumnNode actualColumn,
-            ColumnNode expectedColumn)
+            string schema,
+            string table,
+            string column,
+            Type type)
         {
-            ActualTable = actualTable;
-            ExpectedTable = expectedTable;
-            ActualColumn = actualColumn;
-            ExpectedColumn = expectedColumn;
+            Schema = schema;
+            Table = table;
+            Column = column;
+            Type = type;
         }
 
         /// <summary>
-        /// Actual table
+        /// Schema
         /// </summary>
-        public TableNode ActualTable { get; }
+        public string Schema { get; }
 
         /// <summary>
-        /// Expected table
+        /// Table
         /// </summary>
-        public TableNode ExpectedTable { get; }
+        public string Table { get; }
 
         /// <summary>
-        /// Actual column
+        /// Column
         /// </summary>
-        public ColumnNode ActualColumn { get; }
+        public string Column { get; }
 
         /// <summary>
-        /// Expected column
+        /// Type
         /// </summary>
-        public ColumnNode ExpectedColumn { get; }
+        public Type Type { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(AlterColumn)} {ActualTable.Type.Name}.{ActualColumn.Name}";
+            return $"{nameof(AlterColumn)} {Schema}.{Table}.{Column} ({Type.FullName})";
         }
     }
 }

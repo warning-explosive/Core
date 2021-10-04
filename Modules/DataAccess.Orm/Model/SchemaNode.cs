@@ -13,22 +13,26 @@
                               ISafelyEquatable<SchemaNode>
     {
         /// <summary> .cctor </summary>
-        /// <param name="name">Database name</param>
-        /// <param name="tables">Database tables</param>
-        /// <param name="views">Database views</param>
-        public SchemaNode(string name,
+        /// <param name="schema">Schema</param>
+        /// <param name="tables">Tables</param>
+        /// <param name="views">Views</param>
+        /// <param name="indexes">Indexes</param>
+        public SchemaNode(
+            string schema,
             IReadOnlyCollection<TableNode> tables,
-            IReadOnlyCollection<ViewNode> views)
+            IReadOnlyCollection<ViewNode> views,
+            IReadOnlyCollection<IndexNode> indexes)
         {
-            Name = name;
+            Schema = schema;
             Tables = tables;
             Views = views;
+            Indexes = indexes;
         }
 
         /// <summary>
-        /// Database name
+        /// Schema
         /// </summary>
-        public string Name { get; }
+        public string Schema { get; }
 
         /// <summary>
         /// Tables
@@ -39,6 +43,11 @@
         /// Views
         /// </summary>
         public IReadOnlyCollection<ViewNode> Views { get; }
+
+        /// <summary>
+        /// Indexes
+        /// </summary>
+        public IReadOnlyCollection<IndexNode> Indexes { get; }
 
         #region IEquatable
 
@@ -67,7 +76,7 @@
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name);
+            return HashCode.Combine(Schema);
         }
 
         /// <inheritdoc />
@@ -85,7 +94,7 @@
         /// <inheritdoc />
         public bool SafeEquals(SchemaNode other)
         {
-            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -93,7 +102,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return Name;
+            return Schema;
         }
     }
 }

@@ -1,33 +1,40 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     /// <summary>
-    /// Drop column change
+    /// DropColumn
     /// </summary>
     public class DropColumn : IDatabaseModelChange
     {
         /// <summary> .cctor </summary>
+        /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="column">Column</param>
-        public DropColumn(TableNode table, ColumnNode column)
+        public DropColumn(string schema, string table, string column)
         {
+            Schema = schema;
             Table = table;
             Column = column;
         }
 
         /// <summary>
+        /// Schema
+        /// </summary>
+        public string Schema { get; }
+
+        /// <summary>
         /// Table
         /// </summary>
-        public TableNode Table { get; }
+        public string Table { get; }
 
         /// <summary>
         /// Column
         /// </summary>
-        public ColumnNode Column { get; }
+        public string Column { get; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(DropColumn)} {Table.Type.Name}.{Column.Name}";
+            return $"{nameof(DropColumn)} {Schema}.{Table}.{Column}";
         }
     }
 }

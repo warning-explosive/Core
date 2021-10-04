@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Orm.Model;
@@ -45,46 +46,56 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         {
             var tables = new List<TableNode>();
             var views = new List<ViewNode>();
+            var indexes = new List<IndexNode>();
 
             foreach (var entity in entities)
             {
                 if (entity.IsSqlView())
                 {
-                    views.Add(BuildViewNode(entity));
+                    views.Add(BuildViewNode(schema, entity));
                 }
                 else
                 {
-                    tables.Add(BuildTableNode(entity));
+                    tables.Add(BuildTableNode(schema, entity));
                 }
+
+                indexes.AddRange(BuildIndexNodes(schema, entity));
             }
 
-            return new SchemaNode(schema, tables, views);
+            return new SchemaNode(schema, tables, views, indexes);
         }
 
-        private static TableNode BuildTableNode(Type tableType)
+        private static TableNode BuildTableNode(string schema, Type tableType)
         {
             var columns = tableType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .Select(property => BuildColumnNode(tableType, property))
+                .Select(property => BuildColumnNode(schema, tableType, property))
                 .ToList();
 
-            return new TableNode(tableType, columns);
+            return new TableNode(schema, tableType.Name, tableType, columns);
 
-            static ColumnNode BuildColumnNode(Type tableType, PropertyInfo propertyInfo)
+            static ColumnNode BuildColumnNode(string schema, Type tableType, PropertyInfo propertyInfo)
             {
                 var tableName = tableType.Name;
-                var columnType = propertyInfo.PropertyType;
                 var columnName = propertyInfo.Name;
+                var columnType = propertyInfo.PropertyType;
 
                 return columnType.IsTypeSupported()
-                    ? new ColumnNode(columnType, columnName)
+                    ? new ColumnNode(schema, tableName, columnName, columnType)
                     : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
             }
         }
 
-        private ViewNode BuildViewNode(Type viewType)
+        private ViewNode BuildViewNode(string schema, Type viewType)
         {
-            return new ViewNode(viewType, viewType.SqlViewQuery(_dependencyContainer));
+            return new ViewNode(schema, viewType.Name, viewType.SqlViewQuery(_dependencyContainer));
+        }
+
+        private static IEnumerable<IndexNode> BuildIndexNodes(string schema, Type entity)
+        {
+            return entity
+                .GetAttributes<IndexAttribute>()
+                .Select(index => new IndexNode(schema, entity.Name, index.Columns, index.Unique));
         }
     }
 }

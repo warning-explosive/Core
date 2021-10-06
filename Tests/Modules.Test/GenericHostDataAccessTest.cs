@@ -80,13 +80,10 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
-            var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
                 .UseIntegrationTransport(builder => builder
                     .WithInMemoryIntegrationTransport()
                     .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options
-                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
                     .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -111,18 +108,16 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(300);
 
-            var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
                 .UseIntegrationTransport(builder => builder
                     .WithInMemoryIntegrationTransport()
                     .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options
-                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
                     .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport, inMemoryIntegrationTransportCollector }
+                new object[] { useInMemoryIntegrationTransport }
             };
 
             return DependencyContainerImplementations()
@@ -143,19 +138,17 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(300);
 
-            var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
                 .UseIntegrationTransport(builder => builder
                     .WithInMemoryIntegrationTransport()
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
-                    .ModifyContainerOptions(options => options
-                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
                     .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport, inMemoryIntegrationTransportCollector }
+                new object[] { useInMemoryIntegrationTransport }
             };
 
             return DependencyContainerImplementations()
@@ -377,7 +370,6 @@ namespace SpaceEngineers.Core.Modules.Test
         internal async Task GetConversationTraceTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             IDatabaseProvider databaseProvider,
             TimeSpan timeout)
         {
@@ -409,18 +401,18 @@ namespace SpaceEngineers.Core.Modules.Test
                     .BuildOptions(TestIdentity.TracingEndpoint))
                 .BuildHost();
 
-            var container = host.GetTransportDependencyContainer();
-
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var integrationContext = container.Resolve<IIntegrationContext>();
 
                 var conversationId = Guid.NewGuid();
 
@@ -438,6 +430,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(4, collector.Messages.Count);
                 var messages = collector.Messages.ToArray();
                 collector.Messages.Clear();
+
                 Assert.Equal(typeof(GetConversationTrace), messages[0].ReflectedType);
                 Assert.Equal(typeof(ConversationTrace), messages[1].ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
@@ -466,6 +459,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(4, collector.Messages.Count);
                 messages = collector.Messages.ToArray();
                 collector.Messages.Clear();
+
                 Assert.Equal(typeof(Query), messages[0].ReflectedType);
                 Assert.Equal(typeof(Reply), messages[1].ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
@@ -484,6 +478,10 @@ namespace SpaceEngineers.Core.Modules.Test
                     .ConfigureAwait(false);
 
                 await awaiter.ConfigureAwait(false);
+
+                Assert.Empty(collector.ErrorMessages);
+                Assert.Equal(4, collector.Messages.Count);
+                collector.Messages.Clear();
 
                 Assert.Equal(conversationId, trace.ConversationId);
                 Assert.NotNull(trace.Message);

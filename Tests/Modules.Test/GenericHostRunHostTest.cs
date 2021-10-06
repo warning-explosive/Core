@@ -63,23 +63,24 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var inMemoryIntegrationTransportCollector = new MessagesCollector();
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
                 .UseIntegrationTransport(builder => builder
                     .WithInMemoryIntegrationTransport()
                     .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options
-                        .WithManualRegistrations(new MessagesCollectorInstanceManualRegistration(inMemoryIntegrationTransportCollector)))
+                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
                     .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport, inMemoryIntegrationTransportCollector }
+                new object[] { useInMemoryIntegrationTransport }
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
-                    .Select(useTransport => useContainer.Concat(useTransport).Concat(new object[] { timeout }).ToArray()));
+                    .Select(useTransport => useContainer
+                        .Concat(useTransport)
+                        .Concat(new object[] { timeout })
+                        .ToArray()));
         }
 
         [Theory(Timeout = 60_000)]
@@ -87,7 +88,6 @@
         internal async Task RequestReplyTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var messageTypes = new[]
@@ -114,20 +114,22 @@
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var command = new RequestQueryCommand(42);
 
-                await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                await integrationContext
                     .Send(command, cts.Token)
                     .ConfigureAwait(false);
 
@@ -153,7 +155,6 @@
         internal async Task RpcRequestTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var messageTypes = new[]
@@ -177,20 +178,22 @@
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var query = new Query(42);
 
-                var reply = await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                var reply = await integrationContext
                     .RpcRequest<Query, Reply>(query, cts.Token)
                     .ConfigureAwait(false);
 
@@ -211,7 +214,6 @@
         internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var messageTypes = new[]
@@ -242,18 +244,20 @@
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                await integrationContext
                     .Send(new Command(42), cts.Token)
                     .ConfigureAwait(false);
 
@@ -305,7 +309,6 @@
         internal async Task ContravariantMessageHandlerTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var messageTypes = new[]
@@ -333,18 +336,20 @@
                     .BuildOptions(TestIdentity.Endpoint10))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                await integrationContext
                     .Send(new PublishInheritedEventCommand(42), cts.Token)
                     .ConfigureAwait(false);
 
@@ -370,7 +375,6 @@
         internal async Task ThrowingMessageHandlerTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var endpointIdentity = new EndpointIdentity(TestIdentity.Endpoint1, 0);
@@ -402,18 +406,20 @@
                     .BuildOptions(endpointIdentity))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                await integrationContext
                     .Send(new Command(42), cts.Token)
                     .ConfigureAwait(false);
 
@@ -478,7 +484,6 @@
         internal async Task EventSubscriptionBetweenEndpointsTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var endpoint1MessageTypes = new[]
@@ -522,18 +527,20 @@
                     .BuildOptions(TestIdentity.Endpoint20))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                await host
-                    .GetTransportDependencyContainer()
-                    .Resolve<IIntegrationContext>()
+                await integrationContext
                     .Send(new PublishEventCommand(42), cts.Token)
                     .ConfigureAwait(false);
 
@@ -552,7 +559,6 @@
         internal async Task RunTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
@@ -563,14 +569,20 @@
                     .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 var runningHost = host.RunAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
                 await runningHost.ConfigureAwait(false);
 
                 Assert.Empty(collector.ErrorMessages);
@@ -583,7 +595,6 @@
         internal async Task StartStopTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport,
-            MessagesCollector collector,
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
@@ -594,13 +605,18 @@
                     .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
                 .BuildHost();
 
-            var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 Assert.Empty(collector.ErrorMessages);

@@ -20,13 +20,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public DatabaseModelBuilder(
             IDependencyContainer dependencyContainer,
-            IDatabaseConnectionProvider connectionProvider)
+            IDatabaseConnectionProvider connectionProvider,
+            IColumnDataTypeProvider columnDataTypeProvider)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
+            _columnDataTypeProvider = columnDataTypeProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
@@ -68,7 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             }
         }
 
-        private static async Task<SchemaNode> BuildSchemaNode(
+        private async Task<SchemaNode> BuildSchemaNode(
             IDatabaseContext transaction,
             string schema,
             CancellationToken token)
@@ -80,7 +83,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             return new SchemaNode(schema, tables, views, indexes);
         }
 
-        private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
+        private async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
             IDatabaseContext transaction,
             string schema,
             CancellationToken token)
@@ -92,13 +95,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .GroupBy(column => column.Table)
                     .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
                     .ConfigureAwait(false))
-                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value))
+                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value, _columnDataTypeProvider))
                 .ToList();
 
-            static TableNode BuildTableNode(string schema, string table, IReadOnlyCollection<DatabaseColumn> databaseColumns)
+            static TableNode BuildTableNode(
+                string schema,
+                string table,
+                IReadOnlyCollection<DatabaseColumn> databaseColumns,
+                IColumnDataTypeProvider columnDataTypeProvider)
             {
                 var columns = databaseColumns
-                    .Select(BuildColumnNode)
+                    .Select(column => BuildColumnNode(column, columnDataTypeProvider))
                     .ToList();
 
                 return new TableNode(schema, table, GetTableType(schema, table), columns);
@@ -109,14 +116,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 }
             }
 
-            static ColumnNode BuildColumnNode(DatabaseColumn column)
+            static ColumnNode BuildColumnNode(
+                DatabaseColumn column,
+                IColumnDataTypeProvider columnDataTypeProvider)
             {
-                return new ColumnNode(column.Schema, column.Table, column.Column, GetColumnType(column));
-
-                static Type GetColumnType(DatabaseColumn column)
-                {
-                    throw new NotImplementedException($"#110 - {column.DataType}");
-                }
+                return new ColumnNode(
+                    column.Schema,
+                    column.Table,
+                    column.Column,
+                    columnDataTypeProvider.GetColumnType(column.DataType));
             }
         }
 

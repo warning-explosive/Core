@@ -26,6 +26,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <returns>Model type supported or not</returns>
         public static bool IsTypeSupported(this Type type)
         {
+            type = type.UnwrapTypeParameter(typeof(Nullable<>));
+
             return type.IsMultipleRelation(out var itemType)
                 ? IsItemTypeSupported(itemType)
                 : IsItemTypeSupported(type);

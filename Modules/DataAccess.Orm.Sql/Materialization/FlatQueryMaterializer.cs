@@ -22,18 +22,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
+        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IObjectBuilder _objectBuilder;
 
         public FlatQueryMaterializer(
             IDependencyContainer dependencyContainer,
-            ISettingsProvider<OrmSettings> ormSettingsProvider,
+            ISettingsProvider<OrmSettings> settingsProvider,
             IAdvancedDatabaseTransaction transaction,
             IObjectBuilder objectBuilder)
         {
             _dependencyContainer = dependencyContainer;
-            _ormSettingsProvider = ormSettingsProvider;
+            _settingsProvider = settingsProvider;
             _transaction = transaction;
             _objectBuilder = objectBuilder;
         }
@@ -68,17 +68,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
         private async Task<IEnumerable<dynamic>?> GetDynamicResult(FlatQuery query, CancellationToken token)
         {
-            var ormSettings = await _ormSettingsProvider
+            var ormSettings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var transaction = _transaction.UnderlyingDbTransaction;
+            var command = new CommandDefinition(
+                InlineQueryParameters(query),
+                null,
+                _transaction.UnderlyingDbTransaction,
+                ormSettings.QueryTimeout.Seconds,
+                CommandType.Text,
+                CommandFlags.Buffered,
+                token);
 
-            var sqlQuery = InlineQueryParameters(query);
-
-            return await transaction
+            return await _transaction
+                .UnderlyingDbTransaction
                 .Connection
-                .QueryAsync(sqlQuery, null, transaction, ormSettings.QueryTimeout.Seconds, CommandType.Text)
+                .QueryAsync(command)
                 .ConfigureAwait(false);
         }
 

@@ -55,7 +55,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateIndex)} {Schema}.{Table}.{Index}";
+            return $"{nameof(CreateIndex)} {Index}";
         }
     }
 }

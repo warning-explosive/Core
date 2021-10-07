@@ -50,13 +50,27 @@
             }
         }
 
-        private IDbConnection Connection
+        private IDbConnection UnderlyingDbConnection
         {
             get
             {
-                if (_connection?.State == ConnectionState.Open)
+                for (var i = 0; i < 3; i++)
                 {
-                    return _connection;
+                    switch (_connection?.State)
+                    {
+                        case ConnectionState.Connecting:
+                            Task.Delay(TimeSpan.FromMilliseconds(50));
+                            continue;
+                        case ConnectionState.Open:
+                        case ConnectionState.Executing:
+                        case ConnectionState.Fetching:
+                            return _connection;
+                        case ConnectionState.Broken:
+                        case ConnectionState.Closed:
+                        case null:
+                        default:
+                            break;
+                    }
                 }
 
                 Interlocked.Exchange(ref _connection, default)?.Dispose();
@@ -104,7 +118,7 @@
                 throw new InvalidOperationException("Database transaction have already opened");
             }
 
-            _transaction = Connection.BeginTransaction(isolationLevel);
+            _transaction = UnderlyingDbConnection.BeginTransaction(isolationLevel);
             return Task.FromResult(_transaction);
         }
 

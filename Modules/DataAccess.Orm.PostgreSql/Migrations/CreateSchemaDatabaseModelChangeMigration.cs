@@ -1,34 +1,53 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Migrations
 {
+    using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
-    using Orm.Connection;
     using Orm.Model;
+    using Orm.Settings;
 
-    [Component(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Scoped)]
     internal class CreateSchemaDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateSchema>
     {
-        private const string CommandFormat = @"CREATE SCHEMA ""{0}""";
+        private const string CommandFormat = @"create schema ""{0}""";
 
-        private readonly IDatabaseConnectionProvider _databaseConnectionProvider;
+        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
+        private readonly IAdvancedDatabaseTransaction _databaseTransaction;
 
-        public CreateSchemaDatabaseModelChangeMigration(IDatabaseConnectionProvider databaseConnectionProvider)
+        public CreateSchemaDatabaseModelChangeMigration(
+            ISettingsProvider<OrmSettings> settingsProvider,
+            IAdvancedDatabaseTransaction databaseTransaction)
         {
-            _databaseConnectionProvider = databaseConnectionProvider;
+            _settingsProvider = settingsProvider;
+            _databaseTransaction = databaseTransaction;
         }
 
         public async Task Migrate(CreateSchema change, CancellationToken token)
         {
-            using (var connection = await _databaseConnectionProvider.OpenConnection(token).ConfigureAwait(false))
-            {
-                await connection
-                    .ExecuteAsync(CommandFormat.Format(change.Schema), token)
-                    .ConfigureAwait(false);
-            }
+            var settings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
+
+            var command = new CommandDefinition(
+                CommandFormat.Format(change.Schema),
+                null,
+                _databaseTransaction.UnderlyingDbTransaction,
+                settings.QueryTimeout.Seconds,
+                CommandType.Text,
+                CommandFlags.Buffered,
+                token);
+
+            await _databaseTransaction
+                .UnderlyingDbTransaction
+                .Connection
+                .ExecuteAsync(command)
+                .ConfigureAwait(false);
         }
     }
 }

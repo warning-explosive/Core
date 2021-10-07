@@ -25,8 +25,6 @@
             ConversationId = conversationId;
             Payload = payload;
             Headers = headers;
-
-            var x = this with { MessageId = Guid.NewGuid() };
         }
 
         public Guid MessageId { get; private init; }

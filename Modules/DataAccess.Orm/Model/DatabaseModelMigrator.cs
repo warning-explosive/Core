@@ -22,12 +22,15 @@
         {
             foreach (var change in modelChanges)
             {
-                await _dependencyContainer
-                    .ResolveGeneric(typeof(IDatabaseModelChangeMigration<>), change.GetType())
-                    .CallMethod(nameof(IDatabaseModelChangeMigration<IDatabaseModelChange>.Migrate))
-                    .WithArguments(change, token)
-                    .Invoke<Task>()
-                    .ConfigureAwait(false);
+                await using (_dependencyContainer.OpenScopeAsync())
+                {
+                    await _dependencyContainer
+                        .ResolveGeneric(typeof(IDatabaseModelChangeMigration<>), change.GetType())
+                        .CallMethod(nameof(IDatabaseModelChangeMigration<IDatabaseModelChange>.Migrate))
+                        .WithArguments(change, token)
+                        .Invoke<Task>()
+                        .ConfigureAwait(false);
+                }
             }
         }
     }

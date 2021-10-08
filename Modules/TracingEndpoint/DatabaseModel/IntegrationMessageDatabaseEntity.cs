@@ -37,13 +37,13 @@
 
         public IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer, IStringFormatter formatter)
         {
-            var payload = (IIntegrationMessage)serializer.DeserializeObject(Payload.Value, Payload.Type);
+            var payload = (IIntegrationMessage)serializer.DeserializeObject(Payload.Value, Payload.SystemType);
 
             var headers = Headers
                 .Select(header => header.BuildIntegrationMessageHeader(serializer))
                 .ToList();
 
-            return new IntegrationMessage(MessageId, payload, Payload.Type, headers, formatter);
+            return new IntegrationMessage(MessageId, payload, Payload.SystemType, headers, formatter);
         }
 
         public static IntegrationMessageDatabaseEntity Build(IntegrationMessage message, IJsonSerializer serializer)

@@ -34,7 +34,6 @@
       <ProjectReference Include="..\DataAccess.Api\DataAccess.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.0.90" />
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -116,9 +115,6 @@
       </Compile>
       <Compile Update="Model\CreateSchema.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DatabaseModelMigrator.cs">
-        <DependentUpon>IDatabaseModelMigrator.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateView.cs">
         <DependentUpon>IDatabaseModelChange.cs</DependentUpon>

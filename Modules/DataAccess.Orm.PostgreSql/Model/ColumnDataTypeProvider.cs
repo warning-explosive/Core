@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -18,186 +20,195 @@
                 throw new NotSupportedException($"Not supported column type: {type}");
             }
 
-            type = type.UnwrapTypeParameter(typeof(Nullable<>));
-
-            if (type == typeof(Guid))
+            if (TryGetPrimitiveDataType(type, out var dataType))
             {
-                return EnPostgreSqlDataType.Uuid.ToString();
+                return dataType;
             }
-
-            if (type == typeof(bool))
-            {
-                return EnPostgreSqlDataType.Boolean.ToString();
-            }
-
-            if (type == typeof(string))
-            {
-                return EnPostgreSqlDataType.Varchar.ToString();
-            }
-
-            if (type == typeof(short))
-            {
-                return EnPostgreSqlDataType.SmallInt.ToString();
-            }
-
-            if (type == typeof(int))
-            {
-                return EnPostgreSqlDataType.Integer.ToString();
-            }
-
-            if (type == typeof(long))
-            {
-                return EnPostgreSqlDataType.BigInt.ToString();
-            }
-
-            if (type == typeof(float))
-            {
-                // float
-                // ±1.5e−45 to ±3.4e38
-                // ~6-9 digits
-                // 4 bytes
-                return $"{EnPostgreSqlDataType.Numeric}(6, 4)";
-            }
-
-            if (type == typeof(double))
-            {
-                // double
-                // ±5.0e−324 to ±1.7e308
-                // ~15-17 digits
-                // 8 bytes
-                return $"{EnPostgreSqlDataType.Numeric}(15, 8)";
-            }
-
-            if (type == typeof(decimal))
-            {
-                // decimal
-                // ±1.0e-28 to ±7.9228e28
-                // 28-29 digits
-                // 16 bytes
-                return $"{EnPostgreSqlDataType.Numeric}(28, 12)";
-            }
-
-            if (type == typeof(DateTime))
-            {
-                return EnPostgreSqlDataType.Timestamp.ToString();
-            }
-
-            if (type == typeof(TimeSpan))
-            {
-                return EnPostgreSqlDataType.Interval.ToString();
-            }
-
-            // TODO: #110 - relations
-            /*if (type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(IInlinedObject)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(IReadOnlyCollection<>)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(ICollection<>)))
-            {
-                return;
-            }*/
 
             throw new NotSupportedException($"Not supported column type: {type}");
+
+            static bool TryGetPrimitiveDataType(Type type, [NotNullWhen(true)] out string? dataType)
+            {
+                type = type.UnwrapTypeParameter(typeof(Nullable<>));
+
+                if (type == typeof(Guid))
+                {
+                    dataType = EnPostgreSqlDataType.Uuid.ToString();
+                    return true;
+                }
+
+                if (type == typeof(bool))
+                {
+                    dataType = EnPostgreSqlDataType.Boolean.ToString();
+                    return true;
+                }
+
+                if (type == typeof(string))
+                {
+                    dataType = EnPostgreSqlDataType.Varchar.ToString();
+                    return true;
+                }
+
+                if (type == typeof(short))
+                {
+                    dataType = EnPostgreSqlDataType.SmallInt.ToString();
+                    return true;
+                }
+
+                if (type == typeof(int))
+                {
+                    dataType = EnPostgreSqlDataType.Integer.ToString();
+                    return true;
+                }
+
+                if (type == typeof(long))
+                {
+                    dataType = EnPostgreSqlDataType.BigInt.ToString();
+                    return true;
+                }
+
+                if (type == typeof(float))
+                {
+                    // float
+                    // ±1.5e−45 to ±3.4e38
+                    // ~6-9 digits
+                    // 4 bytes
+                    dataType = $"{EnPostgreSqlDataType.Numeric}(6, 4)";
+                    return true;
+                }
+
+                if (type == typeof(double))
+                {
+                    // double
+                    // ±5.0e−324 to ±1.7e308
+                    // ~15-17 digits
+                    // 8 bytes
+                    dataType = $"{EnPostgreSqlDataType.Numeric}(15, 8)";
+                    return true;
+                }
+
+                if (type == typeof(decimal))
+                {
+                    // decimal
+                    // ±1.0e-28 to ±7.9228e28
+                    // 28-29 digits
+                    // 16 bytes
+                    dataType = $"{EnPostgreSqlDataType.Numeric}(28, 12)";
+                    return true;
+                }
+
+                if (type == typeof(DateTime))
+                {
+                    dataType = EnPostgreSqlDataType.Timestamp.ToString();
+                    return true;
+                }
+
+                if (type == typeof(TimeSpan))
+                {
+                    dataType = EnPostgreSqlDataType.Interval.ToString();
+                    return true;
+                }
+
+                dataType = default;
+                return false;
+            }
         }
 
         public Type GetColumnType(string dataType)
         {
-            if (dataType.Equals(EnPostgreSqlDataType.Uuid.ToString(), StringComparison.OrdinalIgnoreCase))
+            if (TryGetPrimitiveType(dataType, out var type))
             {
-                return typeof(Guid);
+                return type;
             }
-
-            if (dataType.Equals(EnPostgreSqlDataType.Boolean.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(bool);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.Varchar.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(string);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.SmallInt.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(short);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.Integer.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(int);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.BigInt.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(long);
-            }
-
-            if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(6, 4)", StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(float);
-            }
-
-            if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(15, 8)", StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(double);
-            }
-
-            if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(28, 12)", StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(decimal);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.Timestamp.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(DateTime);
-            }
-
-            if (dataType.Equals(EnPostgreSqlDataType.Interval.ToString(), StringComparison.OrdinalIgnoreCase))
-            {
-                return typeof(TimeSpan);
-            }
-
-            // TODO: #110 - relations
-            /*if (type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(IInlinedObject)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(IReadOnlyCollection<>)))
-            {
-                return;
-            }
-
-            if (type.IsSubclassOfOpenGeneric(typeof(ICollection<>)))
-            {
-                return;
-            }*/
 
             throw new NotSupportedException($"Not supported column data type: {dataType}");
+
+            static bool TryGetPrimitiveType(string dataType, [NotNullWhen(true)] out Type? type)
+            {
+                if (dataType.Equals(EnPostgreSqlDataType.Uuid.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(Guid);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.Boolean.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(bool);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.Varchar.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(string);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.SmallInt.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(short);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.Integer.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(int);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.BigInt.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(long);
+                    return true;
+                }
+
+                if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(6, 4)", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(float);
+                    return true;
+                }
+
+                if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(15, 8)", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(double);
+                    return true;
+                }
+
+                if (dataType.Equals($"{EnPostgreSqlDataType.Numeric}(28, 12)", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(decimal);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.Timestamp.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(DateTime);
+                    return true;
+                }
+
+                if (dataType.Equals(EnPostgreSqlDataType.Interval.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(TimeSpan);
+                    return true;
+                }
+
+                type = default;
+                return false;
+            }
         }
 
-        public IEnumerable<string> GetModifiers(Type type)
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
+        public IEnumerable<string> GetModifiers(CreateColumn createColumn)
         {
+            if (createColumn.Type == typeof(Guid)
+                && createColumn.Column.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+            {
+                yield return $@"constraint ""{createColumn.Table.ToLowerInvariant()}_pk"" primary key";
+            }
+
             // TODO: #110 - nullable reference
-            if (!type.IsNullable()
-                || type.IsClass
-                || type.IsInterface)
+            if (!createColumn.Type.IsNullable()
+                || createColumn.Type.IsClass
+                || createColumn.Type.IsInterface)
             {
                 yield return "not null";
             }

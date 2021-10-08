@@ -1,6 +1,5 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Model
 {
-    using System;
     using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
@@ -12,11 +11,11 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Value</param>
-        /// <param name="type">Type</param>
-        public JsonObject(string value, Type type)
+        /// <param name="systemType">System type</param>
+        public JsonObject(string value, SystemType systemType)
         {
             Value = value;
-            Type = type;
+            SystemType = systemType;
         }
 
         /// <summary>
@@ -25,8 +24,8 @@
         public string Value { get; private init; }
 
         /// <summary>
-        /// Type
+        /// System type
         /// </summary>
-        public Type Type { get; private init; }
+        public SystemType SystemType { get; private init; }
     }
 }

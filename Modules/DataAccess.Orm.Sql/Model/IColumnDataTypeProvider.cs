@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using AutoRegistration.Api.Abstractions;
+    using Orm.Model;
 
     /// <summary>
     /// IColumnDataTypeProvider
@@ -26,8 +27,8 @@
         /// <summary>
         /// Gets column modifiers
         /// </summary>
-        /// <param name="type">Type</param>
+        /// <param name="createColumn">CreateColumn</param>
         /// <returns>Column modifiers</returns>
-        IEnumerable<string> GetModifiers(Type type);
+        IEnumerable<string> GetModifiers(CreateColumn createColumn);
     }
 }

@@ -19,7 +19,7 @@
 
         public IIntegrationMessageHeader BuildIntegrationMessageHeader(IJsonSerializer serializer)
         {
-            return (IIntegrationMessageHeader)serializer.DeserializeObject(Value.Value, Value.Type);
+            return (IIntegrationMessageHeader)serializer.DeserializeObject(Value.Value, Value.SystemType);
         }
 
         public static IntegrationMessageHeaderDatabaseEntity Build(IIntegrationMessageHeader messageHeader, IJsonSerializer serializer)

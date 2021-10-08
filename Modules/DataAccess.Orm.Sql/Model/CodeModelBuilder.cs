@@ -65,24 +65,123 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             return new SchemaNode(schema, tables, views, indexes);
         }
 
+        // TODO: #110 - create model cache
         private static TableNode BuildTableNode(string schema, Type tableType)
         {
             var columns = tableType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .Select(property => BuildColumnNode(schema, tableType, property))
+                .Select(Validate)
+                .SelectMany(FlattenSpecialTypes)
+                .Select(BuildColumn)
+                .Select(column => new ColumnNode(schema, tableType.Name, column.Name, column.Type))
                 .ToList();
 
             return new TableNode(schema, tableType.Name, tableType, columns);
 
-            static ColumnNode BuildColumnNode(string schema, Type tableType, PropertyInfo propertyInfo)
+            static PropertyInfo Validate(PropertyInfo property)
             {
-                var tableName = tableType.Name;
-                var columnName = propertyInfo.Name;
-                var columnType = propertyInfo.PropertyType;
+                if (!property.PropertyType.IsTypeSupported())
+                {
+                    throw new NotSupportedException($"Not supported column type: {property.Name} - {property.PropertyType}");
+                }
 
-                return columnType.IsTypeSupported()
-                    ? new ColumnNode(schema, tableName, columnName, columnType)
-                    : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+                return property;
+            }
+
+            static IEnumerable<(string Name, Type Type)[]> FlattenSpecialTypes(PropertyInfo property)
+            {
+                if (typeof(IInlinedObject).IsAssignableFrom(property.PropertyType))
+                {
+                    return FlattenInlinedObject(property);
+                }
+
+                if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+                {
+                    return FlattenRelation(property);
+                }
+
+                if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IReadOnlyCollection<>)))
+                {
+                    var itemType = property
+                        .PropertyType
+                        .UnwrapTypeParameter(typeof(IReadOnlyCollection<>));
+
+                    return itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                        ? FlattenMultipleRelation(property, itemType)
+                        : FlattenArray(property, itemType);
+                }
+
+                return new[]
+                {
+                    new[]
+                    {
+                        (property.Name, property.PropertyType)
+                    }
+                };
+            }
+
+            static IEnumerable<(string Name, Type Type)[]> FlattenInlinedObject(PropertyInfo property)
+            {
+                var properties = property
+                    .PropertyType
+                    .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+
+                foreach (var inlined in properties)
+                {
+                    foreach (var subsequent in FlattenSpecialTypes(inlined))
+                    {
+                        yield return new[] { (property.Name, property.PropertyType) }
+                            .Concat(subsequent)
+                            .ToArray();
+                    }
+                }
+            }
+
+            static IEnumerable<(string Name, Type Type)[]> FlattenRelation(PropertyInfo property)
+            {
+                var primaryKeyType = property
+                    .PropertyType
+                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
+                    .Single();
+
+                yield return new[]
+                {
+                    (property.Name, property.PropertyType),
+                    (nameof(IUniqueIdentified<Guid>.PrimaryKey), primaryKeyType)
+                };
+            }
+
+            static IEnumerable<(string Name, Type Type)[]> FlattenMultipleRelation(PropertyInfo property, Type itemType)
+            {
+                var primaryKeyType = itemType
+                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
+                    .Single();
+
+                return new[]
+                {
+                    new[]
+                    {
+                        (property.Name, primaryKeyType)
+                    }
+                };
+            }
+
+            static IEnumerable<(string Name, Type Type)[]> FlattenArray(PropertyInfo property, Type itemType)
+            {
+                throw new NotSupportedException($"Arrays are not supported: {property.Name} - {itemType.Name}[]");
+            }
+
+            static (string Name, Type Type) BuildColumn((string Name, Type Type)[] properties)
+            {
+                var name = properties
+                    .Select(property => property.Name)
+                    .ToString("_");
+
+                var type = properties
+                    .Last()
+                    .Type;
+
+                return (name, type);
             }
         }
 

@@ -1,72 +1,32 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Migrations
 {
-    using System.Data;
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
-    using Npgsql;
     using Orm.Model;
-    using Orm.Settings;
-    using Settings;
+    using Sql.Migrations;
+    using Sql.Settings;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class CreateDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateDatabase>
     {
-        private const string CommandFormat = @"create database ""{0}""";
+        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _postgresSettingsProvider;
-
-        public CreateDatabaseModelChangeMigration(
-            ISettingsProvider<OrmSettings> settingsProvider,
-            ISettingsProvider<PostgreSqlDatabaseSettings> postgresSettingsProvider)
+        public CreateDatabaseModelChangeMigration(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
             _settingsProvider = settingsProvider;
-            _postgresSettingsProvider = postgresSettingsProvider;
         }
 
-        public async Task Migrate(CreateDatabase change, CancellationToken token)
+        public async Task<string> Migrate(CreateDatabase change, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var postgresSettings = await _postgresSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
-            {
-                Host = postgresSettings.Host,
-                Port = postgresSettings.Port,
-                Database = "postgres",
-                Username = postgresSettings.Username,
-                Password = postgresSettings.Password
-            };
-
-            using (var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString))
-            {
-                await connection
-                    .OpenAsync(token)
-                    .ConfigureAwait(false);
-
-                var command = new CommandDefinition(
-                    CommandFormat.Format(postgresSettings.Database),
-                    null,
-                    null,
-                    settings.QueryTimeout.Seconds,
-                    CommandType.Text,
-                    CommandFlags.Buffered,
-                    token);
-
-                await connection
-                    .ExecuteAsync(command)
-                    .ConfigureAwait(false);
-            }
+            throw new InvalidOperationException($"You should create and configure {settings.Database} database manually");
         }
     }
 }

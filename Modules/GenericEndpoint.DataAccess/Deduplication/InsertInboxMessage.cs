@@ -26,9 +26,7 @@
         {
             var message = IntegrationMessageDatabaseEntity.Build(domainEvent.Message, _serializer);
 
-            var endpointIdentity = new EndpointIdentityInlinedObject(domainEvent.EndpointIdentity.LogicalName, domainEvent.EndpointIdentity.InstanceName);
-
-            var inbox = new InboxMessageDatabaseEntity(domainEvent.InboxId, message, endpointIdentity, false, false);
+            var inbox = new InboxMessageDatabaseEntity(domainEvent.InboxId, message, domainEvent.EndpointIdentity, false, false);
 
             return _databaseContext
                 .Write<InboxMessageDatabaseEntity, Guid>()

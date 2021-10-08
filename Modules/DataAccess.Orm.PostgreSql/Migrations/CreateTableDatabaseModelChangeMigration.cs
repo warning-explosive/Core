@@ -1,20 +1,16 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Migrations
 {
     using System;
-    using System.Data;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
     using Orm.Model;
-    using Orm.Settings;
+    using Sql.Migrations;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class CreateTableDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateTable>
     {
         private const string CommandFormat = @"create table ""{0}"".""{1}""
@@ -24,45 +20,24 @@
 
         private const string ColumnFormat = @"""{0}"" {1}{2}";
 
-        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly IAdvancedDatabaseTransaction _databaseTransaction;
         private readonly CreateColumnDatabaseModelChangeMigration _createColumnMigration;
 
-        public CreateTableDatabaseModelChangeMigration(
-            ISettingsProvider<OrmSettings> settingsProvider,
-            IAdvancedDatabaseTransaction databaseTransaction,
-            CreateColumnDatabaseModelChangeMigration createColumnMigration)
+        public CreateTableDatabaseModelChangeMigration(CreateColumnDatabaseModelChangeMigration createColumnMigration)
         {
-            _settingsProvider = settingsProvider;
-            _databaseTransaction = databaseTransaction;
             _createColumnMigration = createColumnMigration;
         }
 
-        public async Task Migrate(CreateTable change, CancellationToken token)
+        public Task<string> Migrate(CreateTable change, CancellationToken token)
         {
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
+            // TODO: #110 - create FK constraints and define on delete actions
             var columns = change
                 .Columns
                 .Select(CreateColumn)
                 .ToString($",{Environment.NewLine}\t");
 
-            var command = new CommandDefinition(
-                CommandFormat.Format(change.Schema, change.Table, columns),
-                null,
-                _databaseTransaction.UnderlyingDbTransaction,
-                settings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
+            var command = CommandFormat.Format(change.Schema, change.Table, columns);
 
-            await _databaseTransaction
-                .UnderlyingDbTransaction
-                .Connection
-                .ExecuteAsync(command)
-                .ConfigureAwait(false);
+            return Task.FromResult(command);
         }
 
         private string CreateColumn(CreateColumn createColumn)

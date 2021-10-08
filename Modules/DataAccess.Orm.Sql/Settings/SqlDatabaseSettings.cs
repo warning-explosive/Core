@@ -1,18 +1,18 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Settings
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
 {
     using System.Data;
     using Basics;
     using CrossCuttingConcerns.Api.Abstractions;
 
     /// <summary>
-    /// Postgre sql settings
+    /// SqlDatabaseSettings
     /// </summary>
-    public class PostgreSqlDatabaseSettings : IYamlSettings
+    public class SqlDatabaseSettings : IYamlSettings
     {
         private const string Format = "{0}={1}";
 
         /// <summary> .cctor </summary>
-        public PostgreSqlDatabaseSettings()
+        public SqlDatabaseSettings()
         {
             Host = "localhost";
             Port = 5432;

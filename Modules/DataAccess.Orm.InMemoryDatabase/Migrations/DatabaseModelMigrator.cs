@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Migrations
 {
     using System.Collections.Generic;
     using System.Threading;
@@ -7,6 +7,7 @@
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
+    using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelMigrator : IDatabaseModelMigrator

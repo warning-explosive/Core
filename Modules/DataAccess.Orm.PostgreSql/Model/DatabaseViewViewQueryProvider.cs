@@ -13,10 +13,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select
     gen_random_uuid() as ""{nameof(DatabaseView.PrimaryKey)}"",
-    table_name as ""{nameof(DatabaseView.View)}"",
-	view_definition as ""{nameof(DatabaseView.Query)}"",
-    table_schema as ""{nameof(DatabaseView.Schema)}""
-from information_schema.views";
+    viewname as ""{nameof(DatabaseView.View)}"",
+    definition as ""{nameof(DatabaseView.Query)}"",
+    schemaname as ""{nameof(DatabaseView.Schema)}""
+from pg_catalog.pg_views
+union all
+select
+    gen_random_uuid() as ""{nameof(DatabaseView.PrimaryKey)}"",
+    matviewname as ""{nameof(DatabaseView.View)}"",
+    definition as ""{nameof(DatabaseView.Query)}"",
+    schemaname as ""{nameof(DatabaseView.Schema)}""
+from pg_catalog.pg_matviews";
 
         public string GetQuery()
         {

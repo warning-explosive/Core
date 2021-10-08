@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using CrossCuttingConcerns.Api.Abstractions;
     using Npgsql;
     using Orm.Connection;
-    using Settings;
+    using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider
@@ -18,9 +18,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private const string SqlState = nameof(SqlState);
         private const string DatabaseDoesNotExistCode = "3D000";
 
-        private readonly ISettingsProvider<PostgreSqlDatabaseSettings> _settingsProvider;
+        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        public DatabaseConnectionProvider(ISettingsProvider<PostgreSqlDatabaseSettings> settingsProvider)
+        public DatabaseConnectionProvider(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
             _settingsProvider = settingsProvider;
         }
@@ -41,17 +41,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
-            var databaseSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
-                Host = databaseSettings.Host,
-                Port = databaseSettings.Port,
-                Database = databaseSettings.Database,
-                Username = databaseSettings.Username,
-                Password = databaseSettings.Password
+                Host = settings.Host,
+                Port = settings.Port,
+                Database = settings.Database,
+                Username = settings.Username,
+                Password = settings.Password
             };
 
             var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);

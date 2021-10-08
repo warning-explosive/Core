@@ -1,6 +1,6 @@
 Host: localhost
 Port: 5432
-Database: SpaceEngineersDatabase
+Database: SpaceEngineerDatabase
 Username: SpaceEngineer
-Password: 1234
+Password: Voyager1
 IsolationLevel: Snapshot

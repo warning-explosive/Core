@@ -1,8 +1,9 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Migrations
 {
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
+    using Orm.Model;
 
     /// <summary>
     /// IDatabaseModelChangeMigration

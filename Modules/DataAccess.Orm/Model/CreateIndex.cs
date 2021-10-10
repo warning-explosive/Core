@@ -1,30 +1,22 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// CreateIndex
     /// </summary>
-    public class CreateIndex : IDatabaseModelChange
+    public class CreateIndex : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="index">Name</param>
-        /// <param name="columns">Columns</param>
-        /// <param name="unique">Unique</param>
         public CreateIndex(
             string schema,
             string table,
-            string index,
-            IReadOnlyCollection<string> columns,
-            bool unique)
+            string index)
         {
             Schema = schema;
             Table = table;
             Index = index;
-            Columns = columns;
-            Unique = unique;
         }
 
         /// <summary>
@@ -42,20 +34,10 @@
         /// </summary>
         public string Index { get; }
 
-        /// <summary>
-        /// Columns
-        /// </summary>
-        public IReadOnlyCollection<string> Columns { get; }
-
-        /// <summary>
-        /// Unique
-        /// </summary>
-        public bool Unique { get; }
-
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(CreateIndex)} {Index}";
+            return $"{nameof(CreateIndex)} {Schema}.{Table}.{Index}";
         }
     }
 }

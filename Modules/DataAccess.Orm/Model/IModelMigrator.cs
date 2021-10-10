@@ -6,9 +6,9 @@
     using AutoRegistration.Api.Abstractions;
 
     /// <summary>
-    /// IDatabaseModelMigrator
+    /// IModelMigrator
     /// </summary>
-    public interface IDatabaseModelMigrator : IResolvable
+    public interface IModelMigrator : IResolvable
     {
         /// <summary>
         /// Migrate
@@ -16,6 +16,6 @@
         /// <param name="modelChanges">Model changes</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token);
+        public Task Migrate(IReadOnlyCollection<IModelChange> modelChanges, CancellationToken token);
     }
 }

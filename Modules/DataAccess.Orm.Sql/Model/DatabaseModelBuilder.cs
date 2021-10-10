@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Model;
     using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
@@ -13,23 +14,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Orm.Model;
-    using Reading;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelBuilder : IDatabaseModelBuilder
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
-        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
+        private readonly IModelProvider _modelProvider;
 
         public DatabaseModelBuilder(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
-            IColumnDataTypeProvider columnDataTypeProvider)
+            IModelProvider modelProvider)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
-            _columnDataTypeProvider = columnDataTypeProvider;
+            _modelProvider = modelProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
@@ -49,17 +49,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
                 await using (await transaction.Open(true, token).ConfigureAwait(false))
                 {
-                    var defaultSchemas = new[]
-                    {
-                        "information_schema",
-                        "public"
-                    };
-
                     var schemas = await (await transaction
                             .Read<DatabaseSchema, Guid>()
                             .All()
                             .Select(schema => schema.Name)
-                            .Where(schema => !defaultSchemas.Contains(schema) && !schema.Like("pg_%"))
                             .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                             .ConfigureAwait(false))
                         .Select(schema => BuildSchemaNode(transaction, schema, token))
@@ -95,36 +88,53 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .GroupBy(column => column.Table)
                     .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
                     .ConfigureAwait(false))
-                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value, _columnDataTypeProvider))
+                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value))
+                .ToList();
+        }
+
+        private TableNode BuildTableNode(string schema, string table, IReadOnlyCollection<DatabaseColumn> databaseColumns)
+        {
+            var columns = databaseColumns
+                .Select(column => BuildColumnNode(schema, table, column))
                 .ToList();
 
-            static TableNode BuildTableNode(
-                string schema,
-                string table,
-                IReadOnlyCollection<DatabaseColumn> databaseColumns,
-                IColumnDataTypeProvider columnDataTypeProvider)
+            return new TableNode(schema, table, columns);
+        }
+
+        private ColumnNode BuildColumnNode(string schema, string table, DatabaseColumn column)
+        {
+            var constraints = GetConstraints(schema, table, column).ToList();
+
+            return new ColumnNode(column.Schema, column.Table, column.Column, column.DataType, constraints);
+        }
+
+        private IEnumerable<string> GetConstraints(string schema, string table, DatabaseColumn databaseColumn)
+        {
+            if (databaseColumn.Column.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
             {
-                var columns = databaseColumns
-                    .Select(column => BuildColumnNode(column, columnDataTypeProvider))
-                    .ToList();
-
-                return new TableNode(schema, table, GetTableType(schema, table), columns);
-
-                static Type GetTableType(string schema, string table)
-                {
-                    throw new NotImplementedException($"#110 - {schema}.{table}");
-                }
+                yield return "primary key";
             }
 
-            static ColumnNode BuildColumnNode(
-                DatabaseColumn column,
-                IColumnDataTypeProvider columnDataTypeProvider)
+            var columnSuffix = databaseColumn
+                .Column
+                .Split("_", StringSplitOptions.RemoveEmptyEntries)
+                .Last();
+
+            if (columnSuffix.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
             {
-                return new ColumnNode(
-                    column.Schema,
-                    column.Table,
-                    column.Column,
-                    columnDataTypeProvider.GetColumnType(column.DataType));
+                if (!_modelProvider.Model.TryGetValue(schema, out var schemaInfo)
+                    || !schemaInfo.TryGetValue(table, out var tableInfo)
+                    || !tableInfo.Columns.TryGetValue(databaseColumn.Column, out var columnInfo))
+                {
+                    throw new InvalidOperationException($"{schema}.{table}.{databaseColumn.Column} isn't presented in the model");
+                }
+
+                yield return $"references {columnInfo.Type.Name}";
+            }
+
+            if (!databaseColumn.Nullable)
+            {
+                yield return "not null";
             }
         }
 
@@ -157,10 +167,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .Read<DatabaseIndex, Guid>()
                     .All()
                     .Where(index => index.Schema == schema)
-                    .Select(index => index.Index)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(IndexNode.FromName)
+                .Select(index => IndexNode.FromDb(index.Schema, index.Table, index.Index))
                 .ToList();
         }
     }

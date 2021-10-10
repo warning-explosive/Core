@@ -4,11 +4,12 @@
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Database;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateTableModelChangeMigration : IDatabaseModelChangeMigration<CreateTable>
+    internal class CreateTableModelChangeMigration : IModelChangeMigration<CreateTable>
     {
         private readonly IInMemoryDatabase _database;
 
@@ -19,7 +20,9 @@
 
         public Task Migrate(CreateTable change, CancellationToken token)
         {
-            return _database.CreateTable(change.Type, token);
+            var type = AssembliesExtensions.FindRequiredType(change.Schema, change.Table);
+
+            return _database.CreateTable(type, token);
         }
     }
 }

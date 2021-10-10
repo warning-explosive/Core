@@ -176,5 +176,26 @@
       <Compile Update="Model\DatabaseIndex.cs">
         <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\ModelProvider.cs">
+        <DependentUpon>IModelProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ColumnInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\TableInfo.cs">
+        <DependentUpon>IObjectModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ViewInfo.cs">
+        <DependentUpon>IObjectModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\SchemaInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IndexInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IObjectModelInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

@@ -10,24 +10,24 @@
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseModelMigrator : IDatabaseModelMigrator
+    internal class ModelMigrator : IModelMigrator
     {
         private readonly IDependencyContainer _dependencyContainer;
 
-        public DatabaseModelMigrator(IDependencyContainer dependencyContainer)
+        public ModelMigrator(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
         }
 
-        public async Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token)
+        public async Task Migrate(IReadOnlyCollection<IModelChange> modelChanges, CancellationToken token)
         {
             foreach (var change in modelChanges)
             {
                 await using (_dependencyContainer.OpenScopeAsync())
                 {
                     await _dependencyContainer
-                        .ResolveGeneric(typeof(IDatabaseModelChangeMigration<>), change.GetType())
-                        .CallMethod(nameof(IDatabaseModelChangeMigration<IDatabaseModelChange>.Migrate))
+                        .ResolveGeneric(typeof(IModelChangeMigration<>), change.GetType())
+                        .CallMethod(nameof(IModelChangeMigration<IModelChange>.Migrate))
                         .WithArguments(change, token)
                         .Invoke<Task>()
                         .ConfigureAwait(false);

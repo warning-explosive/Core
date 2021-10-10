@@ -15,7 +15,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static readonly Type[] SupportedCollections =
             new[]
             {
-                typeof(ICollection<>),
                 typeof(IReadOnlyCollection<>)
             };
 
@@ -66,7 +65,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <param name="type">Type</param>
         /// <param name="itemType">Item type</param>
         /// <returns>Type represents multiple relation or not</returns>
-        [SuppressMessage("Analysis", "CA1021", Justification = "desired method name")]
+        [SuppressMessage("Analysis", "CA1021", Justification = "desired method signature")]
         public static bool IsMultipleRelation(this Type type, [NotNullWhen(true)] out Type? itemType)
         {
             itemType = SupportedCollections
@@ -88,15 +87,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Schema name</returns>
-        [SuppressMessage("Analysis", "CA1308", Justification = "desired behavior")]
         public static string SchemaName(this Type type)
         {
             return type
                 .Assembly
                 .GetName()
                 .Name
-                .Replace(".", "_", StringComparison.OrdinalIgnoreCase)
-                .ToLowerInvariant();
+                .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

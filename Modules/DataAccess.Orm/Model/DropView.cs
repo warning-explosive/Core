@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// DropView
     /// </summary>
-    public class DropView : IDatabaseModelChange
+    public class DropView : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>

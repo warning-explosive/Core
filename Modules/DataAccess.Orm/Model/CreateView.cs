@@ -3,20 +3,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// CreateView
     /// </summary>
-    public class CreateView : IDatabaseModelChange
+    public class CreateView : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="view">View</param>
-        /// <param name="query">Query</param>
-        public CreateView(
-            string schema,
-            string view,
-            string query)
+        public CreateView(string schema, string view)
         {
             Schema = schema;
             View = view;
-            Query = query;
         }
 
         /// <summary>
@@ -28,11 +23,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// View
         /// </summary>
         public string View { get; }
-
-        /// <summary>
-        /// Query
-        /// </summary>
-        public string Query { get; }
 
         /// <inheritdoc />
         public override string ToString()

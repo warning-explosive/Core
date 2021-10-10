@@ -76,13 +76,13 @@
         <DependentUpon>IInMemoryDatabase.cs</DependentUpon>
       </Compile>
       <Compile Update="Migrations\CreateTableModelChangeMigration.cs">
-        <DependentUpon>IDatabaseModelChangeMigration.cs</DependentUpon>
+        <DependentUpon>IModelChangeMigration.cs</DependentUpon>
       </Compile>
-      <Compile Update="Migrations\CreateDatabaseModelChangeMigration.cs">
-        <DependentUpon>IDatabaseModelChangeMigration.cs</DependentUpon>
+      <Compile Update="Migrations\CreateModelChangeMigration.cs">
+        <DependentUpon>IModelChangeMigration.cs</DependentUpon>
       </Compile>
-      <Compile Update="Migrations\FallbackDatabaseModelChangeMigration.cs">
-        <DependentUpon>IDatabaseModelChangeMigration.cs</DependentUpon>
+      <Compile Update="Migrations\FallbackModelChangeMigration.cs">
+        <DependentUpon>IModelChangeMigration.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

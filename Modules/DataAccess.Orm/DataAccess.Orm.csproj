@@ -62,9 +62,6 @@
       <Compile Update="Linq\IQueryTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\CreateColumn.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\TableNode.cs">
         <DependentUpon>SchemaNode.cs</DependentUpon>
       </Compile>
@@ -74,23 +71,26 @@
       <Compile Update="Model\ColumnNode.cs">
         <DependentUpon>TableNode.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\CreateColumn.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
       <Compile Update="Model\AlterColumn.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateDatabase.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateTable.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DropColumn.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DropTable.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DropView.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\IDatabaseModelBuilder.cs">
         <DependentUpon>IModelBuilder.cs</DependentUpon>
@@ -98,8 +98,8 @@
       <Compile Update="Model\ICodeModelBuilder.cs">
         <DependentUpon>IModelBuilder.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\DatabaseModelComparator.cs">
-        <DependentUpon>IDatabaseModelComparator.cs</DependentUpon>
+      <Compile Update="Model\ModelComparator.cs">
+        <DependentUpon>IModelComparator.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
@@ -114,19 +114,19 @@
         <DependentUpon>DatabaseNode.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateSchema.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateView.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\IndexNode.cs">
         <DependentUpon>SchemaNode.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\CreateIndex.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DropIndex.cs">
-        <DependentUpon>IDatabaseModelChange.cs</DependentUpon>
+        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// IModelComparator
     /// </summary>
-    public interface IDatabaseModelComparator : IResolvable
+    public interface IModelComparator : IResolvable
     {
         /// <summary>
         /// Extracts diff between actual model and expected model
@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <param name="actualModel">Actual model</param>
         /// <param name="expectedModel">Expected model</param>
         /// <returns>Diff</returns>
-        public IEnumerable<IDatabaseModelChange> ExtractDiff(
+        public IEnumerable<IModelChange> ExtractDiff(
             DatabaseNode? actualModel,
             DatabaseNode? expectedModel);
     }

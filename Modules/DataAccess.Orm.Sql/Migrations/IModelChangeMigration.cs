@@ -6,11 +6,11 @@
     using Orm.Model;
 
     /// <summary>
-    /// IDatabaseModelChangeMigration
+    /// IModelChangeMigration
     /// </summary>
     /// <typeparam name="TChange">TChange type-argument</typeparam>
-    public interface IDatabaseModelChangeMigration<TChange> : IResolvable
-        where TChange : IDatabaseModelChange
+    public interface IModelChangeMigration<TChange> : IResolvable
+        where TChange : IModelChange
     {
         /// <summary>
         /// Migrates

@@ -15,17 +15,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
-        /// <param name="type">Type</param>
         /// <param name="columns">Columns</param>
         public TableNode(
             string schema,
             string table,
-            Type type,
             IReadOnlyCollection<ColumnNode> columns)
         {
             Schema = schema;
             Table = table;
-            Type = type;
             Columns = columns;
         }
 
@@ -38,11 +35,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// Table
         /// </summary>
         public string Table { get; }
-
-        /// <summary>
-        /// Type
-        /// </summary>
-        public Type Type { get; }
 
         /// <summary>
         /// Columns
@@ -76,7 +68,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Schema, Table, Type);
+            return HashCode.Combine(Schema, Table);
         }
 
         /// <inheritdoc />
@@ -95,8 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         public bool SafeEquals(TableNode other)
         {
             return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase)
-                   && Type == other.Type;
+                   && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -104,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table} ({Type.FullName})";
+            return $"{Schema}.{Table}";
         }
     }
 }

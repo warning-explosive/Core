@@ -8,9 +8,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseModelComparator : IDatabaseModelComparator
+    internal class ModelComparator : IModelComparator
     {
-        public IEnumerable<IDatabaseModelChange> ExtractDiff(DatabaseNode? actualModel, DatabaseNode? expectedModel)
+        public IEnumerable<IModelChange> ExtractDiff(DatabaseNode? actualModel, DatabaseNode? expectedModel)
         {
             if (actualModel != null && expectedModel != null)
             {
@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> ExtractSchemasDiff(IEnumerable<SchemaNode> actualModel, IEnumerable<SchemaNode> expectedModel)
+        private static IEnumerable<IModelChange> ExtractSchemasDiff(IEnumerable<SchemaNode> actualModel, IEnumerable<SchemaNode> expectedModel)
         {
             var modelChanges = actualModel
                 .FullOuterJoin(expectedModel,
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> SchemaChangesSelector(SchemaNode? actualModel, SchemaNode? expectedModel)
+        private static IEnumerable<IModelChange> SchemaChangesSelector(SchemaNode? actualModel, SchemaNode? expectedModel)
         {
             if (actualModel != null && expectedModel != null)
             {
@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> ExtractTablesDiff(IEnumerable<TableNode> actualModel, IEnumerable<TableNode> expectedModel)
+        private static IEnumerable<IModelChange> ExtractTablesDiff(IEnumerable<TableNode> actualModel, IEnumerable<TableNode> expectedModel)
         {
             var modelChanges = actualModel
                 .FullOuterJoin(expectedModel,
@@ -114,7 +114,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> TableChangesSelector(TableNode? actualModel, TableNode? expectedModel)
+        private static IEnumerable<IModelChange> TableChangesSelector(TableNode? actualModel, TableNode? expectedModel)
         {
             if (actualModel != null && expectedModel != null)
             {
@@ -129,13 +129,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
             else if (actualModel == null && expectedModel != null)
             {
-                var emptyTable = new TableNode(expectedModel.Schema, expectedModel.Table, expectedModel.Type, Array.Empty<ColumnNode>());
-
-                var columns = ExtractColumnsDiff(emptyTable, expectedModel)
-                    .OfType<CreateColumn>()
-                    .ToList();
-
-                yield return new CreateTable(expectedModel.Schema, expectedModel.Table, expectedModel.Type, columns);
+                yield return new CreateTable(expectedModel.Schema, expectedModel.Table);
             }
             else
             {
@@ -143,7 +137,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> ExtractColumnsDiff(TableNode actualModel, TableNode expectedModel)
+        private static IEnumerable<IModelChange> ExtractColumnsDiff(TableNode actualModel, TableNode expectedModel)
         {
             return actualModel.Columns
                 .FullOuterJoin(expectedModel.Columns,
@@ -153,27 +147,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                     StringComparer.OrdinalIgnoreCase);
         }
 
-        private static IDatabaseModelChange ColumnChangesSelector(ColumnNode? actualColumn, ColumnNode? expectedModel)
+        private static IModelChange ColumnChangesSelector(ColumnNode? actualColumn, ColumnNode? expectedModel)
         {
             if (actualColumn != null && expectedModel != null)
             {
-                return new AlterColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column, expectedModel.Type);
+                return new AlterColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column);
             }
-            else if (actualColumn != null && expectedModel == null)
+
+            if (actualColumn != null && expectedModel == null)
             {
                 return new DropColumn(actualColumn.Schema, actualColumn.Table, actualColumn.Column);
             }
-            else if (actualColumn == null && expectedModel != null)
+
+            if (actualColumn == null && expectedModel != null)
             {
-                return new CreateColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column, expectedModel.Type);
+                return new CreateColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column);
             }
-            else
-            {
-                throw new InvalidOperationException("Wrong database column change");
-            }
+
+            throw new InvalidOperationException("Wrong database column change");
         }
 
-        private static IEnumerable<IDatabaseModelChange> ExtractViewsDiff(IEnumerable<ViewNode> actualModel, IEnumerable<ViewNode> expectedModel)
+        private static IEnumerable<IModelChange> ExtractViewsDiff(IEnumerable<ViewNode> actualModel, IEnumerable<ViewNode> expectedModel)
         {
             var modelChanges = actualModel
                 .FullOuterJoin(expectedModel,
@@ -189,12 +183,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> ViewChangesSelector(ViewNode? actualModel, ViewNode? expectedModel)
+        private static IEnumerable<IModelChange> ViewChangesSelector(ViewNode? actualModel, ViewNode? expectedModel)
         {
             if (actualModel != null && expectedModel != null)
             {
                 yield return new DropView(actualModel.Schema, actualModel.View);
-                yield return new CreateView(expectedModel.Schema, expectedModel.View, expectedModel.Query);
+                yield return new CreateView(expectedModel.Schema, expectedModel.View);
             }
             else if (actualModel != null && expectedModel == null)
             {
@@ -202,7 +196,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
             else if (actualModel == null && expectedModel != null)
             {
-                yield return new CreateView(expectedModel.Schema, expectedModel.View, expectedModel.Query);
+                yield return new CreateView(expectedModel.Schema, expectedModel.View);
             }
             else
             {
@@ -210,7 +204,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> ExtractIndexesDiff(IEnumerable<IndexNode> actualModel, IEnumerable<IndexNode> expectedModel)
+        private static IEnumerable<IModelChange> ExtractIndexesDiff(IEnumerable<IndexNode> actualModel, IEnumerable<IndexNode> expectedModel)
         {
             var modelChanges = actualModel
                 .FullOuterJoin(expectedModel,
@@ -226,12 +220,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
         }
 
-        private static IEnumerable<IDatabaseModelChange> IndexChangesSelector(IndexNode? actualModel, IndexNode? expectedModel)
+        private static IEnumerable<IModelChange> IndexChangesSelector(IndexNode? actualModel, IndexNode? expectedModel)
         {
             if (actualModel != null && expectedModel != null)
             {
                 yield return new DropIndex(actualModel.Schema, actualModel.Table, actualModel.ToString());
-                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString(), expectedModel.Columns, expectedModel.Unique);
+                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString());
             }
             else if (actualModel != null && expectedModel == null)
             {
@@ -239,7 +233,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             }
             else if (actualModel == null && expectedModel != null)
             {
-                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString(), expectedModel.Columns, expectedModel.Unique);
+                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString());
             }
             else
             {

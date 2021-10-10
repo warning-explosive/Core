@@ -3,13 +3,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// DropColumn
     /// </summary>
-    public class DropColumn : IDatabaseModelChange
+    public class DropColumn : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="column">Column</param>
-        public DropColumn(string schema, string table, string column)
+        public DropColumn(
+            string schema,
+            string table,
+            string column)
         {
             Schema = schema;
             Table = table;

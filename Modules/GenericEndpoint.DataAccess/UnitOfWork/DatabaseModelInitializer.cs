@@ -15,19 +15,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     {
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;
-        private readonly IDatabaseModelComparator _databaseModelComparator;
-        private readonly IDatabaseModelMigrator _databaseModelMigrator;
+        private readonly IModelComparator _modelComparator;
+        private readonly IModelMigrator _modelMigrator;
 
         public DatabaseModelInitializer(
             IDatabaseModelBuilder databaseModelBuilder,
             ICodeModelBuilder codeModelBuilder,
-            IDatabaseModelComparator databaseModelComparator,
-            IDatabaseModelMigrator databaseModelMigrator)
+            IModelComparator modelComparator,
+            IModelMigrator modelMigrator)
         {
             _databaseModelBuilder = databaseModelBuilder;
             _codeModelBuilder = codeModelBuilder;
-            _databaseModelComparator = databaseModelComparator;
-            _databaseModelMigrator = databaseModelMigrator;
+            _modelComparator = modelComparator;
+            _modelMigrator = modelMigrator;
         }
 
         public async Task Initialize(CancellationToken token)
@@ -40,11 +40,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .BuildModel(token)
                 .ConfigureAwait(false);
 
-            var modelChanges = _databaseModelComparator
+            var modelChanges = _modelComparator
                 .ExtractDiff(actualModel, expectedModel)
                 .ToList();
 
-            await _databaseModelMigrator
+            await _modelMigrator
                 .Migrate(modelChanges, token)
                 .ConfigureAwait(false);
         }

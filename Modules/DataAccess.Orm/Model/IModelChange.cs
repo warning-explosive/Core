@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// IModelChange
     /// </summary>
-    public interface IDatabaseModelChange
+    public interface IModelChange
     {
     }
 }

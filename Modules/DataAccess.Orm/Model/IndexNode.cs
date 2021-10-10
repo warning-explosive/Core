@@ -129,20 +129,19 @@
         /// <summary>
         /// Builds IndexNode from actual index name
         /// </summary>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
         /// <param name="name">Name</param>
         /// <returns>IndexNode</returns>
-        public static IndexNode FromName(string name)
+        public static IndexNode FromDb(string schema, string table, string name)
         {
             var parts = name.Split(new string(Separator, 2), StringSplitOptions.RemoveEmptyEntries);
 
-            var schema = parts[0];
-            var table = parts[1];
-
-            var columns = parts[2]
+            var columns = parts[0]
                 .Split(Separator, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
 
-            var unique = parts.Length == 4;
+            var unique = name.Contains("__unique", StringComparison.OrdinalIgnoreCase);
 
             return new IndexNode(schema, table, columns, unique);
         }

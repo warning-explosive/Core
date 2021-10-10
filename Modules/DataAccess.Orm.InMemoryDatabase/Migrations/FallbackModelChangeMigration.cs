@@ -7,8 +7,8 @@
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class FallbackDatabaseModelChangeMigration<TChange> : IDatabaseModelChangeMigration<TChange>
-        where TChange : IDatabaseModelChange
+    internal class FallbackModelChangeMigration<TChange> : IModelChangeMigration<TChange>
+        where TChange : IModelChange
     {
         public Task Migrate(TChange change, CancellationToken token)
         {

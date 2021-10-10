@@ -12,6 +12,8 @@ namespace SpaceEngineers.Core.Basics
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public;
 
+        private const string NullableAttributeFullName = "System.Runtime.CompilerServices.NullableAttribute";
+
         /// <summary>
         /// Check that object has property
         /// </summary>
@@ -141,6 +143,46 @@ namespace SpaceEngineers.Core.Basics
                         return (value?.GetType() ?? info.PropertyType, value);
                     },
                     StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Is property nullable
+        /// </summary>
+        /// <param name="propertyInfo">PropertyInfo</param>
+        /// <returns>Property is nullable or not</returns>
+        public static bool IsNullable(this PropertyInfo propertyInfo)
+        {
+            return IsNullable(propertyInfo, info => info.PropertyType, info => info.GetCustomAttributes());
+        }
+
+        /// <summary>
+        /// Is field nullable
+        /// </summary>
+        /// <param name="fieldInfo">FieldInfo</param>
+        /// <returns>Field is nullable or not</returns>
+        public static bool IsNullable(this FieldInfo fieldInfo)
+        {
+            return IsNullable(fieldInfo, info => info.FieldType, info => info.GetCustomAttributes());
+        }
+
+        private static bool IsNullable<T>(
+            this T memberInfo,
+            Func<T, Type> typeAccessor,
+            Func<T, IEnumerable<Attribute>> attributesAccessor)
+            where T : MemberInfo
+        {
+            var isNullableValueType = typeAccessor(memberInfo).IsNullable();
+
+            if (isNullableValueType)
+            {
+                return true;
+            }
+
+            var nullableAttributeType = AssembliesExtensions.FindRequiredType(
+                memberInfo.ReflectedType.Assembly.GetName().Name,
+                NullableAttributeFullName);
+
+            return attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
         }
     }
 }

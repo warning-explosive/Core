@@ -3,13 +3,16 @@
     /// <summary>
     /// DropIndex
     /// </summary>
-    public class DropIndex : IDatabaseModelChange
+    public class DropIndex : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="index">Index</param>
-        public DropIndex(string schema, string table, string index)
+        public DropIndex(
+            string schema,
+            string table,
+            string index)
         {
             Schema = schema;
             Table = table;

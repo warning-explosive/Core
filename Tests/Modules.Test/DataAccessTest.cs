@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <summary>
         /// Schema
         /// </summary>
-        public const string Schema = "spaceengineers_core_modules_test";
+        public const string Schema = "SpaceEngineersCoreModulesTest";
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>

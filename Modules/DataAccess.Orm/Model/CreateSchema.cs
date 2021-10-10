@@ -3,7 +3,7 @@
     /// <summary>
     /// CreateSchema
     /// </summary>
-    public class CreateSchema : IDatabaseModelChange
+    public class CreateSchema : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>

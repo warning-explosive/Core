@@ -9,7 +9,7 @@
     using Sql.Migrations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateSchemaDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateSchema>
+    internal class CreateSchemaModelChangeMigration : IModelChangeMigration<CreateSchema>
     {
         private const string CommandFormat = @"create schema ""{0}""";
 

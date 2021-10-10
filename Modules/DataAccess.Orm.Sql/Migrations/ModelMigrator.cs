@@ -18,14 +18,14 @@
     using Orm.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseModelMigrator : IDatabaseModelMigrator
+    internal class ModelMigrator : IModelMigrator
     {
         private const string CommandFormat = @"--[{0}]{1}";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
 
-        public DatabaseModelMigrator(
+        public ModelMigrator(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider)
         {
@@ -33,7 +33,7 @@
             _settingsProvider = settingsProvider;
         }
 
-        public async Task Migrate(IReadOnlyCollection<IDatabaseModelChange> modelChanges, CancellationToken token)
+        public async Task Migrate(IReadOnlyCollection<IModelChange> modelChanges, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)
@@ -65,7 +65,7 @@
             }
         }
 
-        private async Task<string> BuildCommands(IDatabaseModelChange[] modelChanges, CancellationToken token)
+        private async Task<string> BuildCommands(IModelChange[] modelChanges, CancellationToken token)
         {
             var sb = new StringBuilder();
 
@@ -74,8 +74,8 @@
                 var modelChange = modelChanges[i];
 
                 var command = await _dependencyContainer
-                    .ResolveGeneric(typeof(IDatabaseModelChangeMigration<>), modelChange.GetType())
-                    .CallMethod(nameof(IDatabaseModelChangeMigration<IDatabaseModelChange>.Migrate))
+                    .ResolveGeneric(typeof(IModelChangeMigration<>), modelChange.GetType())
+                    .CallMethod(nameof(IModelChangeMigration<IModelChange>.Migrate))
                     .WithArguments(modelChange, token)
                     .Invoke<Task<string>>()
                     .ConfigureAwait(false);

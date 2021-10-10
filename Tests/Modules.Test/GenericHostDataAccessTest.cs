@@ -192,7 +192,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .ConfigureAwait(false);
 
             var modelChanges = tracingEndpointContainer
-                .Resolve<IDatabaseModelComparator>()
+                .Resolve<IModelComparator>()
                 .ExtractDiff(actualModel, expectedModel)
                 .ToArray();
 
@@ -201,167 +201,85 @@ namespace SpaceEngineers.Core.Modules.Test
             if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
             {
                 Assert.Equal(19, modelChanges.Length);
-            }
-            else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
-            {
-                Assert.Equal(10, modelChanges.Length);
-            }
-            else
-            {
-                throw new NotSupportedException(databaseProvider.GetType().FullName);
-            }
 
-            AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
+                AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
 
-            AssertCreateSchema(modelChanges, 1, "spaceengineers_core_tracingendpoint");
+                AssertCreateSchema(modelChanges, 1, "spaceengineers_core_tracingendpoint");
+                AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
 
-            AssertCreateTable(
-                modelChanges,
-                2,
-                typeof(CapturedMessageDatabaseEntity),
-                nameof(CapturedMessageDatabaseEntity.Message),
-                nameof(CapturedMessageDatabaseEntity.RefuseReason),
-                nameof(CapturedMessageDatabaseEntity.PrimaryKey));
+                AssertCreateSchema(modelChanges, 5, "spaceengineers_core_genericendpoint_dataaccess");
+                AssertCreateTable(modelChanges, 6, typeof(InboxMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+                AssertCreateTable(modelChanges, 9, typeof(OutboxMessageDatabaseEntity));
 
-            AssertCreateTable(
-                modelChanges,
-                3,
-                typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Payload),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Headers),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey));
-
-            AssertCreateTable(
-                modelChanges,
-                4,
-                typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value),
-                nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey));
-
-            AssertCreateSchema(modelChanges, 5, "spaceengineers_core_genericendpoint_dataaccess");
-
-            AssertCreateTable(
-                modelChanges,
-                6,
-                typeof(InboxMessageDatabaseEntity),
-                nameof(InboxMessageDatabaseEntity.Message),
-                nameof(InboxMessageDatabaseEntity.EndpointIdentity),
-                nameof(InboxMessageDatabaseEntity.IsError),
-                nameof(InboxMessageDatabaseEntity.Handled),
-                nameof(InboxMessageDatabaseEntity.PrimaryKey));
-
-            AssertCreateTable(
-                modelChanges,
-                7,
-                typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity),
-                nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Payload),
-                nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Headers),
-                nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.PrimaryKey));
-
-            AssertCreateTable(
-                modelChanges,
-                8,
-                typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity),
-                nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.Value),
-                nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity.PrimaryKey));
-
-            AssertCreateTable(
-                modelChanges,
-                9,
-                typeof(OutboxMessageDatabaseEntity),
-                nameof(OutboxMessageDatabaseEntity.Message),
-                nameof(OutboxMessageDatabaseEntity.Sent),
-                nameof(OutboxMessageDatabaseEntity.PrimaryKey));
-
-            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
-            {
                 AssertCreateSchema(modelChanges, 10, "spaceengineers_core_dataaccess_orm_sql");
-
                 AssertCreateView(modelChanges, 11, nameof(DatabaseColumn));
                 AssertCreateView(modelChanges, 12, nameof(DatabaseIndex));
                 AssertCreateView(modelChanges, 13, nameof(DatabaseSchema));
                 AssertCreateView(modelChanges, 14, nameof(DatabaseView));
-
-                AssertCreateIndex(
-                    modelChanges,
-                    15,
-                    "spaceengineers_core_dataaccess_orm_sql__DatabaseColumn__Column_Schema_Table__Unique",
-                    true,
-                    nameof(DatabaseColumn.Column),
-                    nameof(DatabaseColumn.Schema),
-                    nameof(DatabaseColumn.Table));
-
-                AssertCreateIndex(
-                    modelChanges,
-                    16,
-                    "spaceengineers_core_dataaccess_orm_sql__DatabaseIndex__Index_Schema_Table__Unique",
-                    true,
-                    nameof(DatabaseIndex.Index),
-                    nameof(DatabaseIndex.Schema),
-                    nameof(DatabaseIndex.Table));
-
-                AssertCreateIndex(
-                    modelChanges,
-                    17,
-                    "spaceengineers_core_dataaccess_orm_sql__DatabaseSchema__Name__Unique",
-                    true,
-                    nameof(DatabaseSchema.Name));
-
-                AssertCreateIndex(
-                    modelChanges,
-                    18,
-                    "spaceengineers_core_dataaccess_orm_sql__DatabaseView__Query_Schema_View__Unique",
-                    true,
-                    nameof(DatabaseView.Query),
-                    nameof(DatabaseView.Schema),
-                    nameof(DatabaseView.View));
+                AssertCreateIndex(modelChanges, 15, "spaceengineers_core_dataaccess_orm_sql__DatabaseColumn__Column_Schema_Table__Unique");
+                AssertCreateIndex(modelChanges, 16, "spaceengineers_core_dataaccess_orm_sql__DatabaseIndex__Index_Schema_Table__Unique");
+                AssertCreateIndex(modelChanges, 17, "spaceengineers_core_dataaccess_orm_sql__DatabaseSchema__Name__Unique");
+                AssertCreateIndex(modelChanges, 18, "spaceengineers_core_dataaccess_orm_sql__DatabaseView__Query_Schema_View__Unique");
             }
             else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
             {
+                Assert.Equal(10, modelChanges.Length);
+
+                AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
+
+                AssertCreateSchema(modelChanges, 1, "spaceengineers_core_tracingendpoint");
+                AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+
+                AssertCreateSchema(modelChanges, 5, "spaceengineers_core_genericendpoint_dataaccess");
+                AssertCreateTable(modelChanges, 6, typeof(InboxMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+                AssertCreateTable(modelChanges, 9, typeof(OutboxMessageDatabaseEntity));
             }
             else
             {
                 throw new NotSupportedException(databaseProvider.GetType().FullName);
             }
 
-            static void AssertCreateDataBase(IDatabaseModelChange[] modelChanges, int index, string database)
+            static void AssertCreateDataBase(IModelChange[] modelChanges, int index, string database)
             {
                 Assert.True(modelChanges[index] is CreateDatabase);
                 var createDatabase = (CreateDatabase)modelChanges[index];
                 Assert.True(createDatabase.Database.Equals(database, StringComparison.OrdinalIgnoreCase));
             }
 
-            static void AssertCreateSchema(IDatabaseModelChange[] modelChanges, int index, string schema)
+            static void AssertCreateSchema(IModelChange[] modelChanges, int index, string schema)
             {
                 Assert.True(modelChanges[index] is CreateSchema);
                 var createSchema = (CreateSchema)modelChanges[index];
                 Assert.True(createSchema.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
             }
 
-            static void AssertCreateTable(IDatabaseModelChange[] modelChanges, int index, Type table, params string[] columns)
+            static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
             {
                 Assert.True(modelChanges[index] is CreateTable);
                 var createTable = (CreateTable)modelChanges[index];
-                Assert.Equal(table, createTable.Type);
-                Assert.True(columns.SequenceEqual(createTable.Columns.Select(create => create.Column).ToList()));
+                Assert.Equal(table.Name, createTable.Table);
             }
 
-            static void AssertCreateView(IDatabaseModelChange[] modelChanges, int index, string view)
+            static void AssertCreateView(IModelChange[] modelChanges, int index, string view)
             {
                 Assert.True(modelChanges[index] is CreateView);
                 var createView = (CreateView)modelChanges[index];
                 Assert.True(createView.View.Equals(view, StringComparison.OrdinalIgnoreCase));
             }
 
-            static void AssertCreateIndex(IDatabaseModelChange[] modelChanges, int index, string indexName, bool unique, params string[] columns)
+            static void AssertCreateIndex(IModelChange[] modelChanges, int index, string indexName)
             {
                 Assert.True(modelChanges[index] is CreateIndex);
                 var createIndex = (CreateIndex)modelChanges[index];
                 Assert.True(createIndex.Index.Equals(indexName, StringComparison.OrdinalIgnoreCase));
-                Assert.Equal(unique, createIndex.Unique);
-                Assert.True(columns.SequenceEqual(createIndex.Columns));
             }
         }
 

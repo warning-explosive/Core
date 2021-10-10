@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// <summary>
     /// CreateDatabase
     /// </summary>
-    public class CreateDatabase : IDatabaseModelChange
+    public class CreateDatabase : IModelChange
     {
         /// <summary> .cctor </summary>
         /// <param name="database">Database</param>

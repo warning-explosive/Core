@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using Basics;
 
     /// <summary>
@@ -15,17 +17,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="column">Column</param>
-        /// <param name="type">Type</param>
+        /// <param name="dataType">Data type</param>
+        /// <param name="constraints">Constraints</param>
         public ColumnNode(
             string schema,
             string table,
             string column,
-            Type type)
+            string dataType,
+            IReadOnlyCollection<string> constraints)
         {
             Schema = schema;
             Table = table;
             Column = column;
-            Type = type;
+            DataType = dataType;
+            Constraints = constraints;
         }
 
         /// <summary>
@@ -44,9 +49,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         public string Column { get; }
 
         /// <summary>
-        /// Type
+        /// Data type
         /// </summary>
-        public Type Type { get; }
+        public string DataType { get; }
+
+        /// <summary>
+        /// Constraints
+        /// </summary>
+        public IReadOnlyCollection<string> Constraints { get; }
 
         #region IEquatable
 
@@ -75,7 +85,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Schema, Table, Column, Type);
+            return HashCode.Combine(Schema, Table, Column, DataType, Constraints);
         }
 
         /// <inheritdoc />
@@ -96,7 +106,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
             return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
                    && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase)
                    && Column.Equals(other.Column, StringComparison.OrdinalIgnoreCase)
-                   && Type == other.Type;
+                   && DataType.Equals(other.DataType, StringComparison.OrdinalIgnoreCase)
+                   && Constraints.OrderBy(modifier => modifier).SequenceEqual(other.Constraints.OrderBy(modifier => modifier), StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -104,7 +115,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table}.{Column} ({Type.FullName})";
+            return $"{Schema}.{Table}.{Column} ({DataType}, {Constraints.ToString(", ")}) ";
         }
     }
 }

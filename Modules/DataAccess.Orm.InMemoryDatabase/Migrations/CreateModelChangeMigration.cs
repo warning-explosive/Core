@@ -9,11 +9,11 @@
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateDatabase>
+    internal class CreateModelChangeMigration : IModelChangeMigration<CreateDatabase>
     {
         private readonly IInMemoryDatabase _database;
 
-        public CreateDatabaseModelChangeMigration(IInMemoryDatabase database)
+        public CreateModelChangeMigration(IInMemoryDatabase database)
         {
             _database = database;
         }

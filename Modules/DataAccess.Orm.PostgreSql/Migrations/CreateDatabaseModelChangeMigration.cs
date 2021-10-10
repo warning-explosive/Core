@@ -11,7 +11,7 @@
     using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateDatabaseModelChangeMigration : IDatabaseModelChangeMigration<CreateDatabase>
+    internal class CreateDatabaseModelChangeMigration : IModelChangeMigration<CreateDatabase>
     {
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 

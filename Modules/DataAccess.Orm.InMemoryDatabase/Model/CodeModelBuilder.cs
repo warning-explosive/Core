@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
         {
             var schemas = _databaseTypeProvider
                 .DatabaseEntities()
-                .GroupBy(entity => entity.SchemaName())
+                .GroupBy(entity => entity.Assembly.GetName().Name)
                 .Select(grp => BuildSchemaNode(grp.Key, grp))
                 .ToList();
 
@@ -55,17 +55,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Model
                 .Select(property => BuildColumnNode(schema, tableType, property))
                 .ToList();
 
-            return new TableNode(schema, tableType.Name, tableType, columns);
+            return new TableNode(schema, tableType.FullName, columns);
 
             static ColumnNode BuildColumnNode(string schema, Type tableType, PropertyInfo propertyInfo)
             {
                 var tableName = tableType.Name;
                 var columnName = propertyInfo.Name;
                 var columnType = propertyInfo.PropertyType;
+                var columnTypeName = propertyInfo.PropertyType.Name;
 
                 return columnType.IsTypeSupported()
-                    ? new ColumnNode(schema, tableName, columnName, columnType)
-                    : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnType}");
+                    ? new ColumnNode(schema, tableName, columnName, columnTypeName, Array.Empty<string>())
+                    : throw new NotSupportedException($"Not supported column type: {tableName}.{columnName} - {columnTypeName}");
             }
         }
     }

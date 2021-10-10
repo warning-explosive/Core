@@ -1,200 +1,94 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder
     {
-        private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseTypeProvider _databaseTypeProvider;
+        private readonly IModelProvider _modelProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public CodeModelBuilder(
-            IDependencyContainer dependencyContainer,
-            IDatabaseTypeProvider databaseTypeProvider,
-            IDatabaseConnectionProvider connectionProvider)
+            IModelProvider modelProvider,
+            IDatabaseConnectionProvider connectionProvider,
+            IColumnDataTypeProvider columnDataTypeProvider)
         {
-            _dependencyContainer = dependencyContainer;
-            _databaseTypeProvider = databaseTypeProvider;
+            _modelProvider = modelProvider;
             _connectionProvider = connectionProvider;
+            _columnDataTypeProvider = columnDataTypeProvider;
         }
 
         public Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
-            var schemas = _databaseTypeProvider
-                .DatabaseEntities()
-                .GroupBy(entity => entity.SchemaName())
-                .Select(grp => BuildSchemaNode(grp.Key, grp))
+            var schemas = _modelProvider
+                .Model
+                .Select(grp => BuildSchemaNode(grp.Key, grp.Value.Values.ToList()))
                 .ToArray();
 
             return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas));
         }
 
-        private SchemaNode BuildSchemaNode(string schema, IEnumerable<Type> entities)
+        private SchemaNode BuildSchemaNode(string schema, IReadOnlyCollection<IObjectModelInfo> objects)
         {
             var tables = new List<TableNode>();
             var views = new List<ViewNode>();
             var indexes = new List<IndexNode>();
 
-            foreach (var entity in entities)
+            foreach (var obj in objects)
             {
-                if (entity.IsSqlView())
+                if (obj is TableInfo tableInfo)
                 {
-                    views.Add(BuildViewNode(schema, entity));
+                    tables.Add(BuildTableNode(tableInfo));
                 }
-                else
+                else if (obj is ViewInfo viewInfo)
                 {
-                    tables.Add(BuildTableNode(schema, entity));
+                    views.Add(BuildViewNode(viewInfo));
                 }
 
-                indexes.AddRange(BuildIndexNodes(schema, entity));
+                indexes.AddRange(obj.Indexes.Select(index => BuildIndexNode(index.Value)));
             }
 
             return new SchemaNode(schema, tables, views, indexes);
         }
 
-        // TODO: #110 - create model cache
-        private static TableNode BuildTableNode(string schema, Type tableType)
+        private TableNode BuildTableNode(TableInfo tableInfo)
         {
-            var columns = tableType
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .Select(Validate)
-                .SelectMany(FlattenSpecialTypes)
-                .Select(BuildColumn)
-                .Select(column => new ColumnNode(schema, tableType.Name, column.Name, column.Type))
+            var columns = tableInfo
+                .Columns
+                .Select(column => BuildColumnNode(column.Value))
                 .ToList();
 
-            return new TableNode(schema, tableType.Name, tableType, columns);
-
-            static PropertyInfo Validate(PropertyInfo property)
-            {
-                if (!property.PropertyType.IsTypeSupported())
-                {
-                    throw new NotSupportedException($"Not supported column type: {property.Name} - {property.PropertyType}");
-                }
-
-                return property;
-            }
-
-            static IEnumerable<(string Name, Type Type)[]> FlattenSpecialTypes(PropertyInfo property)
-            {
-                if (typeof(IInlinedObject).IsAssignableFrom(property.PropertyType))
-                {
-                    return FlattenInlinedObject(property);
-                }
-
-                if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
-                {
-                    return FlattenRelation(property);
-                }
-
-                if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IReadOnlyCollection<>)))
-                {
-                    var itemType = property
-                        .PropertyType
-                        .UnwrapTypeParameter(typeof(IReadOnlyCollection<>));
-
-                    return itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                        ? FlattenMultipleRelation(property, itemType)
-                        : FlattenArray(property, itemType);
-                }
-
-                return new[]
-                {
-                    new[]
-                    {
-                        (property.Name, property.PropertyType)
-                    }
-                };
-            }
-
-            static IEnumerable<(string Name, Type Type)[]> FlattenInlinedObject(PropertyInfo property)
-            {
-                var properties = property
-                    .PropertyType
-                    .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-
-                foreach (var inlined in properties)
-                {
-                    foreach (var subsequent in FlattenSpecialTypes(inlined))
-                    {
-                        yield return new[] { (property.Name, property.PropertyType) }
-                            .Concat(subsequent)
-                            .ToArray();
-                    }
-                }
-            }
-
-            static IEnumerable<(string Name, Type Type)[]> FlattenRelation(PropertyInfo property)
-            {
-                var primaryKeyType = property
-                    .PropertyType
-                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
-                    .Single();
-
-                yield return new[]
-                {
-                    (property.Name, property.PropertyType),
-                    (nameof(IUniqueIdentified<Guid>.PrimaryKey), primaryKeyType)
-                };
-            }
-
-            static IEnumerable<(string Name, Type Type)[]> FlattenMultipleRelation(PropertyInfo property, Type itemType)
-            {
-                var primaryKeyType = itemType
-                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
-                    .Single();
-
-                return new[]
-                {
-                    new[]
-                    {
-                        (property.Name, primaryKeyType)
-                    }
-                };
-            }
-
-            static IEnumerable<(string Name, Type Type)[]> FlattenArray(PropertyInfo property, Type itemType)
-            {
-                throw new NotSupportedException($"Arrays are not supported: {property.Name} - {itemType.Name}[]");
-            }
-
-            static (string Name, Type Type) BuildColumn((string Name, Type Type)[] properties)
-            {
-                var name = properties
-                    .Select(property => property.Name)
-                    .ToString("_");
-
-                var type = properties
-                    .Last()
-                    .Type;
-
-                return (name, type);
-            }
+            return new TableNode(tableInfo.Schema, tableInfo.Name, columns);
         }
 
-        private ViewNode BuildViewNode(string schema, Type viewType)
+        private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
-            return new ViewNode(schema, viewType.Name, viewType.SqlViewQuery(_dependencyContainer));
+            var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo.Type);
+
+            return new ColumnNode(columnInfo.Schema, columnInfo.Table, columnInfo.Name, dataType, columnInfo.Constraints);
         }
 
-        private static IEnumerable<IndexNode> BuildIndexNodes(string schema, Type entity)
+        private static ViewNode BuildViewNode(ViewInfo viewInfo)
         {
-            return entity
-                .GetAttributes<IndexAttribute>()
-                .Select(index => new IndexNode(schema, entity.Name, index.Columns, index.Unique));
+            return new ViewNode(viewInfo.Schema, viewInfo.Name, viewInfo.Query);
+        }
+
+        private static IndexNode BuildIndexNode(IndexInfo indexInfo)
+        {
+            var columns = indexInfo
+                .Columns
+                .Select(column => column.Name)
+                .ToList();
+
+            return new IndexNode(indexInfo.Schema, indexInfo.Table, columns, indexInfo.Unique);
         }
     }
 }

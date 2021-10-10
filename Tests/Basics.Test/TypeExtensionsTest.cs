@@ -69,9 +69,51 @@ namespace SpaceEngineers.Core.Basics.Test
         internal void IsNullableTest()
         {
             Assert.False(typeof(bool).IsNullable());
-            Assert.False(typeof(object).IsNullable());
             Assert.True(typeof(bool?).IsNullable());
             Assert.True(typeof(Nullable<>).IsNullable());
+
+            Assert.False(typeof(string).IsNullable());
+            Assert.False(typeof(object).IsNullable());
+
+            var nullableString = (string?)string.Empty;
+            var nullableObject = (object?)string.Empty;
+
+            Assert.False(nullableString.GetType().IsNullable());
+            Assert.False(nullableObject.GetType().IsNullable());
+        }
+
+        [Fact]
+        internal void IsNullableMemberTest()
+        {
+            var notNullableValueField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._notNullableValue));
+            var nullableValueField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._nullableValue));
+            var notNullableReferenceField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._notNullableReference));
+            var nullableReferenceField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._nullableReference));
+
+            Assert.NotNull(notNullableValueField);
+            Assert.NotNull(nullableValueField);
+            Assert.NotNull(notNullableReferenceField);
+            Assert.NotNull(nullableReferenceField);
+
+            Assert.False(notNullableValueField!.IsNullable());
+            Assert.True(nullableValueField!.IsNullable());
+            Assert.False(notNullableReferenceField!.IsNullable());
+            Assert.True(nullableReferenceField!.IsNullable());
+
+            var notNullableValueProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NotNullableValue));
+            var nullableValueProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NullableValue));
+            var notNullableReferenceProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NotNullableReference));
+            var nullableReferenceProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NullableReference));
+
+            Assert.NotNull(notNullableValueProperty);
+            Assert.NotNull(nullableValueProperty);
+            Assert.NotNull(notNullableReferenceProperty);
+            Assert.NotNull(nullableReferenceProperty);
+
+            Assert.False(notNullableValueProperty!.IsNullable());
+            Assert.True(nullableValueProperty!.IsNullable());
+            Assert.False(notNullableReferenceProperty!.IsNullable());
+            Assert.True(nullableReferenceProperty!.IsNullable());
         }
 
         [Fact]
@@ -226,6 +268,42 @@ namespace SpaceEngineers.Core.Basics.Test
         private struct StructWithParameter
         {
             public StructWithParameter(object param) { }
+        }
+
+        [SuppressMessage("Analysis", "SA1401", Justification = "For test reasons")]
+        private class ClassWithNullableMembers
+        {
+            public bool _notNullableValue;
+
+            public bool? _nullableValue;
+
+            public object _notNullableReference = null!;
+
+            public object? _nullableReference;
+
+            public bool NotNullableValue
+            {
+                get => _notNullableValue;
+                set => _notNullableValue = value;
+            }
+
+            public bool? NullableValue
+            {
+                get => _nullableValue;
+                set => _nullableValue = value;
+            }
+
+            public object NotNullableReference
+            {
+                get => _notNullableReference;
+                set => _notNullableReference = value;
+            }
+
+            public object? NullableReference
+            {
+                get => _nullableReference;
+                set => _nullableReference = value;
+            }
         }
     }
 }

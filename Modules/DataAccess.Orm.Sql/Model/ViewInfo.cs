@@ -24,7 +24,7 @@
             string query)
         {
             Type = type;
-            Columns = columns.ToDictionary(info => info.Name);
+            Columns = columns.ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
             Query = query;
         }
 
@@ -70,12 +70,12 @@
                     {
                         foreach (var column in index.Columns)
                         {
-                            if (Columns.TryGetValue(column, out var info))
+                            if (!Columns.TryGetValue(column, out var info))
                             {
-                                yield return info;
+                                throw new InvalidOperationException($"View {Schema}.{Name} doesn't have column {column} for index");
                             }
 
-                            throw new InvalidOperationException($"View {Schema}.{Name} doesn't have column {column} for index");
+                            yield return info;
                         }
                     }
                 }

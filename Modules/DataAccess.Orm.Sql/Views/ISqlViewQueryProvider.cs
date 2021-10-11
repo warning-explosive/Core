@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public interface ISqlViewQueryProvider<TView, TKey> : IResolvable
         where TView : ISqlView<TKey>
+        where TKey : notnull
     {
         /// <summary>
         /// Gets view query

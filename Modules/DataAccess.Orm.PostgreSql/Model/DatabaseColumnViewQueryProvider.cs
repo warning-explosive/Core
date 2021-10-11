@@ -24,6 +24,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
 	numeric_precision as ""{nameof(DatabaseColumn.Precision)}"",
 	character_maximum_length as ""{nameof(DatabaseColumn.Length)}""
 from information_schema.columns
+where table_schema not in ('information_schema', 'public')
+      and table_schema not like 'pg_%'
 order by table_name, ordinal_position";
 
         public string GetQuery()

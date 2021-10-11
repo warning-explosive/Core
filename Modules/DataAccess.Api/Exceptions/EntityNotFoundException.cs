@@ -10,6 +10,7 @@
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public class EntityNotFoundException<TEntity, TKey> : Exception
         where TEntity : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>

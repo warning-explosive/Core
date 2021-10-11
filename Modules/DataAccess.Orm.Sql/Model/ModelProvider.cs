@@ -112,9 +112,9 @@
                     return FlattenRelation(property);
                 }
 
-                if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IReadOnlyCollection<>)))
+                if (property.PropertyType.IsMultipleRelation(out var itemType))
                 {
-                    return FlattenArrayOrMultipleRelation(property, typeof(IReadOnlyCollection<>));
+                    return FlattenArrayOrMultipleRelation(property, itemType);
                 }
 
                 return new[]
@@ -156,12 +156,8 @@
                 };
             }
 
-            static IEnumerable<PropertyInfo[]> FlattenArrayOrMultipleRelation(PropertyInfo property, Type collectionType)
+            static IEnumerable<PropertyInfo[]> FlattenArrayOrMultipleRelation(PropertyInfo property, Type itemType)
             {
-                var itemType = property
-                    .PropertyType
-                    .UnwrapTypeParameter(collectionType);
-
                 return itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
                     ? FlattenMultipleRelation(property, itemType)
                     : FlattenArray(property, itemType);

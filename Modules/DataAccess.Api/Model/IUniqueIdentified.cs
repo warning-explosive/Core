@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     /// </summary>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public interface IUniqueIdentified<TKey>
+        where TKey : notnull
     {
         /// <summary>
         /// Primary key

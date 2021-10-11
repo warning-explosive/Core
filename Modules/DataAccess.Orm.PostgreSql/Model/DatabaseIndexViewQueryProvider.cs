@@ -16,7 +16,9 @@
     schemaname as ""{nameof(DatabaseIndex.Schema)}"",
     tablename as ""{nameof(DatabaseIndex.Table)}"",
     indexname as ""{nameof(DatabaseIndex.Index)}""
-FROM pg_indexes";
+FROM pg_indexes
+where schemaname not in ('information_schema', 'public')
+      and schemaname not like 'pg_%'";
 
         public string GetQuery()
         {

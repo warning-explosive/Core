@@ -20,7 +20,7 @@
         public TableInfo(Type type, IReadOnlyCollection<ColumnInfo> columns)
         {
             Type = type;
-            Columns = columns.ToDictionary(info => info.Name);
+            Columns = columns.ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -65,12 +65,12 @@
                     {
                         foreach (var column in index.Columns)
                         {
-                            if (Columns.TryGetValue(column, out var info))
+                            if (!Columns.TryGetValue(column, out var info))
                             {
-                                yield return info;
+                                throw new InvalidOperationException($"Table {Schema}.{Name} doesn't have column {column} for index");
                             }
 
-                            throw new InvalidOperationException($"Table {Schema}.{Name} doesn't have column {column} for index");
+                            yield return info;
                         }
                     }
                 }

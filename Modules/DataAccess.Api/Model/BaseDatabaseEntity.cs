@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
     public abstract record BaseDatabaseEntity<TKey> : IDatabaseEntity<TKey>,
                                                       ISafelyEquatable<BaseDatabaseEntity<TKey>>
+        where TKey : notnull
     {
         /// <summary>
         /// .cctor

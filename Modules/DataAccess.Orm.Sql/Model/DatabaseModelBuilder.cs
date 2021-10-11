@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
@@ -103,39 +102,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         private ColumnNode BuildColumnNode(string schema, string table, DatabaseColumn column)
         {
-            var constraints = GetConstraints(schema, table, column).ToList();
+            var constraints = ColumnInfo
+                .DbConstraints(schema, table, column.Column, column.Nullable, _modelProvider)
+                .ToList();
 
             return new ColumnNode(column.Schema, column.Table, column.Column, column.DataType, constraints);
-        }
-
-        private IEnumerable<string> GetConstraints(string schema, string table, DatabaseColumn databaseColumn)
-        {
-            if (databaseColumn.Column.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
-            {
-                yield return "primary key";
-            }
-
-            var columnSuffix = databaseColumn
-                .Column
-                .Split("_", StringSplitOptions.RemoveEmptyEntries)
-                .Last();
-
-            if (columnSuffix.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
-            {
-                if (!_modelProvider.Model.TryGetValue(schema, out var schemaInfo)
-                    || !schemaInfo.TryGetValue(table, out var tableInfo)
-                    || !tableInfo.Columns.TryGetValue(databaseColumn.Column, out var columnInfo))
-                {
-                    throw new InvalidOperationException($"{schema}.{table}.{databaseColumn.Column} isn't presented in the model");
-                }
-
-                yield return $"references {columnInfo.Type.Name}";
-            }
-
-            if (!databaseColumn.Nullable)
-            {
-                yield return "not null";
-            }
         }
 
         private static async Task<List<ViewNode>> BuildViewNodes(

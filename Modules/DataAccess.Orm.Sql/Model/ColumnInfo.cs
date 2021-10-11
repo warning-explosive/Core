@@ -58,7 +58,9 @@
 
                 string InitName()
                 {
-                    return Chain.Select(property => property.Name).ToString("_");
+                    return Chain
+                        .Select(property => property.Name)
+                        .ToString("_");
                 }
             }
         }
@@ -101,10 +103,19 @@
                     {
                         yield return "primary key";
                     }
-
-                    if (Type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+                    else if (Property.Name.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
                     {
-                        yield return $"references {Type.Name}";
+                        var relation = Chain.SkipLast(1).Last();
+
+                        if (relation.PropertyType.IsMultipleRelation(out var itemType))
+                        {
+                            // TODO: #110 - references to intermediate many-to-many table
+                            yield return @"references ""schema"".""to_do_many_to_many_table""";
+                        }
+                        else
+                        {
+                            yield return $@"references ""{relation.PropertyType.SchemaName()}"".""{relation.PropertyType.Name}""";
+                        }
                     }
 
                     if (!Property.IsNullable())
@@ -112,6 +123,52 @@
                         yield return "not null";
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets DB constraints
+        /// </summary>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
+        /// <param name="column">Column</param>
+        /// <param name="nullable">Nullable</param>
+        /// <param name="modelProvider">IModelProvider</param>
+        /// <returns>Constraints</returns>
+        public static IEnumerable<string> DbConstraints(
+            string schema,
+            string table,
+            string column,
+            bool nullable,
+            IModelProvider modelProvider)
+        {
+            if (column.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+            {
+                yield return "primary key";
+            }
+            else if (column.Split("_", StringSplitOptions.RemoveEmptyEntries).Last().Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+            {
+                if (!modelProvider.Model.TryGetValue(schema, out var schemaInfo)
+                    || !schemaInfo.TryGetValue(table, out var tableInfo)
+                    || !tableInfo.Columns.TryGetValue(column, out var columnInfo))
+                {
+                    throw new InvalidOperationException($"{schema}.{table}.{column} isn't presented in the model");
+                }
+
+                if (columnInfo.Type.IsMultipleRelation(out var itemType))
+                {
+                    // TODO: #110 - references to intermediate many-to-many table
+                    yield return $@"references ""schema"".""to_do_many_to_many_table""";
+                }
+                else
+                {
+                    yield return $@"references ""{columnInfo.Type.SchemaName()}"".""{columnInfo.Type.Name}""";
+                }
+            }
+
+            if (!nullable)
+            {
+                yield return "not null";
             }
         }
     }

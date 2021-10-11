@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
     /// </summary>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
     public interface ISqlView<TKey> : IUniqueIdentified<TKey>
+        where TKey : notnull
     {
     }
 }

@@ -63,7 +63,7 @@
             sb.Append(Table);
             sb.Append(Separator);
             sb.Append(Separator);
-            sb.Append(string.Join(Separator, Columns.OrderBy(it => it)));
+            sb.Append(string.Join(Separator, Columns.Select(column => column.Name).OrderBy(column => column)));
 
             if (Unique)
             {

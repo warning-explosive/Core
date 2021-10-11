@@ -202,28 +202,35 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Assert.Equal(19, modelChanges.Length);
 
-                AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
+                AssertCreateDataBase(modelChanges, 0, "SpaceEngineerDatabase");
 
-                AssertCreateSchema(modelChanges, 1, "spaceengineers_core_tracingendpoint");
+                AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
                 AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
 
-                AssertCreateSchema(modelChanges, 5, "spaceengineers_core_genericendpoint_dataaccess");
+                AssertCreateSchema(modelChanges, 5, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
                 AssertCreateTable(modelChanges, 6, typeof(InboxMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
                 AssertCreateTable(modelChanges, 9, typeof(OutboxMessageDatabaseEntity));
 
-                AssertCreateSchema(modelChanges, 10, "spaceengineers_core_dataaccess_orm_sql");
+                AssertCreateSchema(modelChanges, 10, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql)));
                 AssertCreateView(modelChanges, 11, nameof(DatabaseColumn));
                 AssertCreateView(modelChanges, 12, nameof(DatabaseIndex));
                 AssertCreateView(modelChanges, 13, nameof(DatabaseSchema));
                 AssertCreateView(modelChanges, 14, nameof(DatabaseView));
-                AssertCreateIndex(modelChanges, 15, "spaceengineers_core_dataaccess_orm_sql__DatabaseColumn__Column_Schema_Table__Unique");
-                AssertCreateIndex(modelChanges, 16, "spaceengineers_core_dataaccess_orm_sql__DatabaseIndex__Index_Schema_Table__Unique");
-                AssertCreateIndex(modelChanges, 17, "spaceengineers_core_dataaccess_orm_sql__DatabaseSchema__Name__Unique");
-                AssertCreateIndex(modelChanges, 18, "spaceengineers_core_dataaccess_orm_sql__DatabaseView__Query_Schema_View__Unique");
+                AssertCreateIndex(modelChanges, 15, "SpaceEngineersCoreDataAccessOrmSql__DatabaseColumn__Column_Schema_Table__Unique");
+                AssertCreateIndex(modelChanges, 16, "SpaceEngineersCoreDataAccessOrmSql__DatabaseIndex__Index_Schema_Table__Unique");
+                AssertCreateIndex(modelChanges, 17, "SpaceEngineersCoreDataAccessOrmSql__DatabaseSchema__Name__Unique");
+                AssertCreateIndex(modelChanges, 18, "SpaceEngineersCoreDataAccessOrmSql__DatabaseView__Query_Schema_View__Unique");
+
+                static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
+                {
+                    Assert.True(modelChanges[index] is CreateTable);
+                    var createTable = (CreateTable)modelChanges[index];
+                    Assert.Equal(table.Name, createTable.Table);
+                }
             }
             else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
             {
@@ -231,16 +238,23 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
 
-                AssertCreateSchema(modelChanges, 1, "spaceengineers_core_tracingendpoint");
+                AssertCreateSchema(modelChanges, 1, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
                 AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
 
-                AssertCreateSchema(modelChanges, 5, "spaceengineers_core_genericendpoint_dataaccess");
+                AssertCreateSchema(modelChanges, 5, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
                 AssertCreateTable(modelChanges, 6, typeof(InboxMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
                 AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
                 AssertCreateTable(modelChanges, 9, typeof(OutboxMessageDatabaseEntity));
+
+                static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
+                {
+                    Assert.True(modelChanges[index] is CreateTable);
+                    var createTable = (CreateTable)modelChanges[index];
+                    Assert.Equal(table.FullName, createTable.Table);
+                }
             }
             else
             {
@@ -259,13 +273,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.True(modelChanges[index] is CreateSchema);
                 var createSchema = (CreateSchema)modelChanges[index];
                 Assert.True(createSchema.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
-            }
-
-            static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
-            {
-                Assert.True(modelChanges[index] is CreateTable);
-                var createTable = (CreateTable)modelChanges[index];
-                Assert.Equal(table.Name, createTable.Table);
             }
 
             static void AssertCreateView(IModelChange[] modelChanges, int index, string view)

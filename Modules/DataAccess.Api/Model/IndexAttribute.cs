@@ -7,7 +7,7 @@
     /// <summary>
     /// IndexAttribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = true)]
     public sealed class IndexAttribute : Attribute
     {
         /// <summary> .cctor </summary>

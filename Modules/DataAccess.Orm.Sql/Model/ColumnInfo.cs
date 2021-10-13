@@ -159,11 +159,31 @@
                     }
                     else if (Relation != null)
                     {
-                        yield return $@"references ""{Relation.Type.SchemaName()}"".""{Relation.Type.Name}""";
+                        yield return $@"references ""{Relation.Type.SchemaName()}"".""{Relation.Type.Name}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")";
                     }
-                    else if (MultipleRelation != null)
+                    else if (TableType.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<>)))
                     {
-                        yield return $@"references ""{TableType.SchemaName()}"".""{MultipleRelation.MtmTableName()}""";
+                        var parts = TableType.Name.Split('_', StringSplitOptions.RemoveEmptyEntries);
+
+                        if (parts.Length != 5)
+                        {
+                            throw new InvalidOperationException($"MtM table name should contain 5 parts: {TableType.Name}");
+                        }
+
+                        if (Name.Equals(nameof(BaseMtmDatabaseEntity<Guid>.Left), StringComparison.OrdinalIgnoreCase))
+                        {
+                            var schema = parts[0];
+                            var table = parts[1];
+
+                            yield return $@"references ""{schema}"".""{table}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")";
+                        }
+                        else if (Name.Equals(nameof(BaseMtmDatabaseEntity<Guid>.Right), StringComparison.OrdinalIgnoreCase))
+                        {
+                            var schema = parts[3];
+                            var table = parts[4];
+
+                            yield return $@"references ""{schema}"".""{table}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")";
+                        }
                     }
 
                     if (!Property.IsNullable())

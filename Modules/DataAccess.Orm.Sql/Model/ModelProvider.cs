@@ -68,9 +68,9 @@
             else
             {
                 var tableInfo = GetTableInfo(entity);
-                yield return tableInfo;
+                yield return new TableInfo(tableInfo.Type, tableInfo.Columns.Values.Where(column => column.MultipleRelation == null).ToList());
 
-                foreach (var mtmTableInfo in GetMtmTablesInfo(tableInfo.Columns.Values))
+                foreach (var mtmTableInfo in GetMtmTablesInfo(tableInfo.Columns.Values.Where(column => column.MultipleRelation != null)))
                 {
                     yield return mtmTableInfo;
                 }
@@ -89,10 +89,7 @@
 
         private IEnumerable<TableInfo> GetMtmTablesInfo(IEnumerable<ColumnInfo> columns)
         {
-            return columns
-                .Select(column => column.MultipleRelation)
-                .Where(relation => relation != null)
-                .Select(relation => GetMtmTableInfo(relation!));
+            return columns.Select(relation => GetMtmTableInfo(relation.MultipleRelation!));
 
             TableInfo GetMtmTableInfo(Relation relation)
             {

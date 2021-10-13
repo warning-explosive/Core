@@ -14,9 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
                                                       ISafelyEquatable<BaseDatabaseEntity<TKey>>
         where TKey : notnull
     {
-        /// <summary>
-        /// .cctor
-        /// </summary>
+        /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>
         protected BaseDatabaseEntity(TKey primaryKey)
         {

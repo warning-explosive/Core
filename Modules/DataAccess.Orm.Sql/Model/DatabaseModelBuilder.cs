@@ -48,13 +48,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
                 await using (await transaction.Open(true, token).ConfigureAwait(false))
                 {
+                    var constraints = transaction
+                        .Read<DatabaseColumnConstraint, Guid>()
+                        .All()
+                        .AsEnumerable()
+                        .GroupBy(constraint => constraint.Schema)
+                        .ToDictionary(grp => grp.Key,
+                            grp => grp
+                                .GroupBy(constraint => constraint.Table)
+                                .ToDictionary(g => g.Key,
+                                    g => g.ToDictionary(
+                                        constraint => constraint.Column,
+                                        StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, DatabaseColumnConstraint>,
+                                    StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>,
+                            StringComparer.OrdinalIgnoreCase);
+
                     var schemas = await (await transaction
                             .Read<DatabaseSchema, Guid>()
                             .All()
                             .Select(schema => schema.Name)
                             .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                             .ConfigureAwait(false))
-                        .Select(schema => BuildSchemaNode(transaction, schema, token))
+                        .Select(schema => BuildSchemaNode(transaction, schema, constraints, token))
                         .WhenAll()
                         .ConfigureAwait(false);
 
@@ -63,21 +78,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             }
         }
 
-        private async Task<SchemaNode> BuildSchemaNode(
-            IDatabaseContext transaction,
+        private static async Task<SchemaNode> BuildSchemaNode(IDatabaseContext transaction,
             string schema,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints,
             CancellationToken token)
         {
-            var tables = await BuildTableNodes(transaction, schema, token).ConfigureAwait(false);
+            var tables = await BuildTableNodes(transaction, schema, constraints, token).ConfigureAwait(false);
             var views = await BuildViewNodes(transaction, schema, token).ConfigureAwait(false);
             var indexes = await BuildIndexNodes(transaction, schema, token).ConfigureAwait(false);
 
             return new SchemaNode(schema, tables, views, indexes);
         }
 
-        private async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
+        private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
             IDatabaseContext transaction,
             string schema,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints,
             CancellationToken token)
         {
             return (await transaction
@@ -87,26 +103,62 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .GroupBy(column => column.Table)
                     .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
                     .ConfigureAwait(false))
-                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value))
+                .Select(grp => BuildTableNode(schema, grp.Key, grp.Value, constraints))
                 .ToList();
         }
 
-        private TableNode BuildTableNode(string schema, string table, IReadOnlyCollection<DatabaseColumn> databaseColumns)
+        private static TableNode BuildTableNode(
+            string schema,
+            string table,
+            IReadOnlyCollection<DatabaseColumn> databaseColumns,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints)
         {
             var columns = databaseColumns
-                .Select(column => BuildColumnNode(schema, table, column))
+                .Select(column => BuildColumnNode(schema, table, column, constraints))
                 .ToList();
 
             return new TableNode(schema, table, columns);
         }
 
-        private ColumnNode BuildColumnNode(string schema, string table, DatabaseColumn column)
+        private static ColumnNode BuildColumnNode(
+            string schema,
+            string table,
+            DatabaseColumn column,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints)
         {
-            var constraints = ColumnInfo
-                .DbConstraints(schema, table, column.Column, column.Nullable, _modelProvider)
-                .ToList();
+            return new ColumnNode(
+                column.Schema,
+                column.Table,
+                column.Column,
+                column.DataType,
+                GetConstraints(schema, table, column.Column, column.Nullable, constraints)
+                    .OrderBy(constraint => constraint)
+                    .ToList());
+        }
 
-            return new ColumnNode(column.Schema, column.Table, column.Column, column.DataType, constraints);
+        private static IEnumerable<string> GetConstraints(
+            string schema,
+            string table,
+            string column,
+            bool nullable,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints)
+        {
+            if (constraints.TryGetValue(schema, out var tables)
+                && tables.TryGetValue(table, out var columns)
+                && columns.TryGetValue(column, out var constraint))
+            {
+                yield return constraint.ConstraintType switch
+                {
+                    EnColumnConstraintType.PrimaryKey => "primary key",
+                    EnColumnConstraintType.ForeignKey => $@"references ""{constraint.ForeignSchema}"".""{constraint.ForeignTable}""",
+                    _ => throw new NotSupportedException(constraint.ConstraintType.ToString())
+                };
+            }
+
+            if (!nullable)
+            {
+                yield return "not null";
+            }
         }
 
         private static async Task<List<ViewNode>> BuildViewNodes(

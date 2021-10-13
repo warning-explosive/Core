@@ -9,21 +9,26 @@
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
+    using Dynamic;
+    using Dynamic.Abstractions;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelProvider : IModelProvider
     {
         private readonly IDependencyContainer _dependencyContainer;
+        private readonly IDynamicClassProvider _dynamicClassProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
 
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>>? _model;
 
         public ModelProvider(
             IDependencyContainer dependencyContainer,
+            IDynamicClassProvider dynamicClassProvider,
             IDatabaseTypeProvider databaseTypeProvider)
         {
             _dependencyContainer = dependencyContainer;
+            _dynamicClassProvider = dynamicClassProvider;
             _databaseTypeProvider = databaseTypeProvider;
         }
 
@@ -40,7 +45,7 @@
         {
             var model = new Dictionary<string, Dictionary<string, IObjectModelInfo>>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var info in _databaseTypeProvider.DatabaseEntities().Select(GetEntityInfo))
+            foreach (var info in _databaseTypeProvider.DatabaseEntities().SelectMany(GetEntityInfos))
             {
                 model
                     .GetOrAdd(info.Schema, _ => new Dictionary<string, IObjectModelInfo>(StringComparer.OrdinalIgnoreCase))
@@ -54,15 +59,21 @@
                     StringComparer.OrdinalIgnoreCase);
         }
 
-        private IObjectModelInfo GetEntityInfo(Type entity)
+        private IEnumerable<IObjectModelInfo> GetEntityInfos(Type entity)
         {
             if (entity.IsSqlView())
             {
-                return GetViewInfo(entity);
+                yield return GetViewInfo(entity);
             }
             else
             {
-                return GetTableInfo(entity);
+                var tableInfo = GetTableInfo(entity);
+                yield return tableInfo;
+
+                foreach (var mtmTableInfo in GetMtmTablesInfo(tableInfo.Columns.Values))
+                {
+                    yield return mtmTableInfo;
+                }
             }
         }
 
@@ -74,6 +85,32 @@
                 .ToList();
 
             return new TableInfo(tableType, columns);
+        }
+
+        private IEnumerable<TableInfo> GetMtmTablesInfo(IEnumerable<ColumnInfo> columns)
+        {
+            return columns
+                .Select(column => column.MultipleRelation)
+                .Where(relation => relation != null)
+                .Select(relation => GetMtmTableInfo(relation!));
+
+            TableInfo GetMtmTableInfo(Relation relation)
+            {
+                var name = relation.MtmTableName();
+
+                var keyType = relation
+                    .Type
+                    .ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>))
+                    .Single();
+
+                var type = typeof(BaseMtmDatabaseEntity<>).MakeGenericType(keyType);
+
+                var dynamicClass = new DynamicClass(name).InheritsFrom(type);
+
+                var tableType = _dynamicClassProvider.CreateType(dynamicClass);
+
+                return GetTableInfo(tableType);
+            }
         }
 
         private ViewInfo GetViewInfo(Type viewType)
@@ -164,8 +201,7 @@
 
                 static IEnumerable<PropertyInfo[]> FlattenMultipleRelation(PropertyInfo property, Type itemType)
                 {
-                    var primaryKeyProperty = itemType
-                        .GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey));
+                    var primaryKeyProperty = itemType.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey));
 
                     return new[]
                     {

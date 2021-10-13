@@ -236,7 +236,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Assert.Equal(10, modelChanges.Length);
 
-                AssertCreateDataBase(modelChanges, 0, "SpaceEngineersDatabase");
+                AssertCreateDataBase(modelChanges, 0, "SpaceEngineerDatabase");
 
                 AssertCreateSchema(modelChanges, 1, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
                 AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));

@@ -76,8 +76,8 @@ namespace SpaceEngineers.Core.Dynamic
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Interfaces
-                .Cast<object>()
+            return new object[] { Name }
+                .Concat(Interfaces)
                 .Concat(Properties)
                 .Aggregate((BaseType ?? typeof(object)).GetHashCode(), HashCode.Combine);
         }
@@ -97,7 +97,8 @@ namespace SpaceEngineers.Core.Dynamic
         /// <inheritdoc />
         public bool SafeEquals(DynamicClass other)
         {
-            return BaseType == other.BaseType
+            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
+                   && BaseType == other.BaseType
                    && Interfaces.OrderBy(i => i).SequenceEqual(other.Interfaces.OrderBy(i => i))
                    && Properties.OrderBy(p => p.Name).SequenceEqual(other.Properties.OrderBy(p => p.Name));
         }

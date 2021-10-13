@@ -95,5 +95,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
                 .Name
                 .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase);
         }
+
+        /// <summary>
+        /// Gets Many-to-many table name
+        /// </summary>
+        /// <param name="relation">Relation</param>
+        /// <returns>Schema name</returns>
+        public static string MtmTableName(this Relation relation)
+        {
+            return string.Join(
+                "_",
+                relation.Property.DeclaringType.SchemaName(),
+                relation.Property.DeclaringType.Name,
+                relation.Property.Name,
+                relation.Type.SchemaName(),
+                relation.Type.Name);
+        }
     }
 }

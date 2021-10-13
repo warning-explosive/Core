@@ -15,6 +15,7 @@
     [Component(EnLifestyle.Singleton)]
     internal class CreateColumnModelChangeMigration : IModelChangeMigration<CreateColumn>
     {
+        private const string Separator = " ";
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 
         private readonly IModelProvider _modelProvider;
@@ -37,21 +38,14 @@
                 throw new InvalidOperationException($"{change.Schema}.{change.Table}.{change.Column} isn't presented in the model");
             }
 
-            var (columnName, dataType, modifiers) = CreateColumn(column);
+            var (columnName, dataType, constraints) = CreateColumn(column);
 
-            string constraints;
-
-            if (modifiers.Any())
-            {
-                var separator = " ";
-                constraints = separator + modifiers.ToString(separator);
-            }
-            else
-            {
-                constraints = string.Empty;
-            }
-
-            var command = CommandFormat.Format(change.Schema, change.Table, columnName, dataType, constraints);
+            var command = CommandFormat.Format(
+                change.Schema,
+                change.Table,
+                columnName,
+                dataType,
+                constraints.Any() ? Separator + constraints.ToString(Separator) : string.Empty);
 
             return Task.FromResult(command);
         }

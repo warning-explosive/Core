@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass()),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_1")),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -77,7 +77,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass))),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_2").InheritsFrom(typeof(TestBaseClass))),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().Implements(typeof(ITestInterface))),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_3").Implements(typeof(ITestInterface))),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().HasProperties(propertyValues.Keys.ToArray())),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_4").HasProperties(propertyValues.Keys.ToArray())),
                 propertyValues,
                 new Action<Type>(type =>
                 {
@@ -136,7 +136,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(propertyValues.Keys.ToArray())),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_5").InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(propertyValues.Keys.ToArray())),
                 propertyValues,
                 new Action<Type>(type =>
                 {

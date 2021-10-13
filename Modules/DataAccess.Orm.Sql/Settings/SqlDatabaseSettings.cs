@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         {
             Host = "localhost";
             Port = 5432;
-            Database = "SpaceEngineersDatabase";
+            Database = "SpaceEngineerDatabase";
 
             /* TODO: #130 - use secrets or credentials vault */
             Username = "SpaceEngineer";

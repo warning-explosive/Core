@@ -14,6 +14,7 @@
     [Component(EnLifestyle.Singleton)]
     internal class CreateTableDatabaseModelChangeMigration : IModelChangeMigration<CreateTable>
     {
+        private const string Separator = " ";
         private const string CommandFormat = @"create table ""{0}"".""{1}""
 (
 	{2}
@@ -56,15 +57,10 @@
         {
             var (columnName, dataType, constraints) = _createColumnMigration.CreateColumn(column);
 
-            if (constraints.Any())
-            {
-                var separator = " ";
-                return ColumnFormat.Format(columnName, dataType, separator + constraints.ToString(separator));
-            }
-            else
-            {
-                return ColumnFormat.Format(columnName, dataType, string.Empty);
-            }
+            return ColumnFormat.Format(
+                columnName,
+                dataType,
+                constraints.Any() ? Separator + constraints.ToString(Separator) : string.Empty);
         }
     }
 }

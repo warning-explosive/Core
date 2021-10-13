@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using Api.Model;
     using Basics;
     using Orm.Model;
@@ -16,6 +17,8 @@
         private string? _name;
         private PropertyInfo? _property;
         private IReadOnlyCollection<string>? _constraints;
+        private Lazy<Relation?>? _relation;
+        private Lazy<Relation?>? _multipleRelation;
 
         /// <summary> .cctor </summary>
         /// <param name="tableType">Table type</param>
@@ -88,13 +91,64 @@
         public Type Type => Property.PropertyType;
 
         /// <summary>
+        /// Relation
+        /// </summary>
+        public Relation? Relation
+        {
+            get
+            {
+                _relation ??= new Lazy<Relation?>(InitRelation, LazyThreadSafetyMode.ExecutionAndPublication);
+                return _relation.Value;
+
+                Relation? InitRelation()
+                {
+                    var property = Chain
+                        .Reverse()
+                        .FirstOrDefault(property => property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)));
+
+                    return property == null
+                        ? null
+                        : new Relation(property, property.PropertyType);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Multiple relation
+        /// </summary>
+        public Relation? MultipleRelation
+        {
+            get
+            {
+                _multipleRelation ??= new Lazy<Relation?>(InitMultipleRelation, LazyThreadSafetyMode.ExecutionAndPublication);
+                return _multipleRelation.Value;
+
+                Relation? InitMultipleRelation()
+                {
+                    foreach (var property in Chain.Reverse())
+                    {
+                        if (property.PropertyType.IsMultipleRelation(out var itemType))
+                        {
+                            return new Relation(property, itemType);
+                        }
+                    }
+
+                    return default;
+                }
+            }
+        }
+
+        /// <summary>
         /// Type
         /// </summary>
         public IReadOnlyCollection<string> Constraints
         {
             get
             {
-                _constraints ??= InitConstraints().ToList();
+                _constraints ??= InitConstraints()
+                    .OrderBy(constraint => constraint)
+                    .ToList();
+
                 return _constraints;
 
                 IEnumerable<string> InitConstraints()
@@ -103,19 +157,13 @@
                     {
                         yield return "primary key";
                     }
-                    else if (Property.Name.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+                    else if (Relation != null)
                     {
-                        var relation = Chain.SkipLast(1).Last();
-
-                        if (relation.PropertyType.IsMultipleRelation(out var itemType))
-                        {
-                            // TODO: #110 - references to intermediate many-to-many table
-                            yield return @"references ""schema"".""to_do_many_to_many_table""";
-                        }
-                        else
-                        {
-                            yield return $@"references ""{relation.PropertyType.SchemaName()}"".""{relation.PropertyType.Name}""";
-                        }
+                        yield return $@"references ""{Relation.Type.SchemaName()}"".""{Relation.Type.Name}""";
+                    }
+                    else if (MultipleRelation != null)
+                    {
+                        yield return $@"references ""{TableType.SchemaName()}"".""{MultipleRelation.MtmTableName()}""";
                     }
 
                     if (!Property.IsNullable())
@@ -123,52 +171,6 @@
                         yield return "not null";
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Gets DB constraints
-        /// </summary>
-        /// <param name="schema">Schema</param>
-        /// <param name="table">Table</param>
-        /// <param name="column">Column</param>
-        /// <param name="nullable">Nullable</param>
-        /// <param name="modelProvider">IModelProvider</param>
-        /// <returns>Constraints</returns>
-        public static IEnumerable<string> DbConstraints(
-            string schema,
-            string table,
-            string column,
-            bool nullable,
-            IModelProvider modelProvider)
-        {
-            if (column.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
-            {
-                yield return "primary key";
-            }
-            else if (column.Split("_", StringSplitOptions.RemoveEmptyEntries).Last().Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
-            {
-                if (!modelProvider.Model.TryGetValue(schema, out var schemaInfo)
-                    || !schemaInfo.TryGetValue(table, out var tableInfo)
-                    || !tableInfo.Columns.TryGetValue(column, out var columnInfo))
-                {
-                    throw new InvalidOperationException($"{schema}.{table}.{column} isn't presented in the model");
-                }
-
-                if (columnInfo.Type.IsMultipleRelation(out var itemType))
-                {
-                    // TODO: #110 - references to intermediate many-to-many table
-                    yield return $@"references ""schema"".""to_do_many_to_many_table""";
-                }
-                else
-                {
-                    yield return $@"references ""{columnInfo.Type.SchemaName()}"".""{columnInfo.Type.Name}""";
-                }
-            }
-
-            if (!nullable)
-            {
-                yield return "not null";
             }
         }
     }

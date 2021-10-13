@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Settings
         /// <summary> .cctor </summary>
         public InMemoryDatabaseSettings()
         {
-            Database = "SpaceEngineersDatabase";
+            Database = "SpaceEngineerDatabase";
             IsolationLevel = IsolationLevel.Snapshot;
         }
 

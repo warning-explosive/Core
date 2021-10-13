@@ -178,11 +178,12 @@ namespace SpaceEngineers.Core.Basics
                 return true;
             }
 
-            var nullableAttributeType = AssembliesExtensions.FindRequiredType(
+            var nullableAttributeType = AssembliesExtensions.FindType(
                 memberInfo.ReflectedType.Assembly.GetName().Name,
                 NullableAttributeFullName);
 
-            return attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
+            return nullableAttributeType != default
+                   && attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
         }
     }
 }

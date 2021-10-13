@@ -197,5 +197,11 @@
       <Compile Update="Model\IObjectModelInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\DatabaseColumnConstraint.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnColumnConstraintType.cs">
+        <DependentUpon>DatabaseColumnConstraint.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

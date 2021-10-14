@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
 
             /* TODO: #130 - use secrets or credentials vault */
             Username = "SpaceEngineer";
-            Password = "1234";
+            Password = "Voyager1";
 
             IsolationLevel = IsolationLevel.Snapshot;
         }

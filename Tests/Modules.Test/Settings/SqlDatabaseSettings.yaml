@@ -1,6 +1,6 @@
 Host: localhost
 Port: 5432
 Database: SpaceEngineerDatabase
-Username: SpaceEngineer
-Password: Voyager1
+Username: postgres
+Password: Password12!
 IsolationLevel: Snapshot

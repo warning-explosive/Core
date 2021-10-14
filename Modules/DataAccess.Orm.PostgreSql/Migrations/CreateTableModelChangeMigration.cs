@@ -45,6 +45,7 @@
             var columns = table
                 .Columns
                 .Values
+                .Where(column => !column.IsMultipleRelation)
                 .Select(CreateColumn)
                 .ToString($",{Environment.NewLine}\t");
 

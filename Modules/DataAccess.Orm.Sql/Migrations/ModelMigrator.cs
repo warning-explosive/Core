@@ -25,9 +25,7 @@
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
 
-        public ModelMigrator(
-            IDependencyContainer dependencyContainer,
-            ISettingsProvider<OrmSettings> settingsProvider)
+        public ModelMigrator(IDependencyContainer dependencyContainer, ISettingsProvider<OrmSettings> settingsProvider)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;

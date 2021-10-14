@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             return new[]
             {
-                // TODO: #110 - new object[] { new PostgreSqlDatabaseProvider() },
+                new object[] { new PostgreSqlDatabaseProvider() },
                 new object[] { new InMemoryDatabaseProvider() }
             };
         }
@@ -192,9 +192,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var modelChanges = tracingEndpointContainer
+            var unorderedModelChanges = tracingEndpointContainer
                 .Resolve<IModelComparator>()
-                .ExtractDiff(actualModel, expectedModel)
+                .ExtractDiff(actualModel, expectedModel);
+
+            var modelChanges = tracingEndpointContainer
+                .Resolve<IModelChangesSorter>()
+                .Sort(unorderedModelChanges)
                 .ToArray();
 
             modelChanges.Each((change, i) => Output.WriteLine($"[{i}] {change}"));
@@ -206,76 +210,74 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertCreateDataBase(modelChanges, 0, "SpaceEngineerDatabase");
 
                 AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
+                AssertCreateSchema(modelChanges, 2, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
+                AssertCreateSchema(modelChanges, 3, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql)));
+                AssertCreateSchema(modelChanges, 4, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics), nameof(Core.Dynamic)));
 
-                AssertCreateTable(modelChanges, 2, typeof(CapturedMessageDatabaseEntity));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 2, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 2, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 2, nameof(CapturedMessageDatabaseEntity.RefuseReason), string.Empty);
+                AssertCreateTable(modelChanges, 5, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, "Payload_SystemType_Assembly", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, "Payload_SystemType_Type", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, "Payload_Value", "not null");
+                AssertMtmColumn(tracingEndpointContainer, modelChanges, 5, "Headers_Left");
 
-                AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.MessageId), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.ConversationId), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, "Payload_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, "Payload_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 3, "Payload_Value", "not null");
-                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 3, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageDatabaseEntity.Headers));
+                AssertCreateTable(modelChanges, 6, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "Value_SystemType_Assembly", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "Value_SystemType_Type", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "Value_Value", "not null");
 
-                AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 4, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 4, "Value_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 4, "Value_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 4, "Value_Value", "not null");
+                AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "Payload_SystemType_Assembly", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "Payload_SystemType_Type", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "Payload_Value", "not null");
+                AssertMtmColumn(tracingEndpointContainer, modelChanges, 7, "Headers_Left");
 
-                AssertCreateSchema(modelChanges, 5, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics), nameof(Core.Dynamic)));
+                AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 8, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 8, "Value_SystemType_Assembly", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 8, "Value_SystemType_Type", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 8, "Value_Value", "not null");
 
-                AssertCreateDynamicTable(modelChanges, 6, "SpaceEngineersCoreTracingEndpoint_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreTracingEndpoint_IntegrationMessageHeaderDatabaseEntity");
-                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 6, nameof(IDatabaseEntity<Guid>.PrimaryKey));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "Left", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, "Right", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageHeaderDatabaseEntity"" (""PrimaryKey"")");
+                AssertCreateTable(modelChanges, 9, typeof(CapturedMessageDatabaseEntity));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 9, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 9, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 9, nameof(CapturedMessageDatabaseEntity.RefuseReason), string.Empty);
 
-                AssertCreateDynamicTable(modelChanges, 7, "SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageHeaderDatabaseEntity");
-                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 7, nameof(IDatabaseEntity<Guid>.PrimaryKey));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "Left", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 7, "Right", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageHeaderDatabaseEntity"" (""PrimaryKey"")");
+                AssertCreateDynamicTable(modelChanges, 10, "SpaceEngineersCoreTracingEndpoint_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreTracingEndpoint_IntegrationMessageHeaderDatabaseEntity");
+                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 10, nameof(IDatabaseEntity<Guid>.PrimaryKey));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 10, "Left", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 10, "Right", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageHeaderDatabaseEntity"" (""PrimaryKey"")");
 
-                AssertCreateIndex(modelChanges, 8, "SpaceEngineersCoreBasicsDynamic__SpaceEngineersCoreTracingEndpoint_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreTracingEndpoint_IntegrationMessageHeaderDatabaseEntity__Left_Right__Unique");
-                AssertCreateIndex(modelChanges, 9, "SpaceEngineersCoreBasicsDynamic__SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageHeaderDatabaseEntity__Left_Right__Unique");
+                AssertCreateDynamicTable(modelChanges, 11, "SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageHeaderDatabaseEntity");
+                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 11, nameof(IDatabaseEntity<Guid>.PrimaryKey));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Left", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Right", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageHeaderDatabaseEntity"" (""PrimaryKey"")");
 
-                AssertCreateSchema(modelChanges, 10, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
-
-                AssertCreateTable(modelChanges, 11, typeof(InboxMessageDatabaseEntity));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "EndpointIdentity_LogicalName", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "EndpointIdentity_InstanceName", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(InboxMessageDatabaseEntity.IsError), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(InboxMessageDatabaseEntity.Handled), "not null");
-
-                AssertCreateTable(modelChanges, 12, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity));
+                AssertCreateTable(modelChanges, 12, typeof(InboxMessageDatabaseEntity));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "Payload_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "Payload_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "Payload_Value", "not null");
-                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 12, nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageDatabaseEntity.Headers));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "EndpointIdentity_LogicalName", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, "EndpointIdentity_InstanceName", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, nameof(InboxMessageDatabaseEntity.IsError), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, nameof(InboxMessageDatabaseEntity.Handled), "not null");
 
-                AssertCreateTable(modelChanges, 13, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeaderDatabaseEntity));
+                AssertCreateTable(modelChanges, 13, typeof(OutboxMessageDatabaseEntity));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, "Value_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, "Value_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, "Value_Value", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 13, nameof(OutboxMessageDatabaseEntity.Sent), "not null");
 
-                AssertCreateTable(modelChanges, 14, typeof(OutboxMessageDatabaseEntity));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 14, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 14, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreGenericEndpointDataAccess"".""IntegrationMessageDatabaseEntity"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 14, nameof(OutboxMessageDatabaseEntity.Sent), "not null");
+                AssertCreateView(modelChanges, 14, nameof(DatabaseColumn));
+                AssertCreateView(modelChanges, 15, nameof(DatabaseColumnConstraint));
+                AssertCreateView(modelChanges, 16, nameof(DatabaseIndex));
+                AssertCreateView(modelChanges, 17, nameof(DatabaseSchema));
+                AssertCreateView(modelChanges, 18, nameof(DatabaseView));
 
-                AssertCreateSchema(modelChanges, 15, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql)));
-                AssertCreateView(modelChanges, 16, nameof(DatabaseColumn));
-                AssertCreateView(modelChanges, 17, nameof(DatabaseColumnConstraint));
-                AssertCreateView(modelChanges, 18, nameof(DatabaseIndex));
-                AssertCreateView(modelChanges, 19, nameof(DatabaseSchema));
-                AssertCreateView(modelChanges, 20, nameof(DatabaseView));
+                AssertCreateIndex(modelChanges, 19, "SpaceEngineersCoreBasicsDynamic__SpaceEngineersCoreTracingEndpoint_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreTracingEndpoint_IntegrationMessageHeaderDatabaseEntity__Left_Right__Unique");
+                AssertCreateIndex(modelChanges, 20, "SpaceEngineersCoreBasicsDynamic__SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageDatabaseEntity_Headers_SpaceEngineersCoreGenericEndpointDataAccess_IntegrationMessageHeaderDatabaseEntity__Left_Right__Unique");
                 AssertCreateIndex(modelChanges, 21, "SpaceEngineersCoreDataAccessOrmSql__DatabaseColumn__Column_Schema_Table__Unique");
                 AssertCreateIndex(modelChanges, 22, "SpaceEngineersCoreDataAccessOrmSql__DatabaseIndex__Index_Schema_Table__Unique");
                 AssertCreateIndex(modelChanges, 23, "SpaceEngineersCoreDataAccessOrmSql__DatabaseSchema__Name__Unique");
@@ -305,8 +307,34 @@ namespace SpaceEngineers.Core.Modules.Test
                     Assert.True(modelProvider.Model[createTable.Schema][createTable.Table] is TableInfo);
                     var tableInfo = (TableInfo)modelProvider.Model[createTable.Schema][createTable.Table];
                     Assert.True(tableInfo.Columns.ContainsKey(column));
-                    var actualConstraints = tableInfo.Columns[column].Constraints.ToString(" ");
+                    var columnInfo = tableInfo.Columns[column];
+                    var actualConstraints = columnInfo.Constraints.ToString(" ");
                     Assert.True(actualConstraints.Equals(constraints, StringComparison.OrdinalIgnoreCase));
+                    Assert.False(columnInfo.IsMultipleRelation);
+
+                    if (constraints.Contains("references", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Assert.NotNull(columnInfo.Relation);
+                    }
+                    else
+                    {
+                        Assert.Null(columnInfo.Relation);
+                    }
+                }
+
+                static void AssertMtmColumn(IDependencyContainer dependencyContainer, IModelChange[] modelChanges, int index, string column)
+                {
+                    Assert.True(modelChanges[index] is CreateTable);
+                    var createTable = (CreateTable)modelChanges[index];
+                    var modelProvider = dependencyContainer.Resolve<IModelProvider>();
+                    Assert.True(modelProvider.Model.ContainsKey(createTable.Schema));
+                    Assert.True(modelProvider.Model[createTable.Schema].ContainsKey(createTable.Table));
+                    Assert.True(modelProvider.Model[createTable.Schema][createTable.Table] is TableInfo);
+                    var tableInfo = (TableInfo)modelProvider.Model[createTable.Schema][createTable.Table];
+                    Assert.True(tableInfo.Columns.ContainsKey(column));
+                    var columnInfo = tableInfo.Columns[column];
+                    Assert.True(columnInfo.IsMultipleRelation);
+                    Assert.NotNull(columnInfo.Relation);
                 }
 
                 static void AssertHasNoColumn(IDependencyContainer dependencyContainer, IModelChange[] modelChanges, int index, string column)
@@ -388,6 +416,11 @@ namespace SpaceEngineers.Core.Modules.Test
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
+
+            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
+            {
+                throw new NotImplementedException("#110");
+            }
 
             var messageTypes = new[]
             {

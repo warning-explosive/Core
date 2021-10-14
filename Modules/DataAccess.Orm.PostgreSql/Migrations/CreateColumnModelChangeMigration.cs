@@ -38,6 +38,11 @@
                 throw new InvalidOperationException($"{change.Schema}.{change.Table}.{change.Column} isn't presented in the model");
             }
 
+            if (column.IsMultipleRelation)
+            {
+                return Task.FromResult(string.Empty);
+            }
+
             var (columnName, dataType, constraints) = CreateColumn(column);
 
             var command = CommandFormat.Format(

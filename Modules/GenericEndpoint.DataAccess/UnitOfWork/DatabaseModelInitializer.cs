@@ -16,17 +16,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;
         private readonly IModelComparator _modelComparator;
+        private readonly IModelChangesSorter _modelChangesSorter;
         private readonly IModelMigrator _modelMigrator;
 
         public DatabaseModelInitializer(
             IDatabaseModelBuilder databaseModelBuilder,
             ICodeModelBuilder codeModelBuilder,
             IModelComparator modelComparator,
+            IModelChangesSorter modelChangesSorter,
             IModelMigrator modelMigrator)
         {
             _databaseModelBuilder = databaseModelBuilder;
             _codeModelBuilder = codeModelBuilder;
             _modelComparator = modelComparator;
+            _modelChangesSorter = modelChangesSorter;
             _modelMigrator = modelMigrator;
         }
 
@@ -40,8 +43,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .BuildModel(token)
                 .ConfigureAwait(false);
 
-            var modelChanges = _modelComparator
-                .ExtractDiff(actualModel, expectedModel)
+            var modelChanges = _modelChangesSorter
+                .Sort(_modelComparator.ExtractDiff(actualModel, expectedModel))
                 .ToList();
 
             await _modelMigrator

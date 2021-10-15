@@ -18,7 +18,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
         /// <param name="primaryKey">Primary key</param>
         protected BaseDatabaseEntity(TKey primaryKey)
         {
-            // TODO: #149 - generate primary key in database
             PrimaryKey = primaryKey;
         }
 

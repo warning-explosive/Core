@@ -81,19 +81,5 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
 
             return itemType != null;
         }
-
-        /// <summary>
-        /// Gets schema name
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Schema name</returns>
-        public static string SchemaName(this Type type)
-        {
-            return type
-                .Assembly
-                .GetName()
-                .Name
-                .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
     }
 }

@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     {
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;
+        private readonly IModelValidator _modelValidator;
         private readonly IModelComparator _modelComparator;
         private readonly IModelChangesSorter _modelChangesSorter;
         private readonly IModelMigrator _modelMigrator;
@@ -22,12 +23,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         public DatabaseModelInitializer(
             IDatabaseModelBuilder databaseModelBuilder,
             ICodeModelBuilder codeModelBuilder,
+            IModelValidator modelValidator,
             IModelComparator modelComparator,
             IModelChangesSorter modelChangesSorter,
             IModelMigrator modelMigrator)
         {
             _databaseModelBuilder = databaseModelBuilder;
             _codeModelBuilder = codeModelBuilder;
+            _modelValidator = modelValidator;
             _modelComparator = modelComparator;
             _modelChangesSorter = modelChangesSorter;
             _modelMigrator = modelMigrator;
@@ -42,6 +45,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             var expectedModel = await _codeModelBuilder
                 .BuildModel(token)
                 .ConfigureAwait(false);
+
+            if (expectedModel != null)
+            {
+                _modelValidator.Validate(expectedModel);
+            }
 
             var modelChanges = _modelChangesSorter
                 .Sort(_modelComparator.ExtractDiff(actualModel, expectedModel))

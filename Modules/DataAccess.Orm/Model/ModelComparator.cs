@@ -14,9 +14,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualModel != null && expectedModel != null)
             {
-                foreach (var schemaChanges in ExtractSchemasDiff(actualModel.Schemas, expectedModel.Schemas))
+                if (actualModel.Equals(expectedModel))
                 {
-                    yield return schemaChanges;
+                    foreach (var schemaChanges in ExtractSchemasDiff(actualModel.Schemas, expectedModel.Schemas))
+                    {
+                        yield return schemaChanges;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException($"You can't apply changes from {expectedModel} to {actualModel}");
                 }
             }
             else if (actualModel != null && expectedModel == null)
@@ -41,11 +48,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static IEnumerable<IModelChange> ExtractSchemasDiff(IEnumerable<SchemaNode> actualModel, IEnumerable<SchemaNode> expectedModel)
         {
             var modelChanges = actualModel
-                .FullOuterJoin(expectedModel,
-                    actual => actual.Schema,
-                    expected => expected.Schema,
-                    SchemaChangesSelector,
-                    StringComparer.OrdinalIgnoreCase)
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    SchemaChangesSelector)
                 .SelectMany(change => change);
 
             foreach (var modelChange in modelChanges)
@@ -101,11 +108,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static IEnumerable<IModelChange> ExtractTablesDiff(IEnumerable<TableNode> actualModel, IEnumerable<TableNode> expectedModel)
         {
             var modelChanges = actualModel
-                .FullOuterJoin(expectedModel,
-                    actual => actual.Table,
-                    expected => expected.Table,
-                    TableChangesSelector,
-                    StringComparer.OrdinalIgnoreCase)
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    TableChangesSelector)
                 .SelectMany(change => change);
 
             foreach (var modelChange in modelChanges)
@@ -118,9 +125,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualModel != null && expectedModel != null)
             {
-                foreach (var columnChange in ExtractColumnsDiff(actualModel, expectedModel))
+                if (!actualModel.Equals(expectedModel))
                 {
-                    yield return columnChange;
+                    foreach (var columnChange in ExtractColumnsDiff(actualModel, expectedModel))
+                    {
+                        yield return columnChange;
+                    }
                 }
             }
             else if (actualModel != null && expectedModel == null)
@@ -140,18 +150,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static IEnumerable<IModelChange> ExtractColumnsDiff(TableNode actualModel, TableNode expectedModel)
         {
             return actualModel.Columns
-                .FullOuterJoin(expectedModel.Columns,
-                    actual => actual.Column,
-                    expected => expected.Column,
-                    ColumnChangesSelector,
-                    StringComparer.OrdinalIgnoreCase);
+                .FullOuterJoin(
+                    expectedModel.Columns,
+                    actual => actual,
+                    expected => expected,
+                    ColumnChangesSelector);
         }
 
         private static IModelChange ColumnChangesSelector(ColumnNode? actualColumn, ColumnNode? expectedModel)
         {
             if (actualColumn != null && expectedModel != null)
             {
-                return new AlterColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column);
+                if (!actualColumn.Equals(expectedModel))
+                {
+                    return new AlterColumn(expectedModel.Schema, expectedModel.Table, expectedModel.Column);
+                }
             }
 
             if (actualColumn != null && expectedModel == null)
@@ -170,11 +183,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static IEnumerable<IModelChange> ExtractViewsDiff(IEnumerable<ViewNode> actualModel, IEnumerable<ViewNode> expectedModel)
         {
             var modelChanges = actualModel
-                .FullOuterJoin(expectedModel,
-                    actual => actual.View,
-                    expected => expected.View,
-                    ViewChangesSelector,
-                    StringComparer.OrdinalIgnoreCase)
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    ViewChangesSelector)
                 .SelectMany(change => change);
 
             foreach (var modelChange in modelChanges)
@@ -187,8 +200,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualModel != null && expectedModel != null)
             {
-                yield return new DropView(actualModel.Schema, actualModel.View);
-                yield return new CreateView(expectedModel.Schema, expectedModel.View);
+                if (!actualModel.Equals(expectedModel))
+                {
+                    yield return new DropView(actualModel.Schema, actualModel.View);
+                    yield return new CreateView(expectedModel.Schema, expectedModel.View);
+                }
             }
             else if (actualModel != null && expectedModel == null)
             {
@@ -207,11 +223,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         private static IEnumerable<IModelChange> ExtractIndexesDiff(IEnumerable<IndexNode> actualModel, IEnumerable<IndexNode> expectedModel)
         {
             var modelChanges = actualModel
-                .FullOuterJoin(expectedModel,
-                    actual => actual.ToString(),
-                    expected => expected.ToString(),
-                    IndexChangesSelector,
-                    StringComparer.OrdinalIgnoreCase)
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    IndexChangesSelector)
                 .SelectMany(change => change);
 
             foreach (var modelChange in modelChanges)
@@ -224,16 +240,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         {
             if (actualModel != null && expectedModel != null)
             {
-                yield return new DropIndex(actualModel.Schema, actualModel.Table, actualModel.ToString());
-                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString());
+                if (!actualModel.Equals(expectedModel))
+                {
+                    yield return new DropIndex(actualModel.Schema, actualModel.Table, actualModel.Index);
+                    yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.Index);
+                }
             }
             else if (actualModel != null && expectedModel == null)
             {
-                yield return new DropIndex(actualModel.Schema, actualModel.Table, actualModel.ToString());
+                yield return new DropIndex(actualModel.Schema, actualModel.Table, actualModel.Index);
             }
             else if (actualModel == null && expectedModel != null)
             {
-                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.ToString());
+                yield return new CreateIndex(expectedModel.Schema, expectedModel.Table, expectedModel.Index);
             }
             else
             {

@@ -15,7 +15,6 @@
     [Component(EnLifestyle.Singleton)]
     internal class CreateColumnModelChangeMigration : IModelChangeMigration<CreateColumn>
     {
-        private const string Separator = " ";
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 
         private readonly IModelProvider _modelProvider;
@@ -50,7 +49,7 @@
                 change.Table,
                 columnName,
                 dataType,
-                constraints.Any() ? Separator + constraints.ToString(Separator) : string.Empty);
+                constraints.Any() ? "_" + constraints.ToString("_") : string.Empty);
 
             return Task.FromResult(command);
         }

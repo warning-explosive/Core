@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
 {
     using System;
     using System.Collections.Generic;
@@ -6,6 +6,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Model;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]

@@ -14,7 +14,8 @@
     /// </summary>
     public class ColumnInfo : IModelInfo
     {
-        private readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> _tableTypes;
+        private readonly PropertyInfo[] _chain;
+        private readonly IModelProvider _modelProvider;
 
         private string? _name;
         private PropertyInfo? _property;
@@ -23,34 +24,31 @@
         private Lazy<bool>? _isMultipleRelation;
 
         /// <summary> .cctor </summary>
-        /// <param name="tableType">Table type</param>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
         /// <param name="chain">Property chain</param>
-        /// <param name="tableTypes">Table types</param>
+        /// <param name="modelProvider">IModelProvider</param>
         public ColumnInfo(
-            Type tableType,
-            IReadOnlyCollection<PropertyInfo> chain,
-            IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> tableTypes)
+            string schema,
+            Type table,
+            PropertyInfo[] chain,
+            IModelProvider modelProvider)
         {
-            TableType = tableType;
-            Chain = chain;
-
-            _tableTypes = tableTypes;
+            Schema = schema;
+            Table = table;
+            _chain = chain;
+            _modelProvider = modelProvider;
         }
 
         /// <summary>
         /// Schema
         /// </summary>
-        public string Schema => TableType.SchemaName();
-
-        /// <summary>
-        /// Table
-        /// </summary>
-        public string Table => TableType.Name;
+        public string Schema { get; }
 
         /// <summary>
         /// Table type
         /// </summary>
-        public Type TableType { get; }
+        public Type Table { get; }
 
         /// <summary>
         /// Name
@@ -64,7 +62,7 @@
 
                 string InitName()
                 {
-                    return Chain
+                    return _chain
                         .Select(property => property.Name)
                         .ToString("_");
                 }
@@ -83,7 +81,7 @@
 
                 PropertyInfo InitProperty()
                 {
-                    return Chain.Last();
+                    return _chain.Last();
                 }
             }
         }
@@ -105,7 +103,7 @@
 
                 Relation? InitRelation()
                 {
-                    var oneToOne = Chain
+                    var oneToOne = _chain
                         .Reverse()
                         .FirstOrDefault(property => property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)));
 
@@ -114,7 +112,7 @@
                         return new Relation(oneToOne.PropertyType, oneToOne.Name);
                     }
 
-                    var oneToMany = Chain
+                    var oneToMany = _chain
                         .Reverse()
                         .SkipWhile(property => property.ReflectedType.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
                         .FirstOrDefault();
@@ -131,30 +129,13 @@
 
                     if (manyToMany.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
                     {
-                        var parts = TableType
-                            .Name
-                            .Split('_', StringSplitOptions.RemoveEmptyEntries);
+                        var (left, right) = _modelProvider.MtmTables[Schema][manyToMany];
 
-                        if (parts.Length != 5)
-                        {
-                            throw new InvalidOperationException($"MtM table name should contain 5 parts: {TableType.Name}");
-                        }
+                        var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
+                            ? left
+                            : right;
 
-                        string schema;
-                        string table;
-
-                        if (Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase))
-                        {
-                            schema = parts[0];
-                            table = parts[1];
-                        }
-                        else
-                        {
-                            schema = parts[3];
-                            table = parts[4];
-                        }
-
-                        return new Relation(_tableTypes[schema][table], nameof(IUniqueIdentified<Guid>.PrimaryKey));
+                        return new Relation(type, nameof(IUniqueIdentified<Guid>.PrimaryKey));
                     }
 
                     return default;
@@ -175,7 +156,7 @@
 
                 bool InitIsMultipleRelation()
                 {
-                    return Chain.Any(property => property.PropertyType.IsMultipleRelation(out _));
+                    return _chain.Any(property => property.PropertyType.IsMultipleRelation(out _));
                 }
             }
         }
@@ -212,9 +193,10 @@
             }
         }
 
-        /// <summary>
-        /// Property chain
-        /// </summary>
-        private IReadOnlyCollection<PropertyInfo> Chain { get; }
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
+        }
     }
 }

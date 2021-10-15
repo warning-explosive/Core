@@ -14,11 +14,6 @@
         public string Schema { get; }
 
         /// <summary>
-        /// Name
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
         /// Type
         /// </summary>
         Type Type { get; }

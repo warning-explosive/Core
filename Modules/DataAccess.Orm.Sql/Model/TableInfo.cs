@@ -5,7 +5,6 @@
     using System.Linq;
     using Api.Model;
     using Basics;
-    using Orm.Model;
 
     /// <summary>
     /// TableInfo
@@ -15,10 +14,15 @@
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
 
         /// <summary> .cctor </summary>
+        /// <param name="schema">Schema</param>
         /// <param name="type">Type</param>
         /// <param name="columns">Columns</param>
-        public TableInfo(Type type, IReadOnlyCollection<ColumnInfo> columns)
+        public TableInfo(
+            string schema,
+            Type type,
+            IReadOnlyCollection<ColumnInfo> columns)
         {
+            Schema = schema;
             Type = type;
             Columns = columns.ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
         }
@@ -26,12 +30,7 @@
         /// <summary>
         /// Schema
         /// </summary>
-        public string Schema => Type.SchemaName();
-
-        /// <summary>
-        /// Name
-        /// </summary>
-        public string Name => Type.Name;
+        public string Schema { get; }
 
         /// <summary>
         /// Type
@@ -58,8 +57,8 @@
                 {
                     return Type
                         .GetAttributes<IndexAttribute>()
-                        .Select(index => new IndexInfo(Type, GetColumns(index).ToList(), index.Unique))
-                        .ToDictionary(index => index.ToString());
+                        .Select(index => new IndexInfo(Schema, Type, GetColumns(index).ToList(), index.Unique))
+                        .ToDictionary(index => index.Name);
 
                     IEnumerable<ColumnInfo> GetColumns(IndexAttribute index)
                     {
@@ -67,7 +66,7 @@
                         {
                             if (!Columns.TryGetValue(column, out var info))
                             {
-                                throw new InvalidOperationException($"Table {Schema}.{Name} doesn't have column {column} for index");
+                                throw new InvalidOperationException($"Table {Schema}.{Type.Name} doesn't have column {column} for index");
                             }
 
                             yield return info;
@@ -75,6 +74,12 @@
                     }
                 }
             }
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Schema}.{Type.Name}";
         }
     }
 }

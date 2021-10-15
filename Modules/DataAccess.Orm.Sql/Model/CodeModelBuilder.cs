@@ -66,19 +66,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => BuildColumnNode(column.Value))
                 .ToList();
 
-            return new TableNode(tableInfo.Schema, tableInfo.Name, columns);
+            return new TableNode(tableInfo.Schema, tableInfo.Type.Name, columns);
         }
 
         private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
             var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo.Type);
 
-            return new ColumnNode(columnInfo.Schema, columnInfo.Table, columnInfo.Name, dataType, columnInfo.Constraints);
+            return new ColumnNode(columnInfo.Schema, columnInfo.Table.Name, columnInfo.Name, dataType, columnInfo.Constraints);
         }
 
         private static ViewNode BuildViewNode(ViewInfo viewInfo)
         {
-            return new ViewNode(viewInfo.Schema, viewInfo.Name, viewInfo.Query);
+            return new ViewNode(viewInfo.Schema, viewInfo.Type.Name, viewInfo.Query);
         }
 
         private static IndexNode BuildIndexNode(IndexInfo indexInfo)
@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => column.Name)
                 .ToList();
 
-            return new IndexNode(indexInfo.Schema, indexInfo.Table, columns, indexInfo.Unique);
+            return new IndexNode(indexInfo.Schema, indexInfo.Table.Name, columns, indexInfo.Unique);
         }
     }
 }

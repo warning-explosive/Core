@@ -3,49 +3,48 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using Orm.Model;
 
     /// <summary>
     /// IndexInfo
     /// </summary>
     public class IndexInfo : IModelInfo
     {
-        private const char Separator = '_';
-
         /// <summary> .cctor </summary>
-        /// <param name="tableType">Table type</param>
+        /// <param name="schema">Schema</param>
+        /// <param name="table">Table</param>
         /// <param name="columns">Columns</param>
         /// <param name="unique">Unique</param>
         public IndexInfo(
-            Type tableType,
+            string schema,
+            Type table,
             IReadOnlyCollection<ColumnInfo> columns,
             bool unique)
         {
+            Schema = schema;
             Columns = columns;
             Unique = unique;
-            TableType = tableType;
+            Table = table;
         }
 
         /// <summary>
         /// Schema
         /// </summary>
-        public string Schema => TableType.SchemaName();
+        public string Schema { get; }
 
         /// <summary>
         /// Table
         /// </summary>
-        public string Table => TableType.Name;
-
-        /// <summary>
-        /// Table type
-        /// </summary>
-        public Type TableType { get; }
+        public Type Table { get; }
 
         /// <summary>
         /// Columns
         /// </summary>
         public IReadOnlyCollection<ColumnInfo> Columns { get; }
+
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name => string.Join("_", Columns.Select(column => column.Name).OrderBy(column => column));
 
         /// <summary>
         /// Unique
@@ -55,24 +54,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            var sb = new StringBuilder();
-
-            sb.Append(Schema);
-            sb.Append(Separator);
-            sb.Append(Separator);
-            sb.Append(Table);
-            sb.Append(Separator);
-            sb.Append(Separator);
-            sb.Append(string.Join(Separator, Columns.Select(column => column.Name).OrderBy(column => column)));
-
-            if (Unique)
-            {
-                sb.Append(Separator);
-                sb.Append(Separator);
-                sb.Append(nameof(Unique));
-            }
-
-            return sb.ToString();
+            return $"{Schema}.{Table.Name}.{Name} ({Unique})";
         }
     }
 }

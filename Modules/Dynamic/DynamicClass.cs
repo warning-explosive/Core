@@ -76,10 +76,10 @@ namespace SpaceEngineers.Core.Dynamic
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return new object[] { Name }
+            return new object[] { BaseType ?? typeof(object) }
                 .Concat(Interfaces)
                 .Concat(Properties)
-                .Aggregate((BaseType ?? typeof(object)).GetHashCode(), HashCode.Combine);
+                .Aggregate(Name.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
         }
 
         /// <inheritdoc />

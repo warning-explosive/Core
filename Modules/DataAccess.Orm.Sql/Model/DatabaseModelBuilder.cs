@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Model;
     using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
@@ -19,16 +20,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
-        private readonly IModelProvider _modelProvider;
 
         public DatabaseModelBuilder(
             IDependencyContainer dependencyContainer,
-            IDatabaseConnectionProvider connectionProvider,
-            IModelProvider modelProvider)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
-            _modelProvider = modelProvider;
         }
 
         public async Task<DatabaseNode?> BuildModel(CancellationToken token)
@@ -150,7 +148,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 yield return constraint.ConstraintType switch
                 {
                     EnColumnConstraintType.PrimaryKey => "primary key",
-                    EnColumnConstraintType.ForeignKey => $@"references ""{constraint.ForeignSchema}"".""{constraint.ForeignTable}""",
+                    EnColumnConstraintType.ForeignKey => $@"references ""{constraint.ForeignSchema}"".""{constraint.ForeignTable}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")",
                     _ => throw new NotSupportedException(constraint.ConstraintType.ToString())
                 };
             }
@@ -192,7 +190,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                     .Where(index => index.Schema == schema)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(index => IndexNode.FromDb(index.Schema, index.Table, index.Index))
+                .Select(index => IndexNode.FromDb(index.Schema, index.Table, index.Index, index.Definition))
                 .ToList();
         }
     }

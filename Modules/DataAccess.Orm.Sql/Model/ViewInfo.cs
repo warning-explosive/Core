@@ -5,7 +5,6 @@
     using System.Linq;
     using Api.Model;
     using Basics;
-    using Orm.Model;
 
     /// <summary>
     /// ViewInfo
@@ -15,14 +14,17 @@
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
 
         /// <summary> .cctor </summary>
+        /// <param name="schema">Schema</param>
         /// <param name="type">Type</param>
         /// <param name="columns">Columns</param>
         /// <param name="query">Query</param>
         public ViewInfo(
+            string schema,
             Type type,
             IReadOnlyCollection<ColumnInfo> columns,
             string query)
         {
+            Schema = schema;
             Type = type;
             Columns = columns.ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
             Query = query;
@@ -31,12 +33,7 @@
         /// <summary>
         /// Schema
         /// </summary>
-        public string Schema => Type.SchemaName();
-
-        /// <summary>
-        /// Name
-        /// </summary>
-        public string Name => Type.Name;
+        public string Schema { get; }
 
         /// <summary>
         /// Type
@@ -63,8 +60,8 @@
                 {
                     return Type
                         .GetAttributes<IndexAttribute>()
-                        .Select(index => new IndexInfo(Type, GetColumns(index).ToList(), index.Unique))
-                        .ToDictionary(index => index.ToString());
+                        .Select(index => new IndexInfo(Schema, Type, GetColumns(index).ToList(), index.Unique))
+                        .ToDictionary(index => index.Name);
 
                     IEnumerable<ColumnInfo> GetColumns(IndexAttribute index)
                     {
@@ -72,7 +69,7 @@
                         {
                             if (!Columns.TryGetValue(column, out var info))
                             {
-                                throw new InvalidOperationException($"View {Schema}.{Name} doesn't have column {column} for index");
+                                throw new InvalidOperationException($"View {Schema}.{Type.Name} doesn't have column {column} for index");
                             }
 
                             yield return info;
@@ -91,5 +88,11 @@
         /// Query
         /// </summary>
         public bool Materialized => Indexes.Any();
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{Schema}.{Type.Name} ({Materialized}, {Query})";
+        }
     }
 }

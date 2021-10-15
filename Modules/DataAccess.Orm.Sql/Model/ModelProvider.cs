@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Api.Model;
@@ -20,8 +21,9 @@
         private readonly IDynamicClassProvider _dynamicClassProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
 
+        private readonly Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> _mtmTables;
+
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>>? _model;
-        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>>? _tableTypes;
 
         public ModelProvider(
             IDependencyContainer dependencyContainer,
@@ -31,6 +33,8 @@
             _dependencyContainer = dependencyContainer;
             _dynamicClassProvider = dynamicClassProvider;
             _databaseTypeProvider = databaseTypeProvider;
+
+            _mtmTables = new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>();
         }
 
         public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Model
@@ -42,27 +46,16 @@
             }
         }
 
-        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TableTypes
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type Left, Type Right)>> MtmTables
         {
             get
             {
-                _tableTypes ??= InitTableTypes();
-                return _tableTypes;
+                _model ??= InitModel();
+                return _mtmTables
+                    .ToDictionary(
+                        schema => schema.Key,
+                        schema => schema.Value as IReadOnlyDictionary<Type, (Type, Type)>);
             }
-        }
-
-        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> InitTableTypes()
-        {
-            return _databaseTypeProvider
-                .DatabaseEntities()
-                .Where(entity => !entity.IsSqlView())
-                .GroupBy(table => table.SchemaName())
-                .ToDictionary(
-                    grp => grp.Key,
-                    grp => grp.ToDictionary(
-                        table => table.Name,
-                        StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, Type>,
-                    StringComparer.OrdinalIgnoreCase);
         }
 
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> InitModel()
@@ -87,11 +80,11 @@
         {
             if (entity.IsSqlView())
             {
-                yield return GetViewInfo(entity);
+                yield return GetViewInfo(entity.SchemaName(), entity);
             }
             else
             {
-                var tableInfo = GetTableInfo(entity);
+                var tableInfo = GetTableInfo(entity.SchemaName(), entity);
                 yield return tableInfo;
 
                 foreach (var mtmTableInfo in GetMtmTablesInfo(tableInfo.Columns.Values))
@@ -101,14 +94,14 @@
             }
         }
 
-        private TableInfo GetTableInfo(Type tableType)
+        private TableInfo GetTableInfo(string schema, Type tableType)
         {
             var columns = tableType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .SelectMany(property => GetColumnInfo(tableType, property))
+                .SelectMany(property => GetColumnInfo(schema, tableType, property))
                 .ToList();
 
-            return new TableInfo(tableType, columns);
+            return new TableInfo(schema, tableType, columns);
         }
 
         private IEnumerable<TableInfo> GetMtmTablesInfo(IEnumerable<ColumnInfo> columns)
@@ -119,23 +112,23 @@
 
             TableInfo GetMtmTableInfo(ColumnInfo columnInfo)
             {
-                return GetTableInfo(columnInfo.Property.ReflectedType);
+                return GetTableInfo(columnInfo.Schema, columnInfo.Property.ReflectedType);
             }
         }
 
-        private ViewInfo GetViewInfo(Type viewType)
+        private ViewInfo GetViewInfo(string schema, Type viewType)
         {
             var query = viewType.SqlViewQuery(_dependencyContainer);
 
             var columns = viewType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .SelectMany(property => GetColumnInfo(viewType, property))
+                .SelectMany(property => GetColumnInfo(schema, viewType, property))
                 .ToList();
 
-            return new ViewInfo(viewType, columns, query);
+            return new ViewInfo(schema, viewType, columns, query);
         }
 
-        private IEnumerable<ColumnInfo> GetColumnInfo(Type table, PropertyInfo property)
+        private IEnumerable<ColumnInfo> GetColumnInfo(string schema, Type table, PropertyInfo property)
         {
             if (!property.PropertyType.IsTypeSupported())
             {
@@ -144,7 +137,7 @@
 
             foreach (var chain in FlattenSpecialTypes(property))
             {
-                yield return new ColumnInfo(table, chain, TableTypes);
+                yield return new ColumnInfo(schema, table, chain, this);
             }
         }
 
@@ -214,25 +207,23 @@
         private IEnumerable<PropertyInfo[]> FlattenMultipleRelation(PropertyInfo property, Type itemType)
         {
             var left = property.DeclaringType;
-            var leftKey = left.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
             var right = itemType;
-            var rightKey = right.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
 
-            var mtmType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
+            PropertyInfo relationProperty;
 
-            var mtmTypeName = string.Join(
-                "_",
-                left.SchemaName(),
-                left.Name,
-                property.Name,
-                right.SchemaName(),
-                right.Name);
-
-            var dynamicClass = new DynamicClass(mtmTypeName).InheritsFrom(mtmType);
-
-            var relationProperty = _dynamicClassProvider
-                .CreateType(dynamicClass)
-                .GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
+            if (TryGetMtmType(left, right, out var mtm))
+            {
+                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
+            }
+            else if (TryGetMtmType(right, left, out mtm))
+            {
+                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right));
+            }
+            else
+            {
+                mtm = BuildMtmType(left, right);
+                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
+            }
 
             return new[]
             {
@@ -247,6 +238,43 @@
         private static IEnumerable<PropertyInfo[]> FlattenArray(PropertyInfo property, Type itemType)
         {
             throw new NotSupportedException($"Arrays are not supported: {property.Name} - {itemType.Name}[]");
+        }
+
+        private bool TryGetMtmType(Type left, Type right, [NotNullWhen(true)] out Type? mtm)
+        {
+            var schema = DatabaseModelExtensions.MtmSchemaName(left, right);
+
+            if (!_mtmTables.TryGetValue(schema, out var schemaGroup))
+            {
+                mtm = null;
+                return false;
+            }
+
+            mtm = schemaGroup
+                .SingleOrDefault(pair => pair.Value.Left == left && pair.Value.Right == right)
+                .Key;
+
+            return mtm != null;
+        }
+
+        private Type BuildMtmType(Type left, Type right)
+        {
+            var schema = DatabaseModelExtensions.MtmSchemaName(left, right);
+
+            var leftKey = left.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
+            var rightKey = right.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
+
+            var mtmBaseType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
+
+            var mtmTypeName = string.Join("_", left.Name, right.Name);
+
+            var dynamicClass = new DynamicClass(mtmTypeName).InheritsFrom(mtmBaseType);
+            var mtmType = _dynamicClassProvider.CreateType(dynamicClass);
+
+            var schemaGroup = _mtmTables.GetOrAdd(schema, _ => new Dictionary<Type, (Type Left, Type Right)>());
+            schemaGroup[mtmType] = (left, right);
+
+            return mtmType;
         }
     }
 }

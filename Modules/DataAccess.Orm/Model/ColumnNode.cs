@@ -83,9 +83,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         }
 
         /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(Schema, Table, Column, DataType, Constraints);
+            return HashCode.Combine(
+                Schema.ToLowerInvariant(),
+                Table.ToLowerInvariant(),
+                Column.ToLowerInvariant(),
+                DataType.ToLowerInvariant(),
+                Constraints.ToString(", ").ToLowerInvariant());
         }
 
         /// <inheritdoc />
@@ -115,7 +121,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table}.{Column} ({DataType}, {Constraints.ToString(", ")}) ";
+            return $"{Schema}.{Table}.{Column} ({new[] { DataType }.Concat(Constraints).ToString(", ")})";
         }
     }
 }

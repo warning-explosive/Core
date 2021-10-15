@@ -66,9 +66,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         }
 
         /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(Host, Name);
+            return HashCode.Combine(
+                Host.ToLowerInvariant(),
+                Name.ToLowerInvariant());
         }
 
         /// <inheritdoc />

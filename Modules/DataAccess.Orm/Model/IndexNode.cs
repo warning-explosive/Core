@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Text;
     using Basics;
 
     /// <summary>
@@ -14,8 +13,6 @@
     public class IndexNode : IEquatable<IndexNode>,
                              ISafelyEquatable<IndexNode>
     {
-        private const char Separator = '_';
-
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
@@ -53,6 +50,11 @@
         /// </summary>
         public bool Unique { get; }
 
+        /// <summary>
+        /// Index
+        /// </summary>
+        public string Index => string.Join("_", Columns.OrderBy(it => it));
+
         #region IEquatable
 
         /// <summary>
@@ -78,9 +80,10 @@
         }
 
         /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(ToString());
+            return HashCode.Combine(Index.ToLowerInvariant());
         }
 
         /// <inheritdoc />
@@ -98,7 +101,7 @@
         /// <inheritdoc />
         public bool SafeEquals(IndexNode other)
         {
-            return ToString().Equals(other.ToString(), StringComparison.OrdinalIgnoreCase);
+            return Index.Equals(other.Index, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -106,24 +109,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            var sb = new StringBuilder();
-
-            sb.Append(Schema);
-            sb.Append(Separator);
-            sb.Append(Separator);
-            sb.Append(Table);
-            sb.Append(Separator);
-            sb.Append(Separator);
-            sb.Append(string.Join(Separator, Columns.OrderBy(it => it)));
-
-            if (Unique)
-            {
-                sb.Append(Separator);
-                sb.Append(Separator);
-                sb.Append(nameof(Unique));
-            }
-
-            return sb.ToString();
+            return $"{Schema}.{Table}.{Index}";
         }
 
         /// <summary>
@@ -132,16 +118,15 @@
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="name">Name</param>
+        /// <param name="definition">Definition</param>
         /// <returns>IndexNode</returns>
-        public static IndexNode FromDb(string schema, string table, string name)
+        public static IndexNode FromDb(string schema, string table, string name, string definition)
         {
-            var parts = name.Split(new string(Separator, 2), StringSplitOptions.RemoveEmptyEntries);
-
-            var columns = parts[0]
-                .Split(Separator, StringSplitOptions.RemoveEmptyEntries)
+            var columns = name
+                .Split("_", StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
 
-            var unique = name.Contains("__unique", StringComparison.OrdinalIgnoreCase);
+            var unique = definition.Contains("create unique index", StringComparison.OrdinalIgnoreCase);
 
             return new IndexNode(schema, table, columns, unique);
         }

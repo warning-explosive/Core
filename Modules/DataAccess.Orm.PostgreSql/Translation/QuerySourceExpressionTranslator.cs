@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
-    using Orm.Model;
     using Sql.Model;
     using Sql.Translation;
     using Sql.Translation.Expressions;

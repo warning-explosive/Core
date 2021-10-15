@@ -74,9 +74,10 @@
         }
 
         /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(Schema);
+            return HashCode.Combine(Schema.ToLowerInvariant());
         }
 
         /// <inheritdoc />

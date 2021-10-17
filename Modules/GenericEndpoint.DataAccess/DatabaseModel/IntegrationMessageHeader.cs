@@ -1,15 +1,15 @@
-﻿namespace SpaceEngineers.Core.TracingEndpoint.DatabaseModel
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using Core.DataAccess.Api.Model;
     using CrossCuttingConcerns.Api.Abstractions;
-    using DataAccess.Api.Model;
-    using GenericEndpoint.Messaging.Abstractions;
+    using Messaging.Abstractions;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
-    internal record IntegrationMessageHeaderDatabaseEntity : BaseDatabaseEntity<Guid>
+    internal record IntegrationMessageHeader : BaseDatabaseEntity<Guid>
     {
-        public IntegrationMessageHeaderDatabaseEntity(Guid primaryKey, JsonObject value)
+        public IntegrationMessageHeader(Guid primaryKey, JsonObject value)
             : base(primaryKey)
         {
             Value = value;
@@ -22,10 +22,10 @@
             return (IIntegrationMessageHeader)serializer.DeserializeObject(Value.Value, Value.SystemType);
         }
 
-        public static IntegrationMessageHeaderDatabaseEntity Build(IIntegrationMessageHeader messageHeader, IJsonSerializer serializer)
+        public static IntegrationMessageHeader Build(IIntegrationMessageHeader messageHeader, IJsonSerializer serializer)
         {
             var header = new JsonObject(serializer.SerializeObject(messageHeader), messageHeader.GetType());
-            return new IntegrationMessageHeaderDatabaseEntity(Guid.NewGuid(), header);
+            return new IntegrationMessageHeader(Guid.NewGuid(), header);
         }
     }
 }

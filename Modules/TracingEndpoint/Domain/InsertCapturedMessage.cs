@@ -24,17 +24,17 @@
 
         public async Task Persist(MessageCaptured domainEvent, CancellationToken token)
         {
-            var message = IntegrationMessageDatabaseEntity.Build(domainEvent.Message, _serializer);
+            var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
 
             await _databaseContext
-                .Write<IntegrationMessageDatabaseEntity, Guid>()
+                .Write<IntegrationMessage, Guid>()
                 .Insert(message, token)
                 .ConfigureAwait(false);
 
-            var capturedMessage = new CapturedMessageDatabaseEntity(Guid.NewGuid(), message, domainEvent.RefuseReason);
+            var capturedMessage = new DatabaseModel.CapturedMessage(Guid.NewGuid(), message, domainEvent.RefuseReason);
 
             await _databaseContext
-                .Write<CapturedMessageDatabaseEntity, Guid>()
+                .Write<DatabaseModel.CapturedMessage, Guid>()
                 .Insert(capturedMessage, token)
                 .ConfigureAwait(false);
         }

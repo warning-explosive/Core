@@ -22,7 +22,7 @@
         public async Task Persist(OutboxMessageHaveBeenSent domainEvent, CancellationToken token)
         {
             await _databaseContext
-                .Write<OutboxMessageDatabaseEntity, Guid>()
+                .Write<OutboxMessage, Guid>()
                 .Update(domainEvent.MessageId, message => message.Sent, true, token)
                 .ConfigureAwait(false);
         }

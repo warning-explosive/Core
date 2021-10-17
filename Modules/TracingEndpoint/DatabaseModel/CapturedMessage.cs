@@ -5,11 +5,11 @@
     using DataAccess.Api.Model;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
-    internal record CapturedMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    internal record CapturedMessage : BaseDatabaseEntity<Guid>
     {
-        public CapturedMessageDatabaseEntity(
+        public CapturedMessage(
             Guid primaryKey,
-            IntegrationMessageDatabaseEntity message,
+            IntegrationMessage message,
             string? refuseReason)
             : base(primaryKey)
         {
@@ -17,7 +17,7 @@
             RefuseReason = refuseReason;
         }
 
-        public IntegrationMessageDatabaseEntity Message { get; private init; }
+        public IntegrationMessage Message { get; private init; }
 
         public string? RefuseReason { get; private init; }
     }

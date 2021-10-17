@@ -12,10 +12,9 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
-    using DatabaseModel;
-    using Domain;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
+    using CapturedMessage = DatabaseModel.CapturedMessage;
 
     [Component(EnLifestyle.Transient)]
     internal class GetConversationTraceMessageHandler : IMessageHandler<GetConversationTrace>,
@@ -41,12 +40,12 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
         public async Task Handle(GetConversationTrace query, CancellationToken token)
         {
             var capturedMessages = (await _databaseContext
-                    .Read<CapturedMessageDatabaseEntity, Guid>()
+                    .Read<CapturedMessage, Guid>()
                     .All()
                     .Where(captured => captured.Message.ConversationId == query.ConversationId)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(captured => new CapturedMessage(captured, _serializer, _formatter))
+                .Select(captured => new Domain.CapturedMessage(captured, _serializer, _formatter))
                 .Select(captured => (captured, initiatorMessageId: captured.Message.ReadHeader<InitiatorMessageId>()?.Value))
                 .ToList();
 
@@ -79,12 +78,12 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
         private static ConversationTrace BuildTraceTree(
             GetConversationTrace query,
-            CapturedMessage captured,
-            IReadOnlyDictionary<Guid, CapturedMessage[]> groupByInitiatorId)
+            Domain.CapturedMessage captured,
+            IReadOnlyDictionary<Guid, Domain.CapturedMessage[]> groupByInitiatorId)
         {
             var subsequentTrace = (groupByInitiatorId.TryGetValue(captured.Message.Id, out var subsequentMessages)
                     ? subsequentMessages
-                    : Array.Empty<CapturedMessage>())
+                    : Array.Empty<Domain.CapturedMessage>())
                 .Select(subsequent => BuildTraceTree(query, subsequent, groupByInitiatorId))
                 .ToArray();
 

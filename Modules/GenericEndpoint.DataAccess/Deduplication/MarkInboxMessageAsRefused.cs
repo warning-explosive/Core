@@ -22,7 +22,7 @@
         public Task Persist(InboxMessageWasMovedToErrorQueue domainEvent, CancellationToken token)
         {
             return _databaseContext
-                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Write<InboxMessage, Guid>()
                 .Update(domainEvent.InboxId, message => message.IsError, true, token);
         }
     }

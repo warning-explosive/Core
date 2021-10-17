@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Model;
     using Basics;
@@ -9,7 +10,10 @@
     /// <summary>
     /// ViewInfo
     /// </summary>
-    public class ViewInfo : IObjectModelInfo
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    public class ViewInfo : IObjectModelInfo,
+                            IEquatable<ViewInfo>,
+                            ISafelyEquatable<ViewInfo>
     {
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
 
@@ -88,6 +92,61 @@
         /// Query
         /// </summary>
         public bool Materialized => Indexes.Any();
+
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left ViewInfo</param>
+        /// <param name="right">Right ViewInfo</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(ViewInfo? left, ViewInfo? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left ViewInfo</param>
+        /// <param name="right">Right ViewInfo</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(ViewInfo? left, ViewInfo? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
+
+        /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
+        public override int GetHashCode()
+        {
+            return new object[] { Type }
+                .Concat(Columns.Values.OrderBy(column => column.Name))
+                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return Equatable.Equals(this, obj);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(ViewInfo? other)
+        {
+            return Equatable.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool SafeEquals(ViewInfo other)
+        {
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && Type == other.Type
+                   && Columns.Values.OrderBy(column => column.Name).SequenceEqual(other.Columns.Values.OrderBy(column => column.Name));
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public override string ToString()

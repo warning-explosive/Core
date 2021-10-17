@@ -22,7 +22,7 @@
         public Task Persist(InboxMessageWasHandled domainEvent, CancellationToken token)
         {
             return _databaseContext
-                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Write<InboxMessage, Guid>()
                 .Update(domainEvent.InboxId, message => message.Handled, true, token);
         }
     }

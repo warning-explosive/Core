@@ -32,7 +32,7 @@
         public async Task<Inbox> Build(InboxAggregateSpecification spec, CancellationToken token)
         {
             var integrationMessageDatabaseEntity = await _databaseContext
-                .Read<InboxMessageDatabaseEntity, Guid>()
+                .Read<InboxMessage, Guid>()
                 .All()
                 .Where(message => message.Message.PrimaryKey == spec.Message.Id
                                   && message.EndpointIdentity.LogicalName == spec.EndpointIdentity.LogicalName

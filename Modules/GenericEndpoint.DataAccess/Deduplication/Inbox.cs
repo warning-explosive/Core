@@ -1,10 +1,10 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
-    using Contract;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
-    using Messaging;
+    using EndpointIdentity = Contract.EndpointIdentity;
+    using IntegrationMessage = Messaging.IntegrationMessage;
 
     internal class Inbox : BaseAggregate
     {
@@ -18,7 +18,7 @@
         }
 
         public Inbox(
-            InboxMessageDatabaseEntity message,
+            InboxMessage message,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {

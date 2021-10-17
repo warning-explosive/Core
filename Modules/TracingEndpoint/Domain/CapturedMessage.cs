@@ -1,9 +1,8 @@
 namespace SpaceEngineers.Core.TracingEndpoint.Domain
 {
     using CrossCuttingConcerns.Api.Abstractions;
-    using DatabaseModel;
     using GenericDomain.Api.Abstractions;
-    using GenericEndpoint.Messaging;
+    using IntegrationMessage = GenericEndpoint.Messaging.IntegrationMessage;
 
     internal class CapturedMessage : BaseAggregate
     {
@@ -18,7 +17,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Domain
         }
 
         public CapturedMessage(
-            CapturedMessageDatabaseEntity captured,
+            DatabaseModel.CapturedMessage captured,
             IJsonSerializer serializer,
             IStringFormatter formatter)
         {

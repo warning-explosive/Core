@@ -14,7 +14,7 @@
     using Deduplication;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
-    using Messaging;
+    using IntegrationMessage = Messaging.IntegrationMessage;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -58,7 +58,7 @@
                 await using (await transaction.Open(true, token).ConfigureAwait(false))
                 {
                     unsent = (await transaction
-                            .Read<OutboxMessageDatabaseEntity, Guid>()
+                            .Read<OutboxMessage, Guid>()
                             .All()
                             .Where(outbox => !outbox.Sent)
                             .ToListAsync(token)

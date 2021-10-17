@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -12,7 +13,10 @@
     /// <summary>
     /// ColumnInfo
     /// </summary>
-    public class ColumnInfo : IModelInfo
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    public class ColumnInfo : IModelInfo,
+                              IEquatable<ColumnInfo>,
+                              ISafelyEquatable<ColumnInfo>
     {
         private readonly PropertyInfo[] _chain;
         private readonly IModelProvider _modelProvider;
@@ -192,6 +196,61 @@
                 }
             }
         }
+
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left ColumnInfo</param>
+        /// <param name="right">Right ColumnInfo</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(ColumnInfo? left, ColumnInfo? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left ColumnInfo</param>
+        /// <param name="right">Right ColumnInfo</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(ColumnInfo? left, ColumnInfo? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
+
+        /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
+        public override int GetHashCode()
+        {
+            return new object[] { Table }
+                .Concat(_chain.Select(property => property))
+                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return Equatable.Equals(this, obj);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(ColumnInfo? other)
+        {
+            return Equatable.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool SafeEquals(ColumnInfo other)
+        {
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && Table == other.Table
+                   && _chain.SequenceEqual(other._chain);
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public override string ToString()

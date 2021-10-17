@@ -62,7 +62,7 @@
         {
             var model = new Dictionary<string, Dictionary<string, IObjectModelInfo>>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var info in _databaseTypeProvider.DatabaseEntities().SelectMany(GetEntityInfos))
+            foreach (var info in _databaseTypeProvider.DatabaseEntities().SelectMany(GetEntityInfos).Distinct())
             {
                 model
                     .GetOrAdd(info.Schema, _ => new Dictionary<string, IObjectModelInfo>(StringComparer.OrdinalIgnoreCase))

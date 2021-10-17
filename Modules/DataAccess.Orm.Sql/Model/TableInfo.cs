@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Model;
     using Basics;
@@ -9,7 +10,10 @@
     /// <summary>
     /// TableInfo
     /// </summary>
-    public class TableInfo : IObjectModelInfo
+    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    public class TableInfo : IObjectModelInfo,
+                             IEquatable<TableInfo>,
+                             ISafelyEquatable<TableInfo>
     {
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
 
@@ -75,6 +79,61 @@
                 }
             }
         }
+
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left TableInfo</param>
+        /// <param name="right">Right TableInfo</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(TableInfo? left, TableInfo? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left TableInfo</param>
+        /// <param name="right">Right TableInfo</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(TableInfo? left, TableInfo? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
+
+        /// <inheritdoc />
+        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
+        public override int GetHashCode()
+        {
+            return new object[] { Type }
+                .Concat(Columns.Values.OrderBy(column => column.Name))
+                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return Equatable.Equals(this, obj);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(TableInfo? other)
+        {
+            return Equatable.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool SafeEquals(TableInfo other)
+        {
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                   && Type == other.Type
+                   && Columns.Values.OrderBy(column => column.Name).SequenceEqual(other.Columns.Values.OrderBy(column => column.Name));
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public override string ToString()

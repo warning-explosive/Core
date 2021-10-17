@@ -24,12 +24,12 @@
 
         public Task Persist(InboxMessageReceived domainEvent, CancellationToken token)
         {
-            var message = IntegrationMessageDatabaseEntity.Build(domainEvent.Message, _serializer);
+            var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
 
-            var inbox = new InboxMessageDatabaseEntity(domainEvent.InboxId, message, domainEvent.EndpointIdentity, false, false);
+            var inbox = new InboxMessage(domainEvent.InboxId, message, domainEvent.EndpointIdentity, false, false);
 
             return _databaseContext
-                .Write<InboxMessageDatabaseEntity, Guid>()
+                .Write<InboxMessage, Guid>()
                 .Insert(inbox, token);
         }
     }

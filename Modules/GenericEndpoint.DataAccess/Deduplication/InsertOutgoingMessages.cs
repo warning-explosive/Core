@@ -27,12 +27,12 @@
         {
             var messages = domainEvent
                 .OutgoingMessages
-                .Select(message => IntegrationMessageDatabaseEntity.Build(message, _serializer))
-                .Select(message => new OutboxMessageDatabaseEntity(message.PrimaryKey, message, false))
+                .Select(message => IntegrationMessage.Build(message, _serializer))
+                .Select(message => new OutboxMessage(message.PrimaryKey, message, false))
                 .ToList();
 
             await _databaseContext
-                .BulkWrite<OutboxMessageDatabaseEntity, Guid>()
+                .BulkWrite<OutboxMessage, Guid>()
                 .Insert(messages, token)
                 .ConfigureAwait(false);
         }

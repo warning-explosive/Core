@@ -5,12 +5,12 @@
     using Core.DataAccess.Api.Model;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
-    internal record InboxMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    internal record InboxMessage : BaseDatabaseEntity<Guid>
     {
-        public InboxMessageDatabaseEntity(
+        public InboxMessage(
             Guid primaryKey,
-            IntegrationMessageDatabaseEntity message,
-            EndpointIdentityInlinedObject endpointIdentity,
+            IntegrationMessage message,
+            EndpointIdentity endpointIdentity,
             bool isError,
             bool handled)
             : base(primaryKey)
@@ -21,9 +21,9 @@
             Handled = handled;
         }
 
-        public IntegrationMessageDatabaseEntity Message { get; private init; }
+        public IntegrationMessage Message { get; private init; }
 
-        public EndpointIdentityInlinedObject EndpointIdentity { get; private init; }
+        public EndpointIdentity EndpointIdentity { get; private init; }
 
         public bool IsError { get; private init; }
 

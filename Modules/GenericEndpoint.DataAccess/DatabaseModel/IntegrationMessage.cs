@@ -7,15 +7,14 @@
     using Contract.Abstractions;
     using Core.DataAccess.Api.Model;
     using CrossCuttingConcerns.Api.Abstractions;
-    using Messaging;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
-    internal record IntegrationMessageDatabaseEntity : BaseDatabaseEntity<Guid>
+    internal record IntegrationMessage : BaseDatabaseEntity<Guid>
     {
-        public IntegrationMessageDatabaseEntity(
+        public IntegrationMessage(
             Guid primaryKey,
             JsonObject payload,
-            IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> headers)
+            IReadOnlyCollection<IntegrationMessageHeader> headers)
             : base(primaryKey)
         {
             Payload = payload;
@@ -24,9 +23,9 @@
 
         public JsonObject Payload { get; private init; }
 
-        public IReadOnlyCollection<IntegrationMessageHeaderDatabaseEntity> Headers { get; private init; }
+        public IReadOnlyCollection<IntegrationMessageHeader> Headers { get; private init; }
 
-        public IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer, IStringFormatter formatter)
+        public Messaging.IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer, IStringFormatter formatter)
         {
             var payload = (IIntegrationMessage)serializer.DeserializeObject(Payload.Value, Payload.SystemType);
 
@@ -34,19 +33,19 @@
                 .Select(header => header.BuildIntegrationMessageHeader(serializer))
                 .ToList();
 
-            return new IntegrationMessage(PrimaryKey, payload, Payload.SystemType, headers, formatter);
+            return new Messaging.IntegrationMessage(PrimaryKey, payload, Payload.SystemType, headers, formatter);
         }
 
-        public static IntegrationMessageDatabaseEntity Build(IntegrationMessage message, IJsonSerializer serializer)
+        public static IntegrationMessage Build(Messaging.IntegrationMessage message, IJsonSerializer serializer)
         {
             var payload = new JsonObject(serializer.SerializeObject(message.Payload), message.Payload.GetType());
 
             var headers = message
                 .Headers
-                .Select(header => IntegrationMessageHeaderDatabaseEntity.Build(header, serializer))
+                .Select(header => IntegrationMessageHeader.Build(header, serializer))
                 .ToList();
 
-            return new IntegrationMessageDatabaseEntity(message.Id, payload, headers);
+            return new IntegrationMessage(message.Id, payload, headers);
         }
     }
 }

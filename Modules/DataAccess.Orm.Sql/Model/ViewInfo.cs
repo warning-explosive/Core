@@ -88,11 +88,6 @@
         /// </summary>
         public string Query { get; }
 
-        /// <summary>
-        /// Query
-        /// </summary>
-        public bool Materialized => Indexes.Any();
-
         #region IEquatable
 
         /// <summary>
@@ -151,7 +146,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Type.Name} ({Materialized}, {Query})";
+            return $"{Schema}.{Type.Name} ({Query})";
         }
     }
 }

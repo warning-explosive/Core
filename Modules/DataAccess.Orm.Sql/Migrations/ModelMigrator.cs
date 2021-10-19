@@ -14,6 +14,7 @@
     using CompositionRoot.Api.Abstractions.Container;
     using CrossCuttingConcerns.Api.Abstractions;
     using Dapper;
+    using Model;
     using Orm.Model;
     using Orm.Settings;
 
@@ -58,6 +59,11 @@
                         .UnderlyingDbTransaction
                         .Connection
                         .ExecuteAsync(command)
+                        .ConfigureAwait(false);
+
+                    await transaction
+                        .Write<AppliedMigration, Guid>()
+                        .Insert(new AppliedMigration(Guid.NewGuid(), DateTime.Now, commandText), token)
                         .ConfigureAwait(false);
                 }
             }

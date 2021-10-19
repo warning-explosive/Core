@@ -60,7 +60,7 @@
             return ColumnFormat.Format(
                 columnName,
                 dataType,
-                constraints.Any() ? "_" + constraints.ToString("_") : string.Empty);
+                constraints.Any() ? " " + constraints.ToString(" ") : string.Empty);
         }
     }
 }

@@ -19,7 +19,8 @@
     indexdef as ""{nameof(DatabaseIndex.Definition)}"" 
 FROM pg_indexes
 where schemaname not in ('information_schema', 'public')
-      and schemaname not like 'pg_%'";
+      and schemaname not like 'pg_%'
+      and indexname not like '%_pkey'";
 
         public string GetQuery()
         {

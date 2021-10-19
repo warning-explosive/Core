@@ -13,7 +13,7 @@
     [Component(EnLifestyle.Singleton)]
     internal class CreateViewModelChangeMigration : IModelChangeMigration<CreateView>
     {
-        private const string CommandFormat = @"create {3}view ""{0}"".""{1}"" as {2}";
+        private const string CommandFormat = @"create materialized view ""{0}"".""{1}"" as {2}";
 
         private readonly IModelProvider _modelProvider;
 
@@ -31,11 +31,7 @@
                 throw new InvalidOperationException($"{change.Schema}.{change.View} isn't presented in the model");
             }
 
-            var modifiers = view.Materialized
-                ? "materialized "
-                : string.Empty;
-
-            var command = CommandFormat.Format(change.Schema, change.View, view.Query, modifiers);
+            var command = CommandFormat.Format(change.Schema, change.View, view.Query);
 
             return Task.FromResult(command);
         }

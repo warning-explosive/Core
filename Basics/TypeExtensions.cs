@@ -58,6 +58,27 @@ namespace SpaceEngineers.Core.Basics
 
         /// <summary>
         /// Is type primitive or not
+        /// - Boolean,
+        /// - Byte
+        /// - SByte
+        /// - Int16
+        /// - UInt16
+        /// - Int32
+        /// - UInt32
+        /// - Int64
+        /// - UInt64
+        /// - IntPtr
+        /// - UIntPtr
+        /// - Char
+        /// - Double
+        /// - Single
+        /// - Decimal
+        /// - Enum
+        /// - Guid
+        /// - DateTime
+        /// - TimeSpan
+        /// - string
+        /// - System.Type
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Is type can be interpreted as primitive</returns>
@@ -72,13 +93,16 @@ namespace SpaceEngineers.Core.Basics
                 return t.IsPrimitive
                        || t.IsEnum
                        || t == typeof(Guid)
+                       || t == typeof(DateTime)
+                       || t == typeof(TimeSpan)
+                       || t == typeof(decimal)
                        || t == typeof(string)
                        || t == typeof(Type);
             }
         }
 
         /// <summary>
-        ///  Does type implement Nullable
+        /// Does type implement Nullable
         /// </summary>
         /// <param name="type">Type for check</param>
         /// <returns>Result of check</returns>

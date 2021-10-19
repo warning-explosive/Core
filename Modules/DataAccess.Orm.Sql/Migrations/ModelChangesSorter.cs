@@ -82,6 +82,24 @@
                                     .OfType<CreateTable>())
                                 .Concat(changes
                                     .OfType<CreateView>());
+                        case CreateColumn createColumn:
+                            var dependency = _modelProvider
+                                .Model[createColumn.Schema][createColumn.Table]
+                                .Columns[createColumn.Column]
+                                .Relation
+                               ?.Type;
+                            return dependency != null
+                                ? changes
+                                    .OfType<CreateTable>()
+                                    .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
+                                                     && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase))
+                                : Enumerable.Empty<IModelChange>();
+                        case DropIndex:
+                        case DropTable:
+                        case DropView:
+                        case DropColumn:
+                        case AlterColumn:
+                            return Enumerable.Empty<IModelChange>();
                         default:
                             throw new NotSupportedException($"Not supported model change: {modelChange}");
                     }

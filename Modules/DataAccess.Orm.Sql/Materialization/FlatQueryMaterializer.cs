@@ -92,14 +92,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         {
             var sqlQuery = query.Query;
 
-            foreach (var (name, (type, value)) in query.QueryParameters)
+            foreach (var (name, value) in query.QueryParameters)
             {
                 if (!query.Query.Contains($"@{name}", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                sqlQuery = sqlQuery.Replace($"@{name}", value.QueryParameterSqlExpression(type, _dependencyContainer), StringComparison.OrdinalIgnoreCase);
+                sqlQuery = sqlQuery.Replace($"@{name}", value.QueryParameterSqlExpression(_dependencyContainer), StringComparison.OrdinalIgnoreCase);
             }
 
             return sqlQuery;

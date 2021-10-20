@@ -15,9 +15,9 @@
 
         public Task<string> Migrate(CreateSchema change, CancellationToken token)
         {
-            var command = CommandFormat.Format(change.Schema);
+            var commandText = CommandFormat.Format(change.Schema);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
     }
 }

@@ -12,7 +12,7 @@
 
     [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
     [Component(EnLifestyle.Singleton)]
-    internal class EnumerableQueryParameterTranslator<T> : IQueryParameterTranslator<IEnumerable<T>?>
+    internal class EnumerableQueryParameterTranslator<T> : IQueryParameterTranslator<IEnumerable<T>>
     {
         private readonly IDependencyContainer _dependencyContainer;
 
@@ -21,11 +21,11 @@
             _dependencyContainer = dependencyContainer;
         }
 
-        public string Translate(IEnumerable<T>? value)
+        public string Translate(IEnumerable<T> value)
         {
             var sqlExpression = value
-               ?.Select(item => item.QueryParameterSqlExpression(typeof(T), _dependencyContainer))
-                .ToString(", ") ?? "NULL";
+                .Select(item => item.QueryParameterSqlExpression(_dependencyContainer))
+                .ToString(", ");
 
             var sb = new StringBuilder();
 

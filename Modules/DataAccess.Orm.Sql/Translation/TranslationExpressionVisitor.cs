@@ -265,7 +265,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 TranslationContext context,
                 Type sourceType,
                 ProjectionExpression keyExpression,
-                IReadOnlyDictionary<string, (Type, object?)> keyValues)
+                IReadOnlyDictionary<string, object?> keyValues)
             {
                 Expressions.ParameterExpression parameterExpression = context.GetParameterExpression(sourceType);
 
@@ -293,14 +293,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 static Func<IIntermediateExpression, Expressions.BinaryExpression> BindingFilter(
                     TranslationContext context,
                     ProjectionExpression keyExpression,
-                    IReadOnlyDictionary<string, (Type, object? Value)> keyValues)
+                    IReadOnlyDictionary<string, object?> keyValues)
                 {
                     return expression =>
                     {
                         var value = keyExpression.IsProjectionToClass
                                     && expression is IBindingIntermediateExpression binding
-                            ? keyValues[binding.Name].Value
-                            : keyValues.Single().Value.Value;
+                            ? keyValues[binding.Name]
+                            : keyValues.Single().Value;
 
                         return new Expressions.BinaryExpression(
                             typeof(bool),
@@ -311,7 +311,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 }
             }
 
-            static Func<IReadOnlyDictionary<string, (Type, object?)>, IIntermediateExpression> ValuesExpressionProducer(
+            static Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer(
                 IExpressionTranslator translator,
                 TranslationContext context,
                 MethodCallExpression node,

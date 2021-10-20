@@ -15,9 +15,9 @@
 
         public Task<string> Migrate(DropView change, CancellationToken token)
         {
-            var command = CommandFormat.Format(change.Schema, change.View);
+            var commandText = CommandFormat.Format(change.Schema, change.View);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
     }
 }

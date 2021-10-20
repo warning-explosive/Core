@@ -9,43 +9,39 @@
 
     internal static class QueryParameterExtensions
     {
-        internal static IReadOnlyDictionary<string, (Type, object?)> AsQueryParametersValues(this object? obj)
+        internal static IReadOnlyDictionary<string, object?> AsQueryParametersValues(this object? obj)
         {
-            if (obj?.GetType().IsPrimitive() == true)
-            {
-                return new Dictionary<string, (Type, object?)>(StringComparer.OrdinalIgnoreCase)
+            return obj?.GetType().IsPrimitive() == true
+                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
                 {
-                    [TranslationContext.QueryParameterFormat.Format(0)] = (obj.GetType(), obj)
-                };
-            }
-            else
-            {
-                return obj?.ToPropertyDictionary()
-                       ?? new Dictionary<string, (Type, object?)>(StringComparer.OrdinalIgnoreCase);
-            }
+                    [TranslationContext.QueryParameterFormat.Format(0)] = obj
+                }
+                : obj?.ToPropertyDictionary()
+                  ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
 
-        internal static IReadOnlyDictionary<string, (Type, object?)> ExtractQueryParameters(this IIntermediateExpression expression)
+        internal static IReadOnlyDictionary<string, object?> ExtractQueryParameters(this IIntermediateExpression expression)
         {
             var extractor = new ExtractQueryParametersVisitor();
             _ = extractor.Visit(expression);
 
             if (!extractor.QueryParameters.Any())
             {
-                return new Dictionary<string, (Type, object?)>();
+                return new Dictionary<string, object?>();
             }
 
             return extractor
                 .QueryParameters
-                .ToDictionary(parameter => parameter.Name,
-                    parameter => (parameter.Type, parameter.Value),
+                .ToDictionary(
+                    parameter => parameter.Name,
+                    parameter => parameter.Value,
                     StringComparer.OrdinalIgnoreCase);
         }
 
-        internal static string QueryParameterSqlExpression(this object? value, Type type, IDependencyContainer dependencyContainer)
+        internal static string QueryParameterSqlExpression(this object? value, IDependencyContainer dependencyContainer)
         {
             return dependencyContainer
-                .ResolveGeneric(typeof(IQueryParameterTranslator<>), type)
+                .ResolveGeneric(typeof(IQueryParameterTranslator<>), value?.GetType() ?? typeof(object))
                 .CallMethod(nameof(IQueryParameterTranslator<object>.Translate))
                 .WithArgument(value)
                 .Invoke<string>();

@@ -373,10 +373,10 @@ namespace SpaceEngineers.Core.Modules.Test
                     Assert.True(modelChanges[index] is CreateTable);
                     var createTable = (CreateTable)modelChanges[index];
                     var modelProvider = dependencyContainer.Resolve<IModelProvider>();
-                    Assert.True(modelProvider.Model.ContainsKey(createTable.Schema));
-                    Assert.True(modelProvider.Model[createTable.Schema].ContainsKey(createTable.Table));
-                    Assert.True(modelProvider.Model[createTable.Schema][createTable.Table] is TableInfo);
-                    var tableInfo = (TableInfo)modelProvider.Model[createTable.Schema][createTable.Table];
+                    Assert.True(modelProvider.Objects.ContainsKey(createTable.Schema));
+                    Assert.True(modelProvider.Objects[createTable.Schema].ContainsKey(createTable.Table));
+                    Assert.True(modelProvider.Objects[createTable.Schema][createTable.Table] is TableInfo);
+                    var tableInfo = (TableInfo)modelProvider.Objects[createTable.Schema][createTable.Table];
                     Assert.True(tableInfo.Columns.ContainsKey(column));
                     var columnInfo = tableInfo.Columns[column];
                     var actualConstraints = columnInfo.Constraints.ToString(" ");
@@ -398,10 +398,10 @@ namespace SpaceEngineers.Core.Modules.Test
                     Assert.True(modelChanges[index] is CreateTable);
                     var createTable = (CreateTable)modelChanges[index];
                     var modelProvider = dependencyContainer.Resolve<IModelProvider>();
-                    Assert.True(modelProvider.Model.ContainsKey(createTable.Schema));
-                    Assert.True(modelProvider.Model[createTable.Schema].ContainsKey(createTable.Table));
-                    Assert.True(modelProvider.Model[createTable.Schema][createTable.Table] is TableInfo);
-                    var tableInfo = (TableInfo)modelProvider.Model[createTable.Schema][createTable.Table];
+                    Assert.True(modelProvider.Objects.ContainsKey(createTable.Schema));
+                    Assert.True(modelProvider.Objects[createTable.Schema].ContainsKey(createTable.Table));
+                    Assert.True(modelProvider.Objects[createTable.Schema][createTable.Table] is TableInfo);
+                    var tableInfo = (TableInfo)modelProvider.Objects[createTable.Schema][createTable.Table];
                     Assert.True(tableInfo.Columns.ContainsKey(column));
                     var columnInfo = tableInfo.Columns[column];
                     Assert.True(columnInfo.IsMultipleRelation);
@@ -413,10 +413,10 @@ namespace SpaceEngineers.Core.Modules.Test
                     Assert.True(modelChanges[index] is CreateTable);
                     var createTable = (CreateTable)modelChanges[index];
                     var modelProvider = dependencyContainer.Resolve<IModelProvider>();
-                    Assert.True(modelProvider.Model.ContainsKey(createTable.Schema));
-                    Assert.True(modelProvider.Model[createTable.Schema].ContainsKey(createTable.Table));
-                    Assert.True(modelProvider.Model[createTable.Schema][createTable.Table] is TableInfo);
-                    var tableInfo = (TableInfo)modelProvider.Model[createTable.Schema][createTable.Table];
+                    Assert.True(modelProvider.Objects.ContainsKey(createTable.Schema));
+                    Assert.True(modelProvider.Objects[createTable.Schema].ContainsKey(createTable.Table));
+                    Assert.True(modelProvider.Objects[createTable.Schema][createTable.Table] is TableInfo);
+                    var tableInfo = (TableInfo)modelProvider.Objects[createTable.Schema][createTable.Table];
                     Assert.True(tableInfo.Columns.Keys.All(key => !key.Contains(column, StringComparison.OrdinalIgnoreCase)));
                 }
             }

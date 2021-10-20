@@ -45,7 +45,7 @@
                                 .Concat(changes
                                     .OfType<CreateTable>()
                                     .Where(createTable => createTable.Schema.Equals(createSchema.Schema, StringComparison.OrdinalIgnoreCase))
-                                    .Select(createTable => _modelProvider.Model[createTable.Schema][createTable.Table])
+                                    .Select(createTable => _modelProvider.Objects[createTable.Schema][createTable.Table])
                                     .OfType<TableInfo>()
                                     .SelectMany(tableInfo => tableInfo.Columns.Values)
                                     .Where(columnInfo => columnInfo.Relation != null)
@@ -59,7 +59,7 @@
                                 .OfType<CreateSchema>()
                                 .Cast<IModelChange>()
                                 .Concat(_modelProvider
-                                    .Model[createTable.Schema][createTable.Table]
+                                    .Objects[createTable.Schema][createTable.Table]
                                     .Columns
                                     .Values
                                     .Where(column => column.Relation != null)
@@ -84,7 +84,7 @@
                                     .OfType<CreateView>());
                         case CreateColumn createColumn:
                             var dependency = _modelProvider
-                                .Model[createColumn.Schema][createColumn.Table]
+                                .Objects[createColumn.Schema][createColumn.Table]
                                 .Columns[createColumn.Column]
                                 .Relation
                                ?.Type;

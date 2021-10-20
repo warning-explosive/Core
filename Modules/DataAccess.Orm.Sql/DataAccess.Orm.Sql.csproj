@@ -203,5 +203,11 @@
       <Compile Update="Model\EnColumnConstraintType.cs">
         <DependentUpon>DatabaseColumnConstraint.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\DateTimeQueryParameterTranslator.cs">
+        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\GuidQueryParameterTranslator.cs">
+        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

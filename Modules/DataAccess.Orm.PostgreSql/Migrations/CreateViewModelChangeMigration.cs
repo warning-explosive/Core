@@ -24,16 +24,16 @@
 
         public Task<string> Migrate(CreateView change, CancellationToken token)
         {
-            if (!_modelProvider.Model.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.View, out var info)
                 || info is not ViewInfo view)
             {
                 throw new InvalidOperationException($"{change.Schema}.{change.View} isn't presented in the model");
             }
 
-            var command = CommandFormat.Format(change.Schema, change.View, view.Query);
+            var commandText = CommandFormat.Format(change.Schema, change.View, view.Query);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
     }
 }

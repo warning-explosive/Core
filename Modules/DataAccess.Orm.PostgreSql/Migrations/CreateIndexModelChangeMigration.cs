@@ -25,7 +25,7 @@
 
         public Task<string> Migrate(CreateIndex change, CancellationToken token)
         {
-            if (!_modelProvider.Model.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || !info.Indexes.TryGetValue(change.Index, out var index))
             {
@@ -41,9 +41,9 @@
                 ? "unique "
                 : string.Empty;
 
-            var command = CommandFormat.Format(change.Schema, change.Table, change.Index, columns, modifiers);
+            var commandText = CommandFormat.Format(change.Schema, change.Table, change.Index, columns, modifiers);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
     }
 }

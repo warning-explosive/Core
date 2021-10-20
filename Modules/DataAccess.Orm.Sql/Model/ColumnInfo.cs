@@ -257,5 +257,31 @@
         {
             return $"{Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
         }
+
+        /// <summary>
+        /// Gets entity column value
+        /// </summary>
+        /// <param name="entity">Entity</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <returns>Column value</returns>
+        public object? GetValue<TEntity, TKey>(TEntity entity)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            object? value = entity;
+
+            foreach (var property in _chain)
+            {
+                if (value == null)
+                {
+                    break;
+                }
+
+                value = property.GetValue(value);
+            }
+
+            return value;
+        }
     }
 }

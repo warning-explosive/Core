@@ -46,7 +46,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic))),
             };
 
-            var emptyQueryParameters = new Dictionary<string, (Type, object?)>();
+            var emptyQueryParameters = new Dictionary<string, object?>();
 
             yield return new object[]
             {
@@ -67,7 +67,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" != @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -78,7 +78,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" < @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -89,7 +89,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" <= @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -100,7 +100,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" = @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -111,7 +111,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" > @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -122,7 +122,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -177,7 +177,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\tCOALESCE(a.\"{nameof(DatabaseEntity.NullableStringField)}\", @param_0){Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(string), string.Empty) },
+                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         write))
             };
             yield return new object[]
@@ -199,7 +199,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0) b) c",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -232,7 +232,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.BooleanField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0) b) c",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
@@ -298,7 +298,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\td.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tc.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.NullableStringField)}\",{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\t{Schema}.\"{nameof(DatabaseEntity)}\" a) b{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL) c{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tc.\"{nameof(DatabaseEntity.IntField)}\" > @param_0 AND c.\"{nameof(DatabaseEntity.IntField)}\" < @param_1) d",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(int), 0), ["param_1"] = (typeof(int), 42) },
+                        new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
                         write))
             };
             yield return new object[]
@@ -320,7 +320,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\" AS Filter{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(bool), true), ["param_1"] = (typeof(bool), false) },
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
@@ -331,7 +331,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(bool), true), ["param_1"] = (typeof(bool), false) },
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
@@ -342,7 +342,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(bool), true), ["param_1"] = (typeof(bool), false) },
+                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
@@ -353,7 +353,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $"SELECT{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}\t{Schema}.\"{nameof(DatabaseEntity)}\" a",
-                        new Dictionary<string, (Type, object?)> { ["param_0"] = (typeof(string), string.Empty) },
+                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         write))
             };
         }
@@ -472,7 +472,7 @@ namespace SpaceEngineers.Core.Modules.Test
         private static void CheckFlatQuery(
             IQuery query,
             string expectedQuery,
-            IReadOnlyDictionary<string, (Type, object?)> expectedQueryParameters,
+            IReadOnlyDictionary<string, object?> expectedQueryParameters,
             Action<string> write)
         {
             var flatQuery = (FlatQuery)query;
@@ -492,7 +492,7 @@ namespace SpaceEngineers.Core.Modules.Test
         private static void CheckGroupedQuery(
             IQuery query,
             string expectedKeysQuery,
-            IReadOnlyDictionary<string, (Type, object?)> expectedKeysQueryParameters,
+            IReadOnlyDictionary<string, object?> expectedKeysQueryParameters,
             Action<string> write)
         {
             var groupedQuery = (GroupedQuery)query;
@@ -511,8 +511,8 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         private static void CheckParameters(
-            IReadOnlyDictionary<string, (Type Type, object? Value)> actualQueryParameters,
-            IReadOnlyDictionary<string, (Type Type, object? Value)> expectedQueryParameters)
+            IReadOnlyDictionary<string, object?> actualQueryParameters,
+            IReadOnlyDictionary<string, object?> expectedQueryParameters)
         {
             var parameters = actualQueryParameters
                 .FullOuterJoin(expectedQueryParameters,
@@ -522,16 +522,9 @@ namespace SpaceEngineers.Core.Modules.Test
                     StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var wrongPairs = parameters
-                .Where(parameter => Equals(parameter.actual, default(KeyValuePair<string, (Type, object?)>))
-                                    || Equals(parameter.expected, default(KeyValuePair<string, (Type, object?)>)));
-
-            Assert.Empty(wrongPairs);
-
             foreach (var (actual, expected) in parameters)
             {
-                Assert.Equal(expected.Value.Type, actual.Value.Type);
-                Assert.Equal(expected.Value.Value, actual.Value.Value);
+                Assert.Equal(expected.Value, actual.Value);
             }
         }
     }

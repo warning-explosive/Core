@@ -30,7 +30,7 @@
 
         public Task<string> Migrate(CreateColumn change, CancellationToken token)
         {
-            if (!_modelProvider.Model.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || !info.Columns.TryGetValue(change.Column, out var column))
             {
@@ -44,14 +44,14 @@
 
             var (columnName, dataType, constraints) = CreateColumn(column);
 
-            var command = CommandFormat.Format(
+            var commandText = CommandFormat.Format(
                 change.Schema,
                 change.Table,
                 columnName,
                 dataType,
                 constraints.Any() ? " " + constraints.ToString(" ") : string.Empty);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
 
         internal (string Column, string DataType, IReadOnlyCollection<string> Constraints) CreateColumn(ColumnInfo column)

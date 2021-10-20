@@ -34,7 +34,7 @@
 
         public Task<string> Migrate(CreateTable change, CancellationToken token)
         {
-            if (!_modelProvider.Model.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || info is not TableInfo table)
             {
@@ -48,9 +48,9 @@
                 .Select(CreateColumn)
                 .ToString($",{Environment.NewLine}\t");
 
-            var command = CommandFormat.Format(change.Schema, change.Table, columns);
+            var commandText = CommandFormat.Format(change.Schema, change.Table, columns);
 
-            return Task.FromResult(command);
+            return Task.FromResult(commandText);
         }
 
         private string CreateColumn(ColumnInfo column)

@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.InMemoryDatabase.Settings
         {
             return this
                 .ToPropertyDictionary()
-                .ToString(";", pair => Format.Format(pair.Key, pair.Value.Value?.ToString() ?? "null"));
+                .ToString(";", pair => Format.Format(pair.Key, pair.Value?.ToString() ?? "null"));
         }
     }
 }

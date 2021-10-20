@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Persisting
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 {
     using System;
     using System.Collections.Generic;

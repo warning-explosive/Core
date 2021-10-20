@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         public Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
             var schemas = _modelProvider
-                .Model
+                .Objects
                 .Select(grp => BuildSchemaNode(grp.Key, grp.Value.Values.ToList()))
                 .ToArray();
 

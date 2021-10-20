@@ -10,9 +10,9 @@
     public interface IModelProvider : IResolvable
     {
         /// <summary>
-        /// Model
+        /// Objects
         /// </summary>
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Model { get; }
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Objects { get; }
 
         /// <summary>
         /// Mtm tables

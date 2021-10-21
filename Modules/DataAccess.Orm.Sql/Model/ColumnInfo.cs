@@ -26,6 +26,7 @@
         private IReadOnlyCollection<string>? _constraints;
         private Lazy<Relation?>? _relation;
         private Lazy<bool>? _isMultipleRelation;
+        private Lazy<bool>? _isInlinedObject;
 
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
@@ -150,7 +151,7 @@
         /// <summary>
         /// Is column multiple relation
         /// </summary>
-        /// <returns>Column is  multiple relation on not</returns>
+        /// <returns>Column is multiple relation on not</returns>
         public bool IsMultipleRelation
         {
             get
@@ -161,6 +162,24 @@
                 bool InitIsMultipleRelation()
                 {
                     return _chain.Any(property => property.PropertyType.IsMultipleRelation(out _));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Is column inlined object
+        /// </summary>
+        /// <returns>Column is inlined object on not</returns>
+        public bool IsInlinedObject
+        {
+            get
+            {
+                _isInlinedObject ??= new Lazy<bool>(InitIsInlinedObject, LazyThreadSafetyMode.ExecutionAndPublication);
+                return _isInlinedObject.Value;
+
+                bool InitIsInlinedObject()
+                {
+                    return _chain.Any(property => typeof(IInlinedObject).IsAssignableFrom(property.PropertyType));
                 }
             }
         }

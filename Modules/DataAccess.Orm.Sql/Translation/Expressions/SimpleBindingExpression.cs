@@ -14,7 +14,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                            IEquatable<SimpleBindingExpression>,
                                            ISafelyEquatable<SimpleBindingExpression>,
                                            IApplicable<SimpleBindingExpression>,
-                                           IApplicable<ParameterExpression>
+                                           IApplicable<ParameterExpression>,
+                                           IApplicable<QueryParameterExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="member">Member info</param>
@@ -107,6 +108,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             return System.Linq.Expressions.Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
         }
 
+        #region IApplicable
+
         /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
@@ -118,5 +121,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             Source = expression;
         }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QueryParameterExpression expression)
+        {
+            Source = expression;
+        }
+
+        #endregion
     }
 }

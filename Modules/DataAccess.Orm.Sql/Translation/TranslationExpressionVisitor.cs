@@ -29,6 +29,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo Where = LinqMethods.QueryableWhere();
         private static readonly MethodInfo GroupBy2 = LinqMethods.QueryableGroupBy2();
         private static readonly MethodInfo GroupBy3 = LinqMethods.QueryableGroupBy3();
+        private static readonly MethodInfo Single = LinqMethods.QueryableSingle();
+        private static readonly MethodInfo SingleOrDefault = LinqMethods.QueryableSingleOrDefault();
+        private static readonly MethodInfo First = LinqMethods.QueryableFirst();
+        private static readonly MethodInfo FirstOrDefault = LinqMethods.QueryableFirstOrDefault();
 
         public TranslationExpressionVisitor(
             ExpressionTranslator translator,
@@ -88,6 +92,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 GroupBy(node, itemType, true);
 
+                return node;
+            }
+
+            if (method == Single
+                || method == SingleOrDefault
+                || method == First
+                || method == FirstOrDefault)
+            {
+                Context.Push(_translator.Translate(node.Arguments[0]));
                 return node;
             }
 

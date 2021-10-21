@@ -31,7 +31,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             }
             else
             {
+                sb.Append('\"');
                 sb.Append(expression.Type.SchemaName());
+                sb.Append('\"');
                 sb.Append('.');
                 sb.Append('\"');
                 sb.Append(expression.Type.Name);

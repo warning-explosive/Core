@@ -209,5 +209,11 @@
       <Compile Update="Translation\GuidQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\JoinColumnChainsVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ColumnChainExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

@@ -21,6 +21,58 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository<>.All()"));
         }
 
+        internal static MethodInfo QueryableSingle()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Single),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
+        }
+
+        internal static MethodInfo QueryableSingleOrDefault()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.SingleOrDefault),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
+        }
+
+        internal static MethodInfo QueryableFirst()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.First),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
+        }
+
+        internal static MethodInfo QueryableFirstOrDefault()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.FirstOrDefault),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
+        }
+
         internal static MethodInfo QueryableSelect()
         {
             return new MethodFinder(typeof(Queryable),

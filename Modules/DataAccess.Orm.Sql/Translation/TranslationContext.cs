@@ -182,6 +182,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
+        internal void Push(IIntermediateExpression expression)
+        {
+            Stack.Push(expression);
+            Expression = expression;
+        }
+
         internal void Apply(IIntermediateExpression expression)
         {
             if (Stack.TryPeek(out var outer))

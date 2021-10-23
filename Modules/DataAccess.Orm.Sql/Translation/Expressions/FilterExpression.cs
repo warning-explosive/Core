@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// FilterExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class FilterExpression : ISubsequentIntermediateExpression,
+    public class FilterExpression : IIntermediateExpression,
                                     IEquatable<FilterExpression>,
                                     ISafelyEquatable<FilterExpression>,
                                     IApplicable<ProjectionExpression>,
@@ -23,16 +23,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="source">Source</param>
-        /// <param name="expression">Expression</param>
+        /// <param name="source">Source expression</param>
+        /// <param name="predicate">Predicate expression</param>
         public FilterExpression(
             Type type,
             IIntermediateExpression source,
-            IIntermediateExpression expression)
+            IIntermediateExpression predicate)
         {
             Type = type;
             Source = source;
-            Expression = expression;
+            Predicate = predicate;
         }
 
         internal FilterExpression(Type type)
@@ -44,14 +44,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Type Type { get; }
 
         /// <summary>
-        /// Source expression which we want to filter
+        /// Source expression
         /// </summary>
         public IIntermediateExpression Source { get; private set; }
 
         /// <summary>
-        /// Filtering expression
+        /// Predicate expression
         /// </summary>
-        public IIntermediateExpression Expression { get; private set; }
+        public IIntermediateExpression Predicate { get; private set; }
 
         #region IEquatable
 
@@ -80,7 +80,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Source, Expression);
+            return HashCode.Combine(Type, Source, Predicate);
         }
 
         /// <inheritdoc />
@@ -100,7 +100,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             return Type == other.Type
                    && Source.Equals(other.Source)
-                   && Expression.Equals(other.Expression);
+                   && Predicate.Equals(other.Predicate);
         }
 
         #endregion
@@ -162,8 +162,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 expression = new ReplaceFilterExpressionVisitor(projection).Visit(expression);
             }
 
-            Expression = Expression != null
-                ? new BinaryExpression(typeof(bool), BinaryOperator.AndAlso, Expression, expression)
+            Predicate = Predicate != null
+                ? new BinaryExpression(typeof(bool), BinaryOperator.AndAlso, Predicate, expression)
                 : expression;
         }
 

@@ -12,27 +12,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// ProjectionExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ProjectionExpression : ISubsequentIntermediateExpression,
+    public class ProjectionExpression : IIntermediateExpression,
                                         IEquatable<ProjectionExpression>,
                                         ISafelyEquatable<ProjectionExpression>,
-                                        IApplicable<ProjectionExpression>,
                                         IApplicable<FilterExpression>,
-                                        IApplicable<QuerySourceExpression>,
                                         IApplicable<NamedSourceExpression>,
                                         IApplicable<NewExpression>,
                                         IApplicable<SimpleBindingExpression>,
                                         IApplicable<NamedBindingExpression>,
                                         IApplicable<BinaryExpression>,
                                         IApplicable<ConditionalExpression>,
-                                        IApplicable<MethodCallExpression>,
-                                        IApplicable<ParameterExpression>
+                                        IApplicable<MethodCallExpression>
     {
         private readonly List<IIntermediateExpression> _bindings;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="source">Source</param>
-        /// <param name="bindings">Bindings</param>
+        /// <param name="source">Source expression</param>
+        /// <param name="bindings">Bindings expressions</param>
         public ProjectionExpression(
             Type type,
             IIntermediateExpression source,
@@ -72,14 +69,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public bool IsDistinct { get; set; }
 
         /// <summary>
-        /// Transformation bindings
-        /// </summary>
-        public IReadOnlyCollection<IIntermediateExpression> Bindings => _bindings;
-
-        /// <summary>
-        /// Source expression which we want to transform
+        /// Source expression
         /// </summary>
         public IIntermediateExpression Source { get; private set; }
+
+        /// <summary>
+        /// Bindings expressions
+        /// </summary>
+        public IReadOnlyCollection<IIntermediateExpression> Bindings => _bindings;
 
         #region IEquatable
 
@@ -108,7 +105,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Bindings, Source);
+            return HashCode.Combine(Type, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Source, Bindings);
         }
 
         /// <inheritdoc />
@@ -130,8 +127,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                    && IsProjectionToClass == other.IsProjectionToClass
                    && IsAnonymousProjection == other.IsAnonymousProjection
                    && IsDistinct == other.IsDistinct
-                   && Bindings.SequenceEqual(other.Bindings)
-                   && Source.Equals(other.Source);
+                   && Source.Equals(other.Source)
+                   && Bindings.SequenceEqual(other.Bindings);
         }
 
         #endregion
@@ -154,72 +151,56 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            _bindings.Add(expression);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, NamedBindingExpression expression)
         {
-            _bindings.Add(expression);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            _bindings.Add(expression);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            _bindings.Add(expression);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, MethodCallExpression expression)
         {
-            _bindings.Add(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            if (Source is not NamedSourceExpression)
-            {
-                Source = new NamedSourceExpression(Source.Type, Source, expression);
-            }
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(context, expression);
+            ApplyBinding(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, FilterExpression expression)
         {
-            ApplySource(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression expression)
-        {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, NamedSourceExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
-        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
+        private void ApplyBinding(IIntermediateExpression expression)
         {
-            Source = Source is not NamedSourceExpression
-                     && expression is not NamedSourceExpression
-                ? new NamedSourceExpression(expression.Type, expression, context.GetParameterExpression(expression.Type))
-                : expression;
+            _bindings.Add(expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
+        {
+            if (Source == null)
+            {
+                Source = expression;
+            }
         }
 
         #endregion

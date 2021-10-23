@@ -16,9 +16,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="when">When IIntermediateExpression</param>
-        /// <param name="then">Then IIntermediateExpression</param>
-        /// <param name="else">Else IIntermediateExpression</param>
+        /// <param name="when">When expression</param>
+        /// <param name="then">Then expression</param>
+        /// <param name="else">Else expression</param>
         public ConditionalExpression(
             Type type,
             IIntermediateExpression when,

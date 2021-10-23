@@ -13,13 +13,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                        IEquatable<ParameterExpression>,
                                        ISafelyEquatable<ParameterExpression>
     {
+        private readonly Func<string> _nameProducer;
+
         /// <summary> .cctor </summary>
         /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
         public ParameterExpression(TranslationContext context, Type type)
         {
             Type = type;
-            Name = context.NextLambdaParameterName();
+            _nameProducer = context.NextLambdaParameterName();
         }
 
         /// <inheritdoc />
@@ -28,7 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Name
         /// </summary>
-        public string Name { get; }
+        public string Name => _nameProducer();
 
         #region IEquatable
 

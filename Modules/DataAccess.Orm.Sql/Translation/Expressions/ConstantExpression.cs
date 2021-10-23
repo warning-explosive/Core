@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="value">Constant value</param>
+        /// <param name="value">Value</param>
         public ConstantExpression(Type type, object? value)
         {
             Type = type;
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Type Type { get; }
 
         /// <summary>
-        /// Constant value
+        /// Value
         /// </summary>
         public object? Value { get; }
 

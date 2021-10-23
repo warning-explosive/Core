@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="name">Name</param>
-        /// <param name="value">Query parameter value</param>
+        /// <param name="value">Value</param>
         private QueryParameterExpression(Type type, string name, object? value)
         {
             Type = type;
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public string Name { get; }
 
         /// <summary>
-        /// Query parameter value
+        /// Value
         /// </summary>
         public object? Value { get; }
 

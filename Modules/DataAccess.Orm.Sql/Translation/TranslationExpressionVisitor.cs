@@ -61,22 +61,57 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>))))))
             {
                 Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
-                    () => Context.WithinScope(new NamedSourceExpression(itemType, new QuerySourceExpression(itemType), Context.GetParameterExpression(itemType)),
-                        () => base.VisitMethodCall(node)));
+                    () => Context.WithinScope(new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
+                        () => Context.WithinScope(new QuerySourceExpression(itemType),
+                            () =>
+                            {
+                                base.VisitMethodCall(node);
+                                Context.ReverseLambdaParametersNames();
+                            })));
 
                 return node;
             }
 
             if (method == Select)
             {
-                Context.WithinScope(new ProjectionExpression(itemType), () => base.VisitMethodCall(node));
+                if (Context.Parent is FilterExpression)
+                {
+                    Context.WithinScope(new ProjectionExpression(itemType),
+                        () => base.VisitMethodCall(node));
+                }
+                else if (Context.Parent is null)
+                {
+                    Context.WithinScope(new ProjectionExpression(itemType),
+                        () => base.VisitMethodCall(node));
+                }
+                else
+                {
+                    Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
+                        () => Context.WithinScope(new ProjectionExpression(itemType),
+                            () => base.VisitMethodCall(node)));
+                }
 
                 return node;
             }
 
             if (method == Where)
             {
-                Context.WithoutScopeDuplication(() => new FilterExpression(itemType), () => base.VisitMethodCall(node));
+                if (Context.Parent is FilterExpression)
+                {
+                    Context.WithoutScopeDuplication(() => new FilterExpression(itemType),
+                        () => base.VisitMethodCall(node));
+                }
+                else if (Context.Parent is null)
+                {
+                    Context.WithinScope(new FilterExpression(itemType),
+                        () => base.VisitMethodCall(node));
+                }
+                else
+                {
+                    Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
+                        () => Context.WithinScope(new FilterExpression(itemType),
+                            () => base.VisitMethodCall(node)));
+                }
 
                 return node;
             }
@@ -171,8 +206,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
-            Context.WithinScope<ProjectionExpression>(() => Context.Apply(Context.GetParameterExpression(node.Parameters.Single().Type)));
-
             Visit(node.Body);
 
             return node;

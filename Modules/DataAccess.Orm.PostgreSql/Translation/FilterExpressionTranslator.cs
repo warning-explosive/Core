@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(new string('\t', depth));
             sb.AppendLine("WHERE");
             sb.Append(new string('\t', depth + 1));
-            sb.Append($"{expression.Expression.Translate(_dependencyContainer, depth)}");
+            sb.Append($"{expression.Predicate.Translate(_dependencyContainer, depth)}");
 
             return sb.ToString();
         }

@@ -17,8 +17,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="operator">Operator</param>
-        /// <param name="left">Left IIntermediateExpression</param>
-        /// <param name="right">Right IIntermediateExpression</param>
+        /// <param name="left">Left expression</param>
+        /// <param name="right">Right expression</param>
         public BinaryExpression(
             Type type,
             BinaryOperator @operator,

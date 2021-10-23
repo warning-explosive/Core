@@ -20,16 +20,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary> .cctor </summary>
         /// <param name="member">Member info</param>
         /// <param name="type">Type</param>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="source">Source</param>
         public SimpleBindingExpression(
             MemberInfo member,
             Type type,
-            IIntermediateExpression expression)
+            IIntermediateExpression source)
         {
             Member = member;
             Type = type;
             Name = member.Name;
-            Source = expression;
+            Source = source;
         }
 
         internal SimpleBindingExpression(MemberInfo member, Type type)

@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private int _queryParameterIndex;
         private int _lambdaParameterIndex;
+        private int _maxLambdaParameterIndex;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
@@ -35,6 +36,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         internal IIntermediateExpression? Expression { get; private set; }
+
+        internal IIntermediateExpression? Parent => Stack.TryPeek(out var parent) ? parent : default;
 
         private Stack<IIntermediateExpression> Stack { get; init; }
 
@@ -70,26 +73,50 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// Gets next lambda parameter name
         /// </summary>
         /// <returns>Lambda parameter name</returns>
-        public string NextLambdaParameterName()
+        public Func<string> NextLambdaParameterName()
         {
-            var ranks = GetRanks(_lambdaParameterIndex++, 'z' - 'a' + 1)
-                .Select(rank => (char)('a' + rank))
-                .ToArray();
+            var lambdaParameterIndex = _lambdaParameterIndex;
+            _lambdaParameterIndex++;
 
-            return new string(ranks);
+            return () =>
+            {
+                var ranks = GetRanks(_maxLambdaParameterIndex - lambdaParameterIndex - 1, 'z' - 'a' + 1)
+                    .Select(rank => (char)('a' + rank))
+                    .ToArray();
 
-            static IEnumerable<int> GetRanks(int index, int delta)
+                return new string(ranks);
+            };
+
+            static IEnumerable<int> GetRanks(int index, int length)
             {
                 var current = index;
 
-                while (current >= delta)
+                while (current >= length)
                 {
-                    yield return (current / delta) - 1;
-                    current = current % delta;
+                    yield return (current / length) - 1;
+                    current = current % length;
                 }
 
                 yield return current;
             }
+        }
+
+        /// <summary>
+        /// Reverses lambda parameters names
+        /// </summary>
+        public void ReverseLambdaParametersNames()
+        {
+            _maxLambdaParameterIndex = _lambdaParameterIndex;
+        }
+
+        /// <summary>
+        /// Gets next parameter expression
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Parameter expression</returns>
+        public ParameterExpression NextParameterExpression(Type type)
+        {
+            return new ParameterExpression(this, type);
         }
 
         /// <summary>
@@ -99,33 +126,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <returns>Parameter expression was got successfully or not</returns>
         public ParameterExpression GetParameterExpression(Type type)
         {
-            var subsequentIntermediateExpression = Stack
-                .OfType<ISubsequentIntermediateExpression>()
-                .FirstOrDefault();
+            var intermediateExpression = Stack
+                .FirstOrDefault(expression => expression is NamedSourceExpression or FilterExpression or ProjectionExpression or JoinExpression);
 
-            ParameterExpression? parameter = null;
+            var namedSourceExpression = ExtractNamedSourceExpression(intermediateExpression, type);
 
-            if (subsequentIntermediateExpression != null)
+            var parameterExpression = namedSourceExpression?.Parameter as ParameterExpression;
+
+            return parameterExpression ?? new ParameterExpression(this, type);
+
+            static NamedSourceExpression? ExtractNamedSourceExpression(IIntermediateExpression? expression, Type type)
             {
-                parameter = FlattenSequence(subsequentIntermediateExpression)
-                    .OfType<NamedSourceExpression>()
-                    .Select(expression => expression.Parameter)
-                    .OfType<ParameterExpression>()
-                    .FirstOrDefault();
-            }
-
-            return parameter ?? new ParameterExpression(this, type);
-
-            static IEnumerable<ISubsequentIntermediateExpression> FlattenSequence(ISubsequentIntermediateExpression expression)
-            {
-                yield return expression;
-
-                if (expression.Source is ISubsequentIntermediateExpression subsequentSource)
+                switch (expression)
                 {
-                    foreach (var source in FlattenSequence(subsequentSource))
-                    {
-                        yield return source;
-                    }
+                    case NamedSourceExpression namedSourceExpression:
+                        return namedSourceExpression.Type == type
+                            ? namedSourceExpression
+                            : ExtractNamedSourceExpression(namedSourceExpression.Source, type);
+                    case FilterExpression filterExpression:
+                        return ExtractNamedSourceExpression(filterExpression.Source, type);
+                    case ProjectionExpression projectionExpression:
+                        return ExtractNamedSourceExpression(projectionExpression.Source, type);
+                    case JoinExpression joinExpression:
+                        return ExtractNamedSourceExpression(joinExpression.LeftSource, type)
+                               ?? ExtractNamedSourceExpression(joinExpression.RightSource, type);
+                    default:
+                        return default;
                 }
             }
         }
@@ -159,7 +185,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 if (Stack.TryPeek(out var outer))
                 {
-                    Apply(expr, outer);
+                    Apply(outer, expr);
                 }
                 else
                 {
@@ -192,11 +218,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             if (Stack.TryPeek(out var outer))
             {
-                Apply(expression, outer);
+                Apply(outer, expression);
             }
         }
 
-        private void Apply(IIntermediateExpression inner, IIntermediateExpression outer)
+        internal void Apply(IIntermediateExpression outer, IIntermediateExpression inner)
         {
             var service = typeof(IApplicable<>).MakeGenericType(inner.GetType());
 

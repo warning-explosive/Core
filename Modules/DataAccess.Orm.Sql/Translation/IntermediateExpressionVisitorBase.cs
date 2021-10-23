@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return new FilterExpression(
                 filterExpression.Type,
                 Visit(filterExpression.Source),
-                Visit(filterExpression.Expression));
+                Visit(filterExpression.Predicate));
         }
 
         /// <summary>

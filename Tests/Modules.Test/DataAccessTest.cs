@@ -363,25 +363,28 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var ctx = new TranslationContext();
 
-            Assert.Equal("a", ctx.NextLambdaParameterName());
-            Assert.Equal("b", ctx.NextLambdaParameterName());
-            Assert.Equal("c", ctx.NextLambdaParameterName());
-
-            Enumerable
+            var producers = Enumerable
                 .Range(0, 42)
-                .Each(_ => ctx.NextLambdaParameterName());
+                .Select(_ => ctx.NextLambdaParameterName())
+                .Reverse()
+                .ToArray();
 
-            Assert.Equal("at", ctx.NextLambdaParameterName());
-            Assert.Equal("au", ctx.NextLambdaParameterName());
-            Assert.Equal("av", ctx.NextLambdaParameterName());
+            ctx.ReverseLambdaParametersNames();
 
-            Enumerable
-                .Range(0, 42)
-                .Each(_ => ctx.NextLambdaParameterName());
+            foreach (var producer in producers)
+            {
+                Output.WriteLine(producer());
+            }
 
-            Assert.Equal("cm", ctx.NextLambdaParameterName());
-            Assert.Equal("cn", ctx.NextLambdaParameterName());
-            Assert.Equal("co", ctx.NextLambdaParameterName());
+            Assert.Equal("a", producers[0]());
+            Assert.Equal("b", producers[1]());
+            Assert.Equal("c", producers[2]());
+            Assert.Equal("y", producers[24]());
+            Assert.Equal("z", producers[25]());
+            Assert.Equal("aa", producers[26]());
+            Assert.Equal("ab", producers[27]());
+            Assert.Equal("ao", producers[40]());
+            Assert.Equal("ap", producers[41]());
         }
 
         [Theory]

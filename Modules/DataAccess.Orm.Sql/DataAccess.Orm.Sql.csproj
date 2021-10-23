@@ -122,17 +122,14 @@
       <Compile Update="Translation\StringQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\ISubsequentIntermediateExpression.cs">
+      <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
-      </Compile>
       <Compile Update="Translation\Expressions\FilterExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ProjectionExpression.cs">
-        <DependentUpon>ISubsequentIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NamedBindingExpression.cs">
         <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
@@ -213,6 +210,9 @@
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ColumnChainExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\JoinExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
     </ItemGroup>

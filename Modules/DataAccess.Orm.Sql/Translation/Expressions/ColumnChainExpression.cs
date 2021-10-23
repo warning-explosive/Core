@@ -18,14 +18,14 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="chain">Bindings chain</param>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="source">Source expression</param>
         public ColumnChainExpression(
             IReadOnlyCollection<SimpleBindingExpression> chain,
-            IIntermediateExpression expression)
+            IIntermediateExpression source)
         {
             Type = chain.Last().Type;
             Chain = chain;
-            Source = expression;
+            Source = source;
         }
 
         /// <inheritdoc />
@@ -37,7 +37,7 @@
         public IReadOnlyCollection<SimpleBindingExpression> Chain { get; }
 
         /// <summary>
-        /// Source
+        /// Source expression
         /// </summary>
         public IIntermediateExpression Source { get; }
 

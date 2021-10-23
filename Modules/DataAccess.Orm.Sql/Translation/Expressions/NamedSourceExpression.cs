@@ -10,9 +10,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// NamedSourceExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class NamedSourceExpression : ISubsequentIntermediateExpression,
+    public class NamedSourceExpression : IIntermediateExpression,
                                          IEquatable<NamedSourceExpression>,
-                                         ISafelyEquatable<NamedSourceExpression>
+                                         ISafelyEquatable<NamedSourceExpression>,
+                                         IApplicable<FilterExpression>,
+                                         IApplicable<ProjectionExpression>,
+                                         IApplicable<QuerySourceExpression>,
+                                         IApplicable<NewExpression>,
+                                         IApplicable<SimpleBindingExpression>,
+                                         IApplicable<NamedBindingExpression>,
+                                         IApplicable<BinaryExpression>,
+                                         IApplicable<ConditionalExpression>,
+                                         IApplicable<MethodCallExpression>,
+                                         IApplicable<ParameterExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -28,11 +38,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Parameter = parameter;
         }
 
+        internal NamedSourceExpression(Type type, IIntermediateExpression parameter)
+            : this(type, null!, parameter)
+        {
+        }
+
         /// <inheritdoc />
         public Type Type { get; }
 
-        /// <inheritdoc />
-        public IIntermediateExpression Source { get; }
+        /// <summary>
+        /// Source expression
+        /// </summary>
+        public IIntermediateExpression Source { get; private set; }
 
         /// <summary>
         /// Parameter expression
@@ -95,6 +112,79 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Expression AsExpressionTree()
         {
             throw new TranslationException(nameof(NamedSourceExpression) + "." + nameof(AsExpressionTree));
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, FilterExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QuerySourceExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NewExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedBindingExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, MethodCallExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParameterExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
+        {
+            if (Source == null)
+            {
+                Source = expression;
+            }
+        }
+
+        private void ForwardExpression(TranslationContext context, IIntermediateExpression expression)
+        {
+            context.Apply(Source is FilterExpression filterExpression ? filterExpression.Source : Source, expression);
         }
     }
 }

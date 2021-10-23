@@ -18,11 +18,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="member">Member info</param>
-        /// <param name="expression">Expression</param>
-        public NamedBindingExpression(MemberInfo member, IIntermediateExpression expression)
+        /// <param name="source">Source expression</param>
+        public NamedBindingExpression(MemberInfo member, IIntermediateExpression source)
         {
             Member = member;
-            Source = expression;
+            Source = source;
             Name = member.Name;
         }
 

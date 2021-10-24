@@ -89,6 +89,9 @@
     <Compile Update="StatelessActionExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
+    <Compile Update="Primitives\RecursiveEnumerable.cs">
+      <DependentUpon>IRecursiveEnumerable.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">

@@ -26,9 +26,9 @@
 
             sb.Append(expression.Source.Translate(_dependencyContainer, depth));
             sb.Append('.');
-            sb.Append('\"');
+            sb.Append('"');
             sb.Append(expression.Chain.Select(binding => binding.Name).ToString("_"));
-            sb.Append('\"');
+            sb.Append('"');
 
             return sb.ToString();
         }

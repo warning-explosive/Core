@@ -26,17 +26,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             if (parenthesis)
             {
-                sb.Append("(");
+                sb.Append('(');
             }
 
             sb.Append(expression.Source.Translate(_dependencyContainer, depth));
 
             if (parenthesis)
             {
-                sb.Append(")");
+                sb.Append(')');
             }
 
-            sb.Append(" ");
+            sb.Append(' ');
             sb.Append(expression.Parameter.Translate(_dependencyContainer, depth));
 
             return sb.ToString();

@@ -114,7 +114,7 @@
 
                     if (oneToOne != null)
                     {
-                        return new Relation(oneToOne.PropertyType, oneToOne.Name);
+                        return new Relation(Table, oneToOne.PropertyType, oneToOne);
                     }
 
                     var oneToMany = _chain
@@ -126,7 +126,7 @@
                     {
                         if (oneToMany != null)
                         {
-                            return new Relation(oneToMany.PropertyType, oneToMany.Name);
+                            return new Relation(Table, oneToMany.PropertyType, oneToMany);
                         }
                     }
 
@@ -136,11 +136,11 @@
                     {
                         var (left, right) = _modelProvider.MtmTables[Schema][manyToMany];
 
-                        var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
+                        Type type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
                             ? left
                             : right;
 
-                        return new Relation(type, nameof(IUniqueIdentified<Guid>.PrimaryKey));
+                        return new Relation(Table, type, Property);
                     }
 
                     return default;
@@ -205,7 +205,7 @@
                     }
                     else if (Relation != null)
                     {
-                        yield return $@"references ""{Relation.Type.SchemaName()}"".""{Relation.Type.Name}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
+                        yield return $@"references ""{Relation.Target.SchemaName()}"".""{Relation.Target.Name}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
                     }
 
                     if (!Property.IsNullable())

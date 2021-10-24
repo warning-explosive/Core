@@ -26,18 +26,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             if (parentheses)
             {
-                sb.Append("(");
+                sb.Append('(');
             }
 
             sb.Append(expression.Source.Translate(_dependencyContainer, depth));
 
             if (parentheses)
             {
-                sb.Append(")");
+                sb.Append(')');
             }
 
             sb.Append(" AS ");
+            sb.Append('"');
             sb.Append(expression.Name);
+            sb.Append('"');
 
             return sb.ToString();
         }

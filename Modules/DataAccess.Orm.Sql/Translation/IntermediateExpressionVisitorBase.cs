@@ -27,6 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ParameterExpression parameterExpression => VisitParameter(parameterExpression),
                 QueryParameterExpression queryParameterExpression => VisitQueryParameter(queryParameterExpression),
                 QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
+                JoinExpression joinExpression => VisitJoinExpression(joinExpression),
                 ColumnChainExpression columnChainExpression => VisitColumnChainExpression(columnChainExpression),
                 GroupByExpression groupByExpression => VisitGroupByExpression(groupByExpression),
                 _ => throw new NotSupportedException(expression.GetType().FullName)
@@ -187,6 +188,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual IIntermediateExpression VisitQuerySource(QuerySourceExpression querySourceExpression)
         {
             return querySourceExpression;
+        }
+
+        /// <summary>
+        /// Visit JoinExpression
+        /// </summary>
+        /// <param name="joinExpression">JoinExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitJoinExpression(JoinExpression joinExpression)
+        {
+            return new JoinExpression(
+                Visit(joinExpression.LeftSource),
+                Visit(joinExpression.RightSource),
+                Visit(joinExpression.On));
         }
 
         /// <summary>

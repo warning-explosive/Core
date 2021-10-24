@@ -12,7 +12,10 @@
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class JoinExpression : IIntermediateExpression,
                                   IEquatable<JoinExpression>,
-                                  ISafelyEquatable<JoinExpression>
+                                  ISafelyEquatable<JoinExpression>,
+                                  IApplicable<JoinExpression>,
+                                  IApplicable<NamedSourceExpression>,
+                                  IApplicable<BinaryExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="leftSource">Left source expression</param>
@@ -26,26 +29,30 @@
             LeftSource = leftSource;
             RightSource = rightSource;
             On = on;
-            Type = typeof(ValueTuple<,>).MakeGenericType(leftSource.Type, rightSource.Type);
+        }
+
+        internal JoinExpression()
+            : this(null!, null!, null!)
+        {
         }
 
         /// <inheritdoc />
-        public Type Type { get; }
+        public Type Type => typeof(ValueTuple<,>).MakeGenericType(LeftSource.Type, RightSource.Type);
 
         /// <summary>
         /// Left source expression
         /// </summary>
-        public IIntermediateExpression LeftSource { get; }
+        public IIntermediateExpression LeftSource { get; private set; }
 
         /// <summary>
         /// Right source expression
         /// </summary>
-        public IIntermediateExpression RightSource { get; }
+        public IIntermediateExpression RightSource { get; private set; }
 
         /// <summary>
         /// On expression
         /// </summary>
-        public IIntermediateExpression On { get; }
+        public IIntermediateExpression On { get; private set; }
 
         #region IEquatable
 
@@ -105,5 +112,42 @@
         {
             throw new TranslationException(nameof(JoinExpression) + "." + nameof(AsExpressionTree));
         }
+
+        #region IApplicable
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            if (On == null)
+            {
+                On = expression;
+            }
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JoinExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, NamedSourceExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
+        {
+            if (LeftSource == null)
+            {
+                LeftSource = expression;
+            }
+            else if (RightSource == null)
+            {
+                RightSource = expression;
+            }
+        }
+
+        #endregion
     }
 }

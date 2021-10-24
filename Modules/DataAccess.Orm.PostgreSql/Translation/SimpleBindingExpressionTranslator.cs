@@ -24,9 +24,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.Append(expression.Source.Translate(_dependencyContainer, depth));
             sb.Append('.');
-            sb.Append('\"');
+            sb.Append('"');
             sb.Append(expression.Name);
-            sb.Append('\"');
+            sb.Append('"');
 
             return sb.ToString();
         }

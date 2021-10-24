@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.Modules.Test.DatabaseEntities.Mtm
+﻿namespace SpaceEngineers.Core.Modules.Test.DatabaseEntities.Relations
 {
     using System;
     using System.Collections.Generic;

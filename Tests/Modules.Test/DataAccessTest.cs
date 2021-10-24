@@ -3,15 +3,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using Basics;
     using CompositionRoot;
+    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Api.Reading;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Translation;
     using DatabaseEntities;
+    using DatabaseEntities.Relations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -39,321 +40,306 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>Test data</returns>
         public static IEnumerable<object> DataAccessTestData()
         {
-            var assemblies = new[]
-            {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic))),
-            };
-
             var emptyQueryParameters = new Dictionary<string, object?>();
 
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - All",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All()),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All()),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison !=",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField != 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField != 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" != @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField < 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField < 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" < @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <=",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField <= 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField <= 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" <= @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison ==",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField == 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField == 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" = @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField > 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField > 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" > @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >=",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary filter",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField).Where(it => it != null)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField).Where(it => it != null)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter after anonymous projection",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\"",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.BooleanField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\"",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Change anonymous projection parameter name",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Coalesce projection",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField ?? string.Empty)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField ?? string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tCOALESCE(a.\"{nameof(DatabaseEntity.NullableStringField)}\", @param_0){Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - anonymous class key test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - projection source test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0) b) c",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}*{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - single field key test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().GroupBy(it => it.StringField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - anonymous class key test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - projection source test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\tc.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.BooleanField)}\",{Environment.NewLine}\t\tb.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\t*{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\" >= @param_0) b) c",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}*{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - single field key test",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().GroupBy(it => it.StringField, it => it.IntField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField, it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
-                        $"SELECT DISTINCT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - bool",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.BooleanField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.BooleanField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - guid",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.PrimaryKey)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.PrimaryKey)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.PrimaryKey)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - int",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.IntField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - string",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.StringField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Projection/filter chain",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\td.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t(SELECT{Environment.NewLine}\t\tc.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\tFROM{Environment.NewLine}\t\t(SELECT{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.NullableStringField)}\",{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\t\tFROM{Environment.NewLine}\t\t\t(SELECT{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.NullableStringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\t\t\t\ta.\"{nameof(DatabaseEntity.IntField)}\"{Environment.NewLine}\t\t\tFROM{Environment.NewLine}\t\t\t\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a) b{Environment.NewLine}\t\tWHERE{Environment.NewLine}\t\t\tb.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL) c{Environment.NewLine}\tWHERE{Environment.NewLine}\t\tc.\"{nameof(DatabaseEntity.IntField)}\" > @param_0 AND c.\"{nameof(DatabaseEntity.IntField)}\" < @param_1) d",
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_0 AND c.""{nameof(DatabaseEntity.IntField)}"" < @param_1) d",
                         new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Property chain with translated member",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.StringField.Length)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField.Length)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tlength(a.\"{nameof(DatabaseEntity.StringField)}\"){Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}length(a.""{nameof(DatabaseEntity.StringField)}""){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection with renaming",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\" AS Filter{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.StringField)}\",{Environment.NewLine}\ta.\"{nameof(DatabaseEntity.NullableStringField)}\"{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Where(it => it.NullableStringField != null ? true : false)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\t*{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a{Environment.NewLine}WHERE{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN @param_0 ELSE @param_1 END",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         write))
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary projection",
-                assemblies,
-                new Func<IReadRepository<DatabaseEntity, Guid>, IQueryable>(repository => repository.All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $"SELECT{Environment.NewLine}\tCASE WHEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" IS NOT NULL THEN a.\"{nameof(DatabaseEntity.NullableStringField)}\" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}\t\"{Schema}\".\"{nameof(DatabaseEntity)}\" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}""{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
+                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Where(it => it.Blog.Theme == "qwerty" && it.User.Nickname == "SpaceEngineer")),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
+                        new Dictionary<string, object?> { ["param_0"] = "qwerty", ["param_1"] = "SpaceEngineer" },
                         write))
             };
         }
@@ -391,24 +377,34 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(DataAccessTestData))]
         internal void ReadRepositoryTest(
             string section,
-            Assembly[] assemblies,
-            Func<IReadRepository<DatabaseEntity, Guid>, IQueryable> queryProducer,
+            Func<IDependencyContainer, IQueryable> queryProducer,
             Action<IQuery, Action<string>> checkQuery)
         {
             Output.WriteLine(section);
             Output.WriteLine(string.Empty);
 
-            var options = new DependencyContainerOptions();
+            var assemblies = new[]
+                {
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)))
+                };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(Blog),
+                typeof(Post),
+                typeof(User)
+            };
+
+            var options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalOurTypes);
             var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
 
             using (dependencyContainer.OpenScope())
             {
-                var readRepository = dependencyContainer
-                    .Resolve<IReadRepository<DatabaseEntity, Guid>>();
-
                 var query = dependencyContainer
                     .Resolve<IQueryTranslator>()
-                    .Translate(queryProducer(readRepository).Expression);
+                    .Translate(queryProducer(dependencyContainer).Expression);
 
                 checkQuery(query, Output.WriteLine);
 

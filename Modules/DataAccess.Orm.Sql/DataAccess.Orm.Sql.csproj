@@ -215,5 +215,8 @@
       <Compile Update="Translation\Expressions\JoinExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

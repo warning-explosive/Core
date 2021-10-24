@@ -49,7 +49,7 @@
                                     .OfType<TableInfo>()
                                     .SelectMany(tableInfo => tableInfo.Columns.Values)
                                     .Where(columnInfo => columnInfo.Relation != null)
-                                    .Select(columnInfo => columnInfo.Relation!.Type.SchemaName())
+                                    .Select(columnInfo => columnInfo.Relation!.Target.SchemaName())
                                     .Where(schema => !schema.Equals(createSchema.Schema, StringComparison.OrdinalIgnoreCase))
                                     .SelectMany(schema => changes
                                         .OfType<CreateSchema>()
@@ -63,7 +63,7 @@
                                     .Columns
                                     .Values
                                     .Where(column => column.Relation != null)
-                                    .Select(column => column.Relation!.Type)
+                                    .Select(column => column.Relation!.Target)
                                     .SelectMany(dependency => changes
                                         .OfType<CreateTable>()
                                         .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
@@ -87,7 +87,7 @@
                                 .Objects[createColumn.Schema][createColumn.Table]
                                 .Columns[createColumn.Column]
                                 .Relation
-                               ?.Type;
+                               ?.Target;
                             return dependency != null
                                 ? changes
                                     .OfType<CreateTable>()

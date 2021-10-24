@@ -25,19 +25,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             if (expression.Type.IsSqlView())
             {
                 // TODO: #110 - inline only on database model initialisation, after use created view object as normal table
-                sb.Append("(");
+                sb.Append('(');
                 sb.Append(expression.Type.SqlViewQuery(_dependencyContainer));
-                sb.Append(")");
+                sb.Append(')');
             }
             else
             {
-                sb.Append('\"');
+                sb.Append('"');
                 sb.Append(expression.Type.SchemaName());
-                sb.Append('\"');
+                sb.Append('"');
                 sb.Append('.');
-                sb.Append('\"');
+                sb.Append('"');
                 sb.Append(expression.Type.Name);
-                sb.Append('\"');
+                sb.Append('"');
             }
 
             return sb.ToString();

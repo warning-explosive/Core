@@ -38,8 +38,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Parameter = parameter;
         }
 
-        internal NamedSourceExpression(Type type, IIntermediateExpression parameter)
-            : this(type, null!, parameter)
+        internal NamedSourceExpression(Type type, TranslationContext context)
+            : this(type, null!, context.NextParameterExpression(type))
         {
         }
 

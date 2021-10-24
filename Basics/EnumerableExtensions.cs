@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Linq;
     using System.Reflection;
     using Exceptions;
+    using Primitives;
 
     /// <summary>
     /// Enumerable extensions
@@ -189,6 +190,18 @@ namespace SpaceEngineers.Core.Basics
                     yield return typed;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets IRecursiveEnumerable
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>IRecursiveEnumerable</returns>
+        public static IRecursiveEnumerable<T> MoveNext<T>(this IEnumerable<T> source)
+            where T : class
+        {
+            return new RecursiveEnumerable<T>(source.GetEnumerator());
         }
 
         /// <summary>

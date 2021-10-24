@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append($"{expression.Source.Translate(_dependencyContainer, depth + 1)}");
+            sb.Append(expression.Source.Translate(_dependencyContainer, depth + 1));
 
             return sb.ToString();
         }

@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                     IEquatable<FilterExpression>,
                                     ISafelyEquatable<FilterExpression>,
                                     IApplicable<ProjectionExpression>,
+                                    IApplicable<JoinExpression>,
                                     IApplicable<QuerySourceExpression>,
                                     IApplicable<QueryParameterExpression>,
                                     IApplicable<ParameterExpression>,
@@ -114,18 +115,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            Source = expression;
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression expression)
-        {
-            Source = expression;
-        }
-
-        /// <inheritdoc />
         public void Apply(TranslationContext context, QueryParameterExpression expression)
         {
             ApplyBinding(expression);
@@ -153,6 +142,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
             ApplyBinding(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ProjectionExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JoinExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QuerySourceExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
+        {
+            if (Source == null)
+            {
+                Source = expression;
+            }
         }
 
         private void ApplyBinding(IIntermediateExpression expression)

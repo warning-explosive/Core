@@ -9,8 +9,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Api.Model;
     using Api.Reading;
     using Basics;
+    using Basics.Primitives;
     using Expressions;
     using Extensions;
+    using Model;
     using Orm.Linq;
     using Views;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
@@ -60,8 +62,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
                     && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>))))))
             {
-                Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
-                    () => Context.WithinScope(new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
+                Context.WithinConditionalScope(
+                    Context.Parent is not JoinExpression,
+                    action => Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType), action),
+                    () => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context),
                         () => Context.WithinScope(new QuerySourceExpression(itemType),
                             () =>
                             {
@@ -74,44 +78,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == Select)
             {
-                if (Context.Parent is FilterExpression)
-                {
-                    Context.WithinScope(new ProjectionExpression(itemType),
-                        () => base.VisitMethodCall(node));
-                }
-                else if (Context.Parent is null)
-                {
-                    Context.WithinScope(new ProjectionExpression(itemType),
-                        () => base.VisitMethodCall(node));
-                }
-                else
-                {
-                    Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
-                        () => Context.WithinScope(new ProjectionExpression(itemType),
-                            () => base.VisitMethodCall(node)));
-                }
+                Context.WithinConditionalScope(
+                    Context.Parent is not null and not FilterExpression,
+                    action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
+                    () => Context.WithinScope(new ProjectionExpression(itemType),
+                        () => BuildJoinExpression(node)));
 
                 return node;
             }
 
             if (method == Where)
             {
-                if (Context.Parent is FilterExpression)
-                {
-                    Context.WithoutScopeDuplication(() => new FilterExpression(itemType),
-                        () => base.VisitMethodCall(node));
-                }
-                else if (Context.Parent is null)
-                {
-                    Context.WithinScope(new FilterExpression(itemType),
-                        () => base.VisitMethodCall(node));
-                }
-                else
-                {
-                    Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context.NextParameterExpression(itemType)),
-                        () => Context.WithinScope(new FilterExpression(itemType),
-                            () => base.VisitMethodCall(node)));
-                }
+                Context.WithinConditionalScope(
+                    Context.Parent is not null and not FilterExpression,
+                    action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
+                    () => Context.WithoutScopeDuplication(() => new FilterExpression(itemType),
+                        () => BuildJoinExpression(node)));
 
                 return node;
             }
@@ -247,6 +229,70 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
+        private void BuildJoinExpression(MethodCallExpression node)
+        {
+            var relations = TranslationContext.ExtractRelations(
+                node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>)),
+                node.Arguments[1]);
+
+            if (relations.Any())
+            {
+                using (var recursiveEnumerable = relations.MoveNext())
+                {
+                    BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0]));
+
+                    // TODO: replace bindings
+                    Visit(node.Arguments[1]);
+                }
+            }
+            else
+            {
+                base.VisitMethodCall(node);
+            }
+
+            static void BuildJoinExpressionRecursive(
+                TranslationContext context,
+                IRecursiveEnumerable<Relation> recursiveEnumerable,
+                Action? action)
+            {
+                if (recursiveEnumerable.TryMoveNext(out var relation))
+                {
+                    context.WithinScope(new JoinExpression(),
+                        () =>
+                        {
+                            context.WithoutScopeDuplication(() => new NamedSourceExpression(relation.Target, context),
+                                () => context.Apply(new QuerySourceExpression(relation.Target)));
+
+                            BuildJoinExpressionRecursive(context, recursiveEnumerable, action);
+
+                            BuildJoinOnExpression(context, relation);
+                        });
+                }
+                else
+                {
+                    action?.Invoke();
+                }
+
+                static void BuildJoinOnExpression(TranslationContext context, Relation relation)
+                {
+                    context.Apply(new Expressions.BinaryExpression(
+                        typeof(bool),
+                        BinaryOperator.Equal,
+                        new SimpleBindingExpression(
+                            relation.Target.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey)),
+                            typeof(Guid),
+                            context.GetParameterExpression(relation.Target)),
+                        new SimpleBindingExpression(
+                            relation.Target.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey)),
+                            typeof(Guid),
+                            new SimpleBindingExpression(
+                                relation.Property,
+                                relation.Target,
+                                context.GetParameterExpression(relation.Source)))));
+                }
+            }
+        }
+
         private void GroupBy(MethodCallExpression node, Type itemType, bool isGroupBy3)
         {
             var sourceType = node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>));
@@ -276,12 +322,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             Context.WithinScope(groupBy, () => Context.Apply(keyProjection));
 
-            static LambdaExpression ExtractLambdaExpression(MethodCallExpression node, Expression selector)
-            {
-                return new ExtractLambdaExpressionVisitor().Extract(selector)
-                       ?? throw new NotSupportedException($"method: {node.Method}");
-            }
-
             static MethodCallExpression MakeSelectExpression(
                 MethodCallExpression node,
                 Expression sourceExpression,
@@ -292,7 +332,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return Expression.Call(null,
                     Select.MakeGenericMethod(sourceType, targetType),
                     sourceExpression,
-                    ExtractLambdaExpression(node, selector));
+                    TranslationContext.ExtractLambdaExpression(node, selector));
             }
 
             static MethodCallExpression MakeWhereExpression(
@@ -304,7 +344,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return Expression.Call(null,
                     Where.MakeGenericMethod(sourceType),
                     sourceExpression,
-                    ExtractLambdaExpression(node, selector));
+                    TranslationContext.ExtractLambdaExpression(node, selector));
             }
 
             static LambdaExpression MakePredicate(

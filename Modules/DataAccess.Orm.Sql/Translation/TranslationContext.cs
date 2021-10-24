@@ -2,10 +2,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Linq.Expressions;
+    using Api.Model;
     using Basics;
     using Basics.Primitives;
     using Expressions;
+    using Model;
+    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
+    using ParameterExpression = Expressions.ParameterExpression;
 
     /// <summary>
     /// TranslationContext
@@ -156,14 +162,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void WithinScope<T>(Action action)
-            where T : class, IIntermediateExpression
+        internal void Push(IIntermediateExpression expression)
         {
-            if (Stack.TryPeek(out var outer)
-                && outer is T)
-            {
-                action.Invoke();
-            }
+            Stack.Push(expression);
+            Expression = expression;
         }
 
         internal void WithinScope<T>(T expression, Action? action = null)
@@ -208,10 +210,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void Push(IIntermediateExpression expression)
+        [SuppressMessage("Analysis", "CA1822", Justification = "desired instance method")]
+        internal void WithinConditionalScope(
+            bool condition,
+            Action<Action?> conditionalAction,
+            Action? action = null)
         {
-            Stack.Push(expression);
-            Expression = expression;
+            if (condition)
+            {
+                conditionalAction(action);
+            }
+            else
+            {
+                action?.Invoke();
+            }
         }
 
         internal void Apply(IIntermediateExpression expression)
@@ -238,6 +250,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 throw new InvalidOperationException($"Could not apply {inner.GetType().Name} for {outer.GetType().Name}");
             }
+        }
+
+        internal static IReadOnlyCollection<Relation> ExtractRelations(Type type, Expression node)
+        {
+            return type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                ? new ExtractRelationsExpressionVisitor().Extract(node)
+                : Array.Empty<Relation>();
+        }
+
+        internal static LambdaExpression ExtractLambdaExpression(MethodCallExpression node, Expression selector)
+        {
+            return new ExtractLambdaExpressionVisitor().Extract(selector)
+                   ?? throw new NotSupportedException($"method: {node.Method}");
         }
     }
 }

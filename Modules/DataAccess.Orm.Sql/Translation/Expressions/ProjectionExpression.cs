@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                         IEquatable<ProjectionExpression>,
                                         ISafelyEquatable<ProjectionExpression>,
                                         IApplicable<FilterExpression>,
+                                        IApplicable<JoinExpression>,
                                         IApplicable<NamedSourceExpression>,
                                         IApplicable<NewExpression>,
                                         IApplicable<SimpleBindingExpression>,
@@ -180,6 +181,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, FilterExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JoinExpression expression)
         {
             ApplySource(expression);
         }

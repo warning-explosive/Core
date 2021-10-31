@@ -218,5 +218,11 @@
       <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\ReplaceJoinBindingsVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractParametersVisitor.cs">
+        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

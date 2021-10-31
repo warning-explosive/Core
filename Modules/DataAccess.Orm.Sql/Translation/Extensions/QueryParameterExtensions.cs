@@ -22,16 +22,8 @@
 
         internal static IReadOnlyDictionary<string, object?> ExtractQueryParameters(this IIntermediateExpression expression)
         {
-            var extractor = new ExtractQueryParametersVisitor();
-            _ = extractor.Visit(expression);
-
-            if (!extractor.QueryParameters.Any())
-            {
-                return new Dictionary<string, object?>();
-            }
-
-            return extractor
-                .QueryParameters
+            return ExtractQueryParametersVisitor
+                .ExtractQueryParameters(expression)
                 .ToDictionary(
                     parameter => parameter.Name,
                     parameter => parameter.Value,

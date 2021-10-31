@@ -172,9 +172,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplyBinding(IIntermediateExpression expression)
         {
-            if (Source is ProjectionExpression projection)
+            if (Source is JoinExpression join)
+            {
+                expression = new ReplaceJoinBindingsVisitor(join).Visit(expression);
+            }
+            else if (Source is ProjectionExpression projection)
             {
                 expression = new ReplaceFilterExpressionVisitor(projection).Visit(expression);
+
+                if (projection.Source is JoinExpression projectionJoin)
+                {
+                    expression = new ReplaceJoinBindingsVisitor(projectionJoin).Visit(expression);
+                }
             }
 
             Predicate = Predicate != null

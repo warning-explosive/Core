@@ -199,6 +199,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplyBinding(IIntermediateExpression expression)
         {
+            if (Source is JoinExpression join)
+            {
+                expression = new ReplaceJoinBindingsVisitor(join).Visit(expression);
+            }
+
             _bindings.Add(expression);
         }
 

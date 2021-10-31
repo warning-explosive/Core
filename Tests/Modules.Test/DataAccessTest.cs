@@ -328,7 +328,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}""{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""",
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""",
                         emptyQueryParameters,
                         write))
             };
@@ -338,7 +338,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Where(it => it.Blog.Theme == "qwerty" && it.User.Nickname == "SpaceEngineer")),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
+                        $@"SELECT{Environment.NewLine}{'\t'}*{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
                         new Dictionary<string, object?> { ["param_0"] = "qwerty", ["param_1"] = "SpaceEngineer" },
                         write))
             };

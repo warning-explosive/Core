@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     Context.Parent is not null and not FilterExpression,
                     action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
                     () => Context.WithinScope(new ProjectionExpression(itemType),
-                        () => BuildJoinExpression(node)));
+                        () => BuildJoinExpression(Context, node, itemType)));
 
                 return node;
             }
@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     Context.Parent is not null and not FilterExpression,
                     action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
                     () => Context.WithoutScopeDuplication(() => new FilterExpression(itemType),
-                        () => BuildJoinExpression(node)));
+                        () => BuildJoinExpression(Context, node, itemType)));
 
                 return node;
             }
@@ -229,7 +229,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        private void BuildJoinExpression(MethodCallExpression node)
+        private void BuildJoinExpression(TranslationContext context, MethodCallExpression node, Type itemType)
         {
             var relations = TranslationContext.ExtractRelations(
                 node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>)),
@@ -239,9 +239,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 using (var recursiveEnumerable = relations.MoveNext())
                 {
-                    BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0]));
+                    context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
+                        () => BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0])));
 
-                    // TODO: replace bindings
                     Visit(node.Arguments[1]);
                 }
             }

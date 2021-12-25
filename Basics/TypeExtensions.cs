@@ -102,6 +102,40 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Is type numeric or not
+        /// - Int16
+        /// - UInt16
+        /// - Int32
+        /// - UInt32
+        /// - Int64
+        /// - UInt64
+        /// - Double
+        /// - Single
+        /// - Decimal
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Result of check</returns>
+        public static bool IsNumeric(this Type type)
+        {
+            return type.IsNullable()
+                ? IsNumericType(type.UnwrapTypeParameter(typeof(Nullable<>)))
+                : IsNumericType(type);
+
+            static bool IsNumericType(Type t)
+            {
+                return t == typeof(short)
+                       || t == typeof(ushort)
+                       || t == typeof(int)
+                       || t == typeof(uint)
+                       || t == typeof(long)
+                       || t == typeof(ulong)
+                       || t == typeof(float)
+                       || t == typeof(double)
+                       || t == typeof(decimal);
+            }
+        }
+
+        /// <summary>
         /// Does type implement Nullable
         /// </summary>
         /// <param name="type">Type for check</param>

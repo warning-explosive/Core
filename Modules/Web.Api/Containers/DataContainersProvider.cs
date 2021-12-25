@@ -3,8 +3,11 @@ namespace SpaceEngineers.Core.Web.Api.Containers
     using System;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
 
+    [Component(EnLifestyle.Singleton)]
     internal class DataContainersProvider : IDataContainersProvider
     {
         private const string UnknownTypeFormat = "Unknown data type: {0}";

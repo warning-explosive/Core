@@ -15,8 +15,6 @@ namespace SpaceEngineers.Core.GenericHost
     /// </summary>
     public static class HostExtensions
     {
-        private const string ForbidUseContainerCallMultipleTimes = ".UseContainer() should be called once";
-
         /// <summary>
         /// UseContainer
         /// </summary>
@@ -29,13 +27,8 @@ namespace SpaceEngineers.Core.GenericHost
         {
             hostBuilder.CheckMultipleCalls(nameof(UseContainer));
 
-            if (!hostBuilder.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out _))
-            {
-                hostBuilder.Properties[nameof(IDependencyContainerImplementation)] = containerImplementationProducer;
-                return hostBuilder;
-            }
-
-            throw new InvalidOperationException(ForbidUseContainerCallMultipleTimes);
+            hostBuilder.Properties[nameof(IDependencyContainerImplementation)] = containerImplementationProducer;
+            return hostBuilder;
         }
 
         /// <summary>

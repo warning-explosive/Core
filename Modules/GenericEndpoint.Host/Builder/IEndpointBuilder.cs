@@ -51,6 +51,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider);
 
         /// <summary>
+        /// With container
+        /// </summary>
+        /// <param name="containerImplementationProducer">Container implementation producer</param>
+        /// <returns>IEndpointBuilder</returns>
+        IEndpointBuilder WithContainer(Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer);
+
+        /// <summary>
         /// Modify container options
         /// </summary>
         /// <param name="modifier">Modifier</param>

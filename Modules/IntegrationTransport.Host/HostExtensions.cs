@@ -25,8 +25,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     /// </summary>
     public static class HostExtensions
     {
-        private const string RequireUseContainerCall = ".UseContainer() should be called before any endpoint declarations";
-
         /// <summary>
         /// Gets endpoint dependency container
         /// </summary>
@@ -139,11 +137,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             HostBuilderContext context,
             TransportEndpointOptions transportEndpointOptions)
         {
-            var containerImplementationProducer = GetContainerImplementationProducer(context);
-
             var dependencyContainer = DependencyContainer.CreateBoundedAbove(
                 transportEndpointOptions.ContainerOptions,
-                containerImplementationProducer(transportEndpointOptions.ContainerOptions),
+                transportEndpointOptions.ContainerImplementationProducer(transportEndpointOptions.ContainerOptions),
                 transportEndpointOptions.AboveAssemblies.ToArray());
 
             var injection = dependencyContainer.Resolve<IManualRegistration>();
@@ -151,17 +147,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             context.Properties.Add(GenericHost.Api.HostExtensions.TransportInjectionKey, injection);
 
             return dependencyContainer;
-        }
-
-        private static Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> GetContainerImplementationProducer(HostBuilderContext context)
-        {
-            if (context.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out var value)
-                && value is Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
-            {
-                return containerImplementationProducer;
-            }
-
-            throw new InvalidOperationException(RequireUseContainerCall);
         }
 
         private static IHostStartupAction BuildEndpointStartupAction(

@@ -16,11 +16,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
     internal class EndpointBuilder : IEndpointBuilder
     {
+        private const string RequireWithContainerCall = ".WithContainer() should be called during endpoint declaration";
+
         private readonly Assembly[] _rootAssemblies;
+
+        private readonly Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? _containerImplementationProducer;
 
         internal EndpointBuilder()
             : this(
                 new[] { AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint))) },
+                null,
                 Array.Empty<Assembly>(),
                 Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>(),
                 Array.Empty<Func<IDependencyContainer, IHostStartupAction>>(),
@@ -30,12 +35,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         private EndpointBuilder(
             Assembly[] rootAssemblies,
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? containerImplementationProducer,
             IReadOnlyCollection<Assembly> endpointPluginAssemblies,
             IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> modifiers,
             IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> startupActions,
             IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> backgroundWorkers)
         {
             _rootAssemblies = rootAssemblies;
+            _containerImplementationProducer = containerImplementationProducer;
             EndpointPluginAssemblies = endpointPluginAssemblies;
             Modifiers = modifiers;
             StartupActions = startupActions;
@@ -54,6 +61,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         {
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(assemblies).ToList(),
                 Modifiers,
                 StartupActions,
@@ -66,6 +74,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(new[] { crossCuttingConcernsAssembly }).ToList(),
                 Modifiers,
                 StartupActions,
@@ -78,6 +87,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(new[] { genericEndpointTracingAssembly }).ToList(),
                 Modifiers,
                 StartupActions,
@@ -93,16 +103,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(new[] { genericEndpointDataAccessAssembly }).Concat(databaseProvider.Implementation()).ToList(),
                 Modifiers.Concat(new[] { dataAccessModifier }).ToList(),
                 StartupActions.Concat(new[] { startupActionProducer }).ToList(),
                 BackgroundWorkers.Concat(new[] { backgroundWorkerProducer }).ToList());
         }
 
+        public IEndpointBuilder WithContainer(
+            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
+        {
+            return new EndpointBuilder(
+                _rootAssemblies,
+                containerImplementationProducer,
+                EndpointPluginAssemblies,
+                Modifiers,
+                StartupActions,
+                BackgroundWorkers);
+        }
+
         public IEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
         {
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies,
                 Modifiers.Concat(new[] { modifier }).ToList(),
                 StartupActions,
@@ -113,6 +137,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         {
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies,
                 Modifiers,
                 StartupActions.Concat(new[] { producer }).ToList(),
@@ -123,6 +148,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         {
             return new EndpointBuilder(
                 _rootAssemblies,
+                _containerImplementationProducer,
                 EndpointPluginAssemblies,
                 Modifiers,
                 StartupActions,
@@ -141,6 +167,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             return new EndpointOptions(
                 endpointIdentity,
                 containerOptions,
+                _containerImplementationProducer ?? throw new InvalidOperationException(RequireWithContainerCall),
                 _rootAssemblies.Concat(EndpointPluginAssemblies).ToArray());
         }
     }

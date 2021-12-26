@@ -3,8 +3,6 @@ namespace SpaceEngineers.Core.GenericHost
     using System;
     using Api;
     using Api.Abstractions;
-    using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Internals;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -15,22 +13,6 @@ namespace SpaceEngineers.Core.GenericHost
     /// </summary>
     public static class HostExtensions
     {
-        /// <summary>
-        /// UseContainer
-        /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="containerImplementationProducer">Container implementation producer</param>
-        /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseContainer(
-            this IHostBuilder hostBuilder,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
-        {
-            hostBuilder.CheckMultipleCalls(nameof(UseContainer));
-
-            hostBuilder.Properties[nameof(IDependencyContainerImplementation)] = containerImplementationProducer;
-            return hostBuilder;
-        }
-
         /// <summary>
         /// Builds configured host
         /// </summary>

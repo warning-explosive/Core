@@ -22,7 +22,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     public static class HostExtensions
     {
         private const string RequireUseTransportCall = ".UseTransport() should be called before any endpoint declarations";
-        private const string RequireUseContainerCall = ".UseContainer() should be called before any endpoint declarations";
         private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}";
 
         /// <summary>
@@ -96,11 +95,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             HostBuilderContext context,
             EndpointOptions endpointOptions)
         {
-            var containerImplementationProducer = GetContainerImplementationProducer(context);
-
             return DependencyContainer.CreateBoundedAbove(
                 endpointOptions.ContainerOptions,
-                containerImplementationProducer(endpointOptions.ContainerOptions),
+                endpointOptions.ContainerImplementationProducer(endpointOptions.ContainerOptions),
                 endpointOptions.AboveAssemblies.ToArray());
         }
 
@@ -170,17 +167,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             }
 
             throw new InvalidOperationException(RequireUseTransportCall);
-        }
-
-        private static Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> GetContainerImplementationProducer(HostBuilderContext context)
-        {
-            if (context.Properties.TryGetValue(nameof(IDependencyContainerImplementation), out var value)
-                && value is Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
-            {
-                return containerImplementationProducer;
-            }
-
-            throw new InvalidOperationException(RequireUseContainerCall);
         }
     }
 }

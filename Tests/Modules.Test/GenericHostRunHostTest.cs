@@ -45,14 +45,14 @@
         /// useContainer
         /// </summary>
         /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<object[]> DependencyContainerImplementations()
+        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
         {
-            var dependencyContainerProducers = new object[]
+            var dependencyContainerProducers = new[]
             {
                 new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
             };
 
-            return new[] { dependencyContainerProducers };
+            return dependencyContainerProducers;
         }
 
         /// <summary>
@@ -63,24 +63,29 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseIntegrationTransport(builder => builder
-                    .WithInMemoryIntegrationTransport()
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
-                    .BuildOptions()));
+            var useInMemoryIntegrationTransport =
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
+                    useContainer => hostBuilder => hostBuilder
+                        .UseIntegrationTransport(builder => builder
+                            .WithContainer(useContainer)
+                            .WithInMemoryIntegrationTransport()
+                            .WithDefaultCrossCuttingConcerns()
+                            .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                            .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport }
+                useInMemoryIntegrationTransport
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
-                    .Select(useTransport => useContainer
-                        .Concat(useTransport)
-                        .Concat(new object[] { timeout })
-                        .ToArray()));
+                    .Select(useTransport => new object[]
+                        {
+                            useContainer,
+                            useTransport(useContainer),
+                            timeout
+                        }));
         }
 
         [Theory(Timeout = 60_000)]
@@ -107,8 +112,8 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
@@ -171,8 +176,8 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
@@ -235,8 +240,8 @@
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options
                         .WithAdditionalOurTypes(additionalOurTypes)
@@ -329,8 +334,8 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
@@ -397,8 +402,8 @@
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options
                         .WithOverrides(overrides)
@@ -512,16 +517,18 @@
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint11))
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint20))
@@ -562,8 +569,8 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
@@ -598,8 +605,8 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))

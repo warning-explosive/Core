@@ -48,6 +48,13 @@
         public ITransportEndpointBuilder WithInMemoryIntegrationTransport();
 
         /// <summary>
+        /// With container
+        /// </summary>
+        /// <param name="containerImplementationProducer">Container implementation producer</param>
+        /// <returns>ITransportEndpointBuilder</returns>
+        ITransportEndpointBuilder WithContainer(Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer);
+
+        /// <summary>
         /// Modify container options
         /// </summary>
         /// <param name="modifier">Modifier</param>

@@ -53,26 +53,26 @@ namespace SpaceEngineers.Core.Modules.Test
         /// useContainer
         /// </summary>
         /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<object[]> DependencyContainerImplementations()
+        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
         {
-            var dependencyContainerProducers = new object[]
+            var dependencyContainerProducers = new[]
             {
                 new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
             };
 
-            return new[] { dependencyContainerProducers };
+            return dependencyContainerProducers;
         }
 
         /// <summary>
         /// databaseProvider
         /// </summary>
         /// <returns>DatabaseProviders</returns>
-        public static IEnumerable<object[]> DatabaseProviders()
+        public static IEnumerable<IDatabaseProvider> DatabaseProviders()
         {
-            return new[]
+            return new IDatabaseProvider[]
             {
-                new object[] { new PostgreSqlDatabaseProvider() },
-                new object[] { new InMemoryDatabaseProvider() }
+                new PostgreSqlDatabaseProvider(),
+                new InMemoryDatabaseProvider()
             };
         }
 
@@ -82,24 +82,29 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseIntegrationTransport(builder => builder
-                    .WithInMemoryIntegrationTransport()
-                    .WithDefaultCrossCuttingConcerns()
-                    .BuildOptions()));
+            var useInMemoryIntegrationTransport =
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
+                    useContainer => hostBuilder => hostBuilder
+                        .UseIntegrationTransport(builder => builder
+                            .WithContainer(useContainer)
+                            .WithInMemoryIntegrationTransport()
+                            .WithDefaultCrossCuttingConcerns()
+                            .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport }
+                useInMemoryIntegrationTransport
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
                     .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => useContainer
-                            .Concat(useTransport)
-                            .Concat(databaseProvider)
-                            .ToArray())));
+                        .Select(databaseProvider => new object[]
+                        {
+                            useContainer,
+                            useTransport(useContainer),
+                            databaseProvider
+                        })));
         }
 
         /// <summary>
@@ -110,26 +115,31 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(300);
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseIntegrationTransport(builder => builder
-                    .WithInMemoryIntegrationTransport()
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
-                    .BuildOptions()));
+            var useInMemoryIntegrationTransport =
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
+                    useContainer => hostBuilder => hostBuilder
+                        .UseIntegrationTransport(builder => builder
+                            .WithContainer(useContainer)
+                            .WithInMemoryIntegrationTransport()
+                            .WithDefaultCrossCuttingConcerns()
+                            .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                            .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport }
+                useInMemoryIntegrationTransport
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
                     .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => useContainer
-                            .Concat(useTransport)
-                            .Concat(databaseProvider)
-                            .Concat(new object[] { timeout })
-                            .ToArray())));
+                        .Select(databaseProvider => new object[]
+                            {
+                                useContainer,
+                                useTransport(useContainer),
+                                databaseProvider,
+                                timeout
+                            })));
         }
 
         /// <summary>
@@ -140,27 +150,32 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(300);
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                .UseIntegrationTransport(builder => builder
-                    .WithInMemoryIntegrationTransport()
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
-                    .BuildOptions()));
+            var useInMemoryIntegrationTransport =
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
+                    useContainer => hostBuilder => hostBuilder
+                        .UseIntegrationTransport(builder => builder
+                            .WithContainer(useContainer)
+                            .WithInMemoryIntegrationTransport()
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithTracing()
+                            .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                            .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                new object[] { useInMemoryIntegrationTransport }
+                useInMemoryIntegrationTransport
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
                     .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => useContainer
-                            .Concat(useTransport)
-                            .Concat(databaseProvider)
-                            .Concat(new object[] { timeout })
-                            .ToArray())));
+                        .Select(databaseProvider => new object[]
+                            {
+                                useContainer,
+                                useTransport(useContainer),
+                                databaseProvider,
+                                timeout
+                            })));
         }
 
         [Theory(Timeout = 60_000)]
@@ -173,8 +188,8 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(databaseProvider.GetType().FullName);
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseTracingEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
                     .BuildOptions(TestIdentity.TracingEndpoint))
@@ -224,8 +239,8 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseTracingEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
@@ -540,13 +555,14 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
                 .UseTracingEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(databaseProvider)
                     .BuildOptions(TestIdentity.TracingEndpoint))

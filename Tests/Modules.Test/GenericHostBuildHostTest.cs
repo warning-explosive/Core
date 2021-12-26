@@ -53,14 +53,14 @@
         /// useContainer
         /// </summary>
         /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<object[]> DependencyContainerImplementations()
+        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
         {
-            var dependencyContainerProducers = new object[]
+            var dependencyContainerProducers = new[]
             {
                 new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
             };
 
-            return new[] { dependencyContainerProducers };
+            return dependencyContainerProducers;
         }
 
         /// <summary>
@@ -69,19 +69,28 @@
         /// <returns>BuildHostTestData</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
-            var integrationTransportProviders = new object[]
+            var useInMemoryIntegrationTransport =
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
+                    useContainer => hostBuilder => hostBuilder
+                        .UseIntegrationTransport(builder => builder
+                            .WithContainer(useContainer)
+                            .WithInMemoryIntegrationTransport()
+                            .WithDefaultCrossCuttingConcerns()
+                            .WithTracing()
+                            .BuildOptions()));
+
+            var integrationTransportProviders = new[]
             {
-                new Func<IHostBuilder, IHostBuilder>(hostBuilder => hostBuilder
-                    .UseIntegrationTransport(builder => builder
-                        .WithInMemoryIntegrationTransport()
-                        .WithDefaultCrossCuttingConcerns()
-                        .WithTracing()
-                        .BuildOptions())),
+                useInMemoryIntegrationTransport
             };
 
             return DependencyContainerImplementations()
                 .SelectMany(useContainer => integrationTransportProviders
-                    .Select(useTransport => useContainer.Concat(new[] { useTransport }).ToArray()));
+                    .Select(useTransport => new object[]
+                        {
+                            useContainer,
+                            useTransport(useContainer)
+                        }));
         }
 
         [Theory(Timeout = 60_000)]
@@ -91,12 +100,13 @@
             Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .BuildOptions(TestIdentity.Endpoint10))
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .BuildOptions(TestIdentity.Endpoint20))
@@ -147,8 +157,8 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseContainer(useContainer)
                 .UseEndpoint(builder => builder
+                    .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))

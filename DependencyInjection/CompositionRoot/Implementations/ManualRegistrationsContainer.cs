@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
+    using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -21,8 +22,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private readonly List<ServiceRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
-        public ManualRegistrationsContainer(ITypeProvider typeProvider)
+        public ManualRegistrationsContainer(
+            IDependencyContainerImplementation container,
+            ITypeProvider typeProvider)
         {
+            Container = container;
             Types = typeProvider;
 
             _instances = new List<InstanceRegistrationInfo>();
@@ -31,6 +35,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _collections = new List<ServiceRegistrationInfo>();
             _decorators = new List<DecoratorRegistrationInfo>();
         }
+
+        public IDependencyContainerImplementation Container { get; }
 
         #region IRegistrationsContainer
 

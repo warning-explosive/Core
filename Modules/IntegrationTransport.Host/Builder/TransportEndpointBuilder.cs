@@ -73,8 +73,6 @@
                 Modifiers,
                 StartupActions,
                 BackgroundWorkers);
-
-            // private const string RequireWithContainerCall = ".WithContainer() should be called before any endpoint declarations";
         }
 
         public ITransportEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)

@@ -21,8 +21,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     /// </summary>
     public static class HostExtensions
     {
-        private const string RequireUseTransportCall = ".UseTransport() should be called before any endpoint declarations";
         private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}";
+        private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations";
+        private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
 
         /// <summary>
         /// Gets endpoint dependency container
@@ -51,9 +52,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             hostBuilder.ApplyOptions(endpointOptions);
 
-            return hostBuilder.ConfigureServices((ctx, serviceCollection) =>
+            return hostBuilder.ConfigureServices((_, serviceCollection) =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildEndpointContainer(ctx, ConfigureEndpointOptions(ctx, serviceProvider, endpointOptions)));
+                serviceCollection.AddSingleton<DependencyContainer>(serviceProvider => BuildEndpointContainer(ConfigureEndpointOptions(serviceProvider, endpointOptions)));
 
                 foreach (var producer in builder.StartupActions)
                 {
@@ -91,24 +92,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             optionsCollection.Add(endpointOptions);
         }
 
-        private static IDependencyContainer BuildEndpointContainer(
-            HostBuilderContext context,
+        private static DependencyContainer BuildEndpointContainer(
             EndpointOptions endpointOptions)
         {
-            return DependencyContainer.CreateBoundedAbove(
+            return (DependencyContainer)DependencyContainer.CreateBoundedAbove(
                 endpointOptions.ContainerOptions,
                 endpointOptions.ContainerImplementationProducer(endpointOptions.ContainerOptions),
                 endpointOptions.AboveAssemblies.ToArray());
         }
 
         private static EndpointOptions ConfigureEndpointOptions(
-            HostBuilderContext ctx,
             IServiceProvider serviceProvider,
             EndpointOptions endpointOptions)
         {
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-            var integrationTransportInjection = ctx.GetTransportInjection();
+            var integrationTransportInjection = GetTransportEndpointDependencyContainer(serviceProvider).Resolve<IManualRegistration>()
+                                                ?? throw new InvalidOperationException(RequireUseTransportCall);
 
             var containerOptions = endpointOptions.ContainerOptions
                 .WithManualRegistrations(integrationTransportInjection)
@@ -141,8 +141,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             EndpointIdentity endpointIdentity)
         {
             return serviceProvider
-                .GetServices<IDependencyContainer>()
-                .Single(IsEndpointContainer(endpointIdentity));
+                       .GetServices<DependencyContainer>()
+                       .SingleOrDefault(IsEndpointContainer(endpointIdentity))
+                   ?? throw new InvalidOperationException(RequireUseEndpointCall.Format(endpointIdentity));
 
             static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {
@@ -158,15 +159,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             }
         }
 
-        private static IManualRegistration GetTransportInjection(this HostBuilderContext ctx)
+        private static IDependencyContainer GetTransportEndpointDependencyContainer(IServiceProvider serviceProvider)
         {
-            if (ctx.Properties.TryGetValue(GenericHost.Api.HostExtensions.TransportInjectionKey, out var value)
-                && value is IManualRegistration transportInjection)
+            return serviceProvider
+                .GetServices<IDependencyContainer>()
+                .SingleOrDefault(IsTransportContainer)
+                ?? throw new InvalidOperationException(RequireUseTransportCall);
+
+            static bool IsTransportContainer(IDependencyContainer dependencyContainer)
             {
-                return transportInjection;
+                return ExecutionExtensions
+                    .Try(dependencyContainer, IsTransportContainerUnsafe)
+                    .Catch<Exception>()
+                    .Invoke(_ => false);
             }
 
-            throw new InvalidOperationException(RequireUseTransportCall);
+            static bool IsTransportContainerUnsafe(IDependencyContainer dependencyContainer)
+            {
+                var endpointIdentity = dependencyContainer.Resolve<EndpointIdentity>();
+
+                return endpointIdentity.LogicalName.Equals(nameof(IntegrationTransport), StringComparison.OrdinalIgnoreCase);
+            }
         }
     }
 }

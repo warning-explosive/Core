@@ -22,7 +22,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                 Array.Empty<IComponentsOverride>(),
                 Array.Empty<Assembly>(),
                 Array.Empty<string>(),
-                Array.Empty<Type>())
+                Array.Empty<Type>(),
+                false)
         {
         }
 
@@ -31,7 +32,8 @@ namespace SpaceEngineers.Core.CompositionRoot
             IReadOnlyCollection<IComponentsOverride> overrides,
             IReadOnlyCollection<Assembly> excludedAssemblies,
             IReadOnlyCollection<string> excludedNamespaces,
-            IReadOnlyCollection<Type> additionalOurTypes)
+            IReadOnlyCollection<Type> additionalOurTypes,
+            bool manualVerification)
         {
             ConstructorResolutionBehavior = new ConstructorResolutionBehavior();
 
@@ -40,6 +42,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ExcludedAssemblies = excludedAssemblies;
             ExcludedNamespaces = excludedNamespaces;
             AdditionalOurTypes = additionalOurTypes;
+            ManualVerification = manualVerification;
         }
 
         /// <summary>
@@ -77,6 +80,11 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// </summary>
         public IReadOnlyCollection<Type> AdditionalOurTypes { get; init; }
 
+        /// <summary>
+        /// Disables or enables automatic verification on container's creation
+        /// </summary>
+        public bool ManualVerification { get; init; }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {
@@ -109,7 +117,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                     Overrides,
                     ExcludedAssemblies,
                     ExcludedNamespaces,
-                    AdditionalOurTypes);
+                    AdditionalOurTypes,
+                    ManualVerification);
         }
 
         /// <summary>
@@ -126,7 +135,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                     Overrides.Concat(overrides).ToList(),
                     ExcludedAssemblies,
                     ExcludedNamespaces,
-                    AdditionalOurTypes);
+                    AdditionalOurTypes,
+                    ManualVerification);
         }
 
         /// <summary>
@@ -143,7 +153,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                     Overrides,
                     ExcludedAssemblies.Concat(assemblies).ToList(),
                     ExcludedNamespaces,
-                    AdditionalOurTypes);
+                    AdditionalOurTypes,
+                    ManualVerification);
         }
 
         /// <summary>
@@ -160,7 +171,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                     Overrides,
                     ExcludedAssemblies,
                     ExcludedNamespaces.Concat(namespaces).ToHashSet(StringComparer.OrdinalIgnoreCase),
-                    AdditionalOurTypes);
+                    AdditionalOurTypes,
+                    ManualVerification);
         }
 
         /// <summary>
@@ -177,7 +189,24 @@ namespace SpaceEngineers.Core.CompositionRoot
                     Overrides,
                     ExcludedAssemblies,
                     ExcludedNamespaces,
-                    AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet());
+                    AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet(),
+                    ManualVerification);
+        }
+
+        /// <summary>
+        /// Disables or enables automatic verification on container's creation
+        /// </summary>
+        /// <param name="attribute">Attribute value</param>
+        /// <returns>DependencyContainerOptions</returns>
+        public DependencyContainerOptions WithManualVerification(bool attribute)
+        {
+            return new DependencyContainerOptions(
+                ManualRegistrations,
+                Overrides,
+                ExcludedAssemblies,
+                ExcludedNamespaces,
+                AdditionalOurTypes,
+                attribute);
         }
     }
 }

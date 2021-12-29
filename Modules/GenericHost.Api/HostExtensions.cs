@@ -10,11 +10,6 @@ namespace SpaceEngineers.Core.GenericHost.Api
     public static class HostExtensions
     {
         /// <summary>
-        /// Transport injection key
-        /// </summary>
-        public const string TransportInjectionKey = "transport_injection";
-
-        /// <summary>
         /// Check multiple calls
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>

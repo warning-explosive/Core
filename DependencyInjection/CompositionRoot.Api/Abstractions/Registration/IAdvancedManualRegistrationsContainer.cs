@@ -2,12 +2,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using AutoRegistration.Api.Enumerations;
+    using Container;
 
     /// <summary>
     /// IAdvancedManualRegistrationsContainer
     /// </summary>
     public interface IAdvancedManualRegistrationsContainer : IManualRegistrationsContainer
     {
+        /// <summary>
+        /// Dependency container implementation
+        /// </summary>
+        IDependencyContainerImplementation Container { get; }
+
         /// <summary> Registers factory delegate </summary>
         /// <param name="factory">Factory delegate</param>
         /// <param name="lifestyle">Lifestyle</param>

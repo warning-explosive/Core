@@ -25,6 +25,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     public class DependencyContainer : IDependencyContainer, IDisposable
     {
         private DependencyContainerOptions _options;
+        private bool _wasVerified;
 
         /// <summary> .cctor </summary>
         /// <param name="implementation">IDependencyContainerImplementation</param>
@@ -38,11 +39,14 @@ namespace SpaceEngineers.Core.CompositionRoot
         {
             Container = implementation;
             _options = options;
+            _wasVerified = false;
 
-            ExecutionExtensions
-                .Try(typeProvider, ConfigureAndVerify)
-                .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
-                .Invoke();
+            Configure(typeProvider);
+
+            if (!options.ManualVerification)
+            {
+                Verify();
+            }
         }
 
         internal IDependencyContainerImplementation Container { get; }
@@ -232,13 +236,27 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         #region Internals
 
-        private void ConfigureAndVerify(ITypeProvider typeProvider)
+        /// <summary>
+        /// Verifies container's integrity
+        /// </summary>
+        public void Verify()
         {
-            var registrations = CollectRegistrations(typeProvider);
+            ExecutionExtensions
+                .Try(() =>
+                {
+                    Container.ResolveCollection<IConfigurationVerifier>().Each(v => v.Verify());
+                    _wasVerified = true;
+                })
+                .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
+                .Invoke();
+        }
 
-            Register(registrations);
-
-            Container.ResolveCollection<IConfigurationVerifier>().Each(v => v.Verify());
+        private void Configure(ITypeProvider typeProvider)
+        {
+            ExecutionExtensions
+                .Try(typeProvider, tp => Register(CollectRegistrations(tp)))
+                .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
+                .Invoke();
         }
 
         private IRegistrationsContainer CollectRegistrations(ITypeProvider typeProvider)
@@ -246,7 +264,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             var overrides = new ComponentsOverrideContainer(_options.ConstructorResolutionBehavior);
             var servicesProvider = new AutoRegistrationServicesProvider(typeProvider);
             var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
-            var manualRegistrations = new ManualRegistrationsContainer(typeProvider);
+            var manualRegistrations = new ManualRegistrationsContainer(Container, typeProvider);
 
             var registrations = new CompositeRegistrationsContainer(
                 overrides,
@@ -273,8 +291,13 @@ namespace SpaceEngineers.Core.CompositionRoot
             registrations.Decorators().RegisterDecorators(Container);
         }
 
-        private static T Resolve<T>(Type service, Func<T> producer)
+        private T Resolve<T>(Type service, Func<T> producer)
         {
+            if (!_wasVerified)
+            {
+                Console.WriteLine($"WRN: Trying to resolve '{service.FullName}' but dependency container isn't verified. Make sure you have set up auto verification on container creation to true '.WithManualVerification(false)' or you verified it manually.");
+            }
+
             return ExecutionExtensions
                 .Try(producer)
                 .Catch<Exception>()

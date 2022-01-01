@@ -26,6 +26,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         private DependencyContainerOptions _options;
         private bool _wasVerified;
+        private bool _suppressResolveWarnings;
 
         /// <summary> .cctor </summary>
         /// <param name="implementation">IDependencyContainerImplementation</param>
@@ -40,6 +41,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             Container = implementation;
             _options = options;
             _wasVerified = false;
+            _suppressResolveWarnings = false;
 
             Configure(typeProvider);
 
@@ -237,6 +239,14 @@ namespace SpaceEngineers.Core.CompositionRoot
         #region Internals
 
         /// <summary>
+        /// Suppresses warnings on service resolution
+        /// </summary>
+        public void SuppressResolveWarnings()
+        {
+            _suppressResolveWarnings = true;
+        }
+
+        /// <summary>
         /// Verifies container's integrity
         /// </summary>
         public void Verify()
@@ -246,6 +256,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 {
                     Container.ResolveCollection<IConfigurationVerifier>().Each(v => v.Verify());
                     _wasVerified = true;
+                    _suppressResolveWarnings = false;
                 })
                 .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
                 .Invoke();
@@ -264,7 +275,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             var overrides = new ComponentsOverrideContainer(_options.ConstructorResolutionBehavior);
             var servicesProvider = new AutoRegistrationServicesProvider(typeProvider);
             var autoRegistrations = new AutoRegistrationsContainer(typeProvider, servicesProvider, _options.ConstructorResolutionBehavior);
-            var manualRegistrations = new ManualRegistrationsContainer(Container, typeProvider);
+            var manualRegistrations = new ManualRegistrationsContainer(this, typeProvider);
 
             var registrations = new CompositeRegistrationsContainer(
                 overrides,
@@ -293,7 +304,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private T Resolve<T>(Type service, Func<T> producer)
         {
-            if (!_wasVerified)
+            if (!_wasVerified && !_suppressResolveWarnings)
             {
                 Console.WriteLine($"WRN: Trying to resolve '{service.FullName}' but dependency container isn't verified. Make sure you have set up auto verification on container creation to true '.WithManualVerification(false)' or you verified it manually.");
             }

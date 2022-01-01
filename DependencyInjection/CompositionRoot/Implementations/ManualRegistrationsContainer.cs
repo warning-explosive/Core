@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
         public ManualRegistrationsContainer(
-            IDependencyContainerImplementation container,
+            DependencyContainer container,
             ITypeProvider typeProvider)
         {
             Container = container;
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _decorators = new List<DecoratorRegistrationInfo>();
         }
 
-        public IDependencyContainerImplementation Container { get; }
+        public IDependencyContainer Container { get; }
 
         #region IRegistrationsContainer
 

@@ -1,5 +1,8 @@
 namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
 {
+    using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Abstractions.Registration;
     using global::SimpleInjector;
     using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +18,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
 
         public void Register(IManualRegistrationsContainer container)
         {
+            ((DependencyContainer)container.Advanced.Container).SuppressResolveWarnings();
+
+            var simpleInjector = ExtractSimpleInjector(container.Advanced.Container);
+
             _serviceCollection.AddSimpleInjector(
-                SimpleInjectorBaseStartup.ExtractSimpleInjector(container.Advanced.Container),
+                simpleInjector,
                 options =>
                 {
                     options.EnableHostedServiceResolution = false;
@@ -27,6 +34,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
                         .AddAspNetCore(ServiceScopeReuseBehavior.OnePerNestedScope)
                         .AddControllerActivation(Lifestyle.Scoped);
                 });
+        }
+
+        private static Container ExtractSimpleInjector(
+            IDependencyContainer dependencyContainerImplementation)
+        {
+            return dependencyContainerImplementation
+                .GetPropertyValue<IDependencyContainerImplementation?>("Container")
+                .EnsureNotNull($"{nameof(IDependencyContainer)} should have container implementation reference inside")
+                .GetFieldValue<Container?>("_container")
+                .EnsureNotNull($"{nameof(IDependencyContainerImplementation)} should have SimpleInjector container reference inside");
         }
     }
 }

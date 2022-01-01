@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
         /// <summary>
         /// Dependency container implementation
         /// </summary>
-        IDependencyContainerImplementation Container { get; }
+        IDependencyContainer Container { get; }
 
         /// <summary> Registers factory delegate </summary>
         /// <param name="factory">Factory delegate</param>

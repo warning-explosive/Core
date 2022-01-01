@@ -26,14 +26,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
             _optionsFactory = optionsFactory;
         }
 
-        internal static Container ExtractSimpleInjector(
-            IDependencyContainerImplementation dependencyContainerImplementation)
-        {
-            return dependencyContainerImplementation
-                .GetFieldValue<Container?>("_container")
-                .EnsureNotNull($"{nameof(IDependencyContainerImplementation)} should have SimpleInjector container reference inside");
-        }
-
         /// <inheritdoc />
         protected sealed override void ConfigureApplicationServices(IServiceCollection serviceCollection)
         {
@@ -73,6 +65,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
             applicationBuilder.UseSimpleInjector(simpleInjector);
 
             ((DependencyContainer)dependencyContainer).Verify();
+        }
+
+        private static Container ExtractSimpleInjector(
+            IDependencyContainerImplementation dependencyContainerImplementation)
+        {
+            return dependencyContainerImplementation
+                .GetFieldValue<Container?>("_container")
+                .EnsureNotNull($"{nameof(IDependencyContainerImplementation)} should have SimpleInjector container reference inside");
         }
     }
 }

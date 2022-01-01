@@ -216,7 +216,7 @@ test_script:
 
       # constants
       $bin = "bin"
-      $targetFramework = "net5.0"
+      $targetFramework = "net6.0"
       $location = Get-Location
       $configuration = $env:CONFIGURATION
       $isReleaseConfiguration = ($env:CONFIGURATION -eq "Release")

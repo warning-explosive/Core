@@ -44,16 +44,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
-            Func<IEndpointBuilder, EndpointOptions> factory)
+            Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> factory)
         {
-            var builder = new EndpointBuilder().WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer));
-
-            var endpointOptions = factory(builder);
-
-            hostBuilder.ApplyOptions(endpointOptions);
-
-            return hostBuilder.ConfigureServices((_, serviceCollection) =>
+            return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
+                var builder = new EndpointBuilder().WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer));
+
+                var endpointOptions = factory(context, builder);
+
+                hostBuilder.ApplyOptions(endpointOptions);
+
                 serviceCollection.AddSingleton<DependencyContainer>(serviceProvider => BuildEndpointContainer(ConfigureEndpointOptions(serviceProvider, endpointOptions)));
 
                 foreach (var producer in builder.StartupActions)

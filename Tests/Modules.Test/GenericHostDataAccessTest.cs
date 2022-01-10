@@ -555,7 +555,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()

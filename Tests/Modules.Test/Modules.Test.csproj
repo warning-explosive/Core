@@ -61,6 +61,7 @@
     <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
     <ProjectReference Include="..\..\Modules\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
     <ProjectReference Include="..\..\Modules\TracingEndpoint\TracingEndpoint.csproj" />
+    <ProjectReference Include="..\..\Modules\Web.Auth\Web.Auth.csproj" />
     <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
   </ItemGroup>
   <ItemGroup>

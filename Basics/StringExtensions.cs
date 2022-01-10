@@ -10,6 +10,20 @@ namespace SpaceEngineers.Core.Basics
     public static class StringExtensions
     {
         /// <summary>
+        /// Starts source string from capital letter
+        /// </summary>
+        /// <param name="source">Source string</param>
+        /// <returns>Source string started from capital letter</returns>
+        public static string StartFromCapitalLetter(this string source)
+        {
+            source = source.Trim();
+
+            return source.IsNullOrEmpty()
+                ? source
+                : char.ToUpper(source[0], CultureInfo.InvariantCulture) + source.Substring(1);
+        }
+
+        /// <summary>
         /// IsNullOrEmpty
         /// </summary>
         /// <param name="source">Source string</param>

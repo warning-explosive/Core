@@ -100,12 +100,12 @@
             Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
                     .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
@@ -157,7 +157,7 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()

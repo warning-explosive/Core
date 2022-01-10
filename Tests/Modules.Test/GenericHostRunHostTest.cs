@@ -112,7 +112,7 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
@@ -176,7 +176,7 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
@@ -240,7 +240,7 @@
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options
@@ -334,7 +334,7 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
@@ -402,7 +402,7 @@
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options
@@ -517,17 +517,17 @@
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                     .BuildOptions(TestIdentity.Endpoint11))
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
@@ -569,7 +569,7 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()
@@ -605,7 +605,7 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint(builder => builder
+                .UseEndpoint((_, builder) => builder
                     .WithContainer(useContainer)
                     .WithDefaultCrossCuttingConcerns()
                     .WithTracing()

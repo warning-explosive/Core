@@ -11,21 +11,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Basics;
     using Basics.Primitives;
     using CompositionRoot.Api.Abstractions.Container;
+    using Contract;
     using Contract.Abstractions;
     using Messaging;
+    using Microsoft.Extensions.Logging;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpoint : IRunnableEndpoint,
                                      IExecutableEndpoint
     {
+        private readonly ILogger _logger;
+        private readonly EndpointIdentity _endpointIdentity;
         private readonly AsyncManualResetEvent _ready;
         private readonly ConcurrentDictionary<Guid, Task> _runningHandlers;
         private CancellationTokenSource? _cts;
 
         public GenericEndpoint(
+            ILogger logger,
+            EndpointIdentity endpointIdentity,
             IDependencyContainer dependencyContainer,
             IEnumerable<IEndpointInitializer> initializers)
         {
+            _logger = logger;
+            _endpointIdentity = endpointIdentity;
+
             DependencyContainer = dependencyContainer;
             Initializers = initializers;
 
@@ -47,6 +56,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             {
                 await initializer.Initialize(Token).ConfigureAwait(false);
             }
+
+            _logger.Information($"{_endpointIdentity} has been started");
 
             _ready.Set();
         }

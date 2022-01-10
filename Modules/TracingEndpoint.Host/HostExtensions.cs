@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Host
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(SpaceEngineers.Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Tracing)))
             };
 
-            return hostBuilder.UseEndpoint(endpointBuilder => factory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
+            return hostBuilder.UseEndpoint((_, endpointBuilder) => factory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
         }
     }
 }

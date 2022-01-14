@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Microsoft.IdentityModel.Tokens;
 
     internal class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
@@ -67,21 +68,21 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
                 .RpcRequest<AuthorizeUser, UserAuthorizationResult>(new AuthorizeUser(username, password), CancellationToken.None)
                 .ConfigureAwait(false);
 
-            if (authorizationResult.Result)
+            if (authorizationResult.Token.IsNullOrEmpty())
             {
-                var claims = new[]
-                {
-                    new Claim(ClaimTypes.Name, username)
-                };
-
-                var identity = new ClaimsIdentity(claims, Scheme.Name);
-                var principal = new ClaimsPrincipal(identity);
-                var ticket = new AuthenticationTicket(principal, Scheme.Name);
-
-                return AuthenticateResult.Success(ticket);
+                return AuthenticateResult.Fail(authorizationResult.Details);
             }
 
-            return AuthenticateResult.Fail(authorizationResult.Details);
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, username)
+            };
+
+            var identity = new ClaimsIdentity(claims, Scheme.Name);
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, Scheme.Name);
+
+            return AuthenticateResult.Success(ticket);
         }
     }
 }

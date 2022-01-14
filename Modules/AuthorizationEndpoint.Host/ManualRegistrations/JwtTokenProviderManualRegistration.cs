@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.AuthorizationEndpoint.Host.ManualRegistrations
 {
-    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Registration;
     using JwtAuthentication;
 
@@ -15,7 +14,10 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Host.ManualRegistrations
 
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Advanced.RegisterDelegate(() => new JwtTokenProvider(_configuration), EnLifestyle.Singleton);
+            var tokenProvider = new JwtTokenProvider(_configuration);
+
+            container.RegisterInstance<ITokenProvider>(tokenProvider);
+            container.RegisterInstance<JwtTokenProvider>(tokenProvider);
         }
     }
 }

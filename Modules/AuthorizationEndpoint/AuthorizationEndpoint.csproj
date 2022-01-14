@@ -29,6 +29,8 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\AuthorizationEndpoint.Contract\AuthorizationEndpoint.Contract.csproj" />
+        <ProjectReference Include="..\DataAccess.Api\DataAccess.Api.csproj" />
+        <ProjectReference Include="..\GenericDomain.Api\GenericDomain.Api.csproj" />
         <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -45,6 +47,21 @@
     <ItemGroup>
       <Compile Update="JwtAuthentication\JwtTokenProvider.cs">
         <DependentUpon>ITokenProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Domain\FindUserSpecification.cs">
+        <DependentUpon>FindUserAggregateFactory.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Domain\CreateUserSpecification.cs">
+        <DependentUpon>CreateUserAggregateFactory.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Domain\FindUserAggregateFactory.cs">
+        <DependentUpon>User.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Domain\CreateUserAggregateFactory.cs">
+        <DependentUpon>User.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Domain\UserCreated.cs">
+        <DependentUpon>User.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

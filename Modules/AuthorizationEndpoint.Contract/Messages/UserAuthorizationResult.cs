@@ -9,16 +9,16 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
-        /// <param name="result">Authorization result (true if authorization was successful)</param>
         /// <param name="details">Authorization details</param>
+        /// <param name="token">Authorization token</param>
         public UserAuthorizationResult(
             string username,
-            bool result,
-            string? details)
+            string token,
+            string details)
         {
             Username = username;
-            Result = result;
-            Details = details ?? string.Empty;
+            Token = token;
+            Details = details;
         }
 
         /// <summary>
@@ -27,9 +27,9 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
         public string Username { get; }
 
         /// <summary>
-        /// Authorization result (true if authorization was successful)
+        /// Authorization token
         /// </summary>
-        public bool Result { get; }
+        public string Token { get; }
 
         /// <summary>
         /// Authorization details

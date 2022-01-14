@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.JwtAuthentication
         /// <param name="issuer">Issuer</param>
         /// <param name="audience">Audience</param>
         /// <param name="privateKey">Private key</param>
+        // TODO: #165 create setting provider for framework configuration files
         public JwtAuthenticationConfiguration(
             string issuer,
             string audience,

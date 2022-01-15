@@ -26,6 +26,11 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
                .WithTypeResolver(new DynamicTypeResolver())
                .Build();
 
+        public YamlSettingsProvider(ISettingsScopeProvider settingsScopeProvider)
+            : base(settingsScopeProvider)
+        {
+        }
+
         protected override string Extension => "yaml";
 
         protected override string SerializeInternal(TSettings value)

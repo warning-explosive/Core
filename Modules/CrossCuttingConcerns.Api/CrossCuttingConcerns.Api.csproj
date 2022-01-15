@@ -46,6 +46,9 @@
       <Compile Update="Abstractions\ISettings.cs">
         <DependentUpon>ISettingsProvider.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\ISettingsScopeProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

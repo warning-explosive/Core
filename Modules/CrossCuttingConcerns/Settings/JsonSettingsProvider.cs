@@ -10,7 +10,10 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     {
         private readonly IJsonSerializer _jsonSerializer;
 
-        public JsonSettingsProvider(IJsonSerializer jsonSerializer)
+        public JsonSettingsProvider(
+            IJsonSerializer jsonSerializer,
+            ISettingsScopeProvider settingsScopeProvider)
+            : base(settingsScopeProvider)
         {
             _jsonSerializer = jsonSerializer;
         }

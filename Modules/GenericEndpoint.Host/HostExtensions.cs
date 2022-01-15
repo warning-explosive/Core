@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Overrides;
     using StartupActions;
 
     /// <summary>
@@ -113,7 +114,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var containerOptions = endpointOptions.ContainerOptions
                 .WithManualRegistrations(integrationTransportInjection)
                 .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
-                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointOptions.Identity, loggerFactory));
+                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointOptions.Identity, loggerFactory))
+                .WithOverrides(new SettingsProviderOverrides());
 
             return endpointOptions.WithContainerOptions(containerOptions);
         }

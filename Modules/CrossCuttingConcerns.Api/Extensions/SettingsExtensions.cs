@@ -19,9 +19,10 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Extensions
         /// <param name="settingsDirectory">Settings directory info</param>
         public static void SetupFileSystemSettingsDirectory(this DirectoryInfo settingsDirectory)
         {
-            Environment.SetEnvironmentVariable(FileSystemSettingsDirectory,
-                                               settingsDirectory.FullName,
-                                               EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable(
+                FileSystemSettingsDirectory,
+                settingsDirectory.FullName,
+                EnvironmentVariableTarget.Process);
         }
     }
 }

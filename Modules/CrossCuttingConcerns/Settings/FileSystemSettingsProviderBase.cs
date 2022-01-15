@@ -12,11 +12,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     internal abstract class FileSystemSettingsProviderBase<TSettings> : ISettingsProvider<TSettings>
         where TSettings : class, IFileSystemSettings
     {
+        private readonly ISettingsScopeProvider _settingsScopeProvider;
+
         private readonly Encoding _encoding = new UTF8Encoding(true);
         private readonly string _folder;
 
-        protected FileSystemSettingsProviderBase()
+        protected FileSystemSettingsProviderBase(ISettingsScopeProvider settingsScopeProvider)
         {
+            _settingsScopeProvider = settingsScopeProvider;
+
             var dir = EnvironmentSettingsProvider.Get(SettingsExtensions.FileSystemSettingsDirectory).Value;
 
             if (!Directory.Exists(dir))
@@ -28,19 +32,14 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         }
 
         /// <summary>
-        /// Extension of file
+        /// Settings file extension
         /// </summary>
         protected abstract string Extension { get; }
-
-        /// <summary>
-        /// Path to all filesystem settings
-        /// </summary>
-        private Func<Type, string> SettingsPath => type => Path.ChangeExtension(Path.Combine(_folder, type.Name), Extension);
 
         /// <inheritdoc />
         public async Task Set(TSettings value, CancellationToken token)
         {
-            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+            using (var fileStream = File.Open(GetSettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
             {
                 var serialized = SerializeInternal(value);
 
@@ -51,7 +50,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         /// <inheritdoc />
         public async Task<TSettings> Get(CancellationToken token)
         {
-            using (var fileStream = File.Open(SettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fileStream = File.Open(GetSettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var serialized = await fileStream.ReadAllAsync(_encoding, token).ConfigureAwait(false);
 
@@ -72,5 +71,24 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         /// <param name="serialized">Serialized string</param>
         /// <returns>Deserialized ISettings object</returns>
         protected abstract TSettings DeserializeInternal(string serialized);
+
+        private string GetSettingsPath(Type type)
+        {
+            var scope = _settingsScopeProvider.Scope;
+
+            if (scope != null && !scope.IsNullOrEmpty())
+            {
+                var exclusivePath = Path.ChangeExtension(Path.Combine(_folder, scope, type.Name), Extension);
+
+                if (File.Exists(exclusivePath))
+                {
+                    return exclusivePath;
+                }
+            }
+
+            var commonPath = Path.ChangeExtension(Path.Combine(_folder, type.Name), Extension);
+
+            return commonPath;
+        }
     }
 }

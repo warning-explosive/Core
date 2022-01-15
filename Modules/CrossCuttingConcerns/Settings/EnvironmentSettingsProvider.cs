@@ -31,8 +31,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         internal static EnvironmentSettingsEntry Get(string entryKey)
         {
             var entryValue = Environment
-                            .GetEnvironmentVariable(entryKey, EnvironmentVariableTarget.Process)
-                            .EnsureNotNull($"Environment settings with key '{entryKey}' should be represented in process environment block");
+                .GetEnvironmentVariable(entryKey, EnvironmentVariableTarget.Process)
+                .EnsureNotNull($"Environment settings with key '{entryKey}' should be represented in process environment block");
 
             return new EnvironmentSettingsEntry(entryKey, entryValue);
         }

@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
@@ -24,7 +25,8 @@
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IChangesTracker _changesTracker;
 
-        private static IDbConnection? _connection;
+        private static readonly ConcurrentDictionary<string, IDbConnection?> _connections
+            = new ConcurrentDictionary<string, IDbConnection?>();
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
@@ -54,9 +56,11 @@
         {
             get
             {
+                var connection = _connections.GetOrAdd(_connectionProvider.Database, _ => default);
+
                 for (var i = 0; i < 3; i++)
                 {
-                    switch (_connection?.State)
+                    switch (connection?.State)
                     {
                         case ConnectionState.Connecting:
                             Task.Delay(TimeSpan.FromMilliseconds(50));
@@ -64,7 +68,7 @@
                         case ConnectionState.Open:
                         case ConnectionState.Executing:
                         case ConnectionState.Fetching:
-                            return _connection;
+                            return connection;
                         case ConnectionState.Broken:
                         case ConnectionState.Closed:
                         case null:
@@ -73,13 +77,15 @@
                     }
                 }
 
-                Interlocked.Exchange(ref _connection, default)?.Dispose();
+                connection?.Dispose();
 
-                _connection = _connectionProvider
+                connection = _connectionProvider
                     .OpenConnection(CancellationToken.None)
                     .Result;
 
-                return _connection;
+                _connections[_connectionProvider.Database] = connection;
+
+                return connection;
             }
         }
 

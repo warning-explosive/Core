@@ -29,6 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
+      <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Tracing\GenericEndpoint.Tracing.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />

@@ -130,7 +130,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
 
-            Output.WriteLine($"Total: {compositionInfo.Count}\n");
+            Output.WriteLine($"Total: {compositionInfo.Count}{Environment.NewLine}");
             Output.WriteLine(boundedContainer.Resolve<ICompositionInfoInterpreter<string>>().Visualize(compositionInfo));
 
             var allowedAssemblies = new[]

@@ -29,7 +29,7 @@
                 .OutgoingMessages
                 .Select(message => IntegrationMessage.Build(message, _serializer))
                 .Select(message => new OutboxMessage(message.PrimaryKey, message, false))
-                .ToList();
+                .ToArray();
 
             await _databaseContext
                 .BulkWrite<OutboxMessage, Guid>()

@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Property values of passed instance</returns>
         public static string ShowProperties(this object instance, BindingFlags flags, params string[] blackList)
         {
-            return string.Join("\n",
+            return string.Join(Environment.NewLine,
                         instance.GetType()
                                 .GetProperties(flags)
                                 .Where(z => !blackList.Contains(z.Name))

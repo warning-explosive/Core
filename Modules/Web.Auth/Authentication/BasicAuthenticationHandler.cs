@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
 
             if (!Request.Headers.ContainsKey("Authorization"))
             {
-                return AuthenticateResult.Fail("Missing authentication header");
+                return AuthenticateResult.Fail("Missing authorization header");
             }
 
             var authenticationHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);

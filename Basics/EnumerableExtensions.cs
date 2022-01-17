@@ -14,6 +14,41 @@ namespace SpaceEngineers.Core.Basics
     public static class EnumerableExtensions
     {
         /// <summary>
+        /// Stacks source collection into separate piles defined by key selector
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="keySelector">Key selector</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Separate piles</returns>
+        public static IEnumerable<KeyValuePair<TKey, IEnumerable<TValue>>> Stack<TKey, TValue>(
+            this IEnumerable<TValue> source,
+            Func<TValue, TKey> keySelector)
+        {
+            return source
+                .Aggregate(new Stack<KeyValuePair<TKey, List<TValue>>>(), Aggregate)
+                .Reverse()
+                .Select(pair => new KeyValuePair<TKey, IEnumerable<TValue>>(pair.Key, pair.Value));
+
+            Stack<KeyValuePair<TKey, List<TValue>>> Aggregate(Stack<KeyValuePair<TKey, List<TValue>>> acc, TValue next)
+            {
+                var key = keySelector(next);
+
+                if (!acc.TryPeek(out var peek)
+                    || !EqualityComparer<TKey>.Default.Equals(key, peek.Key))
+                {
+                    acc.Push(new KeyValuePair<TKey, List<TValue>>(key, new List<TValue> { next }));
+                }
+                else
+                {
+                    peek.Value.Add(next);
+                }
+
+                return acc;
+            }
+        }
+
+        /// <summary>
         /// Full outer join
         /// </summary>
         /// <param name="leftSource">Left source</param>

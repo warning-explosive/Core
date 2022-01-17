@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -41,7 +42,14 @@
         {
             Schema = schema;
             Table = table;
+
+            if (!chain.Any())
+            {
+                throw new InvalidOperationException("Column chain should contain at least one property info");
+            }
+
             _chain = chain;
+
             _modelProvider = modelProvider;
         }
 
@@ -70,23 +78,6 @@
                     return _chain
                         .Select(property => property.Name)
                         .ToString("_");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Property
-        /// </summary>
-        public PropertyInfo Property
-        {
-            get
-            {
-                _property ??= InitProperty();
-                return _property;
-
-                PropertyInfo InitProperty()
-                {
-                    return _chain.Last();
                 }
             }
         }
@@ -126,7 +117,7 @@
                     {
                         if (oneToMany != null)
                         {
-                            return new Relation(Table, oneToMany.PropertyType, oneToMany);
+                            return new Relation(Table, oneToMany.PropertyType.GetMultipleRelationItemType(), oneToMany);
                         }
                     }
 
@@ -136,7 +127,7 @@
                     {
                         var (left, right) = _modelProvider.MtmTables[Schema][manyToMany];
 
-                        Type type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
+                        var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
                             ? left
                             : right;
 
@@ -147,6 +138,12 @@
                 }
             }
         }
+
+        /// <summary>
+        /// Is column relation
+        /// </summary>
+        /// <returns>Column is relation on not</returns>
+        public bool IsRelation => Relation != null && !IsMultipleRelation;
 
         /// <summary>
         /// Is column multiple relation
@@ -165,6 +162,12 @@
                 }
             }
         }
+
+        /// <summary>
+        /// Multiple relation table
+        /// </summary>
+        [NotNullIfNotNull(nameof(IsMultipleRelation))]
+        public Type? MultipleRelationTable => IsMultipleRelation ? Property.ReflectedType : null;
 
         /// <summary>
         /// Is column inlined object
@@ -212,6 +215,20 @@
                     {
                         yield return "not null";
                     }
+                }
+            }
+        }
+
+        private PropertyInfo Property
+        {
+            get
+            {
+                _property ??= InitProperty();
+                return _property;
+
+                PropertyInfo InitProperty()
+                {
+                    return _chain.Last();
                 }
             }
         }
@@ -281,26 +298,63 @@
         /// Gets entity column value
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Column value</returns>
-        public object? GetValue<TEntity, TKey>(TEntity entity)
-            where TEntity : IUniqueIdentified<TKey>
+        public object? GetValue<TKey>(IUniqueIdentified<TKey> entity)
             where TKey : notnull
         {
-            object? value = entity;
+            return IsMultipleRelation
+                ? null
+                : _chain.Aggregate((object?)entity, AggregateValue);
+        }
 
-            foreach (var property in _chain)
+        /// <summary>
+        /// Gets entity relation value
+        /// </summary>
+        /// <param name="entity">Entity</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <returns>Relation value</returns>
+        public IUniqueIdentified<TKey>? GetRelationValue<TKey>(IUniqueIdentified<TKey> entity)
+            where TKey : notnull
+        {
+            if (!IsRelation)
             {
-                if (value == null)
-                {
-                    break;
-                }
-
-                value = property.GetValue(value);
+                return null;
             }
 
-            return value;
+            return _chain
+                    .SkipLast(1)
+                    .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified<TKey>;
+        }
+
+        /// <summary>
+        /// Gets entity multiple relation value
+        /// </summary>
+        /// <param name="entity">Entity</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <returns>Multiple relation value</returns>
+        public IEnumerable<IUniqueIdentified<TKey>> GetMultipleRelationValue<TKey>(IUniqueIdentified<TKey> entity)
+            where TKey : notnull
+        {
+            if (!IsMultipleRelation)
+            {
+                return Enumerable.Empty<IUniqueIdentified<TKey>>();
+            }
+
+            return ((IEnumerable)_chain
+                    .SkipLast(1)
+                    .Aggregate((object?)entity, AggregateValue) !)
+                .AsEnumerable<IUniqueIdentified<TKey>>();
+        }
+
+        private static object? AggregateValue(object? value, PropertyInfo property)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            return property.GetValue(value);
         }
     }
 }

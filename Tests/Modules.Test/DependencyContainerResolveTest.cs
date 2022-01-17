@@ -355,8 +355,6 @@ namespace SpaceEngineers.Core.Modules.Test
                  || ctx.OpenGeneric == typeof(PrimaryKeyToEntityObjectTransformer<,>)
                  || ctx.OpenGeneric == typeof(IRepository<,>)
                  || ctx.OpenGeneric == typeof(IBulkRepository<,>)
-                 || ctx.OpenGeneric == typeof(DataAccess.Orm.InMemoryDatabase.Persisting.Repository<,>)
-                 || ctx.OpenGeneric == typeof(DataAccess.Orm.InMemoryDatabase.Persisting.BulkRepository<,>)
                  || ctx.OpenGeneric == typeof(DataAccess.Orm.PostgreSql.Persisting.Repository<,>)
                  || ctx.OpenGeneric == typeof(DataAccess.Orm.PostgreSql.Persisting.BulkRepository<,>))
                 && ctx.TypeArgument.GenericParameterPosition == 1)

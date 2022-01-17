@@ -230,14 +230,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Try(action)
                 .Catch<AmbiguousMatchException>(ex =>
                 {
-                    var exeptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
+                    var exceptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
 
-                    foreach (var msg in exeptionMessagePathsList)
+                    foreach (var msg in exceptionMessagePathsList)
                     {
                         Output.WriteLine(msg);
                     }
 
-                    CheckCandidates(candidates, exeptionMessagePathsList);
+                    CheckCandidates(candidates, exceptionMessagePathsList);
 
                     var strPath = GetShortestStrPath(graph, solverInfo2, sw);
                     Assert.Equal("[AC] => [CD] => [DE]", strPath);

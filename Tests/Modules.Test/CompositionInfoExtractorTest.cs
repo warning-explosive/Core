@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
+    using System;
     using System.Linq;
     using Basics;
     using CompositionRoot;
@@ -41,7 +42,7 @@ namespace SpaceEngineers.Core.Modules.Test
                                                          .GetCompositionInfo(mode)
                                                          .ToArray();
 
-                Output.WriteLine($"Total: {compositionInfo.Length}\n");
+                Output.WriteLine($"Total: {compositionInfo.Length}{Environment.NewLine}");
 
                 Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
                                                     .Visualize(compositionInfo));

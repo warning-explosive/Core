@@ -26,11 +26,6 @@
         {
             var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
 
-            await _databaseContext
-                .Write<IntegrationMessage, Guid>()
-                .Insert(message, token)
-                .ConfigureAwait(false);
-
             var capturedMessage = new DatabaseModel.CapturedMessage(Guid.NewGuid(), message, domainEvent.RefuseReason);
 
             await _databaseContext

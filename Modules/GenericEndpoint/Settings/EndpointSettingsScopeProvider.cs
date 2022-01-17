@@ -1,18 +1,19 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Settings;
-
-using AutoRegistration.Api.Attributes;
-using Contract;
-using CrossCuttingConcerns.Api.Abstractions;
-
-[ComponentOverride]
-internal class EndpointSettingsScopeProvider : ISettingsScopeProvider
+namespace SpaceEngineers.Core.GenericEndpoint.Settings
 {
-    private readonly EndpointIdentity _endpointIdentity;
+    using AutoRegistration.Api.Attributes;
+    using Contract;
+    using CrossCuttingConcerns.Api.Abstractions;
 
-    public EndpointSettingsScopeProvider(EndpointIdentity endpointIdentity)
+    [ComponentOverride]
+    internal class EndpointSettingsScopeProvider : ISettingsScopeProvider
     {
-        _endpointIdentity = endpointIdentity;
-    }
+        private readonly EndpointIdentity _endpointIdentity;
 
-    public string? Scope => _endpointIdentity.LogicalName;
+        public EndpointSettingsScopeProvider(EndpointIdentity endpointIdentity)
+        {
+            _endpointIdentity = endpointIdentity;
+        }
+
+        public string? Scope => _endpointIdentity.LogicalName;
+    }
 }

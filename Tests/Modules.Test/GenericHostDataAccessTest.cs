@@ -13,7 +13,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.InMemoryDatabase;
     using DataAccess.Orm.Model;
     using DataAccess.Orm.PostgreSql;
     using DataAccess.Orm.Sql.Model;
@@ -71,8 +70,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             return new IDatabaseProvider[]
             {
-                new PostgreSqlDatabaseProvider(),
-                new InMemoryDatabaseProvider()
+                new PostgreSqlDatabaseProvider()
             };
         }
 
@@ -457,37 +455,6 @@ namespace SpaceEngineers.Core.Modules.Test
                     Assert.True(modelProvider.Objects[createTable.Schema][createTable.Table] is TableInfo);
                     var tableInfo = (TableInfo)modelProvider.Objects[createTable.Schema][createTable.Table];
                     Assert.True(tableInfo.Columns.Keys.All(key => !key.Contains(column, StringComparison.OrdinalIgnoreCase)));
-                }
-            }
-            else if (databaseProvider.GetType() == typeof(InMemoryDatabaseProvider))
-            {
-                Assert.Equal(16, modelChanges.Length);
-
-                AssertCreateDataBase(modelChanges, 0, "SpaceEngineerDatabase");
-
-                AssertCreateSchema(modelChanges, 1, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
-                AssertCreateTable(modelChanges, 2, typeof(CapturedMessage));
-                AssertCreateTable(modelChanges, 3, typeof(TracingEndpoint.DatabaseModel.IntegrationMessage));
-                AssertCreateTable(modelChanges, 4, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeader));
-
-                AssertCreateSchema(modelChanges, 5, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
-                AssertCreateTable(modelChanges, 6, typeof(InboxMessage));
-                AssertCreateTable(modelChanges, 7, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessage));
-                AssertCreateTable(modelChanges, 8, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeader));
-                AssertCreateTable(modelChanges, 9, typeof(OutboxMessage));
-
-                AssertCreateSchema(modelChanges, 10, AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Modules), nameof(Core.Modules.Test)));
-                AssertCreateTable(modelChanges, 11, typeof(Community));
-                AssertCreateTable(modelChanges, 12, typeof(Participant));
-                AssertCreateTable(modelChanges, 13, typeof(Blog));
-                AssertCreateTable(modelChanges, 14, typeof(Post));
-                AssertCreateTable(modelChanges, 15, typeof(User));
-
-                static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
-                {
-                    Assert.True(modelChanges[index] is CreateTable);
-                    var createTable = (CreateTable)modelChanges[index];
-                    Assert.Equal(table.FullName, createTable.Table);
                 }
             }
             else

@@ -32,7 +32,27 @@ namespace SpaceEngineers.Core.Modules.Test
         public DataAccessTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(Blog),
+                typeof(Post),
+                typeof(User),
+                typeof(Community),
+                typeof(Participant),
+            };
+
+            var options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalOurTypes);
+            DependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
         }
+
+        private IDependencyContainer DependencyContainer { get; }
 
         /// <summary>
         /// DataAccessTestData member
@@ -383,28 +403,11 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(section);
             Output.WriteLine(string.Empty);
 
-            var assemblies = new[]
-                {
-                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
-                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
-                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)))
-                };
-
-            var additionalOurTypes = new[]
+            using (DependencyContainer.OpenScope())
             {
-                typeof(Blog),
-                typeof(Post),
-                typeof(User)
-            };
-
-            var options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalOurTypes);
-            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
-
-            using (dependencyContainer.OpenScope())
-            {
-                var query = dependencyContainer
+                var query = DependencyContainer
                     .Resolve<IQueryTranslator>()
-                    .Translate(queryProducer(dependencyContainer).Expression);
+                    .Translate(queryProducer(DependencyContainer).Expression);
 
                 checkQuery(query, Output.WriteLine);
 
@@ -428,9 +431,9 @@ namespace SpaceEngineers.Core.Modules.Test
                         Output.WriteLine(string.Empty);
 
                         var valuesExpression = groupedQuery.ValuesExpressionProducer.Invoke(keyValues);
-                        var valuesQuery = valuesExpression.Translate(dependencyContainer, 0, token).Result;
+                        var valuesQuery = valuesExpression.Translate(DependencyContainer, 0, token).Result;
                         var valuesQueryParameters = valuesExpression
-                            .ExtractQueryParameters(dependencyContainer)
+                            .ExtractQueryParameters(DependencyContainer)
                             .GetQueryParametersValues();
 
                         Output.WriteLine("Actual values query parameters:");

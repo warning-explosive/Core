@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 var diagnosticsOutput = actualDiagnostics.Any() ? FormatDiagnostics(analyzer, actualDiagnostics.ToArray()) : "    NONE.";
 
                 Assert.True(false,
-                            $"Mismatch between number of diagnostics returned, expected \"{expectedCount}\" actual \"{actualCount}\"\r\n\r\nDiagnostics:\r\n{diagnosticsOutput}\r\n");
+                            $"Mismatch between number of diagnostics returned, expected \"{expectedCount}\" actual \"{actualCount}\"{Environment.NewLine}Diagnostics:{Environment.NewLine}{diagnosticsOutput}{Environment.NewLine}");
             }
 
             for (var i = 0; i < expectedResults.Length; i++)
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                     if (actual.Location != Location.None)
                     {
                         Assert.True(false,
-                                    $"Expected:\nA project diagnostic with No location\nActual:\n{FormatDiagnostics(analyzer, actual)}");
+                                    $"Expected:{Environment.NewLine}A project diagnostic with No location{Environment.NewLine}Actual:{Environment.NewLine}{FormatDiagnostics(analyzer, actual)}");
                     }
                 }
                 else
@@ -62,19 +62,19 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 if (actual.Id != expected.Descriptor.Id)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic id to be \"{expected.Descriptor.Id}\" was \"{actual.Id}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
+                                $"Expected diagnostic id to be \"{expected.Descriptor.Id}\" was \"{actual.Id}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
 
                 if (actual.Severity != expected.Severity)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
+                                $"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
 
                 if (actual.GetMessage() != expected.ActualMessage)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage()}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, actual)}\r\n");
+                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage()}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             Assert.True(actualSpan.Path == expected.SourceFile
                      || (actualSpan.Path != null
                       && actualSpan.Path.Contains(expected.SourceFile, StringComparison.Ordinal)),
-                        $"Expected diagnostic to be in file \"{expected.SourceFile}\" was actually in file \"{actualSpan.Path}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
+                        $"Expected diagnostic to be in file \"{expected.SourceFile}\" was actually in file \"{actualSpan.Path}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
 
             var actualLinePosition = actualSpan.StartLinePosition;
 
@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 if (actualLinePosition.Line + 1 != expected.Line)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic to be on line \"{expected.Line}\" was actually on line \"{actualLinePosition.Line + 1}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
+                                $"Expected diagnostic to be on line \"{expected.Line}\" was actually on line \"{actualLinePosition.Line + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
                 }
             }
 
@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 if (actualLinePosition.Character + 1 != expected.Column)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic to start at column \"{expected.Column}\" was actually at column \"{actualLinePosition.Character + 1}\"\r\n\r\nDiagnostic:\r\n    {FormatDiagnostics(analyzer, diagnostic)}\r\n");
+                                $"Expected diagnostic to start at column \"{expected.Column}\" was actually at column \"{actualLinePosition.Character + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
                 }
             }
         }
@@ -133,7 +133,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                         else
                         {
                             Assert.True(location.IsInSource,
-                                $"Test base does not currently handle diagnostics in metadata locations. Diagnostic in metadata: {diagnostics[i]}\r\n");
+                                $"Test base does not currently handle diagnostics in metadata locations. Diagnostic in metadata: {diagnostics[i]}{Environment.NewLine}");
 
                             var resultMethodName = diagnostics[i].Location.SourceTree.FilePath.EndsWith(".cs", StringComparison.Ordinal)
                                                        ? "expected(("

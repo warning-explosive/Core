@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Persisting
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -23,7 +22,7 @@
         /// <param name="entities">Entities</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Insert(IEnumerable<TEntity> entities, CancellationToken token);
+        Task Insert(TEntity[] entities, CancellationToken token);
 
         /// <summary>
         /// Updates entity in the database
@@ -34,7 +33,7 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TValue">TValue type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        Task Update<TValue>(IEnumerable<TKey> primaryKeys, Expression<Func<TEntity, TValue>> accessor, TValue value, CancellationToken token);
+        Task Update<TValue>(TKey[] primaryKeys, Expression<Func<TEntity, TValue>> accessor, TValue value, CancellationToken token);
 
         /// <summary>
         /// Updates entity in the database
@@ -45,7 +44,7 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TValue">TValue type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        Task Update<TValue>(IEnumerable<TKey> primaryKeys, Expression<Func<TEntity, TValue>> accessor, Expression<Func<TEntity, TValue>> valueProducer, CancellationToken token);
+        Task Update<TValue>(TKey[] primaryKeys, Expression<Func<TEntity, TValue>> accessor, Expression<Func<TEntity, TValue>> valueProducer, CancellationToken token);
 
         /// <summary>
         /// Deletes entity from the database
@@ -53,6 +52,6 @@
         /// <param name="primaryKeys">Primary keys</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Delete(IEnumerable<TKey> primaryKeys, CancellationToken token);
+        Task Delete(TKey[] primaryKeys, CancellationToken token);
     }
 }

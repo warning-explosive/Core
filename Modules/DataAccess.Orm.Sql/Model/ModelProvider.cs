@@ -53,8 +53,7 @@
 
         private ModelInfo InitModel()
         {
-            var mutableMtmTables =
-                new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>(StringComparer.OrdinalIgnoreCase);
+            var mutableMtmTables = new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>(StringComparer.OrdinalIgnoreCase);
 
             var objects = _databaseTypeProvider.DatabaseEntities()
                 .SelectMany(entity => GetEntityInfos(entity, mutableMtmTables))
@@ -116,7 +115,7 @@
 
             TableInfo GetMtmTableInfo(ColumnInfo columnInfo)
             {
-                return GetTableInfo(columnInfo.Schema, columnInfo.Property.ReflectedType, mtmTables);
+                return GetTableInfo(columnInfo.Schema, columnInfo.MultipleRelationTable!, mtmTables);
             }
         }
 

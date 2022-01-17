@@ -28,7 +28,9 @@
         {
             Schema = schema;
             Type = type;
-            Columns = columns.ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
+            Columns = columns
+                .OrderBy(column => column.Name)
+                .ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

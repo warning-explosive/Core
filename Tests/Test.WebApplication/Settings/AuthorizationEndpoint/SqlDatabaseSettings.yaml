@@ -1,0 +1,6 @@
+Host: localhost
+Port: 5432
+Database: AuthorizationEndpointDatabase
+Username: postgres
+Password: Password12!
+IsolationLevel: Snapshot

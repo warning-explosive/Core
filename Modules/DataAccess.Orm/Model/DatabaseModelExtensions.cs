@@ -81,5 +81,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
 
             return itemType != null;
         }
+
+        /// <summary>
+        /// Get item type of multiple relation
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Item type</returns>
+        public static Type GetMultipleRelationItemType(this Type type)
+        {
+            return SupportedCollections
+                .Select(collection =>
+                {
+                    var collectionItemType = type.UnwrapTypeParameter(collection);
+                    var isCollection = collectionItemType != type;
+                    return (collectionItemType, isCollection);
+                })
+                .Where(info => info.isCollection)
+                .Select(info => info.collectionItemType)
+                .First();
+        }
     }
 }

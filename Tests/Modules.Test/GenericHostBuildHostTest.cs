@@ -74,7 +74,7 @@
                     useContainer => hostBuilder => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport()
+                            .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .WithTracing()
                             .BuildOptions()));

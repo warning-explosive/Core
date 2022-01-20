@@ -12,19 +12,20 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using GenericEndpoint.Contract;
+    using GenericHost;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// HostExtensions
     /// </summary>
     public static class HostExtensions
     {
-        private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations";
+        private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
+        private const string RequireTransportDependencyContainer = "Unable to resolve transport IDependencyContainer.";
 
         /// <summary>
         /// Gets endpoint dependency container
@@ -95,76 +96,67 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         {
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
 
-            return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(optionsFactory)(serviceCollection));
+            return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(hostBuilder, optionsFactory)(serviceCollection));
         }
 
         internal static Action<IServiceCollection> InitializeIntegrationTransport(
+            IHostBuilder hostBuilder,
             Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
         {
+            var transportEndpointOptions = ConfigureTransportEndpointOptions(hostBuilder, optionsFactory, out var builder);
+
+            var transportDependencyContainer = BuildTransportContainer(transportEndpointOptions);
+
             return serviceCollection =>
             {
-                var messagingAssembly = AssembliesExtensions.FindRequiredAssembly(
-                    AssembliesExtensions.BuildName(
-                        nameof(SpaceEngineers),
-                        nameof(Core),
-                        nameof(Core.GenericEndpoint),
-                        nameof(Core.GenericEndpoint.Messaging)));
-
-                var builder = new TransportEndpointBuilder()
-                    .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
-                    .WithEndpointPluginAssemblies(messagingAssembly);
-
-                var transportEndpointOptions = optionsFactory(builder);
-
-                serviceCollection.AddSingleton<IDependencyContainer>(serviceProvider => BuildTransportContainer(ConfigureTransportEndpointOptions(serviceProvider, transportEndpointOptions)));
+                serviceCollection.AddSingleton<IDependencyContainer>(transportDependencyContainer);
 
                 foreach (var producer in builder.StartupActions)
                 {
-                    serviceCollection.AddSingleton<IHostStartupAction>(serviceProvider => BuildEndpointStartupAction(serviceProvider, producer));
+                    serviceCollection.AddSingleton<IHostStartupAction>(producer(transportDependencyContainer));
                 }
 
                 foreach (var producer in builder.BackgroundWorkers)
                 {
-                    serviceCollection.AddSingleton<IHostBackgroundWorker>(serviceProvider => BuildEndpointBackgroundWorker(serviceProvider, producer));
+                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(transportDependencyContainer));
                 }
             };
         }
 
-        internal static IDependencyContainer GetTransportEndpointDependencyContainer(this IServiceProvider serviceProvider)
+        internal static IDependencyContainer GetTransportEndpointDependencyContainer(
+            this IServiceProvider serviceProvider)
         {
-            return serviceProvider
-                       .GetServices<IDependencyContainer>()
-                       .SingleOrDefault(IsTransportContainer)
-                   ?? throw new InvalidOperationException(RequireUseTransportCall);
-
-            static bool IsTransportContainer(IDependencyContainer dependencyContainer)
-            {
-                return ExecutionExtensions
-                    .Try(dependencyContainer, IsTransportContainerUnsafe)
-                    .Catch<Exception>()
-                    .Invoke(_ => false);
-            }
-
-            static bool IsTransportContainerUnsafe(IDependencyContainer dependencyContainer)
-            {
-                var endpointIdentity = dependencyContainer.Resolve<EndpointIdentity>();
-
-                return endpointIdentity.LogicalName.Equals(nameof(IntegrationTransport), StringComparison.OrdinalIgnoreCase);
-            }
+            return serviceProvider.GetService<IDependencyContainer>()
+                   ?? throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
         }
 
         private static TransportEndpointOptions ConfigureTransportEndpointOptions(
-            IServiceProvider serviceProvider,
-            TransportEndpointOptions transportEndpointOptions)
+            IHostBuilder hostBuilder,
+            Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory,
+            out ITransportEndpointBuilder builder)
         {
+            var messagingAssembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(Core.GenericEndpoint),
+                    nameof(Core.GenericEndpoint.Messaging)));
+
+            builder = new TransportEndpointBuilder()
+                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
+                .WithEndpointPluginAssemblies(messagingAssembly);
+
+            var transportEndpointOptions = optionsFactory(builder);
+
             var endpointIdentity = new EndpointIdentity(nameof(IntegrationTransport), Guid.NewGuid());
 
-            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             var containerOptions = transportEndpointOptions
                 .ContainerOptions
                 .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
-                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, loggerFactory));
+                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                .WithManualVerification(true);
 
             return transportEndpointOptions.WithContainerOptions(containerOptions);
         }
@@ -176,22 +168,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 transportEndpointOptions.ContainerOptions,
                 transportEndpointOptions.ContainerImplementationProducer(transportEndpointOptions.ContainerOptions),
                 transportEndpointOptions.AboveAssemblies.ToArray());
-        }
-
-        private static IHostStartupAction BuildEndpointStartupAction(
-            IServiceProvider serviceProvider,
-            Func<IDependencyContainer, IHostStartupAction> producer)
-        {
-            var dependencyContainer = GetTransportEndpointDependencyContainer(serviceProvider);
-            return producer(dependencyContainer);
-        }
-
-        private static IHostBackgroundWorker BuildEndpointBackgroundWorker(
-            IServiceProvider serviceProvider,
-            Func<IDependencyContainer, IHostBackgroundWorker> producer)
-        {
-            var dependencyContainer = GetTransportEndpointDependencyContainer(serviceProvider);
-            return producer(dependencyContainer);
         }
     }
 }

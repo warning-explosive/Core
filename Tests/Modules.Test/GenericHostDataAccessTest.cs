@@ -85,7 +85,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     useContainer => hostBuilder => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport()
+                            .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .BuildOptions()));
 
@@ -118,7 +118,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     useContainer => hostBuilder => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport()
+                            .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
                             .BuildOptions()));
@@ -153,7 +153,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     useContainer => hostBuilder => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport()
+                            .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .WithTracing()
                             .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))

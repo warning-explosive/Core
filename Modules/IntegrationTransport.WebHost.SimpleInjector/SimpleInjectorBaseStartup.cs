@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
 {
     using System;
     using Basics;
-    using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using global::SimpleInjector;
     using Host;
@@ -11,27 +10,36 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
 
     /// <summary>
     /// SimpleInjectorBaseStartup
     /// </summary>
     public abstract class SimpleInjectorBaseStartup : BaseStartup
     {
+        private readonly IHostBuilder _hostBuilder;
         private readonly Func<ITransportEndpointBuilder, TransportEndpointOptions> _optionsFactory;
 
         /// <summary> .cctor </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="configuration">IConfiguration</param>
         /// <param name="optionsFactory">Transport endpoint options factory</param>
-        protected SimpleInjectorBaseStartup(Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
+        protected SimpleInjectorBaseStartup(
+            IHostBuilder hostBuilder,
+            IConfiguration configuration,
+            Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
+            : base(configuration)
         {
+            _hostBuilder = hostBuilder;
             _optionsFactory = optionsFactory;
         }
 
         /// <inheritdoc />
-        protected sealed override void ConfigureApplicationServices(IServiceCollection serviceCollection)
+        public sealed override void ConfigureServices(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddMvc();
+            ConfigureAspNetCoreServices(serviceCollection);
 
-            HostExtensions.InitializeIntegrationTransport(WithSimpleInjector(_optionsFactory, serviceCollection))(serviceCollection);
+            HostExtensions.InitializeIntegrationTransport(_hostBuilder, WithSimpleInjector(_optionsFactory, serviceCollection))(serviceCollection);
 
             static Func<ITransportEndpointBuilder, TransportEndpointOptions> WithSimpleInjector(
                 Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory,
@@ -51,28 +59,54 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
         }
 
         /// <inheritdoc />
-        protected sealed override void ConfigureApplicationServices(
+        public sealed override void Configure(
             IApplicationBuilder applicationBuilder,
             IWebHostEnvironment environment,
             IConfiguration configuration)
         {
-            var dependencyContainer = applicationBuilder
+            var transportDependencyContainer = applicationBuilder
                 .ApplicationServices
                 .GetTransportEndpointDependencyContainer();
 
-            var simpleInjector = ExtractSimpleInjector(dependencyContainer.Resolve<IDependencyContainerImplementation>());
+            var simpleInjector = ExtractSimpleInjector(transportDependencyContainer);
 
-            applicationBuilder.UseSimpleInjector(simpleInjector);
+            applicationBuilder
+                .ApplicationServices
+                .UseSimpleInjector(simpleInjector);
 
-            ((DependencyContainer)dependencyContainer).Verify();
+            ConfigureAspNetCoreRequestPipeline(
+                applicationBuilder,
+                environment,
+                configuration);
+
+            GenericHost.HostExtensions.VerifyDependencyContainers(applicationBuilder.ApplicationServices);
+
+            static Container ExtractSimpleInjector(
+                IDependencyContainer dependencyContainer)
+            {
+                return dependencyContainer
+                    .GetPropertyValue<IDependencyContainerImplementation>("Container")
+                    .GetFieldValue<Container?>("_container")
+                    .EnsureNotNull($"{nameof(IDependencyContainerImplementation)} should have SimpleInjector container reference inside");
+            }
         }
 
-        private static Container ExtractSimpleInjector(
-            IDependencyContainerImplementation dependencyContainerImplementation)
-        {
-            return dependencyContainerImplementation
-                .GetFieldValue<Container?>("_container")
-                .EnsureNotNull($"{nameof(IDependencyContainerImplementation)} should have SimpleInjector container reference inside");
-        }
+        /// <summary>
+        /// Configures ASP .NET Core DI container
+        /// </summary>
+        /// <param name="serviceCollection">IServiceCollection</param>
+        protected abstract void ConfigureAspNetCoreServices(
+            IServiceCollection serviceCollection);
+
+        /// <summary>
+        /// Configures ASP .NET Core request pipeline
+        /// </summary>
+        /// <param name="applicationBuilder">IApplicationBuilder</param>
+        /// <param name="environment">IWebHostEnvironment</param>
+        /// <param name="configuration">IConfiguration</param>
+        protected abstract void ConfigureAspNetCoreRequestPipeline(
+            IApplicationBuilder applicationBuilder,
+            IWebHostEnvironment environment,
+            IConfiguration configuration);
     }
 }

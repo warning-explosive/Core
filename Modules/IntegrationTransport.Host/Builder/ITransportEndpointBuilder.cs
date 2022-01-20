@@ -6,6 +6,7 @@
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using GenericHost.Api.Abstractions;
+    using Microsoft.Extensions.Hosting;
 
     /// <summary>
     /// ITransportEndpointBuilder
@@ -44,8 +45,9 @@
         /// <summary>
         /// With in-memory integration transport
         /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>ITransportEndpointBuilder</returns>
-        public ITransportEndpointBuilder WithInMemoryIntegrationTransport();
+        public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder);
 
         /// <summary>
         /// With container

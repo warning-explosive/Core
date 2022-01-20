@@ -26,13 +26,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector
                 simpleInjector,
                 options =>
                 {
-                    options.EnableHostedServiceResolution = false;
-                    options.AutoCrossWireFrameworkComponents = false;
+                    options.EnableHostedServiceResolution = true;
+                    options.AutoCrossWireFrameworkComponents = true;
                     options.DisposeContainerWithServiceProvider = false;
 
                     options
                         .AddAspNetCore(ServiceScopeReuseBehavior.OnePerNestedScope)
-                        .AddControllerActivation(Lifestyle.Scoped);
+                        .AddControllerActivation(Lifestyle.Transient);
                 });
         }
 

@@ -3,15 +3,15 @@
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.WebApplication</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.WebApplication</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.Test.WebApplication</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Test.WebApplication</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.WebApplication</Title>
+        <Title>SpaceEngineers.Core.Test.WebApplication</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.WebApplication</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.Test.WebApplication</PackageDescription>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/warning-explosive/Investment</RepositoryUrl>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
         <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
@@ -47,6 +47,7 @@
       <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
       <ProjectReference Include="..\..\Modules\IntegrationTransport.WebHost.SimpleInjector\IntegrationTransport.WebHost.SimpleInjector.csproj" />
       <ProjectReference Include="..\..\Modules\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
+      <ProjectReference Include="..\..\Modules\Web.Api.Host\Web.Api.Host.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Api\Web.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Auth\Web.Auth.csproj" />
     </ItemGroup>

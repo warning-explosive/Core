@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.WebApplication
+namespace SpaceEngineers.Core.Test.WebApplication
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -17,11 +17,11 @@ namespace SpaceEngineers.Core.WebApplication
     using Web.Api.Containers;
 
     /// <summary>
-    /// Crud controller
+    /// Test controller
     /// </summary>
     [Route("[controller]/[action]")]
     [ApiController]
-    public class CrudController : ControllerBase
+    public class TestController : ControllerBase
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IJsonSerializer _jsonSerializer;
@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.WebApplication
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="jsonSerializer">IJsonSerializer</param>
         /// <param name="dataContainersProvider">IDataContainersProvider</param>
-        public CrudController(
+        public TestController(
             EndpointIdentity endpointIdentity,
             IJsonSerializer jsonSerializer,
             IDataContainersProvider dataContainersProvider)

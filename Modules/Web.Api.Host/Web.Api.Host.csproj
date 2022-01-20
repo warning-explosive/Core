@@ -4,13 +4,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.IntegrationTransport.Host</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.IntegrationTransport.Host</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.Web.Api.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Web.Api.Host</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.IntegrationTransport.Host</Title>
+        <Title>SpaceEngineers.Core.Web.Api.Host</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.IntegrationTransport.Host</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.Web.Api.Host</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -28,27 +28,17 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
-      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
-      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
-      <ProjectReference Include="..\IntegrationTransport.InMemory\IntegrationTransport.InMemory.csproj" />
-      <ProjectReference Include="..\IntegrationTransport.Tracing\IntegrationTransport.Tracing.csproj" />
-      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
-    </ItemGroup>
-    <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
       <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Builder\TransportEndpointBuilder.cs">
-        <DependentUpon>ITransportEndpointBuilder.cs</DependentUpon>
-      </Compile>
+      <ProjectReference Include="..\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
+      <ProjectReference Include="..\Web.Api\Web.Api.csproj" />
     </ItemGroup>
 </Project>

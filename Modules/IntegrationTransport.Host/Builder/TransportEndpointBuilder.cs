@@ -4,11 +4,14 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Api.Abstractions;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using GenericHost.Api.Abstractions;
+    using InMemory;
     using InMemory.ManualRegistrations;
+    using Microsoft.Extensions.Hosting;
 
     internal class TransportEndpointBuilder : ITransportEndpointBuilder
     {
@@ -112,10 +115,17 @@
                 BackgroundWorkers);
         }
 
-        public ITransportEndpointBuilder WithInMemoryIntegrationTransport()
+        public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder)
         {
             var inMemoryIntegrationTransportAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.IntegrationTransport), nameof(Core.IntegrationTransport.InMemory)));
-            var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(new InMemoryIntegrationTransportManualRegistration()));
+
+            var endpointInstanceSelectionBehavior = new EndpointInstanceSelectionBehavior();
+            var inMemoryIntegrationTransport = new InMemoryIntegrationTransport(endpointInstanceSelectionBehavior);
+            var inMemoryIntegrationTransportManualRegistration = new InMemoryIntegrationTransportManualRegistration(inMemoryIntegrationTransport, endpointInstanceSelectionBehavior);
+
+            hostBuilder.Properties[nameof(IIntegrationTransport)] = inMemoryIntegrationTransportManualRegistration;
+
+            var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
 
             return new TransportEndpointBuilder(
                     _rootAssemblies,

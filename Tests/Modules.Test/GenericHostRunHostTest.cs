@@ -68,7 +68,7 @@
                     useContainer => hostBuilder => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport()
+                            .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
                             .BuildOptions()));

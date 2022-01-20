@@ -1,10 +1,11 @@
-namespace SpaceEngineers.Core.WebApplication
+namespace SpaceEngineers.Core.Test.WebApplication
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.IO.Compression;
-    using System.Reflection;
+    using Basics;
     using IntegrationTransport.Host.Builder;
     using IntegrationTransport.WebHost.SimpleInjector;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,21 +20,21 @@ namespace SpaceEngineers.Core.WebApplication
     using Web.Auth;
     using Web.Auth.Authentication;
 
+    [SuppressMessage("Analysis", "CA1506", Justification ="web application composition root")]
     internal class WebApplicationStartup : SimpleInjectorBaseStartup
     {
-        private readonly IConfiguration _configuration;
-
         public WebApplicationStartup(
+            IHostBuilder hostBuilder,
             IConfiguration configuration,
             Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
-            : base(optionsFactory)
+            : base(hostBuilder, configuration, optionsFactory)
         {
-            _configuration = configuration;
         }
 
-        protected sealed override void ConfigureCoreServices(IServiceCollection serviceCollection)
+        protected sealed override void ConfigureAspNetCoreServices(
+            IServiceCollection serviceCollection)
         {
-            serviceCollection.AddMvc(options => options.Filters.Add(new AuthorizeFilter()));
+            serviceCollection.AddMvcCore(options => options.Filters.Add(new AuthorizeFilter()));
 
             serviceCollection.AddControllers().AddNewtonsoftJson();
 
@@ -42,18 +43,18 @@ namespace SpaceEngineers.Core.WebApplication
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Investment API",
-                    Description = "An ASP.NET Core Web API for Investment Web application",
-                    TermsOfService = new Uri("https://github.com/warning-explosive/Investment"),
+                    Title = "Test API",
+                    Description = "An ASP.NET Core Web API for test web application",
+                    TermsOfService = new Uri("https://github.com/warning-explosive/Core"),
                     Contact = new OpenApiContact
                     {
                         Name = "Contacts",
-                        Url = new Uri("https://github.com/warning-explosive/Investment")
+                        Url = new Uri("https://github.com/warning-explosive/Core")
                     },
                     License = new OpenApiLicense
                     {
                         Name = "License",
-                        Url = new Uri("https://github.com/warning-explosive/Investment")
+                        Url = new Uri("https://github.com/warning-explosive/Core")
                     }
                 });
 
@@ -107,8 +108,15 @@ namespace SpaceEngineers.Core.WebApplication
                     }
                 });
 
-                var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var assemblyName = AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(SpaceEngineers.Core),
+                    nameof(SpaceEngineers.Core.Test),
+                    nameof(SpaceEngineers.Core.Test.WebApplication));
+
+                var xmlFileName = $"{assemblyName}.xml";
                 var xmlFilePath = Path.Combine(AppContext.BaseDirectory, xmlFileName);
+
                 options.IncludeXmlComments(xmlFilePath);
             });
 
@@ -117,10 +125,10 @@ namespace SpaceEngineers.Core.WebApplication
             serviceCollection.AddResponseCompression(options => options.Providers.Add<GzipCompressionProvider>());
             serviceCollection.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
 
-            serviceCollection.AddAuth(_configuration);
+            serviceCollection.AddAuth(Configuration);
         }
 
-        protected sealed override void ConfigureRequestPipeline(
+        protected sealed override void ConfigureAspNetCoreRequestPipeline(
             IApplicationBuilder applicationBuilder,
             IWebHostEnvironment environment,
             IConfiguration configuration)

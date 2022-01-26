@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Api.Abstractions;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
@@ -122,8 +121,6 @@
             var endpointInstanceSelectionBehavior = new EndpointInstanceSelectionBehavior();
             var inMemoryIntegrationTransport = new InMemoryIntegrationTransport(endpointInstanceSelectionBehavior);
             var inMemoryIntegrationTransportManualRegistration = new InMemoryIntegrationTransportManualRegistration(inMemoryIntegrationTransport, endpointInstanceSelectionBehavior);
-
-            hostBuilder.Properties[nameof(IIntegrationTransport)] = inMemoryIntegrationTransportManualRegistration;
 
             var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
 

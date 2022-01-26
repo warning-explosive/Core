@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericHost;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
+    using InMemory.ManualRegistrations;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -106,6 +107,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             var transportEndpointOptions = ConfigureTransportEndpointOptions(hostBuilder, optionsFactory, out var builder);
 
             var transportDependencyContainer = BuildTransportContainer(transportEndpointOptions);
+
+            hostBuilder.Properties[nameof(IIntegrationTransport)] = new InMemoryIntegrationTransportInjectionManualRegistration(transportDependencyContainer);
 
             return serviceCollection =>
             {

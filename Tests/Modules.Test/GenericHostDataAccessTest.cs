@@ -111,7 +111,7 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> RunHostWithDataAccessTestData()
         {
-            var timeout = TimeSpan.FromSeconds(300);
+            var timeout = TimeSpan.FromSeconds(60);
 
             var useInMemoryIntegrationTransport =
                 new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
@@ -146,7 +146,7 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> RunHostWithDataAccessAndIntegrationTransportTracingTestData()
         {
-            var timeout = TimeSpan.FromSeconds(300);
+            var timeout = TimeSpan.FromSeconds(60);
 
             var useInMemoryIntegrationTransport =
                 new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(

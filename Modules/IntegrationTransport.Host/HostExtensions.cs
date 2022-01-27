@@ -104,9 +104,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             IHostBuilder hostBuilder,
             Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
         {
-            var transportEndpointOptions = ConfigureTransportEndpointOptions(hostBuilder, optionsFactory, out var builder);
+            var builder = ConfigureTransportEndpointBuilder(hostBuilder);
 
-            var transportDependencyContainer = BuildTransportContainer(transportEndpointOptions);
+            var options = optionsFactory(builder);
+
+            var transportDependencyContainer = BuildTransportContainer(options);
 
             hostBuilder.Properties[nameof(IIntegrationTransport)] = new InMemoryIntegrationTransportInjectionManualRegistration(transportDependencyContainer);
 
@@ -133,10 +135,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                    ?? throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
         }
 
-        private static TransportEndpointOptions ConfigureTransportEndpointOptions(
-            IHostBuilder hostBuilder,
-            Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory,
-            out ITransportEndpointBuilder builder)
+        private static ITransportEndpointBuilder ConfigureTransportEndpointBuilder(
+            IHostBuilder hostBuilder)
         {
             var messagingAssembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
@@ -145,23 +145,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     nameof(Core.GenericEndpoint),
                     nameof(Core.GenericEndpoint.Messaging)));
 
-            builder = new TransportEndpointBuilder()
-                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
-                .WithEndpointPluginAssemblies(messagingAssembly);
-
-            var transportEndpointOptions = optionsFactory(builder);
-
             var endpointIdentity = new EndpointIdentity(nameof(IntegrationTransport), Guid.NewGuid());
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
-            var containerOptions = transportEndpointOptions
-                .ContainerOptions
-                .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
-                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
-                .WithManualVerification(true);
-
-            return transportEndpointOptions.WithContainerOptions(containerOptions);
+            return new TransportEndpointBuilder(endpointIdentity)
+                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
+                .WithEndpointPluginAssemblies(messagingAssembly)
+                .ModifyContainerOptions(options => options
+                    .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
+                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                    .WithManualVerification(true));
         }
 
         private static IDependencyContainer BuildTransportContainer(

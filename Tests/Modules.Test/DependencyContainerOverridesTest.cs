@@ -73,7 +73,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var overrides = fixture.DelegateOverride(container =>
                 {
-                    container.Override<IManuallyRegisteredService, ManuallyRegisteredService, ManuallyRegisteredServiceOverride>(EnLifestyle.Transient);
+                    container.Override<IManuallyRegisteredService, ManuallyRegisteredServiceOverride>(EnLifestyle.Transient);
                 });
 
                 return new DependencyContainerOptions()
@@ -113,7 +113,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var overrides = fixture.DelegateOverride(container =>
                 {
-                    container.Override<IScopedService, ScopedService, TOverride>(lifestyle);
+                    container.Override<IScopedService, TOverride>(lifestyle);
                 });
 
                 return new DependencyContainerOptions()
@@ -158,7 +158,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Assert.Equal(typeof(ScopedCollectionResolvableOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableOverride>(Fixture, additionalOurTypes, EnLifestyle.Scoped)).GetType());
             Assert.Equal(typeof(ScopedCollectionResolvableSingletonOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableSingletonOverride>(Fixture, additionalOurTypes, EnLifestyle.Singleton)).GetType());
-            Assert.Throws<ContainerConfigurationException>(() => resolve(OverrideCollectionResolvable<ScopedCollectionResolvableTransientOverride>(Fixture, additionalOurTypes, EnLifestyle.Transient)).GetType());
+            Assert.Equal(typeof(ScopedCollectionResolvableTransientOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableTransientOverride>(Fixture, additionalOurTypes, EnLifestyle.Transient)).GetType());
 
             static DependencyContainerOptions OverrideCollectionResolvable<TOverride>(
                 ModulesTestFixture fixture,
@@ -168,7 +168,10 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var overrides = fixture.DelegateOverride(container =>
                 {
-                    container.Override<IScopedCollectionResolvable, ScopedCollectionResolvable, TOverride>(lifestyle);
+                    container.OverrideCollection(
+                        Enumerable.Empty<object>(),
+                        new[] { (typeof(TOverride), lifestyle) },
+                        Enumerable.Empty<(Func<IScopedCollectionResolvable>, EnLifestyle)>());
                 });
 
                 return new DependencyContainerOptions()
@@ -246,7 +249,10 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var overrides = fixture.DelegateOverride(container =>
                 {
-                    container.Override<IScopedCollectionResolvable, ScopedCollectionResolvable, TOverride>(lifestyle);
+                    container.OverrideCollection(
+                        Enumerable.Empty<object>(),
+                        new[] { (typeof(TOverride), lifestyle) },
+                        Enumerable.Empty<(Func<IScopedCollectionResolvable>, EnLifestyle)>());
                 });
 
                 return new DependencyContainerOptions()
@@ -268,7 +274,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 var overrides = fixture.DelegateOverride(container =>
                 {
-                    container.Override<IScopedCollectionResolvable, ScopedCollectionResolvableDecorator, TOverride>(lifestyle);
+                    container.Override<IScopedCollectionResolvable, TOverride>(lifestyle);
                 });
 
                 return new DependencyContainerOptions()
@@ -333,6 +339,64 @@ namespace SpaceEngineers.Core.Modules.Test
             var overrides = Fixture.DelegateOverride(container =>
             {
                 container.OverrideInstance<IManuallyRegisteredService>(replacement);
+            });
+
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(registration)
+                .WithOverrides(overrides)
+                .WithAdditionalOurTypes(additionalOurTypes);
+
+            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
+            var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
+
+            Assert.NotSame(original, replacement);
+            Assert.NotSame(original, resolved);
+            Assert.Same(replacement, resolved);
+            Assert.Same(resolved, dependencyContainer.Resolve<IManuallyRegisteredService>());
+        }
+
+        [Fact]
+        internal void OverrideInstanceByInstamceProcuderTest()
+        {
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(IScopedService),
+                typeof(ScopedService),
+                typeof(IManuallyRegisteredService),
+                typeof(ManuallyRegisteredService),
+                typeof(ManuallyRegisteredServiceOverride)
+            };
+
+            var original = new ManuallyRegisteredService();
+
+            var registration = Fixture.DelegateRegistration(container =>
+            {
+                container.RegisterInstance<IManuallyRegisteredService>(original);
+                container.RegisterInstance<ManuallyRegisteredService>(original);
+            });
+
+            var replacement = new ManuallyRegisteredServiceOverride();
+
+            var wrongOverrides = Fixture.DelegateOverride(container =>
+            {
+                container.OverrideDelegate<IManuallyRegisteredService>(() => replacement, EnLifestyle.Scoped);
+            });
+
+            var wrongOptions = new DependencyContainerOptions()
+                .WithManualRegistrations(registration)
+                .WithOverrides(wrongOverrides)
+                .WithAdditionalOurTypes(additionalOurTypes);
+
+            Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(wrongOptions, assemblies));
+
+            var overrides = Fixture.DelegateOverride(container =>
+            {
+                container.OverrideDelegate<IManuallyRegisteredService>(() => replacement, EnLifestyle.Singleton);
             });
 
             var options = new DependencyContainerOptions()

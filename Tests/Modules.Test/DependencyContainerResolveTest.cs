@@ -306,7 +306,8 @@ namespace SpaceEngineers.Core.Modules.Test
                     .Register<IndependentTestService, IndependentTestService>(EnLifestyle.Singleton)
                     .Register<ConcreteImplementationWithDependencyService, ConcreteImplementationWithDependencyService>(EnLifestyle.Transient)
                     .Register<ConcreteImplementationService, ConcreteImplementationService>(EnLifestyle.Singleton)
-                    .RegisterCollection<ICollectionResolvableTestService>(expectedCollection, EnLifestyle.Transient)
+                    .RegisterCollectionEntry<ICollectionResolvableTestService, CollectionResolvableTestServiceImpl1>(EnLifestyle.Transient)
+                    .RegisterCollectionEntry<ICollectionResolvableTestService, CollectionResolvableTestServiceImpl2>(EnLifestyle.Transient)
                     .Register<IOpenGenericTestService<object>, OpenGenericTestService<object>>(EnLifestyle.Transient)
                     .Register<OpenGenericTestService<object>, OpenGenericTestService<object>>(EnLifestyle.Transient);
             });

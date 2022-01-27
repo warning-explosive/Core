@@ -40,19 +40,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                .Where(info => info.attribute != null)
                .SelectMany(info => FlattenAutoRegistrationServices(info.implementation)
                    .Select(service => (service, info.implementation, info.attribute)))
-               .Where(info => !registered.Contains(info.implementation) && !HasBeenOverridden(info.service, info.implementation))
+               .Where(info => !registered.Contains(info.implementation) && !HasBeenOverridden(info.service))
                .Each(info => throw new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));
         }
 
-        private bool HasBeenOverridden(Type service, Type implementation)
+        private bool HasBeenOverridden(Type service)
         {
-            return _overrides.InstanceOverrides
-                .Select(info => new { info.Service, Implementation = info.Instance.GetType() })
-                .Concat(_overrides.ResolvableOverrides
-                    .Concat(_overrides.CollectionResolvableOverrides)
-                    .Concat(_overrides.DecoratorOverrides)
-                    .Select(info => new { info.Service, info.Implementation }))
-                .Any(info => info.Service == service && info.Implementation == implementation);
+            return _overrides.ResolvableOverrides.Select(info => info.Service)
+                .Concat(_overrides.CollectionOverrides.Select(collection => collection.Key))
+                .Concat(_overrides.DecoratorOverrides.Select(info => info.Service))
+                .Any(overriddenService => overriddenService == service);
         }
     }
 }

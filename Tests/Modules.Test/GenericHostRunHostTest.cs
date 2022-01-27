@@ -112,11 +112,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -176,11 +178,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -236,17 +240,19 @@
 
             var overrides = Fixture.DelegateOverride(container =>
             {
-                container.Override<IRetryPolicy, DefaultRetryPolicy, RetryPolicyMock>(EnLifestyle.Singleton);
+                container.Override<IRetryPolicy, RetryPolicyMock>(EnLifestyle.Singleton);
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options
-                        .WithAdditionalOurTypes(additionalOurTypes)
-                        .WithOverrides(overrides))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(overrides))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -334,11 +340,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -382,8 +390,6 @@
             Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var endpointIdentity = new EndpointIdentity(TestIdentity.Endpoint1, 0);
-
             var messageTypes = new[]
             {
                 typeof(Command)
@@ -398,17 +404,19 @@
 
             var overrides = Fixture.DelegateOverride(container =>
             {
-                container.Override<IRetryPolicy, DefaultRetryPolicy, RetryPolicyMock>(EnLifestyle.Singleton);
+                container.Override<IRetryPolicy, RetryPolicyMock>(EnLifestyle.Singleton);
             });
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options
-                        .WithOverrides(overrides)
-                        .WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(endpointIdentity))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options
+                            .WithOverrides(overrides)
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -517,21 +525,27 @@
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint11))
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint20))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
+                        .BuildOptions())
+                .UseEndpoint(
+                    TestIdentity.Endpoint11,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
+                        .BuildOptions())
+                .UseEndpoint(
+                    TestIdentity.Endpoint20,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -569,11 +583,13 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .BuildOptions(new EndpointIdentity(nameof(RunTest), 0)))
+                .UseEndpoint(
+                    new EndpointIdentity(nameof(RunTest), 0),
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
@@ -605,11 +621,13 @@
             TimeSpan timeout)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .BuildOptions(new EndpointIdentity(nameof(StartStopTest), 0)))
+                .UseEndpoint(
+                    new EndpointIdentity(nameof(StartStopTest), 0),
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();

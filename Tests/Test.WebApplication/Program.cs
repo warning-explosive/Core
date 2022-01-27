@@ -2,17 +2,14 @@ namespace SpaceEngineers.Core.Test.WebApplication
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
-    using AuthorizationEndpoint.Contract;
     using AuthorizationEndpoint.Host;
     using Basics;
     using CompositionRoot.SimpleInjector;
     using CrossCuttingConcerns.Api.Extensions;
     using DataAccess.Orm.PostgreSql;
-    using GenericEndpoint.Contract;
     using GenericHost;
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Hosting;
-    using TracingEndpoint.Contract;
     using TracingEndpoint.Host;
     using Web.Api.Host;
 
@@ -41,17 +38,17 @@ namespace SpaceEngineers.Core.Test.WebApplication
                             .WithTracing()
                             .WithWebApi()
                             .BuildOptions()))
-                .UseAuthorizationEndpoint(builder => builder
+                .UseAuthorizationEndpoint(0, builder => builder
                     .WithContainer(options => options.UseSimpleInjector())
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(new PostgreSqlDatabaseProvider())
                     .WithTracing()
-                    .BuildOptions(new EndpointIdentity(AuthorizationEndpointIdentity.LogicalName, 0)))
-                .UseTracingEndpoint(builder => builder
+                    .BuildOptions())
+                .UseTracingEndpoint(0, builder => builder
                     .WithContainer(options => options.UseSimpleInjector())
                     .WithDefaultCrossCuttingConcerns()
                     .WithDataAccess(new PostgreSqlDatabaseProvider())
-                    .BuildOptions(new EndpointIdentity(TracingEndpointIdentity.LogicalName, 0)))
+                    .BuildOptions())
                 .BuildWebHost()
                 .RunAsync()
                 .ConfigureAwait(false);

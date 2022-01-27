@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Extensions
     using Api.Abstractions;
     using Basics;
     using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Api.Extensions;
     using Contract.Abstractions;
 
     internal static class IntegrationTypesExtensions
@@ -22,7 +23,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Extensions
         {
             return registrations
                 .Collections()
-                .SelectMany(info => info.Implementation.ExtractGenericArgumentsAt(typeof(IMessageHandler<>)))
+                .RegisteredComponents()
+                .SelectMany(info => info.ExtractGenericArgumentsAt(typeof(IMessageHandler<>)))
                 .Any(messageType.IsAssignableFrom);
         }
     }

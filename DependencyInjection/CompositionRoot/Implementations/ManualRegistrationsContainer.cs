@@ -3,13 +3,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using Api.Abstractions;
     using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [UnregisteredComponent]
@@ -19,7 +17,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private readonly List<InstanceRegistrationInfo> _instances;
         private readonly List<ServiceRegistrationInfo> _resolvable;
         private readonly List<DelegateRegistrationInfo> _delegates;
-        private readonly List<ServiceRegistrationInfo> _collections;
+        private readonly List<IRegistrationInfo> _collections;
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
         public ManualRegistrationsContainer(
@@ -32,7 +30,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _instances = new List<InstanceRegistrationInfo>();
             _resolvable = new List<ServiceRegistrationInfo>();
             _delegates = new List<DelegateRegistrationInfo>();
-            _collections = new List<ServiceRegistrationInfo>();
+            _collections = new List<IRegistrationInfo>();
             _decorators = new List<DecoratorRegistrationInfo>();
         }
 
@@ -59,7 +57,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             return _delegates;
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Collections()
+        public IEnumerable<IRegistrationInfo> Collections()
         {
             return _collections;
         }
@@ -75,8 +73,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IManualRegistrationsContainer Register(Type service, Type implementation, EnLifestyle lifestyle)
         {
-            var info = new ServiceRegistrationInfo(service, implementation, lifestyle);
-            _resolvable.Add(info);
+            _resolvable.Add(new ServiceRegistrationInfo(service, implementation, lifestyle));
             return this;
         }
 
@@ -87,28 +84,27 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             return Register(typeof(TService), typeof(TImplementation), lifestyle);
         }
 
-        public IManualRegistrationsContainer RegisterInstance<TService>(TService singletonInstance)
+        public IManualRegistrationsContainer RegisterInstance<TService>(TService instance)
             where TService : class
         {
-            return RegisterInstance(typeof(TService), singletonInstance);
+            return RegisterInstance(typeof(TService), instance);
         }
 
-        public IManualRegistrationsContainer RegisterInstance(Type service, object singletonInstance)
+        public IManualRegistrationsContainer RegisterInstance(Type service, object instance)
         {
-            _instances.Add(new InstanceRegistrationInfo(service, singletonInstance));
+            _instances.Add(new InstanceRegistrationInfo(service, instance));
             return this;
         }
 
-        public IManualRegistrationsContainer RegisterDelegate<TService>(Func<TService> factory, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterDelegate<TService>(Func<TService> instanceProducer, EnLifestyle lifestyle)
             where TService : class
         {
-            return RegisterDelegate(typeof(TService), factory, lifestyle);
+            return RegisterDelegate(typeof(TService), instanceProducer, lifestyle);
         }
 
-        public IManualRegistrationsContainer RegisterDelegate(Type service, Func<object> factory, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
         {
-            var info = new DelegateRegistrationInfo(service, factory, lifestyle);
-            _delegates.Add(info);
+            _delegates.Add(new DelegateRegistrationInfo(service, instanceProducer, lifestyle));
             return this;
         }
 
@@ -121,25 +117,50 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IManualRegistrationsContainer RegisterDecorator(Type service, Type decorator, EnLifestyle lifestyle)
         {
-            var info = new DecoratorRegistrationInfo(service, decorator, lifestyle);
-
-            _decorators.Add(info);
-
+            _decorators.Add(new DecoratorRegistrationInfo(service, decorator, lifestyle));
             return this;
         }
 
-        public IManualRegistrationsContainer RegisterCollection<TService>(IEnumerable<Type> implementations, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterCollectionEntry<TService, TImplementation>(EnLifestyle lifestyle)
             where TService : class
+            where TImplementation : class, TService
         {
-            return RegisterCollection(typeof(TService), implementations, lifestyle);
+            return RegisterCollectionEntry(typeof(TService), typeof(TImplementation), lifestyle);
         }
 
-        public IManualRegistrationsContainer RegisterCollection(Type service, IEnumerable<Type> implementations, EnLifestyle lifestyle)
+        public IManualRegistrationsContainer RegisterCollectionEntry<TService>(Type implementation, EnLifestyle lifestyle)
+            where TService : class
         {
-            implementations
-                .Select(implementation => new ServiceRegistrationInfo(service, implementation, lifestyle))
-                .Each(_collections.Add);
+            return RegisterCollectionEntry(typeof(TService), implementation, lifestyle);
+        }
 
+        public IManualRegistrationsContainer RegisterCollectionEntry(Type service, Type implementation, EnLifestyle lifestyle)
+        {
+            _collections.Add(new ServiceRegistrationInfo(service, implementation, lifestyle));
+            return this;
+        }
+
+        public IManualRegistrationsContainer RegisterCollectionEntryInstance<TService>(TService instance)
+            where TService : class
+        {
+            return RegisterCollectionEntryInstance(typeof(TService), instance);
+        }
+
+        public IManualRegistrationsContainer RegisterCollectionEntryInstance(Type service, object implementation)
+        {
+            _collections.Add(new InstanceRegistrationInfo(service, implementation));
+            return this;
+        }
+
+        public IManualRegistrationsContainer RegisterCollectionEntryDelegate<TService>(Func<TService> instanceProducer, EnLifestyle lifestyle)
+            where TService : class
+        {
+            return RegisterCollectionEntryDelegate(typeof(TService), instanceProducer, lifestyle);
+        }
+
+        public IManualRegistrationsContainer RegisterCollectionEntryDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
+        {
+            _collections.Add(new DelegateRegistrationInfo(service, instanceProducer, lifestyle));
             return this;
         }
 

@@ -2,13 +2,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
 
     /// <summary>
     /// InstanceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class InstanceRegistrationInfo : IEquatable<InstanceRegistrationInfo>,
+    public class InstanceRegistrationInfo : IRegistrationInfo,
+                                            IEquatable<InstanceRegistrationInfo>,
                                             ISafelyEquatable<InstanceRegistrationInfo>
     {
         /// <summary> .cctor </summary>
@@ -20,9 +22,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
             Instance = instance;
         }
 
-        /// <summary>
-        /// Service
-        /// </summary>
+        /// <inheritdoc />
         public Type Service { get; }
 
         /// <summary>
@@ -31,9 +31,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
         public object Instance { get; }
 
         /// <inheritdoc />
+        public EnLifestyle Lifestyle => EnLifestyle.Singleton;
+
+        /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" | ", Service, Instance.GetType());
+            return string.Join(" | ", Service, Instance.GetType(), Lifestyle);
         }
 
         #region IEquatable

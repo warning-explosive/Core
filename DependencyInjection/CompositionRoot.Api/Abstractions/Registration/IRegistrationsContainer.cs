@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 
         /// <summary> Collections </summary>
         /// <returns>ServiceRegistrationInfos</returns>
-        IEnumerable<ServiceRegistrationInfo> Collections();
+        IEnumerable<IRegistrationInfo> Collections();
 
         /// <summary> Decorators </summary>
         /// <returns>DecoratorRegistrationInfos</returns>

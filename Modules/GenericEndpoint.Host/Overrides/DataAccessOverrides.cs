@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Overrides
     {
         public void RegisterOverrides(IRegisterComponentsOverrideContainer container)
         {
-            container.Override<IIntegrationUnitOfWork, IntegrationUnitOfWork, GenericEndpoint.DataAccess.UnitOfWork.IntegrationUnitOfWork>(EnLifestyle.Scoped);
+            container.Override<IIntegrationUnitOfWork, GenericEndpoint.DataAccess.UnitOfWork.IntegrationUnitOfWork>(EnLifestyle.Scoped);
         }
     }
 }

@@ -16,114 +16,90 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     {
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
 
-        private readonly List<InstanceRegistrationInfo> _instanceOverridesStore;
-        private readonly List<DelegateRegistrationInfo> _delegateOverridesStore;
-        private readonly List<ComponentOverrideInfo> _resolvableOverridesStore;
-        private readonly List<ComponentOverrideInfo> _collectionResolvableOverridesStore;
-        private readonly List<ComponentOverrideInfo> _decoratorOverridesStore;
+        private readonly List<IRegistrationInfo> _resolvableOverridesStore;
+        private readonly Dictionary<Type, IRegistrationInfo[]> _collectionOverridesStore;
+        private readonly List<DecoratorRegistrationInfo> _decoratorOverridesStore;
 
-        private IReadOnlyCollection<InstanceRegistrationInfo>? _instanceOverrides;
-        private IReadOnlyCollection<DelegateRegistrationInfo>? _delegateOverrides;
-        private IReadOnlyCollection<ComponentOverrideInfo>? _resolvableOverrides;
-        private IReadOnlyCollection<ComponentOverrideInfo>? _collectionResolvableOverrides;
-        private IReadOnlyCollection<ComponentOverrideInfo>? _decoratorOverrides;
+        private IReadOnlyCollection<IRegistrationInfo>? _resolvableOverrides;
+        private IReadOnlyDictionary<Type, IRegistrationInfo[]>? _collectionOverrides;
+        private IReadOnlyCollection<DecoratorRegistrationInfo>? _decoratorOverrides;
 
         public ComponentsOverrideContainer(IConstructorResolutionBehavior constructorResolutionBehavior)
         {
             _constructorResolutionBehavior = constructorResolutionBehavior;
 
-            _instanceOverridesStore = new List<InstanceRegistrationInfo>();
-            _delegateOverridesStore = new List<DelegateRegistrationInfo>();
-            _resolvableOverridesStore = new List<ComponentOverrideInfo>();
-            _collectionResolvableOverridesStore = new List<ComponentOverrideInfo>();
-            _decoratorOverridesStore = new List<ComponentOverrideInfo>();
+            _resolvableOverridesStore = new List<IRegistrationInfo>();
+            _collectionOverridesStore = new Dictionary<Type, IRegistrationInfo[]>();
+            _decoratorOverridesStore = new List<DecoratorRegistrationInfo>();
         }
 
-        public IEnumerable<ComponentOverrideInfo> AllOverrides => ResolvableOverrides
-            .Concat(CollectionResolvableOverrides)
-            .Concat(DecoratorOverrides);
-
-        public IReadOnlyCollection<InstanceRegistrationInfo> InstanceOverrides
+        public IReadOnlyCollection<IRegistrationInfo> ResolvableOverrides
         {
             get
             {
-                _instanceOverrides ??= RemoveDuplicates(_instanceOverridesStore);
-                return _instanceOverrides;
-            }
-        }
+                _resolvableOverrides ??= RemoveDuplicates(
+                        _resolvableOverridesStore,
+                        registrationInfo => registrationInfo.Service)
+                    .ToList();
 
-        public IReadOnlyCollection<DelegateRegistrationInfo> DelegateOverrides
-        {
-            get
-            {
-                _delegateOverrides ??= RemoveDuplicates(_delegateOverridesStore);
-                return _delegateOverrides;
-            }
-        }
-
-        public IReadOnlyCollection<ComponentOverrideInfo> ResolvableOverrides
-        {
-            get
-            {
-                _resolvableOverrides ??= RemoveDuplicates(_resolvableOverridesStore);
                 return _resolvableOverrides;
             }
         }
 
-        public IReadOnlyCollection<ComponentOverrideInfo> CollectionResolvableOverrides
+        public IReadOnlyDictionary<Type, IRegistrationInfo[]> CollectionOverrides
         {
             get
             {
-                _collectionResolvableOverrides ??= RemoveDuplicates(_collectionResolvableOverridesStore);
-                return _collectionResolvableOverrides;
+                _collectionOverrides ??= RemoveDuplicates(
+                    _collectionOverridesStore,
+                    collection => collection.Key)
+                    .ToDictionary(
+                        collection => collection.Key,
+                        collection => collection.Value);
+
+                return _collectionOverrides;
             }
         }
 
-        public IReadOnlyCollection<ComponentOverrideInfo> DecoratorOverrides
+        public IReadOnlyCollection<DecoratorRegistrationInfo> DecoratorOverrides
         {
             get
             {
-                _decoratorOverrides ??= RemoveDuplicates(_decoratorOverridesStore);
+                _decoratorOverrides ??= RemoveDuplicates(
+                        _decoratorOverridesStore,
+                        registrationInfo => registrationInfo.Service)
+                    .ToList();
+
                 return _decoratorOverrides;
             }
         }
 
-        public IRegisterComponentsOverrideContainer Override<TService, TImplementation, TReplacement>(EnLifestyle lifestyle)
-            where TImplementation : TService
+        public IRegisterComponentsOverrideContainer Override<TService, TReplacement>(EnLifestyle lifestyle)
             where TReplacement : TService
         {
-            return Override(typeof(TService), typeof(TImplementation), typeof(TReplacement), lifestyle);
+            return Override(typeof(TService), typeof(TReplacement), lifestyle);
         }
 
         public IRegisterComponentsOverrideContainer Override(
             Type service,
-            Type implementation,
             Type replacement,
             EnLifestyle lifestyle)
         {
-            var info = new ComponentOverrideInfo(service, implementation, replacement, lifestyle);
-
             if (replacement.IsSubclassOfOpenGeneric(typeof(IDecorator<>))
                 || (_constructorResolutionBehavior.TryGetConstructor(replacement, out var cctor)
                     && cctor.IsDecorator(service)))
             {
-                _decoratorOverridesStore.Add(info);
+                _decoratorOverridesStore.Add(new DecoratorRegistrationInfo(service, replacement, lifestyle));
                 return this;
             }
 
             if (typeof(IResolvable).IsAssignableFrom(replacement))
             {
-                _resolvableOverridesStore.Add(info);
+                _resolvableOverridesStore.Add(new ServiceRegistrationInfo(service, replacement, lifestyle));
                 return this;
             }
 
-            if (replacement.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)))
-            {
-                _collectionResolvableOverridesStore.Add(info);
-                return this;
-            }
-
-            throw new InvalidOperationException($"You can't use {replacement} as component override for {implementation} that have been registered as {service} with {lifestyle} lifestyle");
+            throw new InvalidOperationException($"You can't use {replacement} as component override and register it as {service} with {lifestyle} lifestyle");
         }
 
         public IRegisterComponentsOverrideContainer OverrideInstance<TService>(TService replacement)
@@ -134,7 +110,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IRegisterComponentsOverrideContainer OverrideInstance(Type service, object replacement)
         {
-            _instanceOverridesStore.Add(new InstanceRegistrationInfo(service, replacement));
+            _resolvableOverridesStore.Add(new InstanceRegistrationInfo(service, replacement));
+
             return this;
         }
 
@@ -146,32 +123,51 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IRegisterComponentsOverrideContainer OverrideDelegate(Type service, Func<object> replacement, EnLifestyle lifestyle)
         {
-            _delegateOverridesStore.Add(new DelegateRegistrationInfo(service, replacement, lifestyle));
+            _resolvableOverridesStore.Add(new DelegateRegistrationInfo(service, replacement, lifestyle));
+
             return this;
         }
 
-        private static IReadOnlyCollection<InstanceRegistrationInfo> RemoveDuplicates(IEnumerable<InstanceRegistrationInfo> infos)
+        public IRegisterComponentsOverrideContainer OverrideCollection<TService>(
+            IEnumerable<object> instanceReplacements,
+            IEnumerable<(Type implementation, EnLifestyle lifestyle)> replacements,
+            IEnumerable<(Func<TService> instanceProducer, EnLifestyle lifestyle)> instanceProducerReplacements)
+            where TService : class
         {
-            return infos
-                .GroupBy(info => new { info.Service })
-                .Select(grp => grp.Last())
-                .ToList();
+            return OverrideCollection(
+                typeof(TService),
+                instanceReplacements,
+                replacements,
+                instanceProducerReplacements.Select(replacement => ((Func<object>)replacement.instanceProducer, replacement.lifestyle)));
         }
 
-        private static IReadOnlyCollection<DelegateRegistrationInfo> RemoveDuplicates(IEnumerable<DelegateRegistrationInfo> infos)
+        public IRegisterComponentsOverrideContainer OverrideCollection(
+            Type service,
+            IEnumerable<object> instanceReplacements,
+            IEnumerable<(Type implementation, EnLifestyle lifestyle)> replacements,
+            IEnumerable<(Func<object> instanceProducer, EnLifestyle lifestyle)> instanceProducerReplacements)
         {
-            return infos
-                .GroupBy(info => new { info.Service })
-                .Select(grp => grp.Last())
-                .ToList();
+            var collection = instanceReplacements
+                .Select(replacement => new InstanceRegistrationInfo(service, instanceReplacements))
+                .Cast<IRegistrationInfo>()
+                .Concat(replacements
+                    .Select(replacement => new ServiceRegistrationInfo(service, replacement.implementation, replacement.lifestyle)))
+                .Concat(instanceProducerReplacements
+                    .Select(replacement => new DelegateRegistrationInfo(service, replacement.instanceProducer, replacement.lifestyle)))
+                .ToArray();
+
+            _collectionOverridesStore.Add(service, collection);
+
+            return this;
         }
 
-        private static IReadOnlyCollection<ComponentOverrideInfo> RemoveDuplicates(IEnumerable<ComponentOverrideInfo> infos)
+        private static IEnumerable<T> RemoveDuplicates<T>(
+            IEnumerable<T> source,
+            Func<T, Type> serviceTypeAccessor)
         {
-            return infos
-                .GroupBy(info => new { info.Service, info.Implementation })
-                .Select(grp => grp.Last())
-                .ToList();
+            return source
+                .GroupBy(serviceTypeAccessor)
+                .Select(grp => grp.Last());
         }
     }
 }

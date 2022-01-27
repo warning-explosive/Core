@@ -100,16 +100,20 @@
             Func<IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .BuildOptions(TestIdentity.Endpoint10))
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .BuildOptions(TestIdentity.Endpoint20))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .BuildOptions())
+                .UseEndpoint(
+                    TestIdentity.Endpoint20,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .BuildOptions())
                 .BuildHost();
 
             var transport = host.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
@@ -131,8 +135,6 @@
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<IHostBuilder, IHostBuilder> useTransport)
         {
-            var endpointIdentity = new EndpointIdentity(TestIdentity.Endpoint1, 0);
-
             var messageTypes = new[]
             {
                 typeof(BaseEvent),
@@ -157,18 +159,20 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(endpointIdentity))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost();
 
             using (host)
             {
                 CheckHost(host);
-                CheckEndpoint(host, endpointIdentity, Output.WriteLine);
+                CheckEndpoint(host, TestIdentity.Endpoint10, Output.WriteLine);
                 CheckTransport(host, Output.WriteLine);
             }
 

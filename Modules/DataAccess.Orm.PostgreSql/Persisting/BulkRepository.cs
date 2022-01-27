@@ -69,8 +69,8 @@
                 .SelectMany(entity => Flatten(entity, _modelProvider, new List<IUniqueIdentified<TKey>>()))
                 .OrderByDependencies(GetKey, GetDependencies(_modelProvider))
                 .Stack(GetKey)
-                .SelectMany(group => InsertEntity(group.Key, group.Value, _dependencyContainer, _modelProvider)
-                    .Concat(InsertMtm(group.Key, group.Value, _dependencyContainer, _modelProvider)))
+                .SelectMany(grp => InsertEntity(grp.Key, grp.Value, _dependencyContainer, _modelProvider)
+                    .Concat(InsertMtm(grp.Key, grp.Value, _dependencyContainer, _modelProvider)))
                 .ToString(";" + Environment.NewLine);
 
             var command = new CommandDefinition(

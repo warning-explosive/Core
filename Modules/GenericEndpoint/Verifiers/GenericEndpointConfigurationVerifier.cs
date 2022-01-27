@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using Basics;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Api.Extensions;
     using Contract.Abstractions;
     using Contract.Attributes;
     using Endpoint;
@@ -86,9 +87,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             var lifestyleViolations = _registrations
                 .Collections()
-                .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>))
-                               && info.Lifestyle != EnLifestyle.Transient)
-                .Select(info => info.Implementation)
+                .Where(info => info.Lifestyle != EnLifestyle.Transient)
+                .RegisteredComponents()
+                .Where(info => info.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                 .ToList();
 
             if (lifestyleViolations.Any())

@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
     /// ServiceRegistrationInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ServiceRegistrationInfo : IEquatable<ServiceRegistrationInfo>,
+    public class ServiceRegistrationInfo : IRegistrationInfo,
+                                           IEquatable<ServiceRegistrationInfo>,
                                            ISafelyEquatable<ServiceRegistrationInfo>
     {
         /// <summary> .cctor </summary>
@@ -23,9 +24,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
             Lifestyle = lifestyle;
         }
 
-        /// <summary>
-        /// Service
-        /// </summary>
+        /// <inheritdoc />
         public Type Service { get; }
 
         /// <summary>
@@ -33,9 +32,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
         /// </summary>
         public Type Implementation { get; }
 
-        /// <summary>
-        /// Lifestyle
-        /// </summary>
+        /// <inheritdoc />
         public EnLifestyle Lifestyle { get; }
 
         /// <inheritdoc />

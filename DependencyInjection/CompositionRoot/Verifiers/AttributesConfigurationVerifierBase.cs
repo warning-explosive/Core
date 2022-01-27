@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     using System.Linq;
     using Api.Abstractions;
     using Api.Abstractions.Registration;
+    using Api.Extensions;
     using AutoRegistration.Api.Abstractions;
     using Basics;
-    using Extensions;
 
     internal abstract class AttributesConfigurationVerifierBase : IConfigurationVerifier
     {

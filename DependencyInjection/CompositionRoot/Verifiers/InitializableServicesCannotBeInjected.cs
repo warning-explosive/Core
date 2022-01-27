@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
     using System.Reflection;
     using Api.Abstractions;
     using Api.Abstractions.Registration;
+    using Api.Extensions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

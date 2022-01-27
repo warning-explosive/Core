@@ -62,7 +62,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             return Enumerable.Empty<DelegateRegistrationInfo>();
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Collections()
+        public IEnumerable<IRegistrationInfo> Collections()
         {
             _collections ??= InitCollections();
             return _collections;

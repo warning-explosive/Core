@@ -1,6 +1,6 @@
 Host: localhost
 Port: 5432
-Database: SpaceEngineersTestDatabase
+Database: CompareEquivalentDatabaseDatabaseModelsTest
 Username: postgres
 Password: Password12!
 IsolationLevel: Snapshot

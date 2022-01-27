@@ -55,19 +55,5 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// Assemblies that limits assembly loading for endpoint's dependency container
         /// </summary>
         public IReadOnlyCollection<Assembly> AboveAssemblies { get; }
-
-        /// <summary>
-        /// With container options
-        /// </summary>
-        /// <param name="containerOptions">DependencyContainerOptions</param>
-        /// <returns>EndpointOptions</returns>
-        internal EndpointOptions WithContainerOptions(DependencyContainerOptions containerOptions)
-        {
-            return new EndpointOptions(
-                Identity,
-                containerOptions,
-                ContainerImplementationProducer,
-                AboveAssemblies.ToArray());
-        }
     }
 }

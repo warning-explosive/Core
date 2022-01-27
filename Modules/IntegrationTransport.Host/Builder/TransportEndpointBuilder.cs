@@ -7,6 +7,7 @@
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
+    using GenericEndpoint.Contract;
     using GenericHost.Api.Abstractions;
     using InMemory;
     using InMemory.ManualRegistrations;
@@ -19,8 +20,9 @@
         private readonly Assembly[] _rootAssemblies;
         private readonly Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? _containerImplementationProducer;
 
-        internal TransportEndpointBuilder()
+        internal TransportEndpointBuilder(EndpointIdentity endpointIdentity)
             : this(
+                endpointIdentity,
                 new[] { AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.IntegrationTransport))) },
                 null,
                 Array.Empty<Assembly>(),
@@ -31,6 +33,7 @@
         }
 
         private TransportEndpointBuilder(
+            EndpointIdentity endpointIdentity,
             Assembly[] rootAssemblies,
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? containerImplementationProducer,
             IReadOnlyCollection<Assembly> endpointPluginAssemblies,
@@ -38,6 +41,7 @@
             IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> startupActions,
             IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> backgroundWorkers)
         {
+            EndpointIdentity = endpointIdentity;
             _rootAssemblies = rootAssemblies;
             _containerImplementationProducer = containerImplementationProducer;
             EndpointPluginAssemblies = endpointPluginAssemblies;
@@ -45,6 +49,8 @@
             StartupActions = startupActions;
             BackgroundWorkers = backgroundWorkers;
         }
+
+        public EndpointIdentity EndpointIdentity { get; }
 
         public IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> StartupActions { get; }
 
@@ -57,6 +63,7 @@
         public ITransportEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(assemblies).ToList(),
@@ -69,6 +76,7 @@
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
         {
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 containerImplementationProducer,
                 EndpointPluginAssemblies,
@@ -80,6 +88,7 @@
         public ITransportEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
         {
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies,
@@ -93,6 +102,7 @@
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(new[] { crossCuttingConcernsAssembly }).ToList(),
@@ -106,6 +116,7 @@
             var integrationTransportTracingAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.IntegrationTransport), nameof(Core.IntegrationTransport.Tracing)));
 
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies.Concat(new[] { integrationTransportTracingAssembly }).ToList(),
@@ -125,17 +136,19 @@
             var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
 
             return new TransportEndpointBuilder(
-                    _rootAssemblies,
-                    _containerImplementationProducer,
-                    EndpointPluginAssemblies.Concat(new[] { inMemoryIntegrationTransportAssembly }).ToList(),
-                    Modifiers.Concat(new[] { inMemoryIntegrationTransportModifier }).ToList(),
-                    StartupActions,
-                    BackgroundWorkers);
+                EndpointIdentity,
+                _rootAssemblies,
+                _containerImplementationProducer,
+                EndpointPluginAssemblies.Concat(new[] { inMemoryIntegrationTransportAssembly }).ToList(),
+                Modifiers.Concat(new[] { inMemoryIntegrationTransportModifier }).ToList(),
+                StartupActions,
+                BackgroundWorkers);
         }
 
         public ITransportEndpointBuilder WithStartupAction(Func<IDependencyContainer, IHostStartupAction> producer)
         {
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies,
@@ -147,6 +160,7 @@
         public ITransportEndpointBuilder WithBackgroundWorker(Func<IDependencyContainer, IHostBackgroundWorker> producer)
         {
             return new TransportEndpointBuilder(
+                EndpointIdentity,
                 _rootAssemblies,
                 _containerImplementationProducer,
                 EndpointPluginAssemblies,
@@ -165,6 +179,7 @@
             }
 
             return new TransportEndpointOptions(
+                EndpointIdentity,
                 containerOptions,
                 _containerImplementationProducer ?? throw new InvalidOperationException(RequireWithContainerCall),
                 _rootAssemblies.Concat(EndpointPluginAssemblies).ToArray());

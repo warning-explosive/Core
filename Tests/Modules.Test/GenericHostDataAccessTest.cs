@@ -26,12 +26,15 @@ namespace SpaceEngineers.Core.Modules.Test
     using Messages;
     using Microsoft.Extensions.Hosting;
     using Mocks;
+    using Overrides;
     using Registrations;
+    using TracingEndpoint.Contract;
     using TracingEndpoint.Contract.Messages;
     using TracingEndpoint.DatabaseModel;
     using TracingEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
+    using EndpointIdentity = GenericEndpoint.Contract.EndpointIdentity;
     using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
 
     /// <summary>
@@ -87,6 +90,8 @@ namespace SpaceEngineers.Core.Modules.Test
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
+                            .ModifyContainerOptions(options => options
+                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -120,7 +125,9 @@ namespace SpaceEngineers.Core.Modules.Test
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
-                            .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                            .ModifyContainerOptions(options => options
+                                .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -156,7 +163,9 @@ namespace SpaceEngineers.Core.Modules.Test
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .WithTracing()
-                            .ModifyContainerOptions(options => options.WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                            .ModifyContainerOptions(options => options
+                                .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -186,14 +195,19 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(databaseProvider.GetType().FullName);
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseTracingEndpoint(builder => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithDataAccess(databaseProvider)
-                    .BuildOptions(TestIdentity.TracingEndpoint))
+                .UseTracingEndpoint(
+                    TestIdentity.Instance0,
+                    builder => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithDataAccess(databaseProvider)
+                        .ModifyContainerOptions(options => options
+                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))))
+                        .BuildOptions())
                 .BuildHost();
 
-            var tracingEndpointContainer = host.GetEndpointDependencyContainer(TestIdentity.TracingEndpoint);
+            var tracingEndpointContainer = host.GetEndpointDependencyContainer(
+                new EndpointIdentity(TracingEndpointIdentity.LogicalName, TestIdentity.Instance0));
 
             var actualModel = await tracingEndpointContainer
                 .Resolve<IDatabaseModelBuilder>()
@@ -237,15 +251,20 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseTracingEndpoint(builder => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithDataAccess(databaseProvider)
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(TestIdentity.TracingEndpoint))
+                .UseTracingEndpoint(
+                    TestIdentity.Instance0,
+                    builder => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithDataAccess(databaseProvider)
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
+                        .BuildOptions())
                 .BuildHost();
 
-            var tracingEndpointContainer = host.GetEndpointDependencyContainer(TestIdentity.TracingEndpoint);
+            var tracingEndpointContainer = host.GetEndpointDependencyContainer(
+                new EndpointIdentity(TracingEndpointIdentity.LogicalName, TestIdentity.Instance0));
 
             var actualModel = await tracingEndpointContainer
                 .Resolve<IDatabaseModelBuilder>()
@@ -272,7 +291,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 Assert.Equal(35, modelChanges.Length);
 
-                AssertCreateDataBase(modelChanges, 0, "SpaceEngineerDatabase");
+                AssertCreateDataBase(modelChanges, 0, nameof(ExtractDatabaseModelChangesDiffTest));
 
                 AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql)));
                 AssertCreateSchema(modelChanges, 2, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
@@ -503,11 +522,6 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
-            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
-            {
-                throw new NotImplementedException("#110");
-            }
-
             var messageTypes = new[]
             {
                 typeof(Query),
@@ -522,17 +536,25 @@ namespace SpaceEngineers.Core.Modules.Test
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Host.CreateDefaultBuilder())
-                .UseEndpoint((_, builder) => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithTracing()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions(TestIdentity.Endpoint10))
-                .UseTracingEndpoint(builder => builder
-                    .WithContainer(useContainer)
-                    .WithDefaultCrossCuttingConcerns()
-                    .WithDataAccess(databaseProvider)
-                    .BuildOptions(TestIdentity.TracingEndpoint))
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithTracing()
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
+                        .BuildOptions())
+                .UseTracingEndpoint(
+                    TestIdentity.Instance0,
+                    builder => builder
+                        .WithContainer(useContainer)
+                        .WithDefaultCrossCuttingConcerns()
+                        .WithDataAccess(databaseProvider)
+                        .ModifyContainerOptions(options => options
+                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
+                        .BuildOptions())
                 .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();

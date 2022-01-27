@@ -5,6 +5,7 @@
     using System.Reflection;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
+    using GenericEndpoint.Contract;
     using GenericHost.Api.Abstractions;
     using Microsoft.Extensions.Hosting;
 
@@ -13,6 +14,11 @@
     /// </summary>
     public interface ITransportEndpointBuilder
     {
+        /// <summary>
+        /// Endpoint identity
+        /// </summary>
+        EndpointIdentity EndpointIdentity { get; }
+
         /// <summary>
         /// Host startup actions
         /// </summary>

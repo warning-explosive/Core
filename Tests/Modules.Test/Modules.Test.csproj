@@ -211,5 +211,11 @@
     <Compile Update="MessageHandlers\BaseEventEmptyMessageHandler.cs">
       <DependentUpon>IntegrationEventEmptyMessageHandler.cs</DependentUpon>
     </Compile>
+    <Compile Update="Settings\TestJsonSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestYamlSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private IReadOnlyCollection<InstanceRegistrationInfo>? _instances;
         private IReadOnlyCollection<ServiceRegistrationInfo>? _resolvable;
         private IReadOnlyCollection<DelegateRegistrationInfo>? _delegates;
-        private IReadOnlyCollection<ServiceRegistrationInfo>? _collections;
+        private IReadOnlyCollection<IRegistrationInfo>? _collections;
         private IReadOnlyCollection<DecoratorRegistrationInfo>? _decorators;
 
         public CompositeRegistrationsContainer(
@@ -29,122 +29,202 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IEnumerable<InstanceRegistrationInfo> Instances()
         {
-            _instances ??= InitInstances();
+            _instances ??= Init().Instances;
             return _instances;
-
-            IReadOnlyCollection<InstanceRegistrationInfo> InitInstances()
-            {
-                return ApplyOverrides(
-                        Aggregate(_registrations, container => container.Instances()),
-                        registrationInfo => new { registrationInfo.Service },
-                        container => container.InstanceOverrides,
-                        overrideInfo => new { overrideInfo.Service },
-                        InstanceOverrideProducer)
-                    .ToList();
-            }
         }
 
         public IEnumerable<ServiceRegistrationInfo> Resolvable()
         {
-            _resolvable ??= InitResolvable();
+            _resolvable ??= Init().Resolvable;
             return _resolvable;
-
-            IReadOnlyCollection<ServiceRegistrationInfo> InitResolvable()
-            {
-                return ApplyOverrides(
-                        Aggregate(_registrations, container => container.Resolvable()),
-                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
-                        container => container.ResolvableOverrides,
-                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
-                        ResolvableOverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
-                    .ToList();
-            }
         }
 
         public IEnumerable<DelegateRegistrationInfo> Delegates()
         {
-            _delegates ??= InitDelegates();
+            _delegates ??= Init().Delegates;
             return _delegates;
-
-            IReadOnlyCollection<DelegateRegistrationInfo> InitDelegates()
-            {
-                return ApplyOverrides(
-                        Aggregate(_registrations, container => container.Delegates()),
-                        registrationInfo => new { registrationInfo.Service },
-                        container => container.DelegateOverrides,
-                        overrideInfo => new { overrideInfo.Service },
-                        DelegateOverrideProducer(overrideInfo => overrideInfo))
-                    .ToList();
-            }
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Collections()
+        public IEnumerable<IRegistrationInfo> Collections()
         {
-            _collections ??= InitCollections();
+            _collections ??= Init().Collections;
             return _collections;
-
-            IReadOnlyCollection<ServiceRegistrationInfo> InitCollections()
-            {
-                return ApplyOverrides(
-                        Aggregate(_registrations, container => container.Collections()),
-                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
-                        container => container.CollectionResolvableOverrides,
-                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
-                        ResolvableOverrideProducer(overrideInfo => new ServiceRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
-                    .ToList();
-            }
         }
 
         public IEnumerable<DecoratorRegistrationInfo> Decorators()
         {
-            _decorators ??= InitDecorators();
+            _decorators ??= Init().Decorators;
             return _decorators;
+        }
 
-            IReadOnlyCollection<DecoratorRegistrationInfo> InitDecorators()
+        private (IReadOnlyCollection<InstanceRegistrationInfo> Instances,
+            IReadOnlyCollection<ServiceRegistrationInfo> Resolvable,
+            IReadOnlyCollection<DelegateRegistrationInfo> Delegates,
+            IReadOnlyCollection<IRegistrationInfo> Collections,
+            IReadOnlyCollection<DecoratorRegistrationInfo> Decorators)
+            Init()
+        {
+            (_instances, _resolvable, _delegates) = OverrideResolvable();
+            _collections = OverrideCollections();
+            _decorators = OverrideDecorators();
+
+            return (_instances, _resolvable, _delegates, _collections, _decorators);
+        }
+
+        private (IReadOnlyCollection<InstanceRegistrationInfo>,
+            IReadOnlyCollection<ServiceRegistrationInfo>,
+            IReadOnlyCollection<DelegateRegistrationInfo>)
+            OverrideResolvable()
+        {
+            var instances = _registrations
+                .SelectMany(container => container.Instances())
+                .ToList();
+
+            var resolvable = _registrations
+                .SelectMany(container => container.Resolvable())
+                .ToList();
+
+            var delegates = _registrations
+                .SelectMany(container => container.Delegates())
+                .ToList();
+
+            _ = instances
+                .Cast<IRegistrationInfo>()
+                .Concat(resolvable)
+                .Concat(delegates)
+                .ToList()
+                .FullOuterJoin(
+                    _overridesContainer.ResolvableOverrides,
+                    registrationInfo => registrationInfo.Service,
+                    overrideInfo => overrideInfo.Service,
+                    ApplyOverride<IRegistrationInfo>(ReplaceRegistration, ServiceLifetimeComparer))
+                .ToList();
+
+            return (instances, resolvable, delegates);
+
+            IRegistrationInfo ReplaceRegistration(
+                IRegistrationInfo registrationInfo,
+                IRegistrationInfo overrideInfo)
             {
-                return ApplyOverrides(
-                        Aggregate(_registrations, container => container.Decorators()),
-                        registrationInfo => new { registrationInfo.Service, registrationInfo.Implementation },
-                        container => container.DecoratorOverrides,
-                        overrideInfo => new { overrideInfo.Service, overrideInfo.Implementation },
-                        DecoratorOverrideProducer(overrideInfo => new DecoratorRegistrationInfo(overrideInfo.Service, overrideInfo.Replacement, overrideInfo.Lifestyle)))
-                    .ToList();
+                RemoveRegistration(registrationInfo);
+                AddRegistration(overrideInfo);
+
+                return overrideInfo;
+            }
+
+            void RemoveRegistration(
+                IRegistrationInfo info)
+            {
+                switch (info)
+                {
+                    case InstanceRegistrationInfo instanceRegistrationInfo:
+                        instances.Remove(instanceRegistrationInfo);
+                        break;
+                    case ServiceRegistrationInfo serviceRegistrationInfo:
+                        resolvable.Remove(serviceRegistrationInfo);
+                        break;
+                    case DelegateRegistrationInfo delegateRegistrationInfo:
+                        delegates.Remove(delegateRegistrationInfo);
+                        break;
+                    default:
+                        throw new NotSupportedException(info.GetType().Name);
+                }
+            }
+
+            void AddRegistration(IRegistrationInfo info)
+            {
+                switch (info)
+                {
+                    case InstanceRegistrationInfo instanceRegistrationInfo:
+                        instances.Add(instanceRegistrationInfo);
+                        break;
+                    case ServiceRegistrationInfo serviceRegistrationInfo:
+                        resolvable.Add(serviceRegistrationInfo);
+                        break;
+                    case DelegateRegistrationInfo delegateRegistrationInfo:
+                        delegates.Add(delegateRegistrationInfo);
+                        break;
+                    default:
+                        throw new NotSupportedException(info.GetType().Name);
+                }
             }
         }
 
-        private static IEnumerable<T> Aggregate<T>(
-            IEnumerable<IRegistrationsContainer> registrations,
-            Func<IRegistrationsContainer, IEnumerable<T>> accessor)
+        private IReadOnlyCollection<IRegistrationInfo> OverrideCollections()
         {
-            return registrations.SelectMany(accessor);
+            return _registrations
+                .SelectMany(container => container.Collections())
+                .GroupBy(registrationInfo => registrationInfo.Service)
+                .FullOuterJoin(
+                    _overridesContainer.CollectionOverrides,
+                    registrationInfo => registrationInfo.Key,
+                    overrideInfo => overrideInfo.Key,
+                    (registrationInfo, overrideInfo) => ApplyCollectionOverride(registrationInfo, overrideInfo.Value))
+                .SelectMany(registrationInfo => registrationInfo)
+                .ToList();
+
+            static IEnumerable<IRegistrationInfo> ApplyCollectionOverride(
+                IEnumerable<IRegistrationInfo>? registeredCollection,
+                IEnumerable<IRegistrationInfo>? overrideCollection)
+            {
+                if (registeredCollection != null && overrideCollection != null)
+                {
+                    return overrideCollection;
+                }
+
+                if (registeredCollection != null && overrideCollection == null)
+                {
+                    return registeredCollection;
+                }
+
+                if (registeredCollection == null && overrideCollection != null)
+                {
+                    throw new InvalidOperationException($"Can't apply override {overrideCollection} to any registration");
+                }
+
+                throw new InvalidOperationException("Wrong override configuration");
+            }
         }
 
-        private IEnumerable<TSource> ApplyOverrides<TSource, TOverride, TKey>(
-            IEnumerable<TSource> source,
-            Func<TSource, TKey> sourceKeySelector,
-            Func<IComponentsOverrideContainer, IReadOnlyCollection<TOverride>> overrides,
-            Func<TOverride, TKey> overridesKeySelector,
-            Func<TSource, TOverride, TSource> overrideProducer)
+        private IReadOnlyCollection<DecoratorRegistrationInfo> OverrideDecorators()
         {
-            return source.FullOuterJoin(
-                    overrides(_overridesContainer),
-                    sourceKeySelector,
-                    overridesKeySelector,
-                    ApplyOverride(overrideProducer));
+            return _registrations
+                .SelectMany(container => container.Decorators())
+                .FullOuterJoin(
+                    _overridesContainer.DecoratorOverrides,
+                    registrationInfo => registrationInfo.Service,
+                    overrideInfo => overrideInfo.Service,
+                    ApplyOverride<DecoratorRegistrationInfo>(ReplaceRegistration, DecoratorLifetimeComparer))
+                .ToList();
+
+            static DecoratorRegistrationInfo ReplaceRegistration(
+                DecoratorRegistrationInfo registrationInfo,
+                DecoratorRegistrationInfo overrideInfo)
+            {
+                return overrideInfo;
+            }
         }
 
-        private static Func<TSource?, TOverride?, TSource> ApplyOverride<TSource, TOverride>(Func<TSource, TOverride, TSource> producer)
+        private static Func<TInfo?, TInfo?, TInfo> ApplyOverride<TInfo>(
+            Func<TInfo, TInfo, TInfo> producer,
+            Func<TInfo, TInfo, bool> lifestylesComparer)
+            where TInfo : IRegistrationInfo
         {
             return (registrationInfo, overrideInfo) =>
             {
+                if (registrationInfo != null && overrideInfo != null)
+                {
+                    if (lifestylesComparer(registrationInfo, overrideInfo))
+                    {
+                        return producer(registrationInfo, overrideInfo);
+                    }
+
+                    throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
+                }
+
                 if (registrationInfo != null && overrideInfo == null)
                 {
                     return registrationInfo;
-                }
-
-                if (registrationInfo != null && overrideInfo != null)
-                {
-                    return producer(registrationInfo, overrideInfo);
                 }
 
                 if (registrationInfo == null && overrideInfo != null)
@@ -156,53 +236,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             };
         }
 
-        private static InstanceRegistrationInfo InstanceOverrideProducer(
-            InstanceRegistrationInfo registrationInfo,
-            InstanceRegistrationInfo overrideInfo)
+        private static bool ServiceLifetimeComparer(
+            IRegistrationInfo registrationInfo,
+            IRegistrationInfo overrideInfo)
         {
-            return overrideInfo;
+            return registrationInfo.Lifestyle <= overrideInfo.Lifestyle;
         }
 
-        private static Func<DelegateRegistrationInfo, DelegateRegistrationInfo, DelegateRegistrationInfo> DelegateOverrideProducer(
-            Func<DelegateRegistrationInfo, DelegateRegistrationInfo> producer)
+        private static bool DecoratorLifetimeComparer(
+            DecoratorRegistrationInfo registrationInfo,
+            DecoratorRegistrationInfo overrideInfo)
         {
-            return (registrationInfo, overrideInfo) =>
-            {
-                if (registrationInfo.Lifestyle <= overrideInfo.Lifestyle)
-                {
-                    return producer(overrideInfo);
-                }
-
-                throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
-            };
-        }
-
-        private static Func<ServiceRegistrationInfo, ComponentOverrideInfo, ServiceRegistrationInfo> ResolvableOverrideProducer(
-            Func<ComponentOverrideInfo, ServiceRegistrationInfo> producer)
-        {
-            return (registrationInfo, overrideInfo) =>
-            {
-                if (registrationInfo.Lifestyle <= overrideInfo.Lifestyle)
-                {
-                    return producer(overrideInfo);
-                }
-
-                throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
-            };
-        }
-
-        private static Func<DecoratorRegistrationInfo, ComponentOverrideInfo, DecoratorRegistrationInfo> DecoratorOverrideProducer(
-            Func<ComponentOverrideInfo, DecoratorRegistrationInfo> producer)
-        {
-            return (registrationInfo, overrideInfo) =>
-            {
-                if (registrationInfo.Lifestyle >= overrideInfo.Lifestyle)
-                {
-                    return producer(overrideInfo);
-                }
-
-                throw new InvalidOperationException($"Lifestyle mismatch - applying {overrideInfo} to {registrationInfo} leads to captive dependency");
-            };
+            return registrationInfo.Lifestyle >= overrideInfo.Lifestyle;
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
+    using System;
     using System.Collections.Generic;
     using AutoRegistration.Api.Abstractions;
 
@@ -9,28 +10,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
     public interface IComponentsOverrideContainer : IResolvable
     {
         /// <summary>
-        /// Instance overrides
-        /// </summary>
-        IReadOnlyCollection<InstanceRegistrationInfo> InstanceOverrides { get; }
-
-        /// <summary>
-        /// Delegate overrides
-        /// </summary>
-        IReadOnlyCollection<DelegateRegistrationInfo> DelegateOverrides { get; }
-
-        /// <summary>
         /// Resolvable overrides
         /// </summary>
-        IReadOnlyCollection<ComponentOverrideInfo> ResolvableOverrides { get; }
+        IReadOnlyCollection<IRegistrationInfo> ResolvableOverrides { get; }
 
         /// <summary>
-        /// Collection resolvable overrides
+        /// Collection overrides
         /// </summary>
-        IReadOnlyCollection<ComponentOverrideInfo> CollectionResolvableOverrides { get; }
+        IReadOnlyDictionary<Type, IRegistrationInfo[]> CollectionOverrides { get; }
 
         /// <summary>
         /// Decorator overrides
         /// </summary>
-        IReadOnlyCollection<ComponentOverrideInfo> DecoratorOverrides { get; }
+        IReadOnlyCollection<DecoratorRegistrationInfo> DecoratorOverrides { get; }
     }
 }

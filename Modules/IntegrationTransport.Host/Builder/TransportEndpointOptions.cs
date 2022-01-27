@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.Builder
     using System.Reflection;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
+    using GenericEndpoint.Contract;
 
     /// <summary>
     /// Transport endpoint initialization options
@@ -13,24 +14,32 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.Builder
     public class TransportEndpointOptions
     {
         /// <summary> .cctor </summary>
+        /// <param name="endpointIdentity">Endpoint identity</param>
         /// <param name="containerOptions">DependencyContainerOptions</param>
         /// <param name="containerImplementationProducer">Container implementation producer</param>
         /// <param name="aboveAssemblies">Assemblies that limits assembly loading for endpoint's dependency container</param>
         internal TransportEndpointOptions(
+            EndpointIdentity endpointIdentity,
             DependencyContainerOptions containerOptions,
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer,
             params Assembly[] aboveAssemblies)
         {
+            EndpointIdentity = endpointIdentity;
             ContainerOptions = containerOptions;
             ContainerImplementationProducer = containerImplementationProducer;
 
             if (!aboveAssemblies.Any())
             {
-                throw new InvalidOperationException("Transport endpoint should be limited at least by one above assembly");
+                throw new InvalidOperationException($"Transport endpoint {endpointIdentity} should be limited at least by one above assembly");
             }
 
             AboveAssemblies = aboveAssemblies;
         }
+
+        /// <summary>
+        /// Endpoint identity
+        /// </summary>
+        public EndpointIdentity EndpointIdentity { get; }
 
         /// <summary>
         /// Dependency container options
@@ -46,18 +55,5 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.Builder
         /// Assemblies that limits assembly loading for endpoint's dependency container
         /// </summary>
         public IReadOnlyCollection<Assembly> AboveAssemblies { get; }
-
-        /// <summary>
-        /// With container options
-        /// </summary>
-        /// <param name="containerOptions">DependencyContainerOptions</param>
-        /// <returns>EndpointOptions</returns>
-        internal TransportEndpointOptions WithContainerOptions(DependencyContainerOptions containerOptions)
-        {
-            return new TransportEndpointOptions(
-                containerOptions,
-                ContainerImplementationProducer,
-                AboveAssemblies.ToArray());
-        }
     }
 }

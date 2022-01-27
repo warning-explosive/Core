@@ -3,14 +3,11 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using Api.Abstractions;
     using Api.Abstractions.Container;
-    using Api.Abstractions.Registration;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Extensions;
     using global::SimpleInjector;
     using global::SimpleInjector.Lifestyles;
 
@@ -55,14 +52,14 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
             _container.Register(service, implementation, lifestyle.MapLifestyle());
         }
 
-        public void Register(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
-        {
-            _container.Register(service, instanceProducer, lifestyle.MapLifestyle());
-        }
-
         public void RegisterInstance(Type service, object instance)
         {
             _container.RegisterInstance(service, instance);
+        }
+
+        public void RegisterDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
+        {
+            _container.Register(service, instanceProducer, lifestyle.MapLifestyle());
         }
 
         public void RegisterOpenGenericFallBack(Type service, Type implementation, EnLifestyle lifestyle)
@@ -70,19 +67,21 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
             _container.RegisterConditional(service, implementation, lifestyle.MapLifestyle(), ctx => !ctx.Handled);
         }
 
-        public void RegisterCollection(Type service, IEnumerable<Type> implementations, EnLifestyle lifestyle)
+        public void RegisterCollectionEntry(Type service, Type implementation, EnLifestyle lifestyle)
         {
-            /*
-             * Register each element of collection as implementation to provide lifestyle for container
-             */
+            Register(implementation, implementation, lifestyle);
+            _container.Collection.Append(service, implementation, lifestyle.MapLifestyle());
+        }
 
-            var materialized = implementations.ToList();
+        public void RegisterCollectionEntryInstance(Type service, object collectionEntryInstance)
+        {
+            RegisterInstance(collectionEntryInstance.GetType(), collectionEntryInstance);
+            _container.Collection.AppendInstance(service, collectionEntryInstance);
+        }
 
-            materialized
-                .Select(implementation => new ServiceRegistrationInfo(service, implementation, lifestyle))
-                .RegisterImplementationsWithOpenGenericFallBack(this);
-
-            _container.Collection.Register(service, materialized.OrderByDependencyAttribute(), lifestyle.MapLifestyle());
+        public void RegisterCollectionEntryDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
+        {
+            AppendCollectionInstanceProducer(service, instanceProducer, lifestyle);
         }
 
         public void RegisterDecorator(Type service, Type implementation, EnLifestyle lifestyle)
@@ -143,6 +142,26 @@ namespace SpaceEngineers.Core.CompositionRoot.SimpleInjector.Internals
         public IEnumerable<object> ResolveCollection(Type service)
         {
             return _container.GetAllInstances(service);
+        }
+
+        #endregion
+
+        #region internals
+
+        private void AppendCollectionInstanceProducer(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
+        {
+            this
+                .CallMethod(nameof(AppendCollectionInstanceProducer))
+                .WithTypeArgument(service)
+                .WithArgument(instanceProducer)
+                .WithArgument(lifestyle)
+                .Invoke();
+        }
+
+        private void AppendCollectionInstanceProducer<TService>(Func<TService> instanceProducer, EnLifestyle lifestyle)
+            where TService : class
+        {
+            _container.Collection.Append(instanceProducer, lifestyle.MapLifestyle());
         }
 
         #endregion

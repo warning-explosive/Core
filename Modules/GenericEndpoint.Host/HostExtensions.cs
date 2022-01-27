@@ -60,21 +60,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// Use specified endpoint
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="factory">Endpoint options factory</param>
+        /// <param name="endpointIdentity">Endpoint identity</param>
+        /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
-            Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> factory)
+            EndpointIdentity endpointIdentity,
+            Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
-                var builder = new EndpointBuilder().WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer));
+                var builder = ConfigureEndpointBuilder(hostBuilder, endpointIdentity);
 
-                var endpointOptions = factory(context, builder);
+                var options = optionsFactory(context, builder);
 
-                hostBuilder.ApplyOptions(endpointOptions);
+                hostBuilder.ApplyOptions(options);
 
-                var endpointDependencyContainer = BuildEndpointContainer(ConfigureEndpointOptions(hostBuilder, endpointOptions));
+                var endpointDependencyContainer = BuildEndpointContainer(options);
 
                 serviceCollection.AddSingleton<DependencyContainer>(endpointDependencyContainer);
 
@@ -123,22 +125,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 endpointOptions.AboveAssemblies.ToArray());
         }
 
-        private static EndpointOptions ConfigureEndpointOptions(
+        private static IEndpointBuilder ConfigureEndpointBuilder(
             IHostBuilder hostBuilder,
-            EndpointOptions endpointOptions)
+            EndpointIdentity endpointIdentity)
         {
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
-            var containerOptions = endpointOptions.ContainerOptions
-                .WithManualRegistrations(integrationTransportInjection)
-                .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointOptions.Identity))
-                .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointOptions.Identity, frameworkDependenciesProvider))
-                .WithOverrides(new SettingsProviderOverrides())
-                .WithManualVerification(true);
-
-            return endpointOptions.WithContainerOptions(containerOptions);
+            return new EndpointBuilder(endpointIdentity)
+                .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
+                .ModifyContainerOptions(options => options
+                    .WithManualRegistrations(integrationTransportInjection)
+                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
+                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                    .WithOverrides(new SettingsProviderOverrides())
+                    .WithManualVerification(true));
         }
 
         private static IManualRegistration GetIntegrationTransportInjection(this IHostBuilder hostBuilder)

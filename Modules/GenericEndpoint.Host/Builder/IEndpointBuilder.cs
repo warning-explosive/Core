@@ -15,6 +15,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     public interface IEndpointBuilder
     {
         /// <summary>
+        /// Endpoint identity
+        /// </summary>
+        EndpointIdentity EndpointIdentity { get; }
+
+        /// <summary>
         /// Host startup actions
         /// </summary>
         IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> StartupActions { get; }
@@ -81,8 +86,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// <summary>
         /// Build endpoint options
         /// </summary>
-        /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <returns>EndpointOptions</returns>
-        EndpointOptions BuildOptions(EndpointIdentity endpointIdentity);
+        EndpointOptions BuildOptions();
     }
 }

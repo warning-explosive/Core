@@ -11,21 +11,17 @@ namespace SpaceEngineers.Core.Roslyn.Test.ManualRegistrations
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            var analyzers = container
+            container
                 .Types
                 .OurTypes
                 .Where(type => typeof(DiagnosticAnalyzer).IsAssignableFrom(type) && type.IsConcreteType())
-                .ToList();
+                .Each(implementation => container.RegisterCollectionEntry<DiagnosticAnalyzer>(implementation, EnLifestyle.Singleton));
 
-            container.RegisterCollection(typeof(DiagnosticAnalyzer), analyzers, EnLifestyle.Singleton);
-
-            var codeFixes = container
+            container
                 .Types
                 .OurTypes
                 .Where(type => typeof(CodeFixProvider).IsAssignableFrom(type) && type.IsConcreteType())
-                .ToList();
-
-            container.RegisterCollection(typeof(CodeFixProvider), codeFixes, EnLifestyle.Singleton);
+                .Each(implementation => container.RegisterCollectionEntry<CodeFixProvider>(implementation, EnLifestyle.Singleton));
         }
     }
 }

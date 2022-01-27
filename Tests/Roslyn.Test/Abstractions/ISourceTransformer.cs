@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
-    using AutoRegistration.Api.Abstractions;
     using Microsoft.CodeAnalysis.Text;
 
     /// <summary>
     /// IAliasHandler
     /// </summary>
-    public interface ISourceTransformer : IResolvable
+    public interface ISourceTransformer
     {
         /// <summary>
         /// Transform source

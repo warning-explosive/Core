@@ -17,11 +17,16 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using ValueObjects;
     using Xunit;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
     internal class CodeFixVerifier : ICodeFixVerifier
     {
-        /// <inheritdoc />
+        private readonly NewLineSourceTransformer _newLineSourceTransformer;
+
+        public CodeFixVerifier(NewLineSourceTransformer newLineSourceTransformer)
+        {
+            _newLineSourceTransformer = newLineSourceTransformer;
+        }
+
         public async Task VerifyCodeFix(DiagnosticAnalyzer analyzer,
                                         CodeFixProvider codeFix,
                                         AnalyzedDocument analyzedDocument,
@@ -29,7 +34,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                                         Action<string> show)
         {
             var fixedDocument = await ApplyFix(codeFix, analyzedDocument.Document, analyzedDocument.ActualDiagnostics).ConfigureAwait(false);
-            var actualSource = await fixedDocument.GetTextAsync().ConfigureAwait(false);
+            var actualSource = _newLineSourceTransformer.Transform(await fixedDocument.GetTextAsync().ConfigureAwait(false));
 
             if (expectedSource.Text.ToString() != actualSource.ToString())
             {

@@ -25,15 +25,15 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     {
         private readonly IDependencyContainer _dependencyContainer;
 
-        private readonly ISourceTransformer _transformer;
+        private readonly IEnumerable<ISourceTransformer> _transformers;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
-        /// <param name="transformer">ISourceTransformer</param>
-        public ConventionalProvider(IDependencyContainer dependencyContainer, ISourceTransformer transformer)
+        /// <param name="transformers">ISourceTransformer</param>
+        public ConventionalProvider(IDependencyContainer dependencyContainer, IEnumerable<ISourceTransformer> transformers)
         {
             _dependencyContainer = dependencyContainer;
-            _transformer = transformer;
+            _transformers = transformers;
         }
 
         private static Func<DiagnosticAnalyzer, string> AnalyzerTypeName => analyzer => analyzer.GetType().Name;
@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                   .Select(tuple =>
                           {
                               var (name, text) = tuple;
-                              return new SourceFile(name, _transformer.Transform(text));
+                              return new SourceFile(name, _transformers.Aggregate(text, (acc, next) => next.Transform(acc)));
                           });
         }
     }

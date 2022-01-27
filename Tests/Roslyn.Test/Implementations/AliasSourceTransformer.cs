@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using System.Linq;
     using System.Xml.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -11,16 +12,14 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Text;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal class AliasSourceTransformer : ISourceTransformer
+    internal class AliasSourceTransformer : ISourceTransformer,
+                                            ICollectionResolvable<ISourceTransformer>
     {
-        /// <summary> .cctor </summary>
         public AliasSourceTransformer()
         {
         }
 
-        /// <inheritdoc />
         public SourceText Transform(SourceText source)
         {
             while (TryGetReplacement(source, out var replacement))

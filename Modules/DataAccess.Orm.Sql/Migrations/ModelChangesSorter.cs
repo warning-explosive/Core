@@ -23,7 +23,9 @@
         {
             var materialized = source.ToList();
 
-            return materialized.OrderByDependencies(GetKey, GetDependencies(materialized));
+            return materialized
+                .OrderByDependencies(GetKey, GetDependencies(materialized))
+                .ThenBy(modelChange => modelChange.ToString());
 
             static string GetKey(IModelChange modelChange)
             {
@@ -58,16 +60,12 @@
                             return changes
                                 .OfType<CreateSchema>()
                                 .Cast<IModelChange>()
-                                .Concat(_modelProvider
-                                    .Objects[createTable.Schema][createTable.Table]
-                                    .Columns
-                                    .Values
-                                    .Where(column => column.Relation != null)
-                                    .Select(column => column.Relation!.Target)
+                                .Concat(GetTableDependencies(_modelProvider, createTable)
                                     .SelectMany(dependency => changes
                                         .OfType<CreateTable>()
                                         .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                         && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase))));
+                                                         && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase)
+                                                         && GetTableDependencies(_modelProvider, change).All(cycleDependency => cycleDependency != _modelProvider.Objects[createTable.Schema][createTable.Table].Type))));
                         case CreateView:
                             return changes
                                 .OfType<CreateSchema>()
@@ -83,17 +81,13 @@
                                 .Concat(changes
                                     .OfType<CreateView>());
                         case CreateColumn createColumn:
-                            var dependency = _modelProvider
-                                .Objects[createColumn.Schema][createColumn.Table]
-                                .Columns[createColumn.Column]
-                                .Relation
-                               ?.Target;
-                            return dependency != null
-                                ? changes
+                            var dependency = GetColumnDependency(createColumn);
+                            return dependency == null
+                                ? Enumerable.Empty<IModelChange>()
+                                : changes
                                     .OfType<CreateTable>()
                                     .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                     && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase))
-                                : Enumerable.Empty<IModelChange>();
+                                                     && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase));
                         case DropIndex:
                         case DropTable:
                         case DropView:
@@ -104,6 +98,27 @@
                             throw new NotSupportedException($"Not supported model change: {modelChange}");
                     }
                 };
+            }
+
+            static IEnumerable<Type> GetTableDependencies(
+                IModelProvider modelProvider,
+                CreateTable createTable)
+            {
+                return modelProvider
+                    .Objects[createTable.Schema][createTable.Table]
+                    .Columns
+                    .Values
+                    .Where(column => column.Relation != null)
+                    .Select(column => column.Relation!.Target);
+            }
+
+            Type? GetColumnDependency(CreateColumn createColumn)
+            {
+                return _modelProvider
+                    .Objects[createColumn.Schema][createColumn.Table]
+                    .Columns[createColumn.Column]
+                    .Relation
+                   ?.Target;
             }
         }
     }

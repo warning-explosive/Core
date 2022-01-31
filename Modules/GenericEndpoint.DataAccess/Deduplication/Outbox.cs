@@ -49,12 +49,9 @@
             {
                 await transport.Enqueue(message, token).ConfigureAwait(false);
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
-                {
-                    var outbox = new Outbox(new[] { message }, new OutboxMessageHaveBeenSent(message.Id));
+                var outbox = new Outbox(new[] { message }, new OutboxMessageHaveBeenSent(message.Id));
 
-                    await transaction.Track(outbox, token).ConfigureAwait(false);
-                }
+                await transaction.Track(outbox, token).ConfigureAwait(false);
             }
         }
     }

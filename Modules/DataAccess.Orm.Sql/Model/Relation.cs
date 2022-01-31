@@ -96,7 +96,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Source.Name} -> {Target.FullName} ({Property.Name})";
+            return $"{Source.TableName()} -> {Target.FullName} ({Property.Name})";
         }
     }
 }

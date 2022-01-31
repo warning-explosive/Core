@@ -51,17 +51,48 @@
             }
         }
 
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities)
+        {
+            databaseEntities = databaseEntities
+                .Where(entity => _databaseTypeProvider.DatabaseEntities().Contains(entity))
+                .ToArray();
+
+            var schemas = databaseEntities
+                .Select(entity => entity.SchemaName())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var tables = databaseEntities
+                .Select(entity => entity.TableName())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return Objects
+                .Where(schema => schemas.Contains(schema.Key))
+                .ToDictionary(
+                    schema => schema.Key,
+                    schema => schema
+                        .Value
+                        .Where(table => tables.Contains(table.Key)
+                                        || (table.Value is TableInfo tableInfo
+                                            && tableInfo.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
+                                            && tableInfo.Columns.Any(column => databaseEntities.Contains(column.Value.Relation.Target))))
+                        .ToDictionary(
+                            table => table.Key,
+                            table => table.Value,
+                            StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>);
+        }
+
         private ModelInfo InitModel()
         {
             var mutableMtmTables = new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>(StringComparer.OrdinalIgnoreCase);
 
-            var objects = _databaseTypeProvider.DatabaseEntities()
+            var objects = _databaseTypeProvider
+                .DatabaseEntities()
                 .SelectMany(entity => GetEntityInfos(entity, mutableMtmTables))
                 .Distinct()
                 .GroupBy(info => info.Schema, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     grp => grp.Key,
-                    grp => grp.ToDictionary(info => info.Type.Name, StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>,
+                    grp => grp.ToDictionary(info => info.Type.TableName(), StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>,
                     StringComparer.OrdinalIgnoreCase);
 
             var mtmTables = mutableMtmTables
@@ -293,7 +324,7 @@
 
             var mtmBaseType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
 
-            var mtmTypeName = string.Join("_", left.Name, right.Name);
+            var mtmTypeName = string.Join("_", left.TableName(), right.TableName());
 
             var dynamicClass = new DynamicClass(mtmTypeName).InheritsFrom(mtmBaseType);
             var mtmType = _dynamicClassProvider.CreateType(dynamicClass);

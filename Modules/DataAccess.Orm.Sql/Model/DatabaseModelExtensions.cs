@@ -43,6 +43,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         }
 
         /// <summary>
+        /// Gets table name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        public static string TableName(this Type type)
+        {
+            return type.Name;
+        }
+
+        /// <summary>
         /// Gets schema name
         /// </summary>
         /// <param name="type">Type</param>

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
@@ -15,8 +14,8 @@
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
     using Settings;
+    using Sql.Extensions;
     using Sql.Model;
     using Sql.Translation;
     using Sql.Translation.Extensions;
@@ -61,7 +60,7 @@
                 return;
             }
 
-            var ormSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
@@ -73,19 +72,9 @@
                     .Concat(InsertMtm(grp.Key, grp.Value, _dependencyContainer, _modelProvider)))
                 .ToString(";" + Environment.NewLine);
 
-            var command = new CommandDefinition(
-                commandText,
-                null,
-                _transaction.UnderlyingDbTransaction,
-                ormSettings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
-
-            await _transaction
+            _ = await _transaction
                 .UnderlyingDbTransaction
-                .Connection
-                .ExecuteAsync(command)
+                .InvokeScalar(commandText, settings, token)
                 .ConfigureAwait(false);
 
             static IEnumerable<IUniqueIdentified<TKey>> Flatten(
@@ -112,7 +101,7 @@
                 return entity =>
                 {
                     var type = entity.GetType();
-                    var table = modelProvider.Objects[type.SchemaName()][type.Name];
+                    var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
 
                     return table
                         .Columns
@@ -135,7 +124,7 @@
                 IDependencyContainer dependencyContainer,
                 IModelProvider modelProvider)
             {
-                var table = modelProvider.Objects[type.SchemaName()][type.Name];
+                var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
 
                 var columns = table
                     .Columns
@@ -158,7 +147,7 @@
 
                 yield return InsertQueryFormat.Format(
                     table.Schema,
-                    table.Type.Name,
+                    table.Type.TableName(),
                     columns,
                     values);
             }
@@ -169,7 +158,7 @@
                 IDependencyContainer dependencyContainer,
                 IModelProvider modelProvider)
             {
-                var table = modelProvider.Objects[type.SchemaName()][type.Name];
+                var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
 
                 var mtmValueProducers = table
                     .Columns
@@ -180,7 +169,7 @@
                         column =>
                         {
                             var schema = DatabaseModelExtensions.MtmSchemaName(column.Relation.Source, column.Relation.Target);
-                            return modelProvider.Objects[schema][column.MultipleRelationTable.Name];
+                            return modelProvider.Objects[schema][column.MultipleRelationTable!.TableName()];
                         });
 
                 foreach (var (column, mtmTable) in mtmValueProducers)
@@ -206,7 +195,7 @@
 
                     yield return InsertQueryFormat.Format(
                         mtmTable.Schema,
-                        mtmTable.Type.Name,
+                        mtmTable.Type.TableName(),
                         columns,
                         values);
                 }
@@ -224,12 +213,12 @@
                 return;
             }
 
-            var ormSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.Name];
+            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
 
             var visitor = new ExtractMemberChainExpressionVisitor();
             _ = visitor.Visit(accessor);
@@ -242,24 +231,14 @@
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
-                table.Type.Name,
+                table.Type.TableName(),
                 column.Name,
                 value.QueryParameterSqlExpression(_dependencyContainer),
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
 
-            var command = new CommandDefinition(
-                commandText,
-                null,
-                _transaction.UnderlyingDbTransaction,
-                ormSettings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
-
-            await _transaction
+            _ = await _transaction
                 .UnderlyingDbTransaction
-                .Connection
-                .ExecuteAsync(command)
+                .InvokeScalar(commandText, settings, token)
                 .ConfigureAwait(false);
         }
 
@@ -274,12 +253,12 @@
                 return;
             }
 
-            var ormSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.Name];
+            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
 
             var visitor = new ExtractMemberChainExpressionVisitor();
             _ = visitor.Visit(accessor);
@@ -296,24 +275,14 @@
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
-                table.Type.Name,
+                table.Type.TableName(),
                 column.Name,
                 valueExpression,
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
 
-            var command = new CommandDefinition(
-                commandText,
-                null,
-                _transaction.UnderlyingDbTransaction,
-                ormSettings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
-
-            await _transaction
+            _ = await _transaction
                 .UnderlyingDbTransaction
-                .Connection
-                .ExecuteAsync(command)
+                .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
         }
 
@@ -326,31 +295,21 @@
                 return;
             }
 
-            var ormSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.Name];
+            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
 
             var commandText = DeleteValueQueryFormat.Format(
                 table.Schema,
-                table.Type.Name,
+                table.Type.TableName(),
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
 
-            var command = new CommandDefinition(
-                commandText,
-                null,
-                _transaction.UnderlyingDbTransaction,
-                ormSettings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
-
-            await _transaction
+            _ = await _transaction
                 .UnderlyingDbTransaction
-                .Connection
-                .ExecuteAsync(command)
+                .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
         }
     }

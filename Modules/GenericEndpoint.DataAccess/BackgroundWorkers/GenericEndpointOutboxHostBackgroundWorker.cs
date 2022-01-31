@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.BackgroundWorkers
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -9,6 +8,7 @@
     using CompositionRoot.Api.Abstractions.Container;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
+    using Core.DataAccess.Orm.Extensions;
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using Deduplication;
@@ -45,32 +45,40 @@
 
         private async Task DeliverMessagesUnsafe(CancellationToken token)
         {
-            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
+            var unsent = await _dependencyContainer
+                .InvokeWithinTransaction(GetUnsentMessages, token)
+                .ConfigureAwait(false);
+
+            await _dependencyContainer
+                .InvokeWithinTransaction(unsent, DeliverMessages, token)
+                .ConfigureAwait(false);
+        }
+
+        private async Task<IntegrationMessage[]> GetUnsentMessages(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        {
             var serializer = _dependencyContainer.Resolve<IJsonSerializer>();
             var formatter = _dependencyContainer.Resolve<IStringFormatter>();
 
-            await using (_dependencyContainer.OpenScopeAsync())
-            {
-                var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
+            return (await transaction
+                    .Read<OutboxMessage, Guid>()
+                    .All()
+                    .Where(outbox => !outbox.Sent)
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
+                .ToArray();
+        }
 
-                IEnumerable<IntegrationMessage> unsent;
+        private async Task DeliverMessages(
+            IAdvancedDatabaseTransaction transaction,
+            IntegrationMessage[] unsent,
+            CancellationToken token)
+        {
+            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
-                {
-                    unsent = (await transaction
-                            .Read<OutboxMessage, Guid>()
-                            .All()
-                            .Where(outbox => !outbox.Sent)
-                            .ToListAsync(token)
-                            .ConfigureAwait(false))
-                        .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
-                        .ToList();
-                }
-
-                await Outbox
-                    .DeliverMessages(unsent, transport, transaction, token)
-                    .ConfigureAwait(false);
-            }
+            await Outbox
+                .DeliverMessages(unsent, transport, transaction, token)
+                .ConfigureAwait(false);
         }
     }
 }

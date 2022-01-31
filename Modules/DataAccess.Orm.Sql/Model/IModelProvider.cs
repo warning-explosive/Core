@@ -18,5 +18,12 @@
         /// Mtm tables
         /// </summary>
         public IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type Left, Type Right)>> MtmTables { get; }
+
+        /// <summary>
+        /// Gets objects for specified database entities
+        /// </summary>
+        /// <param name="databaseEntities">Database entities</param>
+        /// <returns>Objects</returns>
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities);
     }
 }

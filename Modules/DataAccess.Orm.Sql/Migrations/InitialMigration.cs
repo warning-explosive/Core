@@ -1,53 +1,56 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
 {
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Core.DataAccess.Orm.Model;
+    using CompositionRoot.Api.Abstractions.Container;
+    using Model;
+    using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseModelInitializer : IEndpointInitializer,
-                                              ICollectionResolvable<IEndpointInitializer>
+    internal class InitialMigration : IManualMigration, ICollectionResolvable<IManualMigration>
     {
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;
         private readonly IModelValidator _modelValidator;
-        private readonly IModelComparator _modelComparator;
         private readonly IModelChangesSorter _modelChangesSorter;
-        private readonly IModelMigrator _modelMigrator;
+        private readonly IModelComparator _modelComparator;
 
-        public DatabaseModelInitializer(
+        public InitialMigration(
+            IDependencyContainer dependencyContainer,
             IDatabaseModelBuilder databaseModelBuilder,
             ICodeModelBuilder codeModelBuilder,
             IModelValidator modelValidator,
             IModelComparator modelComparator,
-            IModelChangesSorter modelChangesSorter,
-            IModelMigrator modelMigrator)
+            IModelChangesSorter modelChangesSorter)
         {
+            _dependencyContainer = dependencyContainer;
             _databaseModelBuilder = databaseModelBuilder;
             _codeModelBuilder = codeModelBuilder;
             _modelValidator = modelValidator;
-            _modelComparator = modelComparator;
             _modelChangesSorter = modelChangesSorter;
-            _modelMigrator = modelMigrator;
+            _modelComparator = modelComparator;
         }
 
-        public async Task Initialize(CancellationToken token)
-        {
-            await _modelMigrator
-                .ExecuteManualMigrations(token)
-                .ConfigureAwait(false);
+        public string Name { get; } = "Initial migration";
 
+        public async Task ExecuteManualMigration(CancellationToken token)
+        {
             var actualModel = await _databaseModelBuilder
                 .BuildModel(token)
                 .ConfigureAwait(false);
 
+            var databaseEntities = new[]
+            {
+                typeof(AppliedMigration)
+            };
+
             var expectedModel = await _codeModelBuilder
-                .BuildModel(token)
+                .BuildModel(databaseEntities, token)
                 .ConfigureAwait(false);
 
             if (expectedModel != null)
@@ -59,7 +62,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .Sort(_modelComparator.ExtractDiff(actualModel, expectedModel))
                 .ToList();
 
-            await _modelMigrator
+            await _dependencyContainer
+                .Resolve<IModelMigrator>()
                 .ExecuteAutoMigrations(modelChanges, token)
                 .ConfigureAwait(false);
         }

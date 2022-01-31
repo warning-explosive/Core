@@ -71,7 +71,7 @@
         [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return Tables.OrderBy(column => column.Type).Cast<object>()
+            return Tables.OrderBy(column => column.Type).Cast<IObjectModelInfo>()
                 .Concat(Views.OrderBy(view => view.Type))
                 .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
         }

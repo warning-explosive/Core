@@ -208,7 +208,7 @@
                     }
                     else if (Relation != null)
                     {
-                        yield return $@"references ""{Relation.Target.SchemaName()}"".""{Relation.Target.Name}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
+                        yield return $@"references ""{Relation.Target.SchemaName()}"".""{Relation.Target.TableName()}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
                     }
 
                     if (!Property.IsNullable())
@@ -291,7 +291,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
+            return $"{Schema}.{Table.TableName()}.{Name} ({Constraints.ToString(", ")})";
         }
 
         /// <summary>

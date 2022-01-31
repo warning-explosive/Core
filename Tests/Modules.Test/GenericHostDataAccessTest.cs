@@ -289,7 +289,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
             {
-                Assert.Equal(35, modelChanges.Length);
+                Assert.Equal(36, modelChanges.Length);
 
                 AssertCreateDataBase(modelChanges, 0, nameof(ExtractDatabaseModelChangesDiffTest));
 
@@ -302,6 +302,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.PrimaryKey), "not null primary key");
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.DateTime), "not null");
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.CommandText), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.Name), "not null");
 
                 AssertCreateTable(modelChanges, 6, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeader));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeader.PrimaryKey), "not null primary key");
@@ -400,14 +401,15 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertCreateView(modelChanges, 25, nameof(DatabaseSchema));
                 AssertCreateView(modelChanges, 26, nameof(DatabaseView));
 
-                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseColumn), "Column_Schema_Table");
-                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseIndex), "Index_Schema_Table");
-                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseSchema), "Name");
-                AssertCreateIndex(modelChanges, 30, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseView), "Query_Schema_View");
-                AssertCreateIndex(modelChanges, 31, "SpaceEngineersCoreGenericEndpointDataAccess", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
-                AssertCreateIndex(modelChanges, 32, "SpaceEngineersCoreModulesTest", "Blog_Post", "Left_Right");
-                AssertCreateIndex(modelChanges, 33, "SpaceEngineersCoreModulesTest", "Community_Participant", "Left_Right");
-                AssertCreateIndex(modelChanges, 34, "SpaceEngineersCoreTracingEndpoint", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
+                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSql", nameof(AppliedMigration), nameof(AppliedMigration.Name));
+                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseColumn), "Column_Schema_Table");
+                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseIndex), "Index_Schema_Table");
+                AssertCreateIndex(modelChanges, 30, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseSchema), "Name");
+                AssertCreateIndex(modelChanges, 31, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseView), "Query_Schema_View");
+                AssertCreateIndex(modelChanges, 32, "SpaceEngineersCoreGenericEndpointDataAccess", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
+                AssertCreateIndex(modelChanges, 33, "SpaceEngineersCoreModulesTest", "Blog_Post", "Left_Right");
+                AssertCreateIndex(modelChanges, 34, "SpaceEngineersCoreModulesTest", "Community_Participant", "Left_Right");
+                AssertCreateIndex(modelChanges, 35, "SpaceEngineersCoreTracingEndpoint", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
 
                 static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
                 {

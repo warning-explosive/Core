@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Connection;
@@ -12,15 +14,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder
     {
+        private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IModelProvider _modelProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public CodeModelBuilder(
+            IDatabaseTypeProvider databaseTypeProvider,
             IModelProvider modelProvider,
             IDatabaseConnectionProvider connectionProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
+            _databaseTypeProvider = databaseTypeProvider;
             _modelProvider = modelProvider;
             _connectionProvider = connectionProvider;
             _columnDataTypeProvider = columnDataTypeProvider;
@@ -28,8 +33,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public Task<DatabaseNode?> BuildModel(CancellationToken token)
         {
+            return BuildModel(_databaseTypeProvider.DatabaseEntities().ToArray(), token);
+        }
+
+        public Task<DatabaseNode?> BuildModel(Type[] databaseEntities, CancellationToken token)
+        {
             var schemas = _modelProvider
-                .Objects
+                .ObjectsFor(databaseEntities)
                 .Select(grp => BuildSchemaNode(grp.Key, grp.Value.Values.ToList()))
                 .ToArray();
 
@@ -66,19 +76,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => BuildColumnNode(column.Value))
                 .ToList();
 
-            return new TableNode(tableInfo.Schema, tableInfo.Type.Name, columns);
+            return new TableNode(tableInfo.Schema, tableInfo.Type.TableName(), columns);
         }
 
         private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
             var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo.Type);
 
-            return new ColumnNode(columnInfo.Schema, columnInfo.Table.Name, columnInfo.Name, dataType, columnInfo.Constraints);
+            return new ColumnNode(columnInfo.Schema, columnInfo.Table.TableName(), columnInfo.Name, dataType, columnInfo.Constraints);
         }
 
         private static ViewNode BuildViewNode(ViewInfo viewInfo)
         {
-            return new ViewNode(viewInfo.Schema, viewInfo.Type.Name, viewInfo.Query);
+            return new ViewNode(viewInfo.Schema, viewInfo.Type.TableName(), viewInfo.Query);
         }
 
         private static IndexNode BuildIndexNode(IndexInfo indexInfo)
@@ -88,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => column.Name)
                 .ToList();
 
-            return new IndexNode(indexInfo.Schema, indexInfo.Table.Name, columns, indexInfo.Unique);
+            return new IndexNode(indexInfo.Schema, indexInfo.Table.TableName(), columns, indexInfo.Unique);
         }
     }
 }

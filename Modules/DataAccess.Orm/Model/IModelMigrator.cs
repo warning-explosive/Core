@@ -11,11 +11,18 @@
     public interface IModelMigrator : IResolvable
     {
         /// <summary>
-        /// Migrate
+        /// Executes manual migrations
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        public Task ExecuteManualMigrations(CancellationToken token);
+
+        /// <summary>
+        /// Executes automatic migrations
         /// </summary>
         /// <param name="modelChanges">Model changes</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task Migrate(IReadOnlyCollection<IModelChange> modelChanges, CancellationToken token);
+        public Task ExecuteAutoMigrations(IReadOnlyCollection<IModelChange> modelChanges, CancellationToken token);
     }
 }

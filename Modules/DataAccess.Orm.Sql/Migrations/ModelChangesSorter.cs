@@ -64,7 +64,7 @@
                                     .SelectMany(dependency => changes
                                         .OfType<CreateTable>()
                                         .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                         && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase)
+                                                         && change.Table.Equals(dependency.TableName(), StringComparison.OrdinalIgnoreCase)
                                                          && GetTableDependencies(_modelProvider, change).All(cycleDependency => cycleDependency != _modelProvider.Objects[createTable.Schema][createTable.Table].Type))));
                         case CreateView:
                             return changes
@@ -87,7 +87,7 @@
                                 : changes
                                     .OfType<CreateTable>()
                                     .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                     && change.Table.Equals(dependency.Name, StringComparison.OrdinalIgnoreCase));
+                                                     && change.Table.Equals(dependency.TableName(), StringComparison.OrdinalIgnoreCase));
                         case DropIndex:
                         case DropTable:
                         case DropView:

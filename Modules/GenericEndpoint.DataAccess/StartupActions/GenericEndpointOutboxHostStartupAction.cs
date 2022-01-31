@@ -6,6 +6,7 @@
     using CompositionRoot.Api.Abstractions.Container;
     using Contract;
     using Core.DataAccess.Api.Transaction;
+    using Core.DataAccess.Orm.Extensions;
     using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericHost.Api.Abstractions;
@@ -33,27 +34,26 @@
 
         private Func<IntegrationMessage, CancellationToken, Task> ErrorMessageHandler(EndpointIdentity endpointIdentity)
         {
-            return async (message, token) =>
+            return (message, token) => _dependencyContainer.InvokeWithinTransaction((endpointIdentity, message), HandleErrorMessage, token);
+        }
+
+        private async Task HandleErrorMessage(
+            IAdvancedDatabaseTransaction transaction,
+            (EndpointIdentity, IntegrationMessage) state,
+            CancellationToken token)
+        {
+            var (endpointIdentity, message) = state;
+
+            var inbox = await _dependencyContainer
+                .Resolve<IAggregateFactory<Inbox, InboxAggregateSpecification>>()
+                .Build(new InboxAggregateSpecification(message, endpointIdentity), token)
+                .ConfigureAwait(false);
+
+            if (!inbox.IsError)
             {
-                await using (_dependencyContainer.OpenScopeAsync())
-                {
-                    var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
-
-                    await using (await transaction.Open(true, token).ConfigureAwait(false))
-                    {
-                        var inbox = await _dependencyContainer
-                            .Resolve<IAggregateFactory<Inbox, InboxAggregateSpecification>>()
-                            .Build(new InboxAggregateSpecification(message, endpointIdentity), token)
-                            .ConfigureAwait(false);
-
-                        if (!inbox.IsError)
-                        {
-                            inbox.MarkAsError();
-                            await transaction.Track(inbox, token).ConfigureAwait(false);
-                        }
-                    }
-                }
-            };
+                inbox.MarkAsError();
+                await transaction.Track(inbox, token).ConfigureAwait(false);
+            }
         }
     }
 }

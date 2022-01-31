@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
@@ -12,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
     using CrossCuttingConcerns.Api.Abstractions;
-    using Dapper;
+    using Extensions;
     using Orm.Linq;
     using Orm.Settings;
     using Translation;
@@ -74,23 +73,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
         private async Task<IEnumerable<dynamic>?> GetDynamicResult(FlatQuery query, CancellationToken token)
         {
-            var ormSettings = await _settingsProvider
+            var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var command = new CommandDefinition(
-                InlineQueryParameters(query),
-                null,
-                _transaction.UnderlyingDbTransaction,
-                ormSettings.QueryTimeout.Seconds,
-                CommandType.Text,
-                CommandFlags.Buffered,
-                token);
+            var commandText = InlineQueryParameters(query);
 
             return await _transaction
                 .UnderlyingDbTransaction
-                .Connection
-                .QueryAsync(command)
+                .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
         }
 

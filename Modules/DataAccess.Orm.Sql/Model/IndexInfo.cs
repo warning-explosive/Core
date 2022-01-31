@@ -115,7 +115,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table.Name}.{Name} ({Unique})";
+            return $"{Schema}.{Table.TableName()}.{Name} ({Unique})";
         }
     }
 }

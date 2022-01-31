@@ -75,7 +75,7 @@
                         {
                             if (!Columns.TryGetValue(column, out var info))
                             {
-                                throw new InvalidOperationException($"View {Schema}.{Type.Name} doesn't have column {column} for index");
+                                throw new InvalidOperationException($"View {Schema}.{Type.TableName()} doesn't have column {column} for index");
                             }
 
                             yield return info;
@@ -148,7 +148,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Type.Name} ({Query})";
+            return $"{Schema}.{Type.TableName()} ({Query})";
         }
     }
 }

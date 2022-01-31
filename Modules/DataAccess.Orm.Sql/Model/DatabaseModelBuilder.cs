@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
+    using Orm.Extensions;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -40,40 +41,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 return default;
             }
 
-            await using (_dependencyContainer.OpenScopeAsync())
-            {
-                var transaction = _dependencyContainer.Resolve<IDatabaseTransaction>();
+            return await _dependencyContainer
+                .InvokeWithinTransaction(BuildModel, token)
+                .ConfigureAwait(false);
+        }
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
-                {
-                    var constraints = transaction
-                        .Read<DatabaseColumnConstraint, Guid>()
-                        .All()
-                        .AsEnumerable()
-                        .GroupBy(constraint => constraint.Schema)
-                        .ToDictionary(grp => grp.Key,
-                            grp => grp
-                                .GroupBy(constraint => constraint.Table)
-                                .ToDictionary(g => g.Key,
-                                    g => g.ToDictionary(
-                                        constraint => constraint.Column,
-                                        StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, DatabaseColumnConstraint>,
-                                    StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>,
-                            StringComparer.OrdinalIgnoreCase);
+        private async Task<DatabaseNode> BuildModel(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        {
+            var constraints = transaction
+                .Read<DatabaseColumnConstraint, Guid>()
+                .All()
+                .AsEnumerable()
+                .GroupBy(constraint => constraint.Schema)
+                .ToDictionary(grp => grp.Key,
+                    grp => grp
+                        .GroupBy(constraint => constraint.Table)
+                        .ToDictionary(g => g.Key,
+                            g => g.ToDictionary(
+                                constraint => constraint.Column,
+                                StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, DatabaseColumnConstraint>,
+                            StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>,
+                    StringComparer.OrdinalIgnoreCase);
 
-                    var schemas = await (await transaction
-                            .Read<DatabaseSchema, Guid>()
-                            .All()
-                            .Select(schema => schema.Name)
-                            .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
-                            .ConfigureAwait(false))
-                        .Select(schema => BuildSchemaNode(transaction, schema, constraints, token))
-                        .WhenAll()
-                        .ConfigureAwait(false);
+            var schemas = await (await transaction
+                    .Read<DatabaseSchema, Guid>()
+                    .All()
+                    .Select(schema => schema.Name)
+                    .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
+                    .ConfigureAwait(false))
+                .Select(schema => BuildSchemaNode(transaction, schema, constraints, token))
+                .WhenAll()
+                .ConfigureAwait(false);
 
-                    return new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas);
-                }
-            }
+            return new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas);
         }
 
         private static async Task<SchemaNode> BuildSchemaNode(IDatabaseContext transaction,

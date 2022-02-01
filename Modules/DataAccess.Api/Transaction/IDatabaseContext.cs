@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
             where TKey : notnull;
 
         /// <summary>
-        /// Starts tracking specified aggregate root with insert semantics
+        /// Starts tracking specified aggregate root with underlying domain events
         /// </summary>
         /// <param name="aggregate">Aggregate root</param>
         /// <param name="token">Cancellation token</param>

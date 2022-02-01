@@ -1,5 +1,6 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.ChangesTracking
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -8,7 +9,7 @@
     /// <summary>
     /// IChangesTracker
     /// </summary>
-    public interface IChangesTracker : IResolvable
+    public interface IChangesTracker : IDisposable, IResolvable
     {
         /// <summary>
         /// Did the changes tracker capture any state changes

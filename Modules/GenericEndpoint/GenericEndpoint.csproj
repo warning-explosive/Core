@@ -74,6 +74,9 @@
     <Compile Update="Endpoint\MessageHandlerExecutor.cs">
       <DependentUpon>IMessageHandlerExecutor.cs</DependentUpon>
     </Compile>
+    <Compile Update="UnitOfWork\OutboxStorage.cs">
+      <DependentUpon>IOutboxStorage.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />

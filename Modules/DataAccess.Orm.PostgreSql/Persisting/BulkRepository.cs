@@ -34,14 +34,14 @@
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
-        private readonly IAdvancedDatabaseTransaction _transaction;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IExpressionTranslator _expressionTranslator;
 
         public BulkRepository(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             IExpressionTranslator expressionTranslator)
         {
             _dependencyContainer = dependencyContainer;

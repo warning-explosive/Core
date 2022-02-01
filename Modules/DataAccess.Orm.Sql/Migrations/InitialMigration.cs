@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
             _modelComparator = modelComparator;
         }
 
-        public string Name { get; } = "Initial migration";
+        public string Name { get; } = ModelMigrator.GetAutomaticMigrationName(0);
 
         public async Task ExecuteManualMigration(CancellationToken token)
         {

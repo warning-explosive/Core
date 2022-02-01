@@ -30,6 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 JoinExpression joinExpression => VisitJoinExpression(joinExpression),
                 ColumnChainExpression columnChainExpression => VisitColumnChainExpression(columnChainExpression),
                 GroupByExpression groupByExpression => VisitGroupByExpression(groupByExpression),
+                RowsFetchLimitExpression rowsFetchLimitExpression => VisitRowsFetchLimitExpression(rowsFetchLimitExpression),
+                SpecialExpression specialExpression => VisitSpecialExpression(specialExpression),
                 _ => throw new NotSupportedException(expression.GetType().FullName)
             };
         }
@@ -80,7 +82,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual IIntermediateExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
         {
             return new NamedBindingExpression(
-                namedBindingExpression.Member,
+                namedBindingExpression.Name,
                 Visit(namedBindingExpression.Source));
         }
 
@@ -221,6 +223,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual IIntermediateExpression VisitGroupByExpression(GroupByExpression groupByExpression)
         {
             return groupByExpression;
+        }
+
+        /// <summary>
+        /// Visit RowsFetchLimitExpression
+        /// </summary>
+        /// <param name="rowsFetchLimitExpression">RowsFetchLimitExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitRowsFetchLimitExpression(RowsFetchLimitExpression rowsFetchLimitExpression)
+        {
+            return new RowsFetchLimitExpression(
+                rowsFetchLimitExpression.Type,
+                rowsFetchLimitExpression.RowsFetchLimit,
+                Visit(rowsFetchLimitExpression.Source));
+        }
+
+        /// <summary>
+        /// Visit SpecialExpression
+        /// </summary>
+        /// <param name="specialExpression">SpecialExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitSpecialExpression(SpecialExpression specialExpression)
+        {
+            return specialExpression;
         }
     }
 }

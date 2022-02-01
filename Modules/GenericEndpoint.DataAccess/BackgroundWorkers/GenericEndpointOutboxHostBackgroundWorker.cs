@@ -54,7 +54,7 @@
                 .ConfigureAwait(false);
         }
 
-        private async Task<IntegrationMessage[]> GetUnsentMessages(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        private async Task<IntegrationMessage[]> GetUnsentMessages(IDatabaseTransaction transaction, CancellationToken token)
         {
             var serializer = _dependencyContainer.Resolve<IJsonSerializer>();
             var formatter = _dependencyContainer.Resolve<IStringFormatter>();
@@ -70,7 +70,7 @@
         }
 
         private async Task DeliverMessages(
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             IntegrationMessage[] unsent,
             CancellationToken token)
         {

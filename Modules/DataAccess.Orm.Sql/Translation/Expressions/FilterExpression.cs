@@ -164,17 +164,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplySource(IIntermediateExpression expression)
         {
-            if (Source == null)
+            if (Source != null)
             {
-                Source = expression;
+                throw new InvalidOperationException("Filter expression source has already been set");
             }
+
+            Source = expression;
         }
 
         private void ApplyBinding(IIntermediateExpression expression)
         {
             if (Source is JoinExpression join)
             {
-                expression = new ReplaceJoinBindingsVisitor(join).Visit(expression);
+                expression = new ReplaceJoinBindingsVisitor(join, false).Visit(expression);
             }
             else if (Source is ProjectionExpression projection)
             {
@@ -182,7 +184,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {
-                    expression = new ReplaceJoinBindingsVisitor(projectionJoin).Visit(expression);
+                    expression = new ReplaceJoinBindingsVisitor(projectionJoin, false).Visit(expression);
                 }
             }
 

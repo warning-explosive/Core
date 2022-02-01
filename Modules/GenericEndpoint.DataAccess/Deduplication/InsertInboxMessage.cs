@@ -11,7 +11,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertInboxMessage : IDatabaseStateTransformer<InboxMessageReceived>
+    internal class InsertInboxMessage : IDomainEventHandler<InboxMessageReceived>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
@@ -22,7 +22,7 @@
             _serializer = serializer;
         }
 
-        public Task Persist(InboxMessageReceived domainEvent, CancellationToken token)
+        public Task Handle(InboxMessageReceived domainEvent, CancellationToken token)
         {
             var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
 

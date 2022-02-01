@@ -81,7 +81,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Source, Arguments);
+            return HashCode.Combine(
+                Type,
+                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Source,
+                Arguments);
         }
 
         /// <inheritdoc />

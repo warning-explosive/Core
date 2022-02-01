@@ -12,7 +12,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertOutgoingMessages : IDatabaseStateTransformer<OutboxMessagesAreReadyToBeSent>
+    internal class InsertOutgoingMessages : IDomainEventHandler<OutboxMessagesAreReadyToBeSent>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
@@ -23,7 +23,7 @@
             _serializer = serializer;
         }
 
-        public async Task Persist(OutboxMessagesAreReadyToBeSent domainEvent, CancellationToken token)
+        public async Task Handle(OutboxMessagesAreReadyToBeSent domainEvent, CancellationToken token)
         {
             var messages = domainEvent
                 .OutgoingMessages

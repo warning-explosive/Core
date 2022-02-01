@@ -5,14 +5,18 @@
 
     internal class ExtractParametersVisitor : IntermediateExpressionVisitorBase
     {
-        private readonly List<ParameterExpression> _parameters;
+        private const int BindingParameterOffset = 1_000_000;
+
+        private readonly Dictionary<int, ParameterExpression> _parameters;
+        private int _currentIndex;
 
         private ExtractParametersVisitor()
         {
-            _parameters = new List<ParameterExpression>();
+            _parameters = new Dictionary<int, ParameterExpression>();
+            _currentIndex = 0;
         }
 
-        public static IReadOnlyCollection<ParameterExpression> ExtractParameters(IIntermediateExpression expression)
+        public static IReadOnlyDictionary<int, ParameterExpression> ExtractParameters(IIntermediateExpression expression)
         {
             var extractor = new ExtractParametersVisitor();
             _ = extractor.Visit(expression);
@@ -21,8 +25,30 @@
 
         protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
         {
-            _parameters.Add(parameterExpression);
+            _parameters.Add(_currentIndex++, parameterExpression);
             return parameterExpression;
+        }
+
+        protected override IIntermediateExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
+        {
+            var parameter = Visit(namedSourceExpression.Parameter);
+            var source = Visit(namedSourceExpression.Source);
+
+            return new NamedSourceExpression(
+                namedSourceExpression.Type,
+                source,
+                parameter);
+        }
+
+        protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        {
+            if (simpleBindingExpression.Source is ParameterExpression parameterExpression)
+            {
+                _parameters.Add(BindingParameterOffset + _currentIndex++, parameterExpression);
+                return simpleBindingExpression;
+            }
+
+            return base.VisitSimpleBinding(simpleBindingExpression);
         }
     }
 }

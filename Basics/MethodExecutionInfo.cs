@@ -127,6 +127,18 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Execute generic method with type arguments
+        /// </summary>
+        /// <param name="typeArguments">Types of Type-Arguments</param>
+        /// <returns>MethodExecutionInfo</returns>
+        public MethodExecutionInfo WithTypeArguments(params Type[] typeArguments)
+        {
+            typeArguments.Each(_typeArguments.Add);
+
+            return this;
+        }
+
+        /// <summary>
         /// Invoke configured method
         /// </summary>
         /// <typeparam name="TResult">TResult type-argument</typeparam>

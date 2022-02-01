@@ -60,6 +60,8 @@
                             return changes
                                 .OfType<CreateSchema>()
                                 .Cast<IModelChange>()
+                                .Concat(changes
+                                    .OfType<DropTable>())
                                 .Concat(GetTableDependencies(_modelProvider, createTable)
                                     .SelectMany(dependency => changes
                                         .OfType<CreateTable>()
@@ -71,7 +73,9 @@
                                 .OfType<CreateSchema>()
                                 .Cast<IModelChange>()
                                 .Concat(changes
-                                    .OfType<CreateTable>());
+                                    .OfType<CreateTable>())
+                                .Concat(changes
+                                    .OfType<DropView>());
                         case CreateIndex:
                             return changes
                                 .OfType<CreateSchema>()

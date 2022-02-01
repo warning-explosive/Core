@@ -123,15 +123,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 && Right == null)
             {
                 Right = expression;
+                return;
             }
-            else if (Left == null)
+
+            if (Left == null)
             {
                 Left = expression;
+                return;
             }
-            else if (Right == null)
+
+            if (Right == null)
             {
                 Right = expression;
+                return;
             }
+
+            throw new InvalidOperationException("Binary expression sources have already been set");
         }
 
         #endregion

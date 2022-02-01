@@ -64,7 +64,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Name, Value);
+            return HashCode.Combine(
+                Type,
+                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Value);
         }
 
         /// <inheritdoc />
@@ -109,7 +112,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             object? value,
             bool force = false)
         {
-            // see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
+            // TODO: see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
             var isNullConstant = value == null
                                  && value == type.DefaultValue()
                                  && !force;

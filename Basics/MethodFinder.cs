@@ -82,12 +82,22 @@ namespace SpaceEngineers.Core.Basics
 
         private MethodInfo? FindGenericMethod()
         {
-            var methods = DeclaringType.GetMethods(BindingFlags)
-                                       .Where(m => m.Name == MethodName
-                                                && m.IsGenericMethod
-                                                && ValidateParameters(ArgumentTypes.ToArray(), m.GetParameters().Select(z => z.ParameterType).ToArray())
-                                                && ValidateParameters(TypeArguments.ToArray(), m.GetGenericArguments()))
-                                       .ToArray();
+            var methods = DeclaringType
+                .GetMethods(BindingFlags)
+                .Where(methodInfo => methodInfo.Name == MethodName
+                            && methodInfo.IsGenericMethod
+                            && ValidateParameters(TypeArguments, methodInfo.GetGenericArguments())
+                            && ValidateParameters(ArgumentTypes, GetArgumentTypes(methodInfo)))
+                .ToArray();
+
+            IReadOnlyCollection<Type> GetArgumentTypes(MethodInfo methodInfo)
+            {
+                return methodInfo
+                    .MakeGenericMethod(TypeArguments.ToArray())
+                    .GetParameters()
+                    .Select(z => z.ParameterType)
+                    .ToArray();
+            }
 
             string Amb(IEnumerable<MethodInfo> source)
             {
@@ -99,9 +109,9 @@ namespace SpaceEngineers.Core.Basics
             return methods.InformativeSingle(Amb);
         }
 
-        private static bool ValidateParameters(Type[] actual, Type[] expected)
+        private static bool ValidateParameters(IReadOnlyCollection<Type> actual, IReadOnlyCollection<Type> expected)
         {
-            if (actual.Length != expected.Length)
+            if (actual.Count != expected.Count)
             {
                 return false;
             }

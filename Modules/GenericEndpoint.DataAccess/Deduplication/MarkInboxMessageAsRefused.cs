@@ -10,7 +10,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class MarkInboxMessageAsRefused : IDatabaseStateTransformer<InboxMessageWasMovedToErrorQueue>
+    internal class MarkInboxMessageAsRefused : IDomainEventHandler<InboxMessageWasMovedToErrorQueue>
     {
         private readonly IDatabaseContext _databaseContext;
 
@@ -19,7 +19,7 @@
             _databaseContext = databaseContext;
         }
 
-        public Task Persist(InboxMessageWasMovedToErrorQueue domainEvent, CancellationToken token)
+        public Task Handle(InboxMessageWasMovedToErrorQueue domainEvent, CancellationToken token)
         {
             return _databaseContext
                 .Write<InboxMessage, Guid>()

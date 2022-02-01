@@ -1,8 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
-    using System.Data;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Diagnostics.CodeAnalysis;
+    using Model;
 
     /// <summary>
     /// IAdvancedDatabaseTransaction
@@ -10,31 +9,25 @@
     public interface IAdvancedDatabaseTransaction : IDatabaseTransaction
     {
         /// <summary>
-        /// Underlying db transaction
+        /// Puts entry into transactional store
         /// </summary>
-        IDbTransaction UnderlyingDbTransaction { get; }
+        /// <param name="entity">Entity</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        void Store<TEntity, TKey>(TEntity entity)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull;
 
         /// <summary>
-        /// Opens database transaction
+        /// Gets entry from transactional store by key
         /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task<IDbTransaction> Open(CancellationToken token);
-
-        /// <summary>
-        /// Opens database transaction
-        /// </summary>
-        /// <param name="isolationLevel">Isolation level</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task<IDbTransaction> Open(IsolationLevel isolationLevel, CancellationToken token);
-
-        /// <summary>
-        /// Closes database transaction
-        /// </summary>
-        /// <param name="commit">Commit transaction or not</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Close(bool commit, CancellationToken token);
+        /// <param name="key">Key</param>
+        /// <param name="entity">Entity</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <returns>Request result</returns>
+        bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull;
     }
 }

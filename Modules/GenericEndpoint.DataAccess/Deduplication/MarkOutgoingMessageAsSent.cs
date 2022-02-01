@@ -10,7 +10,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class MarkOutgoingMessageAsSent : IDatabaseStateTransformer<OutboxMessageHaveBeenSent>
+    internal class MarkOutgoingMessageAsSent : IDomainEventHandler<OutboxMessageHaveBeenSent>
     {
         private readonly IDatabaseContext _databaseContext;
 
@@ -19,7 +19,7 @@
             _databaseContext = databaseContext;
         }
 
-        public async Task Persist(OutboxMessageHaveBeenSent domainEvent, CancellationToken token)
+        public async Task Handle(OutboxMessageHaveBeenSent domainEvent, CancellationToken token)
         {
             await _databaseContext
                 .Write<OutboxMessage, Guid>()

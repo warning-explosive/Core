@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -33,11 +34,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal SimpleBindingExpression(MemberInfo member, Type type)
-            : this(member, type, null !)
+            : this(member, type, null!)
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Member
+        /// </summary>
         public MemberInfo Member { get; }
 
         /// <inheritdoc />
@@ -76,7 +79,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Member, Type, Name, Source);
+            return HashCode.Combine(
+                Member,
+                Type,
+                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Source);
         }
 
         /// <inheritdoc />
@@ -108,23 +115,51 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             return System.Linq.Expressions.Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
         }
 
+        /// <summary>
+        /// Gets flat collection of underneath expressions
+        /// </summary>
+        /// <returns>Flat collection</returns>
+        public IEnumerable<IIntermediateExpression> Flatten()
+        {
+            IIntermediateExpression? current = this;
+
+            while (current != null)
+            {
+                yield return current;
+
+                current = current is SimpleBindingExpression simpleBindingExpression
+                    ? simpleBindingExpression.Source
+                    : null;
+            }
+        }
+
         #region IApplicable
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
         {
-            Source = expression;
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression expression)
         {
-            Source = expression;
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, QueryParameterExpression expression)
         {
+            ApplySource(expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
+        {
+            if (Source != null)
+            {
+                throw new InvalidOperationException("Simple binding expression source has already been set");
+            }
+
             Source = expression;
         }
 

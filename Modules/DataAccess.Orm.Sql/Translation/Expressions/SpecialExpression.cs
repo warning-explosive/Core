@@ -3,44 +3,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
+    using Api.Exceptions;
     using Basics;
 
     /// <summary>
-    /// ParameterExpression
+    /// SpecialExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class ParameterExpression : IIntermediateExpression,
-                                       IEquatable<ParameterExpression>,
-                                       ISafelyEquatable<ParameterExpression>
+    public class SpecialExpression : IIntermediateExpression,
+                                     IEquatable<SpecialExpression>,
+                                     ISafelyEquatable<SpecialExpression>
     {
-        private readonly Func<string> _nameProducer;
-
         /// <summary> .cctor </summary>
-        /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
-        public ParameterExpression(TranslationContext context, Type type)
+        /// <param name="text">Text</param>
+        public SpecialExpression(Type type, string text)
         {
             Type = type;
-            _nameProducer = context.NextLambdaParameterName();
+            Text = text;
         }
 
         /// <inheritdoc />
         public Type Type { get; }
 
         /// <summary>
-        /// Name
+        /// Text
         /// </summary>
-        public string Name => _nameProducer();
+        public string Text { get; }
 
         #region IEquatable
 
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
+        /// <param name="left">Left SpecialExpression</param>
+        /// <param name="right">Right SpecialExpression</param>
         /// <returns>equals</returns>
-        public static bool operator ==(ParameterExpression? left, ParameterExpression? right)
+        public static bool operator ==(SpecialExpression? left, SpecialExpression? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -48,10 +47,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
+        /// <param name="left">Left SpecialExpression</param>
+        /// <param name="right">Right SpecialExpression</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(ParameterExpression? left, ParameterExpression? right)
+        public static bool operator !=(SpecialExpression? left, SpecialExpression? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -61,7 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             return HashCode.Combine(
                 Type,
-                Name.GetHashCode(StringComparison.OrdinalIgnoreCase));
+                Text.GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />
@@ -71,16 +70,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public bool Equals(ParameterExpression? other)
+        public bool Equals(SpecialExpression? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(ParameterExpression other)
+        public bool SafeEquals(SpecialExpression other)
         {
             return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
+                   && Text.Equals(other.Text, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -88,7 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.Parameter(Type, Name);
+            throw new TranslationException(nameof(SpecialExpression) + "." + nameof(AsExpressionTree));
         }
     }
 }

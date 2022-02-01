@@ -38,7 +38,7 @@
         }
 
         private async Task HandleErrorMessage(
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             (EndpointIdentity, IntegrationMessage) state,
             CancellationToken token)
         {

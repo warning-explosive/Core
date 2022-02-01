@@ -12,6 +12,7 @@
     using CompositionRoot.Api.Abstractions.Container;
     using Dynamic;
     using Dynamic.Abstractions;
+    using Extensions;
     using Orm.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -81,6 +82,19 @@
                             StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>);
         }
 
+        public IEnumerable<ColumnInfo> Columns(Type type)
+        {
+            var mtmTables = MtmTables
+                .ToDictionary(
+                    schema => schema.Key,
+                    schema => schema.Value
+                        .ToDictionary(
+                            table => table.Key,
+                            table => table.Value));
+
+            return GetColumns(type.SchemaName(), type, mtmTables);
+        }
+
         private ModelInfo InitModel()
         {
             var mutableMtmTables = new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>(StringComparer.OrdinalIgnoreCase);
@@ -109,34 +123,31 @@
         {
             if (entity.IsSqlView())
             {
-                yield return GetViewInfo(entity.SchemaName(), entity, mtmTables);
+                yield return GetView(entity.SchemaName(), entity, mtmTables);
             }
             else
             {
-                var tableInfo = GetTableInfo(entity.SchemaName(), entity, mtmTables);
+                var tableInfo = GetTable(entity.SchemaName(), entity, mtmTables);
                 yield return tableInfo;
 
-                foreach (var mtmTableInfo in GetMtmTablesInfo(tableInfo.Columns.Values, mtmTables))
+                foreach (var mtmTableInfo in GetMtmTables(tableInfo.Columns.Values, mtmTables))
                 {
                     yield return mtmTableInfo;
                 }
             }
         }
 
-        private TableInfo GetTableInfo(
+        private TableInfo GetTable(
             string schema,
             Type tableType,
             Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
         {
-            var columns = tableType
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .SelectMany(property => GetColumnInfo(schema, tableType, property, mtmTables))
-                .ToList();
+            var columns = GetColumns(schema, tableType, mtmTables).ToList();
 
             return new TableInfo(schema, tableType, columns);
         }
 
-        private IEnumerable<TableInfo> GetMtmTablesInfo(
+        private IEnumerable<TableInfo> GetMtmTables(
             IEnumerable<ColumnInfo> columns,
             Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
         {
@@ -146,26 +157,33 @@
 
             TableInfo GetMtmTableInfo(ColumnInfo columnInfo)
             {
-                return GetTableInfo(columnInfo.Schema, columnInfo.MultipleRelationTable!, mtmTables);
+                return GetTable(columnInfo.Schema, columnInfo.MultipleRelationTable!, mtmTables);
             }
         }
 
-        private ViewInfo GetViewInfo(
+        private ViewInfo GetView(
             string schema,
             Type viewType,
             Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
         {
             var query = viewType.SqlViewQuery(_dependencyContainer);
 
-            var columns = viewType
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                .SelectMany(property => GetColumnInfo(schema, viewType, property, mtmTables))
-                .ToList();
+            var columns = GetColumns(schema, viewType, mtmTables).ToList();
 
             return new ViewInfo(schema, viewType, columns, query);
         }
 
-        private IEnumerable<ColumnInfo> GetColumnInfo(
+        private IEnumerable<ColumnInfo> GetColumns(
+            string schema,
+            Type type,
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+        {
+            return type
+                .Columns()
+                .SelectMany(property => GetColumns(schema, type, property, mtmTables));
+        }
+
+        private IEnumerable<ColumnInfo> GetColumns(
             string schema,
             Type table,
             PropertyInfo property,
@@ -214,11 +232,7 @@
             PropertyInfo property,
             Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
         {
-            var properties = property
-                .PropertyType
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-
-            foreach (var inlined in properties)
+            foreach (var inlined in property.PropertyType.Columns())
             {
                 foreach (var subsequent in FlattenSpecialTypes(inlined, mtmTables))
                 {

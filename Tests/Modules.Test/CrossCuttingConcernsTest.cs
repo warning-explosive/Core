@@ -37,22 +37,22 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Assert.NotNull(DependencyContainer.Resolve<IObjectBuilder<object>>().Build());
 
-            var objectValues = new Dictionary<string, object> { ["value"] = new object() };
+            var objectValues = new Dictionary<string, object?> { ["value"] = new object() };
             Assert.Throws<InvalidOperationException>(() => DependencyContainer.Resolve<IObjectBuilder<object>>().Build(objectValues));
 
             var str = "qwerty";
-            var stringValues = new Dictionary<string, object> { ["value"] = str };
+            var stringValues = new Dictionary<string, object?> { ["value"] = str };
             Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<string>>().Build(stringValues));
 
-            var enumValues = new Dictionary<string, object> { ["value"] = EnLifestyle.Scoped.ToString() };
+            var enumValues = new Dictionary<string, object?> { ["value"] = EnLifestyle.Scoped.ToString() };
             Assert.Equal(EnLifestyle.Scoped, DependencyContainer.Resolve<IObjectBuilder<EnLifestyle>>().Build(enumValues));
 
             var guid = Guid.NewGuid();
-            var guidValues = new Dictionary<string, object> { ["value"] = guid };
+            var guidValues = new Dictionary<string, object?> { ["value"] = guid };
             Assert.Equal(guid, DependencyContainer.Resolve<IObjectBuilder<Guid>>().Build(guidValues));
 
             Assert.Equal(string.Empty, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build().Value);
-            var testStructValues = new Dictionary<string, object> { [nameof(TestClass.Value)] = str };
+            var testStructValues = new Dictionary<string, object?> { [nameof(TestClass.Value)] = str };
             Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build(testStructValues).Value);
         }
 

@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.ChangesTracking
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Collections.Concurrent;
@@ -45,8 +45,8 @@
                     foreach (var domainEvent in aggregate.Events)
                     {
                         await _dependencyContainer
-                            .ResolveGeneric(typeof(IDatabaseStateTransformer<>), domainEvent.GetType())
-                            .CallMethod(nameof(IDatabaseStateTransformer<IDomainEvent>.Persist))
+                            .ResolveGeneric(typeof(IDomainEventHandler<>), domainEvent.GetType())
+                            .CallMethod(nameof(IDomainEventHandler<IDomainEvent>.Handle))
                             .WithArguments(domainEvent, token)
                             .Invoke<Task>()
                             .ConfigureAwait(false);
@@ -55,8 +55,13 @@
             }
             finally
             {
-                _trackedAggregates.Clear();
+                Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            _trackedAggregates.Clear();
         }
     }
 }

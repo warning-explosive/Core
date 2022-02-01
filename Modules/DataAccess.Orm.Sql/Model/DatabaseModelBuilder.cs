@@ -46,7 +46,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .ConfigureAwait(false);
         }
 
-        private async Task<DatabaseNode> BuildModel(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        private async Task<DatabaseNode> BuildModel(IDatabaseTransaction transaction, CancellationToken token)
         {
             var constraints = transaction
                 .Read<DatabaseColumnConstraint, Guid>()

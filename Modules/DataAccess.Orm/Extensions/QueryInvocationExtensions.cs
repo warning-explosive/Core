@@ -20,14 +20,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <returns>Ongoing operation</returns>
         public static async Task InvokeWithinTransaction(
             this IDependencyContainer dependencyContainer,
-            Func<IAdvancedDatabaseTransaction, CancellationToken, Task> producer,
+            Func<IDatabaseTransaction, CancellationToken, Task> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                 {
                     await producer(transaction, token).ConfigureAwait(false);
                 }
@@ -44,14 +44,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <returns>Ongoing operation</returns>
         public static async Task<TResult> InvokeWithinTransaction<TResult>(
             this IDependencyContainer dependencyContainer,
-            Func<IAdvancedDatabaseTransaction, CancellationToken, Task<TResult>> producer,
+            Func<IDatabaseTransaction, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                 {
                     return await producer(transaction, token).ConfigureAwait(false);
                 }
@@ -70,14 +70,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         public static async Task InvokeWithinTransaction<TState>(
             this IDependencyContainer dependencyContainer,
             TState state,
-            Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task> producer,
+            Func<IDatabaseTransaction, TState, CancellationToken, Task> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                 {
                     await producer(transaction, state, token).ConfigureAwait(false);
                 }
@@ -97,14 +97,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         public static async Task<TResult> InvokeWithinTransaction<TResult, TState>(
             this IDependencyContainer dependencyContainer,
             TState state,
-            Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task<TResult>> producer,
+            Func<IDatabaseTransaction, TState, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                await using (await transaction.Open(true, token).ConfigureAwait(false))
+                await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                 {
                     return await producer(transaction, state, token).ConfigureAwait(false);
                 }

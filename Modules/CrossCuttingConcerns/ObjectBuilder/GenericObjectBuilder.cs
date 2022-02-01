@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             _objectBuilder = objectBuilder;
         }
 
-        public T? Build(IDictionary<string, object>? values = null)
+        public T? Build(IDictionary<string, object?>? values = null)
         {
             var built = _objectBuilder.Build(typeof(T), values);
 

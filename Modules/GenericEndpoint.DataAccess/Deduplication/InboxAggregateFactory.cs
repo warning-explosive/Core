@@ -31,7 +31,7 @@
 
         public async Task<Inbox> Build(InboxAggregateSpecification spec, CancellationToken token)
         {
-            var integrationMessageDatabaseEntity = await _databaseContext
+            var inboxMessageDatabaseEntity = await _databaseContext
                 .Read<InboxMessage, Guid>()
                 .All()
                 .Where(message => message.Message.PrimaryKey == spec.Message.Id
@@ -40,9 +40,9 @@
                 .SingleOrDefaultAsync(token)
                 .ConfigureAwait(false);
 
-            return integrationMessageDatabaseEntity == null
+            return inboxMessageDatabaseEntity == null
                 ? new Inbox(spec.Message, spec.EndpointIdentity)
-                : new Inbox(integrationMessageDatabaseEntity, _serializer, _formatter);
+                : new Inbox(inboxMessageDatabaseEntity, _serializer, _formatter);
         }
     }
 }

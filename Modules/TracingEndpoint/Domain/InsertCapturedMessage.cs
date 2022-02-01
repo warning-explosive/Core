@@ -11,7 +11,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertCapturedMessage : IDatabaseStateTransformer<MessageCaptured>
+    internal class InsertCapturedMessage : IDomainEventHandler<MessageCaptured>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
@@ -22,7 +22,7 @@
             _databaseContext = databaseContext;
         }
 
-        public async Task Persist(MessageCaptured domainEvent, CancellationToken token)
+        public async Task Handle(MessageCaptured domainEvent, CancellationToken token)
         {
             var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
 

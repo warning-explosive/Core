@@ -1,10 +1,47 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using System.Linq;
     using System.Linq.Expressions;
+    using Api.Model;
     using Basics;
+    using Orm.Linq;
+    using Views;
 
     internal class CollapseConstantsExpressionVisitor : ExpressionVisitor
     {
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            var visitedNode = base.VisitMethodCall(node);
+
+            if (visitedNode is ConstantExpression)
+            {
+                return visitedNode;
+            }
+
+            if (visitedNode is MethodCallExpression { Object: ConstantExpression or null } methodCallExpression
+                && methodCallExpression.Arguments.All(argument => argument is ConstantExpression))
+            {
+                var method = node.Method.IsGenericMethod
+                    ? node.Method.GetGenericMethodDefinition()
+                    : node.Method;
+
+                var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+
+                var isQueryRoot = itemType.IsClass
+                    && ((itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                         && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
+                        || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
+                            && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>)))));
+
+                if (!isQueryRoot)
+                {
+                    return visitedNode.CollapseConstantExpression();
+                }
+            }
+
+            return visitedNode;
+        }
+
         protected override Expression VisitMember(MemberExpression node)
         {
             var visitedNode = base.VisitMember(node);

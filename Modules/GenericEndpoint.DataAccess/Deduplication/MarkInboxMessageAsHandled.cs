@@ -10,7 +10,7 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class MarkInboxMessageAsHandled : IDatabaseStateTransformer<InboxMessageWasHandled>
+    internal class MarkInboxMessageAsHandled : IDomainEventHandler<InboxMessageWasHandled>
     {
         private readonly IDatabaseContext _databaseContext;
 
@@ -19,7 +19,7 @@
             _databaseContext = databaseContext;
         }
 
-        public Task Persist(InboxMessageWasHandled domainEvent, CancellationToken token)
+        public Task Handle(InboxMessageWasHandled domainEvent, CancellationToken token)
         {
             return _databaseContext
                 .Write<InboxMessage, Guid>()

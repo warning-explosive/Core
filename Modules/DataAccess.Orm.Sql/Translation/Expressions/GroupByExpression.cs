@@ -121,7 +121,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplyInternal(IIntermediateExpression expression)
         {
-            KeysExpression ??= expression;
+            if (KeysExpression != null)
+            {
+                throw new InvalidOperationException("GroupBy keys expression has already been set");
+            }
+
+            KeysExpression = expression;
         }
 
         #endregion

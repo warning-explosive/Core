@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     [Component(EnLifestyle.Scoped)]
     internal class ExpressionTranslator : IExpressionTranslator
     {
+        private readonly IModelProvider _modelProvider;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
 
         private readonly ExpressionVisitor[] _expressionVisitors;
@@ -23,11 +24,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             IModelProvider modelProvider,
             IEnumerable<IMemberInfoTranslator> sqlFunctionProviders)
         {
+            _modelProvider = modelProvider;
             _sqlFunctionProviders = sqlFunctionProviders;
 
             _expressionVisitors = new ExpressionVisitor[]
             {
-                new CollapseConstantsExpressionVisitor()
+                new CollapseConstantsExpressionVisitor(),
+                new UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor()
             };
 
             _intermediateExpressionVisitors = new IIntermediateExpressionVisitor[]
@@ -39,11 +42,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public IIntermediateExpression Translate(Expression expression)
         {
             expression = ExecutionExtensions
-                .Try(expression, Aggregate)
+                .Try(expression, PreAggregate)
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
 
-            var visitor = new TranslationExpressionVisitor(this, _sqlFunctionProviders);
+            var visitor = new TranslationExpressionVisitor(_modelProvider, this, _sqlFunctionProviders);
 
             ExecutionExtensions
                 .Try(expression, visitor.Visit)
@@ -56,17 +59,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 .EnsureNotNull(() => new TranslationException(expression));
 
             return ExecutionExtensions
-                .Try(intermediateExpression, Aggregate)
+                .Try(intermediateExpression, PostAggregate)
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
         }
 
-        private Expression Aggregate(Expression expression)
+        private Expression PreAggregate(Expression expression)
         {
             return _expressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
         }
 
-        private IIntermediateExpression Aggregate(IIntermediateExpression expression)
+        private IIntermediateExpression PostAggregate(IIntermediateExpression expression)
         {
             return _intermediateExpressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
         }

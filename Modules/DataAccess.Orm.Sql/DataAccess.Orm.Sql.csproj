@@ -226,5 +226,14 @@
       <Compile Update="Translation\ExtractMemberChainExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\SpecialExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

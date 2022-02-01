@@ -114,6 +114,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             throw new TranslationException(nameof(NamedSourceExpression) + "." + nameof(AsExpressionTree));
         }
 
+        #region IApplicable
+
         /// <inheritdoc />
         public void Apply(TranslationContext context, FilterExpression expression)
         {
@@ -176,15 +178,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplySource(IIntermediateExpression expression)
         {
-            if (Source == null)
+            if (Source != null)
             {
-                Source = expression;
+                throw new InvalidOperationException("Named source expression source has already been set");
             }
+
+            Source = expression;
         }
 
         private void ForwardExpression(TranslationContext context, IIntermediateExpression expression)
         {
             context.Apply(Source is FilterExpression filterExpression ? filterExpression.Source : Source, expression);
         }
+
+        #endregion
     }
 }

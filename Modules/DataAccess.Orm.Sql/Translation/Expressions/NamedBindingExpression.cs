@@ -17,22 +17,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                           IApplicable<SimpleBindingExpression>
     {
         /// <summary> .cctor </summary>
-        /// <param name="member">Member info</param>
+        /// <param name="name">Binding name</param>
         /// <param name="source">Source expression</param>
-        public NamedBindingExpression(MemberInfo member, IIntermediateExpression source)
+        public NamedBindingExpression(string name, IIntermediateExpression source)
         {
-            Member = member;
+            Name = name;
             Source = source;
-            Name = member.Name;
         }
 
-        internal NamedBindingExpression(MemberInfo member)
-            : this(member, null !)
+        internal NamedBindingExpression(string name)
+            : this(name, null!)
         {
         }
-
-        /// <inheritdoc />
-        public MemberInfo Member { get; }
 
         /// <inheritdoc />
         public Type Type => Source.Type;
@@ -70,7 +66,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Member, Type, Name, Source);
+            return HashCode.Combine(
+                Type,
+                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Source);
         }
 
         /// <inheritdoc />
@@ -88,8 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public bool SafeEquals(NamedBindingExpression other)
         {
-            return Member == other.Member
-                   && Type == other.Type
+            return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Source.Equals(other.Source);
         }
@@ -102,16 +100,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             throw new TranslationException(nameof(NamedBindingExpression) + "." + nameof(AsExpressionTree));
         }
 
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
-        {
-            Source = expression;
-        }
-
-        #endregion
-
         /// <summary>
         /// Unwrap NamedBindingExpression
         /// </summary>
@@ -123,5 +111,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 ? namedBinding.Source
                 : expression;
         }
+
+        #region IApplicable
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        private void ApplySource(SimpleBindingExpression expression)
+        {
+            if (Source != null)
+            {
+                throw new InvalidOperationException("Named binding expression source has already been set");
+            }
+
+            Source = expression;
+        }
+
+        #endregion
     }
 }

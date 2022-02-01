@@ -25,5 +25,12 @@
         /// <param name="databaseEntities">Database entities</param>
         /// <returns>Objects</returns>
         public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities);
+
+        /// <summary>
+        /// Gets column infos
+        /// </summary>
+        /// <param name="type">Table or projection type</param>
+        /// <returns>Column infos</returns>
+        IEnumerable<ColumnInfo> Columns(Type type);
     }
 }

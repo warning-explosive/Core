@@ -7,8 +7,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Basics;
     using Basics.Enumerations;
     using Basics.Primitives;
+    using CompositionRoot.Api.Abstractions.Container;
     using Contract;
     using Core.DataAccess.Api.Transaction;
+    using Core.DataAccess.Orm.Extensions;
     using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.UnitOfWork;
@@ -20,18 +22,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
                                            IIntegrationUnitOfWork
     {
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;
-        private readonly IAdvancedDatabaseTransaction _transaction;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IAggregateFactory<Inbox, InboxAggregateSpecification> _inboxAggregateFactory;
 
         public IntegrationUnitOfWork(
+            IDependencyContainer dependencyContainer,
             EndpointIdentity endpointIdentity,
             IIntegrationTransport transport,
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             IAggregateFactory<Inbox, InboxAggregateSpecification> inboxAggregateFactory,
             IOutboxStorage outboxStorage)
         {
+            _dependencyContainer = dependencyContainer;
             _endpointIdentity = endpointIdentity;
             _transport = transport;
             _transaction = transaction;
@@ -45,6 +50,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         protected override async Task<EnUnitOfWorkBehavior> Start(IAdvancedIntegrationContext context, CancellationToken token)
         {
+            await _transaction
+                .Open(token)
+                .ConfigureAwait(false);
+
             var spec = new InboxAggregateSpecification(context.Message, _endpointIdentity);
 
             Inbox = await _inboxAggregateFactory.Build(spec, token).ConfigureAwait(false);
@@ -85,9 +94,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
             await Commit(token).ConfigureAwait(false);
 
-            await Outbox
-                .DeliverMessages(outbox.OutgoingMessages, _transport, _transaction, token)
-                .ConfigureAwait(false);
+            await DeliverOutgoingMessages(outbox, token).ConfigureAwait(false);
         }
 
         protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
@@ -98,6 +105,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private Task Commit(CancellationToken token)
         {
             return _transaction.Close(true, token);
+        }
+
+        private Task DeliverOutgoingMessages(
+            Outbox outbox,
+            CancellationToken token)
+        {
+            return _dependencyContainer.InvokeWithinTransaction((outbox, _transport), DeliverMessages, token);
+
+            static Task DeliverMessages(
+                IDatabaseTransaction transaction,
+                (Outbox outbox, IIntegrationTransport transport) state,
+                CancellationToken token)
+            {
+                var (outbox, transport) = state;
+                return Outbox.DeliverMessages(outbox.OutgoingMessages, transport, transaction, token);
+            }
         }
     }
 }

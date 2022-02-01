@@ -201,7 +201,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = new ReplaceJoinBindingsVisitor(join).Visit(expression);
+                expression = new ReplaceJoinBindingsVisitor(join, true).Visit(expression);
             }
 
             _bindings.Add(expression);
@@ -209,10 +209,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplySource(IIntermediateExpression expression)
         {
-            if (Source == null)
+            if (Source != null)
             {
-                Source = expression;
+                throw new InvalidOperationException("Projection expression source has already been set");
             }
+
+            Source = expression;
         }
 
         #endregion

@@ -5,11 +5,13 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Reflection;
     using System.Threading;
     using Api.Model;
     using Basics;
     using Orm.Model;
+    using Translation.Expressions;
 
     /// <summary>
     /// ColumnInfo
@@ -292,6 +294,42 @@
         public override string ToString()
         {
             return $"{Schema}.{Table.TableName()}.{Name} ({Constraints.ToString(", ")})";
+        }
+
+        /// <summary>
+        /// Builds expression tree
+        /// </summary>
+        /// <param name="source">Source expression</param>
+        /// <returns>Expression tree</returns>
+        public Expression BuildExpression(Expression source)
+        {
+            if (source.Type != Table)
+            {
+                throw new InvalidOperationException($"Expression should be constructed over {Table.FullName} type instead of {source.Type.FullName}");
+            }
+
+            return _chain.Aggregate(
+                (Expression)Expression.Parameter(Table),
+                Expression.MakeMemberAccess);
+        }
+
+        /// <summary>
+        /// Builds intermediate expression tree
+        /// </summary>
+        /// <param name="parameter">Parameter expression</param>
+        /// <returns>Expression tree</returns>
+        public IBindingIntermediateExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
+        {
+            if (parameter.Type != Table)
+            {
+                throw new InvalidOperationException($"Parameter expression should be constructed over {Table.FullName} type instead of {parameter.Type.FullName}");
+            }
+
+            var chain = _chain.Aggregate(
+                (IIntermediateExpression)parameter,
+                (acc, next) => new SimpleBindingExpression(next, next.PropertyType, acc));
+
+            return (IBindingIntermediateExpression)chain;
         }
 
         /// <summary>

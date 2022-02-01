@@ -124,15 +124,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             if (When == null)
             {
                 When = expression;
+                return;
             }
-            else if (Then == null)
+
+            if (Then == null)
             {
                 Then = expression;
+                return;
             }
-            else if (Else == null)
+
+            if (Else == null)
             {
                 Else = expression;
+                return;
             }
+
+            throw new InvalidOperationException("Conditional expression sources have already been set");
         }
 
         #endregion

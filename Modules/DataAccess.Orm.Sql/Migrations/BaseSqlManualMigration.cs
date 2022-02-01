@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
             return _dependencyContainer.InvokeWithinTransaction(Producer, token);
         }
 
-        private async Task Producer(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        private async Task Producer(IDatabaseTransaction transaction, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)

@@ -34,6 +34,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
         }
 
+        internal static MethodInfo QueryableSingle2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Single),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
+        }
+
         internal static MethodInfo QueryableSingleOrDefault()
         {
             return new MethodFinder(typeof(Queryable),
@@ -42,6 +55,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 {
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
+        }
+
+        internal static MethodInfo QueryableSingleOrDefault2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.SingleOrDefault),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
@@ -60,6 +86,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
         }
 
+        internal static MethodInfo QueryableFirst2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.First),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
+        }
+
         internal static MethodInfo QueryableFirstOrDefault()
         {
             return new MethodFinder(typeof(Queryable),
@@ -68,6 +107,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 {
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
+        }
+
+        internal static MethodInfo QueryableFirstOrDefault2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.FirstOrDefault),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
@@ -97,6 +149,71 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 }
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Where()"));
+        }
+
+        internal static MethodInfo QueryableAny()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Any),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
+        }
+
+        internal static MethodInfo QueryableAny2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Any),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
+        }
+
+        internal static MethodInfo QueryableAll()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.All),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
+        }
+
+        internal static MethodInfo QueryableCount()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Count),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
+        }
+
+        internal static MethodInfo QueryableCount2()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Count),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(string) },
+                    ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
         internal static MethodInfo QueryableGroupBy2()

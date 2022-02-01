@@ -103,9 +103,6 @@
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
       </Compile>
-      <Compile Update="ChangesTracking\ChangesTracker.cs">
-        <DependentUpon>IChangesTracker.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\LinqMethods.cs">
         <DependentUpon>ReadRepository.cs</DependentUpon>
       </Compile>
@@ -126,6 +123,12 @@
       </Compile>
       <Compile Update="Model\DropIndex.cs">
         <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\ChangesTracker.cs">
+        <DependentUpon>IChangesTracker.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\TransactionalStore.cs">
+        <DependentUpon>ITransactionalStore.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
         /// <param name="type">Type</param>
         /// <param name="values">Property values</param>
         /// <returns>Created and filled instance</returns>
-        object? Build(Type type, IDictionary<string, object>? values = null);
+        object? Build(Type type, IDictionary<string, object?>? values = null);
     }
 
     /// <summary>
@@ -29,6 +29,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
         /// </summary>
         /// <param name="values">Property values</param>
         /// <returns>Created and filled instance</returns>
-        T? Build(IDictionary<string, object>? values = null);
+        T? Build(IDictionary<string, object?>? values = null);
     }
 }

@@ -64,6 +64,11 @@
                 .ConfigureAwait(false);
         }
 
+        internal static string GetAutomaticMigrationName(int number)
+        {
+            return string.Join(string.Empty, AutomaticMigration, " ", number);
+        }
+
         private async Task<string> BuildCommands(IModelChange[] modelChanges, CancellationToken token)
         {
             var sb = new StringBuilder();
@@ -92,7 +97,7 @@
         }
 
         private async Task ExecuteAutoMigrations(
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             string commandText,
             CancellationToken token)
         {
@@ -123,7 +128,7 @@
                 Guid.NewGuid(),
                 DateTime.Now,
                 commandText,
-                string.Join(string.Empty, AutomaticMigration, " ", nextNumber));
+                GetAutomaticMigrationName(nextNumber));
 
             await transaction
                 .Write<AppliedMigration, Guid>()
@@ -132,7 +137,7 @@
         }
 
         private async Task<HashSet<string>> ReadAppliedMigrations(
-            IAdvancedDatabaseTransaction transaction,
+            IDatabaseTransaction transaction,
             CancellationToken token)
         {
             var isSecondaryMigration = await transaction

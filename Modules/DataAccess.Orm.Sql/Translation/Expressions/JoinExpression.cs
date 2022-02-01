@@ -118,10 +118,12 @@
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            if (On == null)
+            if (On != null)
             {
-                On = expression;
+                throw new InvalidOperationException("Join on expression has already been set");
             }
+
+            On = expression;
         }
 
         /// <inheritdoc />
@@ -141,11 +143,16 @@
             if (LeftSource == null)
             {
                 LeftSource = expression;
+                return;
             }
-            else if (RightSource == null)
+
+            if (RightSource == null)
             {
                 RightSource = expression;
+                return;
             }
+
+            throw new InvalidOperationException("Join expression sources have already been set");
         }
 
         #endregion

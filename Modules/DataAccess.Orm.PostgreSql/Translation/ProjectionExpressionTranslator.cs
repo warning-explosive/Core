@@ -26,10 +26,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.AppendLine(expression.IsDistinct ? "SELECT DISTINCT" : "SELECT");
 
-            var lastBindingIndex = expression.Bindings.Count - 1;
-
             if (expression.Bindings.Any())
             {
+                var lastBindingIndex = expression.Bindings.Count - 1;
+
                 expression
                     .Bindings
                     .Select(binding => binding.Translate(_dependencyContainer, depth))
@@ -43,11 +43,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
                         sb.AppendLine(ending);
                     });
-            }
-            else
-            {
-                sb.Append(new string('\t', depth + 1));
-                sb.AppendLine("*");
             }
 
             sb.Append(new string('\t', depth));

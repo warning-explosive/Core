@@ -136,6 +136,25 @@
         }
 
         /// <summary>
+        /// Asynchronously materializes query to first scalar value
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [Pure]
+        public static Task<T> FirstAsync<T>(
+            this IQueryable<T> query,
+            Expression<Func<T, bool>> predicate,
+            CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            return Task.FromResult(query.First(predicate));
+        }
+
+        /// <summary>
         /// Asynchronously materializes query to first or default scalar value
         /// </summary>
         /// <param name="query">Query</param>
@@ -148,6 +167,26 @@
             // TODO: #134 - IAsyncQueryable extensions
             _ = token;
             var value = query.FirstOrDefault();
+            return Task.FromResult((T?)value);
+        }
+
+        /// <summary>
+        /// Asynchronously materializes query to first or default scalar value
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [Pure]
+        public static Task<T?> FirstOrDefaultAsync<T>(
+            this IQueryable<T> query,
+            Expression<Func<T, bool>> predicate,
+            CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            var value = query.FirstOrDefault(predicate);
             return Task.FromResult((T?)value);
         }
 
@@ -168,6 +207,26 @@
         }
 
         /// <summary>
+        /// Asynchronously materializes query to single scalar value
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
+        [Pure]
+        public static Task<T> SingleAsync<T>(
+            this IQueryable<T> query,
+            Expression<Func<T, bool>> predicate,
+            CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            return Task.FromResult(query.Single(predicate));
+        }
+
+        /// <summary>
         /// Asynchronously materializes query to single or default scalar value
         /// </summary>
         /// <param name="query">Query</param>
@@ -184,7 +243,7 @@
         }
 
         /// <summary>
-        /// Asynchronously materializes query to check result
+        /// Asynchronously materializes query to single or default scalar value
         /// </summary>
         /// <param name="query">Query</param>
         /// <param name="predicate">Predicate</param>
@@ -192,14 +251,15 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         [Pure]
-        public static Task<bool> AnyAsync<T>(
+        public static Task<T?> SingleOrDefaultAsync<T>(
             this IQueryable<T> query,
-            Func<T, bool> predicate,
+            Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
             // TODO: #134 - IAsyncQueryable extensions
             _ = token;
-            return Task.FromResult(query.Any(predicate));
+            var value = query.SingleOrDefault(predicate);
+            return Task.FromResult((T?)value);
         }
 
         /// <summary>
@@ -215,6 +275,25 @@
             // TODO: #134 - IAsyncQueryable extensions
             _ = token;
             return Task.FromResult(query.Any());
+        }
+
+        /// <summary>
+        /// Asynchronously materializes query to check result
+        /// </summary>
+        /// <param name="query">Query</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        [Pure]
+        public static Task<bool> AnyAsync<T>(
+            this IQueryable<T> query,
+            Expression<Func<T, bool>> predicate,
+            CancellationToken token)
+        {
+            // TODO: #134 - IAsyncQueryable extensions
+            _ = token;
+            return Task.FromResult(query.Any(predicate));
         }
 
         /// <summary>

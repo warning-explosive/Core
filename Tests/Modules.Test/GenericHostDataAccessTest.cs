@@ -601,14 +601,12 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Null(trace.RefuseReason);
                 Assert.Null(trace.SubsequentTrace);
 
-                var query = new Query(42);
-
                 awaiter = Task.WhenAll(
                     collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Query)),
                     collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Reply)));
 
                 var reply = await integrationContext
-                    .RpcRequest<Query, Reply>(query, cts.Token)
+                    .RpcRequest<Query, Reply>(new Query(42), cts.Token)
                     .ConfigureAwait(false);
 
                 await awaiter.ConfigureAwait(false);
@@ -644,7 +642,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(conversationId, trace.ConversationId);
                 Assert.NotNull(trace.Message);
                 Assert.Equal(typeof(Query), trace.Message.ReflectedType);
-                Assert.Equal(query.Id, ((Query)trace.Message.Payload).Id);
+                Assert.Equal(42, ((Query)trace.Message.Payload).Id);
                 Assert.Null(trace.RefuseReason);
                 Assert.NotNull(trace.SubsequentTrace);
                 Assert.Single(trace.SubsequentTrace);

@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             _dependencyContainer = dependencyContainer;
         }
 
-        public object? Build(Type type, IDictionary<string, object>? values = null)
+        public object? Build(Type type, IDictionary<string, object?>? values = null)
         {
             if (values?.Count == 1 && type.IsPrimitive())
             {
@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             }
 
             values = values?.ToDictionary(it => it.Key, it => it.Value, StringComparer.OrdinalIgnoreCase)
-                     ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                     ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
             // 1. find .cctor (should have public constructor .cctor)
             var cctor = type

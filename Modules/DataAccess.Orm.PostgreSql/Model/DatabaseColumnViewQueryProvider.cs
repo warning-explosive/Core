@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Model
     c.table_schema as ""{nameof(DatabaseColumn.Schema)}"",
     c.table_name as ""{nameof(DatabaseColumn.Table)}"",
     column_name as ""{nameof(DatabaseColumn.Column)}"",
-	ordinal_position as {nameof(DatabaseColumn.Position)},
+	ordinal_position as ""{nameof(DatabaseColumn.Position)}"",
 	data_type as ""{nameof(DatabaseColumn.DataType)}"",
 	case is_nullable when 'NO' then false when 'YES' then true end as ""{nameof(DatabaseColumn.Nullable)}"",
 	column_default as ""{nameof(DatabaseColumn.DefaultValue)}"",

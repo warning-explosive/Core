@@ -13,7 +13,6 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
-    using ChangesTracking;
     using CompositionRoot.Api.Abstractions.Container;
     using Connection;
     using GenericDomain.Api.Abstractions;
@@ -24,8 +23,9 @@
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IChangesTracker _changesTracker;
+        private readonly ITransactionalStore _transactionalStore;
 
-        private static readonly ConcurrentDictionary<string, IDbConnection?> _connections
+        private static readonly ConcurrentDictionary<string, IDbConnection?> Connections
             = new ConcurrentDictionary<string, IDbConnection?>();
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
@@ -34,11 +34,15 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
-            IChangesTracker changesTracker)
+            IChangesTracker changesTracker,
+            ITransactionalStore transactionalStore)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
             _changesTracker = changesTracker;
+            _transactionalStore = transactionalStore;
+
+            _transaction = null;
         }
 
         public bool HasChanges => _changesTracker.HasChanges;
@@ -47,7 +51,7 @@
         {
             get
             {
-                _transaction ??= Open(CancellationToken.None).Result;
+                _transaction ??= Open();
                 return _transaction;
             }
         }
@@ -56,7 +60,7 @@
         {
             get
             {
-                var connection = _connections.GetOrAdd(_connectionProvider.Database, _ => default);
+                var connection = Connections.GetOrAdd(_connectionProvider.Database, _ => default);
 
                 for (var i = 0; i < 3; i++)
                 {
@@ -83,7 +87,7 @@
                     .OpenConnection(CancellationToken.None)
                     .Result;
 
-                _connections[_connectionProvider.Database] = connection;
+                Connections[_connectionProvider.Database] = connection;
 
                 return connection;
             }
@@ -110,34 +114,18 @@
             return _dependencyContainer.Resolve<IBulkRepository<TEntity, TKey>>();
         }
 
-        public Task<IDbTransaction> Open(CancellationToken token)
-        {
-            return Open(_connectionProvider.IsolationLevel, token);
-        }
-
-        public Task<IDbTransaction> Open(IsolationLevel isolationLevel, CancellationToken token)
-        {
-            // TODO: #150 - support manually opened nested transactions
-            // TODO: #151 - work with single, app wide connection
-            if (_transaction != null)
-            {
-                throw new InvalidOperationException("Database transaction have already opened");
-            }
-
-            _transaction = UnderlyingDbConnection.BeginTransaction(isolationLevel);
-            return Task.FromResult(_transaction);
-        }
-
-        public async Task<IAsyncDisposable> Open(bool commit, CancellationToken token)
+        public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)
         {
             await Open(token).ConfigureAwait(false);
+
             return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
         }
 
-        public async Task<IAsyncDisposable> Open(bool commit, IsolationLevel isolationLevel, CancellationToken token)
+        public Task Open(CancellationToken token)
         {
-            await Open(isolationLevel, token).ConfigureAwait(false);
-            return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
+            _transaction = Open();
+
+            return Task.CompletedTask;
         }
 
         public async Task Close(bool commit, CancellationToken token)
@@ -146,7 +134,10 @@
             {
                 if (commit)
                 {
-                    await _changesTracker.SaveChanges(token).ConfigureAwait(false);
+                    await _changesTracker
+                        .SaveChanges(token)
+                        .ConfigureAwait(false);
+
                     _transaction?.Commit();
                 }
                 else
@@ -158,6 +149,8 @@
             finally
             {
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
+                _changesTracker.Dispose();
+                _transactionalStore.Dispose();
             }
         }
 
@@ -169,6 +162,30 @@
         public Task Track(IAggregate aggregate, CancellationToken token)
         {
             return _changesTracker.Track(aggregate, token);
+        }
+
+        public void Store<TEntity, TKey>(TEntity entity)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull
+        {
+            _transactionalStore.Store(entity, static e => e.PrimaryKey);
+        }
+
+        public bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull
+        {
+            return _transactionalStore.TryGetValue(key, out entity);
+        }
+
+        private IDbTransaction Open()
+        {
+            if (_transaction != null)
+            {
+                throw new InvalidOperationException("Database transaction have already been opened");
+            }
+
+            return UnderlyingDbConnection.BeginTransaction(_connectionProvider.IsolationLevel);
         }
     }
 }

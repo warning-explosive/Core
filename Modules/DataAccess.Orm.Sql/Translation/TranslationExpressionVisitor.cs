@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Basics.Primitives;
     using Expressions;
-    using Extensions;
     using Model;
     using Orm.Linq;
     using Views;
@@ -24,6 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class TranslationExpressionVisitor : ExpressionVisitor
     {
+        private readonly IModelProvider _modelProvider;
         private readonly IExpressionTranslator _translator;
         private readonly IEnumerable<IMemberInfoTranslator> _memberInfoTranslators;
 
@@ -35,11 +35,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo SingleOrDefault = LinqMethods.QueryableSingleOrDefault();
         private static readonly MethodInfo First = LinqMethods.QueryableFirst();
         private static readonly MethodInfo FirstOrDefault = LinqMethods.QueryableFirstOrDefault();
+        private static readonly MethodInfo Any = LinqMethods.QueryableAny();
+        private static readonly MethodInfo All = LinqMethods.QueryableAll();
+        private static readonly MethodInfo Count = LinqMethods.QueryableCount();
 
         public TranslationExpressionVisitor(
+            IModelProvider modelProvider,
             ExpressionTranslator translator,
             IEnumerable<IMemberInfoTranslator> memberInfoTranslators)
         {
+            _modelProvider = modelProvider;
             _translator = translator;
             _memberInfoTranslators = memberInfoTranslators;
 
@@ -56,22 +61,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
 
-            if (itemType.IsClass
+            var isQueryRoot = itemType.IsClass
                 && ((itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
                      && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
-                || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
-                    && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>))))))
+                    || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
+                        && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>)))));
+
+            if (isQueryRoot)
             {
                 Context.WithinConditionalScope(
                     Context.Parent is not JoinExpression,
-                    action => Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType), action),
-                    () => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context),
-                        () => Context.WithinScope(new QuerySourceExpression(itemType),
-                            () =>
-                            {
-                                base.VisitMethodCall(node);
-                                Context.ReverseLambdaParametersNames();
-                            })));
+                    action => Context.WithoutScopeDuplication(
+                        () => new ProjectionExpression(itemType),
+                        action),
+                    () =>
+                    {
+                        Context.WithoutScopeDuplication(
+                            () => new NamedSourceExpression(itemType, Context),
+                            () => Context.WithinScope(
+                                new QuerySourceExpression(itemType),
+                                () =>
+                                {
+                                    base.VisitMethodCall(node);
+                                    Context.ReverseLambdaParametersNames();
+                                }));
+
+                        SelectAll(Context.Parent!);
+                    });
 
                 return node;
             }
@@ -80,8 +96,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 Context.WithinConditionalScope(
                     Context.Parent is not null and not FilterExpression,
-                    action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
-                    () => Context.WithinScope(new ProjectionExpression(itemType),
+                    action => Context.WithoutScopeDuplication(
+                        () => new NamedSourceExpression(itemType, Context),
+                        action),
+                    () => Context.WithinScope(
+                        new ProjectionExpression(itemType),
                         () => BuildJoinExpression(Context, node, itemType)));
 
                 return node;
@@ -91,8 +110,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 Context.WithinConditionalScope(
                     Context.Parent is not null and not FilterExpression,
-                    action => Context.WithoutScopeDuplication(() => new NamedSourceExpression(itemType, Context), action),
-                    () => Context.WithoutScopeDuplication(() => new FilterExpression(itemType),
+                    action => Context.WithoutScopeDuplication(
+                        () => new NamedSourceExpression(itemType, Context),
+                        action),
+                    () => Context.WithoutScopeDuplication(
+                        () => new FilterExpression(itemType),
                         () => BuildJoinExpression(Context, node, itemType)));
 
                 return node;
@@ -113,11 +135,115 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
 
             if (method == Single
-                || method == SingleOrDefault
-                || method == First
+                || method == SingleOrDefault)
+            {
+                Context.WithinScope(
+                    new RowsFetchLimitExpression(itemType, 2),
+                    () => Context.WithinScope(
+                        new ProjectionExpression(itemType),
+                        () =>
+                        {
+                            base.VisitMethodCall(node);
+
+                            SelectAll(Context.Parent!);
+                        }));
+
+                return node;
+            }
+
+            if (method == First
                 || method == FirstOrDefault)
             {
-                Context.Push(_translator.Translate(node.Arguments[0]));
+                Context.WithinScope(
+                    new RowsFetchLimitExpression(itemType, 1),
+                    () => Context.WithinScope(
+                        new ProjectionExpression(itemType),
+                        () =>
+                        {
+                            base.VisitMethodCall(node);
+
+                            SelectAll(Context.Parent!);
+                        }));
+
+                return node;
+            }
+
+            if (method == Any)
+            {
+                Context.WithinScope(new ProjectionExpression(itemType),
+                    () =>
+                    {
+                        // count(*) > 0 as "Any"
+                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
+                            nameof(Count),
+                            null,
+                            new[] { new SpecialExpression(itemType, "*") });
+
+                        var binaryExpression = new Expressions.BinaryExpression(
+                            typeof(bool),
+                            BinaryOperator.GreaterThan,
+                            countAllMethodCall,
+                            new Expressions.ConstantExpression(typeof(int), 0));
+
+                        Context.Apply(new NamedBindingExpression(method.Name, binaryExpression));
+                        base.VisitMethodCall(node);
+                    });
+
+                return node;
+            }
+
+            if (method == All)
+            {
+                Context.WithinScope(new ProjectionExpression(itemType),
+                    () =>
+                    {
+                        // count(case when <condition> then 1 else null end) = count(*) as "All"
+                        var conditionalExpression = new Expressions.ConditionalExpression(
+                            typeof(int),
+                            _translator.Translate(node.Arguments[1]),
+                            new Expressions.ConstantExpression(typeof(int), 1),
+                            new Expressions.ConstantExpression(typeof(object), null));
+
+                        var countByCondition = new Expressions.MethodCallExpression(typeof(int),
+                            nameof(Count),
+                            null,
+                            new[] { conditionalExpression });
+
+                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
+                            nameof(Count),
+                            null,
+                            new[] { new SpecialExpression(itemType, "*") });
+
+                        var binaryExpression = new Expressions.BinaryExpression(
+                            typeof(bool),
+                            BinaryOperator.Equal,
+                            countByCondition,
+                            countAllMethodCall);
+
+                        Context.Apply(new NamedBindingExpression(method.Name, binaryExpression));
+
+                        base.VisitMethodCall(node);
+                    });
+
+                return node;
+            }
+
+            if (method == Count)
+            {
+                Context.WithinScope(new ProjectionExpression(itemType),
+                    () =>
+                    {
+                        // count(*) as "Count"
+                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
+                            nameof(Count),
+                            null,
+                            new[] { new SpecialExpression(itemType, "*") });
+
+                        Context.Apply(new NamedBindingExpression(method.Name, countAllMethodCall));
+
+                        base.VisitMethodCall(node);
+                    });
+
                 return node;
             }
 
@@ -156,7 +282,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 }
                 else
                 {
-                    Context.WithinScope(new NamedBindingExpression(memberInfo), () => Visit(argument));
+                    Context.WithinScope(new NamedBindingExpression(memberInfo.Name), () => Visit(argument));
                 }
             }
 
@@ -205,6 +331,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return node;
         }
 
+        private void SelectAll(IIntermediateExpression expression)
+        {
+            if (expression is not ProjectionExpression projection)
+            {
+                return;
+            }
+
+            if (!projection.IsProjectionToClass
+                || projection.IsAnonymousProjection)
+            {
+                return;
+            }
+
+            var parameter = ExtractParameter(projection.Source, projection.Type);
+
+            foreach (var column in _modelProvider.Columns(projection.Type).OrderBy(column => column.Name))
+            {
+                Context.Apply(column.BuildExpression(parameter));
+            }
+
+            static Expressions.ParameterExpression ExtractParameter(IIntermediateExpression source, Type parameterType)
+            {
+                var parameterExpression = ExtractParametersVisitor
+                    .ExtractParameters(source)
+                    .OrderBy(parameter => parameter.Key)
+                    .Select(parameter => parameter.Value)
+                    .FirstOrDefault(parameter => parameter.Type == parameterType);
+
+                if (parameterExpression == null)
+                {
+                    throw new InvalidOperationException("Unable to find appropriate parameter expression");
+                }
+
+                return parameterExpression;
+            }
+        }
+
         private bool TryGetMemberInfoExpression(
             MemberInfo memberInfo,
             [NotNullWhen(true)] out IIntermediateExpression? expression)
@@ -240,7 +403,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 using (var recursiveEnumerable = relations.MoveNext())
                 {
                     context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
-                        () => BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0])));
+                        () =>
+                        {
+                            BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0]));
+
+                            SelectAll(Context.Parent!);
+                        });
 
                     Visit(node.Arguments[1]);
                 }
@@ -362,16 +530,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 return Expression.Lambda(body, (ParameterExpression)parameterExpression.AsExpressionTree());
 
-                static IEnumerable<IIntermediateExpression> GetBindings(ProjectionExpression projection, Expressions.ParameterExpression parameterExpression)
+                static IEnumerable<IIntermediateExpression> GetBindings(
+                    ProjectionExpression projection,
+                    Expressions.ParameterExpression parameterExpression)
                 {
                     var visitor = new ReplaceParameterVisitor(parameterExpression);
 
-                    IEnumerable<IIntermediateExpression> bindings = projection.IsProjectionToClass switch
-                    {
-                        true when !projection.Bindings.Any() => projection.Type.SelectAll(parameterExpression),
-                        true => projection.Bindings.Select(NamedBindingExpression.Unwrap).Select(visitor.Visit),
-                        _ => projection.Bindings.Select(visitor.Visit)
-                    };
+                    var bindings = projection.IsProjectionToClass
+                        ? projection.Bindings.Select(NamedBindingExpression.Unwrap).Select(visitor.Visit)
+                        : projection.Bindings.Select(visitor.Visit);
 
                     return bindings;
                 }

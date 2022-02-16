@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
         private IDependencyContainer DependencyContainer { get; }

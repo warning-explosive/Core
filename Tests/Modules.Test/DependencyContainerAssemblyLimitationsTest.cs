@@ -71,7 +71,7 @@ namespace SpaceEngineers.Core.Modules.Test
             var options = new DependencyContainerOptions();
 
             var ourTypes = Fixture
-                .BoundedAboveContainer(options, aboveAssemblies)
+                .BoundedAboveContainer(Output, options, aboveAssemblies)
                 .Resolve<ITypeProvider>()
                 .OurTypes;
 
@@ -107,7 +107,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions();
 
-            var boundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
+            var boundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
 
             if (mode)
             {
@@ -126,7 +126,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalTypes);
 
-            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(options, assemblies);
+            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
 
             var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
 

@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            DependencyContainer = fixture.ModulesContainer();
+            DependencyContainer = fixture.ModulesContainer(output);
         }
 
         private IDependencyContainer DependencyContainer { get; }
@@ -142,7 +142,7 @@ namespace SpaceEngineers.Core.Modules.Test
             wrongOurTypes = assemblies
                 .SelectMany(asm => asm.GetTypes())
                 .Where(t => (t.FullName?.StartsWith(nameof(SpaceEngineers), StringComparison.Ordinal) ?? true)
-                            && ModulesTestFixtureExtensions.ModulesAssemblies.Contains(t.Assembly)
+                            && ModulesTestFixtureExtensions.ModulesAssemblies().Contains(t.Assembly)
                             && !provider.IsOurType(t)
                             && excludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)))
                 .ShowTypes("#3 - missing", Output.WriteLine)

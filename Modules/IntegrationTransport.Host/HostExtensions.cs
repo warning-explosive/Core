@@ -131,8 +131,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         internal static IDependencyContainer GetTransportEndpointDependencyContainer(
             this IServiceProvider serviceProvider)
         {
-            return serviceProvider.GetService<IDependencyContainer>()
-                   ?? throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
+            return serviceProvider
+                .GetService<IDependencyContainer>()
+                .EnsureNotNull(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
         }
 
         private static ITransportEndpointBuilder ConfigureTransportEndpointBuilder(

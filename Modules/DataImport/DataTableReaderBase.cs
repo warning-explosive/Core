@@ -314,8 +314,7 @@ namespace SpaceEngineers.Core.DataImport
             string? value)
             where TEnum : struct, Enum
         {
-            return ParseEnum<TEnum>(value)
-                   ?? throw RequiredException(property, value);
+            return ParseEnum<TEnum>(value).EnsureNotNull<TEnum>(() => RequiredException(property, value));
         }
 
         /// <summary>
@@ -437,8 +436,7 @@ namespace SpaceEngineers.Core.DataImport
             Func<string?, IFormatProvider, T?> parser)
             where T : struct
         {
-            return Parse(value, formatters, parser)
-                   ?? throw RequiredException(property, value);
+            return Parse(value, formatters, parser).EnsureNotNull<T>(() => RequiredException(property, value));
         }
 
         private static Exception RequiredException(string property, string? value)

@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
+    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -65,11 +66,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             {
                 token.ThrowIfCancellationRequested();
 
-                var type = typeof(T);
-
                 var values = (dynamicValues as IDictionary<string, object?>) !;
 
-                var built = await MaterializeInternal(query, type, values, token).ConfigureAwait(false);
+                var built = await MaterializeInternal(values, token).ConfigureAwait(false);
 
                 yield return built;
             }
@@ -109,127 +108,151 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         }
 
         private async Task<T> MaterializeInternal(
-            FlatQuery query,
-            Type type,
             IDictionary<string, object?> values,
             CancellationToken token)
         {
+            var type = typeof(T);
+
             var relations = _modelProvider
                 .Columns(type)
                 .Where(column => column.IsRelation)
                 .ToArray();
 
-            var mtmRelations = _modelProvider
-                .Columns(type)
-                .Where(column => column.IsMultipleRelation)
-                .ToArray();
+            var relationValues = ReplaceRelations(values, relations);
 
-            if (relations.Any())
-            {
-                MockRelations(type, values, relations);
-            }
-
-            if (mtmRelations.Any())
-            {
-                MockMtmRelations(type, values, mtmRelations);
-            }
-
-            var built = (T)_objectBuilder.Build(type, values) !;
+            var built = (T)Build(type, values) !;
 
             if (type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
             {
                 Store(type, built);
             }
 
-            if (relations.Any())
-            {
-                await MaterializeRelations(query, type, values, relations).ConfigureAwait(false);
-            }
-
-            if (mtmRelations.Any())
-            {
-                await MaterializeMtmRelations(query, type, values, mtmRelations).ConfigureAwait(false);
-            }
+            await MaterializeRelations(built, relationValues, token).ConfigureAwait(false);
 
             return built;
         }
 
-        private void Store(Type entity, object built)
+        private object? Build(Type type, IDictionary<string, object?> values)
+        {
+            if (type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                && values.Count == 1
+                && values.Single().Value == null)
+            {
+                return type.DefaultValue();
+            }
+
+            if (!type.IsPrimitive())
+            {
+                values = values
+                    .GroupBy(pair =>
+                        {
+                            var parts = pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries);
+                            return parts.First();
+                        },
+                        pair =>
+                        {
+                            var parts = pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries);
+                            return parts.Length > 1
+                                ? new KeyValuePair<string, object?>(string.Join("_", parts.Skip(1)), pair.Value)
+                                : pair;
+                        })
+                    .ToDictionary(
+                        grp => grp.Key,
+                        grp =>
+                        {
+                            var innerType = type.Column(grp.Key).PropertyType;
+                            var innerValues = grp.ToDictionary(innerKey => innerKey.Key, innerValue => innerValue.Value);
+                            return Build(innerType, innerValues);
+                        });
+            }
+
+            return _objectBuilder.Build(type, values);
+        }
+
+        private void Store(Type entity, T built)
         {
             _ = _transaction
                 .CallMethod(nameof(_transaction.Store))
                 .WithTypeArguments(entity, entity.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single())
-                .WithArguments(built)
+                .WithArgument(built)
                 .Invoke();
         }
 
-        private static void MockRelations(
-            Type type,
+        private static IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
             IDictionary<string, object?> values,
-            ColumnInfo[] relationColumns)
+            ColumnInfo[] relations)
         {
-            foreach (var column in relationColumns)
+            var relationValues = new Dictionary<ColumnInfo, object?>();
+
+            foreach (var column in relations)
             {
+                relationValues.Add(column, values[column.Name]);
                 values.Remove(column.Name);
+
                 values[column.Relation.Property.Name] = column.Relation.Target.DefaultValue();
             }
+
+            return relationValues;
         }
 
-        private Task MaterializeRelations(
-            FlatQuery query,
-            Type type,
-            IDictionary<string, object?> values,
-            ColumnInfo[] relationColumns)
+        private async Task MaterializeRelations(
+            T built,
+            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
+            CancellationToken token)
         {
-            throw new NotImplementedException();
-        }
-
-        private static void MockMtmRelations(
-            Type type,
-            IDictionary<string, object?> values,
-            ColumnInfo[] mtmRelationColumns)
-        {
-            foreach (var column in mtmRelationColumns)
+            foreach (var (column, primaryKey) in relationValues)
             {
-                values.Remove(column.Name);
-                values[column.Relation.Property.Name] = Activator.CreateInstance(column.Type);
+                if (primaryKey != null)
+                {
+                    var relation = await MaterializeRelation(column.Relation.Target, primaryKey, token).ConfigureAwait(false);
+                    column.Relation.Property.SetValue(built, relation);
+                }
             }
         }
 
-        private Task MaterializeMtmRelations(
-            FlatQuery query,
+        private Task<object?> MaterializeRelation(
             Type type,
-            IDictionary<string, object?> values,
-            ColumnInfo[] mtmRelationColumns)
+            object primaryKey,
+            CancellationToken token)
         {
-            throw new NotImplementedException();
-        }
+            var keyType = type.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single();
 
-        private object? MaterializeRelation(
-            FlatQuery query,
-            Type type,
-            object primaryKey)
-        {
-            return this
+            var task = this
                 .CallMethod(nameof(MaterializeRelation))
-                .WithTypeArguments(type, type.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single())
-                .WithArguments(query, primaryKey)
-                .Invoke<object?>();
+                .WithTypeArguments(type, keyType)
+                .WithArguments(primaryKey, token)
+                .Invoke<Task>();
+
+            return GetType()
+                .CallMethod(nameof(AsEntity))
+                .WithTypeArguments(type, keyType)
+                .WithArgument(task)
+                .Invoke<Task<object?>>();
         }
 
-        private TEntity? MaterializeRelation<TEntity, TKey>(
-            FlatQuery query,
-            TKey primaryKey)
+        private Task<TEntity?> MaterializeRelation<TEntity, TKey>(
+            TKey primaryKey,
+            CancellationToken token)
             where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
             if (_transaction.TryGetValue<TEntity, TKey>(primaryKey, out var entity))
             {
-                return entity;
+                return Task.FromResult<TEntity?>(entity);
             }
 
-            // TODO: run sub-query
-            throw new NotImplementedException();
+            return _transaction
+                .Read<TEntity, TKey>()
+                .All()
+                .Where(databaseEntity => Equals(databaseEntity.PrimaryKey, primaryKey))
+                .SingleOrDefaultAsync(token);
+        }
+
+        private static async Task<object?> AsEntity<TEntity, TKey>(Task<TEntity?> task)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull
+        {
+            return await task.ConfigureAwait(false);
         }
     }
 }

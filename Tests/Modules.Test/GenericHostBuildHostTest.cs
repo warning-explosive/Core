@@ -30,6 +30,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Mocks;
+    using Overrides;
     using TracingEndpoint.Contract.Messages;
     using Xunit;
     using Xunit.Abstractions;
@@ -70,13 +71,15 @@
         public static IEnumerable<object[]> BuildHostTestData()
         {
             var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
-                    useContainer => hostBuilder => hostBuilder
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
+                    useContainer => (output, hostBuilder) => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .WithTracing()
+                            .ModifyContainerOptions(options => options
+                                .WithOverrides(new TestLoggerOverride(output)))
                             .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -97,15 +100,16 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void SameTransportTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
         {
-            var host = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
                         .WithContainer(useContainer)
                         .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
+                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
@@ -113,6 +117,7 @@
                         .WithContainer(useContainer)
                         .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
+                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())
                 .BuildHost();
 
@@ -133,7 +138,7 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void BuildHostTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -158,14 +163,16 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
                         .WithContainer(useContainer)
                         .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
-                        .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                        .ModifyContainerOptions(options => options
+                            .WithOverrides(new TestLoggerOverride(Output))
+                            .WithAdditionalOurTypes(additionalOurTypes))
                         .BuildOptions())
                 .BuildHost();
 

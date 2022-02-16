@@ -238,8 +238,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         public THeader ReadRequiredHeader<THeader>()
             where THeader : IIntegrationMessageHeader
         {
-            return ReadHeader<THeader>()
-                   ?? throw new InvalidOperationException($"Message should have {typeof(THeader).Name} message header");
+            return ReadHeader<THeader>().EnsureNotNull<THeader>($"Message should have {typeof(THeader).Name} message header");
         }
 
         /// <summary>

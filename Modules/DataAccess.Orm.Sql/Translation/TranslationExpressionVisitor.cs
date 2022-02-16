@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == Select)
             {
                 Context.WithinConditionalScope(
-                    Context.Parent is not null and not FilterExpression,
+                    Context.Parent is not null and not FilterExpression and not RowsFetchLimitExpression,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
@@ -109,7 +109,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == Where)
             {
                 Context.WithinConditionalScope(
-                    Context.Parent is not null and not FilterExpression,
+                    Context.Parent is not null and not FilterExpression and not RowsFetchLimitExpression,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
@@ -139,14 +139,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 Context.WithinScope(
                     new RowsFetchLimitExpression(itemType, 2),
-                    () => Context.WithinScope(
-                        new ProjectionExpression(itemType),
-                        () =>
-                        {
-                            base.VisitMethodCall(node);
-
-                            SelectAll(Context.Parent!);
-                        }));
+                    () => base.VisitMethodCall(node));
 
                 return node;
             }
@@ -156,25 +149,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 Context.WithinScope(
                     new RowsFetchLimitExpression(itemType, 1),
-                    () => Context.WithinScope(
-                        new ProjectionExpression(itemType),
-                        () =>
-                        {
-                            base.VisitMethodCall(node);
-
-                            SelectAll(Context.Parent!);
-                        }));
+                    () => base.VisitMethodCall(node));
 
                 return node;
             }
 
             if (method == Any)
             {
-                Context.WithinScope(new ProjectionExpression(itemType),
+                Context.WithinScope(
+                    new ProjectionExpression(itemType),
                     () =>
                     {
                         // count(*) > 0 as "Any"
-                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
+                        var countAllMethodCall = new Expressions.MethodCallExpression(
+                            typeof(int),
                             nameof(Count),
                             null,
                             new[] { new SpecialExpression(itemType, "*") });
@@ -186,6 +174,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             new Expressions.ConstantExpression(typeof(int), 0));
 
                         Context.Apply(new NamedBindingExpression(method.Name, binaryExpression));
+
                         base.VisitMethodCall(node);
                     });
 
@@ -194,35 +183,44 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == All)
             {
-                Context.WithinScope(new ProjectionExpression(itemType),
+                Context.WithinScope(
+                    new ProjectionExpression(itemType),
                     () =>
                     {
+                        Visit(node.Arguments[0]);
+
                         // count(case when <condition> then 1 else null end) = count(*) as "All"
-                        var conditionalExpression = new Expressions.ConditionalExpression(
-                            typeof(int),
-                            _translator.Translate(node.Arguments[1]),
-                            new Expressions.ConstantExpression(typeof(int), 1),
-                            new Expressions.ConstantExpression(typeof(object), null));
+                        Context.WithinScope(
+                            new NamedBindingExpression(method.Name),
+                            () =>
+                            {
+                                Context.WithinScope(
+                                    new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal),
+                                    () =>
+                                    {
+                                        Context.WithinScope(
+                                            new Expressions.MethodCallExpression(typeof(int), nameof(Count), null, Array.Empty<IIntermediateExpression>()),
+                                            () =>
+                                            {
+                                                Context.WithinScope(
+                                                    new Expressions.ConditionalExpression(typeof(int)),
+                                                    () =>
+                                                    {
+                                                        Visit(node.Arguments[1]);
+                                                        Context.Apply(new Expressions.ConstantExpression(typeof(int), 1));
+                                                        Context.Apply(new Expressions.ConstantExpression(typeof(object), null));
+                                                    });
+                                            });
 
-                        var countByCondition = new Expressions.MethodCallExpression(typeof(int),
-                            nameof(Count),
-                            null,
-                            new[] { conditionalExpression });
+                                        var countAllMethodCall = new Expressions.MethodCallExpression(
+                                            typeof(int),
+                                            nameof(Count),
+                                            null,
+                                            new[] { new SpecialExpression(itemType, "*") });
 
-                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
-                            nameof(Count),
-                            null,
-                            new[] { new SpecialExpression(itemType, "*") });
-
-                        var binaryExpression = new Expressions.BinaryExpression(
-                            typeof(bool),
-                            BinaryOperator.Equal,
-                            countByCondition,
-                            countAllMethodCall);
-
-                        Context.Apply(new NamedBindingExpression(method.Name, binaryExpression));
-
-                        base.VisitMethodCall(node);
+                                        Context.Apply(countAllMethodCall);
+                                    });
+                            });
                     });
 
                 return node;
@@ -230,11 +228,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == Count)
             {
-                Context.WithinScope(new ProjectionExpression(itemType),
+                Context.WithinScope(
+                    new ProjectionExpression(itemType),
                     () =>
                     {
                         // count(*) as "Count"
-                        var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int),
+                        var countAllMethodCall = new Expressions.MethodCallExpression(
+                            typeof(int),
                             nameof(Count),
                             null,
                             new[] { new SpecialExpression(itemType, "*") });
@@ -346,7 +346,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var parameter = ExtractParameter(projection.Source, projection.Type);
 
-            foreach (var column in _modelProvider.Columns(projection.Type).OrderBy(column => column.Name))
+            var flatProjectionColumns = _modelProvider
+                .Columns(projection.Type)
+                .Where(column => !column.IsMultipleRelation)
+                .OrderBy(column => column.Name);
+
+            foreach (var column in flatProjectionColumns)
             {
                 Context.Apply(column.BuildExpression(parameter));
             }

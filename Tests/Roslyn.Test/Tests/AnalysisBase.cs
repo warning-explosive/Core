@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 .WithManualRegistrations(new AnalyzersManualRegistration())
                 .WithExcludedNamespaces(IgnoredNamespaces.ToArray());
 
-            DependencyContainer = fixture.Container(options);
+            DependencyContainer = fixture.Container(output, options);
         }
 
         /// <summary>

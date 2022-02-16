@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
@@ -13,6 +14,8 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Orm.Sql.Translation;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using Mocks;
+    using Registrations;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -32,40 +35,20 @@ namespace SpaceEngineers.Core.Modules.Test
         public DataAccessTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assemblies = new[]
-            {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)))
-            };
-
-            var additionalOurTypes = new[]
-            {
-                typeof(Blog),
-                typeof(Post),
-                typeof(User),
-                typeof(Community),
-                typeof(Participant),
-            };
-
-            var options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalOurTypes);
-            DependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
         }
 
-        private IDependencyContainer DependencyContainer { get; }
-
         /// <summary>
-        /// DataAccessTestData member
+        /// QueryTranslationTestData
         /// </summary>
         /// <returns>Test data</returns>
-        public static IEnumerable<object> DataAccessTestData()
+        public static IEnumerable<object> QueryTranslationTestData()
         {
             var emptyQueryParameters = new Dictionary<string, object?>();
 
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - All",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All()),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All()),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -75,7 +58,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison !=",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField != 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField != 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
@@ -85,7 +68,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField < 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField < 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
@@ -95,7 +78,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison <=",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField <= 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField <= 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
@@ -105,7 +88,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison ==",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField == 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField == 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
@@ -115,7 +98,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField > 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField > 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
@@ -125,7 +108,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary comparison >=",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
@@ -135,7 +118,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Binary filter",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField).Where(it => it != null)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField).Where(it => it != null)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
@@ -145,7 +128,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter after anonymous projection",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
@@ -155,7 +138,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Boolean property filter",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.BooleanField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
@@ -165,7 +148,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Change anonymous projection parameter name",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
@@ -175,7 +158,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Coalesce projection",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField ?? string.Empty)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField ?? string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -185,7 +168,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - anonymous class key test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -195,7 +178,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - projection source test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
@@ -205,7 +188,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`2 - single field key test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -215,7 +198,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - anonymous class key test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -225,7 +208,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - projection source test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
@@ -235,7 +218,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - GroupBy`3 - single field key test",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField, it => it.IntField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().GroupBy(it => it.StringField, it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -245,7 +228,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - bool",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.BooleanField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -255,7 +238,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - guid",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.PrimaryKey)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.PrimaryKey)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -265,7 +248,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - int",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.IntField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -275,7 +258,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - One property projection - string",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -285,7 +268,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Where(it => it.Blog.Theme == "qwerty" && it.User.Nickname == "SpaceEngineer")),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Where(it => it.Blog.Theme == "qwerty" && it.User.Nickname == "SpaceEngineer")),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""Blog_PrimaryKey"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""User_PrimaryKey""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
@@ -295,7 +278,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" AS ""Blog_Theme"",{Environment.NewLine}{'\t'}(b.""{nameof(User.Nickname)}"" AS ""User_Nickname"") AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""PrimaryKey"" = a.""User_PrimaryKey""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""PrimaryKey"" = a.""Blog_PrimaryKey""",
@@ -305,7 +288,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Projection/filter chain",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField < 42).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_0 AND c.""{nameof(DatabaseEntity.IntField)}"" < @param_1) d",
@@ -315,7 +298,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Property chain with translated member",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField.Length)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.StringField.Length)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}length(a.""{nameof(DatabaseEntity.StringField)}""){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -324,8 +307,68 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().All(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN 1 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Any(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > 0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Count(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().First(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default by primary key",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().SingleOrDefaultAsync(Guid.NewGuid(), CancellationToken.None)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN 1 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single",
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Single(it => it.BooleanField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        write))
+            };
+            yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection with renaming",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
@@ -335,7 +378,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter after projection",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
@@ -345,7 +388,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary filter",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.NullableStringField != null ? true : false)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
@@ -355,7 +398,7 @@ namespace SpaceEngineers.Core.Modules.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Ternary projection",
-                new Func<IDependencyContainer, IQueryable>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
+                new Func<IDependencyContainer, object>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
@@ -394,22 +437,56 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory]
-        [MemberData(nameof(DataAccessTestData))]
-        internal void ReadRepositoryTest(
+        [MemberData(nameof(QueryTranslationTestData))]
+        internal void QueryTranslationTest(
             string section,
-            Func<IDependencyContainer, IQueryable> queryProducer,
+            Func<IDependencyContainer, object> queryProducer,
             Action<IQuery, Action<string>> checkQuery)
         {
             Output.WriteLine(section);
             Output.WriteLine(string.Empty);
 
-            using (DependencyContainer.OpenScope())
+            var assemblies = new[]
             {
-                var query = DependencyContainer
-                    .Resolve<IQueryTranslator>()
-                    .Translate(queryProducer(DependencyContainer).Expression);
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.PostgreSql))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)))
+            };
 
-                checkQuery(query, Output.WriteLine);
+            var additionalOurTypes = new[]
+            {
+                typeof(Blog),
+                typeof(Post),
+                typeof(User),
+                typeof(Community),
+                typeof(Participant),
+            };
+
+            var options = new DependencyContainerOptions()
+                .WithAdditionalOurTypes(additionalOurTypes)
+                .WithManualRegistrations(new QueryExpressionsCollectorManualRegistration());
+
+            var dependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
+
+            using (dependencyContainer.OpenScope())
+            {
+                var query = ExecutionExtensions
+                    .Try(dependencyContainer, queryProducer)
+                    .Catch<Exception>()
+                    .Invoke(ex => ex);
+
+                var queryTranslator = dependencyContainer.Resolve<IQueryTranslator>();
+
+                var expression = query is IQueryable queryable
+                    ? queryable.Expression
+                    : dependencyContainer
+                        .Resolve<QueryExpressionsCollector>()
+                        .Expressions
+                        .Single();
+
+                var translatedQuery = queryTranslator.Translate(expression);
+
+                checkQuery(translatedQuery, Output.WriteLine);
 
                 /* TODO: #135 - setup appveyor environment so as to run queries */
                 /*var result = queryProducer(readRepository)

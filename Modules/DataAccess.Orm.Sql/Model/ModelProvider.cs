@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -22,6 +23,8 @@
         private readonly IDynamicClassProvider _dynamicClassProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
 
+        private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
+
         private ModelInfo? _model;
 
         public ModelProvider(
@@ -32,6 +35,8 @@
             _dependencyContainer = dependencyContainer;
             _dynamicClassProvider = dynamicClassProvider;
             _databaseTypeProvider = databaseTypeProvider;
+
+            _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
         }
 
         public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Objects
@@ -84,15 +89,7 @@
 
         public IEnumerable<ColumnInfo> Columns(Type type)
         {
-            var mtmTables = MtmTables
-                .ToDictionary(
-                    schema => schema.Key,
-                    schema => schema.Value
-                        .ToDictionary(
-                            table => table.Key,
-                            table => table.Value));
-
-            return GetColumns(type.SchemaName(), type, mtmTables);
+            return _columnsCache.GetOrAdd(type, key => GetColumns(key.SchemaName(), key, null));
         }
 
         private ModelInfo InitModel()
@@ -168,26 +165,27 @@
         {
             var query = viewType.SqlViewQuery(_dependencyContainer);
 
-            var columns = GetColumns(schema, viewType, mtmTables).ToList();
+            var columns = GetColumns(schema, viewType, mtmTables);
 
             return new ViewInfo(schema, viewType, columns, query);
         }
 
-        private IEnumerable<ColumnInfo> GetColumns(
+        private IReadOnlyCollection<ColumnInfo> GetColumns(
             string schema,
             Type type,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
         {
             return type
                 .Columns()
-                .SelectMany(property => GetColumns(schema, type, property, mtmTables));
+                .SelectMany(property => GetColumns(schema, type, property, mtmTables))
+                .ToList();
         }
 
         private IEnumerable<ColumnInfo> GetColumns(
             string schema,
             Type table,
             PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
         {
             if (!property.PropertyType.IsTypeSupported())
             {
@@ -202,7 +200,7 @@
 
         private IEnumerable<PropertyInfo[]> FlattenSpecialTypes(
             PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
         {
             if (typeof(IInlinedObject).IsAssignableFrom(property.PropertyType))
             {
@@ -230,7 +228,7 @@
 
         private IEnumerable<PropertyInfo[]> FlattenInlinedObject(
             PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
         {
             foreach (var inlined in property.PropertyType.Columns())
             {
@@ -259,9 +257,10 @@
         private IEnumerable<PropertyInfo[]> FlattenArrayOrMultipleRelation(
             PropertyInfo property,
             Type itemType,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
+            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
         {
             return itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                   && mtmTables != null
                 ? FlattenMultipleRelation(property, itemType, mtmTables)
                 : FlattenArray(property, itemType);
         }

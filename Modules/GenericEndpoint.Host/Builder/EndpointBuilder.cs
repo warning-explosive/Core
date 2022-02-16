@@ -180,7 +180,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             return new EndpointOptions(
                 EndpointIdentity,
                 containerOptions,
-                _containerImplementationProducer ?? throw new InvalidOperationException(RequireWithContainerCall),
+                _containerImplementationProducer.EnsureNotNull(RequireWithContainerCall),
                 _rootAssemblies.Concat(EndpointPluginAssemblies).ToArray());
         }
     }

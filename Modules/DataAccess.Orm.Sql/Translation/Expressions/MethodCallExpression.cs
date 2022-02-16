@@ -15,7 +15,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class MethodCallExpression : IIntermediateExpression,
                                         IEquatable<MethodCallExpression>,
                                         ISafelyEquatable<MethodCallExpression>,
-                                        IApplicable<SimpleBindingExpression>
+                                        IApplicable<SimpleBindingExpression>,
+                                        IApplicable<ConditionalExpression>
     {
         private readonly List<IIntermediateExpression> _arguments;
 
@@ -121,6 +122,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        {
+            ApplyInternal(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression expression)
         {
             ApplyInternal(expression);
         }

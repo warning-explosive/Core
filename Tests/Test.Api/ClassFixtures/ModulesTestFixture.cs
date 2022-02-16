@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using CompositionRoot.Api.Abstractions.Registration;
     using CrossCuttingConcerns.Api.Extensions;
     using Internals;
+    using Xunit.Abstractions;
 
     /// <summary>
     /// ModulesTestFixture
@@ -46,7 +47,10 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IDependencyContainer BoundedAboveContainer(DependencyContainerOptions options, params Assembly[] aboveAssemblies)
+        public IDependencyContainer BoundedAboveContainer(
+            ITestOutputHelper output,
+            DependencyContainerOptions options,
+            params Assembly[] aboveAssemblies)
         {
             return CreateDependencyContainer(
                 options,
@@ -55,7 +59,10 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IDependencyContainer ExactlyBoundedContainer(DependencyContainerOptions options, params Assembly[] exactAssemblies)
+        public IDependencyContainer ExactlyBoundedContainer(
+            ITestOutputHelper output,
+            DependencyContainerOptions options,
+            params Assembly[] exactAssemblies)
         {
             return CreateDependencyContainer(
                 options,
@@ -64,7 +71,9 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IDependencyContainer Container(DependencyContainerOptions options)
+        public IDependencyContainer Container(
+            ITestOutputHelper output,
+            DependencyContainerOptions options)
         {
             return CreateDependencyContainer(
                 options,

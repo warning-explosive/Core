@@ -57,10 +57,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var providerTypeName = analyzerTypeName + Conventions.ExpectedDiagnosticsProviderSuffix;
 
             var providerType = _dependencyContainer
-                              .Resolve<ITypeProvider>()
-                              .OurTypes
-                              .SingleOrDefault(t => t.Name == providerTypeName)
-                            ?? throw new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzerTypeName} or place it in directory different from source directory");
+                .Resolve<ITypeProvider>()
+                .OurTypes
+                .SingleOrDefault(t => t.Name == providerTypeName)
+                .EnsureNotNull(() => new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzerTypeName} or place it in directory different from source directory"));
 
             return (IExpectedDiagnosticsProvider)_dependencyContainer.Resolve(providerType);
         }

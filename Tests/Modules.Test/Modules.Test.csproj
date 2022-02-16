@@ -217,5 +217,8 @@
     <Compile Update="Settings\TestYamlSettings.cs">
       <DependentUpon>ITestSettings.cs</DependentUpon>
     </Compile>
+    <Compile Update="Mocks\AsyncQueryProviderDecorator.cs">
+      <DependentUpon>QueryProviderDecorator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

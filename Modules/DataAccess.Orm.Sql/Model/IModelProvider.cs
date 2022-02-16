@@ -27,7 +27,7 @@
         public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities);
 
         /// <summary>
-        /// Gets column infos
+        /// Gets columns for specified type
         /// </summary>
         /// <param name="type">Table or projection type</param>
         /// <returns>Column infos</returns>

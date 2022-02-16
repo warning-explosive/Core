@@ -286,11 +286,11 @@ namespace SpaceEngineers.Core.Basics
             where TAttribute : Attribute
         {
             return TypeInfoStorage
-                       .Get(type)
-                       .Attributes
-                       .OfType<TAttribute>()
-                       .InformativeSingleOrDefault(Amb)
-                   ?? throw new AttributeRequiredException(typeof(TAttribute), type);
+                .Get(type)
+                .Attributes
+                .OfType<TAttribute>()
+                .InformativeSingleOrDefault(Amb)
+                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), type));
 
             string Amb(IEnumerable<TAttribute> arg)
             {

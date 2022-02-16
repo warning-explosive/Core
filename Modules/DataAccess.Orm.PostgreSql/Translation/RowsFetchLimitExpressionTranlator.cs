@@ -22,7 +22,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(expression.Source.Translate(_dependencyContainer, depth + 1));
+            sb.Append(new string('\t', depth));
+            sb.AppendLine(expression.Source.Translate(_dependencyContainer, depth));
 
             sb.Append(new string('\t', depth));
             sb.Append($"fetch first {expression.RowsFetchLimit} rows only");

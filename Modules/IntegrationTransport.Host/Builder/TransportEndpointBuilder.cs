@@ -181,7 +181,7 @@
             return new TransportEndpointOptions(
                 EndpointIdentity,
                 containerOptions,
-                _containerImplementationProducer ?? throw new InvalidOperationException(RequireWithContainerCall),
+                _containerImplementationProducer.EnsureNotNull(RequireWithContainerCall),
                 _rootAssemblies.Concat(EndpointPluginAssemblies).ToArray());
         }
     }

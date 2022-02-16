@@ -261,8 +261,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         internal static LambdaExpression ExtractLambdaExpression(MethodCallExpression node, Expression selector)
         {
-            return new ExtractLambdaExpressionVisitor().Extract(selector)
-                   ?? throw new NotSupportedException($"method: {node.Method}");
+            return new ExtractLambdaExpressionVisitor()
+                .Extract(selector)
+                .EnsureNotNull(() => new NotSupportedException($"method: {node.Method}"));
         }
     }
 }

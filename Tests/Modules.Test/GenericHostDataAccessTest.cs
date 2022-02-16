@@ -84,13 +84,14 @@ namespace SpaceEngineers.Core.Modules.Test
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
             var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
-                    useContainer => hostBuilder => hostBuilder
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
+                    useContainer => (output, hostBuilder) => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .ModifyContainerOptions(options => options
+                                .WithOverrides(new TestLoggerOverride(output))
                                 .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
@@ -119,14 +120,15 @@ namespace SpaceEngineers.Core.Modules.Test
             var timeout = TimeSpan.FromSeconds(60);
 
             var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
-                    useContainer => hostBuilder => hostBuilder
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
+                    useContainer => (output, hostBuilder) => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
                             .WithDefaultCrossCuttingConcerns()
                             .ModifyContainerOptions(options => options
                                 .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                                .WithOverrides(new TestLoggerOverride(output))
                                 .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
@@ -156,8 +158,8 @@ namespace SpaceEngineers.Core.Modules.Test
             var timeout = TimeSpan.FromSeconds(60);
 
             var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<IHostBuilder, IHostBuilder>>(
-                    useContainer => hostBuilder => hostBuilder
+                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
+                    useContainer => (output, hostBuilder) => hostBuilder
                         .UseIntegrationTransport(builder => builder
                             .WithContainer(useContainer)
                             .WithInMemoryIntegrationTransport(hostBuilder)
@@ -165,6 +167,7 @@ namespace SpaceEngineers.Core.Modules.Test
                             .WithTracing()
                             .ModifyContainerOptions(options => options
                                 .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                                .WithOverrides(new TestLoggerOverride(output))
                                 .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                             .BuildOptions()));
 
@@ -189,12 +192,12 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport,
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
-            var host = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseTracingEndpoint(
                     TestIdentity.Instance0,
                     builder => builder
@@ -202,6 +205,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         .WithDefaultCrossCuttingConcerns()
                         .WithDataAccess(databaseProvider)
                         .ModifyContainerOptions(options => options
+                            .WithOverrides(new TestLoggerOverride(Output))
                             .WithOverrides(new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))))
                         .BuildOptions())
                 .BuildHost();
@@ -236,7 +240,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport,
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
@@ -250,7 +254,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(User)
             };
 
-            var host = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseTracingEndpoint(
                     TestIdentity.Instance0,
                     builder => builder
@@ -259,6 +263,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         .WithDataAccess(databaseProvider)
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(new TestLoggerOverride(Output))
                             .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
                         .BuildOptions())
                 .BuildHost();
@@ -518,7 +523,7 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task GetConversationTraceTest(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<IHostBuilder, IHostBuilder> useTransport,
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             TimeSpan timeout)
         {
@@ -537,7 +542,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(Host.CreateDefaultBuilder())
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -546,6 +551,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         .WithTracing()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(new TestLoggerOverride(Output))
                             .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
                         .BuildOptions())
                 .UseTracingEndpoint(
@@ -555,6 +561,7 @@ namespace SpaceEngineers.Core.Modules.Test
                         .WithDefaultCrossCuttingConcerns()
                         .WithDataAccess(databaseProvider)
                         .ModifyContainerOptions(options => options
+                            .WithOverrides(new TestLoggerOverride(Output))
                             .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
                         .BuildOptions())
                 .BuildHost();

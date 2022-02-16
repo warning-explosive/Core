@@ -235,5 +235,8 @@
       <Compile Update="Translation\Expressions\SpecialExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\ObjectEqualsMemberInfoTranslator.cs">
+        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

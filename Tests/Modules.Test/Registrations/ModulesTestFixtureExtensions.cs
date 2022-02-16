@@ -5,15 +5,24 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api.ClassFixtures;
+    using Xunit.Abstractions;
 
     internal static class ModulesTestFixtureExtensions
     {
         private static IDependencyContainer? _container;
 
-        internal static DependencyContainerOptions ModulesOptions { get; } =
-            new DependencyContainerOptions().WithManualRegistrations(new ModulesTestManualRegistration());
+        public static IDependencyContainer ModulesContainer(this ModulesTestFixture fixture, ITestOutputHelper output)
+        {
+            _container ??= fixture.ExactlyBoundedContainer(output, ModulesOptions(output), ModulesAssemblies());
+            return _container;
+        }
 
-        internal static Assembly[] ModulesAssemblies { get; } = new[]
+        internal static DependencyContainerOptions ModulesOptions(ITestOutputHelper output)
+        {
+            return new DependencyContainerOptions().WithManualRegistrations(new ModulesTestManualRegistration(output));
+        }
+
+        internal static Assembly[] ModulesAssemblies() => new[]
         {
             AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
 
@@ -67,11 +76,5 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
             AssembliesExtensions.FindRequiredAssembly("System.Private.CoreLib")
         };
-
-        public static IDependencyContainer ModulesContainer(this ModulesTestFixture fixture)
-        {
-            _container ??= fixture.ExactlyBoundedContainer(ModulesOptions, ModulesAssemblies);
-            return _container;
-        }
     }
 }

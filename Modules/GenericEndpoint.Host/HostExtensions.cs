@@ -37,10 +37,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         public static IDependencyContainer GetEndpointDependencyContainer(this IHost host, EndpointIdentity endpointIdentity)
         {
             return host
-                       .Services
-                       .GetServices<DependencyContainer>()
-                       .SingleOrDefault(IsEndpointContainer(endpointIdentity))
-                   ?? throw new InvalidOperationException(RequireUseEndpointCall.Format(endpointIdentity));
+                .Services
+                .GetServices<DependencyContainer>()
+                .SingleOrDefault(IsEndpointContainer(endpointIdentity))
+                .EnsureNotNull(RequireUseEndpointCall.Format(endpointIdentity));
 
             static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {

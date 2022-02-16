@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DependencyContainerResolveTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            DependencyContainer = fixture.ModulesContainer();
+            DependencyContainer = fixture.ModulesContainer(output);
         }
 
         private IDependencyContainer DependencyContainer { get; }
@@ -314,7 +314,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var options = new DependencyContainerOptions().WithManualRegistrations(registration);
 
-            var localContainer = Fixture.ExactlyBoundedContainer(options);
+            var localContainer = Fixture.ExactlyBoundedContainer(Output, options);
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<WiredTestService>();

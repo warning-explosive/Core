@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration())
                     .WithAdditionalOurTypes(additionalOurTypes);
 
-                var container = Fixture.BoundedAboveContainer(options, assemblies);
+                var container = Fixture.BoundedAboveContainer(Output, options, assemblies);
 
                 Assert.Equal(typeof(ManuallyRegisteredServiceOverride), container.Resolve<IManuallyRegisteredService>().GetType());
                 Assert.Equal(typeof(ManuallyRegisteredService), container.Resolve<ManuallyRegisteredService>().GetType());
@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Modules.Test
             // override without original registration
             {
                 var options = OverrideManuallyRegistered(Fixture);
-                Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(options, assemblies));
+                Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(Output, options, assemblies));
             }
 
             static DependencyContainerOptions OverrideManuallyRegistered(ModulesTestFixture fixture)
@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(ScopedServiceTransientOverride)
             };
 
-            var resolve = Resolve(Fixture, assemblies);
+            var resolve = Resolve(Output, Fixture, assemblies);
 
             Assert.Equal(typeof(ScopedServiceOverride), resolve(OverrideResolvable<ScopedServiceOverride>(Fixture, additionalOurTypes, EnLifestyle.Scoped)).GetType());
             Assert.Equal(typeof(ScopedServiceSingletonOverride), resolve(OverrideResolvable<ScopedServiceSingletonOverride>(Fixture, additionalOurTypes, EnLifestyle.Singleton)).GetType());
@@ -122,12 +122,13 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             static Func<DependencyContainerOptions, IScopedService> Resolve(
+                ITestOutputHelper output,
                 ModulesTestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>
                 {
-                    var dependencyContainer = fixture.BoundedAboveContainer(options, assemblies);
+                    var dependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
 
                     using (dependencyContainer.OpenScope())
                     {
@@ -154,7 +155,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(ScopedCollectionResolvableTransientOverride)
             };
 
-            var resolve = Resolve(Fixture, assemblies);
+            var resolve = Resolve(Output, Fixture, assemblies);
 
             Assert.Equal(typeof(ScopedCollectionResolvableOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableOverride>(Fixture, additionalOurTypes, EnLifestyle.Scoped)).GetType());
             Assert.Equal(typeof(ScopedCollectionResolvableSingletonOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableSingletonOverride>(Fixture, additionalOurTypes, EnLifestyle.Singleton)).GetType());
@@ -180,12 +181,13 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             static Func<DependencyContainerOptions, IScopedCollectionResolvable> Resolve(
+                ITestOutputHelper output,
                 ModulesTestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>
                 {
-                    var dependencyContainer = fixture.BoundedAboveContainer(options, assemblies);
+                    var dependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
 
                     using (dependencyContainer.OpenScope())
                     {
@@ -212,7 +214,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(ScopedCollectionResolvableDecorator)
             };
 
-            var resolve = Resolve(Fixture, assemblies);
+            var resolve = Resolve(Output, Fixture, assemblies);
 
             // 1 - override decoratee
             var instance = resolve(OverrideDecoratee<ScopedCollectionResolvableOverride>(Fixture, additionalOurTypes, EnLifestyle.Scoped));
@@ -284,12 +286,13 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             static Func<DependencyContainerOptions, IScopedCollectionResolvable> Resolve(
+                ITestOutputHelper output,
                 ModulesTestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>
                 {
-                    var dependencyContainer = fixture.BoundedAboveContainer(options, assemblies);
+                    var dependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
 
                     using (dependencyContainer.OpenScope())
                     {
@@ -346,7 +349,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .WithOverrides(overrides)
                 .WithAdditionalOurTypes(additionalOurTypes);
 
-            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
+            var dependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
             var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
 
             Assert.NotSame(original, replacement);
@@ -392,7 +395,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .WithOverrides(wrongOverrides)
                 .WithAdditionalOurTypes(additionalOurTypes);
 
-            Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(wrongOptions, assemblies));
+            Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(Output, wrongOptions, assemblies));
 
             var overrides = Fixture.DelegateOverride(container =>
             {
@@ -404,7 +407,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .WithOverrides(overrides)
                 .WithAdditionalOurTypes(additionalOurTypes);
 
-            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
+            var dependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
             var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
 
             Assert.NotSame(original, replacement);
@@ -450,7 +453,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .WithOverrides(overrides)
                 .WithAdditionalOurTypes(additionalOurTypes);
 
-            var dependencyContainer = Fixture.BoundedAboveContainer(options, assemblies);
+            var dependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
             var resolved = dependencyContainer.Resolve<IManuallyRegisteredService>();
 
             Assert.Equal(typeof(ManuallyRegisteredServiceOverride), resolved.GetType());

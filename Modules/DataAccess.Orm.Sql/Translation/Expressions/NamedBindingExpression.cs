@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
-    using System.Reflection;
     using Api.Exceptions;
     using Basics;
 
@@ -14,7 +13,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class NamedBindingExpression : IBindingIntermediateExpression,
                                           IEquatable<NamedBindingExpression>,
                                           ISafelyEquatable<NamedBindingExpression>,
-                                          IApplicable<SimpleBindingExpression>
+                                          IApplicable<SimpleBindingExpression>,
+                                          IApplicable<BinaryExpression>,
+                                          IApplicable<ConditionalExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="name">Binding name</param>
@@ -120,7 +121,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplySource(SimpleBindingExpression expression)
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        private void ApplySource(IIntermediateExpression expression)
         {
             if (Source != null)
             {

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using Core.Test.Api;
     using CrossCuttingConcerns.Api.Extensions;
     using Test.Registrations;
+    using Xunit.Sdk;
 
     /// <summary>
     /// Creates DependencyContainer and measures cold start time
@@ -40,8 +41,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
                 .StepInto("Settings")
                 .SetupFileSystemSettingsDirectory();
 
-            _assemblies = ModulesTestFixtureExtensions.ModulesAssemblies;
-            _options = ModulesTestFixtureExtensions.ModulesOptions;
+            _assemblies = ModulesTestFixtureExtensions.ModulesAssemblies();
+            _options = ModulesTestFixtureExtensions.ModulesOptions(new TestOutputHelper());
         }
 
         /// <summary> CreateExactlyBounded </summary>

@@ -26,6 +26,22 @@ namespace SpaceEngineers.Core.DataAccess.Api.Reading
         /// Retrieves an element by its primary key
         /// </summary>
         /// <param name="key">Primary key</param>
+        /// <returns>Linq query</returns>
+        [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
+        [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
+        public TEntity Single(TKey key);
+
+        /// <summary>
+        /// Retrieves an element by its primary key
+        /// </summary>
+        /// <param name="key">Primary key</param>
+        /// <returns>Linq query</returns>
+        public TEntity? SingleOrDefault(TKey key);
+
+        /// <summary>
+        /// Retrieves an element by its primary key
+        /// </summary>
+        /// <param name="key">Primary key</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Linq query</returns>
         [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]

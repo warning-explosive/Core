@@ -46,9 +46,6 @@
       <Compile Update="Linq\Internals\IMaterializer.cs">
         <DependentUpon>IQueryAsyncQueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\RootQueries.cs">
-        <DependentUpon>ReadRepository.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\QueryProvider.cs">
         <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
       </Compile>

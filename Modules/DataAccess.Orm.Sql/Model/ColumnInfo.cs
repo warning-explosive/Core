@@ -21,28 +21,25 @@
                               IEquatable<ColumnInfo>,
                               ISafelyEquatable<ColumnInfo>
     {
-        private readonly PropertyInfo[] _chain;
+        private readonly ColumnProperty[] _chain;
         private readonly IModelProvider _modelProvider;
 
         private string? _name;
-        private PropertyInfo? _property;
+        private ColumnProperty? _property;
         private IReadOnlyCollection<string>? _constraints;
         private Lazy<Relation?>? _relation;
         private Lazy<bool>? _isMultipleRelation;
         private Lazy<bool>? _isInlinedObject;
 
         /// <summary> .cctor </summary>
-        /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="chain">Property chain</param>
         /// <param name="modelProvider">IModelProvider</param>
         public ColumnInfo(
-            string schema,
-            Type table,
-            PropertyInfo[] chain,
+            ITableInfo table,
+            ColumnProperty[] chain,
             IModelProvider modelProvider)
         {
-            Schema = schema;
             Table = table;
 
             if (!chain.Any())
@@ -56,14 +53,9 @@
         }
 
         /// <summary>
-        /// Schema
-        /// </summary>
-        public string Schema { get; }
-
-        /// <summary>
         /// Table type
         /// </summary>
-        public Type Table { get; }
+        public ITableInfo Table { get; }
 
         /// <summary>
         /// Name
@@ -107,7 +99,7 @@
 
                     if (oneToOne != null)
                     {
-                        return new Relation(Table, oneToOne.PropertyType, oneToOne);
+                        return new Relation(Table.Type, oneToOne.PropertyType, oneToOne, _modelProvider);
                     }
 
                     var oneToMany = _chain
@@ -115,25 +107,21 @@
                         .SkipWhile(property => property.ReflectedType.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
                         .FirstOrDefault();
 
-                    if (oneToMany != Property)
+                    if (oneToMany != null
+                        && oneToMany != Property)
                     {
-                        if (oneToMany != null)
-                        {
-                            return new Relation(Table, oneToMany.PropertyType.GetMultipleRelationItemType(), oneToMany);
-                        }
+                        return new Relation(Table.Type, oneToMany.PropertyType.GetMultipleRelationItemType(), oneToMany, _modelProvider);
                     }
 
-                    var manyToMany = Property.ReflectedType;
-
-                    if (manyToMany.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
+                    if (Table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
                     {
-                        var (left, right) = _modelProvider.MtmTables[Schema][manyToMany];
+                        var mtmTable = _modelProvider.MtmTables[Table.Type];
 
                         var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
-                            ? left
-                            : right;
+                            ? mtmTable.Left
+                            : mtmTable.Right;
 
-                        return new Relation(Table, type, Property);
+                        return new Relation(Table.Type, type, Property, _modelProvider);
                     }
 
                     return default;
@@ -210,10 +198,10 @@
                     }
                     else if (Relation != null)
                     {
-                        yield return $@"references ""{Relation.Target.SchemaName()}"".""{Relation.Target.TableName()}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
+                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
                     }
 
-                    if (!Property.IsNullable())
+                    if (!Property.Declared.IsNullable())
                     {
                         yield return "not null";
                     }
@@ -221,14 +209,14 @@
             }
         }
 
-        private PropertyInfo Property
+        private ColumnProperty Property
         {
             get
             {
                 _property ??= InitProperty();
                 return _property;
 
-                PropertyInfo InitProperty()
+                ColumnProperty InitProperty()
                 {
                     return _chain.Last();
                 }
@@ -263,9 +251,7 @@
         [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return new object[] { Table }
-                .Concat(_chain.Select(property => property))
-                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+            return _chain.Aggregate(Table.GetHashCode(), HashCode.Combine);
         }
 
         /// <inheritdoc />
@@ -283,8 +269,7 @@
         /// <inheritdoc />
         public bool SafeEquals(ColumnInfo other)
         {
-            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && Table == other.Table
+            return Table == other.Table
                    && _chain.SequenceEqual(other._chain);
         }
 
@@ -293,7 +278,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table.TableName()}.{Name} ({Constraints.ToString(", ")})";
+            return $"{Table.Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
         }
 
         /// <summary>
@@ -303,14 +288,16 @@
         /// <returns>Expression tree</returns>
         public Expression BuildExpression(Expression source)
         {
-            if (source.Type != Table)
+            if (source.Type != Table.Type)
             {
-                throw new InvalidOperationException($"Expression should be constructed over {Table.FullName} type instead of {source.Type.FullName}");
+                throw new InvalidOperationException($"Expression should be constructed over {Table.Type.FullName} type instead of {source.Type.FullName}");
             }
 
-            return _chain.Aggregate(
-                (Expression)Expression.Parameter(Table),
-                Expression.MakeMemberAccess);
+            return _chain
+                .Select(property => property.Reflected)
+                .Aggregate(
+                    (Expression)Expression.Parameter(Table.Type),
+                    Expression.MakeMemberAccess);
         }
 
         /// <summary>
@@ -320,14 +307,16 @@
         /// <returns>Expression tree</returns>
         public IBindingIntermediateExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
         {
-            if (parameter.Type != Table)
+            if (parameter.Type != Table.Type)
             {
-                throw new InvalidOperationException($"Parameter expression should be constructed over {Table.FullName} type instead of {parameter.Type.FullName}");
+                throw new InvalidOperationException($"Parameter expression should be constructed over {Table.Type.FullName} type instead of {parameter.Type.FullName}");
             }
 
-            var chain = _chain.Aggregate(
-                (IIntermediateExpression)parameter,
-                (acc, next) => new SimpleBindingExpression(next, next.PropertyType, acc));
+            var chain = _chain
+                .Select(property => property.Reflected)
+                .Aggregate(
+                    (IIntermediateExpression)parameter,
+                    (acc, next) => new SimpleBindingExpression(next, next.PropertyType, acc));
 
             return (IBindingIntermediateExpression)chain;
         }
@@ -343,7 +332,9 @@
         {
             return IsMultipleRelation
                 ? null
-                : _chain.Aggregate((object?)entity, AggregateValue);
+                : _chain
+                    .Select(property => property.Reflected)
+                    .Aggregate((object?)entity, AggregateValue);
         }
 
         /// <summary>
@@ -361,8 +352,9 @@
             }
 
             return _chain
-                    .SkipLast(1)
-                    .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified<TKey>;
+                .Select(property => property.Reflected)
+                .SkipLast(1)
+                .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified<TKey>;
         }
 
         /// <summary>
@@ -380,6 +372,7 @@
             }
 
             return ((IEnumerable)_chain
+                    .Select(property => property.Reflected)
                     .SkipLast(1)
                     .Aggregate((object?)entity, AggregateValue) !)
                 .AsEnumerable<IUniqueIdentified<TKey>>();

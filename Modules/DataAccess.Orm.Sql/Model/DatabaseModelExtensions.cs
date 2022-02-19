@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Linq;
     using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Views;
@@ -40,44 +39,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .ResolveGeneric(typeof(ISqlViewQueryProvider<,>), type, viewKeyType)
                 .CallMethod(nameof(ISqlViewQueryProvider<ISqlView<Guid>, Guid>.GetQuery))
                 .Invoke<string>();
-        }
-
-        /// <summary>
-        /// Gets table name
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Schema name</returns>
-        public static string TableName(this Type type)
-        {
-            return type.Name;
-        }
-
-        /// <summary>
-        /// Gets schema name
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Schema name</returns>
-        public static string SchemaName(this Type type)
-        {
-            return type
-                .Assembly
-                .GetName()
-                .Name
-                .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Gets schema name for mtm-table
-        /// </summary>
-        /// <param name="left">Left relation</param>
-        /// <param name="right">Right relation</param>
-        /// <returns>Schema name</returns>
-        public static string MtmSchemaName(Type left, Type right)
-        {
-            return new[] { left.SchemaName(), right.SchemaName() }
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(name => name)
-                .ToString("_");
         }
     }
 }

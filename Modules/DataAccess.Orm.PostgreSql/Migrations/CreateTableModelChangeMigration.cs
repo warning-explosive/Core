@@ -34,7 +34,7 @@
 
         public Task<string> Migrate(CreateTable change, CancellationToken token)
         {
-            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || info is not TableInfo table)
             {

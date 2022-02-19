@@ -17,6 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Extensions;
     using Model;
     using Orm.Linq;
+    using Orm.Model;
     using Orm.Settings;
     using Translation;
     using Translation.Extensions;
@@ -113,12 +114,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         {
             var type = typeof(T);
 
-            var relations = _modelProvider
-                .Columns(type)
-                .Where(column => column.IsRelation)
-                .ToArray();
+            var relationValues = ReplaceRelations(type, values);
 
-            var relationValues = ReplaceRelations(values, relations);
+            var multipleRelationValues = AddMultipleRelations(type, values);
 
             var built = (T)Build(type, values) !;
 
@@ -128,6 +126,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             }
 
             await MaterializeRelations(built, relationValues, token).ConfigureAwait(false);
+
+            await MaterializeMultipleRelations(built, multipleRelationValues, token).ConfigureAwait(false);
 
             return built;
         }
@@ -139,6 +139,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 && values.Single().Value == null)
             {
                 return type.DefaultValue();
+            }
+
+            if (type.IsMultipleRelation(out _)
+                && values.Count == 1)
+            {
+                return values.Single().Value;
             }
 
             if (!type.IsPrimitive())
@@ -178,21 +184,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 .Invoke();
         }
 
-        private static IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
-            IDictionary<string, object?> values,
-            ColumnInfo[] relations)
+        private IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
+            Type type,
+            IDictionary <string, object?> values)
         {
-            var relationValues = new Dictionary<ColumnInfo, object?>();
+            return _modelProvider
+                .Columns(type)
+                .Where(column => column.IsRelation)
+                .ToDictionary(
+                    column => column,
+                    column =>
+                    {
+                        var value = values[column.Name];
 
-            foreach (var column in relations)
-            {
-                relationValues.Add(column, values[column.Name]);
-                values.Remove(column.Name);
+                        values.Remove(column.Name);
+                        values[column.Relation.Property.Name] = column.Relation.Target.DefaultValue();
 
-                values[column.Relation.Property.Name] = column.Relation.Target.DefaultValue();
-            }
-
-            return relationValues;
+                        return value;
+                    });
         }
 
         private async Task MaterializeRelations(
@@ -205,7 +214,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 if (primaryKey != null)
                 {
                     var relation = await MaterializeRelation(column.Relation.Target, primaryKey, token).ConfigureAwait(false);
-                    column.Relation.Property.SetValue(built, relation);
+                    column.Relation.Property.Declared.SetValue(built, relation);
                 }
             }
         }
@@ -253,6 +262,120 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             where TKey : notnull
         {
             return await task.ConfigureAwait(false);
+        }
+
+        private IReadOnlyDictionary<ColumnInfo, object?> AddMultipleRelations(
+            Type type,
+            IDictionary<string, object?> values)
+        {
+            return _modelProvider
+                .Columns(type)
+                .Where(column => column.IsMultipleRelation)
+                .ToDictionary(
+                    column => column,
+                    column =>
+                    {
+                        var value = column.Relation.Property.PropertyType.IsNullable()
+                            ? column.Relation.Property.PropertyType.DefaultValue()
+                            : Activator.CreateInstance(column.Relation.Target.ConstructMultipleRelationType());
+
+                        values[column.Relation.Property.Name] = value;
+
+                        return value;
+                    });
+        }
+
+        private Task MaterializeMultipleRelations(
+            T built,
+            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
+            CancellationToken token)
+        {
+            if (!relationValues.Any())
+            {
+                return Task.CompletedTask;
+            }
+
+            if (!typeof(T).IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
+            {
+                throw new InvalidOperationException($"Projection {typeof(T).FullName} should implement {nameof(IDatabaseEntity<object>)} so as to have multiple relation fields");
+            }
+
+            var type = typeof(T);
+            var keyType = type.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single();
+
+            return this
+                .CallMethod(nameof(MaterializeMultipleRelations))
+                .WithTypeArguments(type, keyType)
+                .WithArguments(built!, relationValues, token)
+                .Invoke<Task>();
+        }
+
+        private async Task MaterializeMultipleRelations<TEntity, TKey>(
+            TEntity built,
+            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
+            CancellationToken token)
+            where TEntity : IDatabaseEntity<TKey>
+            where TKey : notnull
+        {
+            foreach (var (column, collection) in relationValues)
+            {
+                if (collection == null)
+                {
+                    continue;
+                }
+
+                var mtmType = column.MultipleRelationTable!;
+                var typeArguments = mtmType.ExtractGenericArguments(typeof(BaseMtmDatabaseEntity<,>)).Single();
+                var leftKeyType = typeArguments[0];
+                var rightKeyType = typeArguments[1];
+
+                var ownerType = column.Table.Type;
+                var collectionItemType = column.Relation.Target;
+
+                await this
+                    .CallMethod(nameof(MaterializeMultipleRelation))
+                    .WithTypeArguments(mtmType, ownerType, collectionItemType, leftKeyType, rightKeyType)
+                    .WithArguments(built.PrimaryKey, collection, token)
+                    .Invoke<Task>()
+                    .ConfigureAwait(false);
+            }
+        }
+
+        private async Task MaterializeMultipleRelation<TMtm, TLeft, TRight, TLeftKey, TRightKey>(
+            TLeftKey ownerPrimaryKey,
+            ICollection<TRight> collection,
+            CancellationToken token)
+            where TMtm : BaseMtmDatabaseEntity<TLeftKey, TRightKey>, IUniqueIdentified<object>
+            where TLeft : IDatabaseEntity<TLeftKey>
+            where TRight : IDatabaseEntity<TRightKey>
+            where TLeftKey : notnull
+            where TRightKey : notnull
+        {
+            /*
+             * select <fields>
+             * from <collection_table> ct
+             * where ct."PrimaryKey" in
+             * (
+             *      select mt."Right"
+             *      from <mtm_table> mt
+             *      where mt."Left" = <owner_primary_key>
+             * )
+             */
+
+            var subQuery = _transaction
+                .Read<TMtm, object>()
+                .All()
+                .Where(mtm => Equals(mtm.Left, ownerPrimaryKey))
+                .Select(mtm => mtm.Right);
+
+            var items = await _transaction
+                .Read<TRight, TRightKey>()
+                .All()
+                .Where(databaseEntity => subQuery.Contains(databaseEntity.PrimaryKey))
+                .ToListAsync(token)
+                .ConfigureAwait(false);
+
+            items.Each(collection.Add);
         }
     }
 }

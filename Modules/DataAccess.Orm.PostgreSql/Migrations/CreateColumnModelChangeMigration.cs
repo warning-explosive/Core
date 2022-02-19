@@ -30,7 +30,7 @@
 
         public Task<string> Migrate(CreateColumn change, CancellationToken token)
         {
-            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || !info.Columns.TryGetValue(change.Column, out var column))
             {

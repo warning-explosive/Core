@@ -5,7 +5,6 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using Api.Model;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -24,8 +23,13 @@
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
 
         private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
+        private readonly Dictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
 
-        private ModelInfo? _model;
+        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>>? _tablesMap;
+        private IReadOnlyDictionary<Type, ITableInfo>? _tables;
+        private IReadOnlyDictionary<Type, MtmTableInfo>? _mtmTables;
+
+        private bool _locked;
 
         public ModelProvider(
             IDependencyContainer dependencyContainer,
@@ -37,174 +41,182 @@
             _databaseTypeProvider = databaseTypeProvider;
 
             _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
+            _mtmTablesCache = new Dictionary<Type, (Type Left, Type Right)>();
         }
 
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Objects
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap
         {
             get
             {
-                _model ??= InitModel();
-                return _model.Objects;
+                _tables ??= InitTables();
+
+                _tablesMap ??= _tables
+                    .GroupBy(info => info.Value.Schema)
+                    .ToDictionary(
+                        grp => grp.Key,
+                        grp => grp.ToDictionary(
+                            info => info.Value.Name,
+                            info => info.Value) as IReadOnlyDictionary<string, ITableInfo>,
+                        StringComparer.OrdinalIgnoreCase);
+
+                return _tablesMap;
             }
         }
 
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type Left, Type Right)>> MtmTables
+        public IReadOnlyDictionary<Type, ITableInfo> Tables
         {
             get
             {
-                _model ??= InitModel();
-                return _model.MtmTables;
+                _tables ??= InitTables();
+                return _tables;
             }
         }
 
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities)
+        public IReadOnlyDictionary<Type, MtmTableInfo> MtmTables
         {
-            databaseEntities = databaseEntities
-                .Where(entity => _databaseTypeProvider.DatabaseEntities().Contains(entity))
+            get
+            {
+                _tables ??= InitTables();
+
+                _mtmTables ??= _tables
+                    .Values
+                    .OfType<MtmTableInfo>()
+                    .ToDictionary(mtmTable => mtmTable.Type);
+
+                return _mtmTables;
+            }
+        }
+
+        public IEnumerable<ITableInfo> TablesFor(Type[] databaseEntities)
+        {
+            databaseEntities = _databaseTypeProvider
+                .DatabaseEntities()
+                .Intersect(databaseEntities)
                 .ToArray();
 
-            var schemas = databaseEntities
-                .Select(entity => entity.SchemaName())
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var tables = databaseEntities
-                .Select(entity => entity.TableName())
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            return Objects
-                .Where(schema => schemas.Contains(schema.Key))
-                .ToDictionary(
-                    schema => schema.Key,
-                    schema => schema
-                        .Value
-                        .Where(table => tables.Contains(table.Key)
-                                        || (table.Value is TableInfo tableInfo
-                                            && tableInfo.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
-                                            && tableInfo.Columns.Any(column => databaseEntities.Contains(column.Value.Relation.Target))))
-                        .ToDictionary(
-                            table => table.Key,
-                            table => table.Value,
-                            StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>);
+            foreach (var (_, info) in Tables)
+            {
+                if (databaseEntities.Contains(info.Type)
+                    || (info is MtmTableInfo mtmTableInfo
+                        && mtmTableInfo.Columns.Any(column => databaseEntities.Contains(column.Value.Relation.Target))))
+                {
+                    yield return info;
+                }
+            }
         }
 
         public IEnumerable<ColumnInfo> Columns(Type type)
         {
-            return _columnsCache.GetOrAdd(type, key => GetColumns(key.SchemaName(), key, null));
-        }
+            return Tables.TryGetValue(type, out var info)
+                ? info.Columns.Values
+                : _columnsCache.GetOrAdd(type, ValueFactory);
 
-        private ModelInfo InitModel()
-        {
-            var mutableMtmTables = new Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>(StringComparer.OrdinalIgnoreCase);
-
-            var objects = _databaseTypeProvider
-                .DatabaseEntities()
-                .SelectMany(entity => GetEntityInfos(entity, mutableMtmTables))
-                .Distinct()
-                .GroupBy(info => info.Schema, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(
-                    grp => grp.Key,
-                    grp => grp.ToDictionary(info => info.Type.TableName(), StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IObjectModelInfo>,
-                    StringComparer.OrdinalIgnoreCase);
-
-            var mtmTables = mutableMtmTables
-                .ToDictionary(
-                    schema => schema.Key,
-                    schema => schema.Value as IReadOnlyDictionary<Type, (Type, Type)>);
-
-            return new ModelInfo(objects, mtmTables);
-        }
-
-        private IEnumerable<IObjectModelInfo> GetEntityInfos(
-            Type entity,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
-        {
-            if (entity.IsSqlView())
+            IReadOnlyCollection<ColumnInfo> ValueFactory(Type table)
             {
-                yield return GetView(entity.SchemaName(), entity, mtmTables);
+                return new TableInfo(table, this)
+                    .Columns
+                    .Values
+                    .ToArray();
             }
-            else
-            {
-                var tableInfo = GetTable(entity.SchemaName(), entity, mtmTables);
-                yield return tableInfo;
+        }
 
-                foreach (var mtmTableInfo in GetMtmTables(tableInfo.Columns.Values, mtmTables))
+        public IEnumerable<ColumnInfo> Columns(ITableInfo table)
+        {
+            return table
+                .Type
+                .Columns()
+                .SelectMany(property => GetColumns(table, property))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Gets table name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        public string TableName(Type type)
+        {
+            return type.Name;
+        }
+
+        /// <summary>
+        /// Gets schema name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        public string SchemaName(Type type)
+        {
+            return type
+                .Assembly
+                .GetName()
+                .Name
+                .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string MtmSchemaName(Type left, Type right)
+        {
+            return new[] { SchemaName(left), SchemaName(right) }
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name)
+                .ToString("_");
+        }
+
+        private IReadOnlyDictionary<Type, ITableInfo> InitTables()
+        {
+            if (_locked)
+            {
+                return _tables ?? throw new InvalidOperationException("Model should be initialized");
+            }
+
+            var tables = _databaseTypeProvider
+                .DatabaseEntities()
+                .SelectMany(GetTableInfo)
+                .Distinct()
+                .ToDictionary(info => info.Type);
+
+            _locked = true;
+
+            return tables;
+
+            IEnumerable<ITableInfo> GetTableInfo(Type entity)
+            {
+                ITableInfo info = entity.IsSqlView()
+                    ? new ViewInfo(entity, entity.SqlViewQuery(_dependencyContainer), this)
+                    : new TableInfo(entity, this);
+
+                yield return info;
+
+                var mtmTableInfos = info
+                    .Columns
+                    .Values
+                    .Where(column => column.IsMultipleRelation)
+                    .Select(column => new MtmTableInfo(column.MultipleRelationTable!, column.Relation.Source, column.Relation.Target, this));
+
+                foreach (var mtmTableInfo in mtmTableInfos)
                 {
                     yield return mtmTableInfo;
                 }
             }
         }
 
-        private TableInfo GetTable(
-            string schema,
-            Type tableType,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
-        {
-            var columns = GetColumns(schema, tableType, mtmTables).ToList();
-
-            return new TableInfo(schema, tableType, columns);
-        }
-
-        private IEnumerable<TableInfo> GetMtmTables(
-            IEnumerable<ColumnInfo> columns,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
-        {
-            return columns
-                .Where(column => column.IsMultipleRelation)
-                .Select(GetMtmTableInfo);
-
-            TableInfo GetMtmTableInfo(ColumnInfo columnInfo)
-            {
-                return GetTable(columnInfo.Schema, columnInfo.MultipleRelationTable!, mtmTables);
-            }
-        }
-
-        private ViewInfo GetView(
-            string schema,
-            Type viewType,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
-        {
-            var query = viewType.SqlViewQuery(_dependencyContainer);
-
-            var columns = GetColumns(schema, viewType, mtmTables);
-
-            return new ViewInfo(schema, viewType, columns, query);
-        }
-
-        private IReadOnlyCollection<ColumnInfo> GetColumns(
-            string schema,
-            Type type,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
-        {
-            return type
-                .Columns()
-                .SelectMany(property => GetColumns(schema, type, property, mtmTables))
-                .ToList();
-        }
-
-        private IEnumerable<ColumnInfo> GetColumns(
-            string schema,
-            Type table,
-            PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
+        private IEnumerable<ColumnInfo> GetColumns(ITableInfo table, ColumnProperty property)
         {
             if (!property.PropertyType.IsTypeSupported())
             {
                 throw new NotSupportedException($"Not supported column type: {property.Name} - {property.PropertyType}");
             }
 
-            foreach (var chain in FlattenSpecialTypes(property, mtmTables))
+            foreach (var chain in FlattenSpecialTypes(property))
             {
-                yield return new ColumnInfo(schema, table, chain, this);
+                yield return new ColumnInfo(table, chain, this);
             }
         }
 
-        private IEnumerable<PropertyInfo[]> FlattenSpecialTypes(
-            PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
+        private IEnumerable<ColumnProperty[]> FlattenSpecialTypes(ColumnProperty property)
         {
             if (typeof(IInlinedObject).IsAssignableFrom(property.PropertyType))
             {
-                return FlattenInlinedObject(property, mtmTables);
+                return FlattenInlinedObject(property);
             }
 
             if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
@@ -214,7 +226,7 @@
 
             if (property.PropertyType.IsMultipleRelation(out var itemType))
             {
-                return FlattenArrayOrMultipleRelation(property, itemType, mtmTables);
+                return FlattenMultipleRelation(property, itemType);
             }
 
             return new[]
@@ -226,13 +238,11 @@
             };
         }
 
-        private IEnumerable<PropertyInfo[]> FlattenInlinedObject(
-            PropertyInfo property,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
+        private IEnumerable<ColumnProperty[]> FlattenInlinedObject(ColumnProperty property)
         {
             foreach (var inlined in property.PropertyType.Columns())
             {
-                foreach (var subsequent in FlattenSpecialTypes(inlined, mtmTables))
+                foreach (var subsequent in FlattenSpecialTypes(inlined))
                 {
                     yield return new[] { property }
                         .Concat(subsequent)
@@ -241,11 +251,11 @@
             }
         }
 
-        private static IEnumerable<PropertyInfo[]> FlattenRelation(PropertyInfo property)
+        private static IEnumerable<ColumnProperty[]> FlattenRelation(ColumnProperty property)
         {
             var primaryKeyProperty = property
                 .PropertyType
-                .GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey));
+                .Column(nameof(IUniqueIdentified<Guid>.PrimaryKey));
 
             yield return new[]
             {
@@ -254,39 +264,39 @@
             };
         }
 
-        private IEnumerable<PropertyInfo[]> FlattenArrayOrMultipleRelation(
-            PropertyInfo property,
-            Type itemType,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>>? mtmTables)
+        private IEnumerable<ColumnProperty[]> FlattenMultipleRelation(ColumnProperty property, Type itemType)
         {
-            return itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                   && mtmTables != null
-                ? FlattenMultipleRelation(property, itemType, mtmTables)
-                : FlattenArray(property, itemType);
-        }
+            if (!property.ReflectedType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+            {
+                throw new NotSupportedException($"{property.ReflectedType.Name} should implement {typeof(IUniqueIdentified<>)} so as to have multiple relation {property.Name} to {itemType.Name}");
+            }
 
-        private IEnumerable<PropertyInfo[]> FlattenMultipleRelation(
-            PropertyInfo property,
-            Type itemType,
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables)
-        {
+            if (!itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+            {
+                throw new NotSupportedException($"{itemType.Name} should implement {typeof(IUniqueIdentified<>)} so as to be used as item type for {property.Name} multiple relation");
+            }
+
             var left = property.DeclaringType;
             var right = itemType;
 
-            PropertyInfo relationProperty;
+            ColumnProperty relationProperty;
 
-            if (TryGetMtmType(mtmTables, left, right, out var mtm))
+            if (TryGetMtmType(left, right, out var mtm))
             {
-                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
+                relationProperty = mtm.Column(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
             }
-            else if (TryGetMtmType(mtmTables, right, left, out mtm))
+            else if (TryGetMtmType(right, left, out mtm))
             {
-                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right));
+                relationProperty = mtm.Column(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right));
+            }
+            else if (_locked)
+            {
+                throw new InvalidOperationException($"Unable to find multiple relation {property.Name} from {property.ReflectedType.Name} to {itemType.Name}");
             }
             else
             {
-                mtm = BuildMtmType(mtmTables, left, right);
-                relationProperty = mtm.GetProperty(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
+                mtm = BuildMtmType(left, right);
+                relationProperty = mtm.Column(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left));
             }
 
             return new[]
@@ -299,68 +309,34 @@
             };
         }
 
-        private static IEnumerable<PropertyInfo[]> FlattenArray(PropertyInfo property, Type itemType)
-        {
-            throw new NotSupportedException($"Arrays are not supported: {property.Name} - {itemType.Name}[]");
-        }
-
-        private static bool TryGetMtmType(
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables,
+        private bool TryGetMtmType(
             Type left,
             Type right,
             [NotNullWhen(true)] out Type? mtm)
         {
-            var schema = DatabaseModelExtensions.MtmSchemaName(left, right);
-
-            if (!mtmTables.TryGetValue(schema, out var schemaGroup))
-            {
-                mtm = null;
-                return false;
-            }
-
-            mtm = schemaGroup
+            mtm = _mtmTablesCache
                 .SingleOrDefault(pair => pair.Value.Left == left && pair.Value.Right == right)
                 .Key;
 
             return mtm != null;
         }
 
-        private Type BuildMtmType(
-            Dictionary<string, Dictionary<Type, (Type Left, Type Right)>> mtmTables,
-            Type left,
-            Type right)
+        private Type BuildMtmType(Type left, Type right)
         {
-            var schema = DatabaseModelExtensions.MtmSchemaName(left, right);
-
             var leftKey = left.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
             var rightKey = right.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
 
             var mtmBaseType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
 
-            var mtmTypeName = string.Join("_", left.TableName(), right.TableName());
+            var schema = MtmSchemaName(left, right);
+            var mtmTypeName = string.Join("_", TableName(left), TableName(right));
 
-            var dynamicClass = new DynamicClass(mtmTypeName).InheritsFrom(mtmBaseType);
+            var dynamicClass = new DynamicClass(schema, mtmTypeName).InheritsFrom(mtmBaseType);
             var mtmType = _dynamicClassProvider.CreateType(dynamicClass);
 
-            var schemaGroup = mtmTables.GetOrAdd(schema, _ => new Dictionary<Type, (Type Left, Type Right)>());
-            schemaGroup[mtmType] = (left, right);
+            _mtmTablesCache.Add(mtmType, (left, right));
 
             return mtmType;
-        }
-
-        private class ModelInfo
-        {
-            public ModelInfo(
-                IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> objects,
-                IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type, Type)>> mtmTables)
-            {
-                Objects = objects;
-                MtmTables = mtmTables;
-            }
-
-            public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Objects { get; }
-
-            public IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type, Type)>> MtmTables { get; }
         }
     }
 }

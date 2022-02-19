@@ -179,10 +179,10 @@
         <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\TableInfo.cs">
-        <DependentUpon>IObjectModelInfo.cs</DependentUpon>
+        <DependentUpon>ITableInfo.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\ViewInfo.cs">
-        <DependentUpon>IObjectModelInfo.cs</DependentUpon>
+        <DependentUpon>ITableInfo.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\SchemaInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
@@ -190,7 +190,7 @@
       <Compile Update="Model\IndexInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\IObjectModelInfo.cs">
+      <Compile Update="Model\ITableInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DatabaseColumnConstraint.cs">
@@ -237,6 +237,12 @@
       </Compile>
       <Compile Update="Translation\ObjectEqualsMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ColumnProperty.cs">
+        <DependentUpon>ColumnInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\MtmTableInfo.cs">
+        <DependentUpon>TableInfo.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

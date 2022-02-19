@@ -100,7 +100,7 @@
 
         private static IEnumerable<Exception> InitPropertiesExceptions(Type type, Type[] isExternalInitType)
         {
-            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.DeclaredOnly);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly);
 
             foreach (var property in properties)
             {

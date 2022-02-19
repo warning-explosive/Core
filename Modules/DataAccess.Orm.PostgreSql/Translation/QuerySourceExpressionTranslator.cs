@@ -12,10 +12,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     internal class QuerySourceExpressionTranslator : IExpressionTranslator<QuerySourceExpression>
     {
         private readonly IDependencyContainer _dependencyContainer;
+        private readonly IModelProvider _modelProvider;
 
-        public QuerySourceExpressionTranslator(IDependencyContainer dependencyContainer)
+        public QuerySourceExpressionTranslator(
+            IDependencyContainer dependencyContainer,
+            IModelProvider modelProvider)
         {
             _dependencyContainer = dependencyContainer;
+            _modelProvider = modelProvider;
         }
 
         public string Translate(QuerySourceExpression expression, int depth)
@@ -32,11 +36,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             else
             {
                 sb.Append('"');
-                sb.Append(expression.Type.SchemaName());
+                sb.Append(_modelProvider.SchemaName(expression.Type));
                 sb.Append('"');
                 sb.Append('.');
                 sb.Append('"');
-                sb.Append(expression.Type.TableName());
+                sb.Append(_modelProvider.TableName(expression.Type));
                 sb.Append('"');
             }
 

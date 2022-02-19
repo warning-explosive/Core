@@ -21,14 +21,14 @@
             Definition = definition;
         }
 
-        public Guid PrimaryKey { get; }
+        public Guid PrimaryKey { get; private init; }
 
-        public string Schema { get; }
+        public string Schema { get; private init; }
 
-        public string Table { get; }
+        public string Table { get; private init; }
 
-        public string Index { get; }
+        public string Index { get; private init; }
 
-        public string Definition { get; }
+        public string Definition { get; private init; }
     }
 }

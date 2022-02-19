@@ -241,5 +241,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
+
+        internal static MethodInfo QueryableContains()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.Contains),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(object) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Contains()"));
+        }
     }
 }

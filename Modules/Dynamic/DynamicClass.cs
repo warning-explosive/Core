@@ -14,25 +14,41 @@ namespace SpaceEngineers.Core.Dynamic
                                        ISafelyEquatable<DynamicClass>,
                                        ICloneable<DynamicClass>
     {
+        private const string DynamicAssemblyName = "SpaceEngineers.Core.Basics.Dynamic";
+
         /// <summary> .cctor </summary>
         public DynamicClass()
-            : this(GenerateName())
+            : this(DynamicAssemblyName, GenerateClassName())
         {
         }
 
         /// <summary> .cctor </summary>
-        /// <param name="name">Class name</param>
-        public DynamicClass(string name)
+        /// <param name="className">Class name</param>
+        public DynamicClass(string className)
+            : this(DynamicAssemblyName, className)
         {
-            Name = name;
+        }
+
+        /// <summary> .cctor </summary>
+        /// <param name="assemblyName">Assembly name</param>
+        /// <param name="className">Class name</param>
+        public DynamicClass(string assemblyName, string className)
+        {
+            AssemblyName = assemblyName;
+            ClassName = className;
             Interfaces = new List<Type>();
             Properties = new List<DynamicProperty>();
         }
 
         /// <summary>
-        /// Name
+        /// Assembly name
         /// </summary>
-        public string Name { get; }
+        public string AssemblyName { get; }
+
+        /// <summary>
+        /// Class name
+        /// </summary>
+        public string ClassName { get; }
 
         /// <summary>
         /// Base type
@@ -79,7 +95,11 @@ namespace SpaceEngineers.Core.Dynamic
             return new object[] { BaseType ?? typeof(object) }
                 .Concat(Interfaces)
                 .Concat(Properties)
-                .Aggregate(Name.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+                .Aggregate(
+                    HashCode.Combine(
+                        AssemblyName.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                        ClassName.GetHashCode(StringComparison.OrdinalIgnoreCase)),
+                    HashCode.Combine);
         }
 
         /// <inheritdoc />
@@ -97,7 +117,8 @@ namespace SpaceEngineers.Core.Dynamic
         /// <inheritdoc />
         public bool SafeEquals(DynamicClass other)
         {
-            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
+            return AssemblyName.Equals(other.AssemblyName, StringComparison.OrdinalIgnoreCase)
+                   && ClassName.Equals(other.ClassName, StringComparison.OrdinalIgnoreCase)
                    && BaseType == other.BaseType
                    && Interfaces.OrderBy(i => i).SequenceEqual(other.Interfaces.OrderBy(i => i))
                    && Properties.OrderBy(p => p.Name).SequenceEqual(other.Properties.OrderBy(p => p.Name));
@@ -158,7 +179,7 @@ namespace SpaceEngineers.Core.Dynamic
         /// <inheritdoc />
         public DynamicClass Clone()
         {
-            return new DynamicClass(Name)
+            return new DynamicClass(AssemblyName, ClassName)
             {
                 BaseType = BaseType,
                 Interfaces = Interfaces.ToList(),
@@ -172,7 +193,7 @@ namespace SpaceEngineers.Core.Dynamic
             return Clone();
         }
 
-        private static string GenerateName()
+        private static string GenerateClassName()
         {
             return string.Join(
                 "_",

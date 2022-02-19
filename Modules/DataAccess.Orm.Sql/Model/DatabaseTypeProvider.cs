@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 return _typeProvider
                     .OurTypes
                     .Where(type => type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                                   && !type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
                                    && IsNotAbstraction(type))
                     .ToList();
             }
@@ -41,7 +42,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 return type != typeof(IUniqueIdentified<>)
                        && type != typeof(IDatabaseEntity<>)
                        && type != typeof(BaseDatabaseEntity<>)
-                       && type != typeof(ISqlView<>);
+                       && type != typeof(ISqlView<>)
+                       && type != typeof(BaseMtmDatabaseEntity<,>);
             }
         }
     }

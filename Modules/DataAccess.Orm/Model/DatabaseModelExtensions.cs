@@ -12,7 +12,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
     /// </summary>
     public static class DatabaseModelExtensions
     {
-        private static readonly Type[] SupportedCollections =
+        private static readonly Type MultipleRelation = typeof(List<>);
+
+        private static readonly Type[] SupportedMultipleRelations =
             new[]
             {
                 typeof(IReadOnlyCollection<>)
@@ -68,7 +70,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         [SuppressMessage("Analysis", "CA1021", Justification = "desired method signature")]
         public static bool IsMultipleRelation(this Type type, [NotNullWhen(true)] out Type? itemType)
         {
-            itemType = SupportedCollections
+            itemType = SupportedMultipleRelations
                 .Select(collection =>
                 {
                     var collectionItemType = type.UnwrapTypeParameter(collection);
@@ -89,16 +91,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Model
         /// <returns>Item type</returns>
         public static Type GetMultipleRelationItemType(this Type type)
         {
-            return SupportedCollections
-                .Select(collection =>
-                {
-                    var collectionItemType = type.UnwrapTypeParameter(collection);
-                    var isCollection = collectionItemType != type;
-                    return (collectionItemType, isCollection);
-                })
-                .Where(info => info.isCollection)
-                .Select(info => info.collectionItemType)
-                .First();
+            return IsMultipleRelation(type, out var itemType)
+                ? itemType
+                : throw new InvalidOperationException($"Type {type} doesn't represent multiple relation");
+        }
+
+        /// <summary>
+        /// Constructs multiple relation type
+        /// </summary>
+        /// <param name="itemType">Item type</param>
+        /// <returns>Multiple relation type</returns>
+        public static Type ConstructMultipleRelationType(this Type itemType)
+        {
+            return !itemType.IsGenericType || itemType.IsConstructedGenericType
+                ? MultipleRelation.MakeGenericType(itemType)
+                : throw new InvalidOperationException($"Type {itemType} should be non-generic or fully closed generic type");
         }
     }
 }

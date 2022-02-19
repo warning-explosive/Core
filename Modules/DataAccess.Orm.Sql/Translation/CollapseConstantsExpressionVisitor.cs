@@ -5,7 +5,6 @@
     using Api.Model;
     using Basics;
     using Orm.Linq;
-    using Views;
 
     internal class CollapseConstantsExpressionVisitor : ExpressionVisitor
     {
@@ -28,10 +27,8 @@
                 var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
 
                 var isQueryRoot = itemType.IsClass
-                    && ((itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                         && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
-                        || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
-                            && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>)))));
+                    && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                    && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IUniqueIdentified<>)));
 
                 if (!isQueryRoot)
                 {

@@ -38,8 +38,7 @@
                 .First()
                 .Source;
 
-            return _modelProvider.Objects.TryGetValue(source.Type.SchemaName(), out var schema)
-                   && schema.TryGetValue(source.Type.Name, out var info)
+            return _modelProvider.Tables.TryGetValue(source.Type, out var info)
                    && info.Columns.TryGetValue(chain.ToString("_", binding => binding.Name), out var columnInfo)
                    && (columnInfo.Relation != null
                        || columnInfo.IsInlinedObject);

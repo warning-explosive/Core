@@ -10,21 +10,26 @@
     public interface IModelProvider : IResolvable
     {
         /// <summary>
-        /// Objects
+        /// Tables map
         /// </summary>
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> Objects { get; }
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap { get; }
 
         /// <summary>
-        /// Mtm tables
+        /// Tables
         /// </summary>
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<Type, (Type Left, Type Right)>> MtmTables { get; }
+        IReadOnlyDictionary<Type, ITableInfo> Tables { get; }
 
         /// <summary>
-        /// Gets objects for specified database entities
+        /// Mtm-tables
+        /// </summary>
+        public IReadOnlyDictionary<Type, MtmTableInfo> MtmTables { get; }
+
+        /// <summary>
+        /// Gets tables for specified database entities
         /// </summary>
         /// <param name="databaseEntities">Database entities</param>
-        /// <returns>Objects</returns>
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, IObjectModelInfo>> ObjectsFor(Type[] databaseEntities);
+        /// <returns>Tables</returns>
+        public IEnumerable<ITableInfo> TablesFor(Type[] databaseEntities);
 
         /// <summary>
         /// Gets columns for specified type
@@ -32,5 +37,26 @@
         /// <param name="type">Table or projection type</param>
         /// <returns>Column infos</returns>
         IEnumerable<ColumnInfo> Columns(Type type);
+
+        /// <summary>
+        /// Gets columns for specified type
+        /// </summary>
+        /// <param name="table">ITableInfo</param>
+        /// <returns>Column infos</returns>
+        IEnumerable<ColumnInfo> Columns(ITableInfo table);
+
+        /// <summary>
+        /// Gets table name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        string TableName(Type type);
+
+        /// <summary>
+        /// Gets schema name
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Schema name</returns>
+        string SchemaName(Type type);
     }
 }

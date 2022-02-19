@@ -101,7 +101,7 @@
                 return entity =>
                 {
                     var type = entity.GetType();
-                    var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
+                    var table = modelProvider.Tables[type];
 
                     return table
                         .Columns
@@ -124,7 +124,7 @@
                 IDependencyContainer dependencyContainer,
                 IModelProvider modelProvider)
             {
-                var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
+                var table = modelProvider.Tables[type];
 
                 var columns = table
                     .Columns
@@ -147,7 +147,7 @@
 
                 yield return InsertQueryFormat.Format(
                     table.Schema,
-                    table.Type.TableName(),
+                    table.Name,
                     columns,
                     values);
             }
@@ -158,25 +158,18 @@
                 IDependencyContainer dependencyContainer,
                 IModelProvider modelProvider)
             {
-                var table = modelProvider.Objects[type.SchemaName()][type.TableName()];
+                var table = modelProvider.Tables[type];
 
-                var mtmValueProducers = table
+                var mtmColumns = table
                     .Columns
                     .Values
-                    .Where(column => column.IsMultipleRelation)
-                    .ToDictionary(
-                        column => column,
-                        column =>
-                        {
-                            var schema = DatabaseModelExtensions.MtmSchemaName(column.Relation.Source, column.Relation.Target);
-                            return modelProvider.Objects[schema][column.MultipleRelationTable!.TableName()];
-                        });
+                    .Where(column => column.IsMultipleRelation);
 
-                foreach (var (column, mtmTable) in mtmValueProducers)
+                foreach (var column in mtmColumns)
                 {
-                    var (left, _) = modelProvider.MtmTables[mtmTable.Schema][mtmTable.Type];
+                    var mtmTable = modelProvider.MtmTables[column.MultipleRelationTable!];
 
-                    var columns = (type == left
+                    var columns = (type == mtmTable.Left
                             ? new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }
                             : new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left) })
                         .Select(column => ColumnFormat.Format(column))
@@ -195,7 +188,7 @@
 
                     yield return InsertQueryFormat.Format(
                         mtmTable.Schema,
-                        mtmTable.Type.TableName(),
+                        mtmTable.Name,
                         columns,
                         values);
                 }
@@ -218,11 +211,15 @@
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
+            var table = _modelProvider.Tables[type];
 
             var visitor = new ExtractMemberChainExpressionVisitor();
             _ = visitor.Visit(accessor);
-            var column = new ColumnInfo(table.Schema, table.Type, visitor.Chain, _modelProvider);
+
+            var column = new ColumnInfo(
+                table,
+                visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
+                _modelProvider);
 
             if (column.IsMultipleRelation)
             {
@@ -231,7 +228,7 @@
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
-                table.Type.TableName(),
+                table.Name,
                 column.Name,
                 value.QueryParameterSqlExpression(_dependencyContainer),
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
@@ -258,11 +255,15 @@
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
+            var table = _modelProvider.Tables[type];
 
             var visitor = new ExtractMemberChainExpressionVisitor();
             _ = visitor.Visit(accessor);
-            var column = new ColumnInfo(table.Schema, table.Type, visitor.Chain, _modelProvider);
+
+            var column = new ColumnInfo(
+                table,
+                visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
+                _modelProvider);
 
             if (column.IsMultipleRelation)
             {
@@ -275,7 +276,7 @@
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
-                table.Type.TableName(),
+                table.Name,
                 column.Name,
                 valueExpression,
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
@@ -300,11 +301,11 @@
                 .ConfigureAwait(false);
 
             var type = typeof(TEntity);
-            var table = _modelProvider.Objects[type.SchemaName()][type.TableName()];
+            var table = _modelProvider.Tables[type];
 
             var commandText = DeleteValueQueryFormat.Format(
-                table.Schema,
-                table.Type.TableName(),
+                table.Type,
+                table.Name,
                 primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
 
             _ = await _transaction

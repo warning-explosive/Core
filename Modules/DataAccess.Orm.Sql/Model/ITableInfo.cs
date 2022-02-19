@@ -4,14 +4,19 @@
     using System.Collections.Generic;
 
     /// <summary>
-    /// IObjectModelInfo
+    /// ITableInfo
     /// </summary>
-    public interface IObjectModelInfo : IModelInfo
+    public interface ITableInfo : IModelInfo
     {
         /// <summary>
         /// Schema
         /// </summary>
         public string Schema { get; }
+
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Type

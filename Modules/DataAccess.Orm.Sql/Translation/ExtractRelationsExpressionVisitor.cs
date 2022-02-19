@@ -9,10 +9,12 @@
 
     internal class ExtractRelationsExpressionVisitor : ExpressionVisitor
     {
+        private readonly IModelProvider _modelProvider;
         private readonly HashSet<Relation> _relations;
 
-        public ExtractRelationsExpressionVisitor()
+        public ExtractRelationsExpressionVisitor(IModelProvider modelProvider)
         {
+            _modelProvider = modelProvider;
             _relations = new HashSet<Relation>();
         }
 
@@ -28,7 +30,7 @@
             if (node.Member is PropertyInfo property
                 && node.Type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
             {
-                _relations.Add(new Relation(node.Expression.Type, node.Type, property));
+                _relations.Add(new Relation(node.Expression.Type, node.Type, new ColumnProperty(property, property), _modelProvider));
             }
 
             return base.VisitMember(node);

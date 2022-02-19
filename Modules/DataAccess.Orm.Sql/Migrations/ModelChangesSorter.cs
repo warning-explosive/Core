@@ -47,11 +47,11 @@
                                 .Concat(changes
                                     .OfType<CreateTable>()
                                     .Where(createTable => createTable.Schema.Equals(createSchema.Schema, StringComparison.OrdinalIgnoreCase))
-                                    .Select(createTable => _modelProvider.Objects[createTable.Schema][createTable.Table])
+                                    .Select(createTable => _modelProvider.TablesMap[createTable.Schema][createTable.Table])
                                     .OfType<TableInfo>()
                                     .SelectMany(tableInfo => tableInfo.Columns.Values)
                                     .Where(columnInfo => columnInfo.Relation != null)
-                                    .Select(columnInfo => columnInfo.Relation!.Target.SchemaName())
+                                    .Select(columnInfo => _modelProvider.SchemaName(columnInfo.Relation!.Target))
                                     .Where(schema => !schema.Equals(createSchema.Schema, StringComparison.OrdinalIgnoreCase))
                                     .SelectMany(schema => changes
                                         .OfType<CreateSchema>()
@@ -65,9 +65,9 @@
                                 .Concat(GetTableDependencies(_modelProvider, createTable)
                                     .SelectMany(dependency => changes
                                         .OfType<CreateTable>()
-                                        .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                         && change.Table.Equals(dependency.TableName(), StringComparison.OrdinalIgnoreCase)
-                                                         && GetTableDependencies(_modelProvider, change).All(cycleDependency => cycleDependency != _modelProvider.Objects[createTable.Schema][createTable.Table].Type))));
+                                        .Where(change => change.Schema.Equals(_modelProvider.SchemaName(dependency), StringComparison.OrdinalIgnoreCase)
+                                                         && change.Table.Equals(_modelProvider.TableName(dependency), StringComparison.OrdinalIgnoreCase)
+                                                         && GetTableDependencies(_modelProvider, change).All(cycleDependency => cycleDependency != _modelProvider.TablesMap[createTable.Schema][createTable.Table].Type))));
                         case CreateView:
                             return changes
                                 .OfType<CreateSchema>()
@@ -90,8 +90,8 @@
                                 ? Enumerable.Empty<IModelChange>()
                                 : changes
                                     .OfType<CreateTable>()
-                                    .Where(change => change.Schema.Equals(dependency.SchemaName(), StringComparison.OrdinalIgnoreCase)
-                                                     && change.Table.Equals(dependency.TableName(), StringComparison.OrdinalIgnoreCase));
+                                    .Where(change => change.Schema.Equals(_modelProvider.SchemaName(dependency), StringComparison.OrdinalIgnoreCase)
+                                                     && change.Table.Equals(_modelProvider.TableName(dependency), StringComparison.OrdinalIgnoreCase));
                         case DropIndex:
                         case DropTable:
                         case DropView:
@@ -109,7 +109,7 @@
                 CreateTable createTable)
             {
                 return modelProvider
-                    .Objects[createTable.Schema][createTable.Table]
+                    .TablesMap[createTable.Schema][createTable.Table]
                     .Columns
                     .Values
                     .Where(column => column.Relation != null)
@@ -119,7 +119,7 @@
             Type? GetColumnDependency(CreateColumn createColumn)
             {
                 return _modelProvider
-                    .Objects[createColumn.Schema][createColumn.Table]
+                    .TablesMap[createColumn.Schema][createColumn.Table]
                     .Columns[createColumn.Column]
                     .Relation
                    ?.Target;

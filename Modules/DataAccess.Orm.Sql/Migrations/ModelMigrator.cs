@@ -29,15 +29,18 @@
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
+        private readonly IModelProvider _modelProvider;
         private readonly IEnumerable<IManualMigration> _manualMigrations;
 
         public ModelMigrator(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
+            IModelProvider modelProvider,
             IEnumerable<IManualMigration> manualMigrations)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
+            _modelProvider = modelProvider;
             _manualMigrations = manualMigrations;
         }
 
@@ -143,7 +146,7 @@
             var isSecondaryMigration = await transaction
                 .Read<DatabaseColumnConstraint, Guid>()
                 .All()
-                .AnyAsync(constraint => constraint.Table == typeof(AppliedMigration).TableName(), token)
+                .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
                 .ConfigureAwait(false);
 
             return isSecondaryMigration

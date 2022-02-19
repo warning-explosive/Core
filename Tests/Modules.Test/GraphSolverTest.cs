@@ -230,7 +230,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Try(action)
                 .Catch<AmbiguousMatchException>(ex =>
                 {
-                    var exceptionMessagePathsList = ex.Message.Split('\n')?.ToArray() ?? Array.Empty<string>();
+                    var exceptionMessagePathsList = ex.Message.Split(Environment.NewLine);
 
                     foreach (var msg in exceptionMessagePathsList)
                     {

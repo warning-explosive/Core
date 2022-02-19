@@ -13,7 +13,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Expressions;
     using Model;
     using Orm.Linq;
-    using Views;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using ConstantExpression = System.Linq.Expressions.ConstantExpression;
@@ -38,6 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo Any = LinqMethods.QueryableAny();
         private static readonly MethodInfo All = LinqMethods.QueryableAll();
         private static readonly MethodInfo Count = LinqMethods.QueryableCount();
+        private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
 
         public TranslationExpressionVisitor(
             IModelProvider modelProvider,
@@ -62,10 +62,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
 
             var isQueryRoot = itemType.IsClass
-                && ((itemType.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                     && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IDatabaseEntity<>))))
-                    || (itemType.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
-                        && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(ISqlView<>)))));
+              && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+              && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IUniqueIdentified<>)));
 
             if (isQueryRoot)
             {
@@ -247,6 +245,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
+            if (method == Contains)
+            {
+                Context.WithinScope(new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Contains),
+                    () =>
+                    {
+                        Visit(node.Arguments[1]);
+
+                        var subQueryExpression = ((IQueryable)((ConstantExpression)node.Arguments[0]).Value).Expression;
+
+                        Context.Apply(_translator.Translate(subQueryExpression));
+                    });
+
+                return node;
+            }
+
             if (TryGetMemberInfoExpression(node.Method, out var recognized))
             {
                 Context.WithinScope(recognized, () => base.VisitMethodCall(node));
@@ -401,7 +414,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             var relations = TranslationContext.ExtractRelations(
                 node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>)),
-                node.Arguments[1]);
+                node.Arguments[1],
+                _modelProvider);
 
             if (relations.Any())
             {
@@ -459,7 +473,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             relation.Target.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey)),
                             typeof(Guid),
                             new SimpleBindingExpression(
-                                relation.Property,
+                                relation.Property.Reflected,
                                 relation.Target,
                                 context.GetParameterExpression(relation.Source)))));
                 }

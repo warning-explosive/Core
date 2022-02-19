@@ -15,31 +15,23 @@
                              ISafelyEquatable<IndexInfo>
     {
         /// <summary> .cctor </summary>
-        /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="columns">Columns</param>
         /// <param name="unique">Unique</param>
         public IndexInfo(
-            string schema,
-            Type table,
+            ITableInfo table,
             IReadOnlyCollection<ColumnInfo> columns,
             bool unique)
         {
-            Schema = schema;
             Table = table;
             Columns = columns;
             Unique = unique;
         }
 
         /// <summary>
-        /// Schema
-        /// </summary>
-        public string Schema { get; }
-
-        /// <summary>
         /// Table
         /// </summary>
-        public Type Table { get; }
+        public ITableInfo Table { get; }
 
         /// <summary>
         /// Columns
@@ -84,9 +76,9 @@
         [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return new object[] { Table, Unique }
-                .Concat(Columns.OrderBy(column => column.Name))
-                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+            return Columns
+                .OrderBy(column => column.Name)
+                .Aggregate(HashCode.Combine(Table, Unique), HashCode.Combine);
         }
 
         /// <inheritdoc />
@@ -104,8 +96,7 @@
         /// <inheritdoc />
         public bool SafeEquals(IndexInfo other)
         {
-            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && Table == other.Table
+            return Table == other.Table
                    && Unique == other.Unique
                    && Columns.OrderBy(column => column.Name).SequenceEqual(other.Columns.OrderBy(column => column.Name));
         }
@@ -115,7 +106,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table.TableName()}.{Name} ({Unique})";
+            return $"{Table.Schema}.{Table.Name}.{Name} ({Unique})";
         }
     }
 }

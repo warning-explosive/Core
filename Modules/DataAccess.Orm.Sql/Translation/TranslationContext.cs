@@ -252,14 +252,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal static IReadOnlyCollection<Relation> ExtractRelations(Type type, Expression node)
+        internal static IReadOnlyCollection<Relation> ExtractRelations(
+            Type type,
+            Expression node,
+            IModelProvider modelProvider)
         {
             return type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                ? new ExtractRelationsExpressionVisitor().Extract(node)
+                ? new ExtractRelationsExpressionVisitor(modelProvider).Extract(node)
                 : Array.Empty<Relation>();
         }
 
-        internal static LambdaExpression ExtractLambdaExpression(MethodCallExpression node, Expression selector)
+        internal static LambdaExpression ExtractLambdaExpression(
+            MethodCallExpression node,
+            Expression selector)
         {
             return new ExtractLambdaExpressionVisitor()
                 .Extract(selector)

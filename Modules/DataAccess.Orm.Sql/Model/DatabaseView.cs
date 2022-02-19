@@ -15,12 +15,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             Query = query;
         }
 
-        public Guid PrimaryKey { get; private set; }
+        public Guid PrimaryKey { get; private init; }
 
-        public string Schema { get; private set; }
+        public string Schema { get; private init; }
 
-        public string View { get; private set; }
+        public string View { get; private init; }
 
-        public string Query { get; private set; }
+        public string Query { get; private init; }
     }
 }

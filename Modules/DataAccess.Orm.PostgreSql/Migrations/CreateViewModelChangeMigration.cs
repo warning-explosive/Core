@@ -24,7 +24,7 @@
 
         public Task<string> Migrate(CreateView change, CancellationToken token)
         {
-            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.View, out var info)
                 || info is not ViewInfo view)
             {

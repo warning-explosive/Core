@@ -39,14 +39,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         public Task<DatabaseNode?> BuildModel(Type[] databaseEntities, CancellationToken token)
         {
             var schemas = _modelProvider
-                .ObjectsFor(databaseEntities)
-                .Select(grp => BuildSchemaNode(grp.Key, grp.Value.Values.ToList()))
+                .TablesFor(databaseEntities)
+                .GroupBy(info => info.Schema)
+                .Select(schema => BuildSchemaNode(schema.Key, schema.ToList()))
                 .ToArray();
 
             return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas));
         }
 
-        private SchemaNode BuildSchemaNode(string schema, IReadOnlyCollection<IObjectModelInfo> objects)
+        private SchemaNode BuildSchemaNode(string schema, IReadOnlyCollection<ITableInfo> objects)
         {
             var tables = new List<TableNode>();
             var views = new List<ViewNode>();
@@ -76,19 +77,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => BuildColumnNode(column.Value))
                 .ToList();
 
-            return new TableNode(tableInfo.Schema, tableInfo.Type.TableName(), columns);
+            return new TableNode(tableInfo.Schema, tableInfo.Name, columns);
         }
 
         private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
             var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo.Type);
 
-            return new ColumnNode(columnInfo.Schema, columnInfo.Table.TableName(), columnInfo.Name, dataType, columnInfo.Constraints);
+            return new ColumnNode(columnInfo.Table.Schema, columnInfo.Table.Name, columnInfo.Name, dataType, columnInfo.Constraints);
         }
 
         private static ViewNode BuildViewNode(ViewInfo viewInfo)
         {
-            return new ViewNode(viewInfo.Schema, viewInfo.Type.TableName(), viewInfo.Query);
+            return new ViewNode(viewInfo.Schema, viewInfo.Name, viewInfo.Query);
         }
 
         private static IndexNode BuildIndexNode(IndexInfo indexInfo)
@@ -98,7 +99,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 .Select(column => column.Name)
                 .ToList();
 
-            return new IndexNode(indexInfo.Schema, indexInfo.Table.TableName(), columns, indexInfo.Unique);
+            return new IndexNode(indexInfo.Table.Schema, indexInfo.Table.Name, columns, indexInfo.Unique);
         }
     }
 }

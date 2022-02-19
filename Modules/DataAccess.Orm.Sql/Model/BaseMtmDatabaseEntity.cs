@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
+    using System;
     using Api.Model;
 
     /// <summary>
@@ -8,7 +9,7 @@
     /// <typeparam name="TLeftKey">TLeftKey type-argument</typeparam>
     /// <typeparam name="TRightKey">TRightKey type-argument</typeparam>
     [Index(nameof(Left), nameof(Right), Unique = true)]
-    public abstract class BaseMtmDatabaseEntity<TLeftKey, TRightKey>
+    public abstract class BaseMtmDatabaseEntity<TLeftKey, TRightKey> : IUniqueIdentified<object>
         where TLeftKey : notnull
         where TRightKey : notnull
     {
@@ -26,6 +27,9 @@
             Left = left;
             Right = right;
         }
+
+        /// <inheritdoc />
+        public object PrimaryKey => throw new InvalidOperationException("Mtm tables couldn't have primary keys");
 
         /// <summary>
         /// Left

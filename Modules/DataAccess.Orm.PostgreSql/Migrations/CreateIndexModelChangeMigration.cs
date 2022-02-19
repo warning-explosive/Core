@@ -25,7 +25,7 @@
 
         public Task<string> Migrate(CreateIndex change, CancellationToken token)
         {
-            if (!_modelProvider.Objects.TryGetValue(change.Schema, out var schema)
+            if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
                 || !info.Indexes.TryGetValue(change.Index, out var index))
             {

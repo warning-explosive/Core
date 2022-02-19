@@ -27,22 +27,22 @@
             ForeignColumn = foreignColumn;
         }
 
-        public Guid PrimaryKey { get; }
+        public Guid PrimaryKey { get; private init; }
 
-        public string Schema { get; }
+        public string Schema { get; private init; }
 
-        public string Table { get; }
+        public string Table { get; private init; }
 
-        public string Column { get; }
+        public string Column { get; private init; }
 
-        public EnColumnConstraintType ConstraintType { get; }
+        public EnColumnConstraintType ConstraintType { get; private init; }
 
-        public string ConstraintName { get; }
+        public string ConstraintName { get; private init; }
 
-        public string ForeignSchema { get; }
+        public string ForeignSchema { get; private init; }
 
-        public string ForeignTable { get; }
+        public string ForeignTable { get; private init; }
 
-        public string ForeignColumn { get; }
+        public string ForeignColumn { get; private init; }
     }
 }

@@ -13,8 +13,8 @@
             Name = name;
         }
 
-        public Guid PrimaryKey { get; }
+        public Guid PrimaryKey { get; private init; }
 
-        public string Name { get; }
+        public string Name { get; private init; }
     }
 }

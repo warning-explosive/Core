@@ -2,7 +2,6 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using System.Reflection;
     using Basics;
 
     /// <summary>
@@ -12,18 +11,24 @@
     public class Relation : IEquatable<Relation>,
                             ISafelyEquatable<Relation>
     {
+        private readonly IModelProvider _modelProvider;
+
         /// <summary> .cctor </summary>
         /// <param name="source">Source type</param>
         /// <param name="target">Target type</param>
         /// <param name="property">Property</param>
+        /// <param name="modelProvider">IModelProvider</param>
         public Relation(
             Type source,
             Type target,
-            PropertyInfo property)
+            ColumnProperty property,
+            IModelProvider modelProvider)
         {
             Source = source;
             Target = target;
             Property = property;
+
+            _modelProvider = modelProvider;
         }
 
         /// <summary>
@@ -39,7 +44,7 @@
         /// <summary>
         /// Property
         /// </summary>
-        public PropertyInfo Property { get; }
+        public ColumnProperty Property { get; }
 
         #region IEquatable
 
@@ -96,7 +101,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Source.TableName()} -> {Target.FullName} ({Property.Name})";
+            return $"{_modelProvider.TableName(Source)} -> {_modelProvider.TableName(Target)} ({Property.Name})";
         }
     }
 }

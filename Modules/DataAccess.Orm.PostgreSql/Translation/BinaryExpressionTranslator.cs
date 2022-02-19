@@ -52,29 +52,46 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
         public string Translate(BinaryExpression expression, int depth)
         {
+            var sb = new StringBuilder();
+
             if (FunctionalOperators.ContainsKey(expression.Operator))
             {
-                var sb = new StringBuilder();
-
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
                 sb.Append(expression.Left.Translate(_dependencyContainer, depth));
                 sb.Append(", ");
                 sb.Append(expression.Right.Translate(_dependencyContainer, depth));
                 sb.Append(')');
+            }
+            else
+            {
+                var map = (IsNullConstant(expression.Left) || IsNullConstant(expression.Right))
+                          && AltOperators.ContainsKey(expression.Operator)
+                    ? AltOperators
+                    : Operators;
 
-                return sb.ToString();
+                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
+                sb.Append(" ");
+                sb.Append(map[expression.Operator]);
+
+                if (expression.Operator == BinaryOperator.Contains)
+                {
+                    sb.Append('(');
+                }
+                else
+                {
+                    sb.Append(" ");
+                }
+
+                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
+
+                if (expression.Operator == BinaryOperator.Contains)
+                {
+                    sb.Append(')');
+                }
             }
 
-            var map = (IsNullConstant(expression.Left) || IsNullConstant(expression.Right))
-                      && AltOperators.ContainsKey(expression.Operator)
-                ? AltOperators
-                : Operators;
-
-            return string.Join(" ",
-                expression.Left.Translate(_dependencyContainer, depth),
-                map[expression.Operator],
-                expression.Right.Translate(_dependencyContainer, depth));
+            return sb.ToString();
         }
 
         private static bool IsNullConstant(IIntermediateExpression expression)

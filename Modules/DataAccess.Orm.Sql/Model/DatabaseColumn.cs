@@ -33,26 +33,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             Length = length;
         }
 
-        public Guid PrimaryKey { get; private set; }
+        public Guid PrimaryKey { get; private init; }
 
-        public string Schema { get; private set; }
+        public string Schema { get; private init; }
 
-        public string Table { get; private set; }
+        public string Table { get; private init; }
 
-        public string Column { get; private set; }
+        public string Column { get; private init; }
 
-        public int Position { get; private set; }
+        public int Position { get; private init; }
 
-        public string DataType { get; private set; }
+        public string DataType { get; private init; }
 
-        public bool Nullable { get; private set; }
+        public bool Nullable { get; private init; }
 
-        public string? DefaultValue { get; private set; }
+        public string? DefaultValue { get; private init; }
 
-        public int? Scale { get; private set; }
+        public int? Scale { get; private init; }
 
-        public int? Precision { get; private set; }
+        public int? Precision { get; private init; }
 
-        public int? Length { get; private set; }
+        public int? Length { get; private init; }
     }
 }

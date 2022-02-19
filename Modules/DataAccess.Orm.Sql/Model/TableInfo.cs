@@ -11,32 +11,32 @@
     /// TableInfo
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class TableInfo : IObjectModelInfo,
+    public class TableInfo : ITableInfo,
                              IEquatable<TableInfo>,
                              ISafelyEquatable<TableInfo>
     {
+        private readonly IModelProvider _modelProvider;
+
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
+        private IReadOnlyDictionary<string, ColumnInfo>? _columns;
 
         /// <summary> .cctor </summary>
-        /// <param name="schema">Schema</param>
         /// <param name="type">Type</param>
-        /// <param name="columns">Columns</param>
+        /// <param name="modelProvider">IModelProvider</param>
         public TableInfo(
-            string schema,
             Type type,
-            IReadOnlyCollection<ColumnInfo> columns)
+            IModelProvider modelProvider)
         {
-            Schema = schema;
             Type = type;
-            Columns = columns
-                .OrderBy(column => column.Name)
-                .ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
+
+            _modelProvider = modelProvider;
         }
 
-        /// <summary>
-        /// Schema
-        /// </summary>
-        public string Schema { get; }
+        /// <inheritdoc />
+        public string Schema => _modelProvider.SchemaName(Type);
+
+        /// <inheritdoc />
+        public string Name => _modelProvider.TableName(Type);
 
         /// <summary>
         /// Type
@@ -46,7 +46,22 @@
         /// <summary>
         /// Columns
         /// </summary>
-        public IReadOnlyDictionary<string, ColumnInfo> Columns { get; }
+        public IReadOnlyDictionary<string, ColumnInfo> Columns
+        {
+            get
+            {
+                _columns ??= InitColumns();
+
+                return _columns;
+
+                IReadOnlyDictionary<string, ColumnInfo> InitColumns()
+                {
+                    return _modelProvider.Columns(this)
+                        .OrderBy(column => column.Name)
+                        .ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
+                }
+            }
+        }
 
         /// <summary>
         /// Indexes
@@ -63,7 +78,7 @@
                 {
                     return Type
                         .GetAttributes<IndexAttribute>()
-                        .Select(index => new IndexInfo(Schema, Type, GetColumns(index).ToList(), index.Unique))
+                        .Select(index => new IndexInfo(this, GetColumns(index).ToList(), index.Unique))
                         .ToDictionary(index => index.Name);
 
                     IEnumerable<ColumnInfo> GetColumns(IndexAttribute index)
@@ -72,7 +87,7 @@
                         {
                             if (!Columns.TryGetValue(column, out var info))
                             {
-                                throw new InvalidOperationException($"Table {Schema}.{Type.TableName()} doesn't have column {column} for index");
+                                throw new InvalidOperationException($"Table {Schema}.{Name} doesn't have column {column} for index");
                             }
 
                             yield return info;
@@ -110,9 +125,7 @@
         [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return new object[] { Type }
-                .Concat(Columns.Values.OrderBy(column => column.Name))
-                .Aggregate(Schema.GetHashCode(StringComparison.OrdinalIgnoreCase), HashCode.Combine);
+            return Type.GetHashCode();
         }
 
         /// <inheritdoc />
@@ -130,9 +143,7 @@
         /// <inheritdoc />
         public bool SafeEquals(TableInfo other)
         {
-            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && Type == other.Type
-                   && Columns.Values.OrderBy(column => column.Name).SequenceEqual(other.Columns.Values.OrderBy(column => column.Name));
+            return Type == other.Type;
         }
 
         #endregion
@@ -140,7 +151,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Type.TableName()}";
+            return $"{Schema}.{Name}";
         }
     }
 }

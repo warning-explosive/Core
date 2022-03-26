@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var replacements = ((SyntaxNodeOrToken)syntaxTree.GetRoot())
                 .Flatten(node => node.ChildNodesAndTokens())
                 .SelectMany(node => node.GetLeadingTrivia().Concat(node.GetTrailingTrivia()))
-                .Where(trivia => trivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
+                .Where(trivia => trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
                 .Select(trivia =>
                 {
                     if (TryGetAlias(trivia.ToFullString(), out var content))

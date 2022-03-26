@@ -1,0 +1,27 @@
+ARG DOT_NET_VERSION=6.0
+
+FROM mcr.microsoft.com/dotnet/sdk:${DOT_NET_VERSION} AS builder
+
+ARG CONFIGURATION="Debug"
+ARG PLATFORM="Any CPU"
+
+ENV ENV_CONFIGURATION=${CONFIGURATION}
+ENV ENV_PLATFORM=${PLATFORM}
+
+WORKDIR /docker
+
+COPY ./Core.sln .
+COPY ./NuGet.config .
+COPY ./ruleset.ruleset .
+
+COPY ./Basics ./Basics
+# COPY ./Benchmarks ./Benchmarks
+COPY ./DependencyInjection ./DependencyInjection
+COPY ./Modules ./Modules
+COPY ./Roslyn ./Roslyn
+COPY ./Tests ./Tests
+
+RUN dotnet restore
+RUN dotnet build -c ${ENV_CONFIGURATION} --no-restore /p:Platform="${ENV_PLATFORM}"
+
+ENTRYPOINT [ "dotnet", "test", "--no-restore", "--no-build" ]

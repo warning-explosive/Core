@@ -10,20 +10,20 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class MarkOutgoingMessageAsSent : IDomainEventHandler<OutboxMessageHaveBeenSent>
+    internal class MarkOutgoingMessagesAsSent : IDomainEventHandler<OutboxMessagesHaveBeenSent>
     {
         private readonly IDatabaseContext _databaseContext;
 
-        public MarkOutgoingMessageAsSent(IDatabaseContext databaseContext)
+        public MarkOutgoingMessagesAsSent(IDatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
         }
 
-        public async Task Handle(OutboxMessageHaveBeenSent domainEvent, CancellationToken token)
+        public async Task Handle(OutboxMessagesHaveBeenSent domainEvent, CancellationToken token)
         {
             await _databaseContext
-                .Write<OutboxMessage, Guid>()
-                .Update(domainEvent.MessageId, message => message.Sent, true, token)
+                .BulkWrite<OutboxMessage, Guid>()
+                .Update(domainEvent.MessageIds, outbox => outbox.Sent, true, token)
                 .ConfigureAwait(false);
         }
     }

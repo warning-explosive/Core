@@ -9,13 +9,17 @@
     {
         public OutboxMessage(
             Guid primaryKey,
+            Guid outboxId,
             IntegrationMessage message,
             bool sent)
             : base(primaryKey)
         {
+            OutboxId = outboxId;
             Message = message;
             Sent = sent;
         }
+
+        public Guid OutboxId { get; private init; }
 
         public IntegrationMessage Message { get; private init; }
 

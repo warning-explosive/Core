@@ -143,11 +143,11 @@
                 else
                 {
                     _transaction?.Rollback();
-                    _transaction?.Dispose();
                 }
             }
             finally
             {
+                _transaction?.Dispose();
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 _changesTracker.Dispose();
                 _transactionalStore.Dispose();

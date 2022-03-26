@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             }
 
             return await _dependencyContainer
-                .InvokeWithinTransaction(BuildModel, token)
+                .InvokeWithinTransaction(false, BuildModel, token)
                 .ConfigureAwait(false);
         }
 

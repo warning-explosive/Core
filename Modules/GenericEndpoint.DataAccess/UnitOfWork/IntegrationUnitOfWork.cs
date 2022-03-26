@@ -1,16 +1,15 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Enumerations;
     using Basics.Primitives;
-    using CompositionRoot.Api.Abstractions.Container;
     using Contract;
     using Core.DataAccess.Api.Transaction;
-    using Core.DataAccess.Orm.Extensions;
     using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.UnitOfWork;
@@ -22,21 +21,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
                                            IIntegrationUnitOfWork
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;
         private readonly IDatabaseTransaction _transaction;
         private readonly IAggregateFactory<Inbox, InboxAggregateSpecification> _inboxAggregateFactory;
 
         public IntegrationUnitOfWork(
-            IDependencyContainer dependencyContainer,
             EndpointIdentity endpointIdentity,
             IIntegrationTransport transport,
             IDatabaseTransaction transaction,
             IAggregateFactory<Inbox, InboxAggregateSpecification> inboxAggregateFactory,
             IOutboxStorage outboxStorage)
         {
-            _dependencyContainer = dependencyContainer;
             _endpointIdentity = endpointIdentity;
             _transport = transport;
             _transaction = transaction;
@@ -65,7 +61,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         protected override async Task Commit(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            var inbox = Inbox.EnsureNotNull("You should start the unit of work before commit it");
+            var inbox = Inbox.EnsureNotNull("You should start the unit of work before committing it");
 
             if (inbox.Handled || inbox.IsError)
             {
@@ -92,35 +88,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .Track(outbox, token)
                 .ConfigureAwait(false);
 
-            await Commit(token).ConfigureAwait(false);
+            await _transaction.Close(true, token).ConfigureAwait(false);
 
-            await DeliverOutgoingMessages(outbox, token).ConfigureAwait(false);
+            if (outbox.OutgoingMessages.Any())
+            {
+                await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
+                {
+                    await outbox
+                        .DeliverMessages(_transport, token)
+                        .ConfigureAwait(false);
+                }
+            }
         }
 
         protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
         {
             await _transaction.Close(false, token).ConfigureAwait(false);
-        }
-
-        private Task Commit(CancellationToken token)
-        {
-            return _transaction.Close(true, token);
-        }
-
-        private Task DeliverOutgoingMessages(
-            Outbox outbox,
-            CancellationToken token)
-        {
-            return _dependencyContainer.InvokeWithinTransaction((outbox, _transport), DeliverMessages, token);
-
-            static Task DeliverMessages(
-                IDatabaseTransaction transaction,
-                (Outbox outbox, IIntegrationTransport transport) state,
-                CancellationToken token)
-            {
-                var (outbox, transport) = state;
-                return Outbox.DeliverMessages(outbox.OutgoingMessages, transport, transaction, token);
-            }
         }
     }
 }

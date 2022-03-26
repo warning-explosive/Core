@@ -50,10 +50,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
         /// <returns>Ongoing operation</returns>
         public Task ExecuteManualMigration(CancellationToken token)
         {
-            return _dependencyContainer.InvokeWithinTransaction(Producer, token);
+            return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }
 
-        private async Task Producer(IDatabaseTransaction transaction, CancellationToken token)
+        private async Task ExecuteManualMigration(IDatabaseTransaction transaction, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)

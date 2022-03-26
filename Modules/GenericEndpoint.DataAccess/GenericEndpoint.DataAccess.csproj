@@ -55,7 +55,7 @@
       <Compile Update="Deduplication\InboxMessageWasMovedToErrorQueue.cs">
         <DependentUpon>Inbox.cs</DependentUpon>
       </Compile>
-      <Compile Update="Deduplication\OutboxMessageHaveBeenSent.cs">
+      <Compile Update="Deduplication\OutboxMessagesHaveBeenSent.cs">
         <DependentUpon>Outbox.cs</DependentUpon>
       </Compile>
       <Compile Update="Deduplication\InboxAggregateSpecification.cs">
@@ -67,11 +67,8 @@
       <Compile Update="Deduplication\OutboxMessagesAreReadyToBeSent.cs">
         <DependentUpon>Outbox.cs</DependentUpon>
       </Compile>
-      <Compile Update="Deduplication\InsertOutgoingMessages.cs">
-        <DependentUpon>OutboxMessagesAreReadyToBeSent.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\MarkOutgoingMessageAsSent.cs">
-        <DependentUpon>OutboxMessageHaveBeenSent.cs</DependentUpon>
+      <Compile Update="Deduplication\MarkOutgoingMessagesAsSent.cs">
+        <DependentUpon>OutboxMessagesHaveBeenSent.cs</DependentUpon>
       </Compile>
       <Compile Update="Deduplication\InsertInboxMessage.cs">
         <DependentUpon>InboxMessageReceived.cs</DependentUpon>
@@ -81,6 +78,15 @@
       </Compile>
       <Compile Update="Deduplication\MarkInboxMessageAsHandled.cs">
         <DependentUpon>InboxMessageWasHandled.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\OutboxAggregateFactory.cs">
+        <DependentUpon>Outbox.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\OutboxAggregateSpecification.cs">
+        <DependentUpon>OutboxAggregateFactory.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\InsertOutgoingMessages.cs">
+        <DependentUpon>OutboxMessagesAreReadyToBeSent.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

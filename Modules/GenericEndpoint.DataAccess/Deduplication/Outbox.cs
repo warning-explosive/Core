@@ -1,58 +1,54 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Core.DataAccess.Api.Transaction;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
 
-    /// <summary>
-    /// Outbox
-    /// </summary>
-    public class Outbox : BaseAggregate
+    internal class Outbox : BaseAggregate
     {
-        /// <summary> .cctor </summary>
-        /// <param name="outgoingMessages">Subsequent integration messages</param>
         public Outbox(IReadOnlyCollection<IntegrationMessage> outgoingMessages)
-            : this(outgoingMessages, new OutboxMessagesAreReadyToBeSent(outgoingMessages))
-        {
-        }
-
-        private Outbox(IReadOnlyCollection<IntegrationMessage> outgoingMessages, IDomainEvent domainEvent)
         {
             OutgoingMessages = outgoingMessages;
-            PopulateEvent(domainEvent);
+
+            PopulateEvent(new OutboxMessagesAreReadyToBeSent(Id, outgoingMessages));
         }
 
-        /// <summary>
-        /// Subsequent integration messages
-        /// </summary>
+        public Outbox(
+            Guid primaryKey,
+            IReadOnlyCollection<DatabaseModel.IntegrationMessage> outgoingMessages,
+            IJsonSerializer serializer,
+            IStringFormatter formatter)
+        {
+            Id = primaryKey;
+
+            OutgoingMessages = outgoingMessages
+                .Select(message => message.BuildIntegrationMessage(serializer, formatter))
+                .ToList();
+        }
+
         public IReadOnlyCollection<IntegrationMessage> OutgoingMessages { get; }
 
-        /// <summary>
-        /// Delivers outgoing messages Messages
-        /// </summary>
-        /// <param name="outgoingMessages">Outgoing integration messages</param>
-        /// <param name="transport">IIntegrationTransport</param>
-        /// <param name="transaction">IDatabaseTransaction</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        public static async Task DeliverMessages(
-            IEnumerable<IntegrationMessage> outgoingMessages,
+        public async Task DeliverMessages(
             IIntegrationTransport transport,
-            IDatabaseTransaction transaction,
             CancellationToken token)
         {
-            foreach (var message in outgoingMessages)
+            if (!OutgoingMessages.Any())
+            {
+                return;
+            }
+
+            foreach (var message in OutgoingMessages)
             {
                 await transport.Enqueue(message, token).ConfigureAwait(false);
-
-                var outbox = new Outbox(new[] { message }, new OutboxMessageHaveBeenSent(message.Id));
-
-                await transaction.Track(outbox, token).ConfigureAwait(false);
             }
+
+            PopulateEvent(new OutboxMessagesHaveBeenSent(OutgoingMessages.Select(message => message.Id).ToArray()));
         }
     }
 }

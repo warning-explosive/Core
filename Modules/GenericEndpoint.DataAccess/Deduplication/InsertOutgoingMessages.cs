@@ -28,7 +28,7 @@
             var messages = domainEvent
                 .OutgoingMessages
                 .Select(message => IntegrationMessage.Build(message, _serializer))
-                .Select(message => new OutboxMessage(message.PrimaryKey, message, false))
+                .Select(message => new OutboxMessage(message.PrimaryKey, domainEvent.OutboxId, message, false))
                 .ToArray();
 
             await _databaseContext

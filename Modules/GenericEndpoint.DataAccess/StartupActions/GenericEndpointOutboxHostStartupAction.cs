@@ -34,7 +34,7 @@
 
         private Func<IntegrationMessage, CancellationToken, Task> ErrorMessageHandler(EndpointIdentity endpointIdentity)
         {
-            return (message, token) => _dependencyContainer.InvokeWithinTransaction((endpointIdentity, message), HandleErrorMessage, token);
+            return (message, token) => _dependencyContainer.InvokeWithinTransaction(true, (endpointIdentity, message), HandleErrorMessage, token);
         }
 
         private async Task HandleErrorMessage(

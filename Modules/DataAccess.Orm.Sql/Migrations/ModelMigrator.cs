@@ -47,7 +47,7 @@
         public async Task ExecuteManualMigrations(CancellationToken token)
         {
             var appliedMigrations = await _dependencyContainer
-                .InvokeWithinTransaction(ReadAppliedMigrations, token)
+                .InvokeWithinTransaction(false, ReadAppliedMigrations, token)
                 .ConfigureAwait(false);
 
             await _manualMigrations
@@ -63,7 +63,7 @@
                 .ConfigureAwait(false);
 
             await _dependencyContainer
-                .InvokeWithinTransaction(commandText, ExecuteAutoMigrations, token)
+                .InvokeWithinTransaction(true, commandText, ExecuteAutoMigrations, token)
                 .ConfigureAwait(false);
         }
 

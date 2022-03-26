@@ -9,12 +9,11 @@
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
-    using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using Deduplication;
+    using GenericDomain.Api.Abstractions;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
-    using IntegrationMessage = Messaging.IntegrationMessage;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -45,40 +44,41 @@
 
         private async Task DeliverMessagesUnsafe(CancellationToken token)
         {
-            var unsent = await _dependencyContainer
-                .InvokeWithinTransaction(GetUnsentMessages, token)
-                .ConfigureAwait(false);
-
             await _dependencyContainer
-                .InvokeWithinTransaction(unsent, DeliverMessages, token)
+                .InvokeWithinTransaction(true, DeliverMessages, token)
                 .ConfigureAwait(false);
-        }
-
-        private async Task<IntegrationMessage[]> GetUnsentMessages(IDatabaseTransaction transaction, CancellationToken token)
-        {
-            var serializer = _dependencyContainer.Resolve<IJsonSerializer>();
-            var formatter = _dependencyContainer.Resolve<IStringFormatter>();
-
-            return (await transaction
-                    .Read<OutboxMessage, Guid>()
-                    .All()
-                    .Where(outbox => !outbox.Sent)
-                    .ToListAsync(token)
-                    .ConfigureAwait(false))
-                .Select(outbox => outbox.Message.BuildIntegrationMessage(serializer, formatter))
-                .ToArray();
         }
 
         private async Task DeliverMessages(
             IDatabaseTransaction transaction,
-            IntegrationMessage[] unsent,
             CancellationToken token)
         {
+            var unsent = await transaction
+                .Read<OutboxMessage, Guid>()
+                .All()
+                .Where(outbox => !outbox.Sent)
+                .Select(outbox => outbox.OutboxId)
+                .Distinct()
+                .ToListAsync(token)
+                .ConfigureAwait(false);
+
             var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
 
-            await Outbox
-                .DeliverMessages(unsent, transport, transaction, token)
-                .ConfigureAwait(false);
+            foreach (var outboxId in unsent)
+            {
+                var outbox = await _dependencyContainer
+                    .Resolve<IAggregateFactory<Outbox, OutboxAggregateSpecification>>()
+                    .Build(new OutboxAggregateSpecification(outboxId), token)
+                    .ConfigureAwait(false);
+
+                await outbox
+                    .DeliverMessages(transport, token)
+                    .ConfigureAwait(false);
+
+                await transaction
+                    .Track(outbox, token)
+                    .ConfigureAwait(false);
+            }
         }
     }
 }

@@ -52,5 +52,11 @@
       <Compile Update="Domain\MessageCaptured.cs">
         <DependentUpon>CapturedMessage.cs</DependentUpon>
       </Compile>
+      <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
+        <DependentUpon>IntegrationMessage.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DatabaseModel\IntegrationMessage.cs">
+        <DependentUpon>CapturedMessage.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

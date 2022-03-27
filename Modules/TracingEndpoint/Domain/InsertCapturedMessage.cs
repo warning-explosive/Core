@@ -30,7 +30,7 @@
 
             await _databaseContext
                 .Write<DatabaseModel.CapturedMessage, Guid>()
-                .Insert(capturedMessage, token)
+                .Insert(capturedMessage, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
     }

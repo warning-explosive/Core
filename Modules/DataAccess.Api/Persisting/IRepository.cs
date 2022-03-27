@@ -20,9 +20,10 @@
         /// Inserts entity in the database
         /// </summary>
         /// <param name="entity">Entity</param>
+        /// <param name="insertBehavior">EnInsertBehavior</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Insert(TEntity entity, CancellationToken token);
+        Task Insert(TEntity entity, EnInsertBehavior insertBehavior, CancellationToken token);
 
         /// <summary>
         /// Updates entity in the database

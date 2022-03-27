@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Persisting;
     using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Container;
@@ -62,10 +63,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
             var manualMigration = Name;
             var commandText = CommandText;
 
-            _ = await transaction
+            try
+            {
+                _ = await transaction
                 .UnderlyingDbTransaction
                 .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(commandText, exception);
+            }
 
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
@@ -75,7 +83,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations
 
             await transaction
                 .Write<AppliedMigration, Guid>()
-                .Insert(appliedMigration, token)
+                .Insert(appliedMigration, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
     }

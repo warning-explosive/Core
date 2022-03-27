@@ -16,7 +16,10 @@
         {
             OutgoingMessages = outgoingMessages;
 
-            PopulateEvent(new OutboxMessagesAreReadyToBeSent(Id, outgoingMessages));
+            if (outgoingMessages.Any())
+            {
+                PopulateEvent(new OutboxMessagesAreReadyToBeSent(Id, outgoingMessages));
+            }
         }
 
         public Outbox(

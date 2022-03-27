@@ -23,9 +23,10 @@
 
         public Task Insert(
             TEntity entity,
+            EnInsertBehavior insertBehavior,
             CancellationToken token)
         {
-            return _bulkRepository.Insert(new[] { entity }, token);
+            return _bulkRepository.Insert(new[] { entity }, insertBehavior, token);
         }
 
         public Task Update<TValue>(

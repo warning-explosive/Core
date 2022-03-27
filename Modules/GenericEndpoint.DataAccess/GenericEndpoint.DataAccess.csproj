@@ -88,5 +88,11 @@
       <Compile Update="Deduplication\InsertOutgoingMessages.cs">
         <DependentUpon>OutboxMessagesAreReadyToBeSent.cs</DependentUpon>
       </Compile>
+      <Compile Update="DatabaseModel\EndpointIdentity.cs">
+        <DependentUpon>InboxMessage.cs</DependentUpon>
+      </Compile>
+      <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
+        <DependentUpon>IntegrationMessage.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

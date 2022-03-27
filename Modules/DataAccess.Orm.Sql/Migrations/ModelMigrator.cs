@@ -7,6 +7,7 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Persisting;
     using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
@@ -108,10 +109,17 @@
                 .Get(token)
                 .ConfigureAwait(false);
 
-            _ = await transaction
-                .UnderlyingDbTransaction
-                .InvokeScalar(commandText, settings, token)
-                .ConfigureAwait(false);
+            try
+            {
+                _ = await transaction
+                    .UnderlyingDbTransaction
+                    .InvokeScalar(commandText, settings, token)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(commandText, exception);
+            }
 
             var indexes = (await transaction
                     .Read<AppliedMigration, Guid>()
@@ -135,7 +143,7 @@
 
             await transaction
                 .Write<AppliedMigration, Guid>()
-                .Insert(appliedMigration, token)
+                .Insert(appliedMigration, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
 

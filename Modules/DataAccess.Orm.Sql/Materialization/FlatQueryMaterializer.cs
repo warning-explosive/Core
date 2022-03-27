@@ -83,10 +83,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var commandText = InlineQueryParameters(_dependencyContainer, query);
 
-            return await _transaction
-                .UnderlyingDbTransaction
-                .Invoke(commandText, settings, token)
-                .ConfigureAwait(false);
+            try
+            {
+                return await _transaction
+                    .UnderlyingDbTransaction
+                    .Invoke(commandText, settings, token)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(commandText, exception);
+            }
 
             static string InlineQueryParameters(
                 IDependencyContainer dependencyContainer,

@@ -33,7 +33,7 @@
 
             await _databaseContext
                 .BulkWrite<OutboxMessage, Guid>()
-                .Insert(messages, token)
+                .Insert(messages, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
     }

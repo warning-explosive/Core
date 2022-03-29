@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
     using Basics;
@@ -29,7 +30,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             Member = member;
             Type = type;
-            Name = member.Name;
             Source = source;
         }
 
@@ -47,7 +47,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Type Type { get; }
 
         /// <inheritdoc />
-        public string Name { get; }
+        public string Name
+        {
+            get
+            {
+                return Flatten()
+                   .Reverse()
+                   .Select(expression => expression.Member.Name)
+                   .ToString("_");
+            }
+        }
 
         /// <inheritdoc />
         public IIntermediateExpression Source { get; private set; }
@@ -119,7 +128,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Gets flat collection of underneath expressions
         /// </summary>
         /// <returns>Flat collection</returns>
-        public IEnumerable<IIntermediateExpression> Flatten()
+        public IEnumerable<IIntermediateExpression> FlattenCompletely()
         {
             IIntermediateExpression? current = this;
 
@@ -127,9 +136,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             {
                 yield return current;
 
-                current = current is SimpleBindingExpression simpleBindingExpression
-                    ? simpleBindingExpression.Source
+                current = current is IBindingIntermediateExpression bindingIntermediateExpression
+                    ? bindingIntermediateExpression.Source
                     : null;
+            }
+        }
+
+        /// <summary>
+        /// Gets flat collection of underneath simple binding expressions
+        /// </summary>
+        /// <returns>Flat collection</returns>
+        public IEnumerable<SimpleBindingExpression> Flatten()
+        {
+            var current = this;
+
+            while (current != null)
+            {
+                yield return current;
+                current = current.Source as SimpleBindingExpression;
             }
         }
 

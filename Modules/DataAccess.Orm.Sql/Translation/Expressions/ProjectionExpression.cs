@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                         IApplicable<SimpleBindingExpression>,
                                         IApplicable<NamedBindingExpression>,
                                         IApplicable<BinaryExpression>,
+                                        IApplicable<UnaryExpression>,
                                         IApplicable<ConditionalExpression>,
                                         IApplicable<MethodCallExpression>
     {
@@ -168,6 +169,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
+        public void Apply(TranslationContext context, UnaryExpression expression)
+        {
+            ApplyBinding(expression);
+        }
+
+        /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
         {
             ApplyBinding(expression);
@@ -202,6 +209,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             if (Source is JoinExpression join)
             {
                 expression = new ReplaceJoinBindingsVisitor(join, true).Visit(expression);
+            }
+
+            if (expression is ParameterExpression)
+            {
+                return;
+            }
+
+            if (expression is IBindingIntermediateExpression bindingIntermediateExpression)
+            {
+                var bindingsMap = _bindings
+                   .OfType<IBindingIntermediateExpression>()
+                   .ToDictionary(binding => binding.Name, StringComparer.OrdinalIgnoreCase);
+
+                if (bindingsMap.TryGetValue(bindingIntermediateExpression.Name, out var existedBinding)
+                 && existedBinding.Type == expression.Type)
+                {
+                    return;
+                }
             }
 
             _bindings.Add(expression);

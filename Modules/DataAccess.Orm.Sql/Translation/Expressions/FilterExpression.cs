@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                     IApplicable<QueryParameterExpression>,
                                     IApplicable<ParameterExpression>,
                                     IApplicable<BinaryExpression>,
+                                    IApplicable<UnaryExpression>,
                                     IApplicable<ConditionalExpression>,
                                     IApplicable<SimpleBindingExpression>
     {
@@ -128,6 +129,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            ApplyBinding(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, UnaryExpression expression)
         {
             ApplyBinding(expression);
         }

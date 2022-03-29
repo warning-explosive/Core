@@ -6,23 +6,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
     using AutoRegistration.Api.Enumerations;
     using Contract;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Api.Abstractions;
     using MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory
     {
-        private readonly IStringFormatter _formatter;
-
-        public IntegrationMessageFactory(IStringFormatter formatter)
-        {
-            _formatter = formatter;
-        }
-
         public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage
         {
-            var generalMessage = new IntegrationMessage(payload, typeof(TMessage), _formatter);
+            var generalMessage = new IntegrationMessage(payload, typeof(TMessage));
 
             if (endpointIdentity != null)
             {
@@ -33,7 +25,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
             {
                 var conversationId = initiatorMessage.ReadRequiredHeader<ConversationId>().Value;
                 generalMessage.WriteHeader(new ConversationId(conversationId));
-                generalMessage.WriteHeader(new InitiatorMessageId(initiatorMessage.Id));
+                generalMessage.WriteHeader(new InitiatorMessageId(initiatorMessage.ReadRequiredHeader<Id>().Value));
             }
             else
             {

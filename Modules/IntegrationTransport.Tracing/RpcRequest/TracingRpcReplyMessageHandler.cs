@@ -9,9 +9,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Tracing.RpcRequest
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using IntegrationTransport.RpcRequest;
+    using TracingEndpoint.Contract;
     using TracingEndpoint.Contract.Messages;
 
     [Component(EnLifestyle.Singleton)]
@@ -21,13 +23,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.Tracing.RpcRequest
         where TReply : IIntegrationReply
     {
         private readonly IIntegrationContext _context;
+        private readonly IJsonSerializer _jsonSerializer;
 
         public TracingRpcReplyMessageHandler(
             IRpcReplyMessageHandler<TReply> decoratee,
-            IIntegrationContext context)
+            IIntegrationContext context,
+            IJsonSerializer jsonSerializer)
         {
             Decoratee = decoratee;
+
             _context = context;
+            _jsonSerializer = jsonSerializer;
         }
 
         public IRpcReplyMessageHandler<TReply> Decoratee { get; }
@@ -48,7 +54,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Tracing.RpcRequest
 
         private Task OnSuccess(IntegrationMessage message, CancellationToken token)
         {
-            var command = new CaptureTrace(message, null);
+            var command = new CaptureTrace(SerializedIntegrationMessage.FromIntegrationMessage(message, _jsonSerializer), null);
             return _context.Send(command, token);
         }
 
@@ -56,7 +62,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Tracing.RpcRequest
         {
             return async (exception, token) =>
             {
-                var command = new CaptureTrace(message, exception);
+                var command = new CaptureTrace(SerializedIntegrationMessage.FromIntegrationMessage(message, _jsonSerializer), exception);
                 await _context.Send(command, token).ConfigureAwait(false);
 
                 throw exception.Rethrow();

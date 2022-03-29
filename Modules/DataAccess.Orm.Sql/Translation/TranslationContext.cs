@@ -162,12 +162,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void Push(IIntermediateExpression expression)
-        {
-            Stack.Push(expression);
-            Expression = expression;
-        }
-
         internal void WithinScope<T>(T expression, Action? action = null)
             where T : class, IIntermediateExpression
         {
@@ -231,6 +225,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (Stack.TryPeek(out var outer))
             {
                 Apply(outer, expression);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Could not apply {expression.GetType().Name}. There is no parent expression.");
             }
         }
 

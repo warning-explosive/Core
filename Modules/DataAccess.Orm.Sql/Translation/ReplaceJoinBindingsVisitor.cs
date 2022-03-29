@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Basics;
     using Expressions;
 
     internal class ReplaceJoinBindingsVisitor : IntermediateExpressionVisitorBase
@@ -30,7 +31,7 @@
         {
             var stack = new Stack<SimpleBindingExpression>();
 
-            foreach (var expression in simpleBindingExpression.Flatten())
+            foreach (var expression in simpleBindingExpression.FlattenCompletely())
             {
                 if (expression is not SimpleBindingExpression bindingExpression)
                 {
@@ -59,7 +60,7 @@
                     return replacement;
                 }
 
-                var name = string.Join("_", stack.Select(binding => binding.Name));
+                var name = stack.Select(binding => binding.Member.Name).ToString("_");
 
                 return new NamedBindingExpression(name, replacement);
             }

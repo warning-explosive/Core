@@ -11,22 +11,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
+    using EndpointIdentity = Contract.EndpointIdentity;
 
     [Component(EnLifestyle.Scoped)]
     internal class OutboxAggregateFactory : IAggregateFactory<Outbox, OutboxAggregateSpecification>
     {
+        private readonly EndpointIdentity _endpointIdentity;
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
-        private readonly IStringFormatter _formatter;
 
         public OutboxAggregateFactory(
+            EndpointIdentity endpointIdentity,
             IDatabaseContext databaseContext,
-            IJsonSerializer serializer,
-            IStringFormatter formatter)
+            IJsonSerializer serializer)
         {
+            _endpointIdentity = endpointIdentity;
             _databaseContext = databaseContext;
             _serializer = serializer;
-            _formatter = formatter;
         }
 
         public async Task<Outbox> Build(OutboxAggregateSpecification spec, CancellationToken token)
@@ -34,12 +35,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
             var unsentMessages = await _databaseContext
                 .Read<OutboxMessage, Guid>()
                 .All()
-                .Where(outbox => outbox.OutboxId == spec.OutboxId && !outbox.Sent)
+                .Where(outbox => outbox.OutboxId == spec.OutboxId
+                              && outbox.EndpointIdentity.LogicalName == _endpointIdentity.LogicalName
+                              && !outbox.Sent)
                 .Select(outbox => outbox.Message)
                 .ToListAsync(token)
                 .ConfigureAwait(false);
 
-            return new Outbox(spec.OutboxId, unsentMessages, _serializer, _formatter);
+            return new Outbox(spec.OutboxId, unsentMessages, _serializer);
         }
     }
 }

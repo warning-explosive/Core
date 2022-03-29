@@ -53,6 +53,11 @@
                 return node.CollapseConstantExpression();
             }
 
+            if (visitedNode is MemberExpression { Expression: null })
+            {
+                return node.CollapseConstantExpression();
+            }
+
             if (node.Expression is ConstantExpression)
             {
                 return node.CollapseConstantExpression();

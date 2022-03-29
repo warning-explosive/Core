@@ -76,6 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
                 if (expression.Operator == BinaryOperator.Contains)
                 {
+                    sb.Append(" ");
                     sb.Append('(');
                 }
                 else
@@ -83,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                     sb.Append(" ");
                 }
 
-                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
+                sb.Append(expression.Right.Translate(_dependencyContainer, depth + 1));
 
                 if (expression.Operator == BinaryOperator.Contains)
                 {

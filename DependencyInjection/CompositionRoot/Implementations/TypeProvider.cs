@@ -31,7 +31,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         private readonly HashSet<string> _ourTypesCache;
 
-        public TypeProvider(IReadOnlyCollection<Assembly> allAssemblies,
+        public TypeProvider(
+            IReadOnlyCollection<Assembly> allAssemblies,
             IReadOnlyCollection<Assembly> excludedAssemblies,
             IReadOnlyCollection<string> excludedNamespaces,
             IReadOnlyCollection<Type> additionalOurTypes)
@@ -39,32 +40,41 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             var rootAssemblies = RootAssemblies();
 
             AllLoadedAssemblies = allAssemblies
-                .Union(rootAssemblies)
-                .Distinct(new AssemblyByNameEqualityComparer())
-                .Where(a => !a.IsDynamic)
-                .ToList();
+               .Union(rootAssemblies)
+               .Union(additionalOurTypes.Select(type => type.Assembly))
+               .Where(assembly => !assembly.IsDynamic)
+               .Distinct(new AssemblyByNameEqualityComparer())
+               .ToList();
 
             AllLoadedTypes = AllLoadedAssemblies
-                .SelectMany(a => a.GetTypes())
-                .Union(additionalOurTypes)
-                .ToList();
+               .SelectMany(assembly => assembly.GetTypes())
+               .ToList();
 
             TypeCache = AllLoadedAssemblies
-                .ToDictionary(assembly => assembly.GetName().Name,
-                    assembly => (IReadOnlyDictionary<string, Type>)assembly.GetTypes().ToDictionary(type => type.FullName));
+               .ToDictionary(
+                    assembly => assembly.GetName().Name,
+                    assembly => (IReadOnlyDictionary<string, Type>)assembly
+                       .GetTypes()
+                       .ToDictionary(type => type.FullName));
 
             var isOurReference = AssembliesExtensions.IsOurReference(AllLoadedAssemblies, rootAssemblies);
 
-            OurAssemblies = AllLoadedAssemblies
-                .Where(a => !excludedAssemblies.Contains(a))
-                .Where(isOurReference)
-                .ToList();
+            var ourLoadedAssemblies = allAssemblies
+               .Union(rootAssemblies)
+               .Where(assembly => !assembly.IsDynamic)
+               .Distinct(new AssemblyByNameEqualityComparer())
+               .ToList();
+
+            OurAssemblies = ourLoadedAssemblies
+               .Where(assembly => !excludedAssemblies.Contains(assembly))
+               .Where(isOurReference)
+               .ToList();
 
             OurTypes = OurAssemblies
-                .SelectMany(ExtractOurTypes)
-                .Where(t => !excludedNamespaces.Contains(t.Namespace, StringComparer.OrdinalIgnoreCase))
-                .Union(additionalOurTypes)
-                .ToList();
+               .SelectMany(ExtractOurTypes)
+               .Where(type => !excludedNamespaces.Contains(type.Namespace, StringComparer.OrdinalIgnoreCase))
+               .Union(additionalOurTypes)
+               .ToList();
 
             _ourTypesCache = new HashSet<string>(OurTypes.Select(type => type.FullName));
         }
@@ -91,9 +101,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private static IEnumerable<Type> ExtractOurTypes(Assembly assembly)
         {
             return assembly
-                .GetTypes()
-                .Where(t => t.FullName != null
-                            && ExcludedTypes.All(mask => !t.FullName.Contains(mask, StringComparison.Ordinal)));
+               .GetTypes()
+               .Where(type => type.FullName != null
+                           && ExcludedTypes.All(mask => !type.FullName.Contains(mask, StringComparison.Ordinal)));
         }
 
         private static Assembly[] RootAssemblies()

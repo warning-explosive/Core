@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -20,13 +21,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
                                                           ICollectionResolvable<IConfigurationVerifier>
     {
+        private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
         private readonly IRegistrationsContainer _registrations;
 
         public GenericEndpointConfigurationVerifier(
+            IConstructorResolutionBehavior constructorResolutionBehavior,
             IIntegrationTypeProvider integrationTypeProvider,
             IRegistrationsContainer registrations)
         {
+            _constructorResolutionBehavior = constructorResolutionBehavior;
             _integrationTypeProvider = integrationTypeProvider;
             _registrations = registrations;
         }
@@ -36,6 +40,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         {
             VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyDeserializationRequirement(_integrationTypeProvider.IntegrationMessageTypes());
 
             VerifyMessageHandlersLifestyle();
 
@@ -81,6 +87,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
                     _ = messageType.GetRequiredAttribute<OwnedByAttribute>();
                 }
             }
+        }
+
+        private void VerifyConstructors(IEnumerable<Type> messageTypes)
+        {
+            messageTypes
+               .Where(messageType => messageType.IsConcreteType())
+               .Where(messageType => !_constructorResolutionBehavior.TryGetConstructor(messageType, out _))
+               .Each(messageType => throw new InvalidOperationException($"Message {messageType.FullName} should have one public constructor"));
+        }
+
+        private static void VerifyDeserializationRequirement(IEnumerable<Type> messageTypes)
+        {
+            messageTypes
+               .Where(messageType => messageType.IsConcreteType())
+               .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty))
+               .Where(property => !(property.HasInitializer() && property.SetMethod.IsPublic))
+               .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be deserializable"));
         }
 
         private void VerifyMessageHandlersLifestyle()

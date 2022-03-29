@@ -11,22 +11,20 @@
     using CrossCuttingConcerns.Api.Abstractions;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
+    using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Scoped)]
     internal class InboxAggregateFactory : IAggregateFactory<Inbox, InboxAggregateSpecification>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
-        private readonly IStringFormatter _formatter;
 
         public InboxAggregateFactory(
             IDatabaseContext databaseContext,
-            IJsonSerializer serializer,
-            IStringFormatter formatter)
+            IJsonSerializer serializer)
         {
             _databaseContext = databaseContext;
             _serializer = serializer;
-            _formatter = formatter;
         }
 
         public async Task<Inbox> Build(InboxAggregateSpecification spec, CancellationToken token)
@@ -34,7 +32,7 @@
             var inboxMessageDatabaseEntity = await _databaseContext
                 .Read<InboxMessage, Guid>()
                 .All()
-                .Where(message => message.Message.PrimaryKey == spec.Message.Id
+                .Where(message => message.Message.PrimaryKey == spec.Message.ReadRequiredHeader<Id>().Value
                                   && message.EndpointIdentity.LogicalName == spec.EndpointIdentity.LogicalName
                                   && message.EndpointIdentity.InstanceName == spec.EndpointIdentity.InstanceName)
                 .SingleOrDefaultAsync(token)
@@ -42,7 +40,7 @@
 
             return inboxMessageDatabaseEntity == null
                 ? new Inbox(spec.Message, spec.EndpointIdentity)
-                : new Inbox(inboxMessageDatabaseEntity, _serializer, _formatter);
+                : new Inbox(inboxMessageDatabaseEntity, _serializer);
         }
     }
 }

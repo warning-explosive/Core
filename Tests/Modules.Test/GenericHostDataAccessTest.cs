@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Model;
@@ -294,7 +295,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
             {
-                Assert.Equal(36, modelChanges.Length);
+                Assert.Equal(33, modelChanges.Length);
 
                 AssertCreateDataBase(modelChanges, 0, nameof(ExtractDatabaseModelChangesDiffTest));
 
@@ -334,11 +335,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 10, nameof(User.PrimaryKey), "not null primary key");
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 10, nameof(User.Nickname), "not null");
 
-                AssertCreateTable(modelChanges, 11, typeof(TracingEndpoint.DatabaseModel.IntegrationMessageHeader));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(TracingEndpoint.DatabaseModel.IntegrationMessageHeader.PrimaryKey), "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Value_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Value_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Value_Value", "not null");
+                AssertCreateTable(modelChanges, 11, typeof(TracingEndpoint.DatabaseModel.IntegrationMessage));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.PrimaryKey), "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.MessageId), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.ConversationId), "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.InitiatorMessageId), string.Empty);
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Payload_SystemType_Assembly", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Payload_SystemType_Type", "not null");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 11, "Payload_Value", "not null");
 
                 AssertCreateTable(modelChanges, 12, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessage));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 12, nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessage.PrimaryKey), "not null primary key");
@@ -358,14 +362,10 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertHasNoColumn(tracingEndpointContainer, modelChanges, 14, "Blog_Right");
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 14, "Blog_PrimaryKey", @"not null references ""SpaceEngineersCoreModulesTest"".""Blog"" (""PrimaryKey"")");
 
-                AssertCreateTable(modelChanges, 15, typeof(TracingEndpoint.DatabaseModel.IntegrationMessage));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.PrimaryKey), "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.MessageId), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.ConversationId), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, "Payload_SystemType_Assembly", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, "Payload_SystemType_Type", "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, "Payload_Value", "not null");
-                AssertMtmColumn(tracingEndpointContainer, modelChanges, 15, "Headers_Left");
+                AssertCreateTable(modelChanges, 15, typeof(CapturedMessage));
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, "PrimaryKey", "not null primary key");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessage"" (""PrimaryKey"")");
+                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 15, nameof(CapturedMessage.RefuseReason), string.Empty);
 
                 AssertCreateTable(modelChanges, 16, typeof(InboxMessage));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 16, nameof(InboxMessage.PrimaryKey), "not null primary key");
@@ -390,31 +390,20 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 19, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), @"not null references ""SpaceEngineersCoreModulesTest"".""Blog"" (""PrimaryKey"")");
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 19, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), @"not null references ""SpaceEngineersCoreModulesTest"".""Post"" (""PrimaryKey"")");
 
-                AssertCreateTable(modelChanges, 20, typeof(CapturedMessage));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 20, "PrimaryKey", "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 20, "Message_PrimaryKey", @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessage"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 20, nameof(CapturedMessage.RefuseReason), string.Empty);
+                AssertCreateView(modelChanges, 20, nameof(DatabaseColumn));
+                AssertCreateView(modelChanges, 21, nameof(DatabaseColumnConstraint));
+                AssertCreateView(modelChanges, 22, nameof(DatabaseIndex));
+                AssertCreateView(modelChanges, 23, nameof(DatabaseSchema));
+                AssertCreateView(modelChanges, 24, nameof(DatabaseView));
 
-                AssertCreateMtmTable(modelChanges, 21, "SpaceEngineersCoreTracingEndpoint", "IntegrationMessage_IntegrationMessageHeader");
-                AssertHasNoColumn(tracingEndpointContainer, modelChanges, 21, nameof(IDatabaseEntity<Guid>.PrimaryKey));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 21, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessage"" (""PrimaryKey"")");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 21, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), @"not null references ""SpaceEngineersCoreTracingEndpoint"".""IntegrationMessageHeader"" (""PrimaryKey"")");
-
-                AssertCreateView(modelChanges, 22, nameof(DatabaseColumn));
-                AssertCreateView(modelChanges, 23, nameof(DatabaseColumnConstraint));
-                AssertCreateView(modelChanges, 24, nameof(DatabaseIndex));
-                AssertCreateView(modelChanges, 25, nameof(DatabaseSchema));
-                AssertCreateView(modelChanges, 26, nameof(DatabaseView));
-
-                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSql", nameof(AppliedMigration), nameof(AppliedMigration.Name));
-                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseColumn), "Column_Schema_Table");
-                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseIndex), "Index_Schema_Table");
-                AssertCreateIndex(modelChanges, 30, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseSchema), "Name");
-                AssertCreateIndex(modelChanges, 31, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseView), "Query_Schema_View");
-                AssertCreateIndex(modelChanges, 32, "SpaceEngineersCoreGenericEndpointDataAccess", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
-                AssertCreateIndex(modelChanges, 33, "SpaceEngineersCoreModulesTest", "Blog_Post", "Left_Right");
-                AssertCreateIndex(modelChanges, 34, "SpaceEngineersCoreModulesTest", "Community_Participant", "Left_Right");
-                AssertCreateIndex(modelChanges, 35, "SpaceEngineersCoreTracingEndpoint", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
+                AssertCreateIndex(modelChanges, 25, "SpaceEngineersCoreDataAccessOrmSql", nameof(AppliedMigration), nameof(AppliedMigration.Name));
+                AssertCreateIndex(modelChanges, 26, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseColumn), "Column_Schema_Table");
+                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseIndex), "Index_Schema_Table");
+                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseSchema), "Name");
+                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseView), "Query_Schema_View");
+                AssertCreateIndex(modelChanges, 30, "SpaceEngineersCoreGenericEndpointDataAccess", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
+                AssertCreateIndex(modelChanges, 31, "SpaceEngineersCoreModulesTest", "Blog_Post", "Left_Right");
+                AssertCreateIndex(modelChanges, 32, "SpaceEngineersCoreModulesTest", "Community_Participant", "Left_Right");
 
                 static void AssertCreateTable(IModelChange[] modelChanges, int index, Type table)
                 {
@@ -570,6 +559,10 @@ namespace SpaceEngineers.Core.Modules.Test
             var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
 
+            var jsonSerializer = host
+               .GetEndpointDependencyContainer(TestIdentity.Endpoint10)
+               .Resolve<IJsonSerializer>();
+
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
@@ -582,8 +575,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 var conversationId = Guid.NewGuid();
 
                 var awaiter = Task.WhenAll(
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(GetConversationTrace)),
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(ConversationTrace)));
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
 
                 var trace = await integrationContext
                     .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
@@ -599,18 +592,19 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(typeof(GetConversationTrace), messages[0].ReflectedType);
                 Assert.Equal(typeof(ConversationTrace), messages[1].ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
-                Assert.Equal(typeof(GetConversationTrace), ((CaptureTrace)messages[2].Payload).IntegrationMessage.ReflectedType);
+                Assert.Equal(typeof(GetConversationTrace), ((CaptureTrace)messages[2].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[3].ReflectedType);
-                Assert.Equal(typeof(ConversationTrace), ((CaptureTrace)messages[3].Payload).IntegrationMessage.ReflectedType);
+                Assert.Equal(typeof(ConversationTrace), ((CaptureTrace)messages[3].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
 
                 Assert.Equal(conversationId, trace.ConversationId);
-                Assert.Null(trace.Message);
+                Assert.Null(trace.SerializedMessage);
                 Assert.Null(trace.RefuseReason);
-                Assert.Null(trace.SubsequentTrace);
+                Assert.NotNull(trace.SubsequentTrace);
+                Assert.Empty(trace.SubsequentTrace);
 
                 awaiter = Task.WhenAll(
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Query)),
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(Reply)));
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)),
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply)));
 
                 var reply = await integrationContext
                     .RpcRequest<Query, Reply>(new Query(42), cts.Token)
@@ -626,15 +620,15 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Equal(typeof(Query), messages[0].ReflectedType);
                 Assert.Equal(typeof(Reply), messages[1].ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
-                Assert.Equal(typeof(Query), ((CaptureTrace)messages[2].Payload).IntegrationMessage.ReflectedType);
+                Assert.Equal(typeof(Query), ((CaptureTrace)messages[2].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
                 Assert.Equal(typeof(CaptureTrace), messages[3].ReflectedType);
-                Assert.Equal(typeof(Reply), ((CaptureTrace)messages[3].Payload).IntegrationMessage.ReflectedType);
+                Assert.Equal(typeof(Reply), ((CaptureTrace)messages[3].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
 
                 conversationId = messages[0].ReadRequiredHeader<ConversationId>().Value;
 
                 awaiter = Task.WhenAll(
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(GetConversationTrace)),
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.IntegrationMessage.ReflectedType == typeof(ConversationTrace)));
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
+                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
 
                 trace = await integrationContext
                     .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
@@ -647,17 +641,19 @@ namespace SpaceEngineers.Core.Modules.Test
                 collector.Messages.Clear();
 
                 Assert.Equal(conversationId, trace.ConversationId);
-                Assert.NotNull(trace.Message);
-                Assert.Equal(typeof(Query), trace.Message.ReflectedType);
-                Assert.Equal(42, ((Query)trace.Message.Payload).Id);
+                Assert.NotNull(trace.SerializedMessage);
+                Assert.NotEmpty(trace.SerializedMessage.Payload);
+                Assert.Equal(typeof(Query), trace.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
+                Assert.Equal(42, ((Query)trace.SerializedMessage.ToIntegrationMessage(jsonSerializer).Payload).Id);
                 Assert.Null(trace.RefuseReason);
                 Assert.NotNull(trace.SubsequentTrace);
                 Assert.Single(trace.SubsequentTrace);
 
-                var subsequentTrace = trace.SubsequentTrace!.Single();
-                Assert.NotNull(subsequentTrace.Message);
-                Assert.Equal(typeof(Reply), subsequentTrace.Message.ReflectedType);
-                Assert.Equal(reply.Id, ((Reply)subsequentTrace.Message.Payload).Id);
+                var subsequentTrace = trace.SubsequentTrace.Single();
+                Assert.NotNull(subsequentTrace.SerializedMessage);
+                Assert.NotEmpty(subsequentTrace.SerializedMessage.Payload);
+                Assert.Equal(typeof(Reply), subsequentTrace.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
+                Assert.Equal(reply.Id, ((Reply)subsequentTrace.SerializedMessage.ToIntegrationMessage(jsonSerializer).Payload).Id);
                 Assert.Null(subsequentTrace.RefuseReason);
                 Assert.NotNull(subsequentTrace.SubsequentTrace);
                 Assert.Empty(subsequentTrace.SubsequentTrace);

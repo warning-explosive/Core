@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
     using NewExpression = System.Linq.Expressions.NewExpression;
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
+    using UnaryExpression = System.Linq.Expressions.UnaryExpression;
 
     internal class TranslationExpressionVisitor : ExpressionVisitor
     {
@@ -38,6 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo All = LinqMethods.QueryableAll();
         private static readonly MethodInfo Count = LinqMethods.QueryableCount();
         private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
+        private static readonly MethodInfo Distinct = LinqMethods.QueryableDistinct();
 
         public TranslationExpressionVisitor(
             IModelProvider modelProvider,
@@ -90,15 +92,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
+            var applyNamedSourceCondition = Context.Parent is JoinExpression
+                 || (Context.Parent is not FilterExpression
+                  && Context.Parent is not RowsFetchLimitExpression
+                  && Context.Parent != null
+                  && Context.Parent.Type != itemType);
+
             if (method == Select)
             {
                 Context.WithinConditionalScope(
-                    Context.Parent is not null and not FilterExpression and not RowsFetchLimitExpression,
+                    applyNamedSourceCondition,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
-                    () => Context.WithinScope(
-                        new ProjectionExpression(itemType),
+                    () => Context.WithoutScopeDuplication(
+                        () => new ProjectionExpression(itemType),
                         () => BuildJoinExpression(Context, node, itemType)));
 
                 return node;
@@ -107,7 +115,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == Where)
             {
                 Context.WithinConditionalScope(
-                    Context.Parent is not null and not FilterExpression and not RowsFetchLimitExpression,
+                    applyNamedSourceCondition,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
@@ -260,6 +268,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
+            if (method == Distinct)
+            {
+                Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
+                    () =>
+                    {
+                        ((ProjectionExpression)Context.Parent!).IsDistinct = true;
+
+                        Visit(node.Arguments[0]);
+                    });
+
+                return node;
+            }
+
             if (TryGetMemberInfoExpression(node.Method, out var recognized))
             {
                 Context.WithinScope(recognized, () => base.VisitMethodCall(node));
@@ -272,7 +293,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            IIntermediateExpression expression = TryGetMemberInfoExpression(node.Member, out var recognized)
+            var expression = TryGetMemberInfoExpression(node.Member, out var recognized)
                 ? recognized
                 : new SimpleBindingExpression(node.Member, node.Type);
 
@@ -299,8 +320,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 }
             }
 
-            Context.Apply(new Expressions.NewExpression(node.Type));
-
             return node;
         }
 
@@ -314,6 +333,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected override Expression VisitBinary(BinaryExpression node)
         {
             Context.WithinScope(new Expressions.BinaryExpression(node.Type, node.NodeType.AsBinaryOperator()), () => base.VisitBinary(node));
+
+            return node;
+        }
+
+        protected override Expression VisitUnary(UnaryExpression node)
+        {
+            var bypassedExpressionTypes = new[]
+            {
+                ExpressionType.Quote,
+                ExpressionType.Convert,
+                ExpressionType.ConvertChecked
+            };
+
+            if (bypassedExpressionTypes.Contains(node.NodeType))
+            {
+                base.VisitUnary(node);
+            }
+            else
+            {
+                Context.WithinScope(new Expressions.UnaryExpression(node.Type, node.NodeType.AsUnaryOperator()), () => base.VisitUnary(node));
+            }
 
             return node;
         }

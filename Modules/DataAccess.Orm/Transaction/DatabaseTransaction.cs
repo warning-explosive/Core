@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
@@ -25,8 +24,8 @@
         private readonly IChangesTracker _changesTracker;
         private readonly ITransactionalStore _transactionalStore;
 
-        private static readonly ConcurrentDictionary<string, IDbConnection?> Connections
-            = new ConcurrentDictionary<string, IDbConnection?>();
+        [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
+        private IDbConnection? _connection;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
@@ -60,11 +59,9 @@
         {
             get
             {
-                var connection = Connections.GetOrAdd(_connectionProvider.Database, _ => default);
-
                 for (var i = 0; i < 3; i++)
                 {
-                    switch (connection?.State)
+                    switch (_connection?.State)
                     {
                         case ConnectionState.Connecting:
                             Task.Delay(TimeSpan.FromMilliseconds(50));
@@ -72,7 +69,7 @@
                         case ConnectionState.Open:
                         case ConnectionState.Executing:
                         case ConnectionState.Fetching:
-                            return connection;
+                            return _connection;
                         case ConnectionState.Broken:
                         case ConnectionState.Closed:
                         case null:
@@ -81,15 +78,13 @@
                     }
                 }
 
-                connection?.Dispose();
+                _connection?.Dispose();
 
-                connection = _connectionProvider
+                _connection = _connectionProvider
                     .OpenConnection(CancellationToken.None)
                     .Result;
 
-                Connections[_connectionProvider.Database] = connection;
-
-                return connection;
+                return _connection;
             }
         }
 
@@ -147,10 +142,11 @@
             }
             finally
             {
-                _transaction?.Dispose();
-                Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 _changesTracker.Dispose();
                 _transactionalStore.Dispose();
+
+                Interlocked.Exchange(ref _transaction, default)?.Dispose();
+                Interlocked.Exchange(ref _connection, default)?.Dispose();
             }
         }
 

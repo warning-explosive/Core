@@ -5,7 +5,6 @@
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
     using DatabaseModel;
@@ -14,17 +13,15 @@
     internal class InsertCapturedMessage : IDomainEventHandler<MessageCaptured>
     {
         private readonly IDatabaseContext _databaseContext;
-        private readonly IJsonSerializer _serializer;
 
-        public InsertCapturedMessage(IDatabaseContext databaseContext, IJsonSerializer serializer)
+        public InsertCapturedMessage(IDatabaseContext databaseContext)
         {
-            _serializer = serializer;
             _databaseContext = databaseContext;
         }
 
         public async Task Handle(MessageCaptured domainEvent, CancellationToken token)
         {
-            var message = IntegrationMessage.Build(domainEvent.Message, _serializer);
+            var message = IntegrationMessage.Build(domainEvent.SerializedMessage);
 
             var capturedMessage = new DatabaseModel.CapturedMessage(Guid.NewGuid(), message, domainEvent.RefuseReason);
 

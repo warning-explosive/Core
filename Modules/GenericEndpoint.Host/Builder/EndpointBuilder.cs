@@ -20,86 +20,54 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         private readonly Assembly[] _rootAssemblies;
 
-        private readonly Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? _containerImplementationProducer;
+        private Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? _containerImplementationProducer;
 
         internal EndpointBuilder(EndpointIdentity endpointIdentity)
-            : this(
-                endpointIdentity,
-                new[] { AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint))) },
-                null,
-                Array.Empty<Assembly>(),
-                Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>(),
-                Array.Empty<Func<IDependencyContainer, IHostStartupAction>>(),
-                Array.Empty<Func<IDependencyContainer, IHostBackgroundWorker>>())
-        {
-        }
-
-        private EndpointBuilder(
-            EndpointIdentity endpointIdentity,
-            Assembly[] rootAssemblies,
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>? containerImplementationProducer,
-            IReadOnlyCollection<Assembly> endpointPluginAssemblies,
-            IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> modifiers,
-            IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> startupActions,
-            IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> backgroundWorkers)
         {
             EndpointIdentity = endpointIdentity;
-            _rootAssemblies = rootAssemblies;
-            _containerImplementationProducer = containerImplementationProducer;
-            EndpointPluginAssemblies = endpointPluginAssemblies;
-            Modifiers = modifiers;
-            StartupActions = startupActions;
-            BackgroundWorkers = backgroundWorkers;
+            _rootAssemblies = new[] { AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint))) };
+            _containerImplementationProducer = null;
+            EndpointPluginAssemblies = Array.Empty<Assembly>();
+            Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
+            StartupActions = Array.Empty<Func<IDependencyContainer, IHostStartupAction>>();
+            BackgroundWorkers = Array.Empty<Func<IDependencyContainer, IHostBackgroundWorker>>();
         }
 
         public EndpointIdentity EndpointIdentity { get; }
 
-        public IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> StartupActions { get; }
+        public IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> StartupActions { get; private set; }
 
-        public IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> BackgroundWorkers { get; }
+        public IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> BackgroundWorkers { get; private set; }
 
-        private IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; }
+        public IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; private set; }
 
-        private IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; }
+        public IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; private set; }
 
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies.Concat(assemblies).ToList(),
-                Modifiers,
-                StartupActions,
-                BackgroundWorkers);
+            EndpointPluginAssemblies = EndpointPluginAssemblies
+               .Concat(assemblies)
+               .ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithDefaultCrossCuttingConcerns()
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
 
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies.Concat(new[] { crossCuttingConcernsAssembly }).ToList(),
-                Modifiers,
-                StartupActions,
-                BackgroundWorkers);
+            EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(new[] { crossCuttingConcernsAssembly }).ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithTracing()
         {
             var genericEndpointTracingAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Tracing)));
 
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies.Concat(new[] { genericEndpointTracingAssembly }).ToList(),
-                Modifiers,
-                StartupActions,
-                BackgroundWorkers);
+            EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(new[] { genericEndpointTracingAssembly }).ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider)
@@ -109,63 +77,41 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             var startupActionProducer = new Func<IDependencyContainer, IHostStartupAction>(dependencyContainer => new GenericEndpointOutboxHostStartupAction(dependencyContainer));
             var backgroundWorkerProducer = new Func<IDependencyContainer, IHostBackgroundWorker>(dependencyContainer => new GenericEndpointOutboxHostBackgroundWorker(dependencyContainer));
 
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies.Concat(new[] { genericEndpointDataAccessAssembly }).Concat(databaseProvider.Implementation()).ToList(),
-                Modifiers.Concat(new[] { dataAccessModifier }).ToList(),
-                StartupActions.Concat(new[] { startupActionProducer }).ToList(),
-                BackgroundWorkers.Concat(new[] { backgroundWorkerProducer }).ToList());
+            EndpointPluginAssemblies = EndpointPluginAssemblies.Concat(new[] { genericEndpointDataAccessAssembly }).Concat(databaseProvider.Implementation()).ToList();
+            Modifiers = Modifiers.Concat(new[] { dataAccessModifier }).ToList();
+            StartupActions = StartupActions.Concat(new[] { startupActionProducer }).ToList();
+            BackgroundWorkers = BackgroundWorkers.Concat(new[] { backgroundWorkerProducer }).ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithContainer(
             Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer)
         {
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                containerImplementationProducer,
-                EndpointPluginAssemblies,
-                Modifiers,
-                StartupActions,
-                BackgroundWorkers);
+            _containerImplementationProducer = containerImplementationProducer;
+
+            return this;
         }
 
         public IEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
         {
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies,
-                Modifiers.Concat(new[] { modifier }).ToList(),
-                StartupActions,
-                BackgroundWorkers);
+            Modifiers = Modifiers.Concat(new[] { modifier }).ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithStartupAction(Func<IDependencyContainer, IHostStartupAction> producer)
         {
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies,
-                Modifiers,
-                StartupActions.Concat(new[] { producer }).ToList(),
-                BackgroundWorkers);
+            StartupActions = StartupActions.Concat(new[] { producer }).ToList();
+
+            return this;
         }
 
         public IEndpointBuilder WithBackgroundWorker(Func<IDependencyContainer, IHostBackgroundWorker> producer)
         {
-            return new EndpointBuilder(
-                EndpointIdentity,
-                _rootAssemblies,
-                _containerImplementationProducer,
-                EndpointPluginAssemblies,
-                Modifiers,
-                StartupActions,
-                BackgroundWorkers.Concat(new[] { producer }).ToList());
+            BackgroundWorkers = BackgroundWorkers.Concat(new[] { producer }).ToList();
+
+            return this;
         }
 
         public EndpointOptions BuildOptions()

@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
     using System;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
-    using GenericEndpoint.Messaging;
 
     /// <summary>
     /// CaptureTrace
@@ -12,24 +11,24 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
     public class CaptureTrace : IIntegrationCommand
     {
         /// <summary> .cctor </summary>
-        /// <param name="integrationMessage">Integration message</param>
+        /// <param name="serializedMessage">Serialized message</param>
         /// <param name="exception">Exception</param>
         public CaptureTrace(
-            IntegrationMessage integrationMessage,
+            SerializedIntegrationMessage serializedMessage,
             Exception? exception)
         {
-            IntegrationMessage = integrationMessage;
+            SerializedMessage = serializedMessage;
             Exception = exception;
         }
 
         /// <summary>
-        /// Integration message
+        /// Serialized message
         /// </summary>
-        public IntegrationMessage IntegrationMessage { get; }
+        public SerializedIntegrationMessage SerializedMessage { get; init; }
 
         /// <summary>
         /// Exception
         /// </summary>
-        public Exception? Exception { get; }
+        public Exception? Exception { get; init; }
     }
 }

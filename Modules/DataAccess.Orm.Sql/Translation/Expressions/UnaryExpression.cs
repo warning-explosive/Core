@@ -6,43 +6,38 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using Basics;
 
     /// <summary>
-    /// BinaryExpression
+    /// UnaryExpression
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
-    public class BinaryExpression : IIntermediateExpression,
-                                    IEquatable<BinaryExpression>,
-                                    ISafelyEquatable<BinaryExpression>,
-                                    IApplicable<SimpleBindingExpression>,
-                                    IApplicable<ConditionalExpression>,
-                                    IApplicable<BinaryExpression>,
-                                    IApplicable<UnaryExpression>,
-                                    IApplicable<ParameterExpression>,
-                                    IApplicable<QueryParameterExpression>,
-                                    IApplicable<ConstantExpression>,
-                                    IApplicable<SpecialExpression>,
-                                    IApplicable<MethodCallExpression>,
-                                    IApplicable<ProjectionExpression>,
-                                    IApplicable<FilterExpression>
+    public class UnaryExpression : IIntermediateExpression,
+                                   IEquatable<UnaryExpression>,
+                                   ISafelyEquatable<UnaryExpression>,
+                                   IApplicable<SimpleBindingExpression>,
+                                   IApplicable<ConditionalExpression>,
+                                   IApplicable<BinaryExpression>,
+                                   IApplicable<UnaryExpression>,
+                                   IApplicable<ParameterExpression>,
+                                   IApplicable<QueryParameterExpression>,
+                                   IApplicable<ConstantExpression>,
+                                   IApplicable<SpecialExpression>,
+                                   IApplicable<MethodCallExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="operator">Operator</param>
-        /// <param name="left">Left expression</param>
-        /// <param name="right">Right expression</param>
-        public BinaryExpression(
+        /// <param name="source">Source expression</param>
+        public UnaryExpression(
             Type type,
-            BinaryOperator @operator,
-            IIntermediateExpression left,
-            IIntermediateExpression right)
+            UnaryOperator @operator,
+            IIntermediateExpression source)
         {
             Type = type;
             Operator = @operator;
-            Left = left;
-            Right = right;
+            Source = source;
         }
 
-        internal BinaryExpression(Type type, BinaryOperator @operator)
-            : this(type, @operator, null!, null!)
+        internal UnaryExpression(Type type, UnaryOperator @operator)
+            : this(type, @operator, null!)
         {
         }
 
@@ -52,27 +47,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Binary operator
         /// </summary>
-        public BinaryOperator Operator { get; }
+        public UnaryOperator Operator { get; }
 
         /// <summary>
-        /// Left expression
+        /// Source expression
         /// </summary>
-        public IIntermediateExpression Left { get; private set; }
-
-        /// <summary>
-        /// Right expression
-        /// </summary>
-        public IIntermediateExpression Right { get; private set; }
+        public IIntermediateExpression Source { get; private set; }
 
         #region IEquatable
 
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left BinaryExpression</param>
-        /// <param name="right">Right BinaryExpression</param>
+        /// <param name="left">Left UnaryExpression</param>
+        /// <param name="right">Right UnaryExpression</param>
         /// <returns>equals</returns>
-        public static bool operator ==(BinaryExpression? left, BinaryExpression? right)
+        public static bool operator ==(UnaryExpression? left, UnaryExpression? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -80,10 +70,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left BinaryExpression</param>
-        /// <param name="right">Right BinaryExpression</param>
+        /// <param name="left">Left UnaryExpression</param>
+        /// <param name="right">Right UnaryExpression</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(BinaryExpression? left, BinaryExpression? right)
+        public static bool operator !=(UnaryExpression? left, UnaryExpression? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -91,7 +81,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, Operator, Left, Right);
+            return HashCode.Combine(Type, Operator, Source);
         }
 
         /// <inheritdoc />
@@ -101,18 +91,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public bool Equals(BinaryExpression? other)
+        public bool Equals(UnaryExpression? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(BinaryExpression other)
+        public bool SafeEquals(UnaryExpression other)
         {
             return Type == other.Type
                    && Operator == other.Operator
-                   && Left.Equals(other.Left)
-                   && Right.Equals(other.Right);
+                   && Source.Equals(other.Source);
         }
 
         #endregion
@@ -120,7 +109,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.MakeBinary(Operator.AsExpressionType(), Left.AsExpressionTree(), Right.AsExpressionTree());
+            return System.Linq.Expressions.Expression.MakeUnary(Operator.AsExpressionType(), Source.AsExpressionTree(), Type);
         }
 
         #region IApplicable
@@ -179,41 +168,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(context, expression);
         }
 
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(context, expression);
-        }
-
         private void ApplySource(TranslationContext context, IIntermediateExpression expression)
         {
-            if (expression is QueryParameterExpression
-                && Operator == BinaryOperator.Contains
-                && Right == null)
+            if (Source == null)
             {
-                Right = expression;
+                Source = expression;
                 return;
             }
 
-            if (Left == null)
-            {
-                Left = expression;
-                return;
-            }
-
-            if (Right == null)
-            {
-                Right = expression;
-                return;
-            }
-
-            throw new InvalidOperationException("Binary expression sources have already been set");
+            throw new InvalidOperationException("Unary expression source have already been set");
         }
 
         #endregion

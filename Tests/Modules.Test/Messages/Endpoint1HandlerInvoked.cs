@@ -14,8 +14,8 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
             EndpointIdentity = endpointIdentity;
         }
 
-        public Type HandlerType { get; }
+        public Type HandlerType { get; init; }
 
-        public EndpointIdentity EndpointIdentity { get; }
+        public EndpointIdentity EndpointIdentity { get; init; }
     }
 }

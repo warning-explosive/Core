@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                           ISafelyEquatable<NamedBindingExpression>,
                                           IApplicable<SimpleBindingExpression>,
                                           IApplicable<BinaryExpression>,
+                                          IApplicable<UnaryExpression>,
                                           IApplicable<ConditionalExpression>
     {
         /// <summary> .cctor </summary>
@@ -109,7 +110,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public static IIntermediateExpression Unwrap(IIntermediateExpression expression)
         {
             return expression is NamedBindingExpression namedBinding
-                ? namedBinding.Source
+                ? Unwrap(namedBinding.Source)
                 : expression;
         }
 
@@ -123,6 +124,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, UnaryExpression expression)
         {
             ApplySource(expression);
         }

@@ -12,7 +12,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class ConditionalExpression : IIntermediateExpression,
                                          IEquatable<ConditionalExpression>,
                                          ISafelyEquatable<ConditionalExpression>,
-                                         IApplicable<IIntermediateExpression>
+                                         IApplicable<SimpleBindingExpression>,
+                                         IApplicable<ConditionalExpression>,
+                                         IApplicable<BinaryExpression>,
+                                         IApplicable<UnaryExpression>,
+                                         IApplicable<ParameterExpression>,
+                                         IApplicable<QueryParameterExpression>,
+                                         IApplicable<ConstantExpression>,
+                                         IApplicable<SpecialExpression>,
+                                         IApplicable<MethodCallExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -119,7 +127,60 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, IIntermediateExpression expression)
+        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConditionalExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, BinaryExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, UnaryExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParameterExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, QueryParameterExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ConstantExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, SpecialExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, MethodCallExpression expression)
+        {
+            ApplySource(context, expression);
+        }
+
+        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
         {
             if (When == null)
             {

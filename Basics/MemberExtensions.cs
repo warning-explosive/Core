@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Extensions for operations with class members
@@ -13,6 +14,13 @@ namespace SpaceEngineers.Core.Basics
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public;
 
         private const string NullableAttributeFullName = "System.Runtime.CompilerServices.NullableAttribute";
+
+        private static readonly Type[] IsExternalInitTypes =
+            new[]
+            {
+                AssembliesExtensions.FindRequiredType("System.Private.CoreLib", AssembliesExtensions.BuildName(nameof(System), nameof(System.Runtime), nameof(System.Runtime.CompilerServices), nameof(IsExternalInit))),
+                typeof(IsExternalInit)
+            };
 
         /// <summary>
         /// Check that object has property
@@ -139,6 +147,18 @@ namespace SpaceEngineers.Core.Basics
                     info => info.Name,
                     info => (object?)info.GetValue(target),
                     StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Does property have the initializer (init modifier);
+        /// </summary>
+        /// <param name="propertyInfo">PropertyInfo</param>
+        /// <returns>Property have the initializer or not</returns>
+        public static bool HasInitializer(this PropertyInfo propertyInfo)
+        {
+            return propertyInfo.SetMethod != default
+                && propertyInfo.SetMethod.ReturnParameter != null
+                && propertyInfo.SetMethod.ReturnParameter.GetRequiredCustomModifiers().Any(IsExternalInitTypes.Contains);
         }
 
         /// <summary>

@@ -20,6 +20,6 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
         /// <summary>
         /// Conversation id
         /// </summary>
-        public Guid ConversationId { get; }
+        public Guid ConversationId { get; init; }
     }
 }

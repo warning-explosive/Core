@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return expression switch
             {
                 BinaryExpression binaryExpression => VisitBinary(binaryExpression),
+                UnaryExpression unaryExpression => VisitUnary(unaryExpression),
                 ConditionalExpression conditionalExpression => VisitConditional(conditionalExpression),
                 ConstantExpression constantExpression => VisitConstant(constantExpression),
                 NamedBindingExpression namedBindingExpression => VisitNamedBinding(namedBindingExpression),
@@ -28,7 +29,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 QueryParameterExpression queryParameterExpression => VisitQueryParameter(queryParameterExpression),
                 QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
                 JoinExpression joinExpression => VisitJoinExpression(joinExpression),
-                ColumnChainExpression columnChainExpression => VisitColumnChainExpression(columnChainExpression),
                 GroupByExpression groupByExpression => VisitGroupByExpression(groupByExpression),
                 RowsFetchLimitExpression rowsFetchLimitExpression => VisitRowsFetchLimitExpression(rowsFetchLimitExpression),
                 SpecialExpression specialExpression => VisitSpecialExpression(specialExpression),
@@ -48,6 +48,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 binaryExpression.Operator,
                 Visit(binaryExpression.Left),
                 Visit(binaryExpression.Right));
+        }
+
+        /// <summary>
+        /// Visit UnaryExpression
+        /// </summary>
+        /// <param name="unaryExpression">UnaryExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual IIntermediateExpression VisitUnary(UnaryExpression unaryExpression)
+        {
+            return new UnaryExpression(
+                unaryExpression.Type,
+                unaryExpression.Operator,
+                Visit(unaryExpression.Source));
         }
 
         /// <summary>
@@ -203,16 +216,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Visit(joinExpression.LeftSource),
                 Visit(joinExpression.RightSource),
                 Visit(joinExpression.On));
-        }
-
-        /// <summary>
-        /// Visit ColumnChainExpression
-        /// </summary>
-        /// <param name="columnChainExpression">ColumnChainExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitColumnChainExpression(ColumnChainExpression columnChainExpression)
-        {
-            return columnChainExpression;
         }
 
         /// <summary>

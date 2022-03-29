@@ -17,7 +17,9 @@
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;
 
-        public InsertOutgoingMessages(IDatabaseContext databaseContext, IJsonSerializer serializer)
+        public InsertOutgoingMessages(
+            IDatabaseContext databaseContext,
+            IJsonSerializer serializer)
         {
             _databaseContext = databaseContext;
             _serializer = serializer;
@@ -28,7 +30,12 @@
             var messages = domainEvent
                 .OutgoingMessages
                 .Select(message => IntegrationMessage.Build(message, _serializer))
-                .Select(message => new OutboxMessage(message.PrimaryKey, domainEvent.OutboxId, message, false))
+                .Select(message => new OutboxMessage(
+                    message.PrimaryKey,
+                    domainEvent.OutboxId,
+                    domainEvent.EndpointIdentity,
+                    message,
+                    false))
                 .ToArray();
 
             await _databaseContext

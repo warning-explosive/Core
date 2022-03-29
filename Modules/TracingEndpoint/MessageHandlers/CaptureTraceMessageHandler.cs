@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
         public Task Handle(CaptureTrace command, CancellationToken token)
         {
-            var capturedMessage = new CapturedMessage(command.IntegrationMessage, command.Exception?.ToString());
+            var capturedMessage = new CapturedMessage(command.SerializedMessage, command.Exception?.ToString());
 
             return _databaseContext.Track(capturedMessage, token);
         }

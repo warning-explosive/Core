@@ -7,7 +7,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
+    using CrossCuttingConcerns.Api.Abstractions;
     using GenericEndpoint.Pipeline;
+    using TracingEndpoint.Contract;
     using TracingEndpoint.Contract.Messages;
 
     [Component(EnLifestyle.Singleton)]
@@ -15,9 +17,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
     [Dependent(typeof(GenericEndpoint.Pipeline.UnitOfWorkPipeline))]
     internal class TracingPipeline : IMessagePipelineStep, IMessagePipeline
     {
-        public TracingPipeline(IMessagePipeline decoratee)
+        private readonly IJsonSerializer _jsonSerializer;
+
+        public TracingPipeline(
+            IMessagePipeline decoratee,
+            IJsonSerializer jsonSerializer)
         {
             Decoratee = decoratee;
+
+            _jsonSerializer = jsonSerializer;
         }
 
         public IMessagePipeline Decoratee { get; }
@@ -42,24 +50,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
             await OnSuccess(context, token).ConfigureAwait(false);
         }
 
-        private static Task OnSuccess(IAdvancedIntegrationContext context, CancellationToken token)
+        private Task OnSuccess(IAdvancedIntegrationContext context, CancellationToken token)
         {
             if (context.Message.Payload is not CaptureTrace)
             {
-                var command = new CaptureTrace(context.Message, null);
+                var command = new CaptureTrace(SerializedIntegrationMessage.FromIntegrationMessage(context.Message, _jsonSerializer), null);
                 return context.Send(command, token);
             }
 
             return Task.CompletedTask;
         }
 
-        private static Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
+        private Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
         {
             return async (exception, token) =>
             {
                 if (context.Message.Payload is not CaptureTrace)
                 {
-                    var command = new CaptureTrace(context.Message, exception);
+                    var command = new CaptureTrace(SerializedIntegrationMessage.FromIntegrationMessage(context.Message, _jsonSerializer), exception);
                     await context.Send(command, token).ConfigureAwait(false);
                 }
 

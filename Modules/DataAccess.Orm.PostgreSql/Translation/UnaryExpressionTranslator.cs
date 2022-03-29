@@ -1,34 +1,37 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
-    using System.Linq;
+    using System.Collections.Generic;
     using System.Text;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Sql.Translation;
     using Sql.Translation.Expressions;
     using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ColumnChainExpressionTranslator : IExpressionTranslator<ColumnChainExpression>
+    internal class UnaryExpressionTranslator : IExpressionTranslator<UnaryExpression>
     {
+        private static readonly IReadOnlyDictionary<UnaryOperator, string> Operators
+            = new Dictionary<UnaryOperator, string>
+            {
+                [UnaryOperator.Not] = "NOT"
+            };
+
         private readonly IDependencyContainer _dependencyContainer;
 
-        public ColumnChainExpressionTranslator(IDependencyContainer dependencyContainer)
+        public UnaryExpressionTranslator(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
         }
 
-        public string Translate(ColumnChainExpression expression, int depth)
+        public string Translate(UnaryExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
+            sb.Append(Operators[expression.Operator]);
+            sb.Append(" ");
             sb.Append(expression.Source.Translate(_dependencyContainer, depth));
-            sb.Append('.');
-            sb.Append('"');
-            sb.Append(expression.Chain.Select(binding => binding.Name).ToString("_"));
-            sb.Append('"');
 
             return sb.ToString();
         }

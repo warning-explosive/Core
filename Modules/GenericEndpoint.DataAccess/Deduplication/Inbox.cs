@@ -19,11 +19,10 @@
 
         public Inbox(
             InboxMessage message,
-            IJsonSerializer serializer,
-            IStringFormatter formatter)
+            IJsonSerializer serializer)
         {
             Id = message.PrimaryKey;
-            Message = message.Message.BuildIntegrationMessage(serializer, formatter);
+            Message = message.Message.BuildIntegrationMessage(serializer);
             IsError = message.IsError;
             Handled = message.Handled;
         }
@@ -38,14 +37,14 @@
         {
             Handled = true;
 
-            PopulateEvent(new InboxMessageWasHandled(Id, Message.Id));
+            PopulateEvent(new InboxMessageWasHandled(Id));
         }
 
         public void MarkAsError()
         {
             IsError = true;
 
-            PopulateEvent(new InboxMessageWasMovedToErrorQueue(Id, Message.Id));
+            PopulateEvent(new InboxMessageWasMovedToErrorQueue(Id));
         }
     }
 }

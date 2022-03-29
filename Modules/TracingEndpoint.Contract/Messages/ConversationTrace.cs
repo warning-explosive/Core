@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
     using System;
     using System.Collections.Generic;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Messaging;
 
     /// <summary>
     /// ConversationTrace
@@ -12,46 +11,39 @@ namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
     {
         /// <summary> .cctor </summary>
         /// <param name="correlationId">Conversation id</param>
-        /// <param name="message">Integration message</param>
+        /// <param name="serializedMessage">Serialized message</param>
         /// <param name="refuseReason">Refuse reason</param>
         /// <param name="subsequentTrace">Subsequent trace</param>
         public ConversationTrace(
             Guid correlationId,
-            IntegrationMessage message,
+            SerializedIntegrationMessage? serializedMessage = null,
             string? refuseReason = null,
             IReadOnlyCollection<ConversationTrace>? subsequentTrace = null)
         {
             ConversationId = correlationId;
-            Message = message;
+            SerializedMessage = serializedMessage;
             RefuseReason = refuseReason;
             SubsequentTrace = subsequentTrace ?? Array.Empty<ConversationTrace>();
-        }
-
-        /// <summary> .cctor </summary>
-        /// <param name="correlationId">Conversation id</param>
-        public ConversationTrace(Guid correlationId)
-        {
-            ConversationId = correlationId;
         }
 
         /// <summary>
         /// Conversation id
         /// </summary>
-        public Guid ConversationId { get; }
+        public Guid ConversationId { get; init; }
 
         /// <summary>
-        /// Message
+        /// Serialized message
         /// </summary>
-        public IntegrationMessage? Message { get; }
+        public SerializedIntegrationMessage? SerializedMessage { get; init; }
 
         /// <summary>
         /// Refuse reason
         /// </summary>
-        public string? RefuseReason { get; }
+        public string? RefuseReason { get; init; }
 
         /// <summary>
         /// Subsequent trace
         /// </summary>
-        public IReadOnlyCollection<ConversationTrace>? SubsequentTrace { get; }
+        public IReadOnlyCollection<ConversationTrace> SubsequentTrace { get; init; }
     }
 }

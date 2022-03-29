@@ -1,31 +1,27 @@
 namespace SpaceEngineers.Core.TracingEndpoint.Domain
 {
-    using CrossCuttingConcerns.Api.Abstractions;
+    using Contract;
     using GenericDomain.Api.Abstractions;
-    using IntegrationMessage = GenericEndpoint.Messaging.IntegrationMessage;
 
     internal class CapturedMessage : BaseAggregate
     {
         public CapturedMessage(
-            IntegrationMessage message,
+            SerializedIntegrationMessage serializedMessage,
             string? refuseReason)
         {
-            Message = message;
+            SerializedMessage = serializedMessage;
             RefuseReason = refuseReason;
 
-            PopulateEvent(new MessageCaptured(message, refuseReason));
+            PopulateEvent(new MessageCaptured(serializedMessage, refuseReason));
         }
 
-        public CapturedMessage(
-            DatabaseModel.CapturedMessage captured,
-            IJsonSerializer serializer,
-            IStringFormatter formatter)
+        public CapturedMessage(DatabaseModel.CapturedMessage captured)
         {
-            Message = captured.Message.BuildIntegrationMessage(serializer, formatter);
+            SerializedMessage = captured.Message.BuildSerializedIntegrationMessage();
             RefuseReason = captured.RefuseReason;
         }
 
-        public IntegrationMessage Message { get; }
+        public SerializedIntegrationMessage SerializedMessage { get; }
 
         public string? RefuseReason { get; }
     }

@@ -33,10 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 new UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor()
             };
 
-            _intermediateExpressionVisitors = new IIntermediateExpressionVisitor[]
-            {
-                new JoinColumnChainsVisitor(modelProvider)
-            };
+            _intermediateExpressionVisitors = Array.Empty<IIntermediateExpressionVisitor>();
         }
 
         public IIntermediateExpression Translate(Expression expression)

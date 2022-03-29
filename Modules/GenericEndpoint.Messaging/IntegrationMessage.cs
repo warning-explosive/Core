@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using Abstractions;
     using Basics;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Api.Abstractions;
     using MessageHeaders;
 
     /// <summary>
@@ -22,60 +21,46 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       IComparable,
                                       ICloneable<IntegrationMessage>
     {
-        private readonly IStringFormatter _formatter;
-        private readonly List<IIntegrationMessageHeader> _headers;
+        private readonly ICollection<IIntegrationMessageHeader> _headers;
 
         /// <summary> .cctor </summary>
         /// <param name="payload">User-defined payload message</param>
         /// <param name="reflectedType">Message reflected type</param>
-        /// <param name="formatter">IStringFormatter</param>
         public IntegrationMessage(
             IIntegrationMessage payload,
-            Type reflectedType,
-            IStringFormatter formatter)
+            Type reflectedType)
+            : this(payload, reflectedType, new List<IIntegrationMessageHeader> { new Id(Guid.NewGuid()) })
         {
-            Id = Guid.NewGuid();
-            Payload = payload;
-            ReflectedType = reflectedType;
-
-            _formatter = formatter;
-            _headers = new List<IIntegrationMessageHeader>();
         }
 
         internal IntegrationMessage(
-            Guid id,
             IIntegrationMessage payload,
             Type reflectedType,
-            List<IIntegrationMessageHeader> headers,
-            IStringFormatter formatter)
+            ICollection<IIntegrationMessageHeader> headers)
         {
-            Id = id;
             Payload = payload;
             ReflectedType = reflectedType;
             _headers = headers;
-
-            _formatter = formatter;
         }
-
-        /// <summary>
-        /// Identifier
-        /// </summary>
-        public Guid Id { get; }
 
         /// <summary>
         /// User-defined payload message
         /// </summary>
-        public IIntegrationMessage Payload { get; }
+        public IIntegrationMessage Payload { get; init; }
 
         /// <summary>
         /// Message reflected type
         /// </summary>
-        public Type ReflectedType { get; }
+        public Type ReflectedType { get; init; }
 
         /// <summary>
         /// Integration message headers
         /// </summary>
-        public IReadOnlyCollection<IIntegrationMessageHeader> Headers => _headers;
+        public IReadOnlyCollection<IIntegrationMessageHeader> Headers
+        {
+            get => _headers.ToList();
+            init => _headers = value.ToList();
+        }
 
         #region IEquitable
 
@@ -148,7 +133,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public bool SafeEquals(IntegrationMessage other)
         {
-            return Id == other.Id;
+            return ReadRequiredHeader<Id>().Value == other.ReadRequiredHeader<Id>().Value;
         }
 
         /// <inheritdoc />
@@ -166,7 +151,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return ReadRequiredHeader<Id>().Value.GetHashCode();
         }
 
         #endregion
@@ -188,7 +173,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public int SafeCompareTo(IntegrationMessage other)
         {
-            return Id.CompareTo(other.Id);
+            return ReadRequiredHeader<Id>().Value.CompareTo(other.ReadRequiredHeader<Id>().Value);
         }
 
         #endregion
@@ -208,7 +193,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public IntegrationMessage Clone()
         {
-            return new IntegrationMessage(Id, Payload.DeepCopy(), ReflectedType, _headers.DeepCopy(), _formatter);
+            return new IntegrationMessage(Payload.DeepCopy(), ReflectedType, _headers.DeepCopy());
         }
 
         /// <inheritdoc />
@@ -277,11 +262,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             _headers.Add(header);
         }
 
-        private string FormatHeaders<THeader>(IEnumerable<THeader> headers)
+        private static string FormatHeaders<THeader>(IEnumerable<THeader> headers)
             where THeader : IIntegrationMessageHeader
         {
             return headers
-                .Select(header => $"[{(header as ObjectHeader)?.Name ?? header.GetType().Name}, {_formatter.Format(header.Value)}]")
+                .Select(header => $"[{(header as ObjectHeader)?.Name ?? header.GetType().Name}, {header.Value}]")
                 .ToString(" ");
         }
     }

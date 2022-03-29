@@ -4,7 +4,6 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Basics;
     using CompositionRoot.Api.Abstractions.Container;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
@@ -14,6 +13,7 @@
     using GenericDomain.Api.Abstractions;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
+    using EndpointIdentity = Contract.EndpointIdentity;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -34,33 +34,27 @@
             }
         }
 
-        private Task DeliverMessages(CancellationToken token)
-        {
-            return ExecutionExtensions
-                .TryAsync(DeliverMessagesUnsafe)
-                .Catch<Exception>()
-                .Invoke(token);
-        }
-
-        private async Task DeliverMessagesUnsafe(CancellationToken token)
+        private async Task DeliverMessages(CancellationToken token)
         {
             await _dependencyContainer
-                .InvokeWithinTransaction(true, DeliverMessages, token)
+                .InvokeWithinTransaction(true, _dependencyContainer.Resolve<EndpointIdentity>(), DeliverMessages, token)
                 .ConfigureAwait(false);
         }
 
         private async Task DeliverMessages(
             IDatabaseTransaction transaction,
+            EndpointIdentity endpointIdentity,
             CancellationToken token)
         {
             var unsent = await transaction
-                .Read<OutboxMessage, Guid>()
-                .All()
-                .Where(outbox => !outbox.Sent)
-                .Select(outbox => outbox.OutboxId)
-                .Distinct()
-                .ToListAsync(token)
-                .ConfigureAwait(false);
+               .Read<OutboxMessage, Guid>()
+               .All()
+               .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
+                             && !outbox.Sent)
+               .Select(outbox => outbox.OutboxId)
+               .Distinct()
+               .ToListAsync(token)
+               .ConfigureAwait(false);
 
             var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
 

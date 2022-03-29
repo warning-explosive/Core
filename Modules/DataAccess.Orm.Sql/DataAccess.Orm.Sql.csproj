@@ -109,9 +109,6 @@
       <Compile Update="Translation\Expressions\BinaryOperator.cs">
         <DependentUpon>BinaryExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\BinaryOperatorConversions.cs">
-        <DependentUpon>BinaryExpression.cs</DependentUpon>
-      </Compile>
       <Compile Update="Translation\LikeMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
       </Compile>
@@ -205,12 +202,6 @@
       <Compile Update="Translation\GuidQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\JoinColumnChainsVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\Expressions\ColumnChainExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
-      </Compile>
       <Compile Update="Translation\Expressions\JoinExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
       </Compile>
@@ -243,6 +234,18 @@
       </Compile>
       <Compile Update="Model\MtmTableInfo.cs">
         <DependentUpon>TableInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryOperator.cs">
+        <DependentUpon>UnaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryOperatorConversions.cs">
+        <DependentUpon>BinaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryOperatorConversions.cs">
+        <DependentUpon>UnaryExpression.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

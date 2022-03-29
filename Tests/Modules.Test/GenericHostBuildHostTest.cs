@@ -10,9 +10,12 @@
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using DataAccess.Orm.PostgreSql;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.DataAccess.BackgroundWorkers;
+    using GenericEndpoint.DataAccess.StartupActions;
     using GenericEndpoint.Endpoint;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.StartupActions;
@@ -164,17 +167,17 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
-                        .WithTracing()
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(additionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithContainer(useContainer)
+                       .WithDefaultCrossCuttingConcerns()
+                       .WithDataAccess(new PostgreSqlDatabaseProvider())
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(Output))
+                           .WithAdditionalOurTypes(additionalOurTypes))
+                       .BuildOptions())
+               .BuildHost();
 
             using (host)
             {
@@ -189,6 +192,7 @@
 
                 var expectedHostStartupActions = new[]
                 {
+                    typeof(GenericEndpointOutboxHostStartupAction),
                     typeof(GenericEndpointHostStartupAction)
                 };
 
@@ -203,6 +207,7 @@
 
                 var expectedHostBackgroundWorkers = new[]
                 {
+                    typeof(GenericEndpointOutboxHostBackgroundWorker),
                     typeof(IntegrationTransportHostBackgroundWorker)
                 };
 
@@ -219,7 +224,7 @@
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
             {
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
-                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command), new StringFormatterMock());
+                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
 
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));

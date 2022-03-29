@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .Track(inbox, token)
                 .ConfigureAwait(false);
 
-            var outbox = new Outbox(OutboxStorage.All());
+            var outbox = new Outbox(_endpointIdentity, OutboxStorage.All());
 
             await _transaction
                 .Track(outbox, token)

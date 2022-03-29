@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     /// IApplicable
     /// </summary>
     /// <typeparam name="TExpression">TExpression type-argument</typeparam>
-    public interface IApplicable<in TExpression>
+    public interface IApplicable<TExpression>
         where TExpression : class, IIntermediateExpression
     {
         /// <summary>

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Modules.Test.Messages
             Id = id;
         }
 
-        public int Id { get; }
+        public int Id { get; init; }
 
         public override string ToString()
         {

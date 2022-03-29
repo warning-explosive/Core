@@ -30,22 +30,16 @@
 
         public void Verify()
         {
-            var isExternalInitTypes = new[]
-            {
-                AssembliesExtensions.FindRequiredType("System.Private.CoreLib", AssembliesExtensions.BuildName(nameof(System), nameof(System.Runtime), nameof(System.Runtime.CompilerServices), nameof(IsExternalInit))),
-                typeof(IsExternalInit)
-            };
-
             _typeProvider
                 .OurTypes
                 .Where(type => (typeof(IInlinedObject).IsAssignableFrom(type)
                                 || type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
                                && type.IsConcreteType())
-                .SelectMany(type => Verify(type, isExternalInitTypes))
+                .SelectMany(type => Verify(type))
                 .Each(exception => throw exception.Rethrow());
         }
 
-        private IEnumerable<Exception> Verify(Type type, Type[] isExternalInitTypes)
+        private IEnumerable<Exception> Verify(Type type)
         {
             if (TypeHasWrongConstructor(type, out var constructorException))
             {
@@ -57,7 +51,7 @@
                 yield return modifierException;
             }
 
-            foreach (var initPropertyException in InitPropertiesExceptions(type, isExternalInitTypes))
+            foreach (var initPropertyException in MissingPropertyInitializers(type))
             {
                 yield return initPropertyException;
             }
@@ -98,19 +92,13 @@
             return false;
         }
 
-        private static IEnumerable<Exception> InitPropertiesExceptions(Type type, Type[] isExternalInitType)
+        private static IEnumerable<Exception> MissingPropertyInitializers(Type type)
         {
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly);
 
-            foreach (var property in properties)
+            foreach (var property in properties.Where(property => !(property.HasInitializer() && property.SetMethod.IsPrivate)))
             {
-                if (property.SetMethod == default
-                    || property.SetMethod.ReturnParameter == null
-                    || !property.SetMethod.ReturnParameter.GetRequiredCustomModifiers().Any(isExternalInitType.Contains)
-                    || !property.SetMethod.IsPrivate)
-                {
-                    yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have an private init initializer");
-                }
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
             }
         }
     }

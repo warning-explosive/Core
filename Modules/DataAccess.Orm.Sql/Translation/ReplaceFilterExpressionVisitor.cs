@@ -3,29 +3,48 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Basics;
+    using Basics.Primitives;
     using Expressions;
 
     internal class ReplaceFilterExpressionVisitor : IntermediateExpressionVisitorBase
     {
         private readonly IReadOnlyDictionary<string, IIntermediateExpression> _replacements;
+        private readonly Stack<string> _scope;
 
         public ReplaceFilterExpressionVisitor(ProjectionExpression projection)
         {
             _replacements = projection
                 .Bindings
                 .OfType<IBindingIntermediateExpression>()
-                .ToDictionary(binding => binding.Name,
+                .ToDictionary(
+                    binding => binding.Name,
                     NamedBindingExpression.Unwrap,
                     StringComparer.OrdinalIgnoreCase);
+
+            _scope = new Stack<string>();
         }
 
         protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
-            return simpleBindingExpression.Source is ParameterExpression
-                   && _replacements.TryGetValue(simpleBindingExpression.Name, out var replacement)
-                   && replacement.Type == simpleBindingExpression.Type
-                ? replacement
-                : base.VisitSimpleBinding(simpleBindingExpression);
+            using (Disposable.Create(_scope, Push, Pop))
+            {
+                return simpleBindingExpression.Source is ParameterExpression
+                    && _replacements.TryGetValue(_scope.ToString("_"), out var replacement)
+                    && replacement.Type == simpleBindingExpression.Type
+                    ? replacement
+                    : base.VisitSimpleBinding(simpleBindingExpression);
+            }
+
+            void Push(Stack<string> scope)
+            {
+                scope.Push(simpleBindingExpression.Member.Name);
+            }
+
+            void Pop(Stack<string> scope)
+            {
+                scope.Pop();
+            }
         }
 
         protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)

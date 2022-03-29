@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -22,7 +23,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
+            var source = expression
+               .Flatten()
+               .Last()
+               .Source;
+
+            sb.Append(source.Translate(_dependencyContainer, depth));
             sb.Append('.');
             sb.Append('"');
             sb.Append(expression.Name);

@@ -18,31 +18,15 @@ namespace SpaceEngineers.Core.CompositionRoot
     {
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
-            : this(Array.Empty<IManualRegistration>(),
-                Array.Empty<IComponentsOverride>(),
-                Array.Empty<Assembly>(),
-                Array.Empty<string>(),
-                Array.Empty<Type>(),
-                false)
-        {
-        }
-
-        private DependencyContainerOptions(
-            IReadOnlyCollection<IManualRegistration> manualRegistrations,
-            IReadOnlyCollection<IComponentsOverride> overrides,
-            IReadOnlyCollection<Assembly> excludedAssemblies,
-            IReadOnlyCollection<string> excludedNamespaces,
-            IReadOnlyCollection<Type> additionalOurTypes,
-            bool manualVerification)
         {
             ConstructorResolutionBehavior = new ConstructorResolutionBehavior();
 
-            ManualRegistrations = manualRegistrations;
-            Overrides = overrides;
-            ExcludedAssemblies = excludedAssemblies;
-            ExcludedNamespaces = excludedNamespaces;
-            AdditionalOurTypes = additionalOurTypes;
-            ManualVerification = manualVerification;
+            ManualRegistrations = Array.Empty<IManualRegistration>();
+            Overrides = Array.Empty<IComponentsOverride>();
+            ExcludedAssemblies = Array.Empty<Assembly>();
+            ExcludedNamespaces = Array.Empty<string>();
+            AdditionalOurTypes = Array.Empty<Type>();
+            ManualVerification = false;
         }
 
         /// <summary>
@@ -53,37 +37,37 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <summary>
         /// Manual registrations
         /// </summary>
-        public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; init; }
+        public IReadOnlyCollection<IManualRegistration> ManualRegistrations { get; private set; }
 
         /// <summary>
         /// Overrides
         /// </summary>
-        public IReadOnlyCollection<IComponentsOverride> Overrides { get; init; }
+        public IReadOnlyCollection<IComponentsOverride> Overrides { get; private set; }
 
         /// <summary>
         /// Excluded assemblies
         /// Assemblies excluded from type loading
         /// These assemblies and their types will be identified as third party and won't participate in components registrations
         /// </summary>
-        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; init; }
+        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; private set; }
 
         /// <summary>
         /// Excluded namespaces
         /// Namespaces excluded from type loading
         /// These types will be identified as third party and won't participate in components registrations
         /// </summary>
-        public IReadOnlyCollection<string> ExcludedNamespaces { get; init; }
+        public IReadOnlyCollection<string> ExcludedNamespaces { get; private set; }
 
         /// <summary>
         /// Additional our types
         /// Types that will be identified as ours and will take part in components registration
         /// </summary>
-        public IReadOnlyCollection<Type> AdditionalOurTypes { get; init; }
+        public IReadOnlyCollection<Type> AdditionalOurTypes { get; private set; }
 
         /// <summary>
         /// Disables or enables automatic verification on container's creation
         /// </summary>
-        public bool ManualVerification { get; init; }
+        public bool ManualVerification { get; private set; }
 
         /// <inheritdoc />
         public override int GetHashCode()
@@ -110,15 +94,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithManualRegistrations(params IManualRegistration[] manualRegistrations)
         {
-            return !manualRegistrations.Any()
-                ? this
-                : new DependencyContainerOptions(
-                    ManualRegistrations.Concat(manualRegistrations).ToList(),
-                    Overrides,
-                    ExcludedAssemblies,
-                    ExcludedNamespaces,
-                    AdditionalOurTypes,
-                    ManualVerification);
+            ManualRegistrations = ManualRegistrations.Concat(manualRegistrations).ToList();
+
+            return this;
         }
 
         /// <summary>
@@ -128,15 +106,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithOverrides(params IComponentsOverride[] overrides)
         {
-            return !overrides.Any()
-                ? this
-                : new DependencyContainerOptions(
-                    ManualRegistrations,
-                    Overrides.Concat(overrides).ToList(),
-                    ExcludedAssemblies,
-                    ExcludedNamespaces,
-                    AdditionalOurTypes,
-                    ManualVerification);
+            Overrides = Overrides.Concat(overrides).ToList();
+
+            return this;
         }
 
         /// <summary>
@@ -146,15 +118,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithExcludedAssemblies(params Assembly[] assemblies)
         {
-            return !assemblies.Any()
-                ? this
-                : new DependencyContainerOptions(
-                    ManualRegistrations,
-                    Overrides,
-                    ExcludedAssemblies.Concat(assemblies).ToList(),
-                    ExcludedNamespaces,
-                    AdditionalOurTypes,
-                    ManualVerification);
+            ExcludedAssemblies = ExcludedAssemblies.Concat(assemblies).ToList();
+
+            return this;
         }
 
         /// <summary>
@@ -164,15 +130,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithExcludedNamespaces(params string[] namespaces)
         {
-            return !namespaces.Any()
-                ? this
-                : new DependencyContainerOptions(
-                    ManualRegistrations,
-                    Overrides,
-                    ExcludedAssemblies,
-                    ExcludedNamespaces.Concat(namespaces).ToHashSet(StringComparer.OrdinalIgnoreCase),
-                    AdditionalOurTypes,
-                    ManualVerification);
+            ExcludedNamespaces = ExcludedNamespaces.Concat(namespaces).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return this;
         }
 
         /// <summary>
@@ -182,15 +142,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithAdditionalOurTypes(params Type[] additionalOurTypes)
         {
-            return !additionalOurTypes.Any()
-                ? this
-                : new DependencyContainerOptions(
-                    ManualRegistrations,
-                    Overrides,
-                    ExcludedAssemblies,
-                    ExcludedNamespaces,
-                    AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet(),
-                    ManualVerification);
+            AdditionalOurTypes = AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet();
+
+            return this;
         }
 
         /// <summary>
@@ -200,13 +154,9 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <returns>DependencyContainerOptions</returns>
         public DependencyContainerOptions WithManualVerification(bool attribute)
         {
-            return new DependencyContainerOptions(
-                ManualRegistrations,
-                Overrides,
-                ExcludedAssemblies,
-                ExcludedNamespaces,
-                AdditionalOurTypes,
-                attribute);
+            ManualVerification = attribute;
+
+            return this;
         }
     }
 }

@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
 
             message.WriteHeader(new SentFrom(_endpointIdentity));
 
-            var requestId = message.Id;
+            var requestId = message.ReadRequiredHeader<Id>().Value;
 
             var tcs = new TaskCompletionSource<IntegrationMessage>();
 

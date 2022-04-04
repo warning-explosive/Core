@@ -128,11 +128,29 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             };
         }
 
-        internal static IDependencyContainer GetTransportEndpointDependencyContainer(this IServiceProvider serviceProvider)
+        internal static IDependencyContainer GetTransportEndpointDependencyContainer(
+            this IServiceProvider serviceProvider)
         {
             return serviceProvider
-                .GetService<IDependencyContainer>()
-                .EnsureNotNull(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
+               .GetServices<IDependencyContainer>()
+               .SingleOrDefault(IsTransportContainer)
+               .EnsureNotNull(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
+
+            static bool IsTransportContainer(IDependencyContainer container)
+            {
+                return ExecutionExtensions
+                   .Try(container, IsTransportContainerUnsafe)
+                   .Catch<Exception>()
+                   .Invoke(_ => false);
+            }
+
+            static bool IsTransportContainerUnsafe(IDependencyContainer container)
+            {
+                return container
+                   .Resolve<EndpointIdentity>()
+                   .LogicalName
+                   .Equals(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         private static ITransportEndpointBuilder ConfigureBuilder(
@@ -151,7 +169,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     nameof(Core),
                     nameof(Core.CrossCuttingConcerns)));
 
-            var endpointIdentity = new EndpointIdentity(nameof(IntegrationTransport), Guid.NewGuid());
+            var endpointIdentity = new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid());
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 

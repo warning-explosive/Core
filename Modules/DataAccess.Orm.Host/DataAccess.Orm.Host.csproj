@@ -30,6 +30,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
       <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
     <ItemGroup>

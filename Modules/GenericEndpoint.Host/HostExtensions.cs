@@ -27,6 +27,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
         private const string RequireTransportInjection = "Unable to find IIntegrationTransport injection.";
         private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
+        private const string RequireExecuteMigrationsCall = ".ExecuteMigrations() should be called after all endpoint declarations";
+        private const string RequireUseEndpointCallBeforeMigrationsCall = ".UseEndpoint() with identity {0} should be called before migrations declaration";
 
         /// <summary>
         /// Gets endpoint dependency container
@@ -38,21 +40,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         {
             return host
                 .Services
-                .GetServices<DependencyContainer>()
+                .GetServices<IDependencyContainer>()
                 .SingleOrDefault(IsEndpointContainer(endpointIdentity))
                 .EnsureNotNull(RequireUseEndpointCall.Format(endpointIdentity));
 
             static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {
                 return container => ExecutionExtensions
-                    .Try(endpointIdentity, IsEndpointContainerUnsafe(container))
+                    .Try(container, state => IsEndpointContainerUnsafe(state, endpointIdentity))
                     .Catch<Exception>()
                     .Invoke(_ => false);
             }
 
-            static Func<EndpointIdentity, bool> IsEndpointContainerUnsafe(IDependencyContainer dependencyContainer)
+            static bool IsEndpointContainerUnsafe(IDependencyContainer dependencyContainer, EndpointIdentity endpointIdentity)
             {
-                return endpointIdentity => dependencyContainer.Resolve<EndpointIdentity>().Equals(endpointIdentity);
+                return dependencyContainer
+                   .Resolve<EndpointIdentity>()
+                   .Equals(endpointIdentity);
             }
         }
 
@@ -68,17 +72,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             EndpointIdentity endpointIdentity,
             Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> optionsFactory)
         {
+            hostBuilder.ApplyOptions(endpointIdentity);
+
             return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
                 var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
                 var options = optionsFactory(context, builder);
 
-                hostBuilder.ApplyOptions(options);
-
                 var dependencyContainer = BuildDependencyContainer(options);
 
-                serviceCollection.AddSingleton<DependencyContainer>(dependencyContainer);
+                serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
 
                 foreach (var producer in builder.StartupActions)
                 {
@@ -92,18 +96,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             });
         }
 
-        private static void ApplyOptions(this IHostBuilder hostBuilder, EndpointOptions options)
+        private static void ApplyOptions(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
-            if (!hostBuilder.Properties.TryGetValue(nameof(EndpointOptions), out var value)
-                || value is not ICollection<EndpointOptions> optionsCollection)
+            if (hostBuilder.Properties.Keys.OfType<string>().Contains("Migrations", StringComparer.OrdinalIgnoreCase))
             {
-                hostBuilder.Properties[nameof(EndpointOptions)] = new List<EndpointOptions> { options };
+                throw new InvalidOperationException(RequireExecuteMigrationsCall.Format(RequireUseEndpointCallBeforeMigrationsCall.Format(endpointIdentity)));
+            }
+
+            if (!hostBuilder.Properties.TryGetValue(nameof(EndpointIdentity), out var value)
+                || value is not ICollection<EndpointIdentity> identities)
+            {
+                hostBuilder.Properties[nameof(EndpointIdentity)] = new List<EndpointIdentity> { endpointIdentity };
                 return;
             }
 
-            var duplicates = optionsCollection
-                .Concat(new[] { options })
-                .GroupBy(e => e.Identity)
+            var duplicates = identities
+                .Concat(new[] { endpointIdentity })
+                .GroupBy(identity => identity)
                 .Where(grp => grp.Count() > 1)
                 .Select(grp => grp.Key.ToString())
                 .ToList();
@@ -113,12 +122,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(string.Join(", ", duplicates)));
             }
 
-            optionsCollection.Add(options);
+            identities.Add(endpointIdentity);
         }
 
-        private static DependencyContainer BuildDependencyContainer(EndpointOptions options)
+        private static IDependencyContainer BuildDependencyContainer(EndpointOptions options)
         {
-            return (DependencyContainer)DependencyContainer.CreateBoundedAbove(
+            return DependencyContainer.CreateBoundedAbove(
                 options.ContainerOptions,
                 options.AboveAssemblies.ToArray());
         }

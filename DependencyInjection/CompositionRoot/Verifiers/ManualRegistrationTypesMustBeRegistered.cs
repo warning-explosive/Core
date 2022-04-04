@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             _typeProvider = typeProvider;
         }
 
-        protected override void VerifyInternal(ICollection<Type> registered)
+        protected override void VerifyInternal(IReadOnlyCollection<Type> registeredComponents)
         {
             _typeProvider
                .OurTypes
@@ -40,8 +40,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                .Where(info => info.attribute != null)
                .SelectMany(info => FlattenAutoRegistrationServices(info.implementation)
                    .Select(service => (service, info.implementation, info.attribute)))
-               .Where(info => !registered.Contains(info.implementation) && !HasBeenOverridden(info.service))
+               .Where(info => !Registered(registeredComponents, info))
                .Each(info => throw new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));
+        }
+
+        private bool Registered(
+            IReadOnlyCollection<Type> registeredComponents,
+            (Type service, Type implementation, ManuallyRegisteredComponentAttribute? attribute) info)
+        {
+            return registeredComponents.Contains(info.implementation)
+                || HasBeenOverridden(info.service);
         }
 
         private bool HasBeenOverridden(Type service)

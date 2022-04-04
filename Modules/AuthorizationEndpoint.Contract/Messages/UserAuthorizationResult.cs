@@ -24,16 +24,16 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
         /// <summary>
         /// Username
         /// </summary>
-        public string Username { get; }
+        public string Username { get; init; }
 
         /// <summary>
         /// Authorization token
         /// </summary>
-        public string Token { get; }
+        public string Token { get; init; }
 
         /// <summary>
         /// Authorization details
         /// </summary>
-        public string Details { get; }
+        public string Details { get; init; }
     }
 }

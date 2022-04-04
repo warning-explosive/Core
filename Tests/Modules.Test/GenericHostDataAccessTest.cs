@@ -171,42 +171,50 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
+            };
+
             var host = useTransport(Output, Host.CreateDefaultBuilder())
-                .UseTracingEndpoint(
-                    TestIdentity.Instance0,
+               .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
-                        .WithDataAccess(databaseProvider)
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithOverrides(overrides))
+                   .BuildOptions())
+               .BuildHost();
 
-            var tracingEndpointContainer = host.GetEndpointDependencyContainer(
-                new EndpointIdentity(TracingEndpointIdentity.LogicalName, TestIdentity.Instance0));
+            var migrationsContainer = host.GetMigrationsDependencyContainer();
 
-            var actualModel = await tracingEndpointContainer
+            var actualModel = await migrationsContainer
                 .Resolve<IDatabaseModelBuilder>()
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var databaseEntities = tracingEndpointContainer
+            var databaseEntities = migrationsContainer
                .Resolve<IDatabaseTypeProvider>()
                .DatabaseEntities()
                .ToArray();
 
-            var expectedModel = await tracingEndpointContainer
+            var expectedModel = await migrationsContainer
                 .Resolve<ICodeModelBuilder>()
                 .BuildModel(databaseEntities, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var modelChanges = tracingEndpointContainer
+            var modelChanges = migrationsContainer
                 .Resolve<IModelComparator>()
                 .ExtractDiff(actualModel, expectedModel);
 
             Assert.NotEmpty(modelChanges);
 
-            modelChanges = tracingEndpointContainer
+            modelChanges = migrationsContainer
                 .Resolve<IModelComparator>()
                 .ExtractDiff(expectedModel, expectedModel);
 
@@ -230,41 +238,52 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(User)
             };
 
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
+            };
+
             var host = useTransport(Output, Host.CreateDefaultBuilder())
-                .UseTracingEndpoint(
-                    TestIdentity.Instance0,
+               .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
-                        .WithDataAccess(databaseProvider)
-                        .ModifyContainerOptions(options => options
-                            .WithAdditionalOurTypes(additionalOurTypes)
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithOverrides(overrides))
+                   .BuildOptions())
+               .BuildHost();
 
             var tracingEndpointContainer = host.GetEndpointDependencyContainer(
                 new EndpointIdentity(TracingEndpointIdentity.LogicalName, TestIdentity.Instance0));
 
-            var actualModel = await tracingEndpointContainer
+            var migrationsContainer = host.GetMigrationsDependencyContainer();
+
+            var actualModel = await migrationsContainer
                 .Resolve<IDatabaseModelBuilder>()
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var databaseEntities = tracingEndpointContainer
+            var databaseEntities = migrationsContainer
                .Resolve<IDatabaseTypeProvider>()
                .DatabaseEntities()
                .ToArray();
 
-            var expectedModel = await tracingEndpointContainer
+            var expectedModel = await migrationsContainer
                 .Resolve<ICodeModelBuilder>()
                 .BuildModel(databaseEntities, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var unorderedModelChanges = tracingEndpointContainer
+            var unorderedModelChanges = migrationsContainer
                 .Resolve<IModelComparator>()
                 .ExtractDiff(actualModel, expectedModel);
 
-            var modelChanges = tracingEndpointContainer
+            var modelChanges = migrationsContainer
                 .Resolve<IModelChangesSorter>()
                 .Sort(unorderedModelChanges)
                 .ToArray();
@@ -277,16 +296,16 @@ namespace SpaceEngineers.Core.Modules.Test
 
                 AssertCreateDataBase(modelChanges, 0, nameof(ExtractDatabaseModelChangesDiffTest));
 
-                AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql)));
+                AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql), nameof(Core.DataAccess.Orm.Sql.Host)));
                 AssertCreateSchema(modelChanges, 2, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
                 AssertCreateSchema(modelChanges, 3, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.Modules), nameof(Core.Modules.Test)));
                 AssertCreateSchema(modelChanges, 4, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.TracingEndpoint)));
 
                 AssertCreateTable(modelChanges, 5, typeof(AppliedMigration));
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.PrimaryKey), "not null primary key");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.DateTime), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.CommandText), "not null");
-                AssertColumnConstraints(tracingEndpointContainer, modelChanges, 5, nameof(AppliedMigration.Name), "not null");
+                AssertColumnConstraints(migrationsContainer, modelChanges, 5, nameof(AppliedMigration.PrimaryKey), "not null primary key");
+                AssertColumnConstraints(migrationsContainer, modelChanges, 5, nameof(AppliedMigration.DateTime), "not null");
+                AssertColumnConstraints(migrationsContainer, modelChanges, 5, nameof(AppliedMigration.CommandText), "not null");
+                AssertColumnConstraints(migrationsContainer, modelChanges, 5, nameof(AppliedMigration.Name), "not null");
 
                 AssertCreateTable(modelChanges, 6, typeof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeader));
                 AssertColumnConstraints(tracingEndpointContainer, modelChanges, 6, nameof(GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessageHeader.PrimaryKey), "not null primary key");
@@ -374,11 +393,11 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssertCreateView(modelChanges, 23, nameof(DatabaseSchema));
                 AssertCreateView(modelChanges, 24, nameof(DatabaseView));
 
-                AssertCreateIndex(modelChanges, 25, "SpaceEngineersCoreDataAccessOrmSql", nameof(AppliedMigration), nameof(AppliedMigration.Name));
-                AssertCreateIndex(modelChanges, 26, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseColumn), "Column_Schema_Table");
-                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseIndex), "Index_Schema_Table");
-                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseSchema), "Name");
-                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSql", nameof(DatabaseView), "Query_Schema_View");
+                AssertCreateIndex(modelChanges, 25, "SpaceEngineersCoreDataAccessOrmSqlHost", nameof(AppliedMigration), nameof(AppliedMigration.Name));
+                AssertCreateIndex(modelChanges, 26, "SpaceEngineersCoreDataAccessOrmSqlHost", nameof(DatabaseColumn), "Column_Schema_Table");
+                AssertCreateIndex(modelChanges, 27, "SpaceEngineersCoreDataAccessOrmSqlHost", nameof(DatabaseIndex), "Index_Schema_Table");
+                AssertCreateIndex(modelChanges, 28, "SpaceEngineersCoreDataAccessOrmSqlHost", nameof(DatabaseSchema), "Name");
+                AssertCreateIndex(modelChanges, 29, "SpaceEngineersCoreDataAccessOrmSqlHost", nameof(DatabaseView), "Query_Schema_View");
                 AssertCreateIndex(modelChanges, 30, "SpaceEngineersCoreGenericEndpointDataAccess", "IntegrationMessage_IntegrationMessageHeader", "Left_Right");
                 AssertCreateIndex(modelChanges, 31, "SpaceEngineersCoreModulesTest", "Blog_Post", "Left_Right");
                 AssertCreateIndex(modelChanges, 32, "SpaceEngineersCoreModulesTest", "Community_Participant", "Left_Right");

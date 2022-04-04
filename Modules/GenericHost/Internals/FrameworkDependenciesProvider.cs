@@ -8,11 +8,11 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class FrameworkDependenciesProvider : IFrameworkDependenciesProvider
     {
-        private const string RequireUseDependencyContainerCall = "Call .UseFrameworkDependenciesProvider() during application initialization so as to resolve framework dependencies";
+        private const string RequireFrameworkDependenciesProviderSetup = "Setup IFrameworkDependenciesProvider during application initialization so as to resolve framework dependencies";
 
         private IServiceProvider? _serviceProvider;
 
-        private IServiceProvider ServiceProvider => _serviceProvider.EnsureNotNull(RequireUseDependencyContainerCall);
+        private IServiceProvider ServiceProvider => _serviceProvider.EnsureNotNull(RequireFrameworkDependenciesProviderSetup);
 
         public TService? GetService<TService>()
         {

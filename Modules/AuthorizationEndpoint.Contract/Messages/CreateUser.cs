@@ -21,11 +21,11 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
         /// <summary>
         /// Username
         /// </summary>
-        public string Username { get; }
+        public string Username { get; init; }
 
         /// <summary>
         /// Password
         /// </summary>
-        public string Password { get; }
+        public string Password { get; init; }
     }
 }

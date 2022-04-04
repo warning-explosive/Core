@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Api.Abstractions.Container;
     using Model;
+    using Orm.Extensions;
     using Orm.Host.Migrations;
     using Orm.Host.Model;
 
@@ -42,9 +43,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
         public async Task ExecuteManualMigration(CancellationToken token)
         {
-            var actualModel = await _databaseModelBuilder
-                .BuildModel(token)
-                .ConfigureAwait(false);
+            var actualModel = await _dependencyContainer
+               .InvokeWithinTransaction(false, _databaseModelBuilder, static (_, databaseModelBuilder, t) => databaseModelBuilder.BuildModel(t), token)
+               .ConfigureAwait(false);
 
             var databaseEntities = new[]
             {

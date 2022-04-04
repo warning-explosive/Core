@@ -43,7 +43,10 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Update="BaseStartup.cs">
-            <DependentUpon>IStartup.cs</DependentUpon>
+          <DependentUpon>IStartup.cs</DependentUpon>
+        </Compile>
+        <Compile Update="SimpleInjectorIntegrationManualRegistration.cs">
+          <DependentUpon>BaseStartup.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 </Project>

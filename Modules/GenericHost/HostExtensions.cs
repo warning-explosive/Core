@@ -44,10 +44,10 @@ namespace SpaceEngineers.Core.GenericHost
         public static void VerifyDependencyContainers(
             this IServiceProvider serviceProvider)
         {
-            serviceProvider.GetServices<IDependencyContainer>()
-                .Concat(serviceProvider.GetServices<DependencyContainer>())
-                .Distinct()
-                .Each(dependencyContainer => ((DependencyContainer)dependencyContainer).Verify());
+            serviceProvider
+               .GetServices<IDependencyContainer>()
+               .Distinct()
+               .Each(dependencyContainer => ((DependencyContainer)dependencyContainer).Verify());
         }
 
         /// <summary>

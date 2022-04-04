@@ -635,7 +635,7 @@ namespace SpaceEngineers.Core.Basics
 
                 if (genericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
                 {
-                    filters.Add(type => type.IsClass);
+                    filters.Add(type => type.IsClass || type.IsInterface);
                 }
 
                 if (genericParameterAttributes.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))

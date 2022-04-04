@@ -26,7 +26,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     public class DependencyContainer : IDependencyContainer, IDisposable
     {
-        private readonly Container _container;
         private DependencyContainerOptions _options;
         private bool _wasVerified;
         private bool _suppressResolveWarnings;
@@ -39,7 +38,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             DependencyContainerOptions options,
             ITypeProvider typeProvider)
         {
-            _container = new Container
+            Container = new Container
             {
                 Options =
                 {
@@ -66,10 +65,15 @@ namespace SpaceEngineers.Core.CompositionRoot
             }
         }
 
+        /// <summary>
+        /// Container
+        /// </summary>
+        public Container Container { get; }
+
         /// <inheritdoc />
         public void Dispose()
         {
-            _container.Dispose();
+            Container.Dispose();
         }
 
         #region Creation
@@ -152,7 +156,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <inheritdoc />
         public IDisposable OpenScope()
         {
-            return AsyncScopedLifestyle.BeginScope(_container);
+            return AsyncScopedLifestyle.BeginScope(Container);
         }
 
         #if NETSTANDARD2_1
@@ -160,7 +164,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <inheritdoc />
         public IAsyncDisposable OpenScopeAsync()
         {
-            return AsyncScopedLifestyle.BeginScope(_container);
+            return AsyncScopedLifestyle.BeginScope(Container);
         }
 
         #endif
@@ -177,7 +181,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(typeof(TService));
-                    return _container.GetInstance<TService>();
+                    return Container.GetInstance<TService>();
                 });
         }
 
@@ -188,7 +192,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return Resolve(typeof(TService),
                 () =>
                 {
-                    var instance = _container.GetInstance<TService>();
+                    var instance = Container.GetInstance<TService>();
 
                     instance.Initialize(runtimeInfo);
 
@@ -203,7 +207,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(service);
-                    return _container.GetInstance(service);
+                    return Container.GetInstance(service);
                 });
         }
 
@@ -214,7 +218,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(service);
-                    return _container.GetInstance(service.MakeGenericType(genericTypeArguments));
+                    return Container.GetInstance(service.MakeGenericType(genericTypeArguments));
                 });
         }
 
@@ -226,7 +230,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(typeof(TService));
-                    return _container.GetAllInstances<TService>();
+                    return Container.GetAllInstances<TService>();
                 });
         }
 
@@ -236,7 +240,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return Resolve(service, () =>
             {
                 IsNotInitializable(service);
-                return _container.GetAllInstances(service);
+                return Container.GetAllInstances(service);
             });
         }
 
@@ -260,7 +264,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ExecutionExtensions
                 .Try(() =>
                 {
-                    _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
+                    Container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
                     _wasVerified = true;
                     _suppressResolveWarnings = false;
                 })
@@ -301,11 +305,11 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private void Register(IRegistrationsContainer registrations)
         {
-            registrations.Instances().RegisterInstances(_container);
-            registrations.Resolvable().RegisterResolvable(_container);
-            registrations.Delegates().RegisterDelegates(_container);
-            registrations.Collections().RegisterCollections(_container);
-            registrations.Decorators().RegisterDecorators(_container);
+            registrations.Instances().RegisterInstances(Container);
+            registrations.Resolvable().RegisterResolvable(Container);
+            registrations.Delegates().RegisterDelegates(Container);
+            registrations.Collections().RegisterCollections(Container);
+            registrations.Decorators().RegisterDecorators(Container);
         }
 
         private T Resolve<T>(Type service, Func<T> producer)

@@ -101,5 +101,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             await _transaction.Close(false, token).ConfigureAwait(false);
         }
+
+        private async Task DeliverMessages(Outbox outbox, CancellationToken token)
+        {
+            if (outbox.OutgoingMessages.Any())
+            {
+                await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
+                {
+                    await outbox
+                       .DeliverMessages(_transport, token)
+                       .ConfigureAwait(false);
+                }
+            }
+        }
     }
 }

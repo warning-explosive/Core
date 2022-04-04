@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.IntegrationTransport.WebHost
 {
-    using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Abstractions.Registration;
     using Microsoft.Extensions.DependencyInjection;
     using SimpleInjector;
@@ -20,7 +18,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
         {
             ((DependencyContainer)container.Advanced.Container).SuppressResolveWarnings();
 
-            var simpleInjector = ExtractSimpleInjector(container.Advanced.Container);
+            var simpleInjector = ((DependencyContainer)container.Advanced.Container).Container;
 
             _serviceCollection.AddSimpleInjector(
                 simpleInjector,
@@ -34,14 +32,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
                         .AddAspNetCore(ServiceScopeReuseBehavior.OnePerNestedScope)
                         .AddControllerActivation(Lifestyle.Transient);
                 });
-        }
-
-        private static Container ExtractSimpleInjector(
-            IDependencyContainer dependencyContainerImplementation)
-        {
-            return dependencyContainerImplementation
-                .GetFieldValue<Container?>("_container")
-                .EnsureNotNull("Dependency container should have SimpleInjector container reference inside");
         }
     }
 }

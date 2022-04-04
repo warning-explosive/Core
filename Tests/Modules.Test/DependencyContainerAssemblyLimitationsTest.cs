@@ -105,18 +105,9 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var boundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
 
-            if (mode)
-            {
-                Assert.Throws<InvalidOperationException>(() => boundedContainer
-                   .Resolve<ICompositionInfoExtractor>()
-                   .GetCompositionInfo(mode));
-            }
-            else
-            {
-                _ = boundedContainer
-                   .Resolve<ICompositionInfoExtractor>()
-                   .GetCompositionInfo(mode);
-            }
+            _ = boundedContainer
+               .Resolve<ICompositionInfoExtractor>()
+               .GetCompositionInfo(mode);
 
             var additionalTypes = new[]
             {

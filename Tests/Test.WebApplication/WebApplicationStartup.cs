@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Web.Auth.Authentication;
 
     [SuppressMessage("Analysis", "CA1506", Justification ="web application composition root")]
-    internal class WebApplicationStartup : SimpleInjectorBaseStartup
+    internal class WebApplicationStartup : BaseStartup
     {
         public WebApplicationStartup(
             IHostBuilder hostBuilder,
@@ -32,7 +32,8 @@ namespace SpaceEngineers.Core.Test.WebApplication
         }
 
         protected sealed override void ConfigureAspNetCoreServices(
-            IServiceCollection serviceCollection)
+            IServiceCollection serviceCollection,
+            IConfiguration configuration)
         {
             serviceCollection.AddMvcCore(options => options.Filters.Add(new AuthorizeFilter()));
 
@@ -125,7 +126,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
             serviceCollection.AddResponseCompression(options => options.Providers.Add<GzipCompressionProvider>());
             serviceCollection.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
 
-            serviceCollection.AddAuth(Configuration);
+            serviceCollection.AddAuth(configuration);
         }
 
         protected sealed override void ConfigureAspNetCoreRequestPipeline(

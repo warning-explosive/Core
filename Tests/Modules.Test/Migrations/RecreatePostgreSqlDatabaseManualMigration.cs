@@ -21,14 +21,8 @@ namespace SpaceEngineers.Core.Modules.Test.Migrations
                                                                ICollectionResolvable<IManualMigration>
     {
         private const string CommandText = @"
-SELECT pg_terminate_backend(pg_stat_activity.pid)
-FROM pg_stat_activity
-WHERE datname in ('{0}');
-
-drop database if exists ""{0}"";
-
+drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
-
 grant all privileges on database ""{0}"" to ""{1}""";
 
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
@@ -73,6 +67,8 @@ grant all privileges on database ""{0}"" to ""{1}""";
                    .InvokeScalar(commandText, ormSettings, token)
                    .ConfigureAwait(false);
             }
+
+            NpgsqlConnection.ClearAllPools();
         }
     }
 }

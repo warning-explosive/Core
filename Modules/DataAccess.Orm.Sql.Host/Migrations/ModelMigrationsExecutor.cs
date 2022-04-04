@@ -61,17 +61,20 @@
                .DoesDatabaseExist(token)
                .ConfigureAwait(false);
 
-            var appliedMigrations = databaseExists
-                ? await _dependencyContainer
-                   .InvokeWithinTransaction(false, ReadAppliedMigrations, token)
-                   .ConfigureAwait(false)
-                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var migration in manualMigrations.Where(migration => !appliedMigrations.Contains(migration.Name)))
+            foreach (var migration in manualMigrations)
             {
-                await migration
-                   .ExecuteManualMigration(token)
-                   .ConfigureAwait(false);
+                var appliedMigrations = databaseExists
+                    ? await _dependencyContainer
+                       .InvokeWithinTransaction(false, ReadAppliedMigrations, token)
+                       .ConfigureAwait(false)
+                    : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                if (!appliedMigrations.Contains(migration.Name))
+                {
+                    await migration
+                       .ExecuteManualMigration(token)
+                       .ConfigureAwait(false);
+                }
             }
         }
 

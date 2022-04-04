@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             VerifyInternal(_registrations.RegisteredComponents().ToList());
         }
 
-        protected abstract void VerifyInternal(ICollection<Type> registered);
+        protected abstract void VerifyInternal(IReadOnlyCollection<Type> registeredComponents);
 
         protected static IEnumerable<Type> FlattenAutoRegistrationServices(Type type)
         {

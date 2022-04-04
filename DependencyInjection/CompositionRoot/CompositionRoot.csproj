@@ -32,6 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SimpleInjector" Version="5.3.3" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +45,9 @@
     </Compile>
     <Compile Update="Verifiers\UnregisteredTypesMustBeUnregistered.cs">
       <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\DependencyInfo.cs">
+      <DependentUpon>CompositionInfoExtractor.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

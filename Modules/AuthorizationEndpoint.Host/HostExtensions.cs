@@ -21,12 +21,12 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="endpointInstanceName">Endpoint instance name</param>
-        /// <param name="factory">Endpoint options factory</param>
+        /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseAuthorizationEndpoint(
             this IHostBuilder hostBuilder,
             object endpointInstanceName,
-            Func<IEndpointBuilder, EndpointOptions> factory)
+            Func<IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             var assemblies = new[]
             {
@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Host
 
             return hostBuilder.UseEndpoint(
                 new EndpointIdentity(AuthorizationEndpointIdentity.LogicalName, endpointInstanceName),
-                (context, endpointBuilder) => factory(endpointBuilder
+                (context, endpointBuilder) => optionsFactory(endpointBuilder
                     .WithEndpointPluginAssemblies(assemblies)
                     .ModifyContainerOptions(options => options.WithManualRegistrations(new JwtTokenProviderManualRegistration(context.Configuration.GetAuthenticationConfiguration())))));
         }

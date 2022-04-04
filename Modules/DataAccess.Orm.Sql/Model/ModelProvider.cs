@@ -13,7 +13,7 @@
     using Dynamic;
     using Dynamic.Abstractions;
     using Extensions;
-    using Orm.Model;
+    using Orm.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelProvider : IModelProvider
@@ -87,7 +87,7 @@
             }
         }
 
-        public IEnumerable<ITableInfo> TablesFor(Type[] databaseEntities)
+        public IEnumerable<ITableInfo> TablesFor(IReadOnlyCollection<Type> databaseEntities)
         {
             databaseEntities = _databaseTypeProvider
                 .DatabaseEntities()

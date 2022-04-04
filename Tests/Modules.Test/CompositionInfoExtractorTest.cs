@@ -22,7 +22,11 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(Core.CompositionRoot)));
 
             var options = new DependencyContainerOptions();
 
@@ -38,14 +42,16 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             using (DependencyContainer.OpenScope())
             {
-                var compositionInfo = DependencyContainer.Resolve<ICompositionInfoExtractor>()
-                                                         .GetCompositionInfo(mode)
-                                                         .ToArray();
+                var compositionInfo = DependencyContainer
+                   .Resolve<ICompositionInfoExtractor>()
+                   .GetCompositionInfo(mode)
+                   .ToArray();
 
                 Output.WriteLine($"Total: {compositionInfo.Length}{Environment.NewLine}");
 
-                Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
-                                                    .Visualize(compositionInfo));
+                Output.WriteLine(DependencyContainer
+                   .Resolve<ICompositionInfoInterpreter<string>>()
+                   .Visualize(compositionInfo));
             }
         }
     }

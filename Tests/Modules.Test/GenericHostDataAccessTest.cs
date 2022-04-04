@@ -7,15 +7,17 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
-    using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Model;
-    using DataAccess.Orm.PostgreSql;
+    using DataAccess.Orm.Host;
+    using DataAccess.Orm.Host.Model;
+    using DataAccess.Orm.PostgreSql.Host;
+    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
     using DatabaseEntities.Relations;
     using GenericEndpoint.DataAccess.DatabaseModel;
@@ -26,6 +28,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Hosting;
+    using Migrations;
     using Mocks;
     using Overrides;
     using Registrations;
@@ -53,20 +56,6 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         /// <summary>
-        /// useContainer
-        /// </summary>
-        /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
-        {
-            var dependencyContainerProducers = new[]
-            {
-                new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
-            };
-
-            return dependencyContainerProducers;
-        }
-
-        /// <summary>
         /// databaseProvider
         /// </summary>
         /// <returns>DatabaseProviders</returns>
@@ -84,32 +73,27 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
-            var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
-                    useContainer => (output, hostBuilder) => hostBuilder
-                        .UseIntegrationTransport(builder => builder
-                            .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithDefaultCrossCuttingConcerns()
-                            .ModifyContainerOptions(options => options
-                                .WithOverrides(new TestLoggerOverride(output))
-                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
-                            .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
+                (output, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport
             };
 
-            return DependencyContainerImplementations()
-                .SelectMany(useContainer => integrationTransportProviders
-                    .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => new object[]
-                        {
-                            useContainer,
-                            useTransport(useContainer),
-                            databaseProvider
-                        })));
+            return integrationTransportProviders
+               .SelectMany(useTransport => DatabaseProviders()
+                   .Select(databaseProvider => new object[]
+                   {
+                       useTransport,
+                       databaseProvider
+                   }));
         }
 
         /// <summary>
@@ -120,34 +104,29 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
-                    useContainer => (output, hostBuilder) => hostBuilder
-                        .UseIntegrationTransport(builder => builder
-                            .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithDefaultCrossCuttingConcerns()
-                            .ModifyContainerOptions(options => options
-                                .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                                .WithOverrides(new TestLoggerOverride(output))
-                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
-                            .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
+                (output, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport
             };
 
-            return DependencyContainerImplementations()
-                .SelectMany(useContainer => integrationTransportProviders
-                    .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => new object[]
-                            {
-                                useContainer,
-                                useTransport(useContainer),
-                                databaseProvider,
-                                timeout
-                            })));
+            return integrationTransportProviders
+               .SelectMany(useTransport => DatabaseProviders()
+                   .Select(databaseProvider => new object[]
+                   {
+                       useTransport,
+                       databaseProvider,
+                       timeout
+                   }));
         }
 
         /// <summary>
@@ -158,41 +137,35 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
-                    useContainer => (output, hostBuilder) => hostBuilder
-                        .UseIntegrationTransport(builder => builder
-                            .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithDefaultCrossCuttingConcerns()
-                            .WithTracing()
-                            .ModifyContainerOptions(options => options
-                                .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                                .WithOverrides(new TestLoggerOverride(output))
-                                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
-                            .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
+                (output, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport
             };
 
-            return DependencyContainerImplementations()
-                .SelectMany(useContainer => integrationTransportProviders
-                    .SelectMany(useTransport => DatabaseProviders()
-                        .Select(databaseProvider => new object[]
-                            {
-                                useContainer,
-                                useTransport(useContainer),
-                                databaseProvider,
-                                timeout
-                            })));
+            return integrationTransportProviders
+               .SelectMany(useTransport => DatabaseProviders()
+                   .Select(databaseProvider => new object[]
+                   {
+                       useTransport,
+                       databaseProvider,
+                       timeout
+                   }));
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
@@ -202,8 +175,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseTracingEndpoint(
                     TestIdentity.Instance0,
                     builder => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithDataAccess(databaseProvider)
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
@@ -219,9 +190,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
+            var databaseEntities = tracingEndpointContainer
+               .Resolve<IDatabaseTypeProvider>()
+               .DatabaseEntities()
+               .ToArray();
+
             var expectedModel = await tracingEndpointContainer
                 .Resolve<ICodeModelBuilder>()
-                .BuildModel(CancellationToken.None)
+                .BuildModel(databaseEntities, CancellationToken.None)
                 .ConfigureAwait(false);
 
             var modelChanges = tracingEndpointContainer
@@ -240,7 +216,6 @@ namespace SpaceEngineers.Core.Modules.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
@@ -259,8 +234,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 .UseTracingEndpoint(
                     TestIdentity.Instance0,
                     builder => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithDataAccess(databaseProvider)
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -277,9 +250,14 @@ namespace SpaceEngineers.Core.Modules.Test
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
+            var databaseEntities = tracingEndpointContainer
+               .Resolve<IDatabaseTypeProvider>()
+               .DatabaseEntities()
+               .ToArray();
+
             var expectedModel = await tracingEndpointContainer
                 .Resolve<ICodeModelBuilder>()
-                .BuildModel(CancellationToken.None)
+                .BuildModel(databaseEntities, CancellationToken.None)
                 .ConfigureAwait(false);
 
             var unorderedModelChanges = tracingEndpointContainer
@@ -511,7 +489,6 @@ namespace SpaceEngineers.Core.Modules.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task GetConversationTraceTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             TimeSpan timeout)
@@ -531,29 +508,39 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
+            var manualMigrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseManualMigration)
+            };
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))
+            };
+
             var host = useTransport(Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
-                        .WithTracing()
-                        .ModifyContainerOptions(options => options
-                            .WithAdditionalOurTypes(additionalOurTypes)
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
-                        .BuildOptions())
-                .UseTracingEndpoint(
-                    TestIdentity.Instance0,
+                       .WithDataAccess(databaseProvider)
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
-                        .WithDataAccess(databaseProvider)
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithOverrides(new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(manualMigrations)
+                       .WithOverrides(overrides))
+                   .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();

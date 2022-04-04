@@ -26,10 +26,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         IsolationLevel IsolationLevel { get; }
 
         /// <summary>
-        /// Checks does the database exist
+        /// Checks the database existence
         /// </summary>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing check operation</returns>
+        /// <returns>Ongoing operation</returns>
         Task<bool> DoesDatabaseExist(CancellationToken token);
 
         /// <summary>

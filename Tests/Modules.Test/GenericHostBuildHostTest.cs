@@ -4,13 +4,11 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using DataAccess.Orm.PostgreSql;
+    using DataAccess.Orm.PostgreSql.Host;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
@@ -32,7 +30,6 @@
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Mocks;
     using Overrides;
     using TracingEndpoint.Contract.Messages;
     using Xunit;
@@ -54,71 +51,42 @@
         }
 
         /// <summary>
-        /// useContainer
-        /// </summary>
-        /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
-        {
-            var dependencyContainerProducers = new[]
-            {
-                new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
-            };
-
-            return dependencyContainerProducers;
-        }
-
-        /// <summary>
         /// useContainer; useTransport;
         /// </summary>
         /// <returns>BuildHostTestData</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
-            var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
-                    useContainer => (output, hostBuilder) => hostBuilder
-                        .UseIntegrationTransport(builder => builder
-                            .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithDefaultCrossCuttingConcerns()
-                            .WithTracing()
-                            .ModifyContainerOptions(options => options
-                                .WithOverrides(new TestLoggerOverride(output)))
-                            .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
+                (output, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(output)))
+                       .BuildOptions()));
 
-            var integrationTransportProviders = new[]
+            return new[]
             {
-                useInMemoryIntegrationTransport
+                new object[]
+                {
+                    useInMemoryIntegrationTransport
+                }
             };
-
-            return DependencyContainerImplementations()
-                .SelectMany(useContainer => integrationTransportProviders
-                    .Select(useTransport => new object[]
-                        {
-                            useContainer,
-                            useTransport(useContainer)
-                        }));
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void SameTransportTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
+        internal void SameTransportTest(Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
         {
             var host = useTransport(Output, Host.CreateDefaultBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())
@@ -139,9 +107,7 @@
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void BuildHostTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
-            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
+        internal void BuildHostTest(Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -169,8 +135,6 @@
             var host = useTransport(Output, Host.CreateDefaultBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithContainer(useContainer)
-                       .WithDefaultCrossCuttingConcerns()
                        .WithDataAccess(new PostgreSqlDatabaseProvider())
                        .WithTracing()
                        .ModifyContainerOptions(options => options

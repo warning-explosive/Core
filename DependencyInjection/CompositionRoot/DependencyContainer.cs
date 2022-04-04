@@ -14,6 +14,8 @@ namespace SpaceEngineers.Core.CompositionRoot
     using Extensions;
     using Implementations;
     using ManualRegistrations;
+    using SimpleInjector;
+    using SimpleInjector.Lifestyles;
 
     /// <summary>
     /// Dependency container implementation based on SimpleInjector
@@ -24,21 +26,34 @@ namespace SpaceEngineers.Core.CompositionRoot
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     public class DependencyContainer : IDependencyContainer, IDisposable
     {
+        private readonly Container _container;
         private DependencyContainerOptions _options;
         private bool _wasVerified;
         private bool _suppressResolveWarnings;
 
         /// <summary> .cctor </summary>
-        /// <param name="implementation">IDependencyContainerImplementation</param>
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
         /// <param name="options">DependencyContainerOptions</param>
         [Obsolete("Use factory methods instead")]
         public DependencyContainer(
-            IDependencyContainerImplementation implementation,
             DependencyContainerOptions options,
             ITypeProvider typeProvider)
         {
-            Container = implementation;
+            _container = new Container
+            {
+                Options =
+                {
+                    DefaultLifestyle = Lifestyle.Transient,
+                    DefaultScopedLifestyle = new AsyncScopedLifestyle(),
+                    UseFullyQualifiedTypeNames = true,
+                    ResolveUnregisteredConcreteTypes = false,
+                    AllowOverridingRegistrations = false,
+                    SuppressLifestyleMismatchVerification = false,
+                    UseStrictLifestyleMismatchBehavior = true,
+                    EnableAutoVerification = false
+                }
+            };
+
             _options = options;
             _wasVerified = false;
             _suppressResolveWarnings = false;
@@ -51,12 +66,10 @@ namespace SpaceEngineers.Core.CompositionRoot
             }
         }
 
-        internal IDependencyContainerImplementation Container { get; }
-
         /// <inheritdoc />
         public void Dispose()
         {
-            Container.Dispose();
+            _container.Dispose();
         }
 
         #region Creation
@@ -65,11 +78,8 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Creates IDependencyContainer without assembly limitations
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer Create(
-            DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> containerImplementationProducer)
+        public static IDependencyContainer Create(DependencyContainerOptions options)
         {
             var typeProvider = new TypeProvider(
                 AssembliesExtensions.AllAssembliesFromCurrentDomain(),
@@ -79,7 +89,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             #pragma warning disable 618
 
-            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
+            return new DependencyContainer(options, typeProvider);
 
             #pragma warning restore 618
         }
@@ -88,12 +98,10 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Creates IDependencyContainer bounded above by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <param name="assemblies">Assembly for container configuration</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateBoundedAbove(
             DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> containerImplementationProducer,
             params Assembly[] assemblies)
         {
             var belowAssemblies = assemblies
@@ -109,7 +117,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             #pragma warning disable 618
 
-            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
+            return new DependencyContainer(options, typeProvider);
 
             #pragma warning restore 618
         }
@@ -118,12 +126,10 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// Creates IDependencyContainer exactly bounded by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="containerImplementationProducer">Dependency container implementation producer</param>
         /// <param name="assemblies">Assemblies for container configuration</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer CreateExactlyBounded(
             DependencyContainerOptions options,
-            Func<IDependencyContainerImplementation> containerImplementationProducer,
             params Assembly[] assemblies)
         {
             var typeProvider = new TypeProvider(
@@ -134,7 +140,7 @@ namespace SpaceEngineers.Core.CompositionRoot
 
             #pragma warning disable 618
 
-            return new DependencyContainer(containerImplementationProducer(), options, typeProvider);
+            return new DependencyContainer(options, typeProvider);
 
             #pragma warning restore 618
         }
@@ -146,7 +152,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <inheritdoc />
         public IDisposable OpenScope()
         {
-            return Container.OpenScope();
+            return AsyncScopedLifestyle.BeginScope(_container);
         }
 
         #if NETSTANDARD2_1
@@ -154,7 +160,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         /// <inheritdoc />
         public IAsyncDisposable OpenScopeAsync()
         {
-            return Container.OpenScopeAsync();
+            return AsyncScopedLifestyle.BeginScope(_container);
         }
 
         #endif
@@ -171,7 +177,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(typeof(TService));
-                    return Container.Resolve<TService>();
+                    return _container.GetInstance<TService>();
                 });
         }
 
@@ -182,7 +188,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return Resolve(typeof(TService),
                 () =>
                 {
-                    var instance = Container.Resolve<TService>();
+                    var instance = _container.GetInstance<TService>();
 
                     instance.Initialize(runtimeInfo);
 
@@ -197,7 +203,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(service);
-                    return Container.Resolve(service);
+                    return _container.GetInstance(service);
                 });
         }
 
@@ -208,7 +214,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(service);
-                    return Container.Resolve(service.MakeGenericType(genericTypeArguments));
+                    return _container.GetInstance(service.MakeGenericType(genericTypeArguments));
                 });
         }
 
@@ -220,7 +226,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                 () =>
                 {
                     IsNotInitializable(typeof(TService));
-                    return Container.ResolveCollection<TService>();
+                    return _container.GetAllInstances<TService>();
                 });
         }
 
@@ -230,7 +236,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return Resolve(service, () =>
             {
                 IsNotInitializable(service);
-                return Container.ResolveCollection(service);
+                return _container.GetAllInstances(service);
             });
         }
 
@@ -254,7 +260,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             ExecutionExtensions
                 .Try(() =>
                 {
-                    Container.ResolveCollection<IConfigurationVerifier>().Each(v => v.Verify());
+                    _container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
                     _wasVerified = true;
                     _suppressResolveWarnings = false;
                 })
@@ -295,11 +301,11 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         private void Register(IRegistrationsContainer registrations)
         {
-            registrations.Instances().RegisterInstances(Container);
-            registrations.Resolvable().RegisterResolvable(Container);
-            registrations.Delegates().RegisterDelegates(Container);
-            registrations.Collections().RegisterCollections(Container);
-            registrations.Decorators().RegisterDecorators(Container);
+            registrations.Instances().RegisterInstances(_container);
+            registrations.Resolvable().RegisterResolvable(_container);
+            registrations.Delegates().RegisterDelegates(_container);
+            registrations.Collections().RegisterCollections(_container);
+            registrations.Decorators().RegisterDecorators(_container);
         }
 
         private T Resolve<T>(Type service, Func<T> producer)

@@ -10,7 +10,7 @@
     using System.Threading;
     using Api.Model;
     using Basics;
-    using Orm.Model;
+    using Orm.Extensions;
     using Translation.Expressions;
 
     /// <summary>

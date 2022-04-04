@@ -7,4 +7,3 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.WebHost")]
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.WebHost.SimpleInjector")]

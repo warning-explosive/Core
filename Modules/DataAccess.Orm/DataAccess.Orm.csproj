@@ -58,68 +58,11 @@
       <Compile Update="Linq\IQueryTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\TableNode.cs">
-        <DependentUpon>SchemaNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\ViewNode.cs">
-        <DependentUpon>SchemaNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\ColumnNode.cs">
-        <DependentUpon>TableNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateColumn.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\AlterColumn.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateDatabase.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateTable.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DropColumn.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DropTable.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DropView.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\IDatabaseModelBuilder.cs">
-        <DependentUpon>IModelBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\ICodeModelBuilder.cs">
-        <DependentUpon>IModelBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\ModelComparator.cs">
-        <DependentUpon>IModelComparator.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\LinqMethods.cs">
         <DependentUpon>ReadRepository.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\SchemaNode.cs">
-        <DependentUpon>DatabaseNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateSchema.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateView.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\IndexNode.cs">
-        <DependentUpon>SchemaNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\CreateIndex.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DropIndex.cs">
-        <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\ChangesTracker.cs">
         <DependentUpon>IChangesTracker.cs</DependentUpon>

@@ -13,5 +13,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// </summary>
         /// <returns>Implementation</returns>
         IEnumerable<Assembly> Implementation();
+
+        /// <summary>
+        /// Database provider implementation for migrations
+        /// </summary>
+        /// <returns>Implementation</returns>
+        IEnumerable<Assembly> Migrations();
     }
 }

@@ -29,7 +29,7 @@
         /// </summary>
         /// <param name="databaseEntities">Database entities</param>
         /// <returns>Tables</returns>
-        public IEnumerable<ITableInfo> TablesFor(Type[] databaseEntities);
+        public IEnumerable<ITableInfo> TablesFor(IReadOnlyCollection<Type> databaseEntities);
 
         /// <summary>
         /// Gets columns for specified type

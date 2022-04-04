@@ -1,13 +1,11 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Api.Abstractions;
@@ -57,7 +55,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api)))
             };
 
@@ -100,7 +97,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)))
             };
@@ -111,11 +107,15 @@ namespace SpaceEngineers.Core.Modules.Test
 
             if (mode)
             {
-                Assert.Throws<InvalidOperationException>(() => GetCompositionInfo(boundedContainer, mode));
+                Assert.Throws<InvalidOperationException>(() => boundedContainer
+                   .Resolve<ICompositionInfoExtractor>()
+                   .GetCompositionInfo(mode));
             }
             else
             {
-                _ = GetCompositionInfo(boundedContainer, mode);
+                _ = boundedContainer
+                   .Resolve<ICompositionInfoExtractor>()
+                   .GetCompositionInfo(mode);
             }
 
             var additionalTypes = new[]
@@ -126,9 +126,10 @@ namespace SpaceEngineers.Core.Modules.Test
 
             options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalTypes);
 
-            var extendedBoundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
-
-            var compositionInfo = GetCompositionInfo(extendedBoundedContainer, mode);
+            var compositionInfo = Fixture
+               .ExactlyBoundedContainer(Output, options, assemblies)
+               .Resolve<ICompositionInfoExtractor>()
+               .GetCompositionInfo(mode);
 
             Output.WriteLine($"Total: {compositionInfo.Count}{Environment.NewLine}");
             Output.WriteLine(boundedContainer.Resolve<ICompositionInfoInterpreter<string>>().Visualize(compositionInfo));
@@ -142,7 +143,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns), nameof(Core.CrossCuttingConcerns.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
             };
@@ -168,11 +168,6 @@ namespace SpaceEngineers.Core.Modules.Test
                 }
 
                 return satisfies;
-            }
-
-            static IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(IDependencyContainer dependencyContainer, bool mode)
-            {
-                return dependencyContainer.Resolve<ICompositionInfoExtractor>().GetCompositionInfo(mode);
             }
         }
 

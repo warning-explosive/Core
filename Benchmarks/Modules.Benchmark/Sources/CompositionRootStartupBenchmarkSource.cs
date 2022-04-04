@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using BenchmarkDotNet.Engines;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions.Container;
-    using Core.Test.Api;
     using CrossCuttingConcerns.Api.Extensions;
     using Test.Registrations;
     using Xunit.Sdk;
@@ -50,10 +49,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [Benchmark(Description = nameof(CreateExactlyBounded), Baseline = true)]
         public IDependencyContainer CreateExactlyBounded()
         {
-            return DependencyContainer.CreateExactlyBounded(
-                Options,
-                Options.UseGenericContainer(),
-                Assemblies);
+            return DependencyContainer.CreateExactlyBounded(Options, Assemblies);
         }
     }
 }

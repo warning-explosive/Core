@@ -16,8 +16,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using CrossCuttingConcerns.Api.Abstractions;
     using Extensions;
     using Model;
+    using Orm.Extensions;
     using Orm.Linq;
-    using Orm.Model;
     using Orm.Settings;
     using Translation;
     using Translation.Extensions;

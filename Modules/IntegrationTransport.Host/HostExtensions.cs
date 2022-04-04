@@ -104,39 +104,38 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             IHostBuilder hostBuilder,
             Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
         {
-            var builder = ConfigureTransportEndpointBuilder(hostBuilder);
+            var builder = ConfigureBuilder(hostBuilder);
 
             var options = optionsFactory(builder);
 
-            var transportDependencyContainer = BuildTransportContainer(options);
+            var dependencyContainer = BuildDependencyContainer(options);
 
-            hostBuilder.Properties[nameof(IIntegrationTransport)] = new InMemoryIntegrationTransportInjectionManualRegistration(transportDependencyContainer);
+            hostBuilder.Properties[nameof(IIntegrationTransport)] = new InMemoryIntegrationTransportInjectionManualRegistration(dependencyContainer);
 
             return serviceCollection =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(transportDependencyContainer);
+                serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
 
                 foreach (var producer in builder.StartupActions)
                 {
-                    serviceCollection.AddSingleton<IHostStartupAction>(producer(transportDependencyContainer));
+                    serviceCollection.AddSingleton<IHostStartupAction>(producer(dependencyContainer));
                 }
 
                 foreach (var producer in builder.BackgroundWorkers)
                 {
-                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(transportDependencyContainer));
+                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(dependencyContainer));
                 }
             };
         }
 
-        internal static IDependencyContainer GetTransportEndpointDependencyContainer(
-            this IServiceProvider serviceProvider)
+        internal static IDependencyContainer GetTransportEndpointDependencyContainer(this IServiceProvider serviceProvider)
         {
             return serviceProvider
                 .GetService<IDependencyContainer>()
                 .EnsureNotNull(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
         }
 
-        private static ITransportEndpointBuilder ConfigureTransportEndpointBuilder(
+        private static ITransportEndpointBuilder ConfigureBuilder(
             IHostBuilder hostBuilder)
         {
             var messagingAssembly = AssembliesExtensions.FindRequiredAssembly(
@@ -146,26 +145,30 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     nameof(Core.GenericEndpoint),
                     nameof(Core.GenericEndpoint.Messaging)));
 
+            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(Core.CrossCuttingConcerns)));
+
             var endpointIdentity = new EndpointIdentity(nameof(IntegrationTransport), Guid.NewGuid());
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             return new TransportEndpointBuilder(endpointIdentity)
                 .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
-                .WithEndpointPluginAssemblies(messagingAssembly)
+                .WithEndpointPluginAssemblies(messagingAssembly, crossCuttingConcernsAssembly)
                 .ModifyContainerOptions(options => options
                     .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
                     .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
                     .WithManualVerification(true));
         }
 
-        private static IDependencyContainer BuildTransportContainer(
-            TransportEndpointOptions transportEndpointOptions)
+        private static IDependencyContainer BuildDependencyContainer(TransportEndpointOptions options)
         {
             return DependencyContainer.CreateBoundedAbove(
-                transportEndpointOptions.ContainerOptions,
-                transportEndpointOptions.ContainerImplementationProducer(transportEndpointOptions.ContainerOptions),
-                transportEndpointOptions.AboveAssemblies.ToArray());
+                options.ContainerOptions,
+                options.AboveAssemblies.ToArray());
         }
     }
 }

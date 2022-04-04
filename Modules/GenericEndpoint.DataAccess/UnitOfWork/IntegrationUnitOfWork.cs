@@ -90,15 +90,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
             await _transaction.Close(true, token).ConfigureAwait(false);
 
-            if (outbox.OutgoingMessages.Any())
-            {
-                await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
-                {
-                    await outbox
-                        .DeliverMessages(_transport, token)
-                        .ConfigureAwait(false);
-                }
-            }
+            await ExecutionExtensions
+               .TryAsync(outbox, DeliverMessages)
+               .Catch<Exception>()
+               .Invoke(token)
+               .ConfigureAwait(false);
         }
 
         protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)

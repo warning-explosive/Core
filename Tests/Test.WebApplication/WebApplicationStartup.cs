@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.IO.Compression;
     using Basics;
     using IntegrationTransport.Host.Builder;
-    using IntegrationTransport.WebHost.SimpleInjector;
+    using IntegrationTransport.WebHost;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;

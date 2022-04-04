@@ -70,39 +70,39 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         {
             return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
-                var builder = ConfigureEndpointBuilder(hostBuilder, endpointIdentity);
+                var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
                 var options = optionsFactory(context, builder);
 
                 hostBuilder.ApplyOptions(options);
 
-                var endpointDependencyContainer = BuildEndpointContainer(options);
+                var dependencyContainer = BuildDependencyContainer(options);
 
-                serviceCollection.AddSingleton<DependencyContainer>(endpointDependencyContainer);
+                serviceCollection.AddSingleton<DependencyContainer>(dependencyContainer);
 
                 foreach (var producer in builder.StartupActions)
                 {
-                    serviceCollection.AddSingleton<IHostStartupAction>(producer(endpointDependencyContainer));
+                    serviceCollection.AddSingleton<IHostStartupAction>(producer(dependencyContainer));
                 }
 
                 foreach (var producer in builder.BackgroundWorkers)
                 {
-                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(endpointDependencyContainer));
+                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(dependencyContainer));
                 }
             });
         }
 
-        private static void ApplyOptions(this IHostBuilder hostBuilder, EndpointOptions endpointOptions)
+        private static void ApplyOptions(this IHostBuilder hostBuilder, EndpointOptions options)
         {
             if (!hostBuilder.Properties.TryGetValue(nameof(EndpointOptions), out var value)
                 || value is not ICollection<EndpointOptions> optionsCollection)
             {
-                hostBuilder.Properties[nameof(EndpointOptions)] = new List<EndpointOptions> { endpointOptions };
+                hostBuilder.Properties[nameof(EndpointOptions)] = new List<EndpointOptions> { options };
                 return;
             }
 
             var duplicates = optionsCollection
-                .Concat(new[] { endpointOptions })
+                .Concat(new[] { options })
                 .GroupBy(e => e.Identity)
                 .Where(grp => grp.Count() > 1)
                 .Select(grp => grp.Key.ToString())
@@ -113,34 +113,37 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(string.Join(", ", duplicates)));
             }
 
-            optionsCollection.Add(endpointOptions);
+            optionsCollection.Add(options);
         }
 
-        private static DependencyContainer BuildEndpointContainer(
-            EndpointOptions endpointOptions)
+        private static DependencyContainer BuildDependencyContainer(EndpointOptions options)
         {
             return (DependencyContainer)DependencyContainer.CreateBoundedAbove(
-                endpointOptions.ContainerOptions,
-                endpointOptions.ContainerImplementationProducer(endpointOptions.ContainerOptions),
-                endpointOptions.AboveAssemblies.ToArray());
+                options.ContainerOptions,
+                options.AboveAssemblies.ToArray());
         }
 
-        private static IEndpointBuilder ConfigureEndpointBuilder(
-            IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity)
+        private static IEndpointBuilder ConfigureBuilder(IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
+            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(Core.CrossCuttingConcerns)));
+
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             return new EndpointBuilder(endpointIdentity)
-                .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
-                .ModifyContainerOptions(options => options
-                    .WithManualRegistrations(integrationTransportInjection)
-                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
-                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
-                    .WithOverrides(new SettingsProviderOverrides())
-                    .WithManualVerification(true));
+               .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
+               .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
+               .ModifyContainerOptions(options => options
+                   .WithManualRegistrations(integrationTransportInjection)
+                   .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
+                   .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                   .WithOverrides(new SettingsProviderOverride())
+                   .WithManualVerification(true));
         }
 
         private static IManualRegistration GetIntegrationTransportInjection(this IHostBuilder hostBuilder)

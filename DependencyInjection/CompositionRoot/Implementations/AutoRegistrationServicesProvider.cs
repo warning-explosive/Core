@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IEnumerable<Type> External()
         {
-            return ExtractGeneric(_typeProvider.AllLoadedTypes, typeof(IExternalResolvable<>));
+            return ExtractGeneric(_typeProvider.OurTypes, typeof(IExternalResolvable<>));
         }
 
         public IEnumerable<Type> Decorators()

@@ -1,25 +1,25 @@
 namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 {
     using Api.Abstractions;
-    using Api.Abstractions.Container;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using SimpleInjector;
 
     [Component(EnLifestyle.Singleton)]
     internal class ContainerImplementationConfigurationVerifier : IConfigurationVerifier,
                                                                   ICollectionResolvable<IConfigurationVerifier>
     {
-        private readonly IDependencyContainerImplementation _container;
+        private readonly Container _container;
 
-        public ContainerImplementationConfigurationVerifier(IDependencyContainerImplementation container)
+        public ContainerImplementationConfigurationVerifier(Container container)
         {
             _container = container;
         }
 
         public void Verify()
         {
-            _container.Verify();
+            _container.Verify(VerificationOption.VerifyAndDiagnose);
         }
     }
 }

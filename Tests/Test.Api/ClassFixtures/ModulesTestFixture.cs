@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, assemblies) => DependencyContainer.CreateBoundedAbove(containerOptions, containerOptions.UseGenericContainer(), assemblies),
+                DependencyContainer.CreateBoundedAbove,
                 aboveAssemblies);
         }
 
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, assemblies) => DependencyContainer.CreateExactlyBounded(containerOptions, containerOptions.UseGenericContainer(), assemblies),
+                DependencyContainer.CreateExactlyBounded,
                 exactAssemblies);
         }
 
@@ -77,7 +77,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         {
             return CreateDependencyContainer(
                 options,
-                (containerOptions, _) => DependencyContainer.Create(containerOptions, containerOptions.UseGenericContainer()));
+                (containerOptions, _) => DependencyContainer.Create(containerOptions));
         }
 
         private static IDependencyContainer CreateDependencyContainer(

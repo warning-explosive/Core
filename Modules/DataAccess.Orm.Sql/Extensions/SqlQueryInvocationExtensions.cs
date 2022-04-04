@@ -67,5 +67,57 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 .Connection
                 .QueryAsync(command);
         }
+
+        /// <summary>
+        /// Invokes scalar command
+        /// </summary>
+        /// <param name="connection">IDbConnection</param>
+        /// <param name="commandText">Sql command text</param>
+        /// <param name="settings">Orm settings</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>The number of rows affected</returns>
+        public static Task<int> InvokeScalar(
+            this IDbConnection connection,
+            string commandText,
+            OrmSettings settings,
+            CancellationToken token)
+        {
+            var command = new CommandDefinition(
+                commandText,
+                null,
+                null,
+                settings.QueryTimeout.Seconds,
+                CommandType.Text,
+                CommandFlags.Buffered,
+                token);
+
+            return connection.ExecuteAsync(command);
+        }
+
+        /// <summary>
+        /// Invokes command
+        /// </summary>
+        /// <param name="connection">IDbConnection</param>
+        /// <param name="commandText">Sql command text</param>
+        /// <param name="settings">Orm settings</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Query result</returns>
+        public static Task<IEnumerable<dynamic>> Invoke(
+            this IDbConnection connection,
+            string commandText,
+            OrmSettings settings,
+            CancellationToken token)
+        {
+            var command = new CommandDefinition(
+                commandText,
+                null,
+                null,
+                settings.QueryTimeout.Seconds,
+                CommandType.Text,
+                CommandFlags.Buffered,
+                token);
+
+            return connection.QueryAsync(command);
+        }
     }
 }

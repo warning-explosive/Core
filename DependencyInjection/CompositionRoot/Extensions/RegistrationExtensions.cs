@@ -3,26 +3,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using SimpleInjector;
 
     internal static class RegistrationExtensions
     {
-        internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, IDependencyContainerImplementation container)
-        {
-            infos.OrderByDependencyAttribute(info => info.Implementation)
-                 .Each(info =>
-                       {
-                           container.RegisterDecorator(info.Service, info.Implementation, info.Lifestyle);
-                       });
-        }
-
-        internal static void RegisterCollections(this IEnumerable<IRegistrationInfo> infos, IDependencyContainerImplementation container)
+        internal static void RegisterDecorators(this IEnumerable<DecoratorRegistrationInfo> infos, Container container)
         {
             infos
-                .GroupBy(info => info.Service)
-                .Each(grp => RegisterCollection(
+               .OrderByDependencyAttribute(info => info.Implementation)
+               .Each(info => container.RegisterDecorator(info.Service, info.Implementation, info.Lifestyle.MapLifestyle()));
+        }
+
+        internal static void RegisterCollections(this IEnumerable<IRegistrationInfo> infos, Container container)
+        {
+            infos
+               .GroupBy(info => info.Service)
+               .Each(grp => RegisterCollection(
                     grp.OrderByDependencyAttribute(GetRegistrationKey),
                     container));
 
@@ -39,25 +38,25 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
 
             static void RegisterCollection(
                 IOrderedEnumerable<IRegistrationInfo> infos,
-                IDependencyContainerImplementation container)
+                Container container)
             {
                 infos.Each(info =>
                 {
                     switch (info)
                     {
                         case InstanceRegistrationInfo instanceRegistrationInfo:
-                            container.RegisterCollectionEntryInstance(
+                            RegisterCollectionEntryInstance(container,
                                 instanceRegistrationInfo.Service,
                                 instanceRegistrationInfo.Instance);
                             break;
                         case ServiceRegistrationInfo serviceRegistrationInfo:
-                            container.RegisterCollectionEntry(
+                            RegisterCollectionEntry(container,
                                 serviceRegistrationInfo.Service,
                                 serviceRegistrationInfo.Implementation,
                                 serviceRegistrationInfo.Lifestyle);
                             break;
                         case DelegateRegistrationInfo delegateRegistrationInfo:
-                            container.RegisterCollectionEntryDelegate(
+                            RegisterCollectionEntryDelegate(container,
                                 delegateRegistrationInfo.Service,
                                 delegateRegistrationInfo.InstanceProducer,
                                 delegateRegistrationInfo.Lifestyle);
@@ -67,65 +66,119 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                     }
                 });
             }
-        }
 
-        internal static void RegisterInstances(this IEnumerable<InstanceRegistrationInfo> instances, IDependencyContainerImplementation container)
-        {
-            foreach (var info in instances)
+            static void RegisterCollectionEntry(
+                Container container,
+                Type service,
+                Type implementation,
+                EnLifestyle lifestyle)
             {
-                container.RegisterInstance(info.Service, info.Instance);
+                container.Register(implementation, implementation, lifestyle.MapLifestyle());
+                container.Collection.Append(service, implementation, lifestyle.MapLifestyle());
+            }
+
+            static void RegisterCollectionEntryInstance(
+                Container container,
+                Type service,
+                object collectionEntryInstance)
+            {
+                container.Collection.AppendInstance(service, collectionEntryInstance);
+            }
+
+            static void RegisterCollectionEntryDelegate(
+                Container container,
+                Type service,
+                Func<object> instanceProducer,
+                EnLifestyle lifestyle)
+            {
+                container.AppendCollectionInstanceProducer(service, instanceProducer, lifestyle);
             }
         }
 
-        internal static void RegisterDelegates(this IEnumerable<DelegateRegistrationInfo> infos, IDependencyContainerImplementation container)
+        internal static void RegisterInstances(
+            this IEnumerable<InstanceRegistrationInfo> instances,
+            Container container)
         {
-            foreach (var info in infos)
-            {
-                container.RegisterDelegate(info.Service, info.InstanceProducer, info.Lifestyle);
-            }
+            instances.Each(info => container.RegisterInstance(info.Service, info.Instance));
+        }
+
+        internal static void RegisterDelegates(this IEnumerable<DelegateRegistrationInfo> infos, Container container)
+        {
+            infos.Each(info => container.Register(info.Service, info.InstanceProducer, info.Lifestyle.MapLifestyle()));
         }
 
         internal static void RegisterResolvable(
             this IEnumerable<ServiceRegistrationInfo> infos,
-            IDependencyContainerImplementation container)
+            Container container)
         {
             infos.RegisterServicesWithOpenGenericFallBack(container);
         }
 
-        internal static void RegisterServicesWithOpenGenericFallBack(
+        private static void RegisterServicesWithOpenGenericFallBack(
             this IEnumerable<ServiceRegistrationInfo> infos,
-            IDependencyContainerImplementation container)
+            Container container)
         {
             RegisterWithOpenGenericFallBack(container, infos, info => info.Service);
         }
 
-        internal static void RegisterImplementationsWithOpenGenericFallBack(
+        private static void RegisterImplementationsWithOpenGenericFallBack(
             this IEnumerable<ServiceRegistrationInfo> infos,
-            IDependencyContainerImplementation container)
+            Container container)
         {
             RegisterWithOpenGenericFallBack(container, infos, info => info.Implementation);
         }
 
         private static void RegisterWithOpenGenericFallBack(
-            this IDependencyContainerImplementation container,
+            this Container container,
             IEnumerable<ServiceRegistrationInfo> infos,
             Func<ServiceRegistrationInfo, Type> serviceSelector)
         {
             infos // open-generic fallback should be registered after all exactly registered components
-                .OrderBy(info => info.IsOpenGenericFallback())
-                .Each(info =>
-                {
-                    var service = serviceSelector(info);
+               .OrderBy(info => info.IsOpenGenericFallback())
+               .Each(info =>
+               {
+                   var service = serviceSelector(info);
 
-                    if (info.IsOpenGenericFallback())
-                    {
-                        container.RegisterOpenGenericFallBack(service, info.Implementation, info.Lifestyle);
-                    }
-                    else
-                    {
-                        container.Register(service, info.Implementation, info.Lifestyle);
-                    }
-                });
+                   if (info.IsOpenGenericFallback())
+                   {
+                       container.RegisterOpenGenericFallBack(service, info.Implementation, info.Lifestyle);
+                   }
+                   else
+                   {
+                       container.Register(service, info.Implementation, info.Lifestyle.MapLifestyle());
+                   }
+               });
+        }
+
+        private static void RegisterOpenGenericFallBack(
+            this Container container,
+            Type service,
+            Type implementation,
+            EnLifestyle lifestyle)
+        {
+            container.RegisterConditional(service, implementation, lifestyle.MapLifestyle(), ctx => !ctx.Handled);
+        }
+
+        private static void AppendCollectionInstanceProducer(
+            this Container container,
+            Type service,
+            Func<object> instanceProducer,
+            EnLifestyle lifestyle)
+        {
+            typeof(RegistrationExtensions)
+               .CallMethod(nameof(AppendCollectionInstanceProducer))
+               .WithTypeArgument(service)
+               .WithArguments(container, instanceProducer, lifestyle)
+               .Invoke();
+        }
+
+        private static void AppendCollectionInstanceProducer<TService>(
+            this Container container,
+            Func<TService> instanceProducer,
+            EnLifestyle lifestyle)
+            where TService : class
+        {
+            container.Collection.Append(instanceProducer, lifestyle.MapLifestyle());
         }
     }
 }

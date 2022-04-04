@@ -7,3 +7,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.DataAccess.Orm.PostgreSql")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.DataAccess.Orm.Sql.Host")]

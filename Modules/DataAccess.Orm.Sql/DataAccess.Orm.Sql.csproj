@@ -91,15 +91,6 @@
       <Compile Update="Translation\IIntermediateQueryTranslator.cs">
         <DependentUpon>QueryTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\DatabaseColumn.cs">
-        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DatabaseView.cs">
-        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DatabaseSchema.cs">
-        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
-      </Compile>
       <Compile Update="Translation\CollapseConstantsExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
@@ -166,9 +157,6 @@
       <Compile Update="Translation\FallbackQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\DatabaseIndex.cs">
-        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\ModelProvider.cs">
         <DependentUpon>IModelProvider.cs</DependentUpon>
       </Compile>
@@ -189,12 +177,6 @@
       </Compile>
       <Compile Update="Model\ITableInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\DatabaseColumnConstraint.cs">
-        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\EnColumnConstraintType.cs">
-        <DependentUpon>DatabaseColumnConstraint.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\DateTimeQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>

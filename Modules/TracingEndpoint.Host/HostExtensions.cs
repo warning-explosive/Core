@@ -18,12 +18,12 @@ namespace SpaceEngineers.Core.TracingEndpoint.Host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="endpointInstanceName">Endpoint instance name</param>
-        /// <param name="factory">Endpoint options factory</param>
+        /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseTracingEndpoint(
             this IHostBuilder hostBuilder,
             object endpointInstanceName,
-            Func<IEndpointBuilder, EndpointOptions> factory)
+            Func<IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             var assemblies = new[]
             {
@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.Host
 
             return hostBuilder.UseEndpoint(
                 new EndpointIdentity(TracingEndpointIdentity.LogicalName, endpointInstanceName),
-                (_, endpointBuilder) => factory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
+                (_, endpointBuilder) => optionsFactory(endpointBuilder.WithEndpointPluginAssemblies(assemblies)));
         }
     }
 }

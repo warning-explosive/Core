@@ -8,8 +8,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using GenericEndpoint.Contract;
@@ -43,20 +41,6 @@
         }
 
         /// <summary>
-        /// useContainer
-        /// </summary>
-        /// <returns>DependencyContainerImplementations</returns>
-        public static IEnumerable<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>> DependencyContainerImplementations()
-        {
-            var dependencyContainerProducers = new[]
-            {
-                new Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>(options => options.UseGenericContainer())
-            };
-
-            return dependencyContainerProducers;
-        }
-
-        /// <summary>
         /// useContainer; useTransport; timeout;
         /// </summary>
         /// <returns>RunHostTestData</returns>
@@ -64,37 +48,28 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport =
-                new Func<Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>>, Func<ITestOutputHelper, IHostBuilder, IHostBuilder>>(
-                    useContainer => (output, hostBuilder) => hostBuilder
-                        .UseIntegrationTransport(builder => builder
-                            .WithContainer(useContainer)
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithDefaultCrossCuttingConcerns()
-                            .ModifyContainerOptions(options => options
-                                .WithOverrides(new TestLoggerOverride(output))
-                                .WithManualRegistrations(new MessagesCollectorManualRegistration()))
-                            .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
+                (output, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration()))
+                       .BuildOptions()));
 
-            var integrationTransportProviders = new[]
+            return new[]
             {
-                useInMemoryIntegrationTransport
+                new object[]
+                {
+                    useInMemoryIntegrationTransport,
+                    timeout
+                }
             };
-
-            return DependencyContainerImplementations()
-                .SelectMany(useContainer => integrationTransportProviders
-                    .Select(useTransport => new object[]
-                        {
-                            useContainer,
-                            useTransport(useContainer),
-                            timeout
-                        }));
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -118,8 +93,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -165,7 +138,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -186,8 +158,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -228,7 +198,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -254,8 +223,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithOverrides(overrides)
@@ -326,7 +293,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -351,8 +317,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -396,7 +360,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -421,8 +384,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(overrides)
                             .WithOverrides(new TestLoggerOverride(Output))
@@ -506,7 +467,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -539,8 +499,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
@@ -548,8 +506,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint11,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
@@ -557,8 +513,6 @@
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .ModifyContainerOptions(options => options
                             .WithOverrides(new TestLoggerOverride(Output))
                             .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
@@ -595,7 +549,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RunTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -603,8 +556,6 @@
                 .UseEndpoint(
                     new EndpointIdentity(nameof(RunTest), 0),
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())
@@ -634,7 +585,6 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
-            Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> useContainer,
             Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
@@ -642,8 +592,6 @@
                 .UseEndpoint(
                     new EndpointIdentity(nameof(StartStopTest), 0),
                     (_, builder) => builder
-                        .WithContainer(useContainer)
-                        .WithDefaultCrossCuttingConcerns()
                         .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
                         .BuildOptions())

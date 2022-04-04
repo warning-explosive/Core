@@ -37,12 +37,6 @@
         public ITransportEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies);
 
         /// <summary>
-        /// With default cross-cutting concerns
-        /// </summary>
-        /// <returns>ITransportEndpointBuilder</returns>
-        public ITransportEndpointBuilder WithDefaultCrossCuttingConcerns();
-
-        /// <summary>
         /// Adds tracing pipeline into message processing so as to collect and store message processing information
         /// </summary>
         /// <returns>ITransportEndpointBuilder</returns>
@@ -54,13 +48,6 @@
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>ITransportEndpointBuilder</returns>
         public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder);
-
-        /// <summary>
-        /// With container
-        /// </summary>
-        /// <param name="containerImplementationProducer">Container implementation producer</param>
-        /// <returns>ITransportEndpointBuilder</returns>
-        ITransportEndpointBuilder WithContainer(Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer);
 
         /// <summary>
         /// Modify container options

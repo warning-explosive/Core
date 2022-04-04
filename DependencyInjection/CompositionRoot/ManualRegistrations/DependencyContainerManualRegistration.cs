@@ -20,14 +20,12 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
         public void Register(IManualRegistrationsContainer container)
         {
             container
-                .RegisterInstance<DependencyContainerOptions>(_options)
-                .RegisterInstance<IConstructorResolutionBehavior>(_options.ConstructorResolutionBehavior)
-                .RegisterInstance(_options.ConstructorResolutionBehavior.GetType(), _options.ConstructorResolutionBehavior)
-                .RegisterInstance<DependencyContainer>(_dependencyContainer)
-                .RegisterInstance<IDependencyContainer>(_dependencyContainer)
-                .RegisterInstance<IScopedContainer>(_dependencyContainer)
-                .RegisterInstance<IDependencyContainerImplementation>(_dependencyContainer.Container)
-                .RegisterInstance(_dependencyContainer.Container.GetType(), _dependencyContainer.Container);
+               .RegisterInstance<DependencyContainerOptions>(_options)
+               .RegisterInstance<IConstructorResolutionBehavior>(_options.ConstructorResolutionBehavior)
+               .RegisterInstance(_options.ConstructorResolutionBehavior.GetType(), _options.ConstructorResolutionBehavior)
+               .RegisterInstance<DependencyContainer>(_dependencyContainer)
+               .RegisterInstance<IDependencyContainer>(_dependencyContainer)
+               .RegisterInstance<IScopedContainer>(_dependencyContainer);
         }
     }
 }

@@ -1,0 +1,20 @@
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
+{
+    using System;
+    using Api.Model;
+    using Views;
+
+    [Index(nameof(Name), Unique = true)]
+    internal class DatabaseSchema : ISqlView<Guid>
+    {
+        public DatabaseSchema(Guid primaryKey, string name)
+        {
+            PrimaryKey = primaryKey;
+            Name = name;
+        }
+
+        public Guid PrimaryKey { get; private init; }
+
+        public string Name { get; private init; }
+    }
+}

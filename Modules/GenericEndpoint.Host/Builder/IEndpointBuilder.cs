@@ -37,12 +37,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies);
 
         /// <summary>
-        /// With default cross-cutting concerns
-        /// </summary>
-        /// <returns>IEndpointBuilder</returns>
-        public IEndpointBuilder WithDefaultCrossCuttingConcerns();
-
-        /// <summary>
         /// Adds tracing pipeline into message processing so as to collect and store message processing information
         /// </summary>
         /// <returns>IEndpointBuilder</returns>
@@ -54,13 +48,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// <param name="databaseProvider">Database provider</param>
         /// <returns>IEndpointBuilder</returns>
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider);
-
-        /// <summary>
-        /// With container
-        /// </summary>
-        /// <param name="containerImplementationProducer">Container implementation producer</param>
-        /// <returns>IEndpointBuilder</returns>
-        IEndpointBuilder WithContainer(Func<DependencyContainerOptions, Func<IDependencyContainerImplementation>> containerImplementationProducer);
 
         /// <summary>
         /// Modify container options

@@ -133,10 +133,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             private static bool IsComponentCandidate(Type type)
             {
                 return type.IsConcreteType()
-                       && (typeof(IResolvable).IsAssignableFrom(type)
-                           || type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>))
-                           || type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>))
-                           || type.IsSubclassOfOpenGeneric(typeof(IDecorator<>)));
+                    && (type.IsSubclassOfOpenGeneric(typeof(IResolvable<>))
+                     || type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>))
+                     || type.IsSubclassOfOpenGeneric(typeof(IDecorator<>)));
             }
         }
     }

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
     using System;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
     using Xunit.Abstractions;
 

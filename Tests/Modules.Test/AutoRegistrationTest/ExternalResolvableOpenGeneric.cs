@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 
     [Component(EnLifestyle.Transient)]
     internal class ExternalResolvableOpenGeneric<T> : IProgress<T>,
-                                                      IExternalResolvable<IProgress<T>>
+                                                      IResolvable<IProgress<T>>
         where T : class
     {
         public void Report(T value)

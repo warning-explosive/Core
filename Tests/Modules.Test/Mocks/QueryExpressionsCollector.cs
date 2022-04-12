@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using AutoRegistration.Api.Attributes;
 
     [ManuallyRegisteredComponent(nameof(DataAccess))]
-    internal class QueryExpressionsCollector : IResolvable
+    internal class QueryExpressionsCollector : IResolvable<QueryExpressionsCollector>
     {
         public ConcurrentQueue<Expression> Expressions { get; } = new ConcurrentQueue<Expression>();
 

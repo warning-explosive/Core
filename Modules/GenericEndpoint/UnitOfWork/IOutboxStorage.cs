@@ -3,13 +3,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Messaging;
 
     /// <summary>
     /// IOutboxStorage
     /// </summary>
-    public interface IOutboxStorage : IResolvable
+    public interface IOutboxStorage
     {
         /// <summary>
         /// Adds message to the outbox storage

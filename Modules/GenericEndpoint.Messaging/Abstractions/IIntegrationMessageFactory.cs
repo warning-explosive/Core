@@ -1,13 +1,12 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Abstractions
 {
-    using AutoRegistration.Api.Abstractions;
     using Contract;
     using Contract.Abstractions;
 
     /// <summary>
     /// IIntegrationMessageFactory abstraction
     /// </summary>
-    public interface IIntegrationMessageFactory : IResolvable
+    public interface IIntegrationMessageFactory
     {
         /// <summary>
         /// Creates IntegrationMessage instance from user defined payload

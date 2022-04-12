@@ -5,14 +5,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using GenericEndpoint.Messaging;
     using Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class RpcRequestRegistry : IRpcRequestRegistry, IDisposable
+    internal class RpcRequestRegistry : IRpcRequestRegistry,
+                                        IDisposable,
+                                        IResolvable<IRpcRequestRegistry>
     {
         private readonly MemoryCache _memoryCache;
         private readonly ISettingsProvider<IntegrationTransportSettings> _integrationTransportSettings;

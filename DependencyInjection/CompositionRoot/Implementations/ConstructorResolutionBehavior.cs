@@ -5,9 +5,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Linq;
     using System.Reflection;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Basics;
 
-    internal class ConstructorResolutionBehavior : IConstructorResolutionBehavior
+    [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
+    internal class ConstructorResolutionBehavior : IConstructorResolutionBehavior,
+                                                   IResolvable<IConstructorResolutionBehavior>
     {
         /// <inheritdoc />
         public bool TryGetConstructor(Type implementation, [NotNullWhen(true)] out ConstructorInfo? cctor)

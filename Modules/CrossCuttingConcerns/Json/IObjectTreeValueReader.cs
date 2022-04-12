@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
-    using AutoRegistration.Api.Abstractions;
     using Newtonsoft.Json;
 
     /// <summary>
     /// Seam for custom value reading from json input
     /// </summary>
-    public interface IObjectTreeValueReader : IResolvable
+    public interface IObjectTreeValueReader
     {
         /// <summary> Read </summary>
         /// <param name="reader">JsonReader</param>

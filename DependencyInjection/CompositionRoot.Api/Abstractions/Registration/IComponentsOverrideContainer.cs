@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IComponentsOverrideContainer
     /// </summary>
-    public interface IComponentsOverrideContainer : IResolvable
+    public interface IComponentsOverrideContainer
     {
         /// <summary>
         /// Resolvable overrides

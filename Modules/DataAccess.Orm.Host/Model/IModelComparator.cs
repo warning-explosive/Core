@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Host.Model
 {
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IModelComparator
     /// </summary>
-    public interface IModelComparator : IResolvable
+    public interface IModelComparator
     {
         /// <summary>
         /// Extracts diff between actual model and expected model

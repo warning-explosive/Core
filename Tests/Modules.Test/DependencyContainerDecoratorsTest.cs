@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using AutoRegistrationTest;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Registrations;

@@ -6,7 +6,7 @@
     using System.Linq;
     using Contract.Abstractions;
     using Core.DataAccess.Api.Model;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using Messaging.MessageHeaders;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]

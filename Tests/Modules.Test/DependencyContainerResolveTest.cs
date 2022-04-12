@@ -11,11 +11,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api;
     using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Abstractions.Container;
     using CompositionRoot.Api.Exceptions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.ObjectBuilder;
     using DataAccess.Api.Model;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Reading;
@@ -51,7 +50,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 new object[]
                 {
-                    typeof(IResolvable),
+                    typeof(IResolvable<>),
                     new Func<IEnumerable<Type>, IEnumerable<Type>>(SingleResolvable),
                     new Func<IDependencyContainer, Type, object>((container, service) => container.Resolve(service))
                 },
@@ -66,9 +65,11 @@ namespace SpaceEngineers.Core.Modules.Test
             IEnumerable<Type> SingleResolvable(IEnumerable<Type> source)
             {
                 return source
-                    .Where(type => typeof(IResolvable).IsAssignableFrom(type)
-                                   && typeof(IResolvable) != type
-                                   && type.HasAttribute<ComponentAttribute>());
+                   .Where(t => t.IsSubclassOfOpenGeneric(typeof(IResolvable<>)))
+                   .SelectMany(t => t.ExtractGenericArgumentsAt(typeof(IResolvable<>)))
+                   .Where(type => !type.IsGenericParameter && type.HasAttribute<ComponentAttribute>())
+                   .Select(type => type.GenericTypeDefinitionOrSelf())
+                   .Distinct();
             }
 
             IEnumerable<Type> Collections(IEnumerable<Type> source)
@@ -130,20 +131,10 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(ReferenceEquals(container, DependencyContainer));
             Assert.True(container.Equals(DependencyContainer));
 
-            var scopedContainer = DependencyContainer.Resolve<IScopedContainer>();
-
-            Assert.True(ReferenceEquals(scopedContainer, DependencyContainer));
-            Assert.True(scopedContainer.Equals(DependencyContainer));
-
             container = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().DependencyContainer;
 
             Assert.True(ReferenceEquals(container, DependencyContainer));
             Assert.True(container.Equals(DependencyContainer));
-
-            scopedContainer = DependencyContainer.Resolve<IWithInjectedDependencyContainer>().ScopedContainer;
-
-            Assert.True(ReferenceEquals(scopedContainer, DependencyContainer));
-            Assert.True(scopedContainer.Equals(DependencyContainer));
         }
 
         [Fact]
@@ -154,12 +145,7 @@ namespace SpaceEngineers.Core.Modules.Test
                          DependencyContainer.Resolve<ISingletonService>());
 
             // 2 - resolve via concrete type
-            Assert.Equal(DependencyContainer.Resolve<SingletonService>(),
-                         DependencyContainer.Resolve<SingletonService>());
-
-            // 3 - cross equals resolve
-            Assert.Equal(DependencyContainer.Resolve<ISingletonService>(),
-                         DependencyContainer.Resolve<SingletonService>());
+            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<SingletonService>());
         }
 
         [Fact]
@@ -264,20 +250,6 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.True(typeof(IUnregisteredService).IsAssignableFrom(typeof(BaseUnregisteredService)));
 
             Assert.Equal(typeof(DerivedFromUnregisteredService), DependencyContainer.Resolve<IUnregisteredService>().GetType());
-        }
-
-        [Fact]
-        internal void UnregisteredExternalServiceResolveTest()
-        {
-            Assert.True(typeof(BaseUnregisteredExternalServiceImpl).HasAttribute<UnregisteredComponentAttribute>());
-
-            Assert.True(typeof(DerivedFromUnregisteredExternalServiceImpl).IsSubclassOf(typeof(BaseUnregisteredExternalServiceImpl)));
-            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(DerivedFromUnregisteredExternalServiceImpl)));
-            Assert.True(typeof(IUnregisteredExternalService).IsAssignableFrom(typeof(BaseUnregisteredExternalServiceImpl)));
-
-            Assert.Equal(typeof(DerivedFromUnregisteredExternalServiceImpl), DependencyContainer.Resolve<IUnregisteredExternalService>().GetType());
-            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<DerivedFromUnregisteredExternalServiceImpl>().GetType());
-            Assert.Throws<ComponentResolutionException>(() => DependencyContainer.Resolve<BaseUnregisteredExternalServiceImpl>().GetType());
         }
 
         [Fact]

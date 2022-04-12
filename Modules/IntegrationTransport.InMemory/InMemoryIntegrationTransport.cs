@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Enumerations;
@@ -19,7 +20,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using GenericEndpoint.Messaging.MessageHeaders;
 
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
-    internal class InMemoryIntegrationTransport : IIntegrationTransport
+    internal class InMemoryIntegrationTransport : IIntegrationTransport,
+                                                  IResolvable<IIntegrationTransport>
     {
         private readonly AsyncManualResetEvent _ready;
         private readonly MessageQueue<IntegrationMessage> _inputQueue;

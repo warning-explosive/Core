@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -12,7 +13,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateTableDatabaseModelChangeMigration : IModelChangeMigration<CreateTable>
+    internal class CreateTableDatabaseModelChangeMigration : IModelChangeMigration<CreateTable>,
+                                                             IResolvable<IModelChangeMigration<CreateTable>>
     {
         private const string CommandFormat = @"create table ""{0}"".""{1}""
 (

@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
 {
     using Api.Abstractions;
-    using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
 
     internal class DependencyContainerManualRegistration : IManualRegistration
@@ -22,10 +21,7 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
             container
                .RegisterInstance<DependencyContainerOptions>(_options)
                .RegisterInstance<IConstructorResolutionBehavior>(_options.ConstructorResolutionBehavior)
-               .RegisterInstance(_options.ConstructorResolutionBehavior.GetType(), _options.ConstructorResolutionBehavior)
-               .RegisterInstance<DependencyContainer>(_dependencyContainer)
-               .RegisterInstance<IDependencyContainer>(_dependencyContainer)
-               .RegisterInstance<IScopedContainer>(_dependencyContainer);
+               .RegisterInstance<IDependencyContainer>(_dependencyContainer);
         }
     }
 }

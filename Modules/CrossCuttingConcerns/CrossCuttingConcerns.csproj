@@ -30,7 +30,6 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
-      <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Internals\GenericObjectBuilder.cs">
@@ -64,10 +63,10 @@
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
       </Compile>
       <Compile Update="ObjectBuilder\StringToCharArrayTransformer.cs">
-        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+        <DependentUpon>IObjectTransformer.cs</DependentUpon>
       </Compile>
       <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
-        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+        <DependentUpon>IObjectTransformer.cs</DependentUpon>
       </Compile>
       <Compile Update="Settings\EnvironmentSettingsEntry.cs">
         <DependentUpon>EnvironmentSettingsProvider.cs</DependentUpon>
@@ -79,7 +78,7 @@
         <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Settings\EnvironmentSettings.cs">
-        <DependentUpon>EnvironmentSettingsProvider.cs</DependentUpon>
+        <DependentUpon>ISettings.cs</DependentUpon>
       </Compile>
       <Compile Update="Json\ArrayNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
@@ -96,12 +95,46 @@
       <Compile Update="Json\ValueNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
       </Compile>
+      <Compile Update="Settings\IJsonSettings.cs">
+        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\IYamlSettings.cs">
+        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\IFileSystemSettings.cs">
+        <DependentUpon>ISettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\StringFormatter.cs">
+        <DependentUpon>IStringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\ObjectStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\DateTimeStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\JsonSerializerImpl.cs">
+        <DependentUpon>IJsonSerializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\ObjectBuilder.cs">
+        <DependentUpon>IObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettingsProviderBase.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\EnvironmentSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\DefaultSettingsScopeProvider.cs">
+        <DependentUpon>ISettingsScopeProvider.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
       <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

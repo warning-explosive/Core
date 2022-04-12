@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;

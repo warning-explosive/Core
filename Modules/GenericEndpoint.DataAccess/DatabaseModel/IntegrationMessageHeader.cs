@@ -3,7 +3,7 @@
     using System;
     using System.Diagnostics.CodeAnalysis;
     using Core.DataAccess.Api.Model;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using Messaging.Abstractions;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]

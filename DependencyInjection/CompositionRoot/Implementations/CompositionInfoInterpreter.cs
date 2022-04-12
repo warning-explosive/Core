@@ -5,15 +5,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Linq;
     using System.Text;
     using Api.Abstractions.CompositionInfo;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal class CompositionInfoInterpreter : ICompositionInfoInterpreter<string>
+    internal class CompositionInfoInterpreter : ICompositionInfoInterpreter<string>,
+                                                IResolvable<ICompositionInfoInterpreter<string>>
     {
-        /// <inheritdoc />
         public string Visualize(IReadOnlyCollection<IDependencyInfo> compositionInfo)
         {
             var builder = new StringBuilder();

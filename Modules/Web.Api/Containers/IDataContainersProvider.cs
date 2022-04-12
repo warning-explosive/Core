@@ -1,11 +1,9 @@
 namespace SpaceEngineers.Core.Web.Api.Containers
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// IDataContainersProvider
     /// </summary>
-    public interface IDataContainersProvider : IResolvable
+    public interface IDataContainersProvider
     {
         /// <summary>
         /// Converts entity to view entity

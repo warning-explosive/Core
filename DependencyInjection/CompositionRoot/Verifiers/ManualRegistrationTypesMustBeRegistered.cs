@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                    return (implementation, attribute);
                })
                .Where(info => info.attribute != null)
-               .SelectMany(info => FlattenAutoRegistrationServices(info.implementation)
+               .SelectMany(info => GetAutoRegistrationServices(info.implementation)
                    .Select(service => (service, info.implementation, info.attribute)))
                .Where(info => !Registered(registeredComponents, info))
                .Each(info => throw new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -9,7 +10,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ColumnDataTypeProvider : IColumnDataTypeProvider
+    internal class ColumnDataTypeProvider : IColumnDataTypeProvider,
+                                            IResolvable<IColumnDataTypeProvider>
     {
         public string GetColumnDataType(Type type)
         {

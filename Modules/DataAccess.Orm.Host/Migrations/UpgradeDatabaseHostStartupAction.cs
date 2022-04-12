@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using GenericHost.Api.Abstractions;
 
     internal class UpgradeDatabaseHostStartupAction : IHostStartupAction

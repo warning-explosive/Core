@@ -3,15 +3,17 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
     using Core.DataAccess.Api.Transaction;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertInboxMessage : IDomainEventHandler<InboxMessageReceived>
+    internal class InsertInboxMessage : IDomainEventHandler<InboxMessageReceived>,
+                                        IResolvable<IDomainEventHandler<InboxMessageReceived>>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;

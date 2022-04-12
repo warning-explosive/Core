@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;

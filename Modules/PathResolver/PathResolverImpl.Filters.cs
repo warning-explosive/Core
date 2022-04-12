@@ -5,24 +5,19 @@
     using System.Linq;
     using Basics;
 
-    /// <summary>
-    /// PathResolver filters
-    /// </summary>
-    /// <typeparam name="TKey">Node key</typeparam>
-    /// <typeparam name="TValue">Node value</typeparam>
-    internal partial class PathResolverImpl<TKey, TValue>
+    internal static class Filters<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {
-        private static bool FilterGroupedPathByTargetKey(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                         TKey targetNodeKey)
+        internal static bool FilterGroupedPathByTargetKey(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
+                                                          TKey targetNodeKey)
         {
             return EqualityComparer<TKey>.Default.Equals(groupedPath.Last().Key,
                                                          targetNodeKey);
         }
 
-        private static bool FilterGroupedPathByLoops(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                     bool withOutLoops)
+        internal static bool FilterGroupedPathByLoops(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
+                                                      bool withOutLoops)
         {
             if (withOutLoops)
             {
@@ -43,8 +38,8 @@
             return true;
         }
 
-        private static bool FilterGroupedPathByRequiredKeys(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                            Queue<TKey> requiredKeys)
+        internal static bool FilterGroupedPathByRequiredKeys(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
+                                                             Queue<TKey> requiredKeys)
         {
             if (!requiredKeys.Any())
             {
@@ -54,17 +49,17 @@
             var localGroupedPath = groupedPath.DeepCopy();
             var localRequiredKeys = requiredKeys.DeepCopy();
 
-            var localRequiredkey = localRequiredKeys.Dequeue();
+            var localRequiredKey = localRequiredKeys.Dequeue();
 
             while (localGroupedPath.Any())
             {
                 var nodeGroup = localGroupedPath.Dequeue();
 
-                if (EqualityComparer<TKey>.Default.Equals(nodeGroup.Key, localRequiredkey))
+                if (EqualityComparer<TKey>.Default.Equals(nodeGroup.Key, localRequiredKey))
                 {
                     if (localRequiredKeys.Any())
                     {
-                        localRequiredkey = localRequiredKeys.Dequeue();
+                        localRequiredKey = localRequiredKeys.Dequeue();
                     }
                     else
                     {
@@ -76,8 +71,8 @@
             return false;
         }
 
-        private static bool FilterGroupedPathByRequiredEdges(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                             Queue<TValue> requiredEdges)
+        internal static bool FilterGroupedPathByRequiredEdges(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
+                                                              Queue<TValue> requiredEdges)
         {
             if (!requiredEdges.Any())
             {
@@ -121,8 +116,8 @@
             return false;
         }
 
-        private static Queue<KeyValuePair<TKey, ICollection<TValue>>> ExtractPathsFromGroups(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
-                                                                                             Queue<TValue> requiredEdges)
+        internal static Queue<KeyValuePair<TKey, ICollection<TValue>>> ExtractPathsFromGroups(Queue<KeyValuePair<TKey, ICollection<TValue>>> groupedPath,
+                                                                                              Queue<TValue> requiredEdges)
         {
             if (!requiredEdges.Any())
             {

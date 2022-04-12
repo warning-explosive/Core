@@ -3,6 +3,7 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using DataAccess.Api.Persisting;
@@ -10,7 +11,8 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertCapturedMessage : IDomainEventHandler<MessageCaptured>
+    internal class InsertCapturedMessage : IDomainEventHandler<MessageCaptured>,
+                                           IResolvable<IDomainEventHandler<MessageCaptured>>
     {
         private readonly IDatabaseContext _databaseContext;
 

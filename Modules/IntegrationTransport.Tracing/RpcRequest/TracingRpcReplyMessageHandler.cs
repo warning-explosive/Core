@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Tracing.RpcRequest
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using IntegrationTransport.RpcRequest;

@@ -1,12 +1,11 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
     using System;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IJsonSerializer abstraction
     /// </summary>
-    public interface IJsonSerializer : IResolvable
+    public interface IJsonSerializer
     {
         /// <summary>
         /// Serialize object

@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test.Migrations
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Host.Migrations;
     using DataAccess.Orm.Settings;
     using DataAccess.Orm.Sql.Extensions;

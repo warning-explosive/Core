@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -10,7 +11,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelChangesSorter : IModelChangesSorter
+    internal class ModelChangesSorter : IModelChangesSorter,
+                                        IResolvable<IModelChangesSorter>
     {
         private readonly IModelProvider _modelProvider;
 

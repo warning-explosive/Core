@@ -7,14 +7,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ObjectBuilder : IObjectBuilder
+    internal class ObjectBuilder : IObjectBuilder,
+                                   IResolvable<IObjectBuilder>
     {
         private readonly IDependencyContainer _dependencyContainer;
 

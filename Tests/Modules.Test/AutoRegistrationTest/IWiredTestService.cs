@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
-    using AutoRegistration.Api.Abstractions;
-
-    internal interface IWiredTestService : IResolvable
+    internal interface IWiredTestService
     {
         IIndependentTestService IndependentTestService { get; }
     }

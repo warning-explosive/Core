@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
 
     internal class TestJsonSettings : ITestSettings, IJsonSettings
     {

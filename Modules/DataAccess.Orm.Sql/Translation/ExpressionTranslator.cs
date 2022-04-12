@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq;
     using System.Linq.Expressions;
     using Api.Exceptions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -12,7 +13,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Model;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ExpressionTranslator : IExpressionTranslator
+    internal class ExpressionTranslator : IExpressionTranslator,
+                                          IResolvable<IExpressionTranslator>
     {
         private readonly IModelProvider _modelProvider;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;

@@ -2,12 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IModelProvider
     /// </summary>
-    public interface IModelProvider : IResolvable
+    public interface IModelProvider
     {
         /// <summary>
         /// Tables map

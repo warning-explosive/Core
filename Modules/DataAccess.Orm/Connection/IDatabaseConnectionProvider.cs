@@ -3,12 +3,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IDatabaseConnectionProvider
     /// </summary>
-    public interface IDatabaseConnectionProvider : IResolvable
+    public interface IDatabaseConnectionProvider
     {
         /// <summary>
         /// Host

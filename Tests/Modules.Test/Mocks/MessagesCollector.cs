@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
     using GenericEndpoint.Messaging;
 
     [ManuallyRegisteredComponent("We need register instance of this class so as to collect and assert messages inside test")]
-    internal class MessagesCollector : IResolvable
+    internal class MessagesCollector : IResolvable<MessagesCollector>
     {
         public MessagesCollector()
         {

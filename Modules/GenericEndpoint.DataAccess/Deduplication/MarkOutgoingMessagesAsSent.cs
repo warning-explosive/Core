@@ -3,6 +3,7 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
@@ -10,7 +11,8 @@
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class MarkOutgoingMessagesAsSent : IDomainEventHandler<OutboxMessagesHaveBeenSent>
+    internal class MarkOutgoingMessagesAsSent : IDomainEventHandler<OutboxMessagesHaveBeenSent>,
+                                                IResolvable<IDomainEventHandler<OutboxMessagesHaveBeenSent>>
     {
         private readonly IDatabaseContext _databaseContext;
 

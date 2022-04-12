@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Basics;
 
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
-    internal class AutoRegistrationServicesProvider : IAutoRegistrationServicesProvider
+    internal class AutoRegistrationServicesProvider : IAutoRegistrationServicesProvider,
+                                                      IResolvable<IAutoRegistrationServicesProvider>
     {
         private readonly ITypeProvider _typeProvider;
 
@@ -20,20 +21,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public IEnumerable<Type> Resolvable()
         {
-            return _typeProvider
-                  .OurTypes
-                  .Where(type => typeof(IResolvable).IsAssignableFrom(type)
-                              && type != typeof(IResolvable));
+            return ExtractGeneric(_typeProvider.OurTypes, typeof(IResolvable<>));
         }
 
         public IEnumerable<Type> Collections()
         {
             return ExtractGeneric(_typeProvider.OurTypes, typeof(ICollectionResolvable<>));
-        }
-
-        public IEnumerable<Type> External()
-        {
-            return ExtractGeneric(_typeProvider.OurTypes, typeof(IExternalResolvable<>));
         }
 
         public IEnumerable<Type> Decorators()

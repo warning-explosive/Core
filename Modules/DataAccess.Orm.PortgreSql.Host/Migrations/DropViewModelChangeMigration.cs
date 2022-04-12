@@ -2,6 +2,7 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -9,7 +10,8 @@
     using Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DropViewModelChangeMigration : IModelChangeMigration<DropView>
+    internal class DropViewModelChangeMigration : IModelChangeMigration<DropView>,
+                                                  IResolvable<IModelChangeMigration<DropView>>
     {
         private const string CommandFormat = @"drop materialized view ""{0}"".""{1}""";
 

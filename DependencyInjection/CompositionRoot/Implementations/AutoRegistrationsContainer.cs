@@ -10,7 +10,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Extensions;
 
     [UnregisteredComponent]
-    internal class AutoRegistrationsContainer : IRegistrationsContainer
+    internal class AutoRegistrationsContainer : IRegistrationsContainer,
+                                                IResolvable<IRegistrationsContainer>
     {
         private readonly ITypeProvider _typeProvider;
         private readonly IAutoRegistrationServicesProvider _servicesProvider;
@@ -42,18 +43,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
             IReadOnlyCollection<ServiceRegistrationInfo> InitResolvable()
             {
-                var resolvable = _servicesProvider
-                    .Resolvable()
-                    .GetComponents(_typeProvider, _constructorResolutionBehavior);
-
-                var externalResolvable = _servicesProvider
-                    .External()
-                    .GetComponents(_typeProvider, _constructorResolutionBehavior)
-                    .Where(info => info.Implementation.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)));
-
-                return resolvable
-                    .Concat(externalResolvable)
-                    .ToList();
+                return _servicesProvider
+                   .Resolvable()
+                   .GetComponents(_typeProvider, _constructorResolutionBehavior)
+                   .ToList();
             }
         }
 

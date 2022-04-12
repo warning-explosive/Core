@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.Overrides
 {
     using CompositionRoot.Api.Abstractions.Registration;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Mocks;
 
     internal class TestSettingsScopeProviderOverride : IComponentsOverride

@@ -5,17 +5,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Linq;
     using Orm.Linq;
     using Translation;
     using Translation.Extensions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>
+    internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>,
+                                                            IResolvable<IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IQueryMaterializer<FlatQuery, TKey> _keysQueryMaterializer;

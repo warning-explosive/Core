@@ -4,17 +4,19 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
     using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InboxAggregateFactory : IAggregateFactory<Inbox, InboxAggregateSpecification>
+    internal class InboxAggregateFactory : IAggregateFactory<Inbox, InboxAggregateSpecification>,
+                                           IResolvable<IAggregateFactory<Inbox, InboxAggregateSpecification>>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;

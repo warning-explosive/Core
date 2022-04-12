@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Expressions;
 
     internal static class QueryParameterExtensions

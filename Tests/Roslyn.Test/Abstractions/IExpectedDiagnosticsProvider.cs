@@ -3,13 +3,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using Analyzers.Api;
-    using AutoRegistration.Api.Abstractions;
     using ValueObjects;
 
     /// <summary>
     /// IExpectedResultsProvider
     /// </summary>
-    public interface IExpectedDiagnosticsProvider : IResolvable
+    public interface IExpectedDiagnosticsProvider
     {
         /// <summary>
         /// Gets expected diagnostics

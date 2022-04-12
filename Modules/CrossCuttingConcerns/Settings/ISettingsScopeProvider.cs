@@ -1,11 +1,9 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// ISettingsScopeProvider
     /// </summary>
-    public interface ISettingsScopeProvider : IResolvable
+    public interface ISettingsScopeProvider
     {
         /// <summary>
         /// Settings scope

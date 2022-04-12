@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
 {
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Expressions;
 
     internal static class IntermediateExpressionExtensions

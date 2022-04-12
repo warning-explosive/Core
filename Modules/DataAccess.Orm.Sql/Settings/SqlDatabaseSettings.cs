@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
 {
     using System.Data;
     using Basics;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
 
     /// <summary>
     /// SqlDatabaseSettings

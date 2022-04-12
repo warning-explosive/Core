@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using AutoRegistration.Api.Abstractions;
     using Expressions;
     using Orm.Linq;
 
@@ -8,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     /// IQueryTranslator
     /// </summary>
     /// <typeparam name="TExpression">TExpression type-argument</typeparam>
-    public interface IIntermediateQueryTranslator<in TExpression> : IResolvable
+    public interface IIntermediateQueryTranslator<in TExpression>
         where TExpression : IIntermediateExpression
     {
         /// <summary>

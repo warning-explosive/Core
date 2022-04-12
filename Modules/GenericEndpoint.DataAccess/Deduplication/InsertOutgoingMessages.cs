@@ -4,15 +4,17 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Persisting;
     using Core.DataAccess.Api.Transaction;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using DatabaseModel;
 
     [Component(EnLifestyle.Scoped)]
-    internal class InsertOutgoingMessages : IDomainEventHandler<OutboxMessagesAreReadyToBeSent>
+    internal class InsertOutgoingMessages : IDomainEventHandler<OutboxMessagesAreReadyToBeSent>,
+                                            IResolvable<IDomainEventHandler<OutboxMessagesAreReadyToBeSent>>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _serializer;

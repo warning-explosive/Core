@@ -6,11 +6,13 @@
     using System.Threading.Tasks;
     using Api.Model;
     using Api.Persisting;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+    internal class Repository<TEntity, TKey> : IRepository<TEntity, TKey>,
+                                               IResolvable<IRepository<TEntity, TKey>>
         where TEntity : IUniqueIdentified<TKey>
         where TKey : notnull
     {

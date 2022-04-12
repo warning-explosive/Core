@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Dynamic;

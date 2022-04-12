@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Data;
     using System.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -14,7 +15,8 @@ namespace SpaceEngineers.Core.DataImport.Excel
     /// First row as columns header columns selection behavior
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
+    public class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior,
+                                                                   IResolvable<IExcelColumnsSelectionBehavior>
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
 

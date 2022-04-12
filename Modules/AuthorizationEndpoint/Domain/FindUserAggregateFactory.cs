@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Exceptions;
@@ -12,7 +13,8 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class FindUserAggregateFactory : IAggregateFactory<User, FindUserSpecification>
+    internal class FindUserAggregateFactory : IAggregateFactory<User, FindUserSpecification>,
+                                              IResolvable<IAggregateFactory<User, FindUserSpecification>>
     {
         private readonly IDatabaseContext _databaseContext;
 

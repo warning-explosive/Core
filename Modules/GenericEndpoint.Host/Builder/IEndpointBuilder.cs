@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     using System.Collections.Generic;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Core.DataAccess.Orm.Connection;
     using GenericHost.Api.Abstractions;

@@ -1,10 +1,12 @@
 namespace SpaceEngineers.Core.Modules.Test.Mocks
 {
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
 
     [ComponentOverride]
-    internal class TestSettingsScopeProvider : ISettingsScopeProvider
+    internal class TestSettingsScopeProvider : ISettingsScopeProvider,
+                                               IResolvable<ISettingsScopeProvider>
     {
         public TestSettingsScopeProvider(string scope)
         {

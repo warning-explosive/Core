@@ -3,12 +3,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IModelMigrator
     /// </summary>
-    public interface IModelMigrator : IResolvable
+    public interface IModelMigrator
     {
         /// <summary>
         /// Upgrade

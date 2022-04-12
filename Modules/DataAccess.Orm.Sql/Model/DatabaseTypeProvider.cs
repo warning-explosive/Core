@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Collections.Generic;
     using System.Linq;
     using Api.Model;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -11,7 +12,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using Views;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseTypeProvider : IDatabaseTypeProvider
+    internal class DatabaseTypeProvider : IDatabaseTypeProvider,
+                                          IResolvable<IDatabaseTypeProvider>
     {
         private readonly ITypeProvider _typeProvider;
 

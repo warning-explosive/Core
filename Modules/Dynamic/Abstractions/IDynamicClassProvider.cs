@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.Dynamic.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IDynamicClassProvider
     /// </summary>
-    public interface IDynamicClassProvider : IResolvable
+    public interface IDynamicClassProvider
     {
         /// <summary>
         /// Creates dynamic class and initializes instance with specified parameters

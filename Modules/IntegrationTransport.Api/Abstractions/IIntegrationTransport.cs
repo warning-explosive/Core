@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Enumerations;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
@@ -11,7 +10,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     /// <summary>
     /// IIntegrationTransport
     /// </summary>
-    public interface IIntegrationTransport : IResolvable
+    public interface IIntegrationTransport
     {
         /// <summary>
         /// Status changed

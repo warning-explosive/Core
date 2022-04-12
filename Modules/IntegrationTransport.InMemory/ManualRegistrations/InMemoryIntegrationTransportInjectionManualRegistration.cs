@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory.ManualRegistrations
 {
     using Api.Abstractions;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
 
     internal class InMemoryIntegrationTransportInjectionManualRegistration : IManualRegistration

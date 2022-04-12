@@ -3,13 +3,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Messaging;
 
     /// <summary>
     /// IRpcRequestRegistry
     /// </summary>
-    public interface IRpcRequestRegistry : IResolvable
+    public interface IRpcRequestRegistry
     {
         /// <summary>
         /// Enroll RPC request

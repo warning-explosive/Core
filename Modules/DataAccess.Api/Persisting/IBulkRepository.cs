@@ -4,7 +4,6 @@
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Model;
 
     /// <summary>
@@ -12,7 +11,7 @@
     /// </summary>
     /// <typeparam name="TEntity">TEntity type-argument</typeparam>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public interface IBulkRepository<TEntity, TKey> : IResolvable
+    public interface IBulkRepository<TEntity, TKey>
         where TEntity : IUniqueIdentified<TKey>
         where TKey : notnull
     {

@@ -29,7 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
-      <ProjectReference Include="..\..\Modules\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
+      <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

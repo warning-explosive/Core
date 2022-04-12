@@ -112,7 +112,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             object? value,
             bool force = false)
         {
-            // TODO: see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
+            // see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
             var isNullConstant = value == null
                                  && value == type.DefaultValue()
                                  && !force;

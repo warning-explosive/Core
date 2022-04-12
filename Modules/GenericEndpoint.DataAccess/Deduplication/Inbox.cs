@@ -1,6 +1,6 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
     using EndpointIdentity = Contract.EndpointIdentity;

@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Endpoint;
     using GenericHost.Api.Abstractions;
 

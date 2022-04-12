@@ -3,12 +3,14 @@ namespace SpaceEngineers.Core.Web.Api.Containers
     using System;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DataContainersProvider : IDataContainersProvider
+    internal class DataContainersProvider : IDataContainersProvider,
+                                            IResolvable<IDataContainersProvider>
     {
         private const string UnknownTypeFormat = "Unknown data type: {0}";
 

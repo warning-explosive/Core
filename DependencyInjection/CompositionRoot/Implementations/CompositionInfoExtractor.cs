@@ -11,18 +11,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using Basics;
     using SimpleInjector;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal class CompositionInfoExtractor : ICompositionInfoExtractor
+    internal class CompositionInfoExtractor : ICompositionInfoExtractor,
+                                              IResolvable<ICompositionInfoExtractor>
     {
         private readonly Container _container;
         private readonly IGenericTypeProvider _provider;
         private readonly IAutoRegistrationServicesProvider _autoRegistrationServiceProvider;
 
-        /// <summary> .ctor </summary>
-        /// <param name="container">Container</param>
-        /// <param name="provider">IGenericArgumentsReceiver</param>
-        /// <param name="autoRegistrationServiceProvider">IServiceProvider</param>
         public CompositionInfoExtractor(Container container,
                                         IGenericTypeProvider provider,
                                         IAutoRegistrationServicesProvider autoRegistrationServiceProvider)
@@ -32,7 +28,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _autoRegistrationServiceProvider = autoRegistrationServiceProvider;
         }
 
-        /// <inheritdoc />
         public IReadOnlyCollection<IDependencyInfo> GetCompositionInfo(bool activeMode)
         {
             if (activeMode)
@@ -57,7 +52,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
         private IEnumerable<Type> GetClosedServices()
         {
             return _autoRegistrationServiceProvider.Resolvable().Select(CloseOpenGeneric)
-                .Concat(_autoRegistrationServiceProvider.External().Select(CloseOpenGeneric))
                 .Concat(_autoRegistrationServiceProvider.Collections().Select(CloseOpenGenericCollection));
         }
 

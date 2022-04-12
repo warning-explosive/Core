@@ -1,13 +1,11 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// IObjectTransformer
     /// </summary>
     /// <typeparam name="TSource">TSource type-argument</typeparam>
     /// <typeparam name="TTarget">TTarget type-argument</typeparam>
-    public interface IObjectTransformer<in TSource, out TTarget> : IResolvable
+    public interface IObjectTransformer<in TSource, out TTarget>
     {
         /// <summary>
         /// Transforms the source value to target type value

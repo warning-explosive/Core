@@ -2,12 +2,11 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IModelChangesSorter
     /// </summary>
-    public interface IModelChangesSorter : IResolvable
+    public interface IModelChangesSorter
     {
         /// <summary>
         /// Sorts source changes collection

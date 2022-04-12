@@ -6,15 +6,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class EnvironmentSettingsProvider : ISettingsProvider<EnvironmentSettings>
+    internal class EnvironmentSettingsProvider : ISettingsProvider<EnvironmentSettings>,
+                                                 IResolvable<ISettingsProvider<EnvironmentSettings>>
     {
-        /// <inheritdoc />
         public Task<EnvironmentSettings> Get(CancellationToken token)
         {
             var all = new EnvironmentSettings(All().ToList());
@@ -22,7 +22,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
             return Task.FromResult(all);
         }
 
-        /// <inheritdoc />
         public Task Set(EnvironmentSettings value, CancellationToken token)
         {
             throw new InvalidOperationException("Setting environment variables is prohibited");

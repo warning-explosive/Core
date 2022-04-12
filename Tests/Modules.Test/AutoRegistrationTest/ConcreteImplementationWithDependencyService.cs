@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    internal class ConcreteImplementationWithDependencyService : IResolvable
+    internal class ConcreteImplementationWithDependencyService : IResolvable<ConcreteImplementationWithDependencyService>
     {
         public ConcreteImplementationWithDependencyService(ConcreteImplementationService dependency)
         {

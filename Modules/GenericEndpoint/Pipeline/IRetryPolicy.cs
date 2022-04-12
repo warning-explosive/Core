@@ -3,12 +3,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IRetryStrategy abstraction
     /// </summary>
-    public interface IRetryPolicy : IResolvable
+    public interface IRetryPolicy
     {
         /// <summary>
         /// Apply retry strategy

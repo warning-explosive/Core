@@ -2,9 +2,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Collections.Generic;
     using System.Text;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Sql.Translation;
     using Sql.Translation.Expressions;
     using Sql.Translation.Extensions;
@@ -12,7 +13,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using ConstantExpression = Sql.Translation.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
+    internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>,
+                                                IResolvable<IExpressionTranslator<BinaryExpression>>
     {
         private static readonly IReadOnlyDictionary<BinaryOperator, string> FunctionalOperators
             = new Dictionary<BinaryOperator, string>

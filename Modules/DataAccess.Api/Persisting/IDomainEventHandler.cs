@@ -2,14 +2,13 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IDomainEventHandler
     /// </summary>
     /// <typeparam name="TEvent">TEvent type-argument</typeparam>
-    public interface IDomainEventHandler<in TEvent> : IResolvable
+    public interface IDomainEventHandler<in TEvent>
         where TEvent : IDomainEvent
     {
         /// <summary>

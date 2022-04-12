@@ -7,12 +7,13 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using System.Reflection;
     using System.Reflection.Emit;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    public class DynamicClassProvider : IDynamicClassProvider
+    internal class DynamicClassProvider : IDynamicClassProvider,
+                                        IResolvable<IDynamicClassProvider>
     {
         private const TypeAttributes DynamicClassTypeAttributes = TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed;
         private const MethodAttributes GetSetMethodAttributes = MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig;
@@ -20,7 +21,6 @@ namespace SpaceEngineers.Core.Dynamic.Internals
         private static readonly ConcurrentDictionary<string, ModuleBuilder> ModulesCache = new ConcurrentDictionary<string, ModuleBuilder>(StringComparer.OrdinalIgnoreCase);
         private static readonly ConcurrentDictionary<DynamicClass, Type> TypesCache = new ConcurrentDictionary<DynamicClass, Type>();
 
-        /// <inheritdoc />
         public object CreateInstance(DynamicClass dynamicClass, IReadOnlyDictionary<DynamicProperty, object?> values)
         {
             var type = CreateType(dynamicClass);
@@ -43,7 +43,6 @@ namespace SpaceEngineers.Core.Dynamic.Internals
             }
         }
 
-        /// <inheritdoc />
         public Type CreateType(DynamicClass dynamicClass)
         {
             return TypesCache.GetOrAdd(dynamicClass, BuildClass);

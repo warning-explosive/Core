@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Integration types provider
     /// </summary>
-    public interface IIntegrationTypeProvider : IResolvable
+    public interface IIntegrationTypeProvider
     {
         /// <summary>
         /// All types that implements IIntegrationMessage directly or indirectly and referenced to endpoint

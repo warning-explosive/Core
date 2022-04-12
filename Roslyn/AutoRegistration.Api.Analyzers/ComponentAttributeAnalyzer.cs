@@ -93,9 +93,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
 
             var baseSymbols = baseTypes.Select(GetBaseTypeSymbol).ToArray();
 
-            var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable).FullName);
+            var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable<>).FullName);
             var collectionResolvable = context.Compilation.GetTypeByMetadataName(typeof(ICollectionResolvable<>).FullName);
-            var externalResolvable = context.Compilation.GetTypeByMetadataName(typeof(IExternalResolvable<>).FullName);
             var decorator = context.Compilation.GetTypeByMetadataName(typeof(IDecorator<>).FullName);
 
             bool IsDerivedFromService(INamedTypeSymbol symbol, INamedTypeSymbol service)
@@ -108,7 +107,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
                              .OfType<INamedTypeSymbol>()
                              .Any(symbol => (resolvable != null && IsDerivedFromService(symbol, resolvable))
                                          || (collectionResolvable != null && IsDerivedFromService(symbol, collectionResolvable))
-                                         || (externalResolvable != null && IsDerivedFromService(symbol, externalResolvable))
                                          || (decorator != null && IsDerivedFromService(symbol, decorator)));
 
             return isComponent;

@@ -4,15 +4,16 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using Api.Abstractions;
-    using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [UnregisteredComponent]
     internal class ManualRegistrationsContainer : IRegistrationsContainer,
-                                                  IAdvancedManualRegistrationsContainer
+                                                  IAdvancedManualRegistrationsContainer,
+                                                  IResolvable<IRegistrationsContainer>
     {
         private readonly List<InstanceRegistrationInfo> _instances;
         private readonly List<ServiceRegistrationInfo> _resolvable;

@@ -1,13 +1,12 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IObjectBuilder
     /// </summary>
-    public interface IObjectBuilder : IResolvable
+    public interface IObjectBuilder
     {
         /// <summary>
         /// Builds object from values
@@ -22,7 +21,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
     /// IObjectBuilder
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface IObjectBuilder<out T> : IResolvable
+    public interface IObjectBuilder<out T>
     {
         /// <summary>
         /// Builds object from values

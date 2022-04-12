@@ -1,14 +1,15 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.StringFormatter
 {
     using System;
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class StringFormatter : IStringFormatter
+    internal class StringFormatter : IStringFormatter,
+                                     IResolvable<IStringFormatter>
     {
         private readonly IDependencyContainer _dependencyContainer;
 

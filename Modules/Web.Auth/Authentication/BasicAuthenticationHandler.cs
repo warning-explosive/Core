@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
     using System.Threading;
     using System.Threading.Tasks;
     using AuthorizationEndpoint.Contract.Messages;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authorization;

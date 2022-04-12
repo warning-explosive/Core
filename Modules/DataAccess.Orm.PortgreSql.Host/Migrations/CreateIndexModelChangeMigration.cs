@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -12,7 +13,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateIndexModelChangeMigration : IModelChangeMigration<CreateIndex>
+    internal class CreateIndexModelChangeMigration : IModelChangeMigration<CreateIndex>,
+                                                     IResolvable<IModelChangeMigration<CreateIndex>>
     {
         private const string CommandFormat = @"create {4}index ""{2}"" on ""{0}"".""{1}"" ({3})";
 

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -15,7 +16,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
     using GenericEndpoint.Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    internal class IntegrationContext : IIntegrationContext
+    internal class IntegrationContext : IIntegrationContext,
+                                        IResolvable<IIntegrationContext>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;

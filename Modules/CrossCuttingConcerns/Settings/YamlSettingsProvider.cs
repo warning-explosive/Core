@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using YamlDotNet.Serialization;
@@ -8,7 +8,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     using YamlDotNet.Serialization.TypeResolvers;
 
     [Component(EnLifestyle.Singleton)]
-    internal class YamlSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>
+    internal class YamlSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
+                                                     IResolvable<ISettingsProvider<TSettings>>
         where TSettings : class, IYamlSettings
     {
         private readonly ISerializer _serializer =

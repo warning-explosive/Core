@@ -25,15 +25,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 .OurTypes
                 .Select(type =>
                 {
-                    var resolvable = typeof(IResolvable).IsAssignableFrom(type) && type != typeof(IResolvable);
-                    var externalResolvable = type.IsSubclassOfOpenGeneric(typeof(IExternalResolvable<>)) && type != typeof(IExternalResolvable<>);
+                    var resolvable = type.IsSubclassOfOpenGeneric(typeof(IResolvable<>)) && type != typeof(IResolvable<>);
                     var collectionResolvable = type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)) && type != typeof(ICollectionResolvable<>);
                     var decorator = type.IsSubclassOfOpenGeneric(typeof(IDecorator<>)) && type != typeof(IDecorator<>);
 
                     return new ComponentInterfacesInfo(
                         type,
                         resolvable,
-                        externalResolvable,
                         collectionResolvable,
                         decorator);
                 })
@@ -59,13 +57,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             public ComponentInterfacesInfo(
                 Type type,
                 bool resolvable,
-                bool externalResolvable,
                 bool collectionResolvable,
                 bool decorator)
             {
                 Type = type;
                 Resolvable = resolvable;
-                ExternalResolvable = externalResolvable;
                 CollectionResolvable = collectionResolvable;
                 Decorator = decorator;
             }
@@ -74,8 +70,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
             private bool Resolvable { get; }
 
-            private bool ExternalResolvable { get; }
-
             private bool CollectionResolvable { get; }
 
             private bool Decorator { get; }
@@ -83,14 +77,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             public bool IsVerificationRequired()
             {
                 return Resolvable
-                       || ExternalResolvable
                        || CollectionResolvable
                        || Decorator;
             }
 
             public bool IsResolvable()
             {
-                return (Resolvable || ExternalResolvable)
+                return Resolvable
                        && !CollectionResolvable
                        && !Decorator;
             }
@@ -98,7 +91,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             public bool IsCollectionResolvable()
             {
                 return !Resolvable
-                       && !ExternalResolvable
                        && CollectionResolvable
                        && !Decorator;
             }

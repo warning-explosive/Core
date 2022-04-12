@@ -1,13 +1,12 @@
-namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Container
+namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Dependency container abstraction
     /// </summary>
-    public interface IDependencyContainer : IScopedContainer, IResolvable
+    public interface IDependencyContainer
     {
         /// <summary>
         /// Resolve service implementation
@@ -56,5 +55,21 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Container
         /// <param name="service">Service</param>
         /// <returns>Untyped service implementation</returns>
         IEnumerable<object> ResolveCollection(Type service);
+
+        /// <summary>
+        /// Open specified scope
+        /// </summary>
+        /// <returns>Scope cleanup</returns>
+        IDisposable OpenScope();
+
+        #if NETSTANDARD2_1
+
+        /// <summary>
+        /// Open specified scope
+        /// </summary>
+        /// <returns>Scope cleanup</returns>
+        IAsyncDisposable OpenScopeAsync();
+
+        #endif
     }
 }

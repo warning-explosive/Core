@@ -2,13 +2,15 @@
 {
     using System;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Orm.Host.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelValidator : IModelValidator
+    internal class ModelValidator : IModelValidator,
+                                    IResolvable<IModelValidator>
     {
         private const int PostgresNameDataLength = 64 - 1 - 5;
 

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Translation;
@@ -7,7 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
     [Component(EnLifestyle.Singleton)]
 
-    internal class SpecialExpressionTranslator : IExpressionTranslator<SpecialExpression>
+    internal class SpecialExpressionTranslator : IExpressionTranslator<SpecialExpression>,
+                                                 IResolvable<IExpressionTranslator<SpecialExpression>>
     {
         public string Translate(SpecialExpression expression, int depth)
         {

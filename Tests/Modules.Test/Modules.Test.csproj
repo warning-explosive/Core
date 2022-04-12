@@ -150,12 +150,6 @@
     <Compile Update="AutoRegistrationTest\DerivedFromUnregisteredService.cs">
       <DependentUpon>IUnregisteredService.cs</DependentUpon>
     </Compile>
-    <Compile Update="AutoRegistrationTest\BaseUnregisteredExternalServiceImpl.cs">
-      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AutoRegistrationTest\DerivedFromUnregisteredExternalServiceImpl.cs">
-      <DependentUpon>IUnregisteredExternalService.cs</DependentUpon>
-    </Compile>
     <Compile Update="AutoRegistrationTest\ScopedService.cs">
       <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>

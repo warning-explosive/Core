@@ -1,12 +1,13 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 {
     using System.Collections.Generic;
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class GenericObjectBuilder<T> : IObjectBuilder<T>
+    internal class GenericObjectBuilder<T> : IObjectBuilder<T>,
+                                             IResolvable<IObjectBuilder<T>>
     {
         private readonly IObjectBuilder _objectBuilder;
 

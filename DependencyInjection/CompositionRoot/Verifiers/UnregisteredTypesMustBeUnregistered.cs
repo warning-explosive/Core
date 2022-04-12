@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             _typeProvider
                .OurTypes
                .Where(type => type.HasAttribute<UnregisteredComponentAttribute>())
-               .SelectMany(implementation => FlattenAutoRegistrationServices(implementation).Select(service => (service, implementation)))
+               .SelectMany(implementation => GetAutoRegistrationServices(implementation).Select(service => (service, implementation)))
                .Where(pair => registeredComponents.Contains(pair.implementation) || registeredComponents.Contains(pair.service))
                .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} shouldn't be registered but represented in the dependency container as {pair.service.FullName}"));
         }

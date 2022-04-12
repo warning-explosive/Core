@@ -2,10 +2,12 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
     using System;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
 
     [ComponentOverride]
-    internal class ScopedServiceOverride : IScopedService
+    internal class ScopedServiceOverride : IScopedService,
+                                           IResolvable<IScopedService>
     {
         public Task DoSmth()
         {

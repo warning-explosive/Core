@@ -3,15 +3,17 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Orm.Host.Model;
     using Sql.Host.Migrations;
     using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateDatabaseModelChangeMigration : IModelChangeMigration<CreateDatabase>
+    internal class CreateDatabaseModelChangeMigration : IModelChangeMigration<CreateDatabase>,
+                                                        IResolvable<IModelChangeMigration<CreateDatabase>>
     {
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 

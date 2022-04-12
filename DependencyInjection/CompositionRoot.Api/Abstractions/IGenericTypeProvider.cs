@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Close open or partially-closed generic types
     /// </summary>
-    public interface IGenericTypeProvider : IResolvable
+    public interface IGenericTypeProvider
     {
         /// <summary>
         /// Receive all satisfying by type constraints types

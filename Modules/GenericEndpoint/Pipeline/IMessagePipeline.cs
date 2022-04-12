@@ -3,12 +3,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IMessagePipeline abstraction
     /// </summary>
-    public interface IMessagePipeline : IResolvable
+    public interface IMessagePipeline
     {
         /// <summary>
         /// Handle incoming message

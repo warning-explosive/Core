@@ -1,15 +1,17 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System.Text;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Sql.Translation;
     using Sql.Translation.Expressions;
     using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JoinExpressionTranslator : IExpressionTranslator<JoinExpression>
+    internal class JoinExpressionTranslator : IExpressionTranslator<JoinExpression>,
+                                              IResolvable<IExpressionTranslator<JoinExpression>>
     {
         private readonly IDependencyContainer _dependencyContainer;
 

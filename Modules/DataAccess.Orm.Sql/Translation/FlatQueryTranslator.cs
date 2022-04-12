@@ -1,14 +1,16 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Expressions;
     using Extensions;
     using Orm.Linq;
 
     [Component(EnLifestyle.Scoped)]
-    internal class FlatQueryTranslator<TExpression> : IIntermediateQueryTranslator<TExpression>
+    internal class FlatQueryTranslator<TExpression> : IIntermediateQueryTranslator<TExpression>,
+                                                      IResolvable<IIntermediateQueryTranslator<TExpression>>
         where TExpression : IIntermediateExpression
     {
         private readonly IDependencyContainer _dependencyContainer;

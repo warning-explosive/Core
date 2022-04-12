@@ -4,14 +4,15 @@ namespace SpaceEngineers.Core.PathResolver
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Exceptions;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal partial class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>
+    internal class PathResolverImpl<TKey, TValue> : IPathResolver<TKey, TValue>,
+                                                    IResolvable<IPathResolver<TKey, TValue>>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {
@@ -23,7 +24,6 @@ namespace SpaceEngineers.Core.PathResolver
             gsf => gsf.ShowProperties(BindingFlags.Instance | BindingFlags.Public,
                                       nameof(PathResolverInfo<TKey, TValue>.WeightFunc));
 
-        /// <inheritdoc />
         public Queue<KeyValuePair<TKey, TValue>> GetShortestPath(GenericGraph<TKey, TValue> genericGraph,
                                                                  PathResolverInfo<TKey, TValue> pathResolverInfo)
         {
@@ -36,11 +36,11 @@ namespace SpaceEngineers.Core.PathResolver
             }
 
             var query = GetAllGroupedPaths(genericGraph, pathResolverInfo.RootNodeKey)
-                       .Where(grpdPath => FilterGroupedPathByTargetKey(grpdPath, pathResolverInfo.TargetNodeKey))
-                       .Where(grpdPath => FilterGroupedPathByRequiredKeys(grpdPath, pathResolverInfo.RequiredKeys))
-                       .Where(grpdPath => FilterGroupedPathByLoops(grpdPath, pathResolverInfo.WithoutLoops))
-                       .Where(grpdPath => FilterGroupedPathByRequiredEdges(grpdPath, pathResolverInfo.RequiredEdges))
-                       .Select(grpdPath => ExtractPathsFromGroups(grpdPath, pathResolverInfo.RequiredEdges));
+                       .Where(grpdPath => Filters<TKey, TValue>.FilterGroupedPathByTargetKey(grpdPath, pathResolverInfo.TargetNodeKey))
+                       .Where(grpdPath => Filters<TKey, TValue>.FilterGroupedPathByRequiredKeys(grpdPath, pathResolverInfo.RequiredKeys))
+                       .Where(grpdPath => Filters<TKey, TValue>.FilterGroupedPathByLoops(grpdPath, pathResolverInfo.WithoutLoops))
+                       .Where(grpdPath => Filters<TKey, TValue>.FilterGroupedPathByRequiredEdges(grpdPath, pathResolverInfo.RequiredEdges))
+                       .Select(grpdPath => Filters<TKey, TValue>.ExtractPathsFromGroups(grpdPath, pathResolverInfo.RequiredEdges));
 
             var groupedPaths = SelectShortestGroupedPath(query, pathResolverInfo.WeightFunc).ToArray();
 
@@ -73,7 +73,6 @@ namespace SpaceEngineers.Core.PathResolver
             return resultPath;
         }
 
-        /// <inheritdoc />
         public IEnumerable<Queue<KeyValuePair<TKey, ICollection<TValue>>>> GetAllGroupedPaths(
             GenericGraph<TKey, TValue> genericGraph,
             TKey rootNodeKey)
@@ -90,7 +89,6 @@ namespace SpaceEngineers.Core.PathResolver
             return groupedPathsCollection;
         }
 
-        /// <inheritdoc />
         public IEnumerable<KeyValuePair<int, Queue<KeyValuePair<TKey, ICollection<TValue>>>>> GetAllGroupedWeightedPaths(
             GenericGraph<TKey, TValue> genericGraph,
             TKey rootKey,

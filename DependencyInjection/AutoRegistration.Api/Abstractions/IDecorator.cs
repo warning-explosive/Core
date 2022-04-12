@@ -3,12 +3,12 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Abstractions
     /// <summary>
     /// Represents decorator for service
     /// </summary>
-    /// <typeparam name="TResolvable">IResolvable</typeparam>
-    public interface IDecorator<TResolvable>
+    /// <typeparam name="TService">TService type-argument</typeparam>
+    public interface IDecorator<TService>
     {
         /// <summary>
         /// Decoratee
         /// </summary>
-        TResolvable Decoratee { get; }
+        TService Decoratee { get; }
     }
 }

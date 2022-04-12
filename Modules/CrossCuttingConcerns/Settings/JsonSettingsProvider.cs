@@ -1,11 +1,13 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Json;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JsonSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>
+    internal class JsonSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
+                                                     IResolvable<ISettingsProvider<TSettings>>
         where TSettings : class, IJsonSettings
     {
         private readonly IJsonSerializer _jsonSerializer;

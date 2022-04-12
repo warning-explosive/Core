@@ -8,11 +8,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Threading.Tasks;
     using Api.Model;
     using Api.Reading;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
+    internal class ReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>,
+                                                   IResolvable<IReadRepository<TEntity, TKey>>
         where TEntity : IUniqueIdentified<TKey>
         where TKey : notnull
     {

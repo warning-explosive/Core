@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.AuthorizationEndpoint.JwtAuthentication
 {
     using System;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// ITokenProvider
     /// </summary>
-    public interface ITokenProvider : IResolvable
+    public interface ITokenProvider
     {
         /// <summary>
         /// Generates token

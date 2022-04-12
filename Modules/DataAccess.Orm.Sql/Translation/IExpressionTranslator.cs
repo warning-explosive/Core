@@ -1,13 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Linq.Expressions;
-    using AutoRegistration.Api.Abstractions;
     using Expressions;
 
     /// <summary>
     /// IExpressionTranslator
     /// </summary>
-    public interface IExpressionTranslator : IResolvable
+    public interface IExpressionTranslator
     {
         /// <summary>
         /// Translates linq expression to intermediate expression
@@ -21,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     /// IExpressionTranslator
     /// </summary>
     /// <typeparam name="TExpression">TExpression type-argument</typeparam>
-    public interface IExpressionTranslator<TExpression> : IResolvable
+    public interface IExpressionTranslator<TExpression>
         where TExpression : IIntermediateExpression
     {
         /// <summary>

@@ -1,12 +1,10 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.StringFormatter
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// IStringFormatter
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface IStringFormatter<T> : IResolvable
+    public interface IStringFormatter<T>
     {
         /// <summary>
         /// Formats value to string
@@ -19,7 +17,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
     /// <summary>
     /// IStringFormatter
     /// </summary>
-    public interface IStringFormatter : IResolvable
+    public interface IStringFormatter
     {
         /// <summary>
         /// Formats value to string

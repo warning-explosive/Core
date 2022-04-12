@@ -4,12 +4,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
 
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
-    internal class EndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior
+    internal class EndpointInstanceSelectionBehavior : IEndpointInstanceSelectionBehavior,
+                                                       IResolvable<IEndpointInstanceSelectionBehavior>
     {
         private static readonly ConcurrentDictionary<string, int> IndexMap
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);

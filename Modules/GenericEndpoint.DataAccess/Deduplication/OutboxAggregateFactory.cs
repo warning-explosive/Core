@@ -4,17 +4,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
     using EndpointIdentity = Contract.EndpointIdentity;
 
     [Component(EnLifestyle.Scoped)]
-    internal class OutboxAggregateFactory : IAggregateFactory<Outbox, OutboxAggregateSpecification>
+    internal class OutboxAggregateFactory : IAggregateFactory<Outbox, OutboxAggregateSpecification>,
+                                            IResolvable<IAggregateFactory<Outbox, OutboxAggregateSpecification>>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IDatabaseContext _databaseContext;

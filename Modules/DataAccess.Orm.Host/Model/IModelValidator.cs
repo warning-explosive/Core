@@ -1,11 +1,9 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Host.Model
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// IModelValidator
     /// </summary>
-    public interface IModelValidator : IResolvable
+    public interface IModelValidator
     {
         /// <summary>
         /// Validates database model

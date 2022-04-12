@@ -2,13 +2,15 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Host.Model;
     using Sql.Views;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseIndexViewQueryProvider : ISqlViewQueryProvider<DatabaseIndex, Guid>
+    internal class DatabaseIndexViewQueryProvider : ISqlViewQueryProvider<DatabaseIndex, Guid>,
+                                                    IResolvable<ISqlViewQueryProvider<DatabaseIndex, Guid>>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select

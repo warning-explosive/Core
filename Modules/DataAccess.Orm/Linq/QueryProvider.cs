@@ -11,11 +11,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryProvider : IAsyncQueryProvider,
-                                   IExternalResolvable<IQueryProvider>
+                                   IResolvable<IAsyncQueryProvider>,
+                                   IResolvable<IQueryProvider>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IQueryTranslator _translator;

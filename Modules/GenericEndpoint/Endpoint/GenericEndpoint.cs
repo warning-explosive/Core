@@ -6,11 +6,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Primitives;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Contract.Abstractions;
     using Messaging;
@@ -18,7 +19,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpoint : IRunnableEndpoint,
-                                     IExecutableEndpoint
+                                     IExecutableEndpoint,
+                                     IResolvable<IRunnableEndpoint>,
+                                     IResolvable<IExecutableEndpoint>
     {
         private readonly ILogger _logger;
         private readonly EndpointIdentity _endpointIdentity;

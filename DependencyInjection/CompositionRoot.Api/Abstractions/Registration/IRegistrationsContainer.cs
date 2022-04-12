@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IRegistrationsContainer
     /// </summary>
-    public interface IRegistrationsContainer : IResolvable
+    public interface IRegistrationsContainer
     {
         /// <summary> Instances </summary>
         /// <returns> Instance components </returns>

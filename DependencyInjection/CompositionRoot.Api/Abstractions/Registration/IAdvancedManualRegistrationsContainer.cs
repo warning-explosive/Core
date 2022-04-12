@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 {
     using System;
     using AutoRegistration.Api.Enumerations;
-    using Container;
 
     /// <summary>
     /// IAdvancedManualRegistrationsContainer

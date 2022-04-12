@@ -2,14 +2,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
 
     /// <summary>
     /// Integration context
     /// Use to produce integration messages outside of endpoint scope
     /// </summary>
-    public interface IIntegrationContext : IResolvable
+    public interface IIntegrationContext
     {
         /// <summary>
         /// Send integration command to logical owner

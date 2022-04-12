@@ -1,11 +1,13 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Settings
 {
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Contract;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
 
     [ComponentOverride]
-    internal class EndpointSettingsScopeProvider : ISettingsScopeProvider
+    internal class EndpointSettingsScopeProvider : ISettingsScopeProvider,
+                                                   IResolvable<ISettingsScopeProvider>
     {
         private readonly EndpointIdentity _endpointIdentity;
 

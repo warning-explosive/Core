@@ -3,13 +3,12 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IChangesTracker
     /// </summary>
-    public interface IChangesTracker : IDisposable, IResolvable
+    public interface IChangesTracker : IDisposable
     {
         /// <summary>
         /// Did the changes tracker capture any state changes

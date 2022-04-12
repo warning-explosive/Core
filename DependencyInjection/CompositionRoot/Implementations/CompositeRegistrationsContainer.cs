@@ -4,11 +4,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Collections.Generic;
     using System.Linq;
     using Api.Abstractions.Registration;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
 
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
-    internal class CompositeRegistrationsContainer : IRegistrationsContainer
+    internal class CompositeRegistrationsContainer : IRegistrationsContainer,
+                                                     IResolvable<IRegistrationsContainer>
     {
         private readonly IComponentsOverrideContainer _overridesContainer;
         private readonly IEnumerable<IRegistrationsContainer> _registrations;

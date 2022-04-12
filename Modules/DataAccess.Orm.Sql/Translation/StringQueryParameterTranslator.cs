@@ -3,11 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class StringQueryParameterTranslator : IQueryParameterTranslator<string>
+    internal class StringQueryParameterTranslator : IQueryParameterTranslator<string>,
+                                                    IResolvable<IQueryParameterTranslator<string>>
     {
         private static readonly IReadOnlyDictionary<string, string> _replacements = new Dictionary<string, string>
         {

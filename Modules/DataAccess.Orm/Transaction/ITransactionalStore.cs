@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Transactional store
     /// </summary>
-    public interface ITransactionalStore : IDisposable, IResolvable
+    public interface ITransactionalStore : IDisposable
     {
         /// <summary>
         /// Puts entry into transactional store

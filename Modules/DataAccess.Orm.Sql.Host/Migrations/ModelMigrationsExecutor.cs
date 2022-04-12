@@ -10,12 +10,13 @@
     using Api.Persisting;
     using Api.Reading;
     using Api.Transaction;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Connection;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Extensions;
     using Model;
     using Orm.Extensions;
@@ -26,7 +27,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelMigrationsExecutor : IModelMigrationsExecutor
+    internal class ModelMigrationsExecutor : IModelMigrationsExecutor,
+                                             IResolvable<IModelMigrationsExecutor>
     {
         private const string AutomaticMigration = "Automatic migration";
         private const string CommandFormat = @"--[{0}]{1}";

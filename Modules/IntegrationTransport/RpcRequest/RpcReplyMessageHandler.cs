@@ -3,6 +3,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using GenericEndpoint.Contract.Abstractions;
@@ -10,7 +11,8 @@
     using GenericEndpoint.Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    internal class RpcReplyMessageHandler<TReply> : IRpcReplyMessageHandler<TReply>
+    internal class RpcReplyMessageHandler<TReply> : IRpcReplyMessageHandler<TReply>,
+                                                    IResolvable<IRpcReplyMessageHandler<TReply>>
         where TReply : IIntegrationReply
     {
         private readonly IRpcRequestRegistry _registry;

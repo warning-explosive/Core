@@ -6,13 +6,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Linq;
     using System.Reflection;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.EqualityComparers;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
-    internal class TypeProvider : ITypeProvider
+    internal class TypeProvider : ITypeProvider,
+                                  IResolvable<ITypeProvider>
     {
         private static readonly string[] ExcludedTypes =
         {

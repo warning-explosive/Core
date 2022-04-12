@@ -4,13 +4,17 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Globalization;
     using System.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using DocumentFormat.OpenXml.Spreadsheet;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Excel cell value extractor
+    /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class ExcelCellValueExtractor : IExcelCellValueExtractor
+    public class ExcelCellValueExtractor : IExcelCellValueExtractor,
+                                           IResolvable<IExcelCellValueExtractor>
     {
         private readonly IReadOnlyCollection<IRawCellValueVisitor> _cellValueVisitors;
 

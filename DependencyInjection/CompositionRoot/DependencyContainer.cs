@@ -6,9 +6,9 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Linq;
     using System.Reflection;
     using Api.Abstractions;
-    using Api.Abstractions.Container;
     using Api.Abstractions.Registration;
     using Api.Exceptions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Extensions;
@@ -24,7 +24,9 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// </summary>
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
-    public class DependencyContainer : IDependencyContainer, IDisposable
+    public class DependencyContainer : IDisposable,
+                                       IDependencyContainer,
+                                       IResolvable<IDependencyContainer>
     {
         private DependencyContainerOptions _options;
         private bool _wasVerified;

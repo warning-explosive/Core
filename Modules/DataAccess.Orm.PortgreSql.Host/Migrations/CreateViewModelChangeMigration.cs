@@ -3,6 +3,7 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -11,7 +12,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateViewModelChangeMigration : IModelChangeMigration<CreateView>
+    internal class CreateViewModelChangeMigration : IModelChangeMigration<CreateView>,
+                                                    IResolvable<IModelChangeMigration<CreateView>>
     {
         private const string CommandFormat = @"create materialized view ""{0}"".""{1}"" as {2}";
 

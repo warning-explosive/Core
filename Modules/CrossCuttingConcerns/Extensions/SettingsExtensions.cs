@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Extensions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Extensions
 {
     using System;
     using System.IO;

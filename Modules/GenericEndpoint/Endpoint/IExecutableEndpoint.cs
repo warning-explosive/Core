@@ -2,13 +2,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Messaging;
 
     /// <summary>
     /// IExecutableEndpoint
     /// </summary>
-    public interface IExecutableEndpoint : IResolvable
+    public interface IExecutableEndpoint
     {
         /// <summary>
         /// Executes message handlers

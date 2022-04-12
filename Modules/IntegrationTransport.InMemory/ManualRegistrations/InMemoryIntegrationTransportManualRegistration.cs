@@ -19,10 +19,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory.ManualRegistrations
         public void Register(IManualRegistrationsContainer container)
         {
             container.RegisterInstance<IIntegrationTransport>(_inMemoryIntegrationTransport);
-            container.RegisterInstance<InMemoryIntegrationTransport>(_inMemoryIntegrationTransport);
-
             container.RegisterInstance<IEndpointInstanceSelectionBehavior>(_endpointInstanceSelectionBehavior);
-            container.RegisterInstance<EndpointInstanceSelectionBehavior>(_endpointInstanceSelectionBehavior);
         }
     }
 }

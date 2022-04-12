@@ -30,7 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Basics\Basics.csproj" />
         <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
-        <ProjectReference Include="..\CrossCuttingConcerns.Api\CrossCuttingConcerns.Api.csproj" />
+        <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
         <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
         <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     </ItemGroup>

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Model;
     using Orm.Extensions;
     using Orm.Host.Migrations;

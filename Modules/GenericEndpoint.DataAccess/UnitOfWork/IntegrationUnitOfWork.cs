@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Enumerations;
@@ -19,7 +20,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
     [ComponentOverride]
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
-                                           IIntegrationUnitOfWork
+                                           IIntegrationUnitOfWork,
+                                           IResolvable<IIntegrationUnitOfWork>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationTransport _transport;
@@ -104,6 +106,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         private async Task DeliverMessages(Outbox outbox, CancellationToken token)
         {
+            /*
+             * TODO: #154 - test without immediate delivery
+             */
+
             if (outbox.OutgoingMessages.Any())
             {
                 await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))

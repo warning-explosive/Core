@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using System.Text;
     using Abstractions;
     using Analyzers.Api;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Microsoft.CodeAnalysis;
@@ -14,11 +15,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using ValueObjects;
     using Xunit;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal class DiagnosticAnalyzerVerifier : IDiagnosticAnalyzerVerifier
+    internal class DiagnosticAnalyzerVerifier : IDiagnosticAnalyzerVerifier,
+                                                IResolvable<IDiagnosticAnalyzerVerifier>
     {
-        /// <inheritdoc />
         public void VerifyAnalyzedDocument(SyntaxAnalyzerBase analyzer,
                                            AnalyzedDocument analyzedDocument,
                                            ImmutableArray<ExpectedDiagnostic> expectedDiagnostics)

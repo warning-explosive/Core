@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Enumerations;
@@ -14,7 +15,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
 
     [Component(EnLifestyle.Scoped)]
     internal class IntegrationUnitOfWork : AsyncUnitOfWork<IAdvancedIntegrationContext>,
-                                           IIntegrationUnitOfWork
+                                           IIntegrationUnitOfWork,
+                                           IResolvable<IIntegrationUnitOfWork>
     {
         private readonly IIntegrationTransport _transport;
 

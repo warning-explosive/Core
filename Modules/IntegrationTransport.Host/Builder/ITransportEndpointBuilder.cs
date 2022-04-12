@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Reflection;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericHost.Api.Abstractions;
     using Microsoft.Extensions.Hosting;

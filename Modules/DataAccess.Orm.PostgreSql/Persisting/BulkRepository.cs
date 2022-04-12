@@ -9,11 +9,12 @@
     using Api.Model;
     using Api.Persisting;
     using Api.Transaction;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Settings;
     using Sql.Extensions;
     using Sql.Model;
@@ -21,7 +22,8 @@
     using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class BulkRepository<TEntity, TKey> : IBulkRepository<TEntity, TKey>
+    internal class BulkRepository<TEntity, TKey> : IBulkRepository<TEntity, TKey>,
+                                                   IResolvable<IBulkRepository<TEntity, TKey>>
         where TEntity : IUniqueIdentified<TKey>
         where TKey : notnull
     {

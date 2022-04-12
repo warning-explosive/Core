@@ -3,11 +3,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class TransactionalStore : ITransactionalStore
+    internal class TransactionalStore : ITransactionalStore,
+                                        IResolvable<ITransactionalStore>
     {
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<object, object>> _store;
 

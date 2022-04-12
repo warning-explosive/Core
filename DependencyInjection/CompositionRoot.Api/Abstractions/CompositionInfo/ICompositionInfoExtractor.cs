@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.CompositionInfo
 {
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Extracts late-bound (bound at runtime) information about project objects composition
     /// </summary>
-    public interface ICompositionInfoExtractor : IResolvable
+    public interface ICompositionInfoExtractor
     {
         /// <summary>
         /// Extract project objects composition info

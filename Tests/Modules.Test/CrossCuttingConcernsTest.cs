@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.ObjectBuilder;
     using Xunit;
     using Xunit.Abstractions;
 

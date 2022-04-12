@@ -2,13 +2,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System.Collections.Immutable;
     using Analyzers.Api;
-    using AutoRegistration.Api.Abstractions;
     using ValueObjects;
 
     /// <summary>
     /// Verify correctness of DiagnosticAnalyzer
     /// </summary>
-    public interface IDiagnosticAnalyzerVerifier : IResolvable
+    public interface IDiagnosticAnalyzerVerifier
     {
         /// <summary>
         /// VerifyDiagnostics by IExpectedResultsProvider
@@ -16,8 +15,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
         /// <param name="analyzer">The analyzer that was being run on the sources</param>
         /// <param name="analyzedDocument">AnalyzedDocument</param>
         /// <param name="expectedDiagnostics">Expected diagnostics</param>
-        public void VerifyAnalyzedDocument(SyntaxAnalyzerBase analyzer,
-                                           AnalyzedDocument analyzedDocument,
-                                           ImmutableArray<ExpectedDiagnostic> expectedDiagnostics);
+        public void VerifyAnalyzedDocument(
+            SyntaxAnalyzerBase analyzer,
+            AnalyzedDocument analyzedDocument,
+            ImmutableArray<ExpectedDiagnostic> expectedDiagnostics);
     }
 }

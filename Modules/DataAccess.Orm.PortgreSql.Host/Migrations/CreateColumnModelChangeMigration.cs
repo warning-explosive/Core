@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -13,7 +14,9 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateColumnModelChangeMigration : IModelChangeMigration<CreateColumn>
+    internal class CreateColumnModelChangeMigration : IModelChangeMigration<CreateColumn>,
+                                                      IResolvable<IModelChangeMigration<CreateColumn>>,
+                                                      IResolvable<CreateColumnModelChangeMigration>
     {
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 

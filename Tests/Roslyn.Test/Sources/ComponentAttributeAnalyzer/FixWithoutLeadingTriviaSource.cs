@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer
 {
-    internal class FixWithoutLeadingTriviaSource : ITestService
+    using AutoRegistration.Api.Abstractions;
+
+    internal class FixWithoutLeadingTriviaSource : ITestService, IResolvable<ITestService>
     {
     }
 }

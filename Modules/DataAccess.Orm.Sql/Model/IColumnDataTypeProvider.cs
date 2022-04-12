@@ -1,12 +1,11 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IColumnDataTypeProvider
     /// </summary>
-    public interface IColumnDataTypeProvider : IResolvable
+    public interface IColumnDataTypeProvider
     {
         /// <summary>
         /// Gets column data type

@@ -8,16 +8,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Api.Model;
     using Api.Reading;
     using Api.Transaction;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Connection;
     using Orm.Extensions;
     using Orm.Host.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseModelBuilder : IDatabaseModelBuilder
+    internal class DatabaseModelBuilder : IDatabaseModelBuilder,
+                                          IResolvable<IDatabaseModelBuilder>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;

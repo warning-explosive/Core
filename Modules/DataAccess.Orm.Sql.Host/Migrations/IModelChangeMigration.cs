@@ -2,14 +2,13 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Orm.Host.Model;
 
     /// <summary>
     /// IModelChangeMigration
     /// </summary>
     /// <typeparam name="TChange">TChange type-argument</typeparam>
-    public interface IModelChangeMigration<TChange> : IResolvable
+    public interface IModelChangeMigration<TChange>
         where TChange : IModelChange
     {
         /// <summary>

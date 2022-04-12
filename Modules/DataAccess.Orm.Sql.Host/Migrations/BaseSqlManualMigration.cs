@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading.Tasks;
     using Api.Persisting;
     using Api.Transaction;
-    using CompositionRoot.Api.Abstractions.Container;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Extensions;
     using Model;
     using Orm.Extensions;

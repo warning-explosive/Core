@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Security.Claims;
     using System.Threading;
     using System.Threading.Tasks;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using GenericEndpoint.Contract;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;

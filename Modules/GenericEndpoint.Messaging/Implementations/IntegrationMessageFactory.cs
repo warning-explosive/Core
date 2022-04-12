@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
 {
     using System;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract;
@@ -9,7 +10,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
     using MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    internal class IntegrationMessageFactory : IIntegrationMessageFactory
+    internal class IntegrationMessageFactory : IIntegrationMessageFactory,
+                                               IResolvable<IIntegrationMessageFactory>
     {
         public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage

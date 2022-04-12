@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.ManualRegistrations
     using System.Linq;
     using Api.Model;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
     using GenericHost.Api.Abstractions;
 

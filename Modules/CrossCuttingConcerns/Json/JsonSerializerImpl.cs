@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -12,7 +12,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using Newtonsoft.Json.Serialization;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JsonSerializerImpl : IJsonSerializer
+    internal class JsonSerializerImpl : IJsonSerializer,
+                                        IResolvable<IJsonSerializer>
     {
         private readonly JsonSerializerSettings _settings;
 

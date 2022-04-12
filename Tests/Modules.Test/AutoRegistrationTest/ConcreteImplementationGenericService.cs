@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ConcreteImplementationGenericService<T> : IResolvable
+    internal class ConcreteImplementationGenericService<T> : IResolvable<ConcreteImplementationGenericService<T>>
     {
         public ConcreteImplementationGenericService()
         {

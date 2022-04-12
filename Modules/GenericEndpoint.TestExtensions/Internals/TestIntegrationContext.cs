@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Contract.Abstractions;
 
@@ -12,7 +13,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     /// TestIntegrationContext
     /// </summary>
     [UnregisteredComponent]
-    public class TestIntegrationContext : ITestIntegrationContext, IIntegrationContext
+    public class TestIntegrationContext : ITestIntegrationContext,
+                                          IIntegrationContext,
+                                          IResolvable<IIntegrationContext>
     {
         private readonly List<IIntegrationMessage> _messages;
 

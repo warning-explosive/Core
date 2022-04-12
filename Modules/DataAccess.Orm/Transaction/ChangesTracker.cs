@@ -6,14 +6,16 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ChangesTracker : IChangesTracker
+    internal class ChangesTracker : IChangesTracker,
+                                    IResolvable<IChangesTracker>
     {
         private readonly IDependencyContainer _dependencyContainer;
 
@@ -44,6 +46,9 @@
                 {
                     foreach (var domainEvent in aggregate.Events)
                     {
+                        /*
+                         * TODO: #172 - persist events in event store; execute only new events (sort them by timestamps or versions)
+                         */
                         await _dependencyContainer
                             .ResolveGeneric(typeof(IDomainEventHandler<>), domainEvent.GetType())
                             .CallMethod(nameof(IDomainEventHandler<IDomainEvent>.Handle))

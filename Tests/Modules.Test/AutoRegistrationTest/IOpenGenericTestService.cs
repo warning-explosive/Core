@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
-    using AutoRegistration.Api.Abstractions;
-
-    internal interface IOpenGenericTestService<T> : IResolvable
+    internal interface IOpenGenericTestService<T>
     {
     }
 }

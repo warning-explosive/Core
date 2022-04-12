@@ -3,14 +3,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IQueryMaterializer
     /// </summary>
     /// <typeparam name="TQuery">TQuery type-argument</typeparam>
     /// <typeparam name="TItem">TItem type-argument</typeparam>
-    public interface IQueryMaterializer<TQuery, TItem> : IResolvable
+    public interface IQueryMaterializer<TQuery, TItem>
         where TQuery : IQuery
     {
         /// <summary>

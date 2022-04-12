@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Reading
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Model;
 
     /// <summary>
@@ -12,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Reading
     /// </summary>
     /// <typeparam name="TEntity">TEntity type-argument</typeparam>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public interface IReadRepository<TEntity, TKey> : IResolvable
+    public interface IReadRepository<TEntity, TKey>
         where TEntity : IUniqueIdentified<TKey>
         where TKey : notnull
     {

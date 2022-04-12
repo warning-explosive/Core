@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Transaction;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
 
     /// <summary>
     /// Query invocation extensions

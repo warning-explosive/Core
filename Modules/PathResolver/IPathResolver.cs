@@ -3,14 +3,13 @@ namespace SpaceEngineers.Core.PathResolver
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Service for resolve shortest path on the graph between two nodes
     /// </summary>
     /// <typeparam name="TKey">Node key type</typeparam>
     /// <typeparam name="TValue">Node value type</typeparam>
-    public interface IPathResolver<TKey, TValue> : IResolvable
+    public interface IPathResolver<TKey, TValue>
         where TKey : struct
         where TValue : IEquatable<TValue>
     {

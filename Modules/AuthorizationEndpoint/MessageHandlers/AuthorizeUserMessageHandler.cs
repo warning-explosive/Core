@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Contract.Messages;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Domain;
     using Extensions;
     using GenericDomain.Api.Abstractions;

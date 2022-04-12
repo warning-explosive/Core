@@ -12,7 +12,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class ComponentsOverrideContainer : IComponentsOverrideContainer,
-                                                 IRegisterComponentsOverrideContainer
+                                                 IRegisterComponentsOverrideContainer,
+                                                 IResolvable<IComponentsOverrideContainer>
     {
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
 
@@ -93,7 +94,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
                 return this;
             }
 
-            if (typeof(IResolvable).IsAssignableFrom(replacement))
+            if (replacement.IsSubclassOfOpenGeneric(typeof(IResolvable<>)))
             {
                 _resolvableOverridesStore.Add(new ServiceRegistrationInfo(service, replacement, lifestyle));
                 return this;

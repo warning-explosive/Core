@@ -1,12 +1,10 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// IQueryParameterTranslator
     /// </summary>
     /// <typeparam name="TValue">TValue type-argument</typeparam>
-    public interface IQueryParameterTranslator<in TValue> : IResolvable
+    public interface IQueryParameterTranslator<in TValue>
     {
         /// <summary>
         /// Translates SQL query parameter value into sql expression

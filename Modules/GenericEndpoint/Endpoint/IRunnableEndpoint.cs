@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IRunnableEndpoint
     /// </summary>
-    public interface IRunnableEndpoint : IResolvable
+    public interface IRunnableEndpoint
     {
         /// <summary>
         /// Starts endpoint instance

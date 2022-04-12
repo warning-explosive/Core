@@ -1,12 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System.Linq.Expressions;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IQueryTranslator
     /// </summary>
-    public interface IQueryTranslator : IResolvable
+    public interface IQueryTranslator
     {
         /// <summary>
         /// Translates linq expression to DB query

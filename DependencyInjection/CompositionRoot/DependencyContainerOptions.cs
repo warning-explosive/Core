@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// DependencyContainer creation options
     /// </summary>
     [ManuallyRegisteredComponent("Is created manually during DependencyContainer initialization")]
-    public class DependencyContainerOptions : IResolvable
+    public class DependencyContainerOptions : IResolvable<DependencyContainerOptions>
     {
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()

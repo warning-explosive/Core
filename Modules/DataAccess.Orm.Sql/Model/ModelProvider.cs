@@ -6,17 +6,19 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Model;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Dynamic;
     using Dynamic.Abstractions;
     using Extensions;
     using Orm.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelProvider : IModelProvider
+    internal class ModelProvider : IModelProvider,
+                                   IResolvable<IModelProvider>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDynamicClassProvider _dynamicClassProvider;

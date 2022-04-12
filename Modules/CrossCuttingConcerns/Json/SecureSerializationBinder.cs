@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 
     [Component(EnLifestyle.Singleton)]
     internal class SecureSerializationBinder : ISerializationBinder,
-                                               IExternalResolvable<ISerializationBinder>
+                                               IResolvable<ISerializationBinder>
     {
         private readonly JsonSerializerSettings _settings;
         private readonly ITypeProvider _typeProvider;

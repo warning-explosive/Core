@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
     using ValueObjects;
@@ -9,7 +8,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
     /// <summary>
     /// Analysis objects provider base on conventions
     /// </summary>
-    public interface IConventionalProvider : IResolvable
+    public interface IConventionalProvider
     {
         /// <summary>
         /// GetCodeFixProvider

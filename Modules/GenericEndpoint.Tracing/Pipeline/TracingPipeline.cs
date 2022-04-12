@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Pipeline
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using GenericEndpoint.Pipeline;
     using TracingEndpoint.Contract;
     using TracingEndpoint.Contract.Messages;

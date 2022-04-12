@@ -3,12 +3,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelComparator : IModelComparator
+    internal class ModelComparator : IModelComparator,
+                                     IResolvable<IModelComparator>
     {
         public IEnumerable<IModelChange> ExtractDiff(DatabaseNode? actualModel, DatabaseNode? expectedModel)
         {

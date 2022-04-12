@@ -3,7 +3,7 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Contract;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;

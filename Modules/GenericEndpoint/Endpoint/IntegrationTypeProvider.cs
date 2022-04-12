@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -14,7 +15,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class IntegrationTypeProvider : IIntegrationTypeProvider
+    internal class IntegrationTypeProvider : IIntegrationTypeProvider,
+                                             IResolvable<IIntegrationTypeProvider>
     {
         private readonly ITypeProvider _typeProvider;
         private readonly EndpointIdentity _endpointIdentity;

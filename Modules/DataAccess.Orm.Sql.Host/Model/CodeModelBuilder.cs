@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Connection;
@@ -13,20 +13,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CodeModelBuilder : ICodeModelBuilder
+    internal class CodeModelBuilder : ICodeModelBuilder,
+                                      IResolvable<ICodeModelBuilder>
     {
-        private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IModelProvider _modelProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public CodeModelBuilder(
-            IDatabaseTypeProvider databaseTypeProvider,
             IModelProvider modelProvider,
             IDatabaseConnectionProvider connectionProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
-            _databaseTypeProvider = databaseTypeProvider;
             _modelProvider = modelProvider;
             _connectionProvider = connectionProvider;
             _columnDataTypeProvider = columnDataTypeProvider;

@@ -6,7 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Contract;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using GenericDomain.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;

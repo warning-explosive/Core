@@ -1,21 +1,19 @@
 namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 {
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
-    internal class WithInjectedDependencyContainer : IWithInjectedDependencyContainer
+    internal class WithInjectedDependencyContainer : IWithInjectedDependencyContainer,
+                                                     IResolvable<IWithInjectedDependencyContainer>
     {
-        public WithInjectedDependencyContainer(IDependencyContainer dependencyContainer,
-                                               IScopedContainer scopedContainer)
+        public WithInjectedDependencyContainer(IDependencyContainer dependencyContainer)
         {
             DependencyContainer = dependencyContainer;
-            ScopedContainer = scopedContainer;
         }
 
         public IDependencyContainer DependencyContainer { get; }
-
-        public IScopedContainer ScopedContainer { get; }
     }
 }

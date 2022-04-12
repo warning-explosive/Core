@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test.AutoRegistrationTest
 
     [Component(EnLifestyle.Transient)]
     internal class ExternalResolvable : IProgress<ExternalResolvable>,
-                                        IExternalResolvable<IProgress<ExternalResolvable>>
+                                        IResolvable<IProgress<ExternalResolvable>>
     {
         public void Report(ExternalResolvable value)
         {

@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -18,7 +19,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using Xunit;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CodeFixVerifier : ICodeFixVerifier
+    internal class CodeFixVerifier : ICodeFixVerifier,
+                                     IResolvable<ICodeFixVerifier>
     {
         public async Task VerifyCodeFix(DiagnosticAnalyzer analyzer,
                                         CodeFixProvider codeFix,

@@ -3,12 +3,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Type info storage abstraction
     /// </summary>
-    public interface ITypeProvider : IResolvable
+    public interface ITypeProvider
     {
         /// <summary>
         /// All assemblies loaded in AppDomain

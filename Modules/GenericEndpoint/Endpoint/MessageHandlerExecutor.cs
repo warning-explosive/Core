@@ -5,15 +5,17 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Contract.Abstractions;
     using Messaging;
     using Pipeline;
 
     [Component(EnLifestyle.Transient)]
-    internal class MessageHandlerExecutor<TMessage> : IMessageHandlerExecutor<TMessage>
+    internal class MessageHandlerExecutor<TMessage> : IMessageHandlerExecutor<TMessage>,
+                                                      IResolvable<IMessageHandlerExecutor<TMessage>>
         where TMessage : IIntegrationMessage
     {
         private readonly IDependencyContainer _dependencyContainer;

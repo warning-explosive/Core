@@ -4,15 +4,17 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Text;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Extensions;
 
     [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
     [Component(EnLifestyle.Singleton)]
-    internal class EnumerableQueryParameterTranslator<T> : IQueryParameterTranslator<IEnumerable<T>>
+    internal class EnumerableQueryParameterTranslator<T> : IQueryParameterTranslator<IEnumerable<T>>,
+                                                           IResolvable<IQueryParameterTranslator<IEnumerable<T>>>
     {
         private readonly IDependencyContainer _dependencyContainer;
 

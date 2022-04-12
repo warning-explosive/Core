@@ -2,12 +2,11 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
 {
     using System;
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// IDatabaseTypeProvider
     /// </summary>
-    public interface IDatabaseTypeProvider : IResolvable
+    public interface IDatabaseTypeProvider
     {
         /// <summary>
         /// Types that represents database entities (tables)

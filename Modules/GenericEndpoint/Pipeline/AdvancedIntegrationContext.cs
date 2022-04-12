@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -14,9 +15,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Messaging.Abstractions;
     using Messaging.MessageHeaders;
     using UnitOfWork;
+    using IIntegrationContext = Api.Abstractions.IIntegrationContext;
 
     [Component(EnLifestyle.Scoped)]
-    internal class AdvancedIntegrationContext : IAdvancedIntegrationContext
+    internal class AdvancedIntegrationContext : IAdvancedIntegrationContext,
+                                                IResolvable<IIntegrationContext>,
+                                                IResolvable<IAdvancedIntegrationContext>
     {
         private readonly IIntegrationTransport _transport;
         private readonly EndpointIdentity _endpointIdentity;

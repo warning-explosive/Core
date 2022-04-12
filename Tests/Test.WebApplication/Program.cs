@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Threading.Tasks;
     using AuthorizationEndpoint.Host;
     using Basics;
-    using CrossCuttingConcerns.Api.Extensions;
+    using CrossCuttingConcerns.Extensions;
     using DataAccess.Orm.PostgreSql.Host;
     using GenericHost;
     using IntegrationTransport.WebHost;

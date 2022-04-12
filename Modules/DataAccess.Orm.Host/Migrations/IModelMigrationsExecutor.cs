@@ -3,13 +3,12 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Model;
 
     /// <summary>
     /// IModelMigrationsExecutor
     /// </summary>
-    public interface IModelMigrationsExecutor : IResolvable
+    public interface IModelMigrationsExecutor
     {
         /// <summary>
         /// Executes manual migrations

@@ -2,13 +2,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Model
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Host.Model;
     using Sql.Views;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseColumnViewQueryProvider : ISqlViewQueryProvider<DatabaseColumn, Guid>
+    internal class DatabaseColumnViewQueryProvider : ISqlViewQueryProvider<DatabaseColumn, Guid>,
+                                                     IResolvable<ISqlViewQueryProvider<DatabaseColumn, Guid>>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select

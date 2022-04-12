@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Api.Abstractions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     /// <summary>
     /// System configurations root

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.TracingEndpoint.Contract
 {
     using System;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Json;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
 

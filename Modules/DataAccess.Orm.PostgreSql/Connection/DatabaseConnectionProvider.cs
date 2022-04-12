@@ -4,16 +4,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Npgsql;
     using Orm.Connection;
     using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DatabaseConnectionProvider : IDatabaseConnectionProvider
+    internal class DatabaseConnectionProvider : IDatabaseConnectionProvider,
+                                                IResolvable<IDatabaseConnectionProvider>
     {
         private const string SqlState = nameof(SqlState);
         private const string DatabaseDoesNotExistCode = "3D000";
@@ -41,6 +43,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
+            /*
+             * TODO: #151 - add connection count limits
+             */
+
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);

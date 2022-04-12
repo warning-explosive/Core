@@ -2,7 +2,6 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
 
@@ -10,7 +9,7 @@
     /// IRpcReplyMessageHandler
     /// </summary>
     /// <typeparam name="TReply">TReply type-argument</typeparam>
-    public interface IRpcReplyMessageHandler<TReply> : IResolvable
+    public interface IRpcReplyMessageHandler<TReply>
         where TReply : IIntegrationReply
     {
         /// <summary>

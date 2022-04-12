@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -19,7 +20,8 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     ///     -param1 value1 --param2 /param3:'Test-:-work' /param4=happy -param5 '--=nice=--'
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    internal class CliArgumentsParserImpl : ICliArgumentsParser
+    internal class CliArgumentsParserImpl : ICliArgumentsParser,
+                                            IResolvable<ICliArgumentsParser>
     {
         private static readonly Regex RegexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

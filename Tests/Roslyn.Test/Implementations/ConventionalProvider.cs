@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using System.IO;
     using System.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Exceptions;
     using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Abstractions.Container;
     using Extensions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
@@ -21,7 +21,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     /// ConventionalProvider
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    internal class ConventionalProvider : IConventionalProvider
+    internal class ConventionalProvider : IConventionalProvider,
+                                          IResolvable<IConventionalProvider>
     {
         private readonly IDependencyContainer _dependencyContainer;
 

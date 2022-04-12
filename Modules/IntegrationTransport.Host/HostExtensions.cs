@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using Basics.Primitives;
     using Builder;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericHost;
     using GenericHost.Api;

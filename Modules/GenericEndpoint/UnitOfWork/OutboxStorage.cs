@@ -4,12 +4,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Messaging;
 
     [Component(EnLifestyle.Scoped)]
-    internal class OutboxStorage : IOutboxStorage
+    internal class OutboxStorage : IOutboxStorage,
+                                   IResolvable<IOutboxStorage>
     {
         private readonly ICollection<IntegrationMessage> _outgoingMessages;
 

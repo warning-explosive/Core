@@ -14,10 +14,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Host.ManualRegistrations
 
         public void Register(IManualRegistrationsContainer container)
         {
-            var tokenProvider = new JwtTokenProvider(_configuration);
-
-            container.RegisterInstance<ITokenProvider>(tokenProvider);
-            container.RegisterInstance<JwtTokenProvider>(tokenProvider);
+            container.RegisterInstance<ITokenProvider>(new JwtTokenProvider(_configuration));
         }
     }
 }

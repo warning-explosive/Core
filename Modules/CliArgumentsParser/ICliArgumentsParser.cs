@@ -1,11 +1,9 @@
 namespace SpaceEngineers.Core.CliArgumentsParser
 {
-    using AutoRegistration.Api.Abstractions;
-
     /// <summary>
     /// Cli arguments parser service
     /// </summary>
-    public interface ICliArgumentsParser : IResolvable
+    public interface ICliArgumentsParser
     {
         /// <summary>
         /// Parse cli arguments in typed instance

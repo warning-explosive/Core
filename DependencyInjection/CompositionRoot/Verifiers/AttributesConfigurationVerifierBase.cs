@@ -25,10 +25,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         protected abstract void VerifyInternal(IReadOnlyCollection<Type> registeredComponents);
 
-        protected static IEnumerable<Type> FlattenAutoRegistrationServices(Type type)
+        protected static IEnumerable<Type> GetAutoRegistrationServices(Type type)
         {
-            return type.IncludedTypes().Where(t => typeof(IResolvable).IsAssignableFrom(t))
-                .Concat(type.ExtractGenericArgumentsAt(typeof(IExternalResolvable<>)))
+            return type.ExtractGenericArgumentsAt(typeof(IResolvable<>))
                 .Concat(type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>)))
                 .Distinct();
         }

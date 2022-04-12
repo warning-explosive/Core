@@ -5,12 +5,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ModelMigrator : IModelMigrator
+    internal class ModelMigrator : IModelMigrator,
+                                   IResolvable<IModelMigrator>
     {
         private readonly IDatabaseModelBuilder _databaseModelBuilder;
         private readonly ICodeModelBuilder _codeModelBuilder;

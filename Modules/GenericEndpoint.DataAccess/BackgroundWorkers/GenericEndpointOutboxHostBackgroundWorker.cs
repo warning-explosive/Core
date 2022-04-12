@@ -4,7 +4,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
@@ -28,7 +28,7 @@
         {
             while (!token.IsCancellationRequested)
             {
-                // TODO: #154 - add polling timeout
+                // TODO: #154 - add configurable polling timeout
                 await Task.Delay(TimeSpan.FromSeconds(42), token).ConfigureAwait(false);
                 await DeliverMessages(token).ConfigureAwait(false);
             }

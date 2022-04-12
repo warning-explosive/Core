@@ -9,11 +9,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Api.Model;
     using Api.Reading;
     using Api.Transaction;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions;
+    using CrossCuttingConcerns.ObjectBuilder;
+    using CrossCuttingConcerns.Settings;
     using Extensions;
     using Model;
     using Orm.Extensions;
@@ -23,7 +25,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Translation.Extensions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>
+    internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>,
+                                              IResolvable<IQueryMaterializer<FlatQuery, T>>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;

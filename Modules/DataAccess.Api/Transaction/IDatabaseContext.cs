@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using GenericDomain.Api.Abstractions;
     using Model;
     using Persisting;
@@ -11,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
     /// <summary>
     /// IDatabaseContext
     /// </summary>
-    public interface IDatabaseContext : IResolvable
+    public interface IDatabaseContext
     {
         /// <summary>
         /// Are there any changes in the database transaction

@@ -5,12 +5,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     using System.Linq;
     using Api;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal class GenericTypeProvider : IGenericTypeProvider
+    internal class GenericTypeProvider : IGenericTypeProvider,
+                                         IResolvable<IGenericTypeProvider>
     {
         private readonly ITypeProvider _typeProvider;
 

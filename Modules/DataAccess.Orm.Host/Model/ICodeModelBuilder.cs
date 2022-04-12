@@ -4,12 +4,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Model
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
 
     /// <summary>
     /// Builds database model from the existing code base
     /// </summary>
-    public interface ICodeModelBuilder : IResolvable
+    public interface ICodeModelBuilder
     {
         /// <summary>
         /// Builds database model from the specified source

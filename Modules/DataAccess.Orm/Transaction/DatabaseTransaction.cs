@@ -9,15 +9,20 @@
     using Api.Persisting;
     using Api.Reading;
     using Api.Transaction;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.Api.Abstractions;
     using Connection;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
-    internal class DatabaseTransaction : IAdvancedDatabaseTransaction, IDisposable
+    internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
+                                         IDisposable,
+                                         IResolvable<IAdvancedDatabaseTransaction>,
+                                         IResolvable<IDatabaseTransaction>,
+                                         IResolvable<IDatabaseContext>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;

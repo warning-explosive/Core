@@ -20,9 +20,7 @@ namespace SpaceEngineers.Core.CompositionRoot.ManualRegistrations
         {
             container
                 .RegisterInstance<IRegistrationsContainer>(_registrations)
-                .RegisterInstance<CompositeRegistrationsContainer>(_registrations)
-                .RegisterInstance<IComponentsOverrideContainer>(_overrides)
-                .RegisterInstance<ComponentsOverrideContainer>(_overrides);
+                .RegisterInstance<IComponentsOverrideContainer>(_overrides);
         }
     }
 }

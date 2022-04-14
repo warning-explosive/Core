@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericHost;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
+    using GenericHost.Internals;
     using InMemory.ManualRegistrations;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
@@ -174,12 +175,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             return new TransportEndpointBuilder(endpointIdentity)
-                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
-                .WithEndpointPluginAssemblies(messagingAssembly, crossCuttingConcernsAssembly)
-                .ModifyContainerOptions(options => options
-                    .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
-                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
-                    .WithManualVerification(true));
+               .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
+               .WithEndpointPluginAssemblies(messagingAssembly, crossCuttingConcernsAssembly)
+               .ModifyContainerOptions(options => options
+                   .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
+                   .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                   .WithManualRegistrations(new ConfigurationProviderManualRegistration())
+                   .WithManualVerification(true));
         }
 
         private static IDependencyContainer BuildDependencyContainer(TransportEndpointOptions options)

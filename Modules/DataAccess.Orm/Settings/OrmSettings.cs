@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Settings
     /// <summary>
     /// Orm settings
     /// </summary>
-    public class OrmSettings : IYamlSettings
+    public class OrmSettings : ISettings
     {
         /// <summary> .cctor </summary>
         public OrmSettings()

@@ -1,35 +1,68 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Json;
 
+    /// <summary>
+    /// JsonSettingsProvider
+    /// </summary>
+    /// <typeparam name="TSettings">TSettings type-argument</typeparam>
     [Component(EnLifestyle.Singleton)]
-    internal class JsonSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
-                                                     IResolvable<ISettingsProvider<TSettings>>
-        where TSettings : class, IJsonSettings
+    public class JsonSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
+                                                   IResolvable<JsonSettingsProvider<TSettings>>,
+                                                   ICollectionResolvable<ISettingsProvider<TSettings>>
+        where TSettings : class, ISettings, new()
     {
         private readonly IJsonSerializer _jsonSerializer;
 
+        /// <summary> .cctor </summary>
+        /// <param name="settingsScopeProvider">ISettingsScopeProvider</param>
+        /// <param name="fileSystemSettingsProvider">FileSystemSettings provider</param>
+        /// <param name="jsonSerializer">IJsonSerializer</param>
         public JsonSettingsProvider(
-            IJsonSerializer jsonSerializer,
-            ISettingsScopeProvider settingsScopeProvider)
-            : base(settingsScopeProvider)
+            ISettingsScopeProvider settingsScopeProvider,
+            ISettingsProvider<FileSystemSettings> fileSystemSettingsProvider,
+            IJsonSerializer jsonSerializer)
+            : base(settingsScopeProvider, fileSystemSettingsProvider)
         {
             _jsonSerializer = jsonSerializer;
         }
 
-        protected override string Extension => "json";
+        /// <inheritdoc />
+        protected sealed override string Extension { get; } = "json";
 
-        protected override string SerializeInternal(TSettings value)
+        /// <inheritdoc />
+        protected sealed override string FileName { get; } = typeof(TSettings).Name;
+
+        /// <inheritdoc />
+        public sealed override async Task<TSettings> Get(CancellationToken token)
         {
-            return _jsonSerializer.SerializeObject(value);
+            var scoped = GetSettingsFileInfo(Extension, FileSystemSettingsDirectory, FileSystemSettingsScope ?? string.Empty, FileName);
+            var common = GetSettingsFileInfo(Extension, FileSystemSettingsDirectory, FileName);
+
+            return scoped.Exists
+                ? await ReadAndDeserialize(scoped, token).ConfigureAwait(false)
+                : common.Exists
+                    ? await ReadAndDeserialize(common, token).ConfigureAwait(false)
+                    : new TSettings();
         }
 
-        protected override TSettings DeserializeInternal(string serialized)
+        private async Task<TSettings> ReadAndDeserialize(FileInfo file, CancellationToken token)
         {
-            return _jsonSerializer.DeserializeObject<TSettings>(serialized);
+            using (var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var serialized = await fileStream
+                   .ReadAllAsync(Encoding, token)
+                   .ConfigureAwait(false);
+
+                return _jsonSerializer.DeserializeObject<TSettings>(serialized);
+            }
         }
     }
 }

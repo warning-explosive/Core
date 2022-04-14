@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
 
     [Component(EnLifestyle.Singleton)]
     internal class TypeNodeJsonConverter : JsonConverter,
+                                           IResolvable<TypeNodeJsonConverter>,
                                            ICollectionResolvable<JsonConverter>
     {
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)

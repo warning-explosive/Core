@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     using System;
     using System.Collections.Generic;
 
-    internal class TestJsonSettings : ITestSettings
+    internal class TestConfigurationSettings : ITestSettings
     {
         public int Int { get; set; }
 
@@ -13,10 +13,10 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 
         public DateTime Date { get; set; }
 
-        public TestJsonSettings? Reference { get; set; }
+        public TestConfigurationSettings? Reference { get; set; }
 
-        public ICollection<TestJsonSettings>? Collection { get; set; }
+        public ICollection<TestConfigurationSettings>? Collection { get; set; }
 
-        public IDictionary<string, TestJsonSettings>? Dictionary { get; set; }
+        public IDictionary<string, TestConfigurationSettings>? Dictionary { get; set; }
     }
 }

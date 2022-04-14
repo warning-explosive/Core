@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         private readonly List<IDomainEvent> _events;
 
         /// <summary> .cctor </summary>
-        protected BaseAggregate()
+        protected BaseAggregate() // TODO: #172 - BaseAggregate(IReadOnlyCollection<IDomainEvent> events) - restore aggregate from event sequence
         {
             _events = new List<IDomainEvent>();
         }

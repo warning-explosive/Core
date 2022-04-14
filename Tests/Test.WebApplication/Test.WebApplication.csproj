@@ -41,7 +41,6 @@
         <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.3.0" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
       <ProjectReference Include="..\..\Modules\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
       <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />

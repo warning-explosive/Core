@@ -1,47 +1,71 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using YamlDotNet.Serialization;
     using YamlDotNet.Serialization.NamingConventions;
     using YamlDotNet.Serialization.TypeResolvers;
 
+    /// <summary>
+    /// YamlSettingsProvider
+    /// </summary>
+    /// <typeparam name="TSettings">TSettings type-argument</typeparam>
     [Component(EnLifestyle.Singleton)]
-    internal class YamlSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
-                                                     IResolvable<ISettingsProvider<TSettings>>
-        where TSettings : class, IYamlSettings
+    public class YamlSettingsProvider<TSettings> : FileSystemSettingsProviderBase<TSettings>,
+                                                   IResolvable<YamlSettingsProvider<TSettings>>,
+                                                   ICollectionResolvable<ISettingsProvider<TSettings>>
+        where TSettings : class, ISettings, new()
     {
-        private readonly ISerializer _serializer =
-            new SerializerBuilder()
-               .WithNamingConvention(PascalCaseNamingConvention.Instance)
-               .WithTypeResolver(new DynamicTypeResolver())
-               .WithMaximumRecursion(42)
-               .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve)
-               .DisableAliases()
-               .Build();
-
         private readonly IDeserializer _deserializer =
             new DeserializerBuilder()
                .WithNamingConvention(PascalCaseNamingConvention.Instance)
                .WithTypeResolver(new DynamicTypeResolver())
                .Build();
 
-        public YamlSettingsProvider(ISettingsScopeProvider settingsScopeProvider)
-            : base(settingsScopeProvider)
+        /// <summary> .cctor </summary>
+        /// <param name="settingsScopeProvider">ISettingsScopeProvider</param>
+        /// <param name="fileSystemSettingsProvider">FileSystemSettings provider</param>
+        public YamlSettingsProvider(
+            ISettingsScopeProvider settingsScopeProvider,
+            ISettingsProvider<FileSystemSettings> fileSystemSettingsProvider)
+            : base(settingsScopeProvider, fileSystemSettingsProvider)
         {
         }
 
-        protected override string Extension => "yaml";
+        /// <inheritdoc />
+        protected sealed override string Extension { get; } = "yaml";
 
-        protected override string SerializeInternal(TSettings value)
+        /// <inheritdoc />
+        protected sealed override string FileName { get; } = typeof(TSettings).Name;
+
+        /// <inheritdoc />
+        public sealed override async Task<TSettings> Get(CancellationToken token)
         {
-            return _serializer.Serialize(value);
+            var scoped = GetSettingsFileInfo(Extension, FileSystemSettingsDirectory, FileSystemSettingsScope ?? string.Empty, FileName);
+            var common = GetSettingsFileInfo(Extension, FileSystemSettingsDirectory, FileName);
+
+            return scoped.Exists
+                ? await ReadAndDeserialize(scoped, token).ConfigureAwait(false)
+                : common.Exists
+                    ? await ReadAndDeserialize(common, token).ConfigureAwait(false)
+                    : new TSettings();
         }
 
-        protected override TSettings DeserializeInternal(string serialized)
+        private async Task<TSettings> ReadAndDeserialize(FileInfo file, CancellationToken token)
         {
-            return _deserializer.Deserialize<TSettings>(serialized);
+            using (var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var serialized = await fileStream
+                   .ReadAllAsync(Encoding, token)
+                   .ConfigureAwait(false);
+
+                return _deserializer.Deserialize<TSettings>(serialized);
+            }
         }
     }
 }

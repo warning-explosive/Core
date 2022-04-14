@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataAccess.Api.Reading;
@@ -14,6 +15,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using DataAccess.Orm.Sql.Translation;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using GenericHost.Internals;
     using Mocks;
     using Registrations;
     using Xunit;
@@ -561,9 +563,15 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(Participant),
             };
 
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new QueryExpressionsCollectorManualRegistration(),
+                new ConfigurationProviderManualRegistration()
+            };
+
             var options = new DependencyContainerOptions()
                 .WithAdditionalOurTypes(additionalOurTypes)
-                .WithManualRegistrations(new QueryExpressionsCollectorManualRegistration());
+                .WithManualRegistrations(manualRegistrations);
 
             var dependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
 

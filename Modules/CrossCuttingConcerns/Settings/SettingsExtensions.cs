@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Extensions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System;
     using System.IO;
@@ -9,19 +9,14 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Extensions
     public static class SettingsExtensions
     {
         /// <summary>
-        /// File system settings directory path
-        /// </summary>
-        public const string FileSystemSettingsDirectory = nameof(FileSystemSettingsDirectory);
-
-        /// <summary>
         /// Setup FileSystemSettingsDirectory
         /// </summary>
         /// <param name="settingsDirectory">Settings directory info</param>
         public static void SetupFileSystemSettingsDirectory(this DirectoryInfo settingsDirectory)
         {
             Environment.SetEnvironmentVariable(
-                FileSystemSettingsDirectory,
-                settingsDirectory.FullName,
+                nameof(FileSystemSettings),
+                $@"{{ ""{nameof(FileSystemSettings.FileSystemSettingsDirectory)}"": ""{settingsDirectory.FullName}"" }}",
                 EnvironmentVariableTarget.Process);
         }
     }

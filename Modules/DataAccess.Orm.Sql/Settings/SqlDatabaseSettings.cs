@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
     /// <summary>
     /// SqlDatabaseSettings
     /// </summary>
-    public class SqlDatabaseSettings : IYamlSettings
+    public class SqlDatabaseSettings : ISettings
     {
         private const string Format = "{0}={1}";
 

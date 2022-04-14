@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Settings
     /// <summary>
     /// Authorization settings
     /// </summary>
-    public class AuthorizationSettings : IYamlSettings
+    public class AuthorizationSettings : ISettings
     {
         /// <summary>
         /// Authorization token expiration timeout (minutes)

@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using BenchmarkDotNet.Engines;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Settings;
     using Test.Registrations;
     using Xunit.Sdk;
 

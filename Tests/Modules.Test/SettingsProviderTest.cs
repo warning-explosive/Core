@@ -2,6 +2,8 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,112 +37,203 @@ namespace SpaceEngineers.Core.Modules.Test
         /// <returns>Test data</returns>
         public static IEnumerable<object[]> ReadWriteTestData()
         {
-            yield return new object[] { typeof(TestYamlSettings), new Func<object>(TestYamlSettings.CreateYamlSettings) };
-            yield return new object[] { typeof(TestJsonSettings), new Func<object>(TestJsonSettings.CreateJsonSettings) };
-        }
-
-        [Fact]
-        internal async Task EnvironmentSettingsSetTest()
-        {
-            await Assert
-                .ThrowsAsync<InvalidOperationException>(Set)
-                .ConfigureAwait(false);
-
-            Task Set()
+            yield return new object[]
             {
-                return DependencyContainer
-                    .Resolve<ISettingsProvider<EnvironmentSettings>>()
-                    .Set(new EnvironmentSettings(new List<EnvironmentSettingsEntry>()), CancellationToken.None);
-            }
-        }
-
-        [Fact]
-        internal async Task EnvironmentSettingsGetTest()
-        {
-            var entryKey = nameof(EnvironmentSettingsGetTest);
-
-            var before = await Get().ConfigureAwait(false);
-
-            Assert.DoesNotContain(before.Settings, entry => entry.Key == entryKey);
-
-            Environment.SetEnvironmentVariable(entryKey, entryKey, EnvironmentVariableTarget.Process);
-
-            var after = await Get().ConfigureAwait(false);
-
-            Assert.Contains(after.Settings, entry => entry.Key == entryKey);
-
-            Task<EnvironmentSettings> Get()
+                typeof(FileSystemSettings),
+                new Action(() => { }),
+                new Action<FileSystemSettings>(settings =>
+                {
+                    Assert.NotNull(settings.FileSystemSettingsDirectory);
+                    Assert.Equal(Path.Combine(SolutionExtensions.ProjectFile().Directory.FullName, "Settings"), settings.FileSystemSettingsDirectory);
+                })
+            };
+            yield return new object[]
             {
-                return DependencyContainer
-                    .Resolve<ISettingsProvider<EnvironmentSettings>>()
-                    .Get(CancellationToken.None);
-            }
+                typeof(TestEnvironmentSettings),
+                new Action(() =>
+                {
+                    Environment.SetEnvironmentVariable(
+                        nameof(TestEnvironmentSettings),
+                        $@"{{ ""{nameof(TestEnvironmentSettings.Int)}"": 42, ""{nameof(TestEnvironmentSettings.Decimal)}"": 42.42, ""{nameof(TestEnvironmentSettings.String)}"": ""Hello world!"", ""{nameof(TestEnvironmentSettings.Date)}"": ""{new DateTime(2000, 1, 1):yyyy-MM-ddTHH:mm:ss}"" }}",
+                        EnvironmentVariableTarget.Process);
+                }),
+                new Action<TestEnvironmentSettings>(settings =>
+                {
+                    Assert.Equal(42, settings.Int);
+                    Assert.Equal(42.42m, settings.Decimal);
+                    Assert.Equal("Hello world!", settings.String);
+                    Assert.Equal(new DateTime(2000, 1, 1), settings.Date);
+                })
+            };
+            yield return new object[]
+            {
+                typeof(TestYamlSettings),
+                new Action(() => { }),
+                new Action<TestYamlSettings>(settings =>
+                {
+                    AssertPrimitives(settings);
+
+                    Assert.NotNull(settings.Reference);
+                    AssertCircularReference(settings.Reference!);
+
+                    Assert.NotNull(settings.Collection);
+                    Assert.Single(settings.Collection!);
+                    AssertCircularReference(settings.Collection!.Single());
+
+                    Assert.NotNull(settings.Dictionary);
+                    Assert.Single(settings.Dictionary!);
+                    Assert.Equal("First", settings.Dictionary!.Single().Key);
+                    AssertCircularReference(settings.Dictionary!.Single().Value);
+
+                    static void AssertPrimitives(TestYamlSettings settings)
+                    {
+                        Assert.Equal(42, settings.Int);
+                        Assert.Equal(42.42m, settings.Decimal);
+                        Assert.Equal("Hello world!", settings.String);
+                        Assert.Equal(new DateTime(2000, 1, 1), settings.Date);
+                    }
+
+                    static void AssertCircularReference(TestYamlSettings settings)
+                    {
+                        AssertPrimitives(settings);
+                        Assert.Null(settings.Reference);
+                        Assert.Null(settings.Collection);
+                        Assert.Null(settings.Dictionary);
+                    }
+                })
+            };
+            yield return new object[]
+            {
+                typeof(TestJsonSettings),
+                new Action(() => { }),
+                new Action<TestJsonSettings>(settings =>
+                {
+                    AssertPrimitives(settings);
+
+                    Assert.NotNull(settings.Reference);
+                    AssertCircularReference(settings.Reference!);
+
+                    Assert.NotNull(settings.Collection);
+                    Assert.Single(settings.Collection!);
+                    AssertCircularReference(settings.Collection!.Single());
+
+                    Assert.NotNull(settings.Dictionary);
+                    Assert.Single(settings.Dictionary!);
+                    Assert.Equal("First", settings.Dictionary!.Single().Key);
+                    AssertCircularReference(settings.Dictionary!.Single().Value);
+
+                    static void AssertPrimitives(TestJsonSettings settings)
+                    {
+                        Assert.Equal(42, settings.Int);
+                        Assert.Equal(42.42m, settings.Decimal);
+                        Assert.Equal("Hello world!", settings.String);
+                        Assert.Equal(new DateTime(2000, 1, 1), settings.Date);
+                    }
+
+                    static void AssertCircularReference(TestJsonSettings settings)
+                    {
+                        AssertPrimitives(settings);
+                        Assert.Null(settings.Reference);
+                        Assert.Null(settings.Collection);
+                        Assert.Null(settings.Dictionary);
+                    }
+                })
+            };
+            yield return new object[]
+            {
+                typeof(TestConfigurationSettings),
+                new Action(() => { }),
+                new Action<TestConfigurationSettings>(settings =>
+                {
+                    AssertPrimitives(settings);
+
+                    Assert.NotNull(settings.Reference);
+                    AssertCircularReference(settings.Reference!);
+
+                    Assert.NotNull(settings.Collection);
+                    Assert.Single(settings.Collection!);
+                    AssertCircularReference(settings.Collection!.Single());
+
+                    Assert.NotNull(settings.Dictionary);
+                    Assert.Single(settings.Dictionary!);
+                    Assert.Equal("First", settings.Dictionary!.Single().Key);
+                    AssertCircularReference(settings.Dictionary!.Single().Value);
+
+                    static void AssertPrimitives(TestConfigurationSettings settings)
+                    {
+                        Assert.Equal(42, settings.Int);
+                        Assert.Equal(42.42m, settings.Decimal);
+                        Assert.Equal("Hello world!", settings.String);
+                        Assert.Equal(new DateTime(2000, 1, 1), settings.Date);
+                    }
+
+                    static void AssertCircularReference(TestConfigurationSettings settings)
+                    {
+                        AssertPrimitives(settings);
+                        Assert.Null(settings.Reference);
+                        Assert.Null(settings.Collection);
+                        Assert.Null(settings.Dictionary);
+                    }
+                })
+            };
+            yield return new object[]
+            {
+                typeof(PersistenceSettings),
+                new Action(() => { }),
+                new Action<PersistenceSettings>(settings =>
+                {
+                    Assert.NotNull(settings.MongoClientSettings);
+                    Assert.Equal(TimeSpan.FromSeconds(30), settings.MongoClientSettings.ConnectTimeout);
+                    Assert.Equal(TimeSpan.FromSeconds(10), settings.MongoClientSettings.HeartbeatInterval);
+                    Assert.Equal(100, settings.MongoClientSettings.MaxConnectionPoolSize);
+                    Assert.Equal(0, settings.MongoClientSettings.MinConnectionPoolSize);
+                    Assert.Single(settings.MongoClientSettings.Servers);
+                    Assert.Equal("localhost", settings.MongoClientSettings.Servers.Single().Host);
+                    Assert.Equal(27017, settings.MongoClientSettings.Servers.Single().Port);
+                    Assert.Equal(TimeSpan.FromSeconds(30), settings.MongoClientSettings.ServerSelectionTimeout);
+                })
+            };
         }
 
         [Theory]
         [MemberData(nameof(ReadWriteTestData))]
-        internal async Task ReadWriteTest(Type cfgType, Func<object> cfgFactory)
+        internal async Task ReadWriteTest(Type cfgType, object arrange, object assert)
         {
-            await this.CallMethod(nameof(ReadWriteTestInternal))
-                      .WithTypeArgument(cfgType)
-                      .WithArgument(cfgFactory)
-                      .Invoke<Task>()
-                      .ConfigureAwait(false);
+            Output.WriteLine(cfgType.Name);
+
+            var fileSystemSettings = await DependencyContainer
+               .Resolve<ISettingsProvider<FileSystemSettings>>()
+               .Get(CancellationToken.None)
+               .ConfigureAwait(false);
+
+            Output.WriteLine(fileSystemSettings.FileSystemSettingsDirectory);
+
+            await this
+               .CallMethod(nameof(ReadWriteTestInternal))
+               .WithTypeArgument(cfgType)
+               .WithArguments(arrange, assert)
+               .Invoke<Task>()
+               .ConfigureAwait(false);
         }
 
-        [Theory]
-        [InlineData(typeof(TestYamlSettings))]
-        [InlineData(typeof(TestJsonSettings))]
-        [InlineData(typeof(PersistenceSettings))]
-        internal async Task GenericEndpointSettingsReadWriteTest(Type settingsType)
+        private async Task ReadWriteTestInternal<TSettings>(
+            Action arrange,
+            Action<TSettings> assert)
+            where TSettings : class, ISettings, new()
         {
-            await this.CallMethod(nameof(GenericEndpointSettingsReadWriteTestInternal))
-                .WithTypeArgument(settingsType)
-                .Invoke<Task>()
-                .ConfigureAwait(false);
-        }
+            arrange();
 
-        private async Task ReadWriteTestInternal<TSettings>(Func<object> cfgFactory)
-            where TSettings : class, ISettings
-        {
-            var manager = DependencyContainer.Resolve<ISettingsProvider<TSettings>>();
-            var token = CancellationToken.None;
+            var settings = await DependencyContainer
+               .Resolve<ISettingsProvider<TSettings>>()
+               .Get(CancellationToken.None)
+               .ConfigureAwait(false);
 
-            /*
-             * 1 - Read
-             */
-            var config = await manager.Get(token).ConfigureAwait(false);
-            Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+            Assert.NotNull(settings);
+
+            Output.WriteLine(settings.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
 
-            /*
-             * 2 - Write
-             */
-            config = (TSettings)cfgFactory();
-
-            await manager.Set(config, token).ConfigureAwait(false);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
-            Output.WriteLine(string.Empty);
-
-            /*
-             * 3 - Read again
-             */
-            config = await manager.Get(token).ConfigureAwait(false);
-            Assert.NotNull(config);
-            Output.WriteLine(config.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
-        }
-
-        private async Task GenericEndpointSettingsReadWriteTestInternal<TSetting>()
-            where TSetting : class, ISettings
-        {
-            var manager = DependencyContainer.Resolve<ISettingsProvider<TSetting>>();
-            var token = CancellationToken.None;
-
-            var setting = await manager.Get(token).ConfigureAwait(false);
-            Assert.NotNull(setting);
-
-            await manager.Set(setting, token).ConfigureAwait(false);
+            assert(settings);
         }
     }
 }

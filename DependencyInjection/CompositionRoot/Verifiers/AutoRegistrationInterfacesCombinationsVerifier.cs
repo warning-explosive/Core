@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
@@ -25,9 +26,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 .OurTypes
                 .Select(type =>
                 {
-                    var resolvable = type.IsSubclassOfOpenGeneric(typeof(IResolvable<>)) && type != typeof(IResolvable<>);
-                    var collectionResolvable = type.IsSubclassOfOpenGeneric(typeof(ICollectionResolvable<>)) && type != typeof(ICollectionResolvable<>);
-                    var decorator = type.IsSubclassOfOpenGeneric(typeof(IDecorator<>)) && type != typeof(IDecorator<>);
+                    var resolvable = type.ExtractGenericArgumentsAt(typeof(IResolvable<>)).ToList();
+                    var collectionResolvable = type.ExtractGenericArgumentsAt(typeof(ICollectionResolvable<>)).ToList();
+                    var decorator = type.ExtractGenericArgumentsAt(typeof(IDecorator<>)).ToList();
 
                     return new ComponentInterfacesInfo(
                         type,
@@ -35,30 +36,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                         collectionResolvable,
                         decorator);
                 })
-                .Where(it => it.IsVerificationRequired())
-                .Where(TypeHasCorrectlyDefinedInterfaces().Not())
+                .Where(info => info.IsVerificationRequired())
+                .Where(info => !info.TypeHasCorrectlyDefinedInterfaces())
                 .Each(info => throw new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} interfaces configuration"));
-        }
-
-        private static Func<ComponentInterfacesInfo, bool> TypeHasCorrectlyDefinedInterfaces()
-        {
-            return info =>
-            {
-                var sum = info.IsResolvable().Bit()
-                          + info.IsCollectionResolvable().Bit()
-                          + info.IsDecorator().Bit();
-
-                return sum == 1;
-            };
         }
 
         private class ComponentInterfacesInfo
         {
             public ComponentInterfacesInfo(
                 Type type,
-                bool resolvable,
-                bool collectionResolvable,
-                bool decorator)
+                IReadOnlyCollection<Type> resolvable,
+                IReadOnlyCollection<Type> collectionResolvable,
+                IReadOnlyCollection<Type> decorator)
             {
                 Type = type;
                 Resolvable = resolvable;
@@ -68,37 +57,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
             public Type Type { get; }
 
-            private bool Resolvable { get; }
+            private IReadOnlyCollection<Type> Resolvable { get; }
 
-            private bool CollectionResolvable { get; }
+            private IReadOnlyCollection<Type> CollectionResolvable { get; }
 
-            private bool Decorator { get; }
+            private IReadOnlyCollection<Type> Decorator { get; }
 
             public bool IsVerificationRequired()
             {
-                return Resolvable
-                       || CollectionResolvable
-                       || Decorator;
+                return Resolvable.Any()
+                       || CollectionResolvable.Any()
+                       || Decorator.Any();
             }
 
-            public bool IsResolvable()
-            {
-                return Resolvable
-                       && !CollectionResolvable
-                       && !Decorator;
-            }
-
-            public bool IsCollectionResolvable()
+            public bool TypeHasCorrectlyDefinedInterfaces()
             {
                 return !Resolvable
-                       && CollectionResolvable
-                       && !Decorator;
-            }
-
-            public bool IsDecorator()
-            {
-                return Decorator
-                       && !CollectionResolvable;
+                   .Intersect(CollectionResolvable)
+                   .Intersect(Decorator).Any();
             }
         }
     }

@@ -216,5 +216,37 @@
     <Compile Update="Mocks\AsyncQueryProviderDecorator.cs">
       <DependentUpon>QueryProviderDecorator.cs</DependentUpon>
     </Compile>
+    <Compile Update="Settings\TestConfigurationSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestEnvironmentSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestEnvironmentSettingsProvider.cs">
+      <DependentUpon>TestEnvironmentSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestYamlSettingsProvider.cs">
+      <DependentUpon>TestYamlSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestJsonSettingsProvider.cs">
+      <DependentUpon>TestJsonSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\PersistenceSettingsProvider.cs">
+      <DependentUpon>PersistenceSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestConfigurationSettingsProvider.cs">
+      <DependentUpon>TestConfigurationSettings.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Settings\TestJsonSettings.json">
+      <DependentUpon>TestJsonSettings.cs</DependentUpon>
+    </None>
+    <None Update="Settings\TestYamlSettings.yaml">
+      <DependentUpon>TestYamlSettings.cs</DependentUpon>
+    </None>
+    <None Update="Settings\PersistenceSettings.json">
+      <DependentUpon>PersistenceSettings.cs</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>

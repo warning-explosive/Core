@@ -1,8 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
+    using CrossCuttingConcerns.Settings;
 
-    internal interface ITestSettings
+    internal interface ITestSettings : ISettings
     {
         int Int { get; set; }
 

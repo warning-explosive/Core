@@ -170,7 +170,7 @@ namespace SpaceEngineers.Core.Basics
         {
             string left, right;
 
-            if (string.IsNullOrEmpty(extension))
+            if (extension.IsNullOrEmpty())
             {
                 left = file.NameWithoutExtension();
                 right = fileNameWithoutExtension;

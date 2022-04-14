@@ -73,7 +73,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 Type implementation,
                 EnLifestyle lifestyle)
             {
-                container.Register(implementation, implementation, lifestyle.MapLifestyle());
                 container.Collection.Append(service, implementation, lifestyle.MapLifestyle());
             }
 

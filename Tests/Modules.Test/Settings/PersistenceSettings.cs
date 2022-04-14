@@ -6,18 +6,17 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     /// <summary>
     /// Persistence settings
     /// </summary>
-    public class PersistenceSettings : IJsonSettings
+    public class PersistenceSettings : ISettings
     {
         /// <summary> .cctor </summary>
-        /// <param name="mongoClientSettings">MongoClientSettings</param>
-        public PersistenceSettings(MongoClientSettings mongoClientSettings)
+        public PersistenceSettings()
         {
-            MongoClientSettings = mongoClientSettings;
+            MongoClientSettings = new MongoClientSettings();
         }
 
         /// <summary>
         /// Mongo-client settings
         /// </summary>
-        public MongoClientSettings MongoClientSettings { get; }
+        public MongoClientSettings MongoClientSettings { get; set; }
     }
 }

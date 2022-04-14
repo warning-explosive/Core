@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Settings
     /// <summary>
     /// IntegrationTransportSettings
     /// </summary>
-    public class IntegrationTransportSettings : IYamlSettings
+    public class IntegrationTransportSettings : ISettings
     {
         /// <summary> .cctor </summary>
         public IntegrationTransportSettings()

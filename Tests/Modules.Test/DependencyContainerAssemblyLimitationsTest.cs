@@ -6,9 +6,11 @@ namespace SpaceEngineers.Core.Modules.Test
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.CompositionInfo;
+    using CompositionRoot.Api.Abstractions.Registration;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
+    using GenericHost.Internals;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -100,7 +102,13 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)))
             };
 
-            var options = new DependencyContainerOptions();
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new ConfigurationProviderManualRegistration()
+            };
+
+            var options = new DependencyContainerOptions()
+               .WithManualRegistrations(manualRegistrations);
 
             var boundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
 
@@ -110,11 +118,14 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var additionalTypes = new[]
             {
-                typeof(TestJsonSettings),
-                typeof(TestYamlSettings)
+                typeof(TestAdditionalType),
+                typeof(IConfigurationProvider),
+                typeof(ConfigurationProvider)
             };
 
-            options = new DependencyContainerOptions().WithAdditionalOurTypes(additionalTypes);
+            options = new DependencyContainerOptions()
+               .WithAdditionalOurTypes(additionalTypes)
+               .WithManualRegistrations(manualRegistrations);
 
             var compositionInfo = Fixture
                .ExactlyBoundedContainer(Output, options, assemblies)
@@ -148,8 +159,7 @@ namespace SpaceEngineers.Core.Modules.Test
             bool TypeSatisfies(Type type)
             {
                 var satisfies = allowedAssemblies.Contains(type.Assembly)
-                                || type == typeof(TestJsonSettings)
-                                || type == typeof(TestYamlSettings);
+                             || additionalTypes.Contains(type);
 
                 if (!satisfies)
                 {
@@ -160,11 +170,7 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TestYamlSettings : IYamlSettings
-        {
-        }
-
-        private class TestJsonSettings : IJsonSettings
+        private class TestAdditionalType : ISettings
         {
         }
     }

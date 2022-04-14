@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Settings;
     using Internals;
     using Xunit.Abstractions;
 

@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using Contract;
     using GenericHost;
     using GenericHost.Api.Abstractions;
+    using GenericHost.Internals;
     using IntegrationTransport.Api.Abstractions;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
@@ -151,6 +152,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                    .WithManualRegistrations(integrationTransportInjection)
                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                   .WithManualRegistrations(new ConfigurationProviderManualRegistration())
                    .WithOverrides(new SettingsProviderOverride())
                    .WithManualVerification(true));
         }

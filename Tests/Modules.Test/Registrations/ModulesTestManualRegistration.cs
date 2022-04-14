@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Test.Registrations
 {
     using CompositionRoot.Api.Abstractions.Registration;
+    using GenericHost.Internals;
     using IntegrationTransport.InMemory;
     using IntegrationTransport.InMemory.ManualRegistrations;
     using Xunit.Abstractions;
@@ -16,6 +17,8 @@ namespace SpaceEngineers.Core.Modules.Test.Registrations
 
         public void Register(IManualRegistrationsContainer container)
         {
+            new ConfigurationProviderManualRegistration().Register(container);
+
             new ModulesTestGenericEndpointIdentityManualRegistration().Register(container);
 
             new ModulesTestLoggerManualRegistration(_output).Register(container);

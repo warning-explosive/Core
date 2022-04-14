@@ -68,17 +68,11 @@
       <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
         <DependentUpon>IObjectTransformer.cs</DependentUpon>
       </Compile>
-      <Compile Update="Settings\EnvironmentSettingsEntry.cs">
-        <DependentUpon>EnvironmentSettingsProvider.cs</DependentUpon>
-      </Compile>
       <Compile Update="Settings\JsonSettingsProvider.cs">
         <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Settings\YamlSettingsProvider.cs">
         <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\EnvironmentSettings.cs">
-        <DependentUpon>ISettings.cs</DependentUpon>
       </Compile>
       <Compile Update="Json\ArrayNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
@@ -94,15 +88,6 @@
       </Compile>
       <Compile Update="Json\ValueNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\IJsonSettings.cs">
-        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\IYamlSettings.cs">
-        <DependentUpon>IFileSystemSettings.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\IFileSystemSettings.cs">
-        <DependentUpon>ISettings.cs</DependentUpon>
       </Compile>
       <Compile Update="StringFormatter\StringFormatter.cs">
         <DependentUpon>IStringFormatter.cs</DependentUpon>
@@ -127,6 +112,18 @@
       </Compile>
       <Compile Update="Settings\DefaultSettingsScopeProvider.cs">
         <DependentUpon>ISettingsScopeProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\ConfigurationSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\BaseSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettings.cs">
+        <DependentUpon>ISettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

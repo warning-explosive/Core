@@ -1,6 +1,0 @@
-Host: localhost
-Port: 5432
-Database: ExtractDatabaseModelChangesDiffTest
-Username: postgres
-Password: Password12!
-IsolationLevel: Snapshot

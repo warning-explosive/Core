@@ -80,7 +80,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
 
                 var analyzerName = element.Attribute(Conventions.NameAttribute)?.Value;
 
-                if (string.IsNullOrEmpty(analyzerName))
+                if (analyzerName.IsNullOrEmpty())
                 {
                     return false;
                 }

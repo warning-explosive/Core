@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
                 var splitedArgument = RegexCliParser
                                      .Split(argument)
-                                     .Where(z => !string.IsNullOrEmpty(z))
+                                     .Where(z => !z.IsNullOrEmpty())
                                      .ToArray();
 
                 if (splitedArgument.Length < 1 || splitedArgument.Length > 2)
@@ -120,14 +120,14 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                                               z.Key,
                                               z.Value
                                           })
-                         .Where(z => !string.IsNullOrEmpty(z))
+                         .Where(z => !z.IsNullOrEmpty())
                          .OrderByDescending(z => z?.Length)
                          .ToArray();
 
             var splited = cliArguments
                          .Split(entries, StringSplitOptions.RemoveEmptyEntries)
                          .Select(z => FinishChecker.Replace(z, string.Empty))
-                         .Where(z => !string.IsNullOrEmpty(z))
+                         .Where(z => !z.IsNullOrEmpty())
                          .ToArray();
 
             if (splited.Any())
@@ -152,7 +152,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             // Nullable<bool>
             if (type == typeof(bool) || type == typeof(bool?))
             {
-                if (string.IsNullOrEmpty(strValue))
+                if (strValue.IsNullOrEmpty())
                 {
                     typedValue = true;
                 }

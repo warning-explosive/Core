@@ -1,93 +1,80 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Basics;
-    using Extensions;
 
-    internal abstract class FileSystemSettingsProviderBase<TSettings> : ISettingsProvider<TSettings>
-        where TSettings : class, IFileSystemSettings
+    /// <summary>
+    /// FileSystemSettingsProviderBase
+    /// </summary>
+    /// <typeparam name="TSettings">TSettings type-argument</typeparam>
+    public abstract class FileSystemSettingsProviderBase<TSettings> : ISettingsProvider<TSettings>
+        where TSettings : class, ISettings, new()
     {
-        private readonly ISettingsScopeProvider _settingsScopeProvider;
-
-        private readonly Encoding _encoding = new UTF8Encoding(true);
-        private readonly string _folder;
-
-        protected FileSystemSettingsProviderBase(ISettingsScopeProvider settingsScopeProvider)
+        /// <summary> .cctor </summary>
+        /// <param name="settingsScopeProvider">ISettingsScopeProvider</param>
+        /// <param name="fileSystemSettingsProvider">FileSystemSettings provider</param>
+        protected FileSystemSettingsProviderBase(
+            ISettingsScopeProvider settingsScopeProvider,
+            ISettingsProvider<FileSystemSettings> fileSystemSettingsProvider)
         {
-            _settingsScopeProvider = settingsScopeProvider;
+            var directory = fileSystemSettingsProvider
+               .Get(CancellationToken.None)
+               .Result
+               .FileSystemSettingsDirectory;
 
-            var dir = EnvironmentSettingsProvider.Get(SettingsExtensions.FileSystemSettingsDirectory).Value;
-
-            if (!Directory.Exists(dir))
+            if (!Directory.Exists(directory))
             {
-                throw new InvalidOperationException($"FileSystemSettingsDirectory: {dir} not exists");
+                throw new InvalidOperationException($"FileSystemSettingsDirectory: {directory} not exists");
             }
 
-            _folder = dir;
+            FileSystemSettingsDirectory = directory;
+            FileSystemSettingsScope = settingsScopeProvider.Scope;
+
+            Encoding = new UTF8Encoding(true);
         }
+
+        /// <summary>
+        /// File system settings directory
+        /// </summary>
+        protected string FileSystemSettingsDirectory { get; }
+
+        /// <summary>
+        /// File system settings scope
+        /// </summary>
+        protected string? FileSystemSettingsScope { get; }
+
+        /// <summary>
+        /// Settings file name
+        /// </summary>
+        protected abstract string FileName { get; }
 
         /// <summary>
         /// Settings file extension
         /// </summary>
         protected abstract string Extension { get; }
 
-        /// <inheritdoc />
-        public async Task Set(TSettings value, CancellationToken token)
-        {
-            using (var fileStream = File.Open(GetSettingsPath(typeof(TSettings)), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
-            {
-                var serialized = SerializeInternal(value);
-
-                await fileStream.OverWriteAllAsync(serialized, _encoding, token).ConfigureAwait(false);
-            }
-        }
+        /// <summary>
+        /// Encoding
+        /// </summary>
+        protected Encoding Encoding { get; }
 
         /// <inheritdoc />
-        public async Task<TSettings> Get(CancellationToken token)
-        {
-            using (var fileStream = File.Open(GetSettingsPath(typeof(TSettings)), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                var serialized = await fileStream.ReadAllAsync(_encoding, token).ConfigureAwait(false);
-
-                return DeserializeInternal(serialized);
-            }
-        }
+        [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
+        public abstract Task<TSettings> Get(CancellationToken token);
 
         /// <summary>
-        /// Serialize from ISettings object to string
+        /// Gets settings file info
         /// </summary>
-        /// <param name="value">ISettings instance</param>
-        /// <returns>Serialized string</returns>
-        protected abstract string SerializeInternal(TSettings value);
-
-        /// <summary>
-        /// Deserialize from string to ISettings object
-        /// </summary>
-        /// <param name="serialized">Serialized string</param>
-        /// <returns>Deserialized ISettings object</returns>
-        protected abstract TSettings DeserializeInternal(string serialized);
-
-        private string GetSettingsPath(Type type)
+        /// <param name="extension">Extension</param>
+        /// <param name="paths">Paths</param>
+        /// <returns>Settings file info</returns>
+        protected FileInfo GetSettingsFileInfo(string extension, params string[] paths)
         {
-            var scope = _settingsScopeProvider.Scope;
-
-            if (scope != null && !scope.IsNullOrEmpty())
-            {
-                var exclusivePath = Path.ChangeExtension(Path.Combine(_folder, scope, type.Name), Extension);
-
-                if (File.Exists(exclusivePath))
-                {
-                    return exclusivePath;
-                }
-            }
-
-            var commonPath = Path.ChangeExtension(Path.Combine(_folder, type.Name), Extension);
-
-            return commonPath;
+            return new FileInfo(Path.ChangeExtension(Path.Combine(paths), extension));
         }
     }
 }

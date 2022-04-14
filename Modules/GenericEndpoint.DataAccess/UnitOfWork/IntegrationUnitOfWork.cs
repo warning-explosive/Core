@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -14,7 +13,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.UnitOfWork;
-    using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Pipeline;
 
@@ -24,21 +22,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                                            IResolvable<IIntegrationUnitOfWork>
     {
         private readonly EndpointIdentity _endpointIdentity;
-        private readonly IIntegrationTransport _transport;
         private readonly IDatabaseTransaction _transaction;
         private readonly IAggregateFactory<Inbox, InboxAggregateSpecification> _inboxAggregateFactory;
+        private readonly IOutboxMessagesDelivery _outboxMessagesDelivery;
 
         public IntegrationUnitOfWork(
             EndpointIdentity endpointIdentity,
-            IIntegrationTransport transport,
             IDatabaseTransaction transaction,
             IAggregateFactory<Inbox, InboxAggregateSpecification> inboxAggregateFactory,
+            IOutboxMessagesDelivery outboxMessagesDelivery,
             IOutboxStorage outboxStorage)
         {
             _endpointIdentity = endpointIdentity;
-            _transport = transport;
             _transaction = transaction;
             _inboxAggregateFactory = inboxAggregateFactory;
+            _outboxMessagesDelivery = outboxMessagesDelivery;
+
             OutboxStorage = outboxStorage;
         }
 
@@ -93,7 +92,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             await _transaction.Close(true, token).ConfigureAwait(false);
 
             await ExecutionExtensions
-               .TryAsync(outbox, DeliverMessages)
+               .TryAsync(outbox, _outboxMessagesDelivery.DeliverMessages)
                .Catch<Exception>()
                .Invoke(token)
                .ConfigureAwait(false);
@@ -102,23 +101,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         protected override async Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
         {
             await _transaction.Close(false, token).ConfigureAwait(false);
-        }
-
-        private async Task DeliverMessages(Outbox outbox, CancellationToken token)
-        {
-            /*
-             * TODO: #154 - test without immediate delivery
-             */
-
-            if (outbox.OutgoingMessages.Any())
-            {
-                await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
-                {
-                    await outbox
-                       .DeliverMessages(_transport, token)
-                       .ConfigureAwait(false);
-                }
-            }
         }
     }
 }

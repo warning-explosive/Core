@@ -6,10 +6,10 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     using CrossCuttingConcerns.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class PersistenceSettingsProvider : BaseSettingsProvider<PersistenceSettings>,
-                                                 IResolvable<ISettingsProvider<PersistenceSettings>>
+    internal class TestPersistenceSettingsProvider : BaseSettingsProvider<TestPersistenceSettings>,
+                                                     IResolvable<ISettingsProvider<TestPersistenceSettings>>
     {
-        public PersistenceSettingsProvider(JsonSettingsProvider<PersistenceSettings> underlyingSettingProvider)
+        public TestPersistenceSettingsProvider(JsonSettingsProvider<TestPersistenceSettings> underlyingSettingProvider)
             : base(underlyingSettingProvider)
         {
         }

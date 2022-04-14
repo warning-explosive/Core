@@ -7,12 +7,16 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using Registrations;
+    using GenericHost.Internals;
+    using Newtonsoft.Json;
+    using Overrides;
     using Settings;
     using Xunit;
     using Xunit.Abstractions;
@@ -28,14 +32,43 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsProviderTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-            DependencyContainer = fixture.ModulesContainer(output);
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(MongoDB), nameof(MongoDB.Driver)))
+            };
+
+            var additionalOurTypes = new[]
+            {
+                typeof(TestConfigurationSettings),
+                typeof(TestEnvironmentSettings),
+                typeof(TestJsonSettings),
+                typeof(TestYamlSettings),
+                typeof(TestPersistenceSettings)
+            };
+
+            var options = new DependencyContainerOptions()
+               .WithAdditionalOurTypes(additionalOurTypes)
+               .WithManualRegistrations(fixture.DelegateRegistration(container =>
+               {
+                   container.Register<ISettingsProvider<TestConfigurationSettings>, TestConfigurationSettingsProvider>(EnLifestyle.Singleton);
+                   container.Register<ISettingsProvider<TestEnvironmentSettings>, TestEnvironmentSettingsProvider>(EnLifestyle.Singleton);
+                   container.Register<ISettingsProvider<TestJsonSettings>, TestJsonSettingsProvider>(EnLifestyle.Singleton);
+                   container.Register<ISettingsProvider<TestYamlSettings>, TestYamlSettingsProvider>(EnLifestyle.Singleton);
+                   container.Register<ISettingsProvider<TestPersistenceSettings>, TestPersistenceSettingsProvider>(EnLifestyle.Singleton);
+                   container.RegisterCollectionEntry<JsonConverter, MongoServerAddressJsonConverter>(EnLifestyle.Singleton);
+               }))
+               .WithManualRegistrations(new ConfigurationProviderManualRegistration())
+               .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ReadSettingsTest)));
+
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
         }
 
         private IDependencyContainer DependencyContainer { get; }
 
-        /// <summary> ReadWriteTest data member </summary>
+        /// <summary> ReadSettingsTest data member </summary>
         /// <returns>Test data</returns>
-        public static IEnumerable<object[]> ReadWriteTestData()
+        public static IEnumerable<object[]> ReadSettingsTestData()
         {
             yield return new object[]
             {
@@ -178,9 +211,9 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                typeof(PersistenceSettings),
+                typeof(TestPersistenceSettings),
                 new Action(() => { }),
-                new Action<PersistenceSettings>(settings =>
+                new Action<TestPersistenceSettings>(settings =>
                 {
                     Assert.NotNull(settings.MongoClientSettings);
                     Assert.Equal(TimeSpan.FromSeconds(30), settings.MongoClientSettings.ConnectTimeout);
@@ -196,10 +229,10 @@ namespace SpaceEngineers.Core.Modules.Test
         }
 
         [Theory]
-        [MemberData(nameof(ReadWriteTestData))]
-        internal async Task ReadWriteTest(Type cfgType, object arrange, object assert)
+        [MemberData(nameof(ReadSettingsTestData))]
+        internal async Task ReadSettingsTest(Type settingsType, object arrange, object assert)
         {
-            Output.WriteLine(cfgType.Name);
+            Output.WriteLine(settingsType.Name);
 
             var fileSystemSettings = await DependencyContainer
                .Resolve<ISettingsProvider<FileSystemSettings>>()
@@ -209,14 +242,14 @@ namespace SpaceEngineers.Core.Modules.Test
             Output.WriteLine(fileSystemSettings.FileSystemSettingsDirectory);
 
             await this
-               .CallMethod(nameof(ReadWriteTestInternal))
-               .WithTypeArgument(cfgType)
+               .CallMethod(nameof(GenericReadSettingsTest))
+               .WithTypeArgument(settingsType)
                .WithArguments(arrange, assert)
                .Invoke<Task>()
                .ConfigureAwait(false);
         }
 
-        private async Task ReadWriteTestInternal<TSettings>(
+        private async Task GenericReadSettingsTest<TSettings>(
             Action arrange,
             Action<TSettings> assert)
             where TSettings : class, ISettings, new()

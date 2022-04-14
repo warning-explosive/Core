@@ -532,10 +532,20 @@ namespace SpaceEngineers.Core.Modules.Test
                 typeof(RecreatePostgreSqlDatabaseManualMigration)
             };
 
-            var overrides = new IComponentsOverride[]
+            var settingsScope = nameof(GetConversationTraceTest);
+
+            var endpointOverridesList = new IComponentsOverride[]
             {
                 new TestLoggerOverride(Output),
-                new TestSettingsScopeProviderOverride(nameof(GetConversationTraceTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
+            };
+
+            var endpointOverrides = endpointOverridesList.ToArray();
+
+            var migrationOverrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(Output, Host.CreateDefaultBuilder())
@@ -545,19 +555,19 @@ namespace SpaceEngineers.Core.Modules.Test
                        .WithTracing()
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithOverrides(overrides))
+                           .WithOverrides(endpointOverrides))
                        .BuildOptions())
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(overrides))
+                           .WithOverrides(endpointOverrides))
                        .BuildOptions())
                .ExecuteMigrations(builder => builder
                    .WithDataAccess(databaseProvider)
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(manualMigrations)
-                       .WithOverrides(overrides))
+                       .WithOverrides(migrationOverrides))
                    .BuildOptions())
                .BuildHost();
 
@@ -665,6 +675,86 @@ namespace SpaceEngineers.Core.Modules.Test
                 Assert.Empty(subsequentTrace.SubsequentTrace);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        internal async Task BackgroundOutboxDeliveryTest(
+            Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            IDatabaseProvider databaseProvider,
+            TimeSpan timeout)
+        {
+            Output.WriteLine(databaseProvider.GetType().FullName);
+
+            var messageTypes = new[]
+            {
+                typeof(Query),
+                typeof(Reply)
+            };
+
+            var messageHandlerTypes = new[]
+            {
+                typeof(QueryAlwaysReplyMessageHandler)
+            };
+
+            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
+
+            var manualMigrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseManualMigration)
+            };
+
+            var settingsScope = nameof(BackgroundOutboxDeliveryTest);
+
+            var endpointOverridesList = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(settingsScope),
+                new OutboxMessagesDeliveryOverride()
+            };
+
+            var endpointOverrides = endpointOverridesList.ToArray();
+
+            var migrationOverrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(settingsScope)
+            };
+
+            var host = useTransport(Output, Host.CreateDefaultBuilder())
+               .UseEndpoint(TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(endpointOverrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(manualMigrations)
+                       .WithOverrides(migrationOverrides))
+                   .BuildOptions())
+               .BuildHost();
+
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                var reply = await integrationContext
+                    .RpcRequest<Query, Reply>(new Query(42), cts.Token)
+                    .ConfigureAwait(false);
+
+                Assert.Equal(42, reply.Id);
             }
         }
     }

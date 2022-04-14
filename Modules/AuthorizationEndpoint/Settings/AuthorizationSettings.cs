@@ -8,6 +8,12 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Settings
     /// </summary>
     public class AuthorizationSettings : ISettings
     {
+        /// <summary> .cctor </summary>
+        public AuthorizationSettings()
+        {
+            TokenExpirationMinutesTimeout = 5;
+        }
+
         /// <summary>
         /// Authorization token expiration timeout (minutes)
         /// </summary>

@@ -154,7 +154,7 @@
       <DependentUpon>IScopedService.cs</DependentUpon>
     </Compile>
     <Compile Update="Settings\MongoServerAddressJsonConverter.cs">
-      <DependentUpon>PersistenceSettings.cs</DependentUpon>
+      <DependentUpon>TestPersistenceSettings.cs</DependentUpon>
     </Compile>
     <Compile Update="MessageHandlers\InheritedEventEmptyMessageHandler.cs">
       <DependentUpon>BaseEventEmptyMessageHandler.cs</DependentUpon>
@@ -231,11 +231,14 @@
     <Compile Update="Settings\TestJsonSettingsProvider.cs">
       <DependentUpon>TestJsonSettings.cs</DependentUpon>
     </Compile>
-    <Compile Update="Settings\PersistenceSettingsProvider.cs">
-      <DependentUpon>PersistenceSettings.cs</DependentUpon>
+    <Compile Update="Settings\TestPersistenceSettingsProvider.cs">
+      <DependentUpon>TestPersistenceSettings.cs</DependentUpon>
     </Compile>
     <Compile Update="Settings\TestConfigurationSettingsProvider.cs">
       <DependentUpon>TestConfigurationSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Settings\TestPersistenceSettings.cs">
+      <DependentUpon>ITestSettings.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -245,8 +248,8 @@
     <None Update="Settings\TestYamlSettings.yaml">
       <DependentUpon>TestYamlSettings.cs</DependentUpon>
     </None>
-    <None Update="Settings\PersistenceSettings.json">
-      <DependentUpon>PersistenceSettings.cs</DependentUpon>
+    <None Update="Settings\TestPersistenceSettings.json">
+      <DependentUpon>TestPersistenceSettings.cs</DependentUpon>
     </None>
   </ItemGroup>
 </Project>

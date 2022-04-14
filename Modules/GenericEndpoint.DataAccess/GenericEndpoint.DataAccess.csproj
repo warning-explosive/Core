@@ -94,5 +94,8 @@
       <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
         <DependentUpon>IntegrationMessage.cs</DependentUpon>
       </Compile>
+      <Compile Update="UnitOfWork\OutboxMessagesDelivery.cs">
+        <DependentUpon>IOutboxMessagesDelivery.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

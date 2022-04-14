@@ -170,7 +170,7 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        private class TestAdditionalType : ISettings
+        private class TestAdditionalType
         {
         }
     }

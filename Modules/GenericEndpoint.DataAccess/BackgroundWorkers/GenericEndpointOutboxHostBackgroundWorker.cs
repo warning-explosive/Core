@@ -8,11 +8,13 @@
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
+    using CrossCuttingConcerns.Settings;
     using DatabaseModel;
     using Deduplication;
     using GenericDomain.Api.Abstractions;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
+    using Settings;
     using EndpointIdentity = Contract.EndpointIdentity;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
@@ -26,10 +28,15 @@
 
         public async Task Run(CancellationToken token)
         {
+            var settings = await _dependencyContainer
+               .Resolve<ISettingsProvider<OutboxSettings>>()
+               .Get(token)
+               .ConfigureAwait(false);
+
             while (!token.IsCancellationRequested)
             {
-                // TODO: #154 - add configurable polling timeout
-                await Task.Delay(TimeSpan.FromSeconds(42), token).ConfigureAwait(false);
+                await Task.Delay(settings.OutboxDeliveryInterval, token).ConfigureAwait(false);
+
                 await DeliverMessages(token).ConfigureAwait(false);
             }
         }
@@ -61,17 +68,17 @@
             foreach (var outboxId in unsent)
             {
                 var outbox = await _dependencyContainer
-                    .Resolve<IAggregateFactory<Outbox, OutboxAggregateSpecification>>()
-                    .Build(new OutboxAggregateSpecification(outboxId), token)
-                    .ConfigureAwait(false);
+                   .Resolve<IAggregateFactory<Outbox, OutboxAggregateSpecification>>()
+                   .Build(new OutboxAggregateSpecification(outboxId), token)
+                   .ConfigureAwait(false);
 
                 await outbox
-                    .DeliverMessages(transport, token)
-                    .ConfigureAwait(false);
+                   .DeliverMessages(transport, token)
+                   .ConfigureAwait(false);
 
                 await transaction
-                    .Track(outbox, token)
-                    .ConfigureAwait(false);
+                   .Track(outbox, token)
+                   .ConfigureAwait(false);
             }
         }
     }

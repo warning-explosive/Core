@@ -4,12 +4,12 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
     using MongoDB.Driver;
 
     /// <summary>
-    /// Persistence settings
+    /// Test persistence settings
     /// </summary>
-    public class PersistenceSettings : ISettings
+    public class TestPersistenceSettings : ISettings
     {
         /// <summary> .cctor </summary>
-        public PersistenceSettings()
+        public TestPersistenceSettings()
         {
             MongoClientSettings = new MongoClientSettings();
         }

@@ -16,8 +16,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         {
             Environment.SetEnvironmentVariable(
                 nameof(FileSystemSettings),
-                $@"{{ ""{nameof(FileSystemSettings.FileSystemSettingsDirectory)}"": ""{settingsDirectory.FullName}"" }}",
+                $@"{{ ""{nameof(FileSystemSettings.FileSystemSettingsDirectory)}"": ""{EscapeSpecialCharacters(settingsDirectory.FullName)}"" }}",
                 EnvironmentVariableTarget.Process);
+
+            static string EscapeSpecialCharacters(string source)
+            {
+                return source
+                    .Replace("\\", "\\\\", StringComparison.Ordinal)
+                    .Replace("\"", "\\\"", StringComparison.Ordinal);
+            }
         }
     }
 }

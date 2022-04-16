@@ -1,12 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Test.Mocks
 {
-    using System;
     using System.Linq;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using Basics;
-    using DataAccess.Orm.Linq;
 
     [ManuallyRegisteredComponent(nameof(DataAccess))]
     internal class QueryProviderDecorator : IQueryProvider,
@@ -24,17 +21,12 @@ namespace SpaceEngineers.Core.Modules.Test.Mocks
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
         {
-            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
-
-            return (IQueryable)Activator.CreateInstance(
-                typeof(Queryable<>).MakeGenericType(itemType),
-                this,
-                expression) !;
+            return Decoratee.CreateQuery(expression);
         }
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
-            return (IQueryable<TElement>)((IQueryProvider)this).CreateQuery(expression);
+            return Decoratee.CreateQuery<TElement>(expression);
         }
 
         public object? Execute(Expression expression)

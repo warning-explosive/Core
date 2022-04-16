@@ -162,6 +162,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
+        /// <summary>
+        /// Try get projection expression
+        /// </summary>
+        /// <param name="intermediateExpression">IIntermediateExpression</param>
+        /// <returns>Projection expression was got successfully or not</returns>
+        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
+        public ProjectionExpression? GetProjectionExpression(IIntermediateExpression intermediateExpression)
+        {
+            return ExtractProjectionExpression(intermediateExpression);
+
+            static ProjectionExpression? ExtractProjectionExpression(IIntermediateExpression? expression)
+            {
+                switch (expression)
+                {
+                    case NamedSourceExpression namedSourceExpression:
+                        return ExtractProjectionExpression(namedSourceExpression.Source);
+                    case FilterExpression filterExpression:
+                        return ExtractProjectionExpression(filterExpression.Source);
+                    case ProjectionExpression projectionExpression:
+                        return projectionExpression;
+                    case JoinExpression:
+                        throw new InvalidOperationException("Ambiguous reference to join expression source");
+                    default:
+                        return default;
+                }
+            }
+        }
+
         internal void WithinScope<T>(T expression, Action? action = null)
             where T : class, IIntermediateExpression
         {

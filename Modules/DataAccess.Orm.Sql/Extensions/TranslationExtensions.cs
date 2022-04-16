@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Basics;
     using Model;
 
     /// <summary>
@@ -54,7 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                         | BindingFlags.SetProperty
                         | BindingFlags.DeclaredOnly)
                     .Concat(BaseDeclaredColumns(type))
-                    .Where(property => property.CanRead && property.CanWrite);
+                    .Where(property => property.CanRead && (property.CanWrite || type.IsAnonymous()));
             }
 
             static IEnumerable<PropertyInfo> BaseDeclaredColumns(Type type)

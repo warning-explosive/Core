@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
+    using Extensions;
 
     /// <summary>
     /// FilterExpression
@@ -183,15 +184,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = new ReplaceJoinBindingsVisitor(join, false).Visit(expression);
+                expression = expression.ReplaceJoinBindings(join, false);
             }
             else if (Source is ProjectionExpression projection)
             {
-                expression = new ReplaceFilterExpressionVisitor(projection).Visit(expression);
+                expression = expression.ReplaceFilterExpression(projection);
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {
-                    expression = new ReplaceJoinBindingsVisitor(projectionJoin, false).Visit(expression);
+                    expression = expression.ReplaceJoinBindings(projectionJoin, false);
                 }
             }
 

@@ -5,23 +5,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class ExtractQueryParametersVisitor : IntermediateExpressionVisitorBase
     {
-        private readonly List<QueryParameterExpression> _queryParameters;
-
-        private ExtractQueryParametersVisitor()
+        public ExtractQueryParametersVisitor()
         {
-            _queryParameters = new List<QueryParameterExpression>();
+            QueryParameters = new List<QueryParameterExpression>();
         }
 
-        public static IReadOnlyCollection<QueryParameterExpression> ExtractQueryParameters(IIntermediateExpression expression)
-        {
-            var extractor = new ExtractQueryParametersVisitor();
-            _ = extractor.Visit(expression);
-            return extractor._queryParameters;
-        }
+        public List<QueryParameterExpression> QueryParameters { get; }
 
         protected override IIntermediateExpression VisitQueryParameter(QueryParameterExpression queryParameter)
         {
-            _queryParameters.Add(queryParameter);
+            QueryParameters.Add(queryParameter);
             return queryParameter;
         }
     }

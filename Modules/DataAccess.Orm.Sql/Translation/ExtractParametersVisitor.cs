@@ -7,25 +7,19 @@
     {
         private const int BindingParameterOffset = 1_000_000;
 
-        private readonly Dictionary<int, ParameterExpression> _parameters;
         private int _currentIndex;
 
-        private ExtractParametersVisitor()
+        public ExtractParametersVisitor()
         {
-            _parameters = new Dictionary<int, ParameterExpression>();
+            Parameters = new Dictionary<int, ParameterExpression>();
             _currentIndex = 0;
         }
 
-        public static IReadOnlyDictionary<int, ParameterExpression> ExtractParameters(IIntermediateExpression expression)
-        {
-            var extractor = new ExtractParametersVisitor();
-            _ = extractor.Visit(expression);
-            return extractor._parameters;
-        }
+        public Dictionary<int, ParameterExpression> Parameters { get; }
 
         protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
         {
-            _parameters.Add(_currentIndex++, parameterExpression);
+            Parameters.Add(_currentIndex++, parameterExpression);
             return parameterExpression;
         }
 
@@ -44,7 +38,7 @@
         {
             if (simpleBindingExpression.Source is ParameterExpression parameterExpression)
             {
-                _parameters.Add(BindingParameterOffset + _currentIndex++, parameterExpression);
+                Parameters.Add(BindingParameterOffset + _currentIndex++, parameterExpression);
                 return simpleBindingExpression;
             }
 

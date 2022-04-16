@@ -53,7 +53,10 @@
         /// <summary>
         /// Index
         /// </summary>
-        public string Index => string.Join("_", Columns.OrderBy(it => it));
+        public string Index => string.Join(
+            "__",
+            Table,
+            string.Join("_", Columns.OrderBy(it => it)));
 
         #region IEquatable
 
@@ -122,7 +125,7 @@
         /// <returns>IndexNode</returns>
         public static IndexNode FromDb(string schema, string table, string name, string definition)
         {
-            var columns = name
+            var columns = name.Substring((table + "__").Length)
                 .Split("_", StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
 

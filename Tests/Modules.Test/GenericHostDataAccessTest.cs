@@ -78,8 +78,7 @@ namespace SpaceEngineers.Core.Modules.Test
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(output))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))))
+                           .WithOverrides(new TestLoggerOverride(output)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -501,7 +500,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 var createIndex = (CreateIndex)modelChanges[index];
                 Assert.True(createIndex.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
                 Assert.True(createIndex.Table.Equals(table, StringComparison.OrdinalIgnoreCase));
-                Assert.True(createIndex.Index.Equals(indexName, StringComparison.OrdinalIgnoreCase));
+                Assert.True(createIndex.Index.Equals(string.Join("__", table, indexName), StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -534,15 +533,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             var settingsScope = nameof(GetConversationTraceTest);
 
-            var endpointOverridesList = new IComponentsOverride[]
-            {
-                new TestLoggerOverride(Output),
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var endpointOverrides = endpointOverridesList.ToArray();
-
-            var migrationOverrides = new IComponentsOverride[]
+            var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(Output),
                 new TestSettingsScopeProviderOverride(settingsScope)
@@ -555,19 +546,19 @@ namespace SpaceEngineers.Core.Modules.Test
                        .WithTracing()
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithOverrides(endpointOverrides))
+                           .WithOverrides(overrides))
                        .BuildOptions())
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(endpointOverrides))
+                           .WithOverrides(overrides))
                        .BuildOptions())
                .ExecuteMigrations(builder => builder
                    .WithDataAccess(databaseProvider)
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(manualMigrations)
-                       .WithOverrides(migrationOverrides))
+                       .WithOverrides(overrides))
                    .BuildOptions())
                .BuildHost();
 

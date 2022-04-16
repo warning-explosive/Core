@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
+    using Extensions;
 
     /// <summary>
     /// ProjectionExpression
@@ -208,25 +209,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = new ReplaceJoinBindingsVisitor(join, true).Visit(expression);
+                expression = expression.ReplaceJoinBindings(join, true);
             }
 
             if (expression is ParameterExpression)
             {
                 return;
-            }
-
-            if (expression is IBindingIntermediateExpression bindingIntermediateExpression)
-            {
-                var bindingsMap = _bindings
-                   .OfType<IBindingIntermediateExpression>()
-                   .ToDictionary(binding => binding.Name, StringComparer.OrdinalIgnoreCase);
-
-                if (bindingsMap.TryGetValue(bindingIntermediateExpression.Name, out var existedBinding)
-                 && existedBinding.Type == expression.Type)
-                {
-                    return;
-                }
             }
 
             _bindings.Add(expression);

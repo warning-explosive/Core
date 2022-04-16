@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Basics.Primitives;
     using Expressions;
+    using Extensions;
     using Model;
     using Orm.Linq;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
@@ -95,8 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var applyNamedSourceCondition = Context.Parent is JoinExpression
                  || (Context.Parent is not FilterExpression
                   && Context.Parent is not RowsFetchLimitExpression
-                  && Context.Parent != null
-                  && Context.Parent.Type != itemType);
+                  && Context.Parent != null);
 
             if (method == Select)
             {
@@ -270,13 +270,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == Distinct)
             {
-                Context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
-                    () =>
-                    {
-                        ((ProjectionExpression)Context.Parent!).IsDistinct = true;
-
-                        Visit(node.Arguments[0]);
-                    });
+                Visit(node.Arguments[0]);
+                var expression = Context.Expression ?? throw new InvalidOperationException("Unable to find distinct expression root");
+                var projection = Context.GetProjectionExpression(expression) ?? throw new InvalidOperationException("Unable to find distinct projection");
+                projection.IsDistinct = true;
 
                 return node;
             }
@@ -411,8 +408,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             static Expressions.ParameterExpression ExtractParameter(IIntermediateExpression source, Type parameterType)
             {
-                var parameterExpression = ExtractParametersVisitor
-                    .ExtractParameters(source)
+                var parameterExpression = source
+                    .ExtractParameters()
                     .OrderBy(parameter => parameter.Key)
                     .Select(parameter => parameter.Value)
                     .FirstOrDefault(parameter => parameter.Type == parameterType);
@@ -593,11 +590,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     ProjectionExpression projection,
                     Expressions.ParameterExpression parameterExpression)
                 {
-                    var visitor = new ReplaceParameterVisitor(parameterExpression);
-
                     var bindings = projection.IsProjectionToClass
-                        ? projection.Bindings.Select(NamedBindingExpression.Unwrap).Select(visitor.Visit)
-                        : projection.Bindings.Select(visitor.Visit);
+                        ? projection.Bindings.Select(NamedBindingExpression.Unwrap).Select(expression => expression.ReplaceParameter(parameterExpression))
+                        : projection.Bindings.Select(expression => expression.ReplaceParameter(parameterExpression));
 
                     return bindings;
                 }

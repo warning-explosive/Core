@@ -41,7 +41,10 @@
         /// <summary>
         /// Name
         /// </summary>
-        public string Name => string.Join("_", Columns.OrderBy(column => column.Name).Select(column => column.Name));
+        public string Name => string.Join(
+            "__",
+            Table.Name,
+            string.Join("_", Columns.OrderBy(column => column.Name).Select(column => column.Name)));
 
         /// <summary>
         /// Unique

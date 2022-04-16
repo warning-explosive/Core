@@ -5,16 +5,17 @@
     using System.Linq;
     using Basics;
     using Expressions;
+    using Extensions;
 
     internal class ReplaceJoinBindingsVisitor : IntermediateExpressionVisitorBase
     {
         private readonly IReadOnlyDictionary<Type, IIntermediateExpression> _replacements;
         private readonly bool _applyNaming;
 
-        public ReplaceJoinBindingsVisitor(JoinExpression join, bool applyNaming)
+        public ReplaceJoinBindingsVisitor(JoinExpression joinExpression, bool applyNaming)
         {
-            _replacements = ExtractParametersVisitor
-                .ExtractParameters(join)
+            _replacements = joinExpression
+                .ExtractParameters()
                 .GroupBy(parameter => parameter.Value.Type)
                 .ToDictionary(
                     grp => grp.Key,
@@ -66,6 +67,13 @@
             }
 
             return base.VisitSimpleBinding(simpleBindingExpression);
+        }
+
+        protected override IIntermediateExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
+        {
+            return new NamedBindingExpression(
+                namedBindingExpression.Name,
+                NamedBindingExpression.Unwrap(Visit(namedBindingExpression.Source)));
         }
     }
 }

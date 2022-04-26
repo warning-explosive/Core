@@ -5,15 +5,13 @@
     using Views;
 
     [Index(nameof(Name), Unique = true)]
-    internal class DatabaseSchema : ISqlView<Guid>
+    internal class DatabaseSchema : BaseSqlView<Guid>
     {
         public DatabaseSchema(Guid primaryKey, string name)
+            : base(primaryKey)
         {
-            PrimaryKey = primaryKey;
             Name = name;
         }
-
-        public Guid PrimaryKey { get; private init; }
 
         public string Name { get; private init; }
     }

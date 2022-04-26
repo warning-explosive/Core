@@ -14,6 +14,25 @@ namespace SpaceEngineers.Core.Basics
     public static class EnumerableExtensions
     {
         /// <summary>
+        /// Distinct by specified key selector
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="keySelector">Key selector</param>
+        /// <param name="comparer">Custom equality comparer</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Distinct source</returns>
+        public static IEnumerable<TValue> DistinctBy<TKey, TValue>(
+            this IEnumerable<TValue> source,
+            Func<TValue, TKey> keySelector,
+            IEqualityComparer<TKey>? comparer = null)
+        {
+            return source
+               .GroupBy(keySelector, comparer)
+               .Select(it => it.First());
+        }
+
+        /// <summary>
         /// Stacks source collection into separate piles defined by key selector
         /// </summary>
         /// <param name="source">Source</param>
@@ -61,7 +80,7 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="TRight">TRight type-argument</typeparam>
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <typeparam name="TResult">TResult type-argument</typeparam>
-        /// <returns>Left join result</returns>
+        /// <returns>Full outer join result</returns>
         public static IEnumerable<TResult> FullOuterJoin<TLeft, TRight, TKey, TResult>(
             this IEnumerable<TLeft> leftSource,
             IEnumerable<TRight> rightSource,

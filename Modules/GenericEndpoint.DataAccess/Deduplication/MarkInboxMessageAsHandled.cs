@@ -25,7 +25,7 @@
         {
             return _databaseContext
                 .Write<InboxMessage, Guid>()
-                .Update(domainEvent.InboxId, message => message.Handled, true, token);
+                .Update(new[] { domainEvent.InboxId }, message => message.Handled, true, token);
         }
     }
 }

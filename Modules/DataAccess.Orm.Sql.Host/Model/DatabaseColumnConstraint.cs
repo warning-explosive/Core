@@ -3,7 +3,7 @@
     using System;
     using Views;
 
-    internal class DatabaseColumnConstraint : ISqlView<Guid>
+    internal class DatabaseColumnConstraint : BaseSqlView<Guid>
     {
         public DatabaseColumnConstraint(
             Guid primaryKey,
@@ -15,8 +15,8 @@
             string foreignSchema,
             string foreignTable,
             string foreignColumn)
+            : base(primaryKey)
         {
-            PrimaryKey = primaryKey;
             Schema = schema;
             Table = table;
             Column = column;
@@ -26,8 +26,6 @@
             ForeignTable = foreignTable;
             ForeignColumn = foreignColumn;
         }
-
-        public Guid PrimaryKey { get; private init; }
 
         public string Schema { get; private init; }
 

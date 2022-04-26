@@ -5,7 +5,7 @@
     using Views;
 
     [Index(nameof(Schema), nameof(Table), nameof(Index), Unique = true)]
-    internal class DatabaseIndex : ISqlView<Guid>
+    internal class DatabaseIndex : BaseSqlView<Guid>
     {
         public DatabaseIndex(
             Guid primaryKey,
@@ -13,15 +13,13 @@
             string table,
             string index,
             string definition)
+            : base(primaryKey)
         {
-            PrimaryKey = primaryKey;
             Schema = schema;
             Table = table;
             Index = index;
             Definition = definition;
         }
-
-        public Guid PrimaryKey { get; private init; }
 
         public string Schema { get; private init; }
 

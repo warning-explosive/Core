@@ -257,7 +257,7 @@
         {
             var primaryKeyProperty = property
                 .PropertyType
-                .Column(nameof(IUniqueIdentified<Guid>.PrimaryKey));
+                .Column(nameof(IUniqueIdentified.PrimaryKey));
 
             yield return new[]
             {

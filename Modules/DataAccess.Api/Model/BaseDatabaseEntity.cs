@@ -26,6 +26,8 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
         /// </summary>
         public TKey PrimaryKey { get; private init; }
 
+        object IUniqueIdentified.PrimaryKey => PrimaryKey;
+
         #region IEquatable
 
         /// <inheritdoc />

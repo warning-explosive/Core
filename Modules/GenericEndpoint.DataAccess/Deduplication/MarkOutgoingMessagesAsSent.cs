@@ -24,7 +24,7 @@
         public async Task Handle(OutboxMessagesHaveBeenSent domainEvent, CancellationToken token)
         {
             await _databaseContext
-                .BulkWrite<OutboxMessage, Guid>()
+                .Write<OutboxMessage, Guid>()
                 .Update(domainEvent.MessageIds, outbox => outbox.Sent, true, token)
                 .ConfigureAwait(false);
         }

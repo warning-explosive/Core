@@ -29,7 +29,7 @@
 
             await _databaseContext
                 .Write<DatabaseModel.CapturedMessage, Guid>()
-                .Insert(capturedMessage, EnInsertBehavior.Default, token)
+                .Insert(new[] { capturedMessage }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
     }

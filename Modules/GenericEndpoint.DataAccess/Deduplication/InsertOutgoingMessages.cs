@@ -41,7 +41,7 @@
                 .ToArray();
 
             await _databaseContext
-                .BulkWrite<OutboxMessage, Guid>()
+                .Write<OutboxMessage, Guid>()
                 .Insert(messages, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }

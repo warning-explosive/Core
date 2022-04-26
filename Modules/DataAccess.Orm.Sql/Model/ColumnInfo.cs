@@ -192,13 +192,13 @@
 
                 IEnumerable<string> InitConstraints()
                 {
-                    if (Name.Equals(nameof(IUniqueIdentified<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+                    if (Name.Equals(nameof(IUniqueIdentified.PrimaryKey), StringComparison.OrdinalIgnoreCase))
                     {
                         yield return "primary key";
                     }
                     else if (Relation != null)
                     {
-                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")";
+                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")";
                     }
 
                     if (!Property.Declared.IsNullable())
@@ -325,10 +325,8 @@
         /// Gets entity column value
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Column value</returns>
-        public object? GetValue<TKey>(IUniqueIdentified<TKey> entity)
-            where TKey : notnull
+        public object? GetValue(IUniqueIdentified entity)
         {
             return IsMultipleRelation
                 ? null
@@ -341,10 +339,8 @@
         /// Gets entity relation value
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Relation value</returns>
-        public IUniqueIdentified<TKey>? GetRelationValue<TKey>(IUniqueIdentified<TKey> entity)
-            where TKey : notnull
+        public IUniqueIdentified? GetRelationValue(IUniqueIdentified entity)
         {
             if (!IsRelation)
             {
@@ -354,28 +350,26 @@
             return _chain
                 .Select(property => property.Reflected)
                 .SkipLast(1)
-                .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified<TKey>;
+                .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified;
         }
 
         /// <summary>
         /// Gets entity multiple relation value
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Multiple relation value</returns>
-        public IEnumerable<IUniqueIdentified<TKey>> GetMultipleRelationValue<TKey>(IUniqueIdentified<TKey> entity)
-            where TKey : notnull
+        public IEnumerable<IUniqueIdentified> GetMultipleRelationValue(IUniqueIdentified entity)
         {
             if (!IsMultipleRelation)
             {
-                return Enumerable.Empty<IUniqueIdentified<TKey>>();
+                return Enumerable.Empty<IUniqueIdentified>();
             }
 
             return ((IEnumerable)_chain
                     .Select(property => property.Reflected)
                     .SkipLast(1)
                     .Aggregate((object?)entity, AggregateValue) !)
-                .AsEnumerable<IUniqueIdentified<TKey>>();
+                .AsEnumerable<IUniqueIdentified>();
         }
 
         private static object? AggregateValue(object? value, PropertyInfo property)

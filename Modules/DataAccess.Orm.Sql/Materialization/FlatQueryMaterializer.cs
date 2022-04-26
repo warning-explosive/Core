@@ -157,10 +157,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 return values.Single().Value;
             }
 
-            if (!type.IsPrimitive())
+            if (type.IsAnonymous())
             {
                 values = values
-                    .GroupBy(pair =>
+                   .ToDictionary(
+                        pair => pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries).Last(),
+                        pair => pair.Value,
+                        StringComparer.OrdinalIgnoreCase);
+            }
+            else if (!type.IsPrimitive())
+            {
+                values = values
+                   .GroupBy(pair =>
                         {
                             var parts = pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries);
                             return parts.First();
@@ -172,14 +180,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                                 ? new KeyValuePair<string, object?>(string.Join("_", parts.Skip(1)), pair.Value)
                                 : pair;
                         })
-                    .ToDictionary(
-                        grp => grp.Key,
+                   .ToDictionary(grp => grp.Key,
                         grp =>
                         {
                             var innerType = type.Column(grp.Key).PropertyType;
                             var innerValues = grp.ToDictionary(innerKey => innerKey.Key, innerValue => innerValue.Value);
                             return Build(innerType, innerValues);
-                        });
+                        },
+                        StringComparer.OrdinalIgnoreCase);
             }
 
             return _objectBuilder.Build(type, values);
@@ -355,7 +363,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             TLeftKey ownerPrimaryKey,
             ICollection<TRight> collection,
             CancellationToken token)
-            where TMtm : BaseMtmDatabaseEntity<TLeftKey, TRightKey>, IUniqueIdentified<object>
+            where TMtm : BaseMtmDatabaseEntity<TLeftKey, TRightKey>, IUniqueIdentified
             where TLeft : IDatabaseEntity<TLeftKey>
             where TRight : IDatabaseEntity<TRightKey>
             where TLeftKey : notnull

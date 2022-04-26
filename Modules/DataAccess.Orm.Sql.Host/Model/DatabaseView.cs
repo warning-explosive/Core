@@ -5,17 +5,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Views;
 
     [Index(nameof(Schema), nameof(View), nameof(Query), Unique = true)]
-    internal class DatabaseView : ISqlView<Guid>
+    internal class DatabaseView : BaseSqlView<Guid>
     {
-        public DatabaseView(Guid primaryKey, string schema, string view, string query)
+        public DatabaseView(
+            Guid primaryKey,
+            string schema,
+            string view,
+            string query)
+            : base(primaryKey)
         {
-            PrimaryKey = primaryKey;
             Schema = schema;
             View = view;
             Query = query;
         }
-
-        public Guid PrimaryKey { get; private init; }
 
         public string Schema { get; private init; }
 

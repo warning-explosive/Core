@@ -150,7 +150,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 yield return constraint.ConstraintType switch
                 {
                     EnColumnConstraintType.PrimaryKey => "primary key",
-                    EnColumnConstraintType.ForeignKey => $@"references ""{constraint.ForeignSchema}"".""{constraint.ForeignTable}"" (""{nameof(IUniqueIdentified<Guid>.PrimaryKey)}"")",
+                    EnColumnConstraintType.ForeignKey => $@"references ""{constraint.ForeignSchema}"".""{constraint.ForeignTable}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")",
                     _ => throw new NotSupportedException(constraint.ConstraintType.ToString())
                 };
             }

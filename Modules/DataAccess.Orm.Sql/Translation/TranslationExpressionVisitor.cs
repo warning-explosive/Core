@@ -503,11 +503,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         typeof(bool),
                         BinaryOperator.Equal,
                         new SimpleBindingExpression(
-                            relation.Target.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey)),
+                            relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
                             typeof(Guid),
                             context.GetParameterExpression(relation.Target)),
                         new SimpleBindingExpression(
-                            relation.Target.GetProperty(nameof(IUniqueIdentified<Guid>.PrimaryKey)),
+                            relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
                             typeof(Guid),
                             new SimpleBindingExpression(
                                 relation.Property.Reflected,

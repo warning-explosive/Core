@@ -17,7 +17,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         /// <returns>Type is sql view or not</returns>
         public static bool IsSqlView(this Type type)
         {
-            return type.IsSubclassOfOpenGeneric(typeof(ISqlView<>));
+            return type.IsSubclassOfOpenGeneric(typeof(ISqlView<>))
+                && type.IsConcreteType();
         }
 
         /// <summary>

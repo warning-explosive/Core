@@ -38,16 +38,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
             where TKey : notnull;
 
         /// <summary>
-        /// Gets access to IBulkRepository so as to produce bulk writes to database
-        /// </summary>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
-        /// <returns>IBulkRepository</returns>
-        IBulkRepository<TEntity, TKey> BulkWrite<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
-
-        /// <summary>
         /// Starts tracking specified aggregate root with underlying domain events
         /// </summary>
         /// <param name="aggregate">Aggregate root</param>

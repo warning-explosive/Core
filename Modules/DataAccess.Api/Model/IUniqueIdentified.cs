@@ -3,13 +3,24 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     /// <summary>
     /// IUniqueIdentified
     /// </summary>
+    public interface IUniqueIdentified
+    {
+        /// <summary>
+        /// Primary key
+        /// </summary>
+        object PrimaryKey { get; }
+    }
+
+    /// <summary>
+    /// IUniqueIdentified
+    /// </summary>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public interface IUniqueIdentified<TKey>
+    public interface IUniqueIdentified<TKey> : IUniqueIdentified
         where TKey : notnull
     {
         /// <summary>
         /// Primary key
         /// </summary>
-        TKey PrimaryKey { get; }
+        new TKey PrimaryKey { get; }
     }
 }

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Views;
 
     [Index(nameof(Schema), nameof(Table), nameof(Column), Unique = true)]
-    internal class DatabaseColumn : ISqlView<Guid>
+    internal class DatabaseColumn : BaseSqlView<Guid>
     {
         public DatabaseColumn(
             Guid primaryKey,
@@ -19,8 +19,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             int? scale,
             int? precision,
             int? length)
+            : base(primaryKey)
         {
-            PrimaryKey = primaryKey;
             Schema = schema;
             Table = table;
             Column = column;
@@ -32,8 +32,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             Precision = precision;
             Length = length;
         }
-
-        public Guid PrimaryKey { get; private init; }
 
         public string Schema { get; private init; }
 

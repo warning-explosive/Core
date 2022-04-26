@@ -14,7 +14,7 @@
         where TRightKey : notnull
     {
         /// <summary> .cctor </summary>
-        private BaseMtmDatabaseEntity()
+        protected BaseMtmDatabaseEntity()
             : this(default!, default!)
         {
         }
@@ -28,17 +28,19 @@
             Right = right;
         }
 
-        /// <inheritdoc />
-        public object PrimaryKey => throw new InvalidOperationException("Mtm tables couldn't have primary keys");
+        /// <summary>
+        /// Primary key
+        /// </summary>
+        public object PrimaryKey => HashCode.Combine(Left, Right);
 
         /// <summary>
         /// Left
         /// </summary>
-        public TLeftKey Left { get; private init; }
+        public TLeftKey Left { get; protected internal init; }
 
         /// <summary>
         /// Right
         /// </summary>
-        public TRightKey Right { get; private init; }
+        public TRightKey Right { get; protected internal init; }
     }
 }

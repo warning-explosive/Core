@@ -32,7 +32,7 @@
 
             return _databaseContext
                 .Write<InboxMessage, Guid>()
-                .Insert(inbox, EnInsertBehavior.DoUpdate, token);
+                .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token);
         }
     }
 }

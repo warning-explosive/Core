@@ -107,13 +107,6 @@
             return _dependencyContainer.Resolve<IRepository<TEntity, TKey>>();
         }
 
-        public IBulkRepository<TEntity, TKey> BulkWrite<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
-        {
-            return _dependencyContainer.Resolve<IBulkRepository<TEntity, TKey>>();
-        }
-
         public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)
         {
             await Open(token).ConfigureAwait(false);

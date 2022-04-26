@@ -45,6 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                        && type != typeof(IDatabaseEntity<>)
                        && type != typeof(BaseDatabaseEntity<>)
                        && type != typeof(ISqlView<>)
+                       && type != typeof(BaseSqlView<>)
                        && type != typeof(BaseMtmDatabaseEntity<,>);
             }
         }

@@ -41,6 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo Count = LinqMethods.QueryableCount();
         private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
         private static readonly MethodInfo Distinct = LinqMethods.QueryableDistinct();
+        private static readonly MethodInfo SelectMany = LinqMethods.QueryableSelectMany();
 
         public TranslationExpressionVisitor(
             IModelProvider modelProvider,
@@ -276,6 +277,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 projection.IsDistinct = true;
 
                 return node;
+            }
+
+            if (method == SelectMany)
+            {
+                throw new NotSupportedException(nameof(SelectMany));
             }
 
             if (TryGetMemberInfoExpression(node.Method, out var recognized))

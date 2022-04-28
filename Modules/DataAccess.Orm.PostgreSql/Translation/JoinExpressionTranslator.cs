@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -25,9 +26,11 @@
             var sb = new StringBuilder();
 
             sb.AppendLine(expression.LeftSource.Translate(_dependencyContainer, depth));
+            sb.Append(new string('\t', Math.Max(depth - 1, 0)));
             sb.AppendLine("JOIN");
             sb.Append(new string('\t', depth));
             sb.AppendLine(expression.RightSource.Translate(_dependencyContainer, depth));
+            sb.Append(new string('\t', Math.Max(depth - 1, 0)));
             sb.AppendLine("ON");
             sb.Append(new string('\t', depth));
             sb.Append(expression.On.Translate(_dependencyContainer, depth));

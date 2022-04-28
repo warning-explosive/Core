@@ -21,6 +21,8 @@ namespace SpaceEngineers.Core.Modules.Test.Migrations
                                                                          ICollectionResolvable<IManualMigration>
     {
         private const string CommandText = @"
+create extension if not exists dblink;
+
 do
 $do$
     begin

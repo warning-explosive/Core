@@ -21,6 +21,8 @@ namespace SpaceEngineers.Core.Modules.Test.Migrations
                                                                ICollectionResolvable<IManualMigration>
     {
         private const string CommandText = @"
+create extension if not exists dblink;
+
 drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
 grant all privileges on database ""{0}"" to ""{1}""";

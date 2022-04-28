@@ -297,11 +297,11 @@ namespace SpaceEngineers.Core.Modules.Test
                 $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with join expression",
                 useInMemoryIntegrationTransport,
                 postgreSqlDatabaseProvider,
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Blog, Guid>>().All().Where(it => it.Theme == "MilkyWay").SelectMany(it => it.Posts).Select(it => it.User.Nickname).Distinct()),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post, Guid>>().All().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(DatabaseEntity)}"" a",
-                        emptyQueryParameters,
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(User.Nickname)}"" AS ""User_Nickname""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{Schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" AS ""Blog_PrimaryKey"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""User_PrimaryKey""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{Schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{Schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""Blog_PrimaryKey""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.Theme)}"" = @param_0) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""User_PrimaryKey""",
+                        new Dictionary<string, object?> { ["param_0"] = "MilkyWay" },
                         write)),
                 new IUniqueIdentified[] { user, blog, post },
                 timeout

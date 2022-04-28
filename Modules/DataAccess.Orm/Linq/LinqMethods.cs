@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -266,6 +267,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 }
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Distinct()"));
+        }
+
+        internal static MethodInfo QueryableSelectMany()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.SelectMany),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, IEnumerable<object>>>) }
+                }
+               .FindMethod()
+               .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SelectMany()"));
         }
     }
 }

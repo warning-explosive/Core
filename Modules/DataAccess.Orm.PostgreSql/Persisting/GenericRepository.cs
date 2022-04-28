@@ -174,6 +174,7 @@
             TKey[] primaryKeys,
             CancellationToken token)
         {
+            // TODO: #178 - add delete behaviors
             if (!primaryKeys.Any())
             {
                 return;

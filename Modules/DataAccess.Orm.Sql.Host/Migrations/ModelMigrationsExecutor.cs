@@ -128,7 +128,7 @@
         }
 
         private async Task ExecuteAutoMigrations(
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             string commandText,
             CancellationToken token)
         {
@@ -139,7 +139,7 @@
             try
             {
                 _ = await transaction
-                    .UnderlyingDbTransaction
+                    .DbTransaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }

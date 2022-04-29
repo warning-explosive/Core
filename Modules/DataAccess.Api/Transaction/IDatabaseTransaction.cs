@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
     using System;
-    using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -10,11 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
     /// </summary>
     public interface IDatabaseTransaction : IDatabaseContext
     {
-        /// <summary>
-        /// Gets underlying db transaction and begins it if necessary
-        /// </summary>
-        IDbTransaction UnderlyingDbTransaction { get; }
-
         /// <summary>
         /// Opens database transaction scope
         /// </summary>

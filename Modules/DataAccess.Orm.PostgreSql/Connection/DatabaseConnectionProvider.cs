@@ -2,16 +2,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot.Api.Exceptions;
     using CrossCuttingConcerns.Settings;
     using Npgsql;
     using Orm.Connection;
     using Sql.Settings;
+    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider,
@@ -20,10 +25,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private const string SqlState = nameof(SqlState);
         private const string DatabaseDoesNotExistCode = "3D000";
 
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        public DatabaseConnectionProvider(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
+        public DatabaseConnectionProvider(
+            IDependencyContainer dependencyContainer,
+            ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
+            _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
         }
 
@@ -41,11 +50,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Invoke(DatabaseDoesNotExist, token);
         }
 
-        public async Task<IDbConnection> OpenConnection(CancellationToken token)
+        [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
+        public async Task<IDatabaseConnection> OpenConnection(CancellationToken token)
         {
-            /*
-             * TODO: #151 - add connection count limits
-             */
+            ValidateNestedCall(_dependencyContainer);
 
             var settings = await _settingsProvider
                 .Get(token)
@@ -57,13 +65,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 Port = settings.Port,
                 Database = settings.Database,
                 Username = settings.Username,
-                Password = settings.Password
+                Password = settings.Password,
+                Pooling = true,
+                MinPoolSize = 0,
+                MaxPoolSize = (int)settings.ConnectionPoolSize,
+                ConnectionPruningInterval = 1,
+                ConnectionIdleLifetime = 1
             };
 
             var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
-            await connection.OpenAsync(token).ConfigureAwait(false);
 
-            return connection;
+            await connection
+               .OpenAsync(token)
+               .ConfigureAwait(false);
+
+            return new DatabaseConnection(connection);
+        }
+
+        private static void ValidateNestedCall(IDependencyContainer dependencyContainer)
+        {
+            var transaction = ExecutionExtensions
+               .Try(dependencyContainer, container => (IAdvancedDatabaseTransaction?)container.Resolve<IAdvancedDatabaseTransaction>())
+               .Catch<ComponentResolutionException>()
+               .Invoke(_ => default);
+
+            if (transaction?.Connected == true)
+            {
+                throw new InvalidOperationException("Nested database connections aren't supported");
+            }
         }
 
         private async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)

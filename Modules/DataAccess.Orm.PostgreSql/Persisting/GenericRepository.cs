@@ -36,7 +36,7 @@
         private readonly IRepository _repository;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IExpressionTranslator _expressionTranslator;
 
         public GenericRepository(
@@ -44,7 +44,7 @@
             IRepository repository,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             IExpressionTranslator expressionTranslator)
         {
             _dependencyContainer = dependencyContainer;
@@ -106,7 +106,7 @@
             try
             {
                 _ = await _transaction
-                    .UnderlyingDbTransaction
+                    .DbTransaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }
@@ -160,7 +160,7 @@
             try
             {
                 _ = await _transaction
-                    .UnderlyingDbTransaction
+                    .DbTransaction
                     .Invoke(commandText, settings, token)
                     .ConfigureAwait(false);
             }
@@ -195,7 +195,7 @@
             try
             {
                 _ = await _transaction
-                    .UnderlyingDbTransaction
+                    .DbTransaction
                     .Invoke(commandText, settings, token)
                     .ConfigureAwait(false);
             }

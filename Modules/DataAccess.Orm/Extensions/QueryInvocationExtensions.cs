@@ -22,12 +22,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         public static async Task InvokeWithinTransaction(
             this IDependencyContainer dependencyContainer,
             bool commit,
-            Func<IDatabaseTransaction, CancellationToken, Task> producer,
+            Func<IAdvancedDatabaseTransaction, CancellationToken, Task> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
                 await using (await transaction.OpenScope(commit, token).ConfigureAwait(false))
                 {
@@ -48,12 +48,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         public static async Task<TResult> InvokeWithinTransaction<TResult>(
             this IDependencyContainer dependencyContainer,
             bool commit,
-            Func<IDatabaseTransaction, CancellationToken, Task<TResult>> producer,
+            Func<IAdvancedDatabaseTransaction, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
                 await using (await transaction.OpenScope(commit, token).ConfigureAwait(false))
                 {
@@ -76,12 +76,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             this IDependencyContainer dependencyContainer,
             bool commit,
             TState state,
-            Func<IDatabaseTransaction, TState, CancellationToken, Task> producer,
+            Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
                 await using (await transaction.OpenScope(commit, token).ConfigureAwait(false))
                 {
@@ -105,12 +105,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             this IDependencyContainer dependencyContainer,
             bool commit,
             TState state,
-            Func<IDatabaseTransaction, TState, CancellationToken, Task<TResult>> producer,
+            Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
             await using (dependencyContainer.OpenScopeAsync())
             {
-                var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+                var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
                 await using (await transaction.OpenScope(commit, token).ConfigureAwait(false))
                 {

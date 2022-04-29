@@ -23,6 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
             Password = "Voyager1";
 
             IsolationLevel = IsolationLevel.Snapshot;
+            ConnectionPoolSize = 100;
         }
 
         /// <summary>
@@ -54,6 +55,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         /// Isolation level
         /// </summary>
         public IsolationLevel IsolationLevel { get; set; }
+
+        /// <summary>
+        /// Connection pool size
+        /// </summary>
+        public uint ConnectionPoolSize { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

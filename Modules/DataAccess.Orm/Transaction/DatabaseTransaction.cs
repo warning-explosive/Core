@@ -21,6 +21,7 @@
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
                                          IDisposable,
                                          IResolvable<IAdvancedDatabaseTransaction>,
+                                         IResolvable<IDatabaseTransactionStore>,
                                          IResolvable<IDatabaseTransaction>,
                                          IResolvable<IDatabaseContext>
     {
@@ -30,7 +31,7 @@
         private readonly ITransactionalStore _transactionalStore;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
-        private IDbConnection? _connection;
+        private IDatabaseConnection? _connection;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
@@ -51,7 +52,7 @@
 
         public bool HasChanges => _changesTracker.HasChanges;
 
-        public IDbTransaction UnderlyingDbTransaction
+        public IDbTransaction DbTransaction
         {
             get
             {
@@ -60,13 +61,13 @@
             }
         }
 
-        private IDbConnection UnderlyingDbConnection
+        public IDatabaseConnection DbConnection
         {
             get
             {
                 for (var i = 0; i < 3; i++)
                 {
-                    switch (_connection?.State)
+                    switch (_connection?.UnderlyingDbConnection.State)
                     {
                         case ConnectionState.Connecting:
                             Task.Delay(TimeSpan.FromMilliseconds(50));
@@ -92,6 +93,8 @@
                 return _connection;
             }
         }
+
+        public bool Connected => _connection?.UnderlyingDbConnection != null;
 
         public IReadRepository<TEntity, TKey> Read<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
@@ -179,7 +182,9 @@
                 throw new InvalidOperationException("Database transaction have already been opened");
             }
 
-            return UnderlyingDbConnection.BeginTransaction(_connectionProvider.IsolationLevel);
+            return DbConnection
+               .UnderlyingDbConnection
+               .BeginTransaction(_connectionProvider.IsolationLevel);
         }
     }
 }

@@ -32,13 +32,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private const string ExcludedPseudoColumnFormat = @"excluded.{0}";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
 
         public Repository(
             IDependencyContainer dependencyContainer,
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             ISettingsProvider<OrmSettings> settingsProvider)
         {
@@ -77,7 +77,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             try
             {
                 _ = await _transaction
-                   .UnderlyingDbTransaction
+                   .DbTransaction
                    .InvokeScalar(commandText, settings, token)
                    .ConfigureAwait(false);
             }

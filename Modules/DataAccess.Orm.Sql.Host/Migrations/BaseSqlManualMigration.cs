@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }
 
-        private async Task ExecuteManualMigration(IDatabaseTransaction transaction, CancellationToken token)
+        private async Task ExecuteManualMigration(IAdvancedDatabaseTransaction transaction, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)
@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             try
             {
                 _ = await transaction
-                .UnderlyingDbTransaction
+                .DbTransaction
                 .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
             }

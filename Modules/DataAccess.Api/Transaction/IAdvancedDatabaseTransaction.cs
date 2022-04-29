@@ -1,33 +1,25 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
-    using System.Diagnostics.CodeAnalysis;
-    using Model;
+    using System.Data;
 
     /// <summary>
     /// IAdvancedDatabaseTransaction
     /// </summary>
-    public interface IAdvancedDatabaseTransaction : IDatabaseTransaction
+    public interface IAdvancedDatabaseTransaction : IDatabaseTransactionStore
     {
         /// <summary>
-        /// Puts entry into transactional store
+        /// Gets underlying db transaction and begins it if necessary
         /// </summary>
-        /// <param name="entity">Entity</param>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
-        void Store<TEntity, TKey>(TEntity entity)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull;
+        IDbTransaction DbTransaction { get; }
 
         /// <summary>
-        /// Gets entry from transactional store by key
+        /// Gets underlying db connection and connects if necessary
         /// </summary>
-        /// <param name="key">Key</param>
-        /// <param name="entity">Entity</param>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
-        /// <returns>Request result</returns>
-        bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull;
+        IDatabaseConnection DbConnection { get; }
+
+        /// <summary>
+        /// Returns true if connection to the database was requested earlier
+        /// </summary>
+        bool Connected { get; }
     }
 }

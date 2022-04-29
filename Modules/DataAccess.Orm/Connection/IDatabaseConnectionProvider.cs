@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
 
     /// <summary>
     /// IDatabaseConnectionProvider
@@ -36,6 +37,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<IDbConnection> OpenConnection(CancellationToken token);
+        Task<IDatabaseConnection> OpenConnection(CancellationToken token);
     }
 }

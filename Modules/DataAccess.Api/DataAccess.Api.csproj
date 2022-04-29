@@ -57,12 +57,6 @@
       <Compile Update="DatabaseEntity\JsonObject.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
-        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Transaction\IDatabaseTransaction.cs">
-        <DependentUpon>IDatabaseContext.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\BaseDatabaseEntity.cs">
         <DependentUpon>IDatabaseEntity.cs</DependentUpon>
       </Compile>
@@ -74,6 +68,15 @@
       </Compile>
       <Compile Update="Model\SystemType.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseContext.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IDatabaseTransactionStore.cs">
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseTransactionStore.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

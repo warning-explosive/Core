@@ -4,10 +4,13 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using CompositionRoot.Api.Abstractions.Registration;
     using CompositionRoot.Api.Exceptions;
     using CompositionRoot.Api.Extensions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using DataAccess.Orm.Host;
+    using DataAccess.Orm.Host.Migrations;
     using DataAccess.Orm.PostgreSql.Host;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -132,15 +135,30 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
+            var databaseProvider = new PostgreSqlDatabaseProvider();
+
+            var settingsScope = nameof(BuildHostTest);
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(Output),
+                new TestSettingsScopeProviderOverride(settingsScope)
+            };
+
             var host = useTransport(Output, Host.CreateDefaultBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(new PostgreSqlDatabaseProvider())
+                       .WithDataAccess(databaseProvider)
                        .WithTracing()
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(Output))
+                           .WithOverrides(overrides)
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithOverrides(overrides))
+                   .BuildOptions())
                .BuildHost();
 
             using (host)
@@ -156,6 +174,7 @@
 
                 var expectedHostStartupActions = new[]
                 {
+                    typeof(UpgradeDatabaseHostStartupAction),
                     typeof(GenericEndpointOutboxHostStartupAction),
                     typeof(GenericEndpointHostStartupAction)
                 };

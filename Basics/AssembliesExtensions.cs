@@ -60,6 +60,17 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Find required type in current AppDomain
+        /// </summary>
+        /// <param name="typeFullName">Type full name</param>
+        /// <returns>Found type</returns>
+        public static Type FindRequiredType(string typeFullName)
+        {
+            return FindType(typeFullName)
+                .EnsureNotNull($"Type {typeFullName} should be found in current {nameof(AppDomain)}");
+        }
+
+        /// <summary>
         /// Find type in current AppDomain
         /// </summary>
         /// <param name="assemblyName">Assembly short name</param>
@@ -70,6 +81,38 @@ namespace SpaceEngineers.Core.Basics
             return FindAssembly(assemblyName)
                ?.GetTypes()
                 .SingleOrDefault(type => type.FullName.Equals(typeFullName, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Find type in current AppDomain
+        /// </summary>
+        /// <param name="typeFullName">Type full name</param>
+        /// <returns>Found type</returns>
+        public static Type? FindType(string typeFullName)
+        {
+            var parts = typeFullName.Split(".", StringSplitOptions.RemoveEmptyEntries);
+
+            for (var i = 1; i < parts.Length - 1; i++)
+            {
+                var assemblyName = string.Join(".", parts.SkipLast(i));
+
+                for (var j = 1; j <= i; j++)
+                {
+                    var directories = string.Join(".", parts.TakeLast(i).SkipLast(j));
+                    var nestedTypeName = string.Join("+", parts.TakeLast(j));
+                    var possibleParts = new[] { assemblyName, directories, nestedTypeName }.Where(part => !string.IsNullOrEmpty(part));
+                    var possibleTypeFullName = string.Join(".", possibleParts);
+
+                    var type = FindType(assemblyName, possibleTypeFullName);
+
+                    if (type != default)
+                    {
+                        return type;
+                    }
+                }
+            }
+
+            return default;
         }
 
         /// <summary>

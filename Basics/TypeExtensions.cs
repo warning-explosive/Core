@@ -372,7 +372,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Ordered by DependencyAttribute collection</returns>
         public static IOrderedEnumerable<Type> OrderByDependencyAttribute(this IEnumerable<Type> source)
         {
-            return source.OrderByDependencyAttribute(t => t);
+            return source.OrderByDependencyAttribute(t => t.GenericTypeDefinitionOrSelf());
         }
 
         /// <summary> Order collection by DependencyAttribute </summary>

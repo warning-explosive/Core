@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics.Attributes
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Attribute which defines dependent types
@@ -18,6 +19,19 @@ namespace SpaceEngineers.Core.Basics.Attributes
             {
                 dependent
             };
+        }
+
+        /// <summary> .ctor </summary>
+        /// <param name="dependent">Required dependent type</param>
+        /// <param name="dependents">Optional dependent types</param>
+        public DependentAttribute(string dependent, params string[] dependents)
+        {
+            Dependents = new List<string>(dependents)
+                {
+                    dependent
+                }
+               .Select(AssembliesExtensions.FindRequiredType)
+               .ToArray();
         }
 
         /// <summary>

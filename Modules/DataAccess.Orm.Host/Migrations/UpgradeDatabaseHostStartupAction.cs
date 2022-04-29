@@ -3,9 +3,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics.Attributes;
     using CompositionRoot.Api.Abstractions;
     using GenericHost.Api.Abstractions;
 
+    [Dependent("SpaceEngineers.Core.GenericEndpoint.Host.StartupActions.GenericEndpointHostStartupAction")]
     internal class UpgradeDatabaseHostStartupAction : IHostStartupAction
     {
         private readonly IDependencyContainer _dependencyContainer;

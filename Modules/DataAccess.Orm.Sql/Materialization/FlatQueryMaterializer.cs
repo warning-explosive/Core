@@ -89,7 +89,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             try
             {
                 return await _transaction
-                    .DbTransaction
                     .Invoke(commandText, settings, token)
                     .ConfigureAwait(false);
             }

@@ -73,13 +73,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 ConnectionIdleLifetime = 1
             };
 
-            var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
+            var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
 
-            await connection
+            var connection = new DatabaseConnection(npgSqlConnection);
+
+            await npgSqlConnection
                .OpenAsync(token)
                .ConfigureAwait(false);
 
-            return new DatabaseConnection(connection);
+            return connection;
         }
 
         private static void ValidateNestedCall(IDependencyContainer dependencyContainer)

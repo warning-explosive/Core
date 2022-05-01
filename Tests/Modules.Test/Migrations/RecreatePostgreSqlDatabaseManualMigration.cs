@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.Migrations
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -13,6 +14,7 @@ namespace SpaceEngineers.Core.Modules.Test.Migrations
     using DataAccess.Orm.Sql.Extensions;
     using DataAccess.Orm.Sql.Host.Migrations;
     using DataAccess.Orm.Sql.Settings;
+    using DataAccess.Orm.Transaction;
     using Npgsql;
 
     [Dependent(typeof(InitialMigration))]
@@ -40,6 +42,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
 
         public string Name { get; } = ModelMigrationsExecutor.GetAutomaticMigrationName(-1);
 
+        [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
         public async Task ExecuteManualMigration(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
@@ -61,9 +64,11 @@ grant all privileges on database ""{0}"" to ""{1}""";
                 Password = sqlDatabaseSettings.Password
             };
 
-            using (var connection = new NpgsqlConnection(connectionStringBuilder.ConnectionString))
+            var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
+
+            using (var connection = new DatabaseConnection(npgSqlConnection))
             {
-                await connection.OpenAsync(token).ConfigureAwait(false);
+                await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
                 _ = await connection
                    .InvokeScalar(commandText, ormSettings, token)

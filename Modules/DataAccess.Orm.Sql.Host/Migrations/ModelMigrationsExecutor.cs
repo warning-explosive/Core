@@ -139,7 +139,6 @@
             try
             {
                 _ = await transaction
-                    .DbTransaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }

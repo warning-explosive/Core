@@ -77,7 +77,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             try
             {
                 _ = await _transaction
-                   .DbTransaction
                    .InvokeScalar(commandText, settings, token)
                    .ConfigureAwait(false);
             }

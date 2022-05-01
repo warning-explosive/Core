@@ -32,5 +32,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         bool TryGetValue<TEntry, TKey>(TKey key, [NotNullWhen(true)] out TEntry? entry)
             where TEntry : notnull
             where TKey : notnull;
+
+        /// <summary>
+        /// Invalidates transactional store for specified entry
+        /// </summary>
+        /// <param name="key">Key</param>
+        /// <typeparam name="TEntry">TEntry type-argument</typeparam>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        void Invalidate<TEntry, TKey>(TKey key)
+            where TEntry : notnull
+            where TKey : notnull;
     }
 }

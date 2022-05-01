@@ -175,6 +175,13 @@
             return _transactionalStore.TryGetValue(key, out entity);
         }
 
+        public void Invalidate<TEntry, TKey>(TKey key)
+            where TEntry : notnull
+            where TKey : notnull
+        {
+            _transactionalStore.Invalidate<TEntry, TKey>(key);
+        }
+
         private IDbTransaction Open()
         {
             if (_transaction != null)

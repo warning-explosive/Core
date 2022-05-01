@@ -106,7 +106,6 @@
             try
             {
                 _ = await _transaction
-                    .DbTransaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }
@@ -160,7 +159,6 @@
             try
             {
                 _ = await _transaction
-                    .DbTransaction
                     .Invoke(commandText, settings, token)
                     .ConfigureAwait(false);
             }
@@ -195,7 +193,6 @@
             try
             {
                 _ = await _transaction
-                    .DbTransaction
                     .Invoke(commandText, settings, token)
                     .ConfigureAwait(false);
             }

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
     using Dapper;
     using Orm.Settings;
 
@@ -21,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
         public static Task<int> InvokeScalar(
-            this IDbTransaction transaction,
+            this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
@@ -29,15 +30,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
             var command = new CommandDefinition(
                 commandText,
                 null,
-                transaction,
+                transaction.DbTransaction,
                 settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);
 
             return transaction
-                .Connection
-                .ExecuteAsync(command);
+               .DbTransaction
+               .Connection
+               .ExecuteAsync(command);
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="token">Cancellation token</param>
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
-            this IDbTransaction transaction,
+            this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
@@ -57,15 +59,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
             var command = new CommandDefinition(
                 commandText,
                 null,
-                transaction,
+                transaction.DbTransaction,
                 settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);
 
             return transaction
-                .Connection
-                .QueryAsync(command);
+               .DbTransaction
+               .Connection
+               .QueryAsync(command);
         }
 
         /// <summary>
@@ -77,7 +80,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
         public static Task<int> InvokeScalar(
-            this IDbConnection connection,
+            this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
@@ -91,7 +94,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return connection.ExecuteAsync(command);
+            return connection
+               .UnderlyingDbConnection
+               .ExecuteAsync(command);
         }
 
         /// <summary>
@@ -103,7 +108,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="token">Cancellation token</param>
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
-            this IDbConnection connection,
+            this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
@@ -117,7 +122,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return connection.QueryAsync(command);
+            return connection
+               .UnderlyingDbConnection
+               .QueryAsync(command);
         }
     }
 }

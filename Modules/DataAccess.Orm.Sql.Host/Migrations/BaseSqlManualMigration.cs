@@ -64,7 +64,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             try
             {
                 _ = await transaction
-                .DbTransaction
                 .Invoke(commandText, settings, token)
                 .ConfigureAwait(false);
             }

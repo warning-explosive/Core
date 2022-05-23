@@ -84,27 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var lambdaParameterIndex = _lambdaParameterIndex;
             _lambdaParameterIndex++;
 
-            return () =>
-            {
-                var ranks = GetRanks(_maxLambdaParameterIndex - lambdaParameterIndex - 1, 'z' - 'a' + 1)
-                    .Select(rank => (char)('a' + rank))
-                    .ToArray();
-
-                return new string(ranks);
-            };
-
-            static IEnumerable<int> GetRanks(int index, int length)
-            {
-                var current = index;
-
-                while (current >= length)
-                {
-                    yield return (current / length) - 1;
-                    current = current % length;
-                }
-
-                yield return current;
-            }
+            return () => (_maxLambdaParameterIndex - lambdaParameterIndex - 1).AlphabetIndex();
         }
 
         /// <summary>

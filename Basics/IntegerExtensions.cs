@@ -1,12 +1,41 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Integer extensions
     /// </summary>
     public static class IntegerExtensions
     {
+        /// <summary>
+        /// Converts index into english alphabet index
+        /// </summary>
+        /// <param name="index">Index</param>
+        /// <returns>String rank</returns>
+        public static string AlphabetIndex(this int index)
+        {
+            var ranks = GetRanks(index, 'z' - 'a' + 1)
+               .Select(rank => (char)('a' + rank))
+               .ToArray();
+
+            return new string(ranks);
+
+            static IEnumerable<int> GetRanks(int index, int length)
+            {
+                var current = index;
+
+                while (current >= length)
+                {
+                    yield return (current / length) - 1;
+                    current = current % length;
+                }
+
+                yield return current;
+            }
+        }
+
         /// <summary>
         /// Log with custom basis
         /// </summary>

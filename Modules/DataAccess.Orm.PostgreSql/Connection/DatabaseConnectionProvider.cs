@@ -22,9 +22,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider,
                                                 IResolvable<IDatabaseConnectionProvider>
     {
-        private const string SqlState = nameof(SqlState);
-        private const string DatabaseDoesNotExistCode = "3D000";
-
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
@@ -105,11 +102,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private static Task<bool> DatabaseDoesNotExist(Exception ex, CancellationToken token)
+        private static Task<bool> DatabaseDoesNotExist(Exception exception, CancellationToken token)
         {
-            return ex.Data.Contains(SqlState)
-                   && ex.Data[SqlState] is string sqlStateCode
-                   && sqlStateCode.Equals(DatabaseDoesNotExistCode, StringComparison.OrdinalIgnoreCase)
+            return exception is PostgresException postgresException
+                && postgresException.SqlState.Equals(PostgresErrorCodes.InvalidCatalogName, StringComparison.OrdinalIgnoreCase)
                 ? Task.FromResult(false)
                 : Task.FromResult(true);
         }

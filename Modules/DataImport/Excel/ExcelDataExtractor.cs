@@ -112,7 +112,7 @@
             IReadOnlyDictionary<int, string> sharedStrings,
             DataTable dataTable)
         {
-            var rowIndex = row.RowIndex.EnsureNotNull<uint>("Row should have index");
+            var rowIndex = (row.RowIndex?.Value).EnsureNotNull<uint>("Row should have index");
 
             return row
                 .Elements<Cell>()

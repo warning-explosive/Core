@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
         {
             var headerRow = rows.Take(1).Single();
 
-            var headerRowIndex = headerRow.RowIndex.EnsureNotNull<uint>("Row should have index");
+            var headerRowIndex = (headerRow.RowIndex?.Value).EnsureNotNull<uint>("Row should have index");
 
             return headerRow
                 .Elements<Cell>()

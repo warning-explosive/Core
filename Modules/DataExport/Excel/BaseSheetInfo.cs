@@ -12,6 +12,6 @@ namespace SpaceEngineers.Core.DataExport.Excel
         }
 
         /// <inheritdoc />
-        public string SheetName { get; }
+        public string SheetName { get; set; }
     }
 }

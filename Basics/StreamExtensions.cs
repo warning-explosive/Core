@@ -12,6 +12,23 @@ namespace SpaceEngineers.Core.Basics
     public static class StreamExtensions
     {
         /// <summary>
+        /// Converts stream to byte array
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <returns>Byte array</returns>
+        public static async Task<byte[]> ToByteArray(this Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                await stream
+                   .CopyToAsync(memoryStream)
+                   .ConfigureAwait(false);
+
+                return memoryStream.ToArray();
+            }
+        }
+
+        /// <summary>
         /// Read all containing bytes asynchronously and convert to encoded string
         /// </summary>
         /// <param name="stream">Stream</param>

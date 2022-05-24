@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
-    using System.IO;
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
@@ -37,8 +36,7 @@
         /// <inheritdoc />
         public IAsyncEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification, CancellationToken token)
         {
-            using (var stream = File.OpenRead(specification.FileInfo.FullName))
-            using (var document = SpreadsheetDocument.Open(stream, false))
+            using (var document = SpreadsheetDocument.Open(specification.File, false))
             {
                 var worksheet = document
                     .WorkbookPart

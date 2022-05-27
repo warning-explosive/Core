@@ -213,10 +213,11 @@ namespace SpaceEngineers.Core.DataExport.Excel
             ISheetInfo info,
             SheetData sheetData)
         {
-            typeof(ExcelExporter)
+            _ = typeof(ExcelExporter)
                .CallMethod(nameof(FillFlatTableGeneric))
                .WithTypeArguments(info.GetType().GetGenericArguments())
-               .WithArguments(sheetInfo, info, sheetData);
+               .WithArguments(sheetInfo, info, sheetData)
+               .Invoke();
         }
 
         private static void FillFlatTableGeneric<TRow>(

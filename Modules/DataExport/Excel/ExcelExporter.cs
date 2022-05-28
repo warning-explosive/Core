@@ -311,12 +311,14 @@ namespace SpaceEngineers.Core.DataExport.Excel
             Func<PropertyInfo, CellValues> dataTypeAccessor,
             int startFromColumn)
         {
-            foreach (var property in properties)
+            for (var i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
+
                 var value = valueAccessor(property);
                 var dataType = dataTypeAccessor(property);
 
-                var cell = GetCellValue(sheetInfo, value, dataType, row.RowIndex!, 1 + startFromColumn);
+                var cell = GetCellValue(sheetInfo, value, dataType, row.RowIndex!, i + startFromColumn);
 
                 row.AppendChild(cell);
             }

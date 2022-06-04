@@ -43,27 +43,27 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public ITypeProvider Types { get; }
 
-        public IEnumerable<InstanceRegistrationInfo> Instances()
+        public IReadOnlyCollection<InstanceRegistrationInfo> Instances()
         {
             return _instances;
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Resolvable()
+        public IReadOnlyCollection<ServiceRegistrationInfo> Resolvable()
         {
             return _resolvable;
         }
 
-        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        public IReadOnlyCollection<DelegateRegistrationInfo> Delegates()
         {
             return _delegates;
         }
 
-        public IEnumerable<IRegistrationInfo> Collections()
+        public IReadOnlyCollection<IRegistrationInfo> Collections()
         {
             return _collections;
         }
 
-        public IEnumerable<DecoratorRegistrationInfo> Decorators()
+        public IReadOnlyCollection<DecoratorRegistrationInfo> Decorators()
         {
             return _decorators;
         }

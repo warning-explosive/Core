@@ -14,8 +14,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using CompositionRoot.Api.Extensions;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Endpoint;
+    using Contract.Extensions;
     using Extensions;
+    using Messaging.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
@@ -38,6 +39,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         /// <inheritdoc />
         public void Verify()
         {
+            VerifyMessageNames(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
@@ -47,6 +49,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
 
             VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()));
             VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()));
+        }
+
+        private static void VerifyMessageNames(IEnumerable<Type> messageTypes)
+        {
+            messageTypes
+                .Where(HasWrongName)
+                .Each(type => throw new InvalidOperationException($"Message name {type.FullName} should be less or equal than 255 bytes"));
+
+            static bool HasWrongName(Type type)
+            {
+                return type.FullName!.Length > 255;
+            }
         }
 
         private static void VerifyMessageInterfaces(IEnumerable<Type> messageTypes)
@@ -66,7 +80,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
             }
         }
 
-        private static void VerifyOwnedAttribute(IEnumerable<Type> messageTypes)
+        private static void VerifyOwnedAttribute(IReadOnlyCollection<Type> messageTypes)
         {
             foreach (var messageType in messageTypes)
             {
@@ -75,16 +89,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
                     continue;
                 }
 
-                if (typeof(IIntegrationReply).IsAssignableFrom(messageType))
+                if (!typeof(IIntegrationReply).IsAssignableFrom(messageType))
+                {
+                    _ = messageType.GetRequiredAttribute<OwnedByAttribute>();
+                }
+                else
                 {
                     if (messageType.HasAttribute<OwnedByAttribute>())
                     {
                         throw new InvalidOperationException($"Reply should not have {nameof(OwnedByAttribute)}");
                     }
-                }
-                else
-                {
-                    _ = messageType.GetRequiredAttribute<OwnedByAttribute>();
+
+                    var integrationQuery = typeof(IIntegrationQuery<>).MakeGenericType(messageType);
+
+                    var queryTypes = messageTypes
+                       .Where(type => integrationQuery.IsAssignableFrom(type))
+                       .ToList();
+
+                    if (queryTypes.Count == 0)
+                    {
+                        throw new InvalidOperationException($"Reply should have at least one corresponding {nameof(IIntegrationQuery<IIntegrationReply>)}");
+                    }
                 }
             }
         }

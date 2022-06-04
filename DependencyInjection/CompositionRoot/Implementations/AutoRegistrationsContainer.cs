@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot.Implementations
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Api.Abstractions;
@@ -31,12 +32,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _constructorResolutionBehavior = constructorResolutionBehavior;
         }
 
-        public IEnumerable<InstanceRegistrationInfo> Instances()
+        public IReadOnlyCollection<InstanceRegistrationInfo> Instances()
         {
-            return Enumerable.Empty<InstanceRegistrationInfo>();
+            return Array.Empty<InstanceRegistrationInfo>();
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Resolvable()
+        public IReadOnlyCollection<ServiceRegistrationInfo> Resolvable()
         {
             _resolvable ??= InitResolvable();
             return _resolvable;
@@ -50,12 +51,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             }
         }
 
-        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        public IReadOnlyCollection<DelegateRegistrationInfo> Delegates()
         {
-            return Enumerable.Empty<DelegateRegistrationInfo>();
+            return Array.Empty<DelegateRegistrationInfo>();
         }
 
-        public IEnumerable<IRegistrationInfo> Collections()
+        public IReadOnlyCollection<IRegistrationInfo> Collections()
         {
             _collections ??= InitCollections();
             return _collections;
@@ -70,7 +71,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             }
         }
 
-        public IEnumerable<DecoratorRegistrationInfo> Decorators()
+        public IReadOnlyCollection<DecoratorRegistrationInfo> Decorators()
         {
             _decorators ??= InitDecorators();
             return _decorators;

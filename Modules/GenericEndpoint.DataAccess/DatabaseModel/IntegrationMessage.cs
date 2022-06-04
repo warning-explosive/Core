@@ -32,7 +32,7 @@
 
             var headers = Headers
                 .Select(header => header.BuildIntegrationMessageHeader(serializer))
-                .ToList();
+                .ToDictionary(header => header.GetType());
 
             return new Messaging.IntegrationMessage(payload, Payload.SystemType, headers);
         }
@@ -42,9 +42,10 @@
             var payload = new JsonObject(serializer.SerializeObject(message.Payload), message.Payload.GetType());
 
             var headers = message
-                .Headers
-                .Select(header => IntegrationMessageHeader.Build(header, serializer))
-                .ToList();
+               .Headers
+               .Values
+               .Select(header => IntegrationMessageHeader.Build(header, serializer))
+               .ToList();
 
             return new IntegrationMessage(message.ReadRequiredHeader<Id>().Value, payload, headers);
         }

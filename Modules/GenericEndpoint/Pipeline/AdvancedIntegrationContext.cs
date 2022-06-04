@@ -22,21 +22,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
                                                 IResolvable<IIntegrationContext>,
                                                 IResolvable<IAdvancedIntegrationContext>
     {
-        private readonly IIntegrationTransport _transport;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationMessageFactory _factory;
+        private readonly IIntegrationTransport _transport;
 
         private IntegrationMessage? _message;
 
         public AdvancedIntegrationContext(
-            IIntegrationTransport transport,
             EndpointIdentity endpointIdentity,
             IIntegrationMessageFactory factory,
+            IIntegrationTransport transport,
             IIntegrationUnitOfWork unitOfWork)
         {
-            _transport = transport;
             _endpointIdentity = endpointIdentity;
             _factory = factory;
+            _transport = transport;
 
             UnitOfWork = unitOfWork;
         }
@@ -98,19 +98,34 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             Message.WriteHeader(new DidHandlerReplyToTheQuery(true));
         }
 
-        public Task Retry(TimeSpan dueTime, CancellationToken token)
+        public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)
+        {
+            return _transport.Enqueue(message, token);
+        }
+
+        public Task Accept(CancellationToken token)
+        {
+            return _transport.Accept(Message, token);
+        }
+
+        public Task Reject(Exception exception, CancellationToken token)
+        {
+            return _transport.EnqueueError(_endpointIdentity, Message, exception, token);
+        }
+
+        public async Task Retry(TimeSpan dueTime, CancellationToken token)
         {
             var copy = Message.Clone();
 
             copy.OverwriteHeader(new RetryCounter((copy.ReadHeader<RetryCounter>()?.Value ?? 0) + 1));
             copy.OverwriteHeader(new DeferredUntil(DateTime.UtcNow + dueTime));
 
-            return _transport.Enqueue(copy, token);
-        }
+            var wasSent = await SendMessage(copy, token).ConfigureAwait(false);
 
-        public Task Refuse(Exception exception, CancellationToken token)
-        {
-            return _transport.EnqueueError(Message, exception, token);
+            if (!wasSent)
+            {
+                throw new InvalidOperationException("Retry wasn't successful");
+            }
         }
 
         private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)

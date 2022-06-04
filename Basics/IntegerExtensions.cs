@@ -17,6 +17,7 @@ namespace SpaceEngineers.Core.Basics
         public static string AlphabetIndex(this int index)
         {
             var ranks = GetRanks(index, 'z' - 'a' + 1)
+               .Reverse()
                .Select(rank => (char)('a' + rank))
                .ToArray();
 
@@ -28,8 +29,8 @@ namespace SpaceEngineers.Core.Basics
 
                 while (current >= length)
                 {
-                    yield return (current / length) - 1;
-                    current = current % length;
+                    yield return current % length;
+                    current = (current / length) - 1;
                 }
 
                 yield return current;

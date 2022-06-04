@@ -27,8 +27,8 @@
       <DebugType>full</DebugType>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.3" />
-      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="6.0.3" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="6.0.5" />
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -37,11 +37,11 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.19.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
-      <ProjectReference Include="..\AuthorizationEndpoint.Host\AuthorizationEndpoint.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\AuthorizationEndpoint.Host\AuthorizationEndpoint.Host.csproj" />
     </ItemGroup>
 </Project>

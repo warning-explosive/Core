@@ -17,24 +17,31 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
 
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     internal class InMemoryIntegrationTransport : IIntegrationTransport,
                                                   IResolvable<IIntegrationTransport>
     {
+        private readonly EndpointIdentity _endpointIdentity;
+
         private readonly AsyncManualResetEvent _ready;
         private readonly MessageQueue<IntegrationMessage> _inputQueue;
         private readonly DeferredQueue<IntegrationMessage> _delayedDeliveryQueue;
         private readonly IEndpointInstanceSelectionBehavior _instanceSelectionBehavior;
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>> _topology;
-        private readonly ICollection<Func<IntegrationMessage, CancellationToken, Task>> _errorMessageHandlers;
+        private readonly ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>> _errorMessageHandlers;
 
         private EnIntegrationTransportStatus _status;
 
-        public InMemoryIntegrationTransport(IEndpointInstanceSelectionBehavior instanceSelectionBehavior)
+        public InMemoryIntegrationTransport(
+            EndpointIdentity endpointIdentity,
+            IEndpointInstanceSelectionBehavior instanceSelectionBehavior)
         {
+            _endpointIdentity = endpointIdentity;
+
             _status = EnIntegrationTransportStatus.Stopped;
             _ready = new AsyncManualResetEvent(false);
 
@@ -46,7 +53,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             _instanceSelectionBehavior = instanceSelectionBehavior;
 
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>>();
-            _errorMessageHandlers = new List<Func<IntegrationMessage, CancellationToken, Task>>();
+            _errorMessageHandlers = new ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>>();
         }
 
         public event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
@@ -64,22 +71,40 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             }
         }
 
-        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> messageHandler)
+        public void Bind(
+            EndpointIdentity endpointIdentity,
+            Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+            IIntegrationTypeProvider integrationTypeProvider)
         {
-            var logicalGroups = _topology.GetOrAdd(message, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>(StringComparer.OrdinalIgnoreCase));
-            var physicalGroup = logicalGroups.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>());
-            physicalGroup.Add(endpointIdentity, messageHandler);
-        }
+            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointCommands(), _topology);
+            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EventsSubscriptions(), _topology);
+            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointQueries(), _topology);
+            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.RepliesSubscriptions(), _topology);
 
-        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> errorMessageHandler)
-        {
-            lock (_errorMessageHandlers)
+            static void BindTopology(
+                EndpointIdentity endpointIdentity,
+                Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+                IReadOnlyCollection<Type> messages,
+                ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>> topology)
             {
-                _errorMessageHandlers.Add(errorMessageHandler);
+                foreach (var message in messages)
+                {
+                    var logicalGroups = topology.GetOrAdd(message, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>(StringComparer.OrdinalIgnoreCase));
+                    var physicalGroup = logicalGroups.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>());
+                    physicalGroup.Add(endpointIdentity, messageHandler);
+                }
             }
         }
 
-        public async Task Enqueue(IntegrationMessage message, CancellationToken token)
+        public void BindErrorHandler(
+            EndpointIdentity endpointIdentity,
+            Func<IntegrationMessage, Exception, CancellationToken, Task> errorMessageHandler)
+        {
+            var endpointErrorHandlers = _errorMessageHandlers.GetOrAdd(endpointIdentity, new ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>());
+            endpointErrorHandlers.Add(errorMessageHandler);
+        }
+
+        public async Task<bool> Enqueue(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
 
@@ -91,20 +116,27 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             {
                 await EnqueueInput(message, token).ConfigureAwait(false);
             }
+
+            return true;
         }
 
-        public Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token)
+        public Task EnqueueError(
+            EndpointIdentity endpointIdentity,
+            IntegrationMessage message,
+            Exception exception,
+            CancellationToken token)
         {
-            IReadOnlyCollection<Func<IntegrationMessage, CancellationToken, Task>> errorHandlers;
-
-            lock (_errorMessageHandlers)
+            if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
             {
-                errorHandlers = _errorMessageHandlers.ToList();
+                return Task.WhenAll(handlers.Select(handler => handler(message.Clone(), exception, token)));
             }
 
-            return errorHandlers
-                .Select(handler => handler(message.Clone(), token))
-                .WhenAll();
+            throw new InvalidOperationException($"Unable to process error message. Please register error handler for {endpointIdentity} endpoint.");
+        }
+
+        public Task Accept(IntegrationMessage message, CancellationToken token)
+        {
+            return Task.CompletedTask;
         }
 
         public Task StartBackgroundMessageProcessing(CancellationToken token)
@@ -116,6 +148,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                 _inputQueue.Run(MessageProcessingCallback, token));
 
             _ready.Set();
+
             Status = EnIntegrationTransportStatus.Running;
 
             return messageProcessingTask;
@@ -129,7 +162,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
         private Func<Exception, CancellationToken, Task> EnqueueError(IntegrationMessage message)
         {
-            return (exception, token) => EnqueueError(message, exception, token);
+            return (exception, token) => EnqueueError(_endpointIdentity, message, exception, token);
         }
 
         private Task MessageProcessingCallback(IntegrationMessage message, CancellationToken token)

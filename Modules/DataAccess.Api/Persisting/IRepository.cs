@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Persisting
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -41,7 +42,7 @@
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Insert(
-            TEntity[] entities,
+            IReadOnlyCollection<TEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token);
 
@@ -55,7 +56,7 @@
         /// <typeparam name="TValue">TValue type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         Task Update<TValue>(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             Expression<Func<TEntity, TValue>> accessor,
             TValue value,
             CancellationToken token);
@@ -70,7 +71,7 @@
         /// <typeparam name="TValue">TValue type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         Task Update<TValue>(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
             CancellationToken token);
@@ -82,7 +83,7 @@
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Delete(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             CancellationToken token);
     }
 }

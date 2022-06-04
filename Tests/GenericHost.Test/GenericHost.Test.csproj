@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.GenericHost.Test</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericHost.Test</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <Title>SpaceEngineers.Core.GenericHost.Test</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.GenericHost.Test</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+        <PackageReference Include="xunit" Version="2.4.1" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Endpoints\AuthorizationEndpoint.Contract\AuthorizationEndpoint.Contract.csproj" />
+        <ProjectReference Include="..\..\Endpoints\AuthorizationEndpoint.Host\AuthorizationEndpoint.Host.csproj" />
+        <ProjectReference Include="..\..\Endpoints\AuthorizationEndpoint\AuthorizationEndpoint.csproj" />
+        <ProjectReference Include="..\..\Endpoints\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj" />
+        <ProjectReference Include="..\..\Endpoints\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
+        <ProjectReference Include="..\..\Endpoints\TracingEndpoint\TracingEndpoint.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Host\DataAccess.Orm.Host.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql.Host\DataAccess.Orm.Sql.Host.csproj" />
+        <ProjectReference Include="..\..\Modules\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
+        <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
+        <ProjectReference Include="..\..\Modules\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
+        <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
+    </ItemGroup>
+</Project>

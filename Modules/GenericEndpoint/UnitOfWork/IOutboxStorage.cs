@@ -23,5 +23,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
         /// </summary>
         /// <returns>Ongoing operation</returns>
         IReadOnlyCollection<IntegrationMessage> All();
+
+        /// <summary>
+        /// Clears outbox storage
+        /// </summary>
+        void Clear();
     }
 }

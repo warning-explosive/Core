@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Overrides
         public void RegisterOverrides(IRegisterComponentsOverrideContainer container)
         {
             container.Override<IIntegrationUnitOfWork, GenericEndpoint.DataAccess.UnitOfWork.IntegrationUnitOfWork>(EnLifestyle.Scoped);
+            container.Override<IOutboxDelivery, GenericEndpoint.DataAccess.UnitOfWork.OutboxDelivery>(EnLifestyle.Scoped);
         }
     }
 }

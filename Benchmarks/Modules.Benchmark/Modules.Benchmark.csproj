@@ -31,20 +31,27 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="xunit" Version="2.4.1" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
+      <ProjectReference Include="..\..\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
+      <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+      <ProjectReference Include="..\..\Modules\DataExport\DataExport.csproj" />
+      <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
+      <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
+      <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
       <ProjectReference Include="..\..\Tests\Basics.Test\Basics.Test.csproj" />
-      <ProjectReference Include="..\..\Tests\Modules.Test\Modules.Test.csproj" />
+      <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
       <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj" />
     </ItemGroup>
 </Project>

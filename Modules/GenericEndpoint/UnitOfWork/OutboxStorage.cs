@@ -37,5 +37,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
                 return _outgoingMessages.ToList();
             }
         }
+
+        public void Clear()
+        {
+            lock (_outgoingMessages)
+            {
+                _outgoingMessages.Clear();
+            }
+        }
     }
 }

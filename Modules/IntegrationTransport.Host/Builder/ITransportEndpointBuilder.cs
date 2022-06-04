@@ -50,6 +50,13 @@
         public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder);
 
         /// <summary>
+        /// With RabbitMq integration transport
+        /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <returns>ITransportEndpointBuilder</returns>
+        public ITransportEndpointBuilder WithRabbitMqIntegrationTransport(IHostBuilder hostBuilder);
+
+        /// <summary>
         /// Modify container options
         /// </summary>
         /// <param name="modifier">Modifier</param>

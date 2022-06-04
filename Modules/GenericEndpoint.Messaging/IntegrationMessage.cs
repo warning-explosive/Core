@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       IComparable,
                                       ICloneable<IntegrationMessage>
     {
-        private readonly ICollection<IIntegrationMessageHeader> _headers;
+        private readonly Dictionary<Type, IIntegrationMessageHeader> _headers;
 
         /// <summary> .cctor </summary>
         /// <param name="payload">User-defined payload message</param>
@@ -29,14 +29,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         public IntegrationMessage(
             IIntegrationMessage payload,
             Type reflectedType)
-            : this(payload, reflectedType, new List<IIntegrationMessageHeader> { new Id(Guid.NewGuid()) })
+            : this(payload, reflectedType, new Dictionary<Type, IIntegrationMessageHeader> { [typeof(Id)] = new Id(Guid.NewGuid()) })
         {
         }
 
         internal IntegrationMessage(
             IIntegrationMessage payload,
             Type reflectedType,
-            ICollection<IIntegrationMessageHeader> headers)
+            Dictionary<Type, IIntegrationMessageHeader> headers)
         {
             Payload = payload;
             ReflectedType = reflectedType;
@@ -56,10 +56,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <summary>
         /// Integration message headers
         /// </summary>
-        public IReadOnlyCollection<IIntegrationMessageHeader> Headers
+        public IReadOnlyDictionary<Type, IIntegrationMessageHeader> Headers
         {
-            get => _headers.ToList();
-            init => _headers = value.ToList();
+            get => _headers;
+            init => _headers = (Dictionary<Type, IIntegrationMessageHeader>)value;
         }
 
         #region IEquitable
@@ -181,7 +181,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public override string ToString()
         {
-            var headers = new List<IIntegrationMessageHeader>(Headers)
+            var headers = new List<IIntegrationMessageHeader>(Headers.Values)
             {
                 new ObjectHeader(nameof(ReflectedType), ReflectedType.Name),
                 new ObjectHeader(nameof(Payload), Payload)
@@ -210,9 +210,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         public THeader? ReadHeader<THeader>()
             where THeader : IIntegrationMessageHeader
         {
-            return Headers
-                .OfType<THeader>()
-                .InformativeSingleOrDefault(FormatHeaders);
+            return Headers.TryGetValue(typeof(THeader), out var integrationMessageHeader)
+                && integrationMessageHeader is THeader header
+                ? header
+                : default;
         }
 
         /// <summary>
@@ -241,7 +242,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                 throw new InvalidOperationException($"Header {typeof(THeader).Name} already exists in the message");
             }
 
-            _headers.Add(header);
+            _headers.Add(typeof(THeader), header);
         }
 
         /// <summary>
@@ -252,14 +253,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         public void OverwriteHeader<THeader>(THeader header)
             where THeader : IIntegrationMessageHeader
         {
-            var existedHeader = ReadHeader<THeader>();
+            _headers[typeof(THeader)] = header;
+        }
 
-            if (existedHeader != null)
-            {
-                _headers.Remove(existedHeader);
-            }
-
-            _headers.Add(header);
+        /// <summary>
+        /// Deletes existed header
+        /// </summary>
+        /// <param name="header">Header value</param>
+        /// <typeparam name="THeader">THeader type-argument</typeparam>
+        /// <returns>Returns true if the element is successfully found and removed</returns>
+        internal bool TryDeleteHeader<THeader>(out THeader header)
+            where THeader : IIntegrationMessageHeader
+        {
+            var result = _headers.Remove(typeof(THeader), out var untypedHeader);
+            header = (THeader)untypedHeader;
+            return result;
         }
 
         private static string FormatHeaders<THeader>(IEnumerable<THeader> headers)

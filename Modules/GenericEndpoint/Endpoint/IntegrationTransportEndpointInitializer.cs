@@ -1,17 +1,17 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
-    using System.Linq;
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CompositionRoot.Api.Abstractions;
     using Contract;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
+    using Messaging.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationTransportEndpointInitializer : IEndpointInitializer,
@@ -36,18 +36,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         public Task Initialize(CancellationToken token)
         {
-            _integrationTypeProvider.EndpointCommands()
-                .Concat(_integrationTypeProvider.EndpointQueries())
-                .Concat(_integrationTypeProvider.RepliesSubscriptions())
-                .Concat(_integrationTypeProvider.EventsSubscriptions())
-                .Each(message => _transport.Bind(message, _endpointIdentity, ExecuteMessageHandlers));
+            _transport.Bind(_endpointIdentity, ExecuteMessageHandlers(_dependencyContainer), _integrationTypeProvider);
 
             return Task.CompletedTask;
         }
 
-        private Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token)
+        private static Func<IntegrationMessage, CancellationToken, Task> ExecuteMessageHandlers(
+            IDependencyContainer dependencyContainer)
         {
-            return _dependencyContainer
+            return (message, token) => dependencyContainer
                 .Resolve<IExecutableEndpoint>()
                 .ExecuteMessageHandlers(message, token);
         }

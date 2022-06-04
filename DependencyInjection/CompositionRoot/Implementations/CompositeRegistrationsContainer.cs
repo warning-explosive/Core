@@ -29,31 +29,31 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
             _registrations = registrations;
         }
 
-        public IEnumerable<InstanceRegistrationInfo> Instances()
+        public IReadOnlyCollection<InstanceRegistrationInfo> Instances()
         {
             _instances ??= Init().Instances;
             return _instances;
         }
 
-        public IEnumerable<ServiceRegistrationInfo> Resolvable()
+        public IReadOnlyCollection<ServiceRegistrationInfo> Resolvable()
         {
             _resolvable ??= Init().Resolvable;
             return _resolvable;
         }
 
-        public IEnumerable<DelegateRegistrationInfo> Delegates()
+        public IReadOnlyCollection<DelegateRegistrationInfo> Delegates()
         {
             _delegates ??= Init().Delegates;
             return _delegates;
         }
 
-        public IEnumerable<IRegistrationInfo> Collections()
+        public IReadOnlyCollection<IRegistrationInfo> Collections()
         {
             _collections ??= Init().Collections;
             return _collections;
         }
 
-        public IEnumerable<DecoratorRegistrationInfo> Decorators()
+        public IReadOnlyCollection<DecoratorRegistrationInfo> Decorators()
         {
             _decorators ??= Init().Decorators;
             return _decorators;

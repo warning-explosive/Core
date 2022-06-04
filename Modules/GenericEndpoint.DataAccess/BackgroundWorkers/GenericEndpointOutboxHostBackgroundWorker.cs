@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.BackgroundWorkers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -8,14 +9,14 @@
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
+    using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
     using DatabaseModel;
-    using Deduplication;
-    using GenericDomain.Api.Abstractions;
+    using GenericEndpoint.UnitOfWork;
     using GenericHost.Api.Abstractions;
-    using IntegrationTransport.Api.Abstractions;
     using Settings;
     using EndpointIdentity = Contract.EndpointIdentity;
+    using IntegrationMessage = Messaging.IntegrationMessage;
 
     internal class GenericEndpointOutboxHostBackgroundWorker : IHostBackgroundWorker
     {
@@ -43,43 +44,41 @@
 
         private async Task DeliverMessages(CancellationToken token)
         {
-            await _dependencyContainer
-                .InvokeWithinTransaction(true, _dependencyContainer.Resolve<EndpointIdentity>(), DeliverMessages, token)
+            var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
+            var jsonSerializer = _dependencyContainer.Resolve<IJsonSerializer>();
+
+            var messages = await _dependencyContainer
+                .InvokeWithinTransaction(
+                    true,
+                    (endpointIdentity, jsonSerializer),
+                    Read,
+                    token)
                 .ConfigureAwait(false);
+
+            var outboxDelivery = _dependencyContainer.Resolve<IOutboxDelivery>();
+
+            await outboxDelivery
+               .DeliverMessages(messages, token)
+               .ConfigureAwait(false);
         }
 
-        private async Task DeliverMessages(
+        private static async Task<IReadOnlyCollection<IntegrationMessage>> Read(
             IDatabaseTransaction transaction,
-            EndpointIdentity endpointIdentity,
+            (EndpointIdentity, IJsonSerializer) state,
             CancellationToken token)
         {
-            var unsent = await transaction
-               .Read<OutboxMessage, Guid>()
-               .All()
-               .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
-                             && !outbox.Sent)
-               .Select(outbox => outbox.OutboxId)
-               .Distinct()
-               .ToListAsync(token)
-               .ConfigureAwait(false);
+            var (endpointIdentity, serializer) = state;
 
-            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
-
-            foreach (var outboxId in unsent)
-            {
-                var outbox = await _dependencyContainer
-                   .Resolve<IAggregateFactory<Outbox, OutboxAggregateSpecification>>()
-                   .Build(new OutboxAggregateSpecification(outboxId), token)
-                   .ConfigureAwait(false);
-
-                await outbox
-                   .DeliverMessages(transport, token)
-                   .ConfigureAwait(false);
-
-                await transaction
-                   .Track(outbox, token)
-                   .ConfigureAwait(false);
-            }
+            return (await transaction
+                   .Read<OutboxMessage, Guid>()
+                   .All()
+                   .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
+                                 && !outbox.Sent)
+                   .Select(outbox => outbox.Message)
+                   .ToListAsync(token)
+                   .ConfigureAwait(false))
+               .Select(message => message.BuildIntegrationMessage(serializer))
+               .ToList();
         }
     }
 }

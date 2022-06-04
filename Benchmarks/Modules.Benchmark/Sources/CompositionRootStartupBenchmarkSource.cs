@@ -8,8 +8,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
-    using Test.Registrations;
-    using Xunit.Sdk;
 
     /// <summary>
     /// Creates DependencyContainer and measures cold start time
@@ -19,11 +17,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     {
         [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
         private Assembly[]? _assemblies;
-        private DependencyContainerOptions? _options;
 
         private Assembly[] Assemblies => _assemblies.EnsureNotNull(nameof(_assemblies));
-
-        private DependencyContainerOptions Options => _options.EnsureNotNull(nameof(_options));
 
         /// <summary>
         /// GlobalSetup
@@ -36,20 +31,46 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
                 .Directory
                 .EnsureNotNull("Solution directory not found")
                 .StepInto(nameof(Benchmarks))
-                .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Modules.Benchmark)))
+                .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Benchmark)))
                 .StepInto("Settings")
                 .SetupFileSystemSettingsDirectory();
 
-            _assemblies = ModulesTestFixtureExtensions.ModulesAssemblies();
-            _options = ModulesTestFixtureExtensions.ModulesOptions(new TestOutputHelper());
+            _assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
+
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(CompositionRoot.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
+
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
+
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(DataImport))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(DataExport))),
+
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic))),
+
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(PathResolver))),
+
+                AssembliesExtensions.FindRequiredAssembly("System.Private.CoreLib")
+            };
         }
 
         /// <summary> CreateExactlyBounded </summary>
         /// <returns>IDependencyContainer</returns>
-        [Benchmark(Description = nameof(CreateExactlyBounded), Baseline = true)]
+        [Benchmark(Description = nameof(CreateExactlyBounded))]
         public IDependencyContainer CreateExactlyBounded()
         {
-            return DependencyContainer.CreateExactlyBounded(Options, Assemblies);
+            return DependencyContainer.CreateExactlyBounded(new DependencyContainerOptions(), Assemblies);
+        }
+
+        /// <summary> CreateBoundedAbove </summary>
+        /// <returns>IDependencyContainer</returns>
+        [Benchmark(Description = nameof(CreateBoundedAbove), Baseline = true)]
+        public IDependencyContainer CreateBoundedAbove()
+        {
+            return DependencyContainer.CreateBoundedAbove(new DependencyContainerOptions(), Assemblies);
         }
     }
 }

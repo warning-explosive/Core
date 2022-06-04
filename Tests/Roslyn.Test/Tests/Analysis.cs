@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             }
         }
 
-        [SuppressMessage("Analysis", "CA1506", Justification = "reviewed")]
+        [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
         private async Task TestSingleAnalyzer(SyntaxAnalyzerBase analyzer,
                                               CodeFixProvider? codeFix,
                                               IConventionalProvider conventionalProvider)

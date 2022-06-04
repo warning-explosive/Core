@@ -7,4 +7,3 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.CompositionRoot")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint")]
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]

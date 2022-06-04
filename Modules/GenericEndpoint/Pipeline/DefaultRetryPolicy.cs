@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     {
         public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
         {
-            return context.Refuse(exception, token);
+            return context.Reject(exception, token);
         }
     }
 }

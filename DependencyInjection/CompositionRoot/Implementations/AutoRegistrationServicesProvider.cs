@@ -14,24 +14,46 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
     {
         private readonly ITypeProvider _typeProvider;
 
+        private IReadOnlyCollection<Type>? _resolvable;
+        private IReadOnlyCollection<Type>? _collections;
+        private IReadOnlyCollection<Type>? _decorators;
+
         public AutoRegistrationServicesProvider(ITypeProvider typeProvider)
         {
             _typeProvider = typeProvider;
         }
 
-        public IEnumerable<Type> Resolvable()
+        public IReadOnlyCollection<Type> Resolvable()
         {
-            return ExtractGeneric(_typeProvider.OurTypes, typeof(IResolvable<>));
+            _resolvable ??= InitResolvable();
+            return _resolvable;
+
+            IReadOnlyCollection<Type> InitResolvable()
+            {
+                return ExtractGeneric(_typeProvider.OurTypes, typeof(IResolvable<>)).ToList();
+            }
         }
 
-        public IEnumerable<Type> Collections()
+        public IReadOnlyCollection<Type> Collections()
         {
-            return ExtractGeneric(_typeProvider.OurTypes, typeof(ICollectionResolvable<>));
+            _collections ??= InitCollections();
+            return _collections;
+
+            IReadOnlyCollection<Type> InitCollections()
+            {
+                return ExtractGeneric(_typeProvider.OurTypes, typeof(ICollectionResolvable<>)).ToList();
+            }
         }
 
-        public IEnumerable<Type> Decorators()
+        public IReadOnlyCollection<Type> Decorators()
         {
-            return ExtractDecorators(typeof(IDecorator<>));
+            _decorators ??= InitDecorators();
+            return _decorators;
+
+            IReadOnlyCollection<Type> InitDecorators()
+            {
+                return ExtractDecorators(typeof(IDecorator<>)).ToList();
+            }
         }
 
         private IEnumerable<Type> ExtractDecorators(Type decorator)

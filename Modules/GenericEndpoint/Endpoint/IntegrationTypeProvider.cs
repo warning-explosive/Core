@@ -11,8 +11,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using CompositionRoot.Api.Abstractions.Registration;
     using Contract;
     using Contract.Abstractions;
-    using Contract.Attributes;
+    using Contract.Extensions;
     using Extensions;
+    using Messaging.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class IntegrationTypeProvider : IIntegrationTypeProvider,
@@ -38,7 +39,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             _registrations = registrations;
         }
 
-        public IEnumerable<Type> IntegrationMessageTypes()
+        public IReadOnlyCollection<Type> IntegrationMessageTypes()
         {
             _integrationMessageTypes ??= InitIntegrationMessageTypes();
             return _integrationMessageTypes;
@@ -46,55 +47,53 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             IReadOnlyCollection<Type> InitIntegrationMessageTypes()
             {
                 return _typeProvider
-                    .OurTypes
-                    .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type))
-                    .ToList();
+                   .OurTypes
+                   .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
+                               && !type.IsMessageContractAbstraction())
+                   .ToList();
             }
         }
 
-        public IEnumerable<Type> EndpointCommands()
+        public IReadOnlyCollection<Type> EndpointCommands()
         {
             _endpointCommands ??= InitEndpointCommands();
             return _endpointCommands;
 
             IReadOnlyCollection<Type> InitEndpointCommands()
             {
-                return _typeProvider
-                    .OurTypes
+                return IntegrationMessageTypes()
                     .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
                                    && !type.IsMessageContractAbstraction()
-                                   && OwnedByCurrentEndpoint(type)
+                                   && type.OwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }
         }
 
-        public IEnumerable<Type> EndpointQueries()
+        public IReadOnlyCollection<Type> EndpointQueries()
         {
             _endpointQueries ??= InitEndpointQueries();
             return _endpointQueries;
 
             IReadOnlyCollection<Type> InitEndpointQueries()
             {
-                return _typeProvider
-                    .OurTypes
+                return IntegrationMessageTypes()
                     .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
                                    && !type.IsMessageContractAbstraction()
-                                   && OwnedByCurrentEndpoint(type)
+                                   && type.OwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }
         }
 
-        public IEnumerable<Type> RepliesSubscriptions()
+        public IReadOnlyCollection<Type> RepliesSubscriptions()
         {
             _repliesSubscriptions ??= InitRepliesSubscriptions();
             return _repliesSubscriptions;
 
             IReadOnlyCollection<Type> InitRepliesSubscriptions()
             {
-                return _typeProvider
-                    .OurTypes
+                return IntegrationMessageTypes()
                     .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type)
                                    && !type.IsMessageContractAbstraction()
                                    && type.HasMessageHandler(_registrations))
@@ -102,24 +101,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        public IEnumerable<Type> EventsSubscriptions()
+        public IReadOnlyCollection<Type> EventsSubscriptions()
         {
             _eventsSubscriptions ??= InitEventsSubscriptions();
             return _eventsSubscriptions;
 
             IReadOnlyCollection<Type> InitEventsSubscriptions()
             {
-                return _typeProvider
-                    .OurTypes
+                return IntegrationMessageTypes()
                     .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }
-        }
-
-        private bool OwnedByCurrentEndpoint(Type type)
-        {
-            return type.GetRequiredAttribute<OwnedByAttribute>().EndpointName.Equals(_endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

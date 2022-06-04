@@ -7,54 +7,86 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using Microsoft.Extensions.Logging;
 
     [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(UnitOfWorkPipeline))]
     internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
     {
         private readonly IRetryPolicy _retryPolicy;
-        private readonly ILogger _logger;
 
         public ErrorHandlingPipeline(
             IMessagePipeline decoratee,
-            IRetryPolicy retryPolicy,
-            ILogger logger)
+            IRetryPolicy retryPolicy)
         {
             Decoratee = decoratee;
 
             _retryPolicy = retryPolicy;
-            _logger = logger;
         }
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(
+        public async Task Process(
             Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            return ExecutionExtensions
-                .TryAsync((producer, context), Process)
-                .Catch<Exception>(OnError(context))
-                .Invoke(token);
+            var exception = await ExecutionExtensions
+               .TryAsync((producer, context), Process)
+               .Catch<Exception>()
+               .Invoke(OnError(context), token)
+               .ConfigureAwait(false);
+
+            if (exception == null)
+            {
+                await context
+                   .Accept(token)
+                   .ConfigureAwait(false);
+            }
         }
 
-        private Task Process(
+        private async Task<Exception?> Process(
             (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
             CancellationToken token)
         {
             var (producer, context) = state;
-            return Decoratee.Process(producer, context, token);
+
+            await Decoratee
+               .Process(producer, context, token)
+               .ConfigureAwait(false);
+
+            return default;
         }
 
-        private Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
+        private Func<Exception, CancellationToken, Task<Exception?>> OnError(IAdvancedIntegrationContext context)
         {
-            return (exception, token) =>
+            return async (exception, token) =>
             {
-                _logger.Error(exception);
-                return _retryPolicy.Apply(context, exception, token);
+                var retryException = await ExecutionExtensions
+                   .TryAsync((context, _retryPolicy, exception), Retry)
+                   .Catch<Exception>()
+                   .Invoke(OnRetryError, token)
+                   .ConfigureAwait(false);
+
+                return retryException ?? exception;
             };
+        }
+
+        private static async Task<Exception?> Retry(
+            (IAdvancedIntegrationContext, IRetryPolicy, Exception) state,
+            CancellationToken token)
+        {
+            var (context, policy, exception) = state;
+
+            await policy
+               .Apply(context, exception, token)
+               .ConfigureAwait(false);
+
+            return default;
+        }
+
+        private static Task<Exception?> OnRetryError(Exception exception, CancellationToken token)
+        {
+            return Task.FromResult<Exception?>(exception);
         }
     }
 }

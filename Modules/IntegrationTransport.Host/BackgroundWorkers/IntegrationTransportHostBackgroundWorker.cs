@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -10,7 +9,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.Abstractions;
     using GenericHost.Api.Abstractions;
+    using Microsoft.Extensions.Logging;
     using RpcRequest;
 
     internal class IntegrationTransportHostBackgroundWorker : IHostBackgroundWorker
@@ -24,7 +25,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 
         public async Task Run(CancellationToken token)
         {
-            BindRpcReplyMessageHandlers();
+            var logger = _dependencyContainer.Resolve<ILogger>();
+            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
+            var transportEndpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
+            var integrationTypeProvider = _dependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+            transport.Bind(transportEndpointIdentity, ExecuteRpcReplyMessageHandlers(_dependencyContainer), integrationTypeProvider);
+            transport.BindErrorHandler(transportEndpointIdentity, ErrorMessageHandler(logger, transportEndpointIdentity));
 
             await _dependencyContainer
                 .Resolve<IIntegrationTransport>()
@@ -32,51 +39,40 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
                 .ConfigureAwait(false);
         }
 
-        private void BindRpcReplyMessageHandlers()
+        private static Func<IntegrationMessage, CancellationToken, Task> ExecuteRpcReplyMessageHandlers(
+            IDependencyContainer dependencyContainer)
         {
-            var replies = AssembliesExtensions
-                .AllOurAssembliesFromCurrentDomain()
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type)
-                               && !IsMessageContractAbstraction(type))
-                .ToList();
+            return (message, token) => typeof(IntegrationTransportHostBackgroundWorker)
+               .CallMethod(nameof(ExecuteRpcReplyMessageHandlers))
+               .WithTypeArgument(message.ReflectedType)
+               .WithArguments(dependencyContainer, message, token)
+               .Invoke<Task>();
+        }
 
-            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
-            var transportEndpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
-
-            foreach (Type reply in replies)
+        private static async Task ExecuteRpcReplyMessageHandlers<TReply>(
+            IDependencyContainer dependencyContainer,
+            IntegrationMessage message,
+            CancellationToken token)
+            where TReply : IIntegrationReply
+        {
+            await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                this
-                    .CallMethod(nameof(BindRpcReplyMessageHandlers))
-                    .WithTypeArgument(reply)
-                    .WithArguments(transport, transportEndpointIdentity)
-                    .Invoke();
+                await dependencyContainer
+                   .Resolve<IRpcReplyMessageHandler<TReply>>()
+                   .Handle(message, token)
+                   .ConfigureAwait(false);
             }
         }
 
-        private void BindRpcReplyMessageHandlers<TReply>(
-            IIntegrationTransport transport,
+        private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(
+            ILogger logger,
             EndpointIdentity transportEndpointIdentity)
-            where TReply : IIntegrationReply
         {
-            transport.Bind(typeof(TReply), transportEndpointIdentity, ExecuteRpcReplyMessageHandlers<TReply>);
-        }
-
-        private Task ExecuteRpcReplyMessageHandlers<TReply>(IntegrationMessage message, CancellationToken token)
-            where TReply : IIntegrationReply
-        {
-            return _dependencyContainer
-                .Resolve<IRpcReplyMessageHandler<TReply>>()
-                .Handle(message, token);
-        }
-
-        private static bool IsMessageContractAbstraction(Type type)
-        {
-            return type == typeof(IIntegrationMessage)
-                   || type == typeof(IIntegrationCommand)
-                   || type == typeof(IIntegrationEvent)
-                   || type == typeof(IIntegrationReply)
-                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
+            return (_, exception, _) =>
+            {
+                logger.Error(exception, transportEndpointIdentity.ToString());
+                return Task.CompletedTask;
+            };
         }
     }
 }

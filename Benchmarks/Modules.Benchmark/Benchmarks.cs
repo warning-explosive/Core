@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Benchmark
 {
     using Core.Benchmark.Api;
-    using Core.Test.Api;
-    using Core.Test.Api.ClassFixtures;
     using Sources;
+    using Test.Api;
+    using Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -63,12 +63,19 @@ namespace SpaceEngineers.Core.Modules.Benchmark
         {
             var summary = Benchmark.Run<CompositionRootStartupBenchmarkSource>(Output.WriteLine);
 
-            var measure = summary.MillisecondMeasure(
+            var createExactlyBounded = summary.MillisecondMeasure(
                 nameof(CompositionRootStartupBenchmarkSource.CreateExactlyBounded),
                 Measure.Mean,
                 Output.WriteLine);
 
-            Assert.True(measure <= 1000m);
+            Assert.True(createExactlyBounded <= 1000m);
+
+            var createBoundedAbove = summary.MillisecondMeasure(
+                nameof(CompositionRootStartupBenchmarkSource.CreateBoundedAbove),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(createBoundedAbove <= 1000m);
         }
     }
 }

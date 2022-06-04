@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
 {
     using System;
+    using System.Collections.Generic;
     using Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -13,15 +14,39 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Implementations
     internal class IntegrationMessageFactory : IIntegrationMessageFactory,
                                                IResolvable<IIntegrationMessageFactory>
     {
-        public IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
+        private readonly IEnumerable<IUserScopeProvider> _userScopeProviders;
+
+        public IntegrationMessageFactory(IEnumerable<IUserScopeProvider> userScopeProviders)
+        {
+            _userScopeProviders = userScopeProviders;
+        }
+
+        public IntegrationMessage CreateGeneralMessage<TMessage>(
+            TMessage payload,
+            EndpointIdentity endpointIdentity,
+            IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage
         {
             var generalMessage = new IntegrationMessage(payload, typeof(TMessage));
 
-            if (endpointIdentity != null)
+            generalMessage.WriteHeader(new SentFrom(endpointIdentity));
+
+            var user = default(string?);
+
+            foreach (var provider in _userScopeProviders)
             {
-                generalMessage.WriteHeader(new SentFrom(endpointIdentity));
+                if (provider.TryGetUser(initiatorMessage, out user))
+                {
+                    break;
+                }
             }
+
+            if (user == null || string.IsNullOrEmpty(user))
+            {
+                throw new InvalidOperationException("Unable to find user scope");
+            }
+
+            generalMessage.WriteHeader(new User(user));
 
             if (initiatorMessage != null)
             {

@@ -7,4 +7,5 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Tracing")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]
+
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

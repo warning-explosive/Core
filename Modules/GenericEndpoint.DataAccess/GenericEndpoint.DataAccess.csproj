@@ -46,56 +46,11 @@
       <Compile Update="Model\InboxFactorySpecification.cs">
         <DependentUpon>InboxFactory.cs</DependentUpon>
       </Compile>
-      <Compile Update="Deduplication\InboxMessageReceived.cs">
-        <DependentUpon>Inbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InboxMessageWasHandled.cs">
-        <DependentUpon>Inbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InboxMessageWasMovedToErrorQueue.cs">
-        <DependentUpon>Inbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\OutboxMessagesHaveBeenSent.cs">
-        <DependentUpon>Outbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InboxAggregateSpecification.cs">
-        <DependentUpon>InboxAggregateFactory.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InboxAggregateFactory.cs">
-        <DependentUpon>Inbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\OutboxMessagesAreReadyToBeSent.cs">
-        <DependentUpon>Outbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\MarkOutgoingMessagesAsSent.cs">
-        <DependentUpon>OutboxMessagesHaveBeenSent.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InsertInboxMessage.cs">
-        <DependentUpon>InboxMessageReceived.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\MarkInboxMessageAsRefused.cs">
-        <DependentUpon>InboxMessageWasMovedToErrorQueue.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\MarkInboxMessageAsHandled.cs">
-        <DependentUpon>InboxMessageWasHandled.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\OutboxAggregateFactory.cs">
-        <DependentUpon>Outbox.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\OutboxAggregateSpecification.cs">
-        <DependentUpon>OutboxAggregateFactory.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Deduplication\InsertOutgoingMessages.cs">
-        <DependentUpon>OutboxMessagesAreReadyToBeSent.cs</DependentUpon>
-      </Compile>
       <Compile Update="DatabaseModel\EndpointIdentity.cs">
         <DependentUpon>InboxMessage.cs</DependentUpon>
       </Compile>
       <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
         <DependentUpon>IntegrationMessage.cs</DependentUpon>
-      </Compile>
-      <Compile Update="UnitOfWork\OutboxMessagesDelivery.cs">
-        <DependentUpon>IOutboxMessagesDelivery.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

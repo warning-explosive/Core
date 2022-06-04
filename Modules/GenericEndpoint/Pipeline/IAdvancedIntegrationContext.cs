@@ -26,20 +26,34 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         IIntegrationUnitOfWork UnitOfWork { get; }
 
         /// <summary>
-        /// Produces message to transport again and retries integration message processing using specified retry policy
-        /// Should be called within endpoint scope (in message handler)
+        /// Sends integration message immediately
         /// </summary>
-        /// <param name="dueTime">Time that transport waits before deliver message again</param>
+        /// <param name="message">IntegrationMessage</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing retry operation</returns>
-        Task Retry(TimeSpan dueTime, CancellationToken token);
+        /// <returns>Ongoing operation</returns>
+        Task<bool> SendMessage(IntegrationMessage message, CancellationToken token);
 
         /// <summary>
-        /// Refuses further message processing and moves message to errors
+        /// Accepts further message processing
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Accept(CancellationToken token);
+
+        /// <summary>
+        /// Rejects further message processing and moves message to errors
         /// </summary>
         /// <param name="exception">Processing error</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing reject operation</returns>
-        Task Refuse(Exception exception, CancellationToken token);
+        /// <returns>Ongoing operation</returns>
+        Task Reject(Exception exception, CancellationToken token);
+
+        /// <summary>
+        /// Retries integration message processing using specified retry policy
+        /// </summary>
+        /// <param name="dueTime">Time that transport waits before deliver message again</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Retry(TimeSpan dueTime, CancellationToken token);
     }
 }

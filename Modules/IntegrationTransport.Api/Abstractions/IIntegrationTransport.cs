@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
     using Enumerations;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.Abstractions;
 
     /// <summary>
     /// IIntegrationTransport
@@ -25,34 +26,56 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <summary>
         /// Bind message handler and configure topology
         /// </summary>
-        /// <param name="message">Message type</param>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="messageHandler">Message handler</param>
-        public void Bind(Type message, EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> messageHandler);
+        /// <param name="integrationTypeProvider">IIntegrationTypeProvider</param>
+        public void Bind(
+            EndpointIdentity endpointIdentity,
+            Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+            IIntegrationTypeProvider integrationTypeProvider);
 
         /// <summary>
         /// Bind message handler for error messages
         /// </summary>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="errorMessageHandler">Error message handler</param>
-        public void BindErrorHandler(EndpointIdentity endpointIdentity, Func<IntegrationMessage, CancellationToken, Task> errorMessageHandler);
+        public void BindErrorHandler(
+            EndpointIdentity endpointIdentity,
+            Func<IntegrationMessage, Exception, CancellationToken, Task> errorMessageHandler);
 
         /// <summary>
         /// Enqueue message into input queue
         /// </summary>
         /// <param name="message">Integration message</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Enqueue(IntegrationMessage message, CancellationToken token);
+        /// <returns>Returns true if operation was finished successfully</returns>
+        Task<bool> Enqueue(
+            IntegrationMessage message,
+            CancellationToken token);
 
         /// <summary>
         /// Enqueue message into error queue
         /// </summary>
+        /// <param name="endpointIdentity">Endpoint identity</param>
         /// <param name="message">Integration message</param>
         /// <param name="exception">Exception</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task EnqueueError(IntegrationMessage message, Exception exception, CancellationToken token);
+        Task EnqueueError(
+            EndpointIdentity endpointIdentity,
+            IntegrationMessage message,
+            Exception exception,
+            CancellationToken token);
+
+        /// <summary>
+        /// Accepts processed message
+        /// </summary>
+        /// <param name="message">Integration message</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Accept(
+            IntegrationMessage message,
+            CancellationToken token);
 
         /// <summary>
         /// Starts message processing in background thread

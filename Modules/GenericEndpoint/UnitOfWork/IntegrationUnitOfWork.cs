@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -9,8 +8,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using AutoRegistration.Api.Enumerations;
     using Basics.Enumerations;
     using Basics.Primitives;
-    using IntegrationTransport.Api.Abstractions;
-    using Messaging;
     using Pipeline;
 
     [Component(EnLifestyle.Scoped)]
@@ -18,13 +15,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
                                            IIntegrationUnitOfWork,
                                            IResolvable<IIntegrationUnitOfWork>
     {
-        private readonly IIntegrationTransport _transport;
+        private readonly IOutboxDelivery _outboxDelivery;
 
         public IntegrationUnitOfWork(
-            IIntegrationTransport transport,
-            IOutboxStorage outboxStorage)
+            IOutboxStorage outboxStorage,
+            IOutboxDelivery outboxDelivery)
         {
-            _transport = transport;
+            _outboxDelivery = outboxDelivery;
             OutboxStorage = outboxStorage;
         }
 
@@ -35,22 +32,29 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
             return Task.FromResult(EnUnitOfWorkBehavior.Regular);
         }
 
-        protected override async Task Commit(IAdvancedIntegrationContext context, CancellationToken token)
+        protected override async Task Commit(
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
-            await DeliverAll(OutboxStorage.All(), token).ConfigureAwait(false);
-        }
-
-        protected override Task Rollback(IAdvancedIntegrationContext context, Exception? exception, CancellationToken token)
-        {
-            return Task.CompletedTask;
-        }
-
-        private async Task DeliverAll(IReadOnlyCollection<IntegrationMessage> outgoingMessages, CancellationToken token)
-        {
-            foreach (var message in outgoingMessages)
+            try
             {
-                await _transport.Enqueue(message, token).ConfigureAwait(false);
+                await _outboxDelivery
+                   .DeliverMessages(OutboxStorage.All(), token)
+                   .ConfigureAwait(false);
             }
+            finally
+            {
+                OutboxStorage.Clear();
+            }
+        }
+
+        protected override Task Rollback(
+            IAdvancedIntegrationContext context,
+            Exception? exception,
+            CancellationToken token)
+        {
+            OutboxStorage.Clear();
+            return Task.CompletedTask;
         }
     }
 }

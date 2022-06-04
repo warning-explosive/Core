@@ -9,22 +9,22 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
     {
         /// <summary> Instances </summary>
         /// <returns> Instance components </returns>
-        IEnumerable<InstanceRegistrationInfo> Instances();
+        IReadOnlyCollection<InstanceRegistrationInfo> Instances();
 
         /// <summary> Resolvable </summary>
         /// <returns> ServiceRegistrationInfos </returns>
-        IEnumerable<ServiceRegistrationInfo> Resolvable();
+        IReadOnlyCollection<ServiceRegistrationInfo> Resolvable();
 
         /// <summary> Delegates </summary>
         /// <returns> DelegateRegistrationInfos </returns>
-        IEnumerable<DelegateRegistrationInfo> Delegates();
+        IReadOnlyCollection<DelegateRegistrationInfo> Delegates();
 
         /// <summary> Collections </summary>
         /// <returns>ServiceRegistrationInfos</returns>
-        IEnumerable<IRegistrationInfo> Collections();
+        IReadOnlyCollection<IRegistrationInfo> Collections();
 
         /// <summary> Decorators </summary>
         /// <returns>DecoratorRegistrationInfos</returns>
-        IEnumerable<DecoratorRegistrationInfo> Decorators();
+        IReadOnlyCollection<DecoratorRegistrationInfo> Decorators();
     }
 }

@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
     using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
 
-    [Component(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Scoped)]
     internal class IntegrationContext : IIntegrationContext,
                                         IResolvable<IIntegrationContext>
     {
@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return Deliver(CreateGeneralMessage(command), token);
+            return _transport.Enqueue(CreateGeneralMessage(command), token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
 
             if (isOwnedByCurrentEndpoint)
             {
-                return Deliver(CreateGeneralMessage(integrationEvent), token);
+                return _transport.Enqueue(CreateGeneralMessage(integrationEvent), token);
             }
 
             throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Owner: {actualOwner}; Required owner: {_endpointIdentity.LogicalName}");
@@ -65,30 +65,25 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
         {
             var message = CreateGeneralMessage(query);
 
-            message.WriteHeader(new SentFrom(_endpointIdentity));
-
             var requestId = message.ReadRequiredHeader<Id>().Value;
 
             var tcs = new TaskCompletionSource<IntegrationMessage>();
 
             await _registry.TryEnroll(requestId, tcs, token).ConfigureAwait(false);
 
-            await Deliver(message, token).ConfigureAwait(false);
+            _ = _transport
+               .Enqueue(message, token)
+               .ConfigureAwait(false);
 
             var reply = await tcs.Task.ConfigureAwait(false);
 
             return (TReply)reply.Payload;
         }
 
-        private Task Deliver(IntegrationMessage message, CancellationToken token)
-        {
-            return _transport.Enqueue(message, token);
-        }
-
         private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
             where TMessage : IIntegrationMessage
         {
-            return _factory.CreateGeneralMessage(message, null, null);
+            return _factory.CreateGeneralMessage(message, _endpointIdentity, null);
         }
     }
 }

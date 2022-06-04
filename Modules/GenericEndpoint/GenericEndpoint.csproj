@@ -77,6 +77,12 @@
     <Compile Update="UnitOfWork\OutboxStorage.cs">
       <DependentUpon>IOutboxStorage.cs</DependentUpon>
     </Compile>
+    <Compile Update="UnitOfWork\OutboxDelivery.cs">
+      <DependentUpon>IOutboxMessagesDelivery.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\HandledByEndpointPipeline.cs">
+      <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />

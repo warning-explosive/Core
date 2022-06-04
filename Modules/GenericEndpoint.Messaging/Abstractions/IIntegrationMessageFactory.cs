@@ -16,7 +16,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Abstractions
         /// <param name="initiatorMessage">Optional initiator message</param>
         /// <typeparam name="TMessage">TMessage type-argument</typeparam>
         /// <returns>IntegrationMessage instance</returns>
-        IntegrationMessage CreateGeneralMessage<TMessage>(TMessage payload, EndpointIdentity? endpointIdentity, IntegrationMessage? initiatorMessage)
+        IntegrationMessage CreateGeneralMessage<TMessage>(
+            TMessage payload,
+            EndpointIdentity endpointIdentity,
+            IntegrationMessage? initiatorMessage)
             where TMessage : IIntegrationMessage;
     }
 }

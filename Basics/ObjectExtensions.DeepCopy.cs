@@ -13,6 +13,9 @@
     /// </summary>
     public static partial class ObjectExtensions
     {
+        // ReSharper disable once PossibleMistakenCallToGetType.2
+        private static readonly Type RuntimeType = typeof(Type).GetType();
+
         private static readonly MethodInfo ShallowCopyMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
         /// <summary>
@@ -135,10 +138,7 @@
 
         private static bool IsPrimitive(Type type)
         {
-            return type.IsPrimitive()
-
-                   // ReSharper disable once PossibleMistakenCallToGetType.2
-                   || type == typeof(Type).GetType(); // reviewed
+            return type.IsPrimitive() || type == RuntimeType;
         }
 
         private static void ProcessClone(this object? clone, object original, Type typeToReflect, IDictionary<object, object> visited)

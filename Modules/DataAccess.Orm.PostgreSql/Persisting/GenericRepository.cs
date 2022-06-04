@@ -1,6 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
@@ -56,7 +57,7 @@
         }
 
         public Task Insert(
-            TEntity[] entities,
+            IReadOnlyCollection<TEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
         {
@@ -67,7 +68,7 @@
         }
 
         public async Task Update<TValue>(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             Expression<Func<TEntity, TValue>> accessor,
             TValue value,
             CancellationToken token)
@@ -116,7 +117,7 @@
         }
 
         public async Task Update<TValue>(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
             CancellationToken token)
@@ -169,7 +170,7 @@
         }
 
         public async Task Delete(
-            TKey[] primaryKeys,
+            IReadOnlyCollection<TKey> primaryKeys,
             CancellationToken token)
         {
             // TODO: #178 - add delete behaviors

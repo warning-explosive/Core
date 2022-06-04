@@ -12,11 +12,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Contract;
+    using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Contract.Extensions;
     using GenericHost;
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using GenericHost.Internals;
-    using InMemory.ManualRegistrations;
     using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -111,7 +112,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var dependencyContainer = BuildDependencyContainer(options);
 
-            hostBuilder.Properties[nameof(IIntegrationTransport)] = new InMemoryIntegrationTransportInjectionManualRegistration(dependencyContainer);
+            hostBuilder.Properties[nameof(IIntegrationTransport)] = new IntegrationTransportInjectionManualRegistration(dependencyContainer);
 
             return serviceCollection =>
             {
@@ -174,10 +175,18 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
+            var integrationMessageTypes = AssembliesExtensions
+               .AllOurAssembliesFromCurrentDomain()
+               .SelectMany(assembly => assembly.GetTypes())
+               .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
+                           && !type.IsMessageContractAbstraction())
+               .ToArray();
+
             return new TransportEndpointBuilder(endpointIdentity)
                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
                .WithEndpointPluginAssemblies(messagingAssembly, crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
+                   .WithAdditionalOurTypes(integrationMessageTypes)
                    .WithManualRegistrations(new TransportEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
                    .WithManualRegistrations(new ConfigurationProviderManualRegistration())

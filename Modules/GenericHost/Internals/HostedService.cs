@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             return async (exception, token) =>
             {
-                logger.Error(exception);
+                logger.Critical(exception);
                 await StopAsync(token).ConfigureAwait(false);
                 throw exception.Rethrow();
             };

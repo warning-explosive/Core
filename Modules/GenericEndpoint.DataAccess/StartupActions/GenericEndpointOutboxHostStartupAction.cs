@@ -3,15 +3,17 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using CompositionRoot.Api.Abstractions;
-    using Contract;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
-    using Deduplication;
-    using GenericDomain.Api.Abstractions;
+    using DatabaseModel;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
-    using Messaging;
+    using Messaging.MessageHeaders;
+    using Microsoft.Extensions.Logging;
+    using EndpointIdentity = Contract.EndpointIdentity;
+    using IntegrationMessage = Messaging.IntegrationMessage;
 
     internal class GenericEndpointOutboxHostStartupAction : IHostStartupAction
     {
@@ -24,36 +26,58 @@
 
         public Task Run(CancellationToken token)
         {
-            var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
+            var logger = _dependencyContainer.Resolve<ILogger>();
             var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
+            var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
 
-            transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(endpointIdentity));
+            transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(_dependencyContainer, endpointIdentity, logger));
 
             return Task.CompletedTask;
         }
 
-        private Func<IntegrationMessage, CancellationToken, Task> ErrorMessageHandler(EndpointIdentity endpointIdentity)
+        private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(
+            IDependencyContainer dependencyContainer,
+            EndpointIdentity endpointIdentity,
+            ILogger logger)
         {
-            return (message, token) => _dependencyContainer.InvokeWithinTransaction(true, (endpointIdentity, message), HandleErrorMessage, token);
+            return (message, _, token) => ExecutionExtensions
+               .TryAsync((dependencyContainer, message), HandleErrorMessage)
+               .Catch<Exception>(OnCatch(logger, endpointIdentity))
+               .Invoke(token);
         }
 
-        private async Task HandleErrorMessage(
-            IDatabaseTransaction transaction,
-            (EndpointIdentity, IntegrationMessage) state,
+        private static Task HandleErrorMessage(
+            (IDependencyContainer, IntegrationMessage) state,
             CancellationToken token)
         {
-            var (endpointIdentity, message) = state;
+            var (dependencyContainer, message) = state;
 
-            var inbox = await _dependencyContainer
-                .Resolve<IAggregateFactory<Inbox, InboxAggregateSpecification>>()
-                .Build(new InboxAggregateSpecification(message, endpointIdentity), token)
-                .ConfigureAwait(false);
+            return dependencyContainer.InvokeWithinTransaction(true,
+                message,
+                HandleErrorMessage,
+                token);
+        }
 
-            if (!inbox.IsError)
+        private static async Task HandleErrorMessage(
+            IDatabaseTransaction transaction,
+            IntegrationMessage message,
+            CancellationToken token)
+        {
+            await transaction
+               .Write<InboxMessage, Guid>()
+               .Update(new[] { message.ReadRequiredHeader<Id>().Value }, message => message.IsError, true, token)
+               .ConfigureAwait(false);
+        }
+
+        private static Func<Exception, CancellationToken, Task> OnCatch(
+            ILogger logger,
+            EndpointIdentity endpointIdentity)
+        {
+            return (exception, _) =>
             {
-                inbox.MarkAsError();
-                await transaction.Track(inbox, token).ConfigureAwait(false);
-            }
+                logger.Error(exception, endpointIdentity.ToString());
+                return Task.CompletedTask;
+            };
         }
     }
 }

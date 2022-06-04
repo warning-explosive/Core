@@ -29,7 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
-      <ProjectReference Include="..\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj" />
+      <ProjectReference Include="..\..\Endpoints\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

@@ -5,4 +5,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.Modules.Test")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

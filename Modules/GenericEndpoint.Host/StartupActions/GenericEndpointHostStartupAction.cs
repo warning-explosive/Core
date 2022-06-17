@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
     using Messaging;
     using Microsoft.Extensions.Logging;
 
-    [Dependency(typeof(GenericEndpointOutboxHostStartupAction))]
+    [Dependency(typeof(GenericEndpointInboxHostStartupAction))]
     internal class GenericEndpointHostStartupAction : IHostStartupAction
     {
         private readonly IDependencyContainer _dependencyContainer;
@@ -32,6 +32,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
 
             transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(logger, endpointIdentity));
 
+            token.Register(
+                () => _dependencyContainer.Resolve<IRunnableEndpoint>().StopAsync(token),
+                useSynchronizationContext: false);
+
             return _dependencyContainer
                 .Resolve<IRunnableEndpoint>()
                 .StartAsync(token);
@@ -43,7 +47,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
         {
             return (_, exception, _) =>
             {
-                logger.Error(exception, endpointIdentity.ToString());
+                logger.Error(exception, $"{endpointIdentity} -> Message handling error");
                 return Task.CompletedTask;
             };
         }

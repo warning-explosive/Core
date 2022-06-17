@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class CommandThrowingMessageHandler : IMessageHandler<Command>,
-                                                   ICollectionResolvable<IMessageHandler<Command>>
+                                                   IResolvable<IMessageHandler<Command>>
     {
         public Task Handle(Command message, CancellationToken token)
         {

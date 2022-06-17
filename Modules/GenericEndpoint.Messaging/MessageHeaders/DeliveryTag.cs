@@ -1,6 +1,6 @@
-namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
+namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
-    using GenericEndpoint.Messaging.Abstractions;
+    using Abstractions;
 
     /// <summary>
     /// DeliveryTag

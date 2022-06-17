@@ -27,6 +27,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         private readonly EndpointIdentity _endpointIdentity;
         private readonly AsyncManualResetEvent _ready;
         private readonly ConcurrentDictionary<Guid, Task> _runningHandlers;
+
         private CancellationTokenSource? _cts;
 
         public GenericEndpoint(
@@ -49,7 +50,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         public IEnumerable<IEndpointInitializer> Initializers { get; }
 
-        private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
+        private CancellationToken Token => _cts.Token;
 
         public async Task StartAsync(CancellationToken token)
         {

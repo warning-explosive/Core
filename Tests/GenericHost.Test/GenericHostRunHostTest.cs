@@ -7,6 +7,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -16,6 +17,7 @@
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Mocks;
     using Overrides;
     using Registrations;
@@ -48,49 +50,50 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
-            return new[]
+            var integrationTransportProviders = new[]
             {
-                new object[]
-                {
-                    useInMemoryIntegrationTransport,
-                    timeout
-                },
-                new object[]
-                {
-                    useRabbitMqIntegrationTransport,
-                    timeout
-                }
+                useInMemoryIntegrationTransport,
+                /*TODO: #180 - useRabbitMqIntegrationTransport*/
             };
+
+            return integrationTransportProviders
+               .Select(useTransport => new object[]
+               {
+                   useTransport,
+                   timeout
+               });
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var messageTypes = new[]
             {
                 typeof(RequestQueryCommand),
@@ -107,15 +110,23 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(nameof(RequestReplyTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(RequestReplyTest))
+            };
+
+            var host = useTransport(
+                    nameof(RequestReplyTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(additionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -127,9 +138,17 @@
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var command = new RequestQueryCommand(42);
+
+                var awaiter = Task.WhenAny(
+                    hostShutdown,
+                    Task.WhenAll(
+                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler))));
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
@@ -140,29 +159,33 @@
                        .ConfigureAwait(false);
                 }
 
-                await Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler)))
-                    .ConfigureAwait(false);
+                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
+
+                var errorMessages = collector.ErrorMessages.ToArray();
+                Assert.Single(errorMessages);
+                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(ReplyEmptyMessageHandler)));
+
+                var messages = collector.Messages.ToArray();
+                Assert.Equal(3, messages.Length);
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(RequestQueryCommand)));
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                Assert.Empty(collector.ErrorMessages);
-                var messages = collector.Messages.ToArray();
-                Assert.Equal(4, messages.Length);
-                Assert.Equal(typeof(RequestQueryCommand), messages[0].ReflectedType);
-                Assert.Equal(typeof(Query), messages[1].ReflectedType);
-                Assert.Equal(typeof(Reply), messages[2].ReflectedType);
-                Assert.Equal(typeof(Endpoint1HandlerInvoked), messages[3].ReflectedType);
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var messageTypes = new[]
             {
                 typeof(Query),
@@ -176,15 +199,23 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(nameof(RpcRequestTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(RpcRequestTest))
+            };
+
+            var host = useTransport(
+                    nameof(RpcRequestTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(additionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -195,137 +226,53 @@
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var query = new Query(42);
 
+                Reply reply;
+
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
                     var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                    var reply = await integrationContext
-                       .RpcRequest<Query, Reply>(query, cts.Token)
-                       .ConfigureAwait(false);
+                    var awaiter = Task.WhenAny(
+                        hostShutdown,
+                        integrationContext.RpcRequest<Query, Reply>(query, cts.Token));
 
-                    Assert.Equal(query.Id, reply.Id);
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    reply = await ((Task<Reply>)result).ConfigureAwait(false);
                 }
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 Assert.Empty(collector.ErrorMessages);
-                Assert.Equal(2, collector.Messages.Count);
+
                 var messages = collector.Messages.ToArray();
-                Assert.Equal(typeof(Query), messages[0].ReflectedType);
-                Assert.Equal(typeof(Reply), messages[1].ReflectedType);
-            }
-        }
-
-        [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostTestData))]
-        internal async Task EndpointCanHaveSeveralMessageHandlersPerMessage(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
-            TimeSpan timeout)
-        {
-            var messageTypes = new[]
-            {
-                typeof(Command)
-            };
-
-            var messageHandlerTypes = new[]
-            {
-                typeof(CommandEmptyMessageHandler),
-                typeof(CommandThrowingMessageHandler)
-            };
-
-            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
-
-            var overrides = Fixture.DelegateOverride(container =>
-            {
-                container.Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton);
-            });
-
-            var host = useTransport(nameof(EndpointCanHaveSeveralMessageHandlersPerMessage), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithAdditionalOurTypes(additionalOurTypes)
-                            .WithOverrides(overrides)
-                            .WithOverrides(new TestLoggerOverride(Output)))
-                        .BuildOptions())
-                .BuildHost();
-
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
-
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
-            {
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                    await integrationContext
-                       .Send(new Command(42), cts.Token)
-                       .ConfigureAwait(false);
-                }
-
-                await collector
-                    .WaitUntilErrorMessageIsNotReceived<Command>()
-                    .ConfigureAwait(false);
+                Assert.Equal(2, messages.Length);
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
+                Assert.Equal(query.Id, reply.Id);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                Assert.Single(collector.ErrorMessages);
-                var (errorMessage, exception) = collector.ErrorMessages.Single();
-                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
-                Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>().Value);
-
-                var expectedRetryCounts = new[] { 0, 1, 2, 3 };
-
-                var actualRetryCounts = collector
-                    .Messages
-                    .Where(message => message.Payload is Command)
-                    .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
-                    .ToList();
-
-                var commandEmptyMessageHandlerInvokesCount = collector
-                    .Messages
-                    .Count(message => message.Payload is Endpoint1HandlerInvoked handlerInvoked
-                                      && handlerInvoked.HandlerType == typeof(CommandEmptyMessageHandler));
-
-                var commandThrowingMessageHandlerInvokesCount = collector
-                    .Messages
-                    .Count(message => message.Payload is Endpoint1HandlerInvoked handlerInvoked
-                                      && handlerInvoked.HandlerType == typeof(CommandThrowingMessageHandler));
-
-                var handlerInvokedCount = collector
-                    .Messages
-                    .Select(message => message.Payload)
-                    .OfType<Endpoint1HandlerInvoked>()
-                    .Count();
-
-                Assert.Equal(expectedRetryCounts, actualRetryCounts);
-                Assert.Equal(8, collector.Messages.Count);
-                Assert.Equal(4, handlerInvokedCount);
-                Assert.Equal(4, commandEmptyMessageHandlerInvokesCount);
-                Assert.Equal(0, commandThrowingMessageHandlerInvokesCount);
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var messageTypes = new[]
             {
                 typeof(PublishInheritedEventCommand),
@@ -336,22 +283,29 @@
             var messageHandlerTypes = new[]
             {
                 typeof(PublishInheritedEventCommandHandler),
-                typeof(IntegrationEventEmptyMessageHandler),
                 typeof(BaseEventEmptyMessageHandler),
                 typeof(InheritedEventEmptyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(nameof(ContravariantMessageHandlerTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(ContravariantMessageHandlerTest))
+            };
+
+            var host = useTransport(
+                    nameof(ContravariantMessageHandlerTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(additionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -363,7 +317,15 @@
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                var awaiter = Task.WhenAny(
+                        hostShutdown,
+                        Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler))));
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
@@ -374,29 +336,34 @@
                        .ConfigureAwait(false);
                 }
 
-                await Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(IntegrationEventEmptyMessageHandler)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler)))
-                    .ConfigureAwait(false);
+                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
+
+                var errorMessages = collector.ErrorMessages.ToArray();
+                Assert.Equal(2, errorMessages.Length);
+                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(BaseEventEmptyMessageHandler)));
+                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(InheritedEventEmptyMessageHandler)));
+
+                var messages = collector.Messages.ToArray();
+                Assert.Equal(3, messages.Length);
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(PublishInheritedEventCommand)));
+                Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(BaseEvent)));
+                Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                Assert.Empty(collector.ErrorMessages);
-                Assert.Equal(5, collector.Messages.Count);
-                var messages = collector.Messages.Take(2).ToArray();
-                Assert.Equal(typeof(PublishInheritedEventCommand), messages[0].ReflectedType);
-                Assert.Equal(typeof(InheritedEvent), messages[1].ReflectedType);
-                Assert.True(messages.Skip(2).All(message => message.Payload is Endpoint1HandlerInvoked));
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var messageTypes = new[]
             {
                 typeof(Command)
@@ -409,21 +376,24 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var overrides = Fixture.DelegateOverride(container =>
+            var overrides = new IComponentsOverride[]
             {
-                container.Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton);
-            });
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(ThrowingMessageHandlerTest)),
+                Fixture.DelegateOverride(container =>
+                {
+                    container.Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton);
+                })
+            };
 
-            var host = useTransport(nameof(ThrowingMessageHandlerTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+            var host = useTransport(nameof(ThrowingMessageHandlerTest), logger, Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(overrides)
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(additionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -434,6 +404,8 @@
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
@@ -446,11 +418,14 @@
                        .ConfigureAwait(false);
                 }
 
-                await collector
-                    .WaitUntilErrorMessageIsNotReceived<Command>()
-                    .ConfigureAwait(false);
+                var awaiter = Task.WhenAny(
+                    hostShutdown,
+                    collector.WaitUntilErrorMessageIsNotReceived<Command>());
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
 
                 Assert.Single(collector.ErrorMessages);
                 var (errorMessage, exception) = collector.ErrorMessages.Single();
@@ -459,15 +434,15 @@
 
                 var expectedRetryCounters = new[] { 0, 1, 2, 3 };
                 var actualRetryCounters = collector
-                    .Messages
-                    .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
-                    .ToList();
+                   .Messages
+                   .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
+                   .ToList();
 
                 Assert.Equal(expectedRetryCounters, actualRetryCounters);
 
                 var actualDeliveries = collector
                     .Messages
-                    .Select(message => message.ReadHeader<ActualDeliveryDate>()?.Value ?? default(DateTime))
+                    .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
                     .ToList();
 
                 var latency = 200;
@@ -499,15 +474,19 @@
                         Output.WriteLine($"{leftBorder} - {actualDelay} - {rightBorder}");
                         return leftBorder <= actualDelay && actualDelay <= rightBorder;
                     }));
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var endpoint1MessageTypes = new[]
             {
                 typeof(Event)
@@ -533,29 +512,35 @@
             var endpoint1AdditionalOurTypes = endpoint1MessageTypes.Concat(endpoint1MessageHandlerTypes).ToArray();
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
-            var host = useTransport(nameof(EventSubscriptionBetweenEndpointsTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(EventSubscriptionBetweenEndpointsTest))
+            };
+
+            var host = useTransport(
+                    nameof(EventSubscriptionBetweenEndpointsTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
-                        .BuildOptions())
-                .UseEndpoint(
-                    TestIdentity.Endpoint11,
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(endpoint1AdditionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .UseEndpoint(TestIdentity.Endpoint11,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
-                        .BuildOptions())
-                .UseEndpoint(
-                    TestIdentity.Endpoint20,
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(endpoint1AdditionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .UseEndpoint(TestIdentity.Endpoint20,
                     (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithOverrides(new TestLoggerOverride(Output))
-                            .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
-                        .BuildOptions())
-                .BuildHost();
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(endpoint2AdditionalOurTypes)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -566,6 +551,8 @@
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
@@ -578,11 +565,17 @@
                        .ConfigureAwait(false);
                 }
 
-                await Task.WhenAll(
+                var awaiter = Task.WhenAny(
+                    hostShutdown,
+                    Task.WhenAll(
                         collector.WaitUntilMessageIsNotReceived<Event>(),
                         collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10) || message.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)))
-                    .ConfigureAwait(false);
+                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20))));
+
+                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
@@ -591,17 +584,28 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RunTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var host = useTransport(nameof(RunTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    new EndpointIdentity(nameof(RunTest), 0),
+            var logger = Fixture.CreateLogger(Output);
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(RunTest))
+            };
+
+            var host = useTransport(
+                    nameof(RunTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(new EndpointIdentity(nameof(RunTest), 0),
                     (_, builder) => builder
-                        .WithTracing()
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -613,11 +617,14 @@
 
                 var runningHost = host.RunAsync(cts.Token);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 await runningHost.ConfigureAwait(false);
+                await hostShutdown.ConfigureAwait(false);
 
                 Assert.Empty(collector.ErrorMessages);
                 Assert.Empty(collector.Messages);
@@ -627,17 +634,28 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var host = useTransport(nameof(StartStopTest), Output, Host.CreateDefaultBuilder())
-                .UseEndpoint(
-                    new EndpointIdentity(nameof(StartStopTest), 0),
+            var logger = Fixture.CreateLogger(Output);
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(nameof(StartStopTest))
+            };
+
+            var host = useTransport(
+                    nameof(StartStopTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(new EndpointIdentity(nameof(StartStopTest), 0),
                     (_, builder) => builder
-                        .WithTracing()
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
-                        .BuildOptions())
-                .BuildHost();
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
             var collector = transportDependencyContainer.Resolve<MessagesCollector>();
@@ -649,9 +667,13 @@
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
 
                 Assert.Empty(collector.ErrorMessages);
                 Assert.Empty(collector.Messages);

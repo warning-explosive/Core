@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class InheritedEventEmptyMessageHandler : IMessageHandler<InheritedEvent>,
-                                                       ICollectionResolvable<IMessageHandler<InheritedEvent>>
+                                                       IResolvable<IMessageHandler<InheritedEvent>>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationContext _context;

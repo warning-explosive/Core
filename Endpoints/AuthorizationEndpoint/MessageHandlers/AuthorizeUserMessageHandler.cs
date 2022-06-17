@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class AuthorizeUserMessageHandler : IMessageHandler<AuthorizeUser>,
-        ICollectionResolvable<IMessageHandler<AuthorizeUser>>
+                                                 IResolvable<IMessageHandler<AuthorizeUser>>
     {
         private readonly IIntegrationContext _integrationContext;
         private readonly IAggregateFactory<User, FindUserSpecification> _findUserAggregateFactory;

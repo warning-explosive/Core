@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(EndpointIdentity)}] - [{Value}]";
+            return $"[{nameof(HandledBy)}] - [{Value}]";
         }
     }
 }

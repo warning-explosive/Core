@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class EventEmptyMessageHandler : IMessageHandler<Event>,
-                                              ICollectionResolvable<IMessageHandler<Event>>
+                                              IResolvable<IMessageHandler<Event>>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationContext _context;

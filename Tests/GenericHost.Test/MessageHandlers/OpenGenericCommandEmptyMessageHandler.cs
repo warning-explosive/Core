@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class OpenGenericCommandEmptyMessageHandler<TCommand> : IMessageHandler<TCommand>,
-                                                                     ICollectionResolvable<IMessageHandler<TCommand>>
+                                                                     IResolvable<IMessageHandler<TCommand>>
         where TCommand : OpenGenericHandlerCommand
     {
         private readonly EndpointIdentity _endpointIdentity;

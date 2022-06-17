@@ -1,60 +1,54 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Basics.Attributes;
+    using CompositionRoot.Api.Abstractions;
     using Messaging;
-    using Messaging.MessageHeaders;
+    using UnitOfWork;
 
     [Component(EnLifestyle.Singleton)]
     [Dependent(typeof(UnitOfWorkPipeline))]
     internal class QueryReplyValidationPipeline : IMessagePipelineStep, IMessagePipeline
     {
-        public QueryReplyValidationPipeline(IMessagePipeline decoratee)
+        private readonly IDependencyContainer _dependencyContainer;
+
+        public QueryReplyValidationPipeline(
+            IMessagePipeline decoratee,
+            IDependencyContainer dependencyContainer)
         {
+            _dependencyContainer = dependencyContainer;
             Decoratee = decoratee;
         }
 
         public IMessagePipeline Decoratee { get; }
 
-        public Task Process(
+        public async Task Process(
             Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            return ExecutionExtensions
-               .TryAsync((producer, context), Process)
-               .Catch<Exception>(OnError(context))
-               .Invoke(token);
-        }
+            await Decoratee
+               .Process(producer, context, token)
+               .ConfigureAwait(false);
 
-        private async Task Process(
-            (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
-            CancellationToken token)
-        {
-            var (producer, context) = state;
-
-            await Decoratee.Process(producer, context, token).ConfigureAwait(false);
-
-            if (context.Message.IsQuery()
-             && context.Message.ReadHeader<DidHandlerReplyToTheQuery>()?.Value != true)
+            if (context.Message.IsQuery())
             {
-                throw new InvalidOperationException("Message handler should reply to the query");
+                var repliesCount = _dependencyContainer
+                   .Resolve<IOutboxStorage>()
+                   .All()
+                   .Count(message => message.IsReplyOnQuery(context.Message));
+
+                switch (repliesCount)
+                {
+                    case < 1: throw new InvalidOperationException("Message handler should reply to the query");
+                    case > 1: throw new InvalidOperationException("Message handler should reply to the query only once");
+                }
             }
-        }
-
-        private static Func<Exception, CancellationToken, Task> OnError(IAdvancedIntegrationContext context)
-        {
-            return (_, _) =>
-            {
-                _ = context.Message.TryDeleteHeader<DidHandlerReplyToTheQuery>(out _);
-
-                return Task.CompletedTask;
-            };
         }
     }
 }

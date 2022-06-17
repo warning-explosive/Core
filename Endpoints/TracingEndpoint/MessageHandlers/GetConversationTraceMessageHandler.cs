@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class GetConversationTraceMessageHandler : IMessageHandler<GetConversationTrace>,
-                                                        ICollectionResolvable<IMessageHandler<GetConversationTrace>>
+                                                        IResolvable<IMessageHandler<GetConversationTrace>>
     {
         private readonly IIntegrationContext _integrationContext;
         private readonly IDatabaseContext _databaseContext;

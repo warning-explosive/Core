@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class HostedService : IHostedService, IDisposable
     {
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly IEnumerable<IHostStartupAction> _startupActions;
         private readonly IEnumerable<IHostBackgroundWorker> _backgroundWorkers;
 
@@ -19,19 +20,21 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         private Task? _backgroundWorkersTask;
 
         public HostedService(
+            IHostApplicationLifetime hostApplicationLifetime,
             ILoggerFactory loggerFactory,
             IEnumerable<IHostStartupAction> startupActions,
             IEnumerable<IHostBackgroundWorker> backgroundWorkers)
         {
             Logger = loggerFactory.CreateLogger<HostedService>();
 
+            _hostApplicationLifetime = hostApplicationLifetime;
             _startupActions = startupActions;
             _backgroundWorkers = backgroundWorkers;
         }
 
         private ILogger Logger { get; }
 
-        private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
+        private CancellationToken Token => _cts.Token;
 
         public async Task StartAsync(CancellationToken token)
         {
@@ -49,24 +52,28 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public async Task StopAsync(CancellationToken token)
         {
-            if (_backgroundWorkersTask == null)
-            {
-                // Stop called without start
-                return;
-            }
-
             try
             {
-                // Signal cancellation to the executing method
-                _cts.Cancel();
+                if (_backgroundWorkersTask == null)
+                {
+                    // Stop called without start
+                    return;
+                }
+                else
+                {
+                    // Signal cancellation to the executing method
+                    _cts.Cancel();
+                }
             }
             finally
             {
                 // Wait until the task completes or the stop token triggers
-                await Task
+                _ = await Task
                     .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
                     .ConfigureAwait(false);
             }
+
+            _hostApplicationLifetime.StopApplication();
         }
 
         public void Dispose()
@@ -97,9 +104,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             return async (exception, token) =>
             {
-                logger.Critical(exception);
+                logger.Critical(exception, "Hosted service unhandled exception");
+
                 await StopAsync(token).ConfigureAwait(false);
-                throw exception.Rethrow();
             };
         }
     }

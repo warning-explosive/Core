@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -19,51 +18,29 @@
         where TMessage : IIntegrationMessage
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IEnumerable<IMessageHandler<TMessage>> _messageHandlers;
         private readonly IMessagePipeline _messagePipeline;
 
         public MessageHandlerExecutor(
             IDependencyContainer dependencyContainer,
-            IEnumerable<IMessageHandler<TMessage>> messageHandlers,
             IMessagePipeline messagePipeline)
         {
             _dependencyContainer = dependencyContainer;
-            _messageHandlers = messageHandlers;
             _messagePipeline = messagePipeline;
         }
 
         public async Task Invoke(IntegrationMessage message, CancellationToken token)
         {
-            using (var enumerator = _messageHandlers.GetEnumerator())
+            await using (_dependencyContainer.OpenScopeAsync())
             {
-                while (true)
-                {
-                    await using (_dependencyContainer.OpenScopeAsync())
-                    {
-                        if (enumerator.MoveNext())
-                        {
-                            var copy = message.Clone();
-                            await InvokeScopedHandler(copy, enumerator.Current, token).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
+                var messageHandler = _dependencyContainer.Resolve<IMessageHandler<TMessage>>();
+
+                await _messagePipeline.Process(
+                        HandleProducer((TMessage)message.Payload, messageHandler),
+                        exclusiveContext,
+                        token)
+                   .ConfigureAwait(false);
             }
-        }
-
-        private async Task InvokeScopedHandler(
-            IntegrationMessage message,
-            IMessageHandler<TMessage> messageHandler,
-            CancellationToken token)
-        {
-            var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
-
-            await _messagePipeline
-                .Process(HandleProducer((TMessage)message.Payload, messageHandler), exclusiveContext, token)
-                .ConfigureAwait(false);
         }
 
         private static Func<IAdvancedIntegrationContext, CancellationToken, Task> HandleProducer(

@@ -14,7 +14,10 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     {
         private static readonly int[] Scale = new[] { 0, 1, 2 };
 
-        public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        public Task Apply(
+            IAdvancedIntegrationContext context,
+            Exception exception,
+            CancellationToken token)
         {
             var actualCounter = context.Message.ReadHeader<RetryCounter>()?.Value ?? 0;
 

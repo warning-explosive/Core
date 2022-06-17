@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class CreateUserMessageHandler : IMessageHandler<CreateUser>,
-        ICollectionResolvable<IMessageHandler<CreateUser>>
+                                              IResolvable<IMessageHandler<CreateUser>>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IAggregateFactory<User, CreateUserSpecification> _createUserAggregateFactory;

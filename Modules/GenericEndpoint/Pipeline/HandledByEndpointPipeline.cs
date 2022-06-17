@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             }
             finally
             {
-                context.Message.WriteHeader(new HandledBy(_endpointIdentity));
+                context.Message.OverwriteHeader(new HandledBy(_endpointIdentity));
             }
         }
     }

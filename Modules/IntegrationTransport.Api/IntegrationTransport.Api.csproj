@@ -45,5 +45,8 @@
       <Compile Update="Abstractions\IntegrationTransportStatusChangedEventArgs.cs">
         <DependentUpon>IIntegrationTransport.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\IntegrationTransportMessageReceivedEventArgs.cs">
+        <DependentUpon>IIntegrationTransport.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

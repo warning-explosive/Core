@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Text.RegularExpressions;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -12,6 +13,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
     using CompositionRoot.Api.Extensions;
+    using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
     using Contract.Extensions;
@@ -22,15 +24,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,
                                                           ICollectionResolvable<IConfigurationVerifier>
     {
+        private readonly EndpointIdentity _endpointIdentity;
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
         private readonly IRegistrationsContainer _registrations;
 
         public GenericEndpointConfigurationVerifier(
+            EndpointIdentity endpointIdentity,
             IConstructorResolutionBehavior constructorResolutionBehavior,
             IIntegrationTypeProvider integrationTypeProvider,
             IRegistrationsContainer registrations)
         {
+            _endpointIdentity = endpointIdentity;
             _constructorResolutionBehavior = constructorResolutionBehavior;
             _integrationTypeProvider = integrationTypeProvider;
             _registrations = registrations;
@@ -39,9 +44,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         /// <inheritdoc />
         public void Verify()
         {
-            VerifyMessageNames(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyLogicalName(_endpointIdentity);
+
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointCommands());
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EventsSubscriptions());
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointQueries());
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.RepliesSubscriptions());
+
             VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
+
             VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyDeserializationRequirement(_integrationTypeProvider.IntegrationMessageTypes());
 
@@ -51,15 +63,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
             VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()));
         }
 
-        private static void VerifyMessageNames(IEnumerable<Type> messageTypes)
+        private static void VerifyLogicalName(EndpointIdentity endpointIdentity)
+        {
+            var pattern = new Regex("[^a-zA-Z\\d]", RegexOptions.Compiled);
+
+            if (pattern.IsMatch(endpointIdentity.LogicalName))
+            {
+                throw new InvalidOperationException($"Endpoint {endpointIdentity} should have only letters in logical name");
+            }
+        }
+
+        private static void VerifyMessageNames(EndpointIdentity endpointIdentity, IEnumerable<Type> messageTypes)
         {
             messageTypes
-                .Where(HasWrongName)
+                .Where(type => HasWrongName(endpointIdentity, type))
                 .Each(type => throw new InvalidOperationException($"Message name {type.FullName} should be less or equal than 255 bytes"));
 
-            static bool HasWrongName(Type type)
+            static bool HasWrongName(EndpointIdentity endpointIdentity, Type type)
             {
-                return type.FullName!.Length > 255;
+                var left = type.FullName!;
+                var right = endpointIdentity.LogicalName;
+
+                return left.Length + right.Length + 1 > 255;
             }
         }
 
@@ -134,7 +159,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
         private void VerifyMessageHandlersLifestyle()
         {
             var lifestyleViolations = _registrations
-                .Collections()
+                .Resolvable()
                 .Where(info => info.Lifestyle != EnLifestyle.Transient)
                 .RegisteredComponents()
                 .Where(info => info.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))

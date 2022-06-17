@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class CaptureTraceMessageHandler : IMessageHandler<CaptureTrace>,
-                                                ICollectionResolvable<IMessageHandler<CaptureTrace>>
+                                                IResolvable<IMessageHandler<CaptureTrace>>
     {
         private readonly IDatabaseContext _databaseContext;
 

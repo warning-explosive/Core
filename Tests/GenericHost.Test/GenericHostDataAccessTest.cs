@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
     using Overrides;
@@ -75,18 +76,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
-            var useInMemoryIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                       .BuildOptions()));
+
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport
+                useInMemoryIntegrationTransport,
+                /*TODO: #180 - useRabbitMqIntegrationTransport*/
             };
 
             return integrationTransportProviders
@@ -106,20 +117,32 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                       .BuildOptions()));
+
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport
+                useInMemoryIntegrationTransport,
+                /*TODO: #180 - useRabbitMqIntegrationTransport*/
             };
 
             return integrationTransportProviders
@@ -140,21 +163,34 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var useInMemoryIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .WithTracing()
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                       .BuildOptions()));
+
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .WithTracing()
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport
+                useInMemoryIntegrationTransport,
+                /*TODO: #180 - useRabbitMqIntegrationTransport*/
             };
 
             return integrationTransportProviders
@@ -170,18 +206,20 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
+            var logger = Fixture.CreateLogger(Output);
+
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
             };
 
-            var host = useTransport(nameof(CompareEquivalentDatabaseDatabaseModelsTest), Output, Host.CreateDefaultBuilder())
+            var host = useTransport(nameof(CompareEquivalentDatabaseDatabaseModelsTest), logger, Fixture.CreateHostBuilder(Output))
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)
@@ -228,10 +266,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
+
+            var logger = Fixture.CreateLogger(Output);
 
             var additionalOurTypes = new[]
             {
@@ -244,11 +284,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
             };
 
-            var host = useTransport(nameof(ExtractDatabaseModelChangesDiffTest), Output, Host.CreateDefaultBuilder())
+            var host = useTransport(nameof(ExtractDatabaseModelChangesDiffTest), logger, Fixture.CreateHostBuilder(Output))
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)
@@ -301,7 +341,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 AssertCreateDataBase(modelChanges, 0, nameof(ExtractDatabaseModelChangesDiffTest));
 
                 AssertCreateSchema(modelChanges, 1, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(DataAccess), nameof(DataAccess.Orm), nameof(DataAccess.Orm.Sql), nameof(DataAccess.Orm.Sql.Host)));
-                AssertCreateSchema(modelChanges, 2, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(GenericEndpoint.DataAccess)));
+                AssertCreateSchema(modelChanges, 2, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
                 AssertCreateSchema(modelChanges, 3, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericHost), nameof(Core.GenericHost.Test)));
                 AssertCreateSchema(modelChanges, 4, string.Join(string.Empty, nameof(SpaceEngineers), nameof(Core), nameof(TracingEndpoint)));
 
@@ -512,11 +552,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task GetConversationTraceTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
+
+            var logger = Fixture.CreateLogger(Output);
 
             var messageTypes = new[]
             {
@@ -540,11 +582,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(nameof(GetConversationTraceTest), Output, Host.CreateDefaultBuilder())
+            var host = useTransport(nameof(GetConversationTraceTest), logger, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider)
@@ -581,13 +623,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var conversationId = Guid.NewGuid();
 
-                var awaiter = Task.WhenAll(
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
-                    collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
+                var awaiter = Task.WhenAny(
+                    hostShutdown,
+                    Task.WhenAll(
+                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
+                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace))));
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
@@ -597,19 +643,20 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
                         .ConfigureAwait(false);
 
-                    await awaiter.ConfigureAwait(false);
+                    if (hostShutdown == await awaiter.ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
 
                     Assert.Empty(collector.ErrorMessages);
                     Assert.Equal(4, collector.Messages.Count);
                     var messages = collector.Messages.ToArray();
                     collector.Messages.Clear();
 
-                    Assert.Equal(typeof(GetConversationTrace), messages[0].ReflectedType);
-                    Assert.Equal(typeof(ConversationTrace), messages[1].ReflectedType);
-                    Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
-                    Assert.Equal(typeof(GetConversationTrace), ((CaptureTrace)messages[2].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
-                    Assert.Equal(typeof(CaptureTrace), messages[3].ReflectedType);
-                    Assert.Equal(typeof(ConversationTrace), ((CaptureTrace)messages[3].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(GetConversationTrace)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(ConversationTrace)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
 
                     Assert.Equal(conversationId, trace.ConversationId);
                     Assert.Null(trace.SerializedMessage);
@@ -617,39 +664,47 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.NotNull(trace.SubsequentTrace);
                     Assert.Empty(trace.SubsequentTrace);
 
-                    awaiter = Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)),
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply)));
+                    awaiter = Task.WhenAny(
+                        hostShutdown,
+                        Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)),
+                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply))));
 
                     var reply = await integrationContext
                         .RpcRequest<Query, Reply>(new Query(42), cts.Token)
                         .ConfigureAwait(false);
 
-                    await awaiter.ConfigureAwait(false);
+                    if (hostShutdown == await awaiter.ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
 
                     Assert.Empty(collector.ErrorMessages);
                     Assert.Equal(4, collector.Messages.Count);
                     messages = collector.Messages.ToArray();
                     collector.Messages.Clear();
 
-                    Assert.Equal(typeof(Query), messages[0].ReflectedType);
-                    Assert.Equal(typeof(Reply), messages[1].ReflectedType);
-                    Assert.Equal(typeof(CaptureTrace), messages[2].ReflectedType);
-                    Assert.Equal(typeof(Query), ((CaptureTrace)messages[2].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
-                    Assert.Equal(typeof(CaptureTrace), messages[3].ReflectedType);
-                    Assert.Equal(typeof(Reply), ((CaptureTrace)messages[3].Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply)));
 
                     conversationId = messages[0].ReadRequiredHeader<ConversationId>().Value;
 
-                    awaiter = Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
+                    awaiter = Task.WhenAny(
+                        hostShutdown,
+                        Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
+                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace))));
 
                     trace = await integrationContext
                         .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
                         .ConfigureAwait(false);
 
-                    await awaiter.ConfigureAwait(false);
+                    if (hostShutdown == await awaiter.ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
 
                     Assert.Empty(collector.ErrorMessages);
                     Assert.Equal(4, collector.Messages.Count);
@@ -681,11 +736,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
+
+            var logger = Fixture.CreateLogger(Output);
 
             var messageTypes = new[]
             {
@@ -707,27 +764,35 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var settingsScope = nameof(BackgroundOutboxDeliveryTest);
 
+            var endpointManualRegistrations = new IManualRegistration[]
+            {
+                new BackgroundOutboxDeliveryManualRegistration()
+            };
+
             var endpointOverridesList = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
-                new TestSettingsScopeProviderOverride(settingsScope),
-                new OutboxMessagesDeliveryOverride()
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var endpointOverrides = endpointOverridesList.ToArray();
 
             var migrationOverrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(nameof(BackgroundOutboxDeliveryTest), Output, Host.CreateDefaultBuilder())
+            var host = useTransport(
+                    nameof(BackgroundOutboxDeliveryTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider)
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithManualRegistrations(endpointManualRegistrations)
                            .WithOverrides(endpointOverrides))
                        .BuildOptions())
                .ExecuteMigrations(builder => builder
@@ -747,18 +812,33 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                Reply reply;
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
                     var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                    var reply = await integrationContext
-                       .RpcRequest<Query, Reply>(new Query(42), cts.Token)
-                       .ConfigureAwait(false);
+                    var awaiter = Task.WhenAny(
+                        hostShutdown,
+                        integrationContext.RpcRequest<Query, Reply>(new Query(42), cts.Token));
 
-                    Assert.Equal(42, reply.Id);
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    reply = await ((Task<Reply>)result).ConfigureAwait(false);
                 }
+
+                Assert.Equal(42, reply.Id);
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
             }
         }
     }

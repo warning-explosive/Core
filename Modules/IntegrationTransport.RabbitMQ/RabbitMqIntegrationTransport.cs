@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using GenericEndpoint.Contract;
+    using GenericEndpoint.Contract.Attributes;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -45,7 +46,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private const string DeferredQueue = nameof(DeferredQueue);
 
         private readonly ILogger _logger;
-        private readonly EndpointIdentity _endpointIdentity;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ISettingsProvider<RabbitMqSettings> _rabbitMqSettingsProvider;
 
@@ -66,12 +66,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         public RabbitMqIntegrationTransport(
             ILogger logger,
-            EndpointIdentity endpointIdentity,
             IJsonSerializer jsonSerializer,
             ISettingsProvider<RabbitMqSettings> rabbitMqSettingsProvider)
         {
             _logger = logger;
-            _endpointIdentity = endpointIdentity;
             _jsonSerializer = jsonSerializer;
             _rabbitMqSettingsProvider = rabbitMqSettingsProvider;
 
@@ -92,6 +90,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         public event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
 
+        public event EventHandler<IntegrationTransportMessageReceivedEventArgs>? MessageReceived;
+
         public EnIntegrationTransportStatus Status
         {
             get => _status;
@@ -99,9 +99,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             private set
             {
                 var previousValue = _status;
+
                 _status = value;
-                var eventArgs = new IntegrationTransportStatusChangedEventArgs(previousValue, value);
-                StatusChanged?.Invoke(this, eventArgs);
+
+                StatusChanged?.Invoke(this, new IntegrationTransportStatusChangedEventArgs(previousValue, value));
             }
         }
 
@@ -147,42 +148,33 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             var channel = _channels[message.ReadRequiredHeader<SentFrom>().Value];
 
-            var basicProperties = CreateBasicProperties(channel, message, out var exchange, out var routingKey);
+            var basicProperties = CreateBasicProperties(channel, message);
+
+            var exchange = string.IsNullOrEmpty(basicProperties.Expiration)
+                ? InputExchange
+                : DeferredExchange;
+
+            var left = message.ReflectedType.FullName!.GetRoutingKeyPart();
+
+            var right = string.IsNullOrEmpty(basicProperties.ReplyTo)
+                ? message.Payload.GetType().GetRequiredAttribute<OwnedByAttribute>().EndpointName
+                : basicProperties.ReplyTo;
+
+            var routingKey = string.Join(".", left, right);
 
             var body = message.EncodeIntegrationMessage(_jsonSerializer);
 
-            Task<bool> confirmedPublication;
-
-            lock (channel)
-            {
-                confirmedPublication = _outstandingConfirms
-                   .GetOrAdd(channel.NextPublishSeqNo, _ => new TaskCompletionSource<bool>())
-                   .Task;
-
-                channel.BasicPublish(exchange, routingKey, true, basicProperties, body);
-            }
-
-            return await confirmedPublication.ConfigureAwait(false);
+            return await channel
+               .Publish(exchange, routingKey, basicProperties, body, _outstandingConfirms)
+               .ConfigureAwait(false);
 
             static IBasicProperties CreateBasicProperties(
                 IModel channel,
-                IntegrationMessage message,
-                out string exchange,
-                out string routingKey)
+                IntegrationMessage message)
             {
                 var basicProperties = channel.CreateBasicProperties();
 
                 basicProperties.DeliveryMode = 2;
-
-                var deferredUntil = message.ReadHeader<DeferredUntil>();
-                var expirationMilliseconds = (ulong)Math.Round((deferredUntil?.Value - DateTime.UtcNow)?.TotalMilliseconds ?? 0.0, MidpointRounding.AwayFromZero);
-
-                var isDeferred = expirationMilliseconds > 0;
-
-                if (isDeferred)
-                {
-                    basicProperties.Expiration = expirationMilliseconds.ToString(CultureInfo.InvariantCulture);
-                }
 
                 basicProperties.ContentType = MediaTypeNames.Application.Json;
                 basicProperties.ContentEncoding = ContentEncoding;
@@ -195,8 +187,15 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 basicProperties.Headers = new Dictionary<string, object>();
                 basicProperties.ReplyTo = message.ReadHeader<ReplyTo>()?.Value.LogicalName ?? default;
 
-                exchange = isDeferred ? DeferredExchange : InputExchange;
-                routingKey = message.ReflectedType.FullName!;
+                var deferredUntil = message.ReadHeader<DeferredUntil>();
+                var expirationMilliseconds = (ulong)Math.Round((deferredUntil?.Value - DateTime.UtcNow)?.TotalMilliseconds ?? 0.0, MidpointRounding.AwayFromZero);
+
+                var isDeferred = expirationMilliseconds > 0;
+
+                if (isDeferred)
+                {
+                    basicProperties.Expiration = expirationMilliseconds.ToString(CultureInfo.InvariantCulture);
+                }
 
                 return basicProperties;
             }
@@ -208,9 +207,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             Exception exception,
             CancellationToken token)
         {
+            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(message, exception));
+
             if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
             {
-                return Task.WhenAll(handlers.Select(handler => handler(message.Clone(), exception, token)));
+                return Task.WhenAll(handlers.Select(handler => handler(message, exception, token)));
             }
 
             throw new InvalidOperationException($"Unable to process error message. Please register error handler for {endpointIdentity} endpoint.");
@@ -248,25 +249,27 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             var handleChannelCallbackExceptionSubscription = HandleChannelCallbackException(_logger, _ready, backgroundMessageProcessingTaskCompletionSource);
 
             var consumers = new Dictionary<string, EndpointIdentity>(_channels.Count, StringComparer.Ordinal);
-            var handleChannelBasicReturnSubscription = HandleChannelBasicReturn(_logger, EnqueueError, consumers, _jsonSerializer, token);
+            var handleChannelBasicReturnSubscription = HandleChannelBasicReturn(_logger, OnMessageReceived, _jsonSerializer, token);
 
             var handleChannelBasicAcksSubscription = HandleChannelBasicAcks();
             var handleChannelBasicNacksSubscription = HandleChannelBasicNacks();
 
-            using var commonChannel = ConfigureChannel(
-                _connection,
-                rabbitMqSettings,
-                handleChannelShutdownSubscription,
-                handleChannelCallbackExceptionSubscription,
-                handleChannelBasicReturnSubscription,
-                handleChannelBasicAcksSubscription,
-                handleChannelBasicNacksSubscription);
+            using (var commonChannel = ConfigureChannel(
+                       _connection,
+                       rabbitMqSettings,
+                       (_, _) => { },
+                       (_, _) => { },
+                       (_, _) => { },
+                       (_, _) => { },
+                       (_, _) => { }))
+            {
+                BuildTopology(commonChannel,
+                    rabbitMqSettings,
+                    _endpoints.Keys,
+                    _integrationMessageTypes);
 
-            BuildTopology(
-                commonChannel,
-                rabbitMqSettings,
-                _endpoints.Keys,
-                _integrationMessageTypes);
+                commonChannel.Close();
+            }
 
             _channels = ConfigureChannels(
                 _connection,
@@ -290,6 +293,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 _channels,
                 consumers,
                 _messageHandlers,
+                OnMessageReceived,
                 handleConsumerShutdownSubscription,
                 _jsonSerializer,
                 _ready,
@@ -340,7 +344,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 }
                 catch (BrokerUnreachableException brokerUnreachableException)
                 {
-                    logger.Error(brokerUnreachableException);
+                    logger.Error(brokerUnreachableException, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(ConfigureConnection)}");
                 }
 
                 await Task
@@ -409,8 +413,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             static void BuildDeadLetterPath(IModel channel, RabbitMqSettings rabbitMqSettings)
             {
                 channel.DeclareExchange(
-                    exchange: DeadLetterExchange,
-                    type: ExchangeType.Direct);
+                    DeadLetterExchange,
+                    ExchangeType.Fanout);
 
                 channel.DeclareQueue(
                     DeadLetterQueue,
@@ -422,15 +426,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     });
 
                 channel.BindQueue(
-                    queue: DeadLetterQueue,
-                    exchange: DeadLetterExchange);
+                    DeadLetterQueue,
+                    DeadLetterExchange,
+                    string.Empty);
             }
 
             static void BuildDeferredPath(IModel channel, RabbitMqSettings rabbitMqSettings)
             {
                 channel.DeclareExchange(
-                    exchange: DeferredExchange,
-                    type: ExchangeType.Direct);
+                    DeferredExchange,
+                    ExchangeType.Fanout);
 
                 channel.DeclareQueue(
                     DeferredQueue,
@@ -443,8 +448,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     });
 
                 channel.BindQueue(
-                    queue: DeferredQueue,
-                    exchange: DeferredExchange);
+                    DeferredQueue,
+                    DeferredExchange,
+                    string.Empty);
             }
 
             static void BuildInputPath(
@@ -454,28 +460,15 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 IReadOnlyDictionary<EndpointIdentity, IIntegrationTypeProvider> integrationMessageTypes)
             {
                 channel.DeclareExchange(
-                    exchange: InputExchange,
-                    type: ExchangeType.Direct);
-
-                var distinctIntegrationMessageTypes = integrationMessageTypes
-                   .Values
-                   .SelectMany(provider => provider.IntegrationMessageTypes())
-                   .Distinct();
-
-                foreach (var integrationMessageType in distinctIntegrationMessageTypes)
-                {
-                    channel.DeclareExchange(
-                        integrationMessageType.FullName!,
-                        ExchangeType.Direct);
-
-                    channel.BindExchange(
-                        source: InputExchange,
-                        destination: integrationMessageType.FullName!,
-                        routingKey: integrationMessageType.FullName!);
-                }
+                    InputExchange,
+                    ExchangeType.Topic);
 
                 foreach (var endpointIdentity in endpoints)
                 {
+                    channel.DeclareExchange(
+                        endpointIdentity.LogicalName,
+                        ExchangeType.Fanout);
+
                     channel.DeclareQueue(
                         endpointIdentity.LogicalName,
                         new Dictionary<string, object>
@@ -485,14 +478,90 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                             ["x-max-length-bytes"] = rabbitMqSettings.QueueMaxLengthBytes,
                             ["x-overflow"] = "reject-publish"
                         });
+
+                    channel.BindQueue(
+                        endpointIdentity.LogicalName,
+                        endpointIdentity.LogicalName,
+                        string.Empty);
                 }
 
-                foreach (var (endpointIdentity, integrationTypeProvider) in integrationMessageTypes)
+                foreach (var (endpointIdentity, provider) in integrationMessageTypes)
                 {
-                    channel.BindQueue(endpointIdentity.LogicalName, integrationTypeProvider.EndpointCommands().Select(messageType => messageType.FullName));
-                    channel.BindQueue(endpointIdentity.LogicalName, integrationTypeProvider.EventsSubscriptions().Select(messageType => messageType.FullName));
-                    channel.BindQueue(endpointIdentity.LogicalName, integrationTypeProvider.EndpointQueries().Select(messageType => messageType.FullName));
-                    channel.BindQueue(endpointIdentity.LogicalName, integrationTypeProvider.RepliesSubscriptions().Select(messageType => messageType.FullName));
+                    BuildLeftInputPath(channel, provider.EndpointCommands());
+                    BuildLeftInputPath(channel, provider.EventsSubscriptions());
+                    BuildLeftInputPath(channel, provider.EndpointQueries());
+                    BuildLeftInputPath(channel, provider.RepliesSubscriptions());
+
+                    BuildContravariance(channel, provider.EndpointCommands());
+                    BuildContravariance(channel, provider.EventsSubscriptions());
+                    BuildContravariance(channel, provider.EndpointQueries());
+                    BuildContravariance(channel, provider.RepliesSubscriptions());
+
+                    BuildRightInputPath(channel, endpointIdentity, provider.EndpointCommands());
+                    BuildRightInputPathForEvents(channel, endpointIdentity, provider.EventsSubscriptions());
+                    BuildRightInputPath(channel, endpointIdentity, provider.EndpointQueries());
+                    BuildRightInputPath(channel, endpointIdentity, provider.RepliesSubscriptions());
+                }
+
+                static void BuildLeftInputPath(
+                    IModel channel,
+                    IReadOnlyCollection<Type> messageTypes)
+                {
+                    foreach (var messageType in messageTypes)
+                    {
+                        channel.DeclareExchange(
+                            messageType.FullName!,
+                            ExchangeType.Topic);
+
+                        channel.BindExchange(
+                            InputExchange,
+                            messageType.FullName!,
+                            $"{messageType.FullName!.GetRoutingKeyPart()}.*");
+                    }
+                }
+
+                static void BuildContravariance(
+                    IModel channel,
+                    IReadOnlyCollection<Type> messageTypes)
+                {
+                    foreach (var source in messageTypes)
+                    {
+                        foreach (var destination in source.BaseTypes().Where(messageTypes.Contains))
+                        {
+                            channel.BindExchange(
+                                source.FullName!,
+                                destination.FullName!,
+                                $"{source.FullName!.GetRoutingKeyPart()}.*");
+                        }
+                    }
+                }
+
+                static void BuildRightInputPath(
+                    IModel channel,
+                    EndpointIdentity endpointIdentity,
+                    IReadOnlyCollection<Type> messageTypes)
+                {
+                    foreach (var messageType in messageTypes)
+                    {
+                        channel.BindExchange(
+                            messageType.FullName!,
+                            endpointIdentity.LogicalName,
+                            $"*.{endpointIdentity.LogicalName}");
+                    }
+                }
+
+                static void BuildRightInputPathForEvents(
+                    IModel channel,
+                    EndpointIdentity endpointIdentity,
+                    IReadOnlyCollection<Type> messageTypes)
+                {
+                    foreach (var messageType in messageTypes)
+                    {
+                        channel.BindExchange(
+                            messageType.FullName!,
+                            endpointIdentity.LogicalName,
+                            "*.*");
+                    }
                 }
             }
         }
@@ -518,12 +587,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             IReadOnlyDictionary<EndpointIdentity, IModel> channels,
             Dictionary<string, EndpointIdentity> consumers,
             IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> messageHandlers,
+            Action<IntegrationMessage, Exception?> onMessageReceived,
             AsyncEventHandler<ShutdownEventArgs> handleConsumerShutdownSubscription,
             IJsonSerializer jsonSerializer,
             AsyncManualResetEvent ready,
             CancellationToken token)
         {
-            var handleReceivedMessageSubscription = HandleReceivedMessage(logger, consumers, messageHandlers, jsonSerializer, ready, token);
+            var handleReceivedMessageSubscription = HandleReceivedMessage(logger, consumers, messageHandlers, onMessageReceived, jsonSerializer, ready, token);
 
             foreach (var (endpointIdentity, channel) in channels)
             {
@@ -540,9 +610,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         #endregion
 
-        #region error event handlers
+        #region error_event_handlers
 
-        private static EventHandler<ShutdownEventArgs> HandleConnectionShutdown(
+        private EventHandler<ShutdownEventArgs> HandleConnectionShutdown(
             ILogger logger,
             AsyncManualResetEvent ready,
             TaskCompletionSource<object?> tcs)
@@ -551,15 +621,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 ready.Reset();
 
+                Status = EnIntegrationTransportStatus.Stopped;
+
                 var exception = new InvalidOperationException(args.ToString());
 
-                logger.Error(exception);
+                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleConnectionShutdown)}");
 
                 tcs.SetException(exception);
             };
         }
 
-        private static EventHandler<ShutdownEventArgs> HandleChannelShutdown(
+        private EventHandler<ShutdownEventArgs> HandleChannelShutdown(
             ILogger logger,
             AsyncManualResetEvent ready,
             TaskCompletionSource<object?> tcs)
@@ -568,15 +640,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 ready.Reset();
 
+                Status = EnIntegrationTransportStatus.Stopped;
+
                 var exception = new InvalidOperationException(args.ToString());
 
-                logger.Error(exception);
+                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelShutdown)}");
 
                 tcs.SetException(exception);
             };
         }
 
-        private static AsyncEventHandler<ShutdownEventArgs> HandleConsumerShutdown(
+        private AsyncEventHandler<ShutdownEventArgs> HandleConsumerShutdown(
             ILogger logger,
             AsyncManualResetEvent ready,
             TaskCompletionSource<object?> tcs)
@@ -585,9 +659,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 ready.Reset();
 
+                Status = EnIntegrationTransportStatus.Stopped;
+
                 var exception = new InvalidOperationException(args.ToString());
 
-                logger.Error(exception);
+                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleConsumerShutdown)}");
 
                 tcs.SetException(exception);
 
@@ -595,7 +671,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             };
         }
 
-        private static EventHandler<CallbackExceptionEventArgs> HandleChannelCallbackException(
+        private EventHandler<CallbackExceptionEventArgs> HandleChannelCallbackException(
             ILogger logger,
             AsyncManualResetEvent ready,
             TaskCompletionSource<object?> tcs)
@@ -604,16 +680,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 ready.Reset();
 
-                logger.Error(args.Exception);
+                Status = EnIntegrationTransportStatus.Stopped;
+
+                logger.Error(args.Exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelCallbackException)}");
 
                 // TODO: #180 - reconnect
+                // TODO: #180 - ack transport replies
                 tcs.SetException(args.Exception);
             };
         }
 
         #endregion
 
-        #region publisher confirms
+        #region publisher_confirms
 
         private EventHandler<BasicAckEventArgs> HandleChannelBasicAcks()
         {
@@ -670,20 +749,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         private static EventHandler<BasicReturnEventArgs> HandleChannelBasicReturn(
             ILogger logger,
-            Func<EndpointIdentity, IntegrationMessage, Exception, CancellationToken, Task> enqueueError,
-            IReadOnlyDictionary<string, EndpointIdentity> consumers,
+            Action<IntegrationMessage, Exception?> onMessageReceived,
             IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
             return (sender, args) =>
             {
-                var consumer = (AsyncEventingBasicConsumer)sender;
-
                 ExecutionExtensions
-                   .TryAsync((consumer, args, consumers, jsonSerializer, enqueueError), EnqueueReturnedErrorMessage)
+                   .TryAsync(((IModel)sender, args, logger, onMessageReceived, jsonSerializer), EnqueueReturnedErrorMessage)
                    .Catch<Exception>((exception, _) =>
                    {
-                       logger.Error(exception);
+                       logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)}");
                        return Task.CompletedTask;
                    })
                    .Invoke(token)
@@ -691,39 +767,33 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             };
 
             static Task EnqueueReturnedErrorMessage(
-                (AsyncEventingBasicConsumer, BasicReturnEventArgs, IReadOnlyDictionary<string, EndpointIdentity>, IJsonSerializer, Func<EndpointIdentity, IntegrationMessage, Exception, CancellationToken, Task>) state,
+                (IModel, BasicReturnEventArgs, ILogger, Action<IntegrationMessage, Exception?>, IJsonSerializer) state,
                 CancellationToken token)
             {
-                var (consumer, args, consumers, jsonSerializer, enqueueError) = state;
+                var (recoveryAwareModel, args, logger, onMessageReceived, jsonSerializer) = state;
 
-                var endpointIdentity = GetEndpointIdentity(consumer, consumers);
+                var exception = new InvalidOperationException($"{args.ReplyCode}: {args.ReplyText} - {args.BasicProperties.Type}: {args.BasicProperties.MessageId}");
 
-                var message = args.DecodeIntegrationMessage(jsonSerializer);
+                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)}");
 
-                var exception = new InvalidOperationException($"{args.ReplyCode}: {args.ReplyText}");
+                onMessageReceived(args.DecodeIntegrationMessage(jsonSerializer), exception);
 
-                return enqueueError(endpointIdentity, message, exception, token);
+                recoveryAwareModel.Publish(DeadLetterExchange, args.RoutingKey, args.BasicProperties, args.Body.ToArray());
+
+                return Task.CompletedTask;
             }
+        }
 
-            static EndpointIdentity GetEndpointIdentity(
-                AsyncEventingBasicConsumer consumer,
-                IReadOnlyDictionary<string, EndpointIdentity> consumers)
-            {
-                var consumerTag = consumer.ConsumerTags.Single();
-
-                if (!consumers.TryGetValue(consumerTag, out var endpointIdentity))
-                {
-                    throw new InvalidOperationException($"Unable to find appropriate endpoint for consumer with tag: {consumerTag}");
-                }
-
-                return endpointIdentity;
-            }
+        private void OnMessageReceived(IntegrationMessage message, Exception? exception)
+        {
+            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(message, exception));
         }
 
         private static AsyncEventHandler<BasicDeliverEventArgs> HandleReceivedMessage(
             ILogger logger,
             IReadOnlyDictionary<string, EndpointIdentity> consumers,
             IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> messageHandlers,
+            Action<IntegrationMessage, Exception?> onMessageReceived,
             IJsonSerializer jsonSerializer,
             AsyncManualResetEvent ready,
             CancellationToken token)
@@ -735,10 +805,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 var consumer = (AsyncEventingBasicConsumer)sender;
 
                 await ExecutionExtensions
-                   .TryAsync((consumer, args, consumers, messageHandlers, jsonSerializer), InvokeMessageHandlers)
+                   .TryAsync((consumer, args, consumers, messageHandlers, onMessageReceived, jsonSerializer), InvokeMessageHandlers)
                    .Catch<Exception>((exception, _) =>
                    {
-                       logger.Error(exception);
+                       logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleReceivedMessage)}");
                        args.Nack(consumer.Model);
                        return Task.CompletedTask;
                    })
@@ -747,14 +817,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             };
 
             static async Task InvokeMessageHandlers(
-                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, IReadOnlyDictionary<string, EndpointIdentity>, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>, IJsonSerializer) state,
+                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, IReadOnlyDictionary<string, EndpointIdentity>, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>, Action<IntegrationMessage, Exception?>, IJsonSerializer) state,
                 CancellationToken token)
             {
-                var (consumer, args, consumers, messageHandlers, jsonSerializer) = state;
+                var (consumer, args, consumers, messageHandlers, onMessageReceived, jsonSerializer) = state;
 
                 var message = args.DecodeIntegrationMessage(jsonSerializer);
 
                 ManageMessageHeaders(message, args);
+
+                onMessageReceived(message, default);
 
                 await GetMessageHandler(consumer, consumers, messageHandlers)
                    .Invoke(message, token)

@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Modules.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class CommandEmptyMessageHandler : IMessageHandler<Command>,
-                                                ICollectionResolvable<IMessageHandler<Command>>
+                                                IResolvable<IMessageHandler<Command>>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationContext _context;

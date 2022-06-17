@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class ReplyEmptyMessageHandler : IMessageHandler<Reply>,
-                                              ICollectionResolvable<IMessageHandler<Reply>>
+                                              IResolvable<IMessageHandler<Reply>>
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationContext _context;

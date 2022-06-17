@@ -1,11 +1,14 @@
 namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Net.Mime;
     using System.Text;
+    using System.Threading.Tasks;
     using Basics;
     using CrossCuttingConcerns.Json;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.MessageHeaders;
     using global::RabbitMQ.Client;
     using global::RabbitMQ.Client.Events;
 
@@ -32,6 +35,41 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             var serializedMessage = jsonSerializer.SerializeObject(message);
             var bytes = Encoding.UTF8.GetBytes(serializedMessage);
             return bytes.Compress();
+        }
+
+        public static void Publish(
+            this IModel channel,
+            string exchange,
+            string routingKey,
+            IBasicProperties basicProperties,
+            byte[] body)
+        {
+            lock (channel)
+            {
+                channel.BasicPublish(exchange, routingKey, true, basicProperties, body);
+            }
+        }
+
+        public static Task<bool> Publish(
+            this IModel channel,
+            string exchange,
+            string routingKey,
+            IBasicProperties basicProperties,
+            byte[] body,
+            ConcurrentDictionary<ulong, TaskCompletionSource<bool>> outstandingConfirms)
+        {
+            Task<bool> confirmedPublication;
+
+            lock (channel)
+            {
+                confirmedPublication = outstandingConfirms
+                   .GetOrAdd(channel.NextPublishSeqNo, _ => new TaskCompletionSource<bool>())
+                   .Task;
+
+                channel.BasicPublish(exchange, routingKey, true, basicProperties, body);
+            }
+
+            return confirmedPublication;
         }
 
         public static void Ack(

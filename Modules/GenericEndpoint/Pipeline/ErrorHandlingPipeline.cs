@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
@@ -12,15 +13,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     [Dependency(typeof(UnitOfWorkPipeline))]
     internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
     {
-        private readonly IRetryPolicy _retryPolicy;
+        private readonly IEnumerable<IErrorHandler> _errorHandlers;
 
         public ErrorHandlingPipeline(
             IMessagePipeline decoratee,
-            IRetryPolicy retryPolicy)
+            IEnumerable<IErrorHandler> errorHandlers)
         {
             Decoratee = decoratee;
 
-            _retryPolicy = retryPolicy;
+            _errorHandlers = errorHandlers;
         }
 
         public IMessagePipeline Decoratee { get; }
@@ -57,34 +58,34 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return default;
         }
 
-        private Func<Exception, CancellationToken, Task<Exception?>> OnError(IAdvancedIntegrationContext context)
+        private Func<Exception, CancellationToken, Task<Exception?>> OnError(
+            IAdvancedIntegrationContext context)
         {
-            return async (exception, token) =>
-            {
-                var retryException = await ExecutionExtensions
-                   .TryAsync((context, _retryPolicy, exception), Retry)
-                   .Catch<Exception>()
-                   .Invoke(OnRetryError, token)
-                   .ConfigureAwait(false);
-
-                return retryException ?? exception;
-            };
+            return (exception, token) => ExecutionExtensions
+               .TryAsync((context, _errorHandlers, exception), InvokeErrorHandlers)
+               .Catch<Exception>()
+               .Invoke(OnErrorHandlingError, token);
         }
 
-        private static async Task<Exception?> Retry(
-            (IAdvancedIntegrationContext, IRetryPolicy, Exception) state,
+        private static async Task<Exception?> InvokeErrorHandlers(
+            (IAdvancedIntegrationContext, IEnumerable<IErrorHandler>, Exception) state,
             CancellationToken token)
         {
-            var (context, policy, exception) = state;
+            var (context, errorHandlers, exception) = state;
 
-            await policy
-               .Apply(context, exception, token)
-               .ConfigureAwait(false);
+            foreach (var handler in errorHandlers)
+            {
+                await handler
+                   .Handle(context, exception, token)
+                   .ConfigureAwait(false);
+            }
 
             return default;
         }
 
-        private static Task<Exception?> OnRetryError(Exception exception, CancellationToken token)
+        private static Task<Exception?> OnErrorHandlingError(
+            Exception exception,
+            CancellationToken token)
         {
             return Task.FromResult<Exception?>(exception);
         }

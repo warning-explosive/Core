@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
     /// Implements reaction on incoming messages
     /// </summary>
     /// <typeparam name="TMessage">TMessage type-argument</typeparam>
-    public interface IMessageHandler<in TMessage>
+    public interface IMessageHandler<TMessage>
         where TMessage : IIntegrationMessage
     {
         /// <summary>

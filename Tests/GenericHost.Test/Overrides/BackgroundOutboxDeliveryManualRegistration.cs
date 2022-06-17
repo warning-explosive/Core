@@ -5,11 +5,11 @@ namespace SpaceEngineers.Core.GenericHost.Test.Overrides
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
 
-    internal class OutboxMessagesDeliveryOverride : IComponentsOverride
+    internal class BackgroundOutboxDeliveryManualRegistration : IManualRegistration
     {
-        public void RegisterOverrides(IRegisterComponentsOverrideContainer container)
+        public void Register(IManualRegistrationsContainer container)
         {
-            container.Override<IOutboxDelivery, BackgroundOutboxDelivery>(EnLifestyle.Scoped);
+            container.RegisterDecorator<IOutboxDelivery, BackgroundOutboxDelivery>(EnLifestyle.Scoped);
         }
     }
 }

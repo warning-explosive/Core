@@ -196,6 +196,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             return new IntegrationMessage(Payload.DeepCopy(), ReflectedType, _headers.DeepCopy());
         }
 
+        /// <summary>
+        /// Clones original message with specified contravariant type
+        /// </summary>
+        /// <param name="reflectedType">Reflected type</param>
+        /// <returns>Copy</returns>
+        public IntegrationMessage ContravariantClone(Type reflectedType)
+        {
+            if (!reflectedType.IsAssignableFrom(ReflectedType))
+            {
+                throw new InvalidOperationException($"{reflectedType} isn't suitable as contravariant analogue for {ReflectedType}");
+            }
+
+            return new IntegrationMessage(Payload.DeepCopy(), reflectedType, _headers.DeepCopy());
+        }
+
         /// <inheritdoc />
         object ICloneable.Clone()
         {

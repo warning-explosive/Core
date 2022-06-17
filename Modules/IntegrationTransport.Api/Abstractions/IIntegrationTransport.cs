@@ -19,6 +19,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
 
         /// <summary>
+        /// Message received
+        /// </summary>
+        event EventHandler<IntegrationTransportMessageReceivedEventArgs>? MessageReceived;
+
+        /// <summary>
         /// Status
         /// </summary>
         EnIntegrationTransportStatus Status { get; }

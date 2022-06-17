@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Extensions
         internal static bool HasMessageHandler(this Type messageType, IRegistrationsContainer registrations)
         {
             return registrations
-               .Collections()
+               .Resolvable()
                .RegisteredComponents()
                .SelectMany(info => info.ExtractGenericArgumentsAt(typeof(IMessageHandler<>)))
                .Any(messageType.IsAssignableFrom);

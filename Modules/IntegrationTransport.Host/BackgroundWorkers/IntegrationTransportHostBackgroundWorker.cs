@@ -27,16 +27,23 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
         {
             var logger = _dependencyContainer.Resolve<ILogger>();
             var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
-            var transportEndpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
+            var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
             var integrationTypeProvider = _dependencyContainer.Resolve<IIntegrationTypeProvider>();
 
-            transport.Bind(transportEndpointIdentity, ExecuteRpcReplyMessageHandlers(_dependencyContainer), integrationTypeProvider);
-            transport.BindErrorHandler(transportEndpointIdentity, ErrorMessageHandler(logger, transportEndpointIdentity));
+            transport.Bind(endpointIdentity, ExecuteRpcReplyMessageHandlers(_dependencyContainer), integrationTypeProvider);
+            transport.BindErrorHandler(endpointIdentity, ErrorMessageHandler(logger, endpointIdentity));
+
+            transport.StatusChanged += OnStatusChanged(logger);
 
             await _dependencyContainer
                 .Resolve<IIntegrationTransport>()
                 .StartBackgroundMessageProcessing(token)
                 .ConfigureAwait(false);
+        }
+
+        private static EventHandler<IntegrationTransportStatusChangedEventArgs> OnStatusChanged(ILogger logger)
+        {
+            return (sender, args) => logger.Information($"{sender.GetType().Name}: {args.PreviousStatus} -> {args.CurrentStatus}");
         }
 
         private static Func<IntegrationMessage, CancellationToken, Task> ExecuteRpcReplyMessageHandlers(
@@ -66,11 +73,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 
         private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(
             ILogger logger,
-            EndpointIdentity transportEndpointIdentity)
+            EndpointIdentity endpointIdentity)
         {
             return (_, exception, _) =>
             {
-                logger.Error(exception, transportEndpointIdentity.ToString());
+                logger.Error(exception, $"{endpointIdentity} -> Message dispatching error");
                 return Task.CompletedTask;
             };
         }

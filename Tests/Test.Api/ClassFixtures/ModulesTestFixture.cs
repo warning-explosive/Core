@@ -11,6 +11,8 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using CompositionRoot.Api.Abstractions.Registration;
     using CrossCuttingConcerns.Settings;
     using Internals;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -32,6 +34,24 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
                 .EnsureNotNull("Project directory not found")
                 .StepInto(Settings)
                 .SetupFileSystemSettingsDirectory();
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder CreateHostBuilder(ITestOutputHelper testOutputHelper)
+        {
+            return Host
+               .CreateDefaultBuilder()
+               .ConfigureLogging(context =>
+               {
+                   context.AddProvider(new XUnitLoggerProvider(testOutputHelper));
+                   context.SetMinimumLevel(LogLevel.Trace);
+               });
+        }
+
+        /// <inheritdoc />
+        public ILogger CreateLogger(ITestOutputHelper testOutputHelper)
+        {
+            return new XUnitConsoleLogger(testOutputHelper);
         }
 
         /// <inheritdoc />

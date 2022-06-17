@@ -11,7 +11,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     internal class DefaultRetryPolicy : IRetryPolicy,
                                         IResolvable<IRetryPolicy>
     {
-        public Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token)
+        public Task Apply(
+            IAdvancedIntegrationContext context,
+            Exception exception,
+            CancellationToken token)
         {
             return context.Reject(exception, token);
         }

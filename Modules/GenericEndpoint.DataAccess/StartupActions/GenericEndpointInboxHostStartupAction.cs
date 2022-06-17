@@ -15,11 +15,11 @@
     using EndpointIdentity = Contract.EndpointIdentity;
     using IntegrationMessage = Messaging.IntegrationMessage;
 
-    internal class GenericEndpointOutboxHostStartupAction : IHostStartupAction
+    internal class GenericEndpointInboxHostStartupAction : IHostStartupAction
     {
         private readonly IDependencyContainer _dependencyContainer;
 
-        public GenericEndpointOutboxHostStartupAction(IDependencyContainer dependencyContainer)
+        public GenericEndpointInboxHostStartupAction(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
         }
@@ -60,12 +60,12 @@
 
         private static async Task HandleErrorMessage(
             IDatabaseTransaction transaction,
-            IntegrationMessage message,
+            IntegrationMessage integrationMessage,
             CancellationToken token)
         {
             await transaction
                .Write<InboxMessage, Guid>()
-               .Update(new[] { message.ReadRequiredHeader<Id>().Value }, message => message.IsError, true, token)
+               .Update(new[] { integrationMessage.ReadRequiredHeader<Id>().Value }, message => message.IsError, true, token)
                .ConfigureAwait(false);
         }
 
@@ -75,7 +75,7 @@
         {
             return (exception, _) =>
             {
-                logger.Error(exception, endpointIdentity.ToString());
+                logger.Error(exception, $"{endpointIdentity} -> Inbox reject error");
                 return Task.CompletedTask;
             };
         }

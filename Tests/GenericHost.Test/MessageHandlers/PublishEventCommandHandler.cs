@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class PublishEventCommandHandler : IMessageHandler<PublishEventCommand>,
-                                                ICollectionResolvable<IMessageHandler<PublishEventCommand>>
+                                                IResolvable<IMessageHandler<PublishEventCommand>>
     {
         private readonly IIntegrationContext _context;
 

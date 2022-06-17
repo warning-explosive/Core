@@ -1,8 +1,10 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using GenericEndpoint.DataAccess.BackgroundWorkers;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.UnitOfWork;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
@@ -10,13 +12,25 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
     [ComponentOverride]
     internal class BackgroundOutboxDelivery : IOutboxDelivery,
-                                              IResolvable<IOutboxDelivery>
+                                              IDecorator<IOutboxDelivery>
     {
+        public BackgroundOutboxDelivery(IOutboxDelivery decoratee)
+        {
+            Decoratee = decoratee;
+        }
+
+        public IOutboxDelivery Decoratee { get; }
+
         public Task DeliverMessages(
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            return Task.CompletedTask;
+            if (!Environment.StackTrace.Contains(nameof(GenericEndpointOutboxHostBackgroundWorker), StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.CompletedTask;
+            }
+
+            return Decoratee.DeliverMessages(messages, token);
         }
     }
 }

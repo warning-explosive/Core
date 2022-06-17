@@ -85,17 +85,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             where TReply : IIntegrationReply
         {
             var replyIntegrationMessage = CreateGeneralMessage(reply);
+
             var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
+
             replyIntegrationMessage.WriteHeader(new ReplyTo(sentFrom));
 
             await Collect(replyIntegrationMessage, token).ConfigureAwait(false);
-
-            if (Message.ReadHeader<DidHandlerReplyToTheQuery>()?.Value == true)
-            {
-                throw new InvalidOperationException("Message handler already replied to integration query");
-            }
-
-            Message.WriteHeader(new DidHandlerReplyToTheQuery(true));
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)

@@ -30,6 +30,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             }
         }
 
+        public static string GetRoutingKeyPart(this string str)
+        {
+            return str
+               .Replace(".", string.Empty, StringComparison.OrdinalIgnoreCase)
+               .Replace("+", string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static void DeclareExchange(
             this IModel channel,
             string exchange,
@@ -62,8 +69,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             string routingKey)
         {
             channel.ExchangeBind(
-                source,
                 destination,
+                source,
                 routingKey,
                 new Dictionary<string, object>());
         }
@@ -71,23 +78,25 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
         public static void BindQueue(
             this IModel channel,
             string queue,
-            string exchange)
+            string exchange,
+            string routingKey)
         {
             channel.QueueBind(
                 queue,
                 exchange,
-                string.Empty,
+                routingKey,
                 new Dictionary<string, object>());
         }
 
         public static void BindQueue(
             this IModel channel,
             string queue,
-            IEnumerable<string> exchanges)
+            IEnumerable<string> exchanges,
+            string routingKey)
         {
             foreach (var exchange in exchanges)
             {
-                BindQueue(channel, queue, exchange);
+                BindQueue(channel, queue, exchange, routingKey);
             }
         }
     }

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class PublishInheritedEventCommandHandler : IMessageHandler<PublishInheritedEventCommand>,
-                                                         ICollectionResolvable<IMessageHandler<PublishInheritedEventCommand>>
+                                                         IResolvable<IMessageHandler<PublishInheritedEventCommand>>
     {
         private readonly IIntegrationContext _context;
 

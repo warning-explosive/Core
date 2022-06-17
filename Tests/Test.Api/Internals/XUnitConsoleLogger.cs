@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Test.Mocks
+namespace SpaceEngineers.Core.Test.Api.Internals
 {
     using System;
     using Basics.Primitives;

@@ -113,6 +113,7 @@ namespace SpaceEngineers.Core.GenericHost
             static Func<IServiceProvider, HostedService> BuildHostedService(IHostBuilder hostBuilder)
             {
                 return serviceProvider => new HostedService(
+                    serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
                     serviceProvider.GetRequiredService<ILoggerFactory>(),
                     serviceProvider.GetServices<IHostStartupAction>(),
                     serviceProvider.GetServices<IHostBackgroundWorker>());

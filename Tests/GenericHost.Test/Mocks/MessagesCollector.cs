@@ -2,22 +2,23 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Threading;
     using System.Threading.Tasks;
     using Basics.Primitives;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
+    using IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
     [ManuallyRegisteredComponent("We need register instance of this class so as to collect and assert messages inside test")]
     internal class MessagesCollector : IResolvable<MessagesCollector>
     {
-        public MessagesCollector()
+        public MessagesCollector(IIntegrationTransport integrationTransport)
         {
             Messages = new ConcurrentQueue<IntegrationMessage>();
             ErrorMessages = new ConcurrentQueue<(IntegrationMessage, Exception?)>();
+
+            integrationTransport.MessageReceived += Collect;
         }
 
         private event EventHandler<MessageCollectedEventArgs>? OnCollected;
@@ -26,21 +27,18 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
         public ConcurrentQueue<(IntegrationMessage message, Exception? exception)> ErrorMessages { get; }
 
-        [SuppressMessage("Analysis", "CA1801", Justification = "test mock integration")]
-        public Task Collect(IntegrationMessage message, Exception? exception, CancellationToken token)
+        public void Collect(object? sender, IntegrationTransportMessageReceivedEventArgs args)
         {
-            if (exception == null)
+            if (args.Exception == null)
             {
-                Messages.Enqueue(message);
+                Messages.Enqueue(args.Message);
             }
             else
             {
-                ErrorMessages.Enqueue((message, exception));
+                ErrorMessages.Enqueue((args.Message, args.Exception));
             }
 
-            OnCollected?.Invoke(this, new MessageCollectedEventArgs(message, exception));
-
-            return Task.CompletedTask;
+            OnCollected?.Invoke(this, new MessageCollectedEventArgs(args.Message, args.Exception));
         }
 
         public async Task WaitUntilErrorMessageIsNotReceived(

@@ -10,12 +10,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     public interface IRetryPolicy
     {
         /// <summary>
-        /// Apply retry strategy
+        /// Applies retry policy
         /// </summary>
         /// <param name="context">Integration context</param>
         /// <param name="exception">Processing error</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing retry operation</returns>
-        Task Apply(IAdvancedIntegrationContext context, Exception exception, CancellationToken token);
+        /// <returns>Ongoing operation</returns>
+        Task Apply(
+            IAdvancedIntegrationContext context,
+            Exception exception,
+            CancellationToken token);
     }
 }

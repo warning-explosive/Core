@@ -8,10 +8,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
     public class User : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
-        /// <param name="user">User</param>
-        public User(string user)
+        /// <param name="value">User</param>
+        public User(string value)
         {
-            Value = user;
+            Value = value;
         }
 
         /// <summary>

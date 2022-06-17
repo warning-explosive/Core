@@ -23,6 +23,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using IntegrationTransport.Host;
     using Messages;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
     using Overrides;
@@ -67,12 +68,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var postgreSqlDatabaseProvider = new PostgreSqlDatabaseProvider();
 
-            var useInMemoryIntegrationTransport = new Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (test, output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (test, logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(output))
+                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(test)))
                        .BuildOptions()));
 
@@ -810,7 +811,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(QueryTranslationTestData))]
         internal async Task QueryTranslationTest(
             string section,
-            Func<string, ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
@@ -818,6 +819,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
             TimeSpan timeout)
         {
             Output.WriteLine(section);
+
+            var logger = Fixture.CreateLogger(Output);
 
             var additionalOurTypes = new[]
             {
@@ -843,11 +846,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(nameof(QueryTranslationTest), Output, Host.CreateDefaultBuilder())
+            var host = useTransport(nameof(QueryTranslationTest), logger, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider)

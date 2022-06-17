@@ -64,6 +64,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// <summary>
         /// Queue max length bytes
         /// </summary>
-        public ulong QueueMaxLengthBytes { get; set; }
+        public int QueueMaxLengthBytes { get; set; }
     }
 }

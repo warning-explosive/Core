@@ -39,6 +39,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         }
 
         /// <summary>
+        /// Is the IntegrationMessage a reply
+        /// </summary>
+        /// <param name="reply">Integration reply</param>
+        /// <param name="query">Integration query</param>
+        /// <returns>IntegrationMessage is a reply or not</returns>
+        public static bool IsReplyOnQuery(this IntegrationMessage reply, IntegrationMessage query)
+        {
+            return typeof(IIntegrationReply).IsAssignableFrom(reply.ReflectedType)
+                && typeof(IIntegrationQuery<>).MakeGenericType(reply.ReflectedType).IsAssignableFrom(query.ReflectedType);
+        }
+
+        /// <summary>
         /// Is the IntegrationMessage a query
         /// </summary>
         /// <param name="message">Integration message</param>

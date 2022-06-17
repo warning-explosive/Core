@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class RequestQueryCommandHandler : IMessageHandler<RequestQueryCommand>,
-                                                ICollectionResolvable<IMessageHandler<RequestQueryCommand>>
+                                                IResolvable<IMessageHandler<RequestQueryCommand>>
     {
         private readonly IIntegrationContext _context;
 

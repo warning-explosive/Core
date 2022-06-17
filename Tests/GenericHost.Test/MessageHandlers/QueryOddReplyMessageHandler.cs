@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
     [Component(EnLifestyle.Transient)]
     internal class QueryOddReplyMessageHandler : IMessageHandler<Query>,
-                                                 ICollectionResolvable<IMessageHandler<Query>>
+                                                 IResolvable<IMessageHandler<Query>>
     {
         private readonly IIntegrationContext _context;
 

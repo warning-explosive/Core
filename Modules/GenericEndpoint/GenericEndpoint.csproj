@@ -57,7 +57,7 @@
       <DependentUpon>IRetryPolicy.cs</DependentUpon>
     </Compile>
     <Compile Update="Pipeline\IRetryPolicy.cs">
-      <DependentUpon>ErrorHandlingPipeline.cs</DependentUpon>
+      <DependentUpon>RetryErrorHandler.cs</DependentUpon>
     </Compile>
     <Compile Update="Pipeline\AdvancedIntegrationContext.cs">
       <DependentUpon>IAdvancedIntegrationContext.cs</DependentUpon>
@@ -82,6 +82,12 @@
     </Compile>
     <Compile Update="Pipeline\HandledByEndpointPipeline.cs">
       <DependentUpon>IMessagePipelineStep.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\IErrorHandler.cs">
+      <DependentUpon>ErrorHandlingPipeline.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\RetryErrorHandler.cs">
+      <DependentUpon>IErrorHandler.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

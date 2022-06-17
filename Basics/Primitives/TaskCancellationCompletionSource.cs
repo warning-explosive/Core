@@ -8,31 +8,23 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// TaskCancellationCompletionSource
     /// </summary>
     /// <typeparam name="TResult">TResult type-argument</typeparam>
-    public class TaskCancellationCompletionSource<TResult> : IDisposable
+    public class TaskCancellationCompletionSource<TResult> : TaskCompletionSource<TResult>, IDisposable
     {
-        private readonly TaskCompletionSource<TResult> _tcs;
         private readonly IDisposable? _registration;
 
         /// <summary> .cctor </summary>
         /// <param name="token">Cancellation token</param>
         public TaskCancellationCompletionSource(CancellationToken token)
+            : base(TaskCreationOptions.RunContinuationsAsynchronously)
         {
-            _tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-
             if (token.IsCancellationRequested)
             {
-                _tcs.SetCanceled();
+                SetCanceled();
                 return;
             }
 
-            _registration = token
-                .Register(() => _tcs.TrySetCanceled(token), useSynchronizationContext: false);
+            _registration = token.Register(() => TrySetCanceled(token), useSynchronizationContext: false);
         }
-
-        /// <summary>
-        /// Task
-        /// </summary>
-        public Task<TResult> Task => _tcs.Task;
 
         /// <inheritdoc />
         public void Dispose()

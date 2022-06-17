@@ -23,6 +23,7 @@
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Overrides;
     using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
     using SpaceEngineers.Core.CompositionRoot.Api.Exceptions;
@@ -59,51 +60,53 @@
         /// <returns>BuildHostTestData</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
-            var useInMemoryIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (output, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
+                (logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .WithTracing()
-                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(output)))
+                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<ITestOutputHelper, IHostBuilder, IHostBuilder>(
-                (output, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
+                (logger, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .WithTracing()
-                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(output)))
+                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                        .BuildOptions()));
 
-            return new[]
+            var integrationTransportProviders = new[]
             {
-                new object[]
-                {
-                    useInMemoryIntegrationTransport
-                },
-                new object[]
-                {
-                    useRabbitMqIntegrationTransport
-                }
+                useInMemoryIntegrationTransport,
+                /*TODO: #180 - useRabbitMqIntegrationTransport*/
             };
+
+            return integrationTransportProviders
+               .Select(useTransport => new object[]
+               {
+                   useTransport
+               });
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void SameTransportTest(Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
+        internal void SameTransportTest(Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
-            var host = useTransport(Output, Host.CreateDefaultBuilder())
+            var logger = Fixture.CreateLogger(Output);
+
+            var host = useTransport(logger, Fixture.CreateHostBuilder(Output))
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
                         .WithTracing()
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
+                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                         .BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
                     (_, builder) => builder
                         .WithTracing()
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(Output)))
+                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                         .BuildOptions())
                 .BuildHost();
 
@@ -123,8 +126,10 @@
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void BuildHostTest(Func<ITestOutputHelper, IHostBuilder, IHostBuilder> useTransport)
+        internal void BuildHostTest(Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
+            var logger = Fixture.CreateLogger(Output);
+
             var messageTypes = new[]
             {
                 typeof(BaseEvent),
@@ -137,7 +142,6 @@
 
             var messageHandlerTypes = new[]
             {
-                typeof(IntegrationEventEmptyMessageHandler),
                 typeof(BaseEventEmptyMessageHandler),
                 typeof(InheritedEventEmptyMessageHandler),
                 typeof(CommandEmptyMessageHandler),
@@ -154,11 +158,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(Output),
+                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(Output, Host.CreateDefaultBuilder())
+            var host = useTransport(logger, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider)
@@ -188,7 +192,7 @@
                 var expectedHostStartupActions = new[]
                 {
                     typeof(UpgradeDatabaseHostStartupAction),
-                    typeof(GenericEndpointOutboxHostStartupAction),
+                    typeof(GenericEndpointInboxHostStartupAction),
                     typeof(GenericEndpointHostStartupAction)
                 };
 
@@ -338,64 +342,26 @@
 
                     Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
 
-                    var expectedCommandHandlers = new[]
+                    Assert.Equal(typeof(BaseEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
+                    Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
+                    Assert.Equal(typeof(CommandEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
+                    Assert.Equal(typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
+                    Assert.Equal(typeof(QueryAlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Query>>().GetType());
+                    Assert.Equal(typeof(ReplyEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
+
+                    var expectedErrorHandlers = new[]
                     {
-                        typeof(CommandEmptyMessageHandler)
+                        typeof(TracingErrorHandler),
+                        typeof(RetryErrorHandler)
                     };
 
-                    var actualCommandHandlers = endpointDependencyContainer
-                        .ResolveCollection<IMessageHandler<Command>>()
-                        .Select(handler => handler.GetType())
-                        .ShowTypes("actualCommandHandlers", log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
+                    var actualErrorHandlers = endpointDependencyContainer
+                       .ResolveCollection<IErrorHandler>()
+                       .Select(obj => obj.GetType())
+                       .ShowTypes(nameof(IErrorHandler), log)
+                       .ToList();
 
-                    Assert.Equal(expectedCommandHandlers.OrderBy(type => type.FullName).ToList(), actualCommandHandlers);
-
-                    var expectedOpenGenericHandlerCommandHandlers = new[]
-                    {
-                        typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>)
-                    };
-
-                    var actualOpenGenericHandlerCommandHandlers = endpointDependencyContainer
-                        .ResolveCollection<IMessageHandler<OpenGenericHandlerCommand>>()
-                        .Select(handler => handler.GetType())
-                        .ShowTypes("actualOpenGenericHandlerCommandHandlers", log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
-
-                    Assert.Equal(actualOpenGenericHandlerCommandHandlers.OrderBy(type => type.FullName).ToList(), expectedOpenGenericHandlerCommandHandlers);
-
-                    var expectedBaseEventHandlers = new[]
-                    {
-                        typeof(IntegrationEventEmptyMessageHandler),
-                        typeof(BaseEventEmptyMessageHandler)
-                    };
-
-                    var actualBaseEventHandlers = endpointDependencyContainer
-                        .ResolveCollection<IMessageHandler<BaseEvent>>()
-                        .Select(handler => handler.GetType())
-                        .ShowTypes("actualBaseEventHandlers", log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
-
-                    Assert.Equal(expectedBaseEventHandlers.OrderBy(type => type.FullName).ToList(), actualBaseEventHandlers);
-
-                    var expectedFirstInheritedEventHandlers = new[]
-                    {
-                        typeof(IntegrationEventEmptyMessageHandler),
-                        typeof(BaseEventEmptyMessageHandler),
-                        typeof(InheritedEventEmptyMessageHandler)
-                    };
-
-                    var actualFirstInheritedEventHandlers = endpointDependencyContainer
-                        .ResolveCollection<IMessageHandler<InheritedEvent>>()
-                        .Select(handler => handler.GetType())
-                        .ShowTypes("actualInheritedEventHandlers", log)
-                        .OrderBy(type => type.FullName)
-                        .ToList();
-
-                    Assert.Equal(expectedFirstInheritedEventHandlers.OrderBy(type => type.FullName).ToList(), actualFirstInheritedEventHandlers);
+                    Assert.Equal(expectedErrorHandlers, actualErrorHandlers);
                 }
             }
 
@@ -436,7 +402,7 @@
 
                     var actualRpcReplyHandlers = transportDependencyContainer
                         .Resolve<IRpcReplyMessageHandler<IIntegrationReply>>()
-                       .FlattenDecoratedObject(obj => obj.GetType())
+                        .FlattenDecoratedObject(obj => obj.GetType())
                         .ShowTypes("rpc reply handlers", log)
                         .ToList();
 

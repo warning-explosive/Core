@@ -63,11 +63,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(TaskCompletionSource<object> tcs, Action<string> log)
             {
-                return (s, e) =>
+                return (_, args) =>
                 {
-                    log($"{s.GetType().Name}: {e.PreviousStatus} -> {e.CurrentStatus}");
-
-                    if (e.CurrentStatus == EnIntegrationTransportStatus.Running)
+                    if (args.CurrentStatus == EnIntegrationTransportStatus.Running)
                     {
                         tcs.TrySetResult(default!);
                     }

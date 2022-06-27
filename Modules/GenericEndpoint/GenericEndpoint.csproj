@@ -36,6 +36,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Pipeline\UnitOfWorkPipeline.cs">
@@ -88,6 +89,12 @@
     </Compile>
     <Compile Update="Pipeline\RetryErrorHandler.cs">
       <DependentUpon>IErrorHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="RpcRequest\RpcRequestRegistry.cs">
+      <DependentUpon>IRpcRequestRegistry.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\MessagesCollector.cs">
+      <DependentUpon>IMessagesCollector.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

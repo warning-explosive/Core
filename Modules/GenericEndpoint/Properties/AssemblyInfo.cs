@@ -9,4 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Tracing")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.DataAccess")]
 
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
+
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

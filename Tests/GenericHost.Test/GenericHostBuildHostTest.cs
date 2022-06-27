@@ -5,6 +5,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
+    using AuthorizationEndpoint.Contract.Messages;
     using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Host;
     using GenericEndpoint.Contract;
@@ -14,11 +15,12 @@
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Pipeline;
+    using GenericEndpoint.RpcRequest;
     using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
     using IntegrationTransport.Host;
     using IntegrationTransport.Host.BackgroundWorkers;
-    using IntegrationTransport.RpcRequest;
+    using IntegrationTransport.Integration;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
@@ -31,14 +33,12 @@
     using SpaceEngineers.Core.DataAccess.Orm.Host.Migrations;
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
     using SpaceEngineers.Core.GenericEndpoint.DataAccess.BackgroundWorkers;
-    using SpaceEngineers.Core.GenericEndpoint.DataAccess.StartupActions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using TracingEndpoint.Contract.Messages;
     using Xunit;
     using Xunit.Abstractions;
-    using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
 
     /// <summary>
     /// GenericHost assembly tests
@@ -79,7 +79,7 @@
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport,
-                /*TODO: #180 - useRabbitMqIntegrationTransport*/
+                useRabbitMqIntegrationTransport
             };
 
             return integrationTransportProviders
@@ -192,7 +192,7 @@
                 var expectedHostStartupActions = new[]
                 {
                     typeof(UpgradeDatabaseHostStartupAction),
-                    typeof(GenericEndpointInboxHostStartupAction),
+                    typeof(GenericEndpointHostStartupAction),
                     typeof(GenericEndpointHostStartupAction)
                 };
 
@@ -207,7 +207,7 @@
 
                 var expectedHostBackgroundWorkers = new[]
                 {
-                    typeof(GenericEndpointOutboxHostBackgroundWorker),
+                    typeof(GenericEndpointDataAccessHostBackgroundWorker),
                     typeof(IntegrationTransportHostBackgroundWorker)
                 };
 
@@ -223,29 +223,54 @@
 
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
             {
+                log($"Endpoint: {endpointIdentity}");
+
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
                 var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
 
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
                 Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
-                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<Core.GenericEndpoint.Api.Abstractions.IIntegrationContext>());
+                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IIntegrationContext>());
 
                 using (endpointDependencyContainer.OpenScope())
                 {
-                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                    var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
-
                     var expectedContexts = new[]
                     {
                         typeof(AdvancedIntegrationContext)
                     };
 
-                    var actualContexts = advancedIntegrationContext
+                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
+
+                    var actualAdvancedIntegrationContexts = advancedIntegrationContext
                         .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("extended integration context", log)
+                        .ShowTypes("advanced integration context", log)
                         .ToList();
 
-                    Assert.Equal(expectedContexts, actualContexts);
+                    Assert.Equal(expectedContexts, actualAdvancedIntegrationContexts);
+
+                    var integrationContext = endpointDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var actualIntegrationContexts = integrationContext
+                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ShowTypes("integration context", log)
+                        .ToList();
+
+                    Assert.Equal(expectedContexts, actualIntegrationContexts);
+
+                    var expectedMessagesCollector = new[]
+                    {
+                        typeof(MessagesCollector)
+                    };
+
+                    var messagesCollector = endpointDependencyContainer.Resolve<IMessagesCollector>();
+
+                    var actualMessagesCollector = messagesCollector
+                       .FlattenDecoratedObject(obj => obj.GetType())
+                       .ShowTypes("collector", log)
+                       .ToList();
+
+                    Assert.Equal(expectedMessagesCollector, actualMessagesCollector);
 
                     var expectedPipeline = new[]
                     {
@@ -370,23 +395,170 @@
                 var transportDependencyContainer = host.GetTransportDependencyContainer();
 
                 var integrationTransport = transportDependencyContainer.Resolve<IIntegrationTransport>();
+                var endpointIdentity = transportDependencyContainer.Resolve<EndpointIdentity>();
+                log($"Endpoint: {endpointIdentity}");
                 log($"{nameof(IIntegrationTransport)}: {integrationTransport.GetType().FullName}");
+
+                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
+
+                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
+                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IIntegrationContext>());
 
                 using (transportDependencyContainer.OpenScope())
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
                     var expectedContexts = new[]
                     {
-                        typeof(IntegrationTransport.Integration.IntegrationContext)
+                        typeof(AdvancedIntegrationContext)
                     };
 
-                    var actualContexts = integrationContext
+                    Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    var advancedIntegrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
+
+                    var actualAdvancedIntegrationContexts = advancedIntegrationContext
+                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ShowTypes("advanced integration context", log)
+                        .ToList();
+
+                    Assert.Equal(expectedContexts, actualAdvancedIntegrationContexts);
+
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var actualIntegrationContexts = integrationContext
+                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ShowTypes("integration context", log)
+                        .ToList();
+
+                    Assert.Equal(expectedContexts, actualIntegrationContexts);
+
+                    var expectedMessagesCollector = new[]
+                    {
+                        typeof(IntegrationTransportMessagesCollector)
+                    };
+
+                    var messagesCollector = transportDependencyContainer.Resolve<IMessagesCollector>();
+
+                    var actualMessagesCollector = messagesCollector
+                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ShowTypes("collector", log)
+                        .ToList();
+
+                    Assert.Equal(expectedMessagesCollector, actualMessagesCollector);
+
+                    var expectedPipeline = new[]
+                    {
+                        typeof(ErrorHandlingPipeline),
+                        typeof(TracingPipeline),
+                        typeof(UnitOfWorkPipeline),
+                        typeof(QueryReplyValidationPipeline),
+                        typeof(HandledByEndpointPipeline),
+                        typeof(MessageHandlerPipeline)
+                    };
+
+                    var actualPipeline = transportDependencyContainer
+                        .Resolve<IMessagePipeline>()
+                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ShowTypes("message pipeline", log)
+                        .ToList();
+
+                    Assert.Equal(expectedPipeline, actualPipeline);
+
+                    var expectedIntegrationTypeProviders = new[]
+                    {
+                        typeof(IntegrationTransportIntegrationTypeProvider)
+                    };
+
+                    var integrationTypeProvider = transportDependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+                    var actualIntegrationTypeProviders = integrationTypeProvider
                        .FlattenDecoratedObject(obj => obj.GetType())
-                       .ShowTypes("transport integration context", log)
+                       .ShowTypes("integration type provider", log)
                        .ToList();
 
-                    Assert.Equal(expectedContexts, actualContexts);
+                    Assert.Equal(expectedIntegrationTypeProviders, actualIntegrationTypeProviders);
+
+                    var expectedIntegrationMessageTypes = new[]
+                    {
+                        typeof(AuthorizeUser),
+                        typeof(CreateUser),
+                        typeof(UserAuthorizationResult),
+                        typeof(BaseEvent),
+                        typeof(InheritedEvent),
+                        typeof(Event),
+                        typeof(PublishEventCommand),
+                        typeof(PublishInheritedEventCommand),
+                        typeof(Command),
+                        typeof(OpenGenericHandlerCommand),
+                        typeof(Query),
+                        typeof(Reply),
+                        typeof(RequestQueryCommand),
+                        typeof(CaptureTrace),
+                        typeof(GetConversationTrace),
+                        typeof(ConversationTrace),
+                        typeof(Endpoint1HandlerInvoked),
+                        typeof(Endpoint2HandlerInvoked)
+                    };
+
+                    var actualIntegrationMessageTypes = integrationTypeProvider
+                        .IntegrationMessageTypes()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(type => type.FullName).ToList(), actualIntegrationMessageTypes);
+
+                    var actualCommands = integrationTypeProvider
+                        .EndpointCommands()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(Array.Empty<Type>(), actualCommands);
+
+                    var actualQueries = integrationTypeProvider
+                        .EndpointQueries()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(Array.Empty<Type>(), actualQueries);
+
+                    var expectedReplies = new[]
+                    {
+                        typeof(UserAuthorizationResult),
+                        typeof(Reply),
+                        typeof(ConversationTrace)
+                    };
+
+                    var actualReplies = integrationTypeProvider
+                        .RepliesSubscriptions()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
+
+                    var actualEvents = integrationTypeProvider
+                        .EventsSubscriptions()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
+                        .OrderBy(type => type.FullName)
+                        .ToList();
+
+                    Assert.Equal(Array.Empty<Type>(), actualEvents);
+
+                    var expectedErrorHandlers = new[]
+                    {
+                        typeof(TracingErrorHandler),
+                        typeof(RetryErrorHandler)
+                    };
+
+                    var actualErrorHandlers = transportDependencyContainer
+                       .ResolveCollection<IErrorHandler>()
+                       .Select(obj => obj.GetType())
+                       .ShowTypes(nameof(IErrorHandler), log)
+                       .ToList();
+
+                    Assert.Equal(expectedErrorHandlers, actualErrorHandlers);
                 }
 
                 _ = transportDependencyContainer.Resolve<IRpcRequestRegistry>();
@@ -395,13 +567,11 @@
                 {
                     var expectedRpcReplyHandlers = new[]
                     {
-                        typeof(IntegrationTransport.RpcRequest.ErrorHandlingRpcReplyMessageHandler<IIntegrationReply>),
-                        typeof(IntegrationTransport.Tracing.RpcRequest.TracingRpcReplyMessageHandler<IIntegrationReply>),
-                        typeof(IntegrationTransport.RpcRequest.RpcReplyMessageHandler<IIntegrationReply>)
+                        typeof(RpcReplyMessageHandler<IIntegrationReply>)
                     };
 
                     var actualRpcReplyHandlers = transportDependencyContainer
-                        .Resolve<IRpcReplyMessageHandler<IIntegrationReply>>()
+                        .Resolve<IMessageHandler<IIntegrationReply>>()
                         .FlattenDecoratedObject(obj => obj.GetType())
                         .ShowTypes("rpc reply handlers", log)
                         .ToList();

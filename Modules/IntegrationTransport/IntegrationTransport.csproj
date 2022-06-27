@@ -29,6 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+      <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
       <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -40,14 +41,5 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="RpcRequest\RpcReplyMessageHandler.cs">
-        <DependentUpon>IRpcReplyMessageHandler.cs</DependentUpon>
-      </Compile>
-      <Compile Update="RpcRequest\ErrorHandlingRpcReplyMessageHandler.cs">
-        <DependentUpon>IRpcReplyMessageHandler.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
 </Project>

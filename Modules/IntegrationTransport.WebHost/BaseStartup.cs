@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
 {
     using System;
     using CompositionRoot;
+    using GenericEndpoint.Host.Builder;
     using Host;
     using Host.Builder;
     using Microsoft.AspNetCore.Builder;
@@ -17,7 +18,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
     public abstract class BaseStartup : IStartup
     {
         private readonly IHostBuilder _hostBuilder;
-        private readonly Func<ITransportEndpointBuilder, TransportEndpointOptions> _optionsFactory;
+        private readonly Func<ITransportEndpointBuilder, EndpointOptions> _optionsFactory;
         private readonly IConfiguration _configuration;
 
         /// <summary> .cctor </summary>
@@ -27,7 +28,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
         protected BaseStartup(
             IHostBuilder hostBuilder,
             IConfiguration configuration,
-            Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
+            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
             _hostBuilder = hostBuilder;
             _configuration = configuration;
@@ -41,8 +42,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
 
             HostExtensions.InitializeIntegrationTransport(_hostBuilder, WithSimpleInjector(_optionsFactory, serviceCollection))(serviceCollection);
 
-            static Func<ITransportEndpointBuilder, TransportEndpointOptions> WithSimpleInjector(
-                Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory,
+            static Func<ITransportEndpointBuilder, EndpointOptions> WithSimpleInjector(
+                Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
                 IServiceCollection serviceCollection)
             {
                 return builder => optionsFactory(ModifyContainerOptions(builder, serviceCollection));
@@ -52,7 +53,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
                 ITransportEndpointBuilder builder,
                 IServiceCollection serviceCollection)
             {
-                return builder.ModifyContainerOptions(options => options
+                return (ITransportEndpointBuilder)builder.ModifyContainerOptions(options => options
                     .WithManualRegistrations(new SimpleInjectorIntegrationManualRegistration(serviceCollection))
                     .WithManualVerification(true));
             }

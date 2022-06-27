@@ -155,7 +155,4 @@
         <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
       </Compile>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Settings" />
-    </ItemGroup>
 </Project>

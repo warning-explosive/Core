@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
     using DatabaseEntities.Relations;
+    using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericHost;
@@ -40,7 +41,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Xunit;
     using Xunit.Abstractions;
     using EndpointIdentity = GenericEndpoint.Contract.EndpointIdentity;
-    using IIntegrationContext = IntegrationTransport.Api.Abstractions.IIntegrationContext;
     using IntegrationMessage = GenericEndpoint.DataAccess.DatabaseModel.IntegrationMessage;
     using User = DatabaseEntities.Relations.User;
 
@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport,
-                /*TODO: #180 - useRabbitMqIntegrationTransport*/
+                useRabbitMqIntegrationTransport
             };
 
             return integrationTransportProviders
@@ -142,7 +142,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport,
-                /*TODO: #180 - useRabbitMqIntegrationTransport*/
+                useRabbitMqIntegrationTransport
             };
 
             return integrationTransportProviders
@@ -190,7 +190,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport,
-                /*TODO: #180 - useRabbitMqIntegrationTransport*/
+                useRabbitMqIntegrationTransport
             };
 
             return integrationTransportProviders
@@ -610,7 +610,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             var jsonSerializer = host
                .GetEndpointDependencyContainer(TestIdentity.Endpoint10)

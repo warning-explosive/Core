@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            if (!Environment.StackTrace.Contains(nameof(GenericEndpointOutboxHostBackgroundWorker), StringComparison.OrdinalIgnoreCase))
+            if (!Environment.StackTrace.Contains(nameof(GenericEndpointDataAccessHostBackgroundWorker), StringComparison.OrdinalIgnoreCase))
             {
                 return Task.CompletedTask;
             }

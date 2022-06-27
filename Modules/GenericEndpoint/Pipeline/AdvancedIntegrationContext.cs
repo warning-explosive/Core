@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -14,8 +15,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Messaging;
     using Messaging.Abstractions;
     using Messaging.MessageHeaders;
-    using UnitOfWork;
-    using IIntegrationContext = Api.Abstractions.IIntegrationContext;
+    using RpcRequest;
 
     [Component(EnLifestyle.Scoped)]
     internal class AdvancedIntegrationContext : IAdvancedIntegrationContext,
@@ -25,6 +25,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationMessageFactory _factory;
         private readonly IIntegrationTransport _transport;
+        private readonly IRpcRequestRegistry _rpcRequestRegistry;
+        private readonly IMessagesCollector _messagesCollector;
 
         private IntegrationMessage? _message;
 
@@ -32,18 +34,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             EndpointIdentity endpointIdentity,
             IIntegrationMessageFactory factory,
             IIntegrationTransport transport,
-            IIntegrationUnitOfWork unitOfWork)
+            IRpcRequestRegistry rpcRequestRegistry,
+            IMessagesCollector messagesCollector)
         {
             _endpointIdentity = endpointIdentity;
             _factory = factory;
             _transport = transport;
-
-            UnitOfWork = unitOfWork;
+            _rpcRequestRegistry = rpcRequestRegistry;
+            _messagesCollector = messagesCollector;
         }
 
         public IntegrationMessage Message => _message.EnsureNotNull($"{nameof(IAdvancedIntegrationContext)} should be initialized with integration message");
-
-        public IIntegrationUnitOfWork UnitOfWork { get; }
 
         public void Initialize(IntegrationMessage message)
         {
@@ -53,7 +54,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return Collect(CreateGeneralMessage(command), token);
+            return _messagesCollector.Collect(CreateGeneralMessage(command), token);
         }
 
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
@@ -67,7 +68,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
             if (isOwnedByCurrentEndpoint)
             {
-                return Collect(CreateGeneralMessage(integrationEvent), token);
+                return _messagesCollector.Collect(CreateGeneralMessage(integrationEvent), token);
             }
 
             throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Owner: {actualOwner}; Required owner: {_endpointIdentity.LogicalName}");
@@ -77,7 +78,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            return Collect(CreateGeneralMessage(query), token);
+            return _messagesCollector.Collect(CreateGeneralMessage(query), token);
         }
 
         public async Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
@@ -89,8 +90,35 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
 
             replyIntegrationMessage.WriteHeader(new ReplyTo(sentFrom));
+            replyIntegrationMessage.WriteHeader(new HandledBy(_endpointIdentity));
 
-            await Collect(replyIntegrationMessage, token).ConfigureAwait(false);
+            await _messagesCollector.Collect(replyIntegrationMessage, token).ConfigureAwait(false);
+        }
+
+        public async Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationReply
+        {
+            var message = CreateGeneralMessage(query);
+
+            var requestId = message.ReadRequiredHeader<Id>().Value;
+
+            var tcs = new TaskCompletionSource<IntegrationMessage>();
+
+            await _rpcRequestRegistry
+               .TryEnroll(requestId, tcs, token)
+               .ConfigureAwait(false);
+
+            var wasSent = await SendMessage(message, token).ConfigureAwait(false);
+
+            if (!wasSent)
+            {
+                throw new InvalidOperationException("Rpc request wasn't successful");
+            }
+
+            var reply = await tcs.Task.ConfigureAwait(false);
+
+            return (TReply)reply.Payload;
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)
@@ -123,15 +151,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             }
         }
 
-        private IntegrationMessage CreateGeneralMessage<TMessage>(TMessage message)
+        private IntegrationMessage CreateGeneralMessage<TMessage>(
+            TMessage message)
             where TMessage : IIntegrationMessage
         {
-            return _factory.CreateGeneralMessage(message, _endpointIdentity, Message);
-        }
-
-        private Task Collect(IntegrationMessage message, CancellationToken token)
-        {
-            return UnitOfWork.OutboxStorage.Add(message, token);
+            return _factory.CreateGeneralMessage(message, _endpointIdentity, _message);
         }
     }
 }

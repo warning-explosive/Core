@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.IO;
     using System.IO.Compression;
     using Basics;
+    using GenericEndpoint.Host.Builder;
     using IntegrationTransport.Host.Builder;
     using IntegrationTransport.WebHost;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,7 +27,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
         public WebApplicationStartup(
             IHostBuilder hostBuilder,
             IConfiguration configuration,
-            Func<ITransportEndpointBuilder, TransportEndpointOptions> optionsFactory)
+            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
             : base(hostBuilder, configuration, optionsFactory)
         {
         }

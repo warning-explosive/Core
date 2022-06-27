@@ -6,13 +6,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
+    using CompositionRoot.Api.Abstractions;
+    using UnitOfWork;
 
     [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(QueryReplyValidationPipeline))]
     internal class UnitOfWorkPipeline : IMessagePipelineStep, IMessagePipeline
     {
-        public UnitOfWorkPipeline(IMessagePipeline decoratee)
+        private readonly IDependencyContainer _dependencyContainer;
+
+        public UnitOfWorkPipeline(
+            IMessagePipeline decoratee,
+            IDependencyContainer dependencyContainer)
         {
+            _dependencyContainer = dependencyContainer;
             Decoratee = decoratee;
         }
 
@@ -23,11 +30,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            return context.UnitOfWork.ExecuteInTransaction(
-                context,
-                Process(producer),
-                true,
-                token);
+            return _dependencyContainer
+               .Resolve<IIntegrationUnitOfWork>()
+               .ExecuteInTransaction(
+                    context,
+                    Process(producer),
+                    true,
+                    token);
         }
 
         private Func<IAdvancedIntegrationContext, CancellationToken, Task> Process(

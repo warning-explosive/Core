@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Api.Abstractions;
     using CompositionRoot.Api.Abstractions;
     using Messaging;
-    using UnitOfWork;
 
     /// <summary>
     /// Advanced integration context
@@ -19,11 +18,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         /// Integration message, processing initiator
         /// </summary>
         IntegrationMessage Message { get; }
-
-        /// <summary>
-        /// Unit of work
-        /// </summary>
-        IIntegrationUnitOfWork UnitOfWork { get; }
 
         /// <summary>
         /// Sends integration message immediately

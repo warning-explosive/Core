@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -65,6 +66,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             where TReply : IIntegrationReply
         {
             return Collect(reply);
+        }
+
+        /// <inheritdoc />
+        public Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationReply
+        {
+            throw new NotSupportedException("Rpc request");
         }
 
         private Task Collect<TMessage>(TMessage message)

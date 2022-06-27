@@ -8,14 +8,14 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
     using System.Threading;
     using System.Threading.Tasks;
     using AuthorizationEndpoint.Contract.Messages;
+    using Basics;
     using CompositionRoot.Api.Abstractions;
-    using IntegrationTransport.Api.Abstractions;
+    using GenericEndpoint.Api.Abstractions;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Microsoft.IdentityModel.Tokens;
 
     internal class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {

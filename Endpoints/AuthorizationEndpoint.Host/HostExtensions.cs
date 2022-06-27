@@ -7,9 +7,9 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Host
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using JwtAuthentication;
-    using ManualRegistrations;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
+    using Registrations;
 
     /// <summary>
     /// HostExtensions

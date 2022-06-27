@@ -13,10 +13,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host
     using GenericHost.Api;
     using GenericHost.Api.Abstractions;
     using GenericHost.Internals;
-    using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Migrations;
+    using Registrations;
 
     /// <summary>
     /// HostExtensions

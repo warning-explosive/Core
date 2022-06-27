@@ -32,8 +32,8 @@ namespace SpaceEngineers.Core.Test.WebApplication
                         context.Configuration,
                         builder => builder
                             .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithTracing()
                             .WithWebApi()
+                            .WithTracing()
                             .BuildOptions()))
                 .UseAuthorizationEndpoint(0, builder => builder
                     .WithDataAccess(new PostgreSqlDatabaseProvider())

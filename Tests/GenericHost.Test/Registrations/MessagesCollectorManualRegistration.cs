@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Registrations
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Register<MessagesCollector, MessagesCollector>(EnLifestyle.Singleton);
+            container.Register<TestMessagesCollector, TestMessagesCollector>(EnLifestyle.Singleton);
         }
     }
 }

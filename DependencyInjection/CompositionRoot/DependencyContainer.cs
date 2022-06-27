@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using Basics;
     using Extensions;
     using Implementations;
-    using ManualRegistrations;
+    using Registrations;
     using SimpleInjector;
     using SimpleInjector.Lifestyles;
 

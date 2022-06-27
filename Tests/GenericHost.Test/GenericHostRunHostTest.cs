@@ -8,6 +8,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using CompositionRoot.Api.Abstractions.Registration;
+    using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -22,7 +23,6 @@
     using Overrides;
     using Registrations;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -75,7 +75,7 @@
             var integrationTransportProviders = new[]
             {
                 useInMemoryIntegrationTransport,
-                /*TODO: #180 - useRabbitMqIntegrationTransport*/
+                useRabbitMqIntegrationTransport
             };
 
             return integrationTransportProviders
@@ -129,7 +129,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -218,7 +218,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -308,7 +308,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -396,7 +396,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -543,7 +543,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -608,7 +608,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -658,7 +658,7 @@
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<MessagesCollector>();
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))

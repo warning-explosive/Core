@@ -13,10 +13,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using GenericHost.Api.Abstractions;
     using GenericHost.Internals;
     using IntegrationTransport.Api.Abstractions;
-    using ManualRegistrations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Overrides;
+    using Registrations;
     using StartupActions;
 
     /// <summary>

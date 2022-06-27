@@ -10,11 +10,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     public interface IExecutableEndpoint
     {
         /// <summary>
-        /// Executes message handlers
+        /// Executes message handler
         /// </summary>
         /// <param name="message">Integration message</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token);
+        Task ExecuteMessageHandler(IntegrationMessage message, CancellationToken token);
     }
 }

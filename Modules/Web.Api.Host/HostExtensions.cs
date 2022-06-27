@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.Web.Api.Host
                     nameof(SpaceEngineers.Core.Web),
                     nameof(SpaceEngineers.Core.Web.Api)));
 
-            return builder.WithEndpointPluginAssemblies(assembly);
+            return (ITransportEndpointBuilder)builder.WithEndpointPluginAssemblies(assembly);
         }
     }
 }

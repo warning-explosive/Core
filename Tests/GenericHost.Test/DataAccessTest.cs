@@ -876,14 +876,22 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
-                await dependencyContainer
+                var assert = dependencyContainer
                    .InvokeWithinTransaction(
                         false,
                         Run(dependencyContainer, queryProducer, checkQuery, databaseEntities, Output.WriteLine),
-                        cts.Token)
-                   .ConfigureAwait(false);
+                        cts.Token);
+
+                var awaiter = Task.WhenAny(hostShutdown, assert);
+
+                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

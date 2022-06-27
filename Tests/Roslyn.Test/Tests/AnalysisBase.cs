@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using ManualRegistrations;
     using Microsoft.Build.Locator;
+    using Registrations;
     using Xunit.Abstractions;
 
     /// <summary>

@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        public async Task ExecuteMessageHandlers(IntegrationMessage message, CancellationToken token)
+        public async Task ExecuteMessageHandler(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 

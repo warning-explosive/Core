@@ -4,31 +4,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: dump context
+    - name: Dump context
       run: echo '${{ toJSON(github) }}'
-    - name: checkout
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: setup .NET toolchain
+    - name: Setup .NET toolchain
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
-    - name: install GitVersion
+    - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
-    - name: determine package version
-      run: |
-        echo "PACKAGE_VERSION=$(echo dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
-        echo ${{ env.PACKAGE_VERSION }}
-    - name: generate assembly version
+    - name: Determine package version
+      run: echo "PACKAGE_VERSION=$(echo dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
+    - name: Generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
-    - name: restore nuget packages
+    - name: Restore nuget packages
       run: dotnet restore --no-cache --verbosity minimal
-    - name: build solution
+    - name: Build solution
       run: dotnet build -c Debug --no-restore --verbosity minimal
-    - name: pack solution
+    - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.PACKAGE_VERSION }} -o:packages -verbosity:minimal
-    - name: upload nuget packages
+    - name: Upload nuget packages
       uses: actions/upload-artifact@v3
       with:
         name: built-packages

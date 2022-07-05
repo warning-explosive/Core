@@ -6,23 +6,23 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v3
-    - name: setup .net toolchain
+    - name: setup .NET toolchain
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
-    - name: install gitversion
+    - name: install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: determine package version
       run: echo "gitversion /output json /showvariable FullSemVer" >> $PACKAGE_VERSION
     - name: generate assembly version
       run: gitversion /l console /output buildserver /updateAssemblyInfo
-    - name: restore packages
+    - name: restore nuget packages
       run: dotnet restore --no-cache --verbosity minimal
     - name: build solution
       run: dotnet build -c Debug --no-restore --verbosity minimal
-    - name: build packages
-      uses: dotnet pack --no-build -p:version=$PACKAGE_VERSION -o:packages -verbosity:minimal
-    - name: upload built packages
+    - name: pack solution
+      run: dotnet pack --no-build -p:version=$PACKAGE_VERSION -o:packages -verbosity:minimal
+    - name: upload nuget packages
       uses: actions/upload-artifact@v3
       with:
         name: built-packages

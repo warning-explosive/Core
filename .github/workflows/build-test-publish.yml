@@ -15,9 +15,9 @@ jobs:
     - name: install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: determine package version
-      run: echo "PACKAGE_VERSION=$(echo gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
+      run: echo "PACKAGE_VERSION=$(echo dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
     - name: generate assembly version
-      run: gitversion /l console /output buildserver /updateAssemblyInfo
+      run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
     - name: restore nuget packages
       run: dotnet restore --no-cache --verbosity minimal
     - name: build solution

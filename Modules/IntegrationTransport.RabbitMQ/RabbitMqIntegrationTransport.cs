@@ -19,7 +19,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using GenericEndpoint.Contract;
+    using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
+    using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -30,6 +32,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Settings;
 
     [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
+    [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     internal class RabbitMqIntegrationTransport : IIntegrationTransport,
                                                   IResolvable<IIntegrationTransport>,
@@ -61,8 +64,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         private EnIntegrationTransportStatus _status;
 
+        private IReadOnlyDictionary<EndpointIdentity, IModel> _channels;
         private IConnection? _connection;
-        private IReadOnlyDictionary<EndpointIdentity, IModel>? _channels;
 
         public RabbitMqIntegrationTransport(
             ILogger logger,
@@ -146,27 +149,49 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
 
+            var result = true;
+
+            var messageTypes = message
+               .ReflectedType
+               .IncludedTypes()
+               .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
+                           && !type.IsMessageContractAbstraction())
+               .ToList();
+
             var channel = _channels[message.ReadRequiredHeader<SentFrom>().Value];
 
-            var basicProperties = CreateBasicProperties(channel, message);
+            foreach (var type in messageTypes)
+            {
+                var copy = message.ContravariantClone(type);
+                result = await Publish(copy, channel, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
+            }
 
-            var exchange = string.IsNullOrEmpty(basicProperties.Expiration)
-                ? InputExchange
-                : DeferredExchange;
+            return result;
 
-            var left = message.ReflectedType.FullName!.GetRoutingKeyPart();
+            static Task<bool> Publish(
+                IntegrationMessage message,
+                IModel channel,
+                ConcurrentDictionary<ulong, TaskCompletionSource<bool>> outstandingConfirms,
+                IJsonSerializer jsonSerializer)
+            {
+                var basicProperties = CreateBasicProperties(channel, message);
 
-            var right = string.IsNullOrEmpty(basicProperties.ReplyTo)
-                ? message.Payload.GetType().GetRequiredAttribute<OwnedByAttribute>().EndpointName
-                : basicProperties.ReplyTo;
+                var exchange = string.IsNullOrEmpty(basicProperties.Expiration)
+                    ? InputExchange
+                    : DeferredExchange;
 
-            var routingKey = string.Join(".", left, right);
+                var body = message.EncodeIntegrationMessage(jsonSerializer);
 
-            var body = message.EncodeIntegrationMessage(_jsonSerializer);
+                var left = message.ReflectedType.FullName!.GetRoutingKeyPart();
 
-            return await channel
-               .Publish(exchange, routingKey, basicProperties, body, _outstandingConfirms)
-               .ConfigureAwait(false);
+                var right = string.IsNullOrEmpty(basicProperties.ReplyTo)
+                    ? message.Payload.GetType().GetRequiredAttribute<OwnedByAttribute>().EndpointName
+                    : basicProperties.ReplyTo;
+
+                var routingKey = string.Join(".", left, right);
+
+                return channel.Publish(exchange, routingKey, basicProperties, body, outstandingConfirms);
+            }
 
             static IBasicProperties CreateBasicProperties(
                 IModel channel,
@@ -492,11 +517,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     BuildLeftInputPath(channel, provider.EndpointQueries());
                     BuildLeftInputPath(channel, provider.RepliesSubscriptions());
 
-                    BuildContravariance(channel, provider.EndpointCommands());
-                    BuildContravariance(channel, provider.EventsSubscriptions());
-                    BuildContravariance(channel, provider.EndpointQueries());
-                    BuildContravariance(channel, provider.RepliesSubscriptions());
-
                     BuildRightInputPath(channel, endpointIdentity, provider.EndpointCommands());
                     BuildRightInputPathForEvents(channel, endpointIdentity, provider.EventsSubscriptions());
                     BuildRightInputPath(channel, endpointIdentity, provider.EndpointQueries());
@@ -517,22 +537,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                             InputExchange,
                             messageType.FullName!,
                             $"{messageType.FullName!.GetRoutingKeyPart()}.*");
-                    }
-                }
-
-                static void BuildContravariance(
-                    IModel channel,
-                    IReadOnlyCollection<Type> messageTypes)
-                {
-                    foreach (var source in messageTypes)
-                    {
-                        foreach (var destination in source.BaseTypes().Where(messageTypes.Contains))
-                        {
-                            channel.BindExchange(
-                                source.FullName!,
-                                destination.FullName!,
-                                $"{source.FullName!.GetRoutingKeyPart()}.*");
-                        }
                     }
                 }
 
@@ -685,7 +689,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 logger.Error(args.Exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelCallbackException)}");
 
                 // TODO: #180 - reconnect
-                // TODO: #180 - ack transport replies
                 tcs.SetException(args.Exception);
             };
         }

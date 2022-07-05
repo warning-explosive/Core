@@ -70,12 +70,6 @@
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
             {
                 var transportIsRunning = WaitUntilTransportIsRunning(transport, cts.Token);
-
-                if (transport.Status != EnIntegrationTransportStatus.Running)
-                {
-                    return;
-                }
-
                 var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, cts.Token);
 
                 await Task

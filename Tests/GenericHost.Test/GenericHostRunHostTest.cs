@@ -468,7 +468,7 @@
                     {
                         var actualDelay = (int)delays.First;
                         var expectedDelay = delays.Second;
-                        var leftBorder = expectedDelay - 1 > 0 ? expectedDelay - 1 : 0; // deferred queue acceptable offset
+                        var leftBorder = expectedDelay;
                         var rightBorder = expectedDelay + latency;
 
                         Output.WriteLine($"{leftBorder} - {actualDelay} - {rightBorder}");

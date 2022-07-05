@@ -149,6 +149,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             {
                 throw new InvalidOperationException("Retry wasn't successful");
             }
+
+            await _transport
+               .Accept(Message, token)
+               .ConfigureAwait(false);
         }
 
         private IntegrationMessage CreateGeneralMessage<TMessage>(

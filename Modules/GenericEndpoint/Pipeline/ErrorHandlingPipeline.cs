@@ -61,10 +61,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         private Func<Exception, CancellationToken, Task<Exception?>> OnError(
             IAdvancedIntegrationContext context)
         {
-            return (exception, token) => ExecutionExtensions
-               .TryAsync((context, _errorHandlers, exception), InvokeErrorHandlers)
-               .Catch<Exception>()
-               .Invoke(OnErrorHandlingError, token);
+            return async (exception, token) =>
+            {
+                var errorHandlingException = await ExecutionExtensions
+                   .TryAsync((context, _errorHandlers, exception), InvokeErrorHandlers)
+                   .Catch<Exception>()
+                   .Invoke(OnErrorHandlingError, token)
+                   .ConfigureAwait(false);
+
+                return errorHandlingException ?? exception;
+            };
         }
 
         private static async Task<Exception?> InvokeErrorHandlers(

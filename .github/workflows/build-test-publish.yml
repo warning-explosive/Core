@@ -8,6 +8,8 @@ jobs:
       run: echo '${{ toJSON(github) }}'
     - name: checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: setup .NET toolchain
       uses: actions/setup-dotnet@v2
       with:
@@ -15,7 +17,9 @@ jobs:
     - name: install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: determine package version
-      run: echo "PACKAGE_VERSION=$(echo dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
+      run: |
+        echo "PACKAGE_VERSION=$(echo dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
+        echo ${{ env.PACKAGE_VERSION }}
     - name: generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
     - name: restore nuget packages

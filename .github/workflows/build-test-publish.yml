@@ -10,9 +10,21 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+    - name: install gitversion
+      run: dotnet tool install --global GitVersion.Tool --version 5.*
+    - name: determine package version
+      run: echo "gitversion /output json /showvariable FullSemVer" >> $PACKAGE_VERSION
+    - name: generate assembly version
+      run: gitversion /l console /output buildserver /updateAssemblyInfo
     - name: restore packages
       run: dotnet restore --no-cache --verbosity minimal
     - name: build solution
       run: dotnet build -c Debug --no-restore --verbosity minimal
-    - name: run tests
-      run: dotnet test --no-build --verbosity minimal
+    - name: build packages
+      uses: dotnet pack --no-build -p:version=$PACKAGE_VERSION -o:packages -verbosity:minimal
+    - name: upload built packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: built-packages
+        path: packages/*.nupkg
+        if-no-files-found: error

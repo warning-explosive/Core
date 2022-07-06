@@ -32,6 +32,9 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Determine configuration
       run: |
         if [[ "${{ github.ref_name }}" == "master" ]]; then
@@ -51,6 +54,8 @@ jobs:
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
+    - name: Publish nuget packages
+      run: dotnet nuget push packages/*.nupkg
     - name: Upload nuget packages
       uses: actions/upload-artifact@v3
       with:

@@ -146,6 +146,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 "Xunit",
                 "System.Runtime.CompilerServices",
                 "Microsoft.CodeAnalysis",
+                "Coverlet.Core.Instrumentation.Tracker"
             };
 
             var expectedAssemblies = new[]

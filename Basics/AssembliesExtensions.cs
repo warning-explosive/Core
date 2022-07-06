@@ -165,7 +165,7 @@ namespace SpaceEngineers.Core.Basics
             IEnumerable<Assembly> assemblies,
             IEnumerable<Assembly> rootAssemblies)
         {
-            var map = assemblies.ToDictionary(a => a.GetName().FullName);
+            var map = assemblies.ToDictionary(assembly => assembly.GetName().FullName);
 
             var visited = rootAssemblies
                 .Distinct(new AssemblyByNameEqualityComparer())
@@ -186,7 +186,12 @@ namespace SpaceEngineers.Core.Basics
                 }
 
                 var exclusiveReferences = assembly.GetReferencedAssemblies();
-                var isReferencedDirectly = exclusiveReferences.Any(a => visited.ContainsKey(a.FullName) && visited[a.FullName]);
+
+                var isReferencedDirectly = exclusiveReferences
+                   .Any(assemblyName =>
+                        visited.ContainsKey(assemblyName.FullName)
+                        && visited[assemblyName.FullName]
+                        && ExcludedAssemblies.All(ex => !assemblyName.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)));
 
                 if (isReferencedDirectly)
                 {
@@ -195,10 +200,12 @@ namespace SpaceEngineers.Core.Basics
                 }
 
                 var isIndirectlyReferenced = exclusiveReferences
-                    .Where(unknownReference => !visited.ContainsKey(unknownReference.FullName)
-                                               && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
-                    .Any(unknownReference => map.TryGetValue(unknownReference.FullName, out var unknownAssembly)
-                                             && IsOurReferenceInternal(unknownAssembly, map, visited));
+                    .Where(unknownReference =>
+                        !visited.ContainsKey(unknownReference.FullName)
+                        && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
+                    .Any(unknownReference =>
+                        map.TryGetValue(unknownReference.FullName, out var unknownAssembly)
+                        && IsOurReferenceInternal(unknownAssembly, map, visited));
 
                 visited[key] = isIndirectlyReferenced;
                 return isIndirectlyReferenced;

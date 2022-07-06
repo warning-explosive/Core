@@ -213,7 +213,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 basicProperties.ReplyTo = message.ReadHeader<ReplyTo>()?.Value.LogicalName ?? default;
 
                 var deferredUntil = message.ReadHeader<DeferredUntil>();
-                var expirationMilliseconds = (ulong)Math.Round((deferredUntil?.Value - DateTime.UtcNow)?.TotalMilliseconds ?? 0.0, MidpointRounding.AwayFromZero);
+                var now = DateTime.UtcNow;
+
+                var expirationMilliseconds = deferredUntil != null && deferredUntil.Value >= now
+                    ? (ulong)Math.Round((deferredUntil.Value - now).TotalMilliseconds, MidpointRounding.AwayFromZero)
+                    : 0;
 
                 var isDeferred = expirationMilliseconds > 0;
 

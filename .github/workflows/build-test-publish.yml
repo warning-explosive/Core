@@ -24,6 +24,8 @@ jobs:
     steps:
     - name: Dump context
       run: echo '${{ toJSON(github) }}'
+    - name: Setup git
+      run: git config --global core.autocrlf true
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -55,7 +57,7 @@ jobs:
       run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github
     - name: Publish nuget packages
       run: dotnet nuget push packages/*.nupkg --source github --api-key ${{ github.token }} --skip-duplicate
-    - name: Upload nuget packages
+    - name: Upload nuget artifacts
       uses: actions/upload-artifact@v3
       with:
         name: built-packages

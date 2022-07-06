@@ -29,14 +29,49 @@ jobs:
     - name: Show environment variables
       run: echo '${{ toJSON(env) }}'
     - name: Restore nuget packages
-      run: dotnet restore --no-cache --verbosity minimal
+      run: dotnet restore --no-cache -v minimal
     - name: Build solution
-      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore --verbosity minimal
+      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v minimal
     - name: Pack solution
-      run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -verbosity:minimal
+      run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Upload nuget packages
       uses: actions/upload-artifact@v3
       with:
         name: built-packages
         path: packages/*.nupkg
         if-no-files-found: error
+
+  test:
+    if: ${{ github.ref_name == 'master' || github.ref_name == 'develop' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump context
+      run: echo '${{ toJSON(github) }}'
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup .NET toolchain
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Determine configuration
+      run: |
+        if [[ "${{ github.ref_name }}" == "master" ]]; then
+          echo "CONFIGURATION=Release" >> $GITHUB_ENV
+        else
+          echo "CONFIGURATION=Debug" >> $GITHUB_ENV
+        fi
+    - name: Show environment variables
+      run: echo '${{ toJSON(env) }}'
+    - name: Restore nuget packages
+      run: dotnet restore --no-cache -v minimal
+    - name: Build solution
+      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v minimal
+    - name: Run tests
+      run: dotnet test Basics/Basics.csproj -c ${{ env.Configuration }} --no-restore --no-build --logger trx --results-directory "TestResults" -v minimal
+    - name: Upload test artifacts
+    - name: Upload dotnet test results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: TestResults

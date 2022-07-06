@@ -55,7 +55,6 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: ./TestResults/Coverage/
-        fail_ci_if_error: true
         files: ./coverage.opencover.xml
         path_to_write_report: ./TestResults/Coverage/codecov_report.txt
     - name: Upload test artifacts

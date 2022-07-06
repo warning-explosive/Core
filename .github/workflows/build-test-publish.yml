@@ -32,9 +32,6 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
-        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Determine configuration
       run: |
         if [[ "${{ github.ref_name }}" == "master" ]]; then
@@ -46,7 +43,7 @@ jobs:
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: Generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
-    - name: Show environment variables
+    - name: Dump environment variables
       run: echo '${{ toJSON(env) }}'
     - name: Restore nuget packages
       run: dotnet restore --no-cache -v:minimal
@@ -55,7 +52,9 @@ jobs:
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Publish nuget packages
-      run: dotnet nuget push packages/*.nupkg
+      run: |
+        dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ github.token }} --store-password-in-clear-text
+        dotnet nuget push packages/*.nupkg --source github --skip-duplicate
     - name: Upload nuget packages
       uses: actions/upload-artifact@v3
       with:
@@ -65,7 +64,6 @@ jobs:
     - name: Run tests
       run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../TestResults/Coverage/' /p:MergeWith='../../TestResults/Coverage/coverage.json'
     - name: Generate coverage report
-      if: ${{ always() }}
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
         reports: 'TestResults/Coverage/coverage.opencover.xml'

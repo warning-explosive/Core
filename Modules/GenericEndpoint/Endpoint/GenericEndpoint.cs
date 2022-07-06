@@ -72,12 +72,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             try
             {
-                // Signal cancellation to the executing handlers
                 _cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
             }
             finally
             {
-                // Wait until completes all running handlers or the stop token triggers
                 await Task
                     .WhenAny(_runningHandlers.Values.WhenAll(), Task.Delay(Timeout.InfiniteTimeSpan, token))
                     .ConfigureAwait(false);

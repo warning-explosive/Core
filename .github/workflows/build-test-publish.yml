@@ -51,6 +51,8 @@ jobs:
       run: dotnet restore --no-cache -v:minimal
     - name: Build solution
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
+    - name: Run tests
+      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../TestResults/Coverage/' /p:MergeWith='../../TestResults/Coverage/coverage.json'
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Add NuGet source
@@ -63,8 +65,6 @@ jobs:
         name: built-packages
         path: packages/*.nupkg
         if-no-files-found: error
-    - name: Run tests
-      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../TestResults/Coverage/' /p:MergeWith='../../TestResults/Coverage/coverage.json'
     - name: Generate coverage report
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:

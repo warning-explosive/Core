@@ -52,22 +52,20 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public async Task StopAsync(CancellationToken token)
         {
+            if (_backgroundWorkersTask == null)
+            {
+                return;
+            }
+
             try
             {
-                if (_backgroundWorkersTask == null)
-                {
-                    // Stop called without start
-                    return;
-                }
-                else
-                {
-                    // Signal cancellation to the executing method
-                    _cts.Cancel();
-                }
+                _cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
             }
             finally
             {
-                // Wait until the task completes or the stop token triggers
                 _ = await Task
                     .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
                     .ConfigureAwait(false);

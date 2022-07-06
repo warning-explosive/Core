@@ -4,6 +4,23 @@ jobs:
   build-test-publish:
     if: ${{ github.ref_name == 'master' || github.ref_name == 'develop' }}
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: Password12!
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      rabbit_mq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
     steps:
     - name: Dump context
       run: echo '${{ toJSON(github) }}'
@@ -54,7 +71,6 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         directory: ./TestResults/Coverage/
         fail_ci_if_error: true
         files: ./coverage.opencover.xml

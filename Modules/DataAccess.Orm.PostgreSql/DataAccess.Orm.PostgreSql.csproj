@@ -12,7 +12,7 @@
         <Company>SpaceEngineers</Company>
         <PackageDescription>SpaceEngineers.Core.DataAccess.Orm.PostgreSql</PackageDescription>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/warning-explosive/Core.PostgreSql</RepositoryUrl>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
         <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>

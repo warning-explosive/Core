@@ -41,7 +41,7 @@ jobs:
         path: packages/*.nupkg
         if-no-files-found: error
     - name: Run tests
-      run: dotnet test -c "${{ env.Configuration }}" --no-restore --no-build --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults" -v minimal
+      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults" -v minimal
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3

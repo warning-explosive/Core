@@ -24,8 +24,6 @@ jobs:
         fi
     - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
-    - name: Determine package version
-      run: echo "PACKAGE_VERSION=$(dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
     - name: Generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
     - name: Show environment variables
@@ -35,7 +33,7 @@ jobs:
     - name: Build solution
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore --verbosity minimal
     - name: Pack solution
-      run: dotnet pack --no-build -p:version=${{ env.PACKAGE_VERSION }} -o:packages -verbosity:minimal
+      run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -verbosity:minimal
     - name: Upload nuget packages
       uses: actions/upload-artifact@v3
       with:

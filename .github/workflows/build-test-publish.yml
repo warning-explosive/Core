@@ -29,9 +29,9 @@ jobs:
     - name: Show environment variables
       run: echo '${{ toJSON(env) }}'
     - name: Restore nuget packages
-      run: dotnet restore --no-cache -v minimal
+      run: dotnet restore --no-cache -v:minimal
     - name: Build solution
-      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v minimal
+      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Upload nuget packages
@@ -41,10 +41,11 @@ jobs:
         path: packages/*.nupkg
         if-no-files-found: error
     - name: Run tests
-      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults" -v minimal
+      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude=/"[*.Test]*,[Test.*]*/" /p:CoverletOutputFormat=/"json,opencover/" /p:CoverletOutput=../../TestResults/ /p:MergeWith=../../TestResults/coverlet.json
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: TestResults
+        if-no-files-found: error

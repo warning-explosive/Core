@@ -1,7 +1,7 @@
 name: build-test-publish
 on: push
 jobs:
-  build:
+  build-test-publish:
     if: ${{ github.ref_name == 'master' || github.ref_name == 'develop' }}
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +41,7 @@ jobs:
         path: packages/*.nupkg
         if-no-files-found: error
     - name: Run tests
-      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:CoverletOutputFormat=/"json,opencover/"
+      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude=\"[*.Test]*,[Test.*]*\" /p:SkipAutoProps=true /p:CoverletOutputFormat=\"json,opencover\"
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3

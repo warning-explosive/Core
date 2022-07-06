@@ -15,22 +15,21 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
-    - name: Determine Release configuration
-      if: ${{ github.ref_name == 'master' }}
-      run: echo "CONFIGURATION=Release" >> $GITHUB_ENV
-    - name: Determine Debug configuration
-      if: ${{ github.ref_name == 'develop' }}
-      run: echo "CONFIGURATION=Debug" >> $GITHUB_ENV
+    - name: Determine configuration
+      run: |
+        if [[ "${{ github.ref_name }}" == "master" ]]; then
+          echo "CONFIGURATION=Release" >> $GITHUB_ENV
+        else
+          echo "CONFIGURATION=Debug" >> $GITHUB_ENV
+        fi
     - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: Determine package version
       run: echo "PACKAGE_VERSION=$(dotnet-gitversion /output json /showvariable FullSemVer)" >> $GITHUB_ENV
     - name: Generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
-    - name: Show variables
-      run: |
-        echo "Configuration: ${{ env.CONFIGURATION }}"
-        echo "Package version: ${{ env.PACKAGE_VERSION }}"
+    - name: Show environment variables
+      run: echo '${{ toJSON(env) }}'
     - name: Restore nuget packages
       run: dotnet restore --no-cache --verbosity minimal
     - name: Build solution

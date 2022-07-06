@@ -41,7 +41,15 @@ jobs:
         path: packages/*.nupkg
         if-no-files-found: error
     - name: Run tests
-      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude=\"[*.Test]*,[Test.*]*\" /p:SkipAutoProps=true /p:CoverletOutputFormat=\"json,opencover\"
+      run: dotnet test -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='..\..\TestResults\Coverage\' /p:MergeWith='..\..\TestResults\Coverage\coverage.json'
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
+      with:
+        reports: 'TestResults\Coverage\coverage.opencover.xml'
+        targetdir: 'TestResults\Coverage'
+        reporttypes: 'Html;Badges'
+        verbosity: 'Info'
+        tag: '${{ env.GitVersion_FullSemVer }}'
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3

@@ -3,7 +3,12 @@ on:
   push:
     branches:
       - master
+      - 'release-[0-9]+.[0-9]+.[0-9]+'
+      - 'hotfix-[0-9]+.[0-9]+.[0-9]+'
+      - 'support-[0-9]+.[0-9]+.[0-9]+'
       - develop
+      - 'feature-[0-9]+'
+      - 'pull-request-[0-9]+'
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
@@ -34,12 +39,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Determine configuration
-      run: |
-        if [[ "${{ github.ref_name }}" == "master" ]]; then
-          echo "CONFIGURATION=Release" >> $GITHUB_ENV
-        else
-          echo "CONFIGURATION=Debug" >> $GITHUB_ENV
-        fi
+      run: echo "${{ (github.ref_name == 'master' || github.ref_name == 'release-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'hotfix-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'support-[0-9]+.[0-9]+.[0-9]+') && 'CONFIGURATION=Release' || 'CONFIGURATION=Debug' }}" >> $GITHUB_ENV
     - name: Setup .NET toolchain
       uses: actions/setup-dotnet@v2
       with:
@@ -79,10 +79,8 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: ./TestResults/Coverage/
         fail_ci_if_error: true
-        files: ./coverage.opencover.xml
-        path_to_write_report: ./TestResults/Coverage/codecov_report.txt
+        files: ./TestResults/Coverage/coverage.opencover.xml
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3

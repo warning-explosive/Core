@@ -28,12 +28,6 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Setup .NET toolchain
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
-    - name: Add NuGet source
-      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github
     - name: Determine configuration
       run: |
         if [[ "${{ github.ref_name }}" == "master" ]]; then
@@ -41,6 +35,10 @@ jobs:
         else
           echo "CONFIGURATION=Debug" >> $GITHUB_ENV
         fi
+    - name: Setup .NET toolchain
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
     - name: Install GitVersion
       run: dotnet tool install --global GitVersion.Tool --version 5.*
     - name: Generate assembly version
@@ -53,6 +51,8 @@ jobs:
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
+    - name: Add NuGet source
+      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github
     - name: Publish nuget packages
       run: dotnet nuget push packages/*.nupkg --source github --api-key ${{ github.token }} --skip-duplicate
     - name: Upload nuget packages

@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <AssemblyName>SpaceEngineers.Core.Test.WebApplication</AssemblyName>
         <RootNamespace>SpaceEngineers.Core.Test.WebApplication</RootNamespace>
-        <IsPackable>true</IsPackable>
+        <IsPackable>false</IsPackable>
         <Title>SpaceEngineers.Core.Test.WebApplication</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>

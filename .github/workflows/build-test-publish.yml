@@ -69,7 +69,6 @@ jobs:
     - name: Run tests
       run: dotnet test Basics/Basics.csproj -c ${{ env.Configuration }} --no-restore --no-build --logger trx --results-directory "TestResults" -v minimal
     - name: Upload test artifacts
-    - name: Upload dotnet test results
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:

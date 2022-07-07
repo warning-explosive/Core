@@ -17,12 +17,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
                                         IResolvable<IRpcRequestRegistry>
     {
         private readonly MemoryCache _memoryCache;
-        private readonly ISettingsProvider<GenericEndpointSettings> _integrationTransportSettings;
+        private readonly ISettingsProvider<GenericEndpointSettings> _genericEndpointSettingsProvider;
 
-        public RpcRequestRegistry(ISettingsProvider<GenericEndpointSettings> integrationTransportSettings)
+        public RpcRequestRegistry(ISettingsProvider<GenericEndpointSettings> genericEndpointSettingsProvider)
         {
             _memoryCache = new MemoryCache(nameof(RpcRequestRegistry));
-            _integrationTransportSettings = integrationTransportSettings;
+            _genericEndpointSettingsProvider = genericEndpointSettingsProvider;
         }
 
         public void Dispose()
@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
 
         public async Task<bool> TryEnroll(Guid requestId, TaskCompletionSource<IntegrationMessage> tcs, CancellationToken token)
         {
-            var settings = await _integrationTransportSettings
+            var settings = await _genericEndpointSettingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 

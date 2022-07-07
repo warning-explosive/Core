@@ -21,5 +21,10 @@
         /// Returns true if connection to the database was requested earlier
         /// </summary>
         bool Connected { get; }
+
+        /// <summary>
+        /// Changes count
+        /// </summary>
+        int ChangesCount { get; set; }
     }
 }

@@ -6,10 +6,12 @@
     using System.Linq;
     using Api.Abstractions;
     using AuthorizationEndpoint.Contract.Messages;
+    using Basics;
     using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Host;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.DataAccess.EventSourcing;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.StartupActions;
     using GenericEndpoint.Messaging;
@@ -23,6 +25,7 @@
     using IntegrationTransport.Integration;
     using MessageHandlers;
     using Messages;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -60,8 +63,17 @@
         /// <returns>BuildHostTestData</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
+            var commonAppSettingsJson = SolutionExtensions
+               .ProjectFile()
+               .Directory
+               .EnsureNotNull("Project directory not found")
+               .StepInto("Settings")
+               .GetFile("appsettings", ".json")
+               .FullName;
+
             var useInMemoryIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
                 (logger, hostBuilder) => hostBuilder
+                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .WithTracing()
@@ -70,6 +82,7 @@
 
             var useRabbitMqIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
                 (logger, hostBuilder) => hostBuilder
+                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .WithTracing()
@@ -294,6 +307,7 @@
 
                     var expectedIntegrationMessageTypes = new[]
                     {
+                        typeof(CaptureDomainEvent<>),
                         typeof(BaseEvent),
                         typeof(InheritedEvent),
                         typeof(Command),
@@ -479,6 +493,7 @@
 
                     var expectedIntegrationMessageTypes = new[]
                     {
+                        typeof(CaptureDomainEvent<>),
                         typeof(AuthorizeUser),
                         typeof(CreateUser),
                         typeof(UserAuthorizationResult),

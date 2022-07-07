@@ -28,12 +28,8 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
 
         public async Task Handle(CreateUser message, CancellationToken token)
         {
-            var user = await _createUserAggregateFactory
+            _ = await _createUserAggregateFactory
                 .Build(new CreateUserSpecification(message.Username, message.Password), token)
-                .ConfigureAwait(false);
-
-            await _databaseContext
-                .Track(user, token)
                 .ConfigureAwait(false);
         }
     }

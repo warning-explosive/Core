@@ -15,7 +15,6 @@
     using Basics.Primitives;
     using CompositionRoot.Api.Abstractions;
     using Connection;
-    using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
@@ -27,7 +26,6 @@
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
-        private readonly IChangesTracker _changesTracker;
         private readonly ITransactionalStore _transactionalStore;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
@@ -39,18 +37,16 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
-            IChangesTracker changesTracker,
             ITransactionalStore transactionalStore)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
-            _changesTracker = changesTracker;
             _transactionalStore = transactionalStore;
-
-            _transaction = null;
         }
 
-        public bool HasChanges => _changesTracker.HasChanges;
+        public int ChangesCount { get; set; }
+
+        public bool HasChanges => ChangesCount > 0;
 
         public IDbTransaction DbTransaction
         {
@@ -124,16 +120,12 @@
             return Task.CompletedTask;
         }
 
-        public async Task Close(bool commit, CancellationToken token)
+        public Task Close(bool commit, CancellationToken token)
         {
             try
             {
                 if (commit)
                 {
-                    await _changesTracker
-                        .SaveChanges(token)
-                        .ConfigureAwait(false);
-
                     _transaction?.Commit();
                 }
                 else
@@ -143,22 +135,18 @@
             }
             finally
             {
-                _changesTracker.Dispose();
                 _transactionalStore.Dispose();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 Interlocked.Exchange(ref _connection, default)?.Dispose();
             }
+
+            return Task.CompletedTask;
         }
 
         public void Dispose()
         {
             Close(false, CancellationToken.None).Wait();
-        }
-
-        public Task Track(IAggregate aggregate, CancellationToken token)
-        {
-            return _changesTracker.Track(aggregate, token);
         }
 
         public void Store<TEntity, TKey>(TEntity entity)

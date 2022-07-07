@@ -51,24 +51,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         private InboxMessage? Inbox { get; set; }
 
-        protected override async Task<EnUnitOfWorkBehavior> Start(IAdvancedIntegrationContext context, CancellationToken token)
+        private bool ThereIsNoFuture => Inbox != null && (Inbox.Handled || Inbox.IsError);
+
+        protected override async Task<EnUnitOfWorkBehavior> Start(
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
             await _transaction.Open(token).ConfigureAwait(false);
 
-            Inbox = await UpsertInbox(context.Message, token).ConfigureAwait(false);
+            Inbox = await ReadInbox(context, token).ConfigureAwait(false);
 
-            return Inbox.Handled || Inbox.IsError
+            return ThereIsNoFuture
                 ? EnUnitOfWorkBehavior.SkipProducer
                 : EnUnitOfWorkBehavior.Regular;
         }
 
-        protected override async Task Commit(IAdvancedIntegrationContext context, CancellationToken token)
+        protected override async Task Commit(
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
             try
             {
                 if (ValidateTransaction(context))
                 {
-                    await MarkInboxAsHandled(token).ConfigureAwait(false);
+                    await PersistInbox(context, token).ConfigureAwait(false);
 
                     await PersistOutgoingMessages(OutboxStorage.All(), token).ConfigureAwait(false);
 
@@ -108,43 +114,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
         }
 
-        private async Task<InboxMessage?> UpsertInbox(
-            IntegrationMessage integrationMessage,
-            CancellationToken token)
+        private Task<InboxMessage?> ReadInbox(IAdvancedIntegrationContext context, CancellationToken token)
         {
-            var inbox = await _transaction
+            return _transaction
                .Read<InboxMessage, Guid>()
                .All()
-               .Where(message => message.Message.PrimaryKey == integrationMessage.ReadRequiredHeader<Id>().Value
+               .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
                               && message.EndpointIdentity.LogicalName == _endpointIdentity.LogicalName
                               && message.EndpointIdentity.InstanceName == _endpointIdentity.InstanceName)
-               .SingleOrDefaultAsync(token)
-               .ConfigureAwait(false);
-
-            if (inbox != null)
-            {
-                return inbox;
-            }
-
-            inbox = new InboxMessage(Guid.NewGuid(),
-                DatabaseModel.IntegrationMessage.Build(integrationMessage, _jsonSerializer),
-                _endpointIdentity,
-                false,
-                false);
-
-            await _transaction
-               .Write<InboxMessage, Guid>()
-               .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
-               .ConfigureAwait(false);
-
-            return inbox;
+               .SingleOrDefaultAsync(token);
         }
 
         private bool ValidateTransaction(IAdvancedIntegrationContext context)
         {
-            var inbox = Inbox.EnsureNotNull("You should start the unit of work before committing it");
-
-            if (inbox.Handled || inbox.IsError)
+            if (ThereIsNoFuture)
             {
                 return false;
             }
@@ -159,11 +142,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             return true;
         }
 
-        private Task MarkInboxAsHandled(CancellationToken token)
+        private async Task PersistInbox(
+            IAdvancedIntegrationContext context,
+            CancellationToken token)
         {
-            return _transaction
-               .Write<InboxMessage, Guid>()
-               .Update(new[] { Inbox.PrimaryKey }, message => message.Handled, true, token);
+            if (Inbox == null)
+            {
+                Inbox = new InboxMessage(Guid.NewGuid(),
+                    DatabaseModel.IntegrationMessage.Build(context.Message, _jsonSerializer),
+                    _endpointIdentity,
+                    false,
+                    true);
+
+                await _transaction
+                   .Write<InboxMessage, Guid>()
+                   .Insert(new[] { Inbox }, EnInsertBehavior.Default, token)
+                   .ConfigureAwait(false);
+            }
+            else
+            {
+                await _transaction
+                   .Write<InboxMessage, Guid>()
+                   .Update(new[] { Inbox.PrimaryKey }, message => message.Handled, true, token)
+                   .ConfigureAwait(false);
+            }
         }
 
         private Task PersistOutgoingMessages(

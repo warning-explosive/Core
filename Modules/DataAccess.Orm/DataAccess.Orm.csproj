@@ -64,9 +64,6 @@
       <Compile Update="Linq\LinqMethods.cs">
         <DependentUpon>ReadRepository.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\ChangesTracker.cs">
-        <DependentUpon>IChangesTracker.cs</DependentUpon>
-      </Compile>
       <Compile Update="Transaction\TransactionalStore.cs">
         <DependentUpon>ITransactionalStore.cs</DependentUpon>
       </Compile>

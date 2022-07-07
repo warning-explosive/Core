@@ -9,15 +9,15 @@
     /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
     /// <typeparam name="TSpec">TSpec type-argument</typeparam>
     public interface IAggregateFactory<TAggregate, TSpec>
-        where TAggregate : IAggregate
+        where TAggregate : class, IAggregate<TAggregate>
         where TSpec : IAggregateSpecification
     {
         /// <summary>
-        /// Builds aggregate root
+        /// Builds aggregate
         /// </summary>
         /// <param name="spec">Specification</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Built aggregate root</returns>
+        /// <returns>Built aggregate</returns>
         Task<TAggregate> Build(TSpec spec, CancellationToken token);
     }
 }

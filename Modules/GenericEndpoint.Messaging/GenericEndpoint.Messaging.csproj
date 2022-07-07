@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Basics\Basics.csproj" />
-      <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
     </ItemGroup>
     <ItemGroup>

@@ -1,8 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-    using GenericDomain.Api.Abstractions;
     using Model;
     using Persisting;
     using Reading;
@@ -36,13 +33,5 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         IRepository<TEntity, TKey> Write<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull;
-
-        /// <summary>
-        /// Starts tracking specified aggregate root with underlying domain events
-        /// </summary>
-        /// <param name="aggregate">Aggregate root</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Track(IAggregate aggregate, CancellationToken token);
     }
 }

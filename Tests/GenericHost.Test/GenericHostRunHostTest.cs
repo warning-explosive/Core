@@ -7,6 +7,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using CompositionRoot.Api.Abstractions.Registration;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -17,6 +18,7 @@
     using IntegrationTransport.Host;
     using MessageHandlers;
     using Messages;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Mocks;
@@ -50,8 +52,17 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
+            var commonAppSettingsJson = SolutionExtensions
+               .ProjectFile()
+               .Directory
+               .EnsureNotNull("Project directory not found")
+               .StepInto("Settings")
+               .GetFile("appsettings", ".json")
+               .FullName;
+
             var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
                 (test, logger, hostBuilder) => hostBuilder
+                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
@@ -63,6 +74,7 @@
 
             var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
                 (test, logger, hostBuilder) => hostBuilder
+                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options

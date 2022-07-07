@@ -46,12 +46,6 @@
       <Compile Update="Repositories\CapturedMessageReadRepository.cs">
         <DependentUpon>ICapturedMessageReadRepository.cs</DependentUpon>
       </Compile>
-      <Compile Update="Domain\InsertCapturedMessage.cs">
-        <DependentUpon>MessageCaptured.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Domain\MessageCaptured.cs">
-        <DependentUpon>CapturedMessage.cs</DependentUpon>
-      </Compile>
       <Compile Update="DatabaseModel\IntegrationMessage.cs">
         <DependentUpon>CapturedMessage.cs</DependentUpon>
       </Compile>

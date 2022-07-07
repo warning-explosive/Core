@@ -160,7 +160,7 @@
             try
             {
                 _ = await _transaction
-                    .Invoke(commandText, settings, token)
+                    .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -194,7 +194,7 @@
             try
             {
                 _ = await _transaction
-                    .Invoke(commandText, settings, token)
+                    .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)

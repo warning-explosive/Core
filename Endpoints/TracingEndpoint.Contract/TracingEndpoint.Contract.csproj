@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\..\Modules\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
     </ItemGroup>
     <ItemGroup>

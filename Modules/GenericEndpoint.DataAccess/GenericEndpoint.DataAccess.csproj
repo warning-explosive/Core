@@ -29,6 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
+      <ProjectReference Include="..\GenericDomain.Api\GenericDomain.Api.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
       <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
     </ItemGroup>

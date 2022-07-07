@@ -6,4 +6,18 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     public interface IDomainEvent
     {
     }
+
+    /// <summary>
+    /// IDomainEvent
+    /// </summary>
+    /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+    public interface IDomainEvent<TAggregate> : IDomainEvent
+        where TAggregate : class, IAggregate<TAggregate>
+    {
+        /// <summary>
+        /// Applies event to aggregate
+        /// </summary>
+        /// <param name="aggregate">Aggregate</param>
+        void Apply(TAggregate aggregate);
+    }
 }

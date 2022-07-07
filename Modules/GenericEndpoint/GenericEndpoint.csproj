@@ -99,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
+    <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
     <ProjectReference Include="..\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
     <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj" />

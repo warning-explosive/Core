@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="settings">Orm settings</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
-        public static Task<int> InvokeScalar(
+        public static async Task<int> InvokeScalar(
             this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
@@ -36,10 +36,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return transaction
+            var result = await transaction
                .DbTransaction
                .Connection
-               .ExecuteAsync(command);
+               .ExecuteAsync(command)
+               .ConfigureAwait(false);
+
+            if (result > 0)
+            {
+                transaction.ChangesCount += result;
+            }
+
+            return result;
         }
 
         /// <summary>

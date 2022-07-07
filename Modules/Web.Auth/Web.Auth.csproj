@@ -41,7 +41,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
-      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
       <ProjectReference Include="..\..\Endpoints\AuthorizationEndpoint.Host\AuthorizationEndpoint.Host.csproj" />
     </ItemGroup>
 </Project>

@@ -1,13 +1,15 @@
 namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract.Messages;
+    using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
-    using Domain;
+    using DatabaseModel;
     using GenericEndpoint.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
@@ -23,9 +25,13 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
 
         public Task Handle(CaptureTrace command, CancellationToken token)
         {
-            var capturedMessage = new CapturedMessage(command.SerializedMessage, command.Exception?.ToString());
+            var message = IntegrationMessage.Build(command.SerializedMessage);
 
-            return _databaseContext.Track(capturedMessage, token);
+            var capturedMessage = new CapturedMessage(Guid.NewGuid(), message, command.Exception?.ToString());
+
+            return _databaseContext
+               .Write<CapturedMessage, Guid>()
+               .Insert(new[] { capturedMessage }, EnInsertBehavior.Default, token);
         }
     }
 }

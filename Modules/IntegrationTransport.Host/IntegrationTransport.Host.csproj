@@ -30,11 +30,9 @@
     <ItemGroup>
       <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
-      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
-      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
+      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
       <ProjectReference Include="..\IntegrationTransport.InMemory\IntegrationTransport.InMemory.csproj" />
       <ProjectReference Include="..\IntegrationTransport.RabbitMQ\IntegrationTransport.RabbitMQ.csproj" />
-      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

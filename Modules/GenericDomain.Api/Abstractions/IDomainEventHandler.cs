@@ -1,8 +1,7 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Persisting
+﻿namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using GenericDomain.Api.Abstractions;
 
     /// <summary>
     /// IDomainEventHandler

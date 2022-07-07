@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericHost;
     using IntegrationTransport.Host;
     using Messages;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
@@ -66,10 +67,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             var timeout = TimeSpan.FromSeconds(60);
 
+            var commonAppSettingsJson = SolutionExtensions
+               .ProjectFile()
+               .Directory
+               .EnsureNotNull("Project directory not found")
+               .StepInto("Settings")
+               .GetFile("appsettings", ".json")
+               .FullName;
+
             var postgreSqlDatabaseProvider = new PostgreSqlDatabaseProvider();
 
             var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
                 (test, logger, hostBuilder) => hostBuilder
+                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options

@@ -17,24 +17,40 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
                                               IResolvable<IAggregateFactory<User, FindUserSpecification>>
     {
         private readonly IDatabaseContext _databaseContext;
+        private readonly IEventStore _eventStore;
 
-        public FindUserAggregateFactory(IDatabaseContext databaseContext)
+        public FindUserAggregateFactory(
+            IDatabaseContext databaseContext,
+            IEventStore eventStore)
         {
             _databaseContext = databaseContext;
+            _eventStore = eventStore;
         }
 
         public async Task<User> Build(FindUserSpecification spec, CancellationToken token)
         {
             var userDatabaseEntity = await _databaseContext
-                .Read<DatabaseModel.User, Guid>()
-                .All()
-                .Where(user => user.Username == spec.Username)
-                .SingleOrDefaultAsync(token)
-                .ConfigureAwait(false);
+               .Read<DatabaseModel.User, Guid>()
+               .All()
+               .Where(user => user.Username == spec.Username)
+               .SingleOrDefaultAsync(token)
+               .ConfigureAwait(false);
 
-            return userDatabaseEntity == null
-                ? throw new NotFoundException($"User '{spec.Username}' doesn't exist")
-                : new User(userDatabaseEntity);
+            if (userDatabaseEntity == null)
+            {
+                throw new NotFoundException($"User '{spec.Username}' doesn't exist");
+            }
+
+            var user = await _eventStore
+               .Get<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow)
+               .ConfigureAwait(false);
+
+            if (user == null)
+            {
+                throw new NotFoundException($"User '{userDatabaseEntity.Username}' with {userDatabaseEntity.PrimaryKey} PK doesn't exist");
+            }
+
+            return user;
         }
     }
 }

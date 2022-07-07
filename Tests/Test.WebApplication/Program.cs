@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using DataAccess.Orm.PostgreSql.Host;
     using GenericHost;
     using IntegrationTransport.WebHost;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using TracingEndpoint.Host;
     using Web.Api.Host;
@@ -17,34 +18,41 @@ namespace SpaceEngineers.Core.Test.WebApplication
         [SuppressMessage("Analysis", "CA1506", Justification = "web application composition root")]
         public static async Task Main(string[] args)
         {
-            SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
-                .StepInto("Settings")
-                .SetupFileSystemSettingsDirectory();
+            var settingsDirectory = SolutionExtensions
+               .ProjectFile()
+               .Directory
+               .EnsureNotNull("Project directory not found")
+               .StepInto("Settings");
+
+            settingsDirectory.SetupFileSystemSettingsDirectory();
+
+            var commonAppSettingsJson = settingsDirectory
+               .GetFile("appsettings", ".json")
+               .FullName;
 
             await Host
-                .CreateDefaultBuilder(args)
-                .UseIntegrationTransport(hostBuilder =>
-                    context => new WebApplicationStartup(
-                        hostBuilder,
+               .CreateDefaultBuilder(args)
+               .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
+               .UseIntegrationTransport(hostBuilder =>
+                    context => new WebApplicationStartup(hostBuilder,
                         context.Configuration,
                         builder => builder
-                            .WithInMemoryIntegrationTransport(hostBuilder)
-                            .WithWebApi()
-                            .WithTracing()
-                            .BuildOptions()))
-                .UseAuthorizationEndpoint(0, builder => builder
-                    .WithDataAccess(new PostgreSqlDatabaseProvider())
-                    .WithTracing()
-                    .BuildOptions())
-                .UseTracingEndpoint(0, builder => builder
-                    .WithDataAccess(new PostgreSqlDatabaseProvider())
-                    .BuildOptions())
-                .BuildWebHost()
-                .RunAsync()
-                .ConfigureAwait(false);
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .WithWebApi()
+                           .WithTracing()
+                           .BuildOptions()))
+               .UseAuthorizationEndpoint(0,
+                    builder => builder
+                       .WithDataAccess(new PostgreSqlDatabaseProvider())
+                       .WithTracing()
+                       .BuildOptions())
+               .UseTracingEndpoint(0,
+                    builder => builder
+                       .WithDataAccess(new PostgreSqlDatabaseProvider())
+                       .BuildOptions())
+               .BuildWebHost()
+               .RunAsync()
+               .ConfigureAwait(false);
         }
     }
 }

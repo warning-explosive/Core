@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
         <ProjectReference Include="..\AuthorizationEndpoint.Contract\AuthorizationEndpoint.Contract.csproj" />
         <ProjectReference Include="..\..\Modules\DataAccess.Api\DataAccess.Api.csproj" />
         <ProjectReference Include="..\..\Modules\GenericDomain.Api\GenericDomain.Api.csproj" />

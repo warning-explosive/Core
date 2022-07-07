@@ -37,47 +37,50 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
                     .Where(captured => captured.Message.ConversationId == query.ConversationId)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(captured => new Domain.CapturedMessage(captured))
                 .ToList();
+
+            ConversationTrace reply;
 
             if (capturedMessages.Any())
             {
                 var entryPoint = capturedMessages
-                    .Single(captured => captured.SerializedMessage.InitiatorMessageId == null);
+                    .Single(captured => captured.Message.InitiatorMessageId == null);
 
                 var groupByInitiatorId = capturedMessages
-                    .Where(captured => captured.SerializedMessage.InitiatorMessageId != null)
-                    .GroupBy(captured => captured.SerializedMessage.InitiatorMessageId)
-                    .ToDictionary(grp => grp.Key!.Value, grp => grp.ToArray());
+                    .Where(captured => captured.Message.InitiatorMessageId != null)
+                    .GroupBy(captured => captured.Message.InitiatorMessageId)
+                    .ToDictionary(
+                        grp => grp.Key!.Value,
+                        grp => grp.ToArray());
 
-                var reply = BuildTraceTree(query, entryPoint, groupByInitiatorId);
-
-                await _integrationContext
-                    .Reply(query, reply, token)
-                    .ConfigureAwait(false);
+                reply = BuildTraceTree(query, entryPoint, groupByInitiatorId);
             }
             else
             {
-                var reply = new ConversationTrace(query.ConversationId);
-
-                await _integrationContext
-                    .Reply(query, reply, token)
-                    .ConfigureAwait(false);
+                reply = new ConversationTrace(query.ConversationId);
             }
+
+            await _integrationContext
+               .Reply(query, reply, token)
+               .ConfigureAwait(false);
         }
 
         private static ConversationTrace BuildTraceTree(
             GetConversationTrace query,
-            Domain.CapturedMessage captured,
-            IReadOnlyDictionary<Guid, Domain.CapturedMessage[]> groupByInitiatorId)
+            CapturedMessage captured,
+            IReadOnlyDictionary<Guid, CapturedMessage[]> groupByInitiatorId)
         {
-            var subsequentTrace = (groupByInitiatorId.TryGetValue(captured.SerializedMessage.Id, out var subsequentMessages)
+            var subsequentTrace = (groupByInitiatorId.TryGetValue(captured.Message.MessageId, out var subsequentMessages)
                     ? subsequentMessages
-                    : Array.Empty<Domain.CapturedMessage>())
+                    : Array.Empty<CapturedMessage>())
                 .Select(subsequent => BuildTraceTree(query, subsequent, groupByInitiatorId))
                 .ToArray();
 
-            return new ConversationTrace(query.ConversationId, captured.SerializedMessage, captured.RefuseReason, subsequentTrace);
+            return new ConversationTrace(
+                query.ConversationId,
+                captured.Message.BuildSerializedIntegrationMessage(),
+                captured.RefuseReason,
+                subsequentTrace);
         }
     }
 }

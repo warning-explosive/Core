@@ -10,6 +10,15 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary>
         /// Domain events
         /// </summary>
-        IReadOnlyCollection<IDomainEvent> Events { get; }
+        IEnumerable<IDomainEvent> Events { get; }
+    }
+
+    /// <summary>
+    /// IAggregate
+    /// </summary>
+    /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+    public interface IAggregate<TAggregate> : IAggregate
+        where TAggregate : class, IAggregate<TAggregate>
+    {
     }
 }

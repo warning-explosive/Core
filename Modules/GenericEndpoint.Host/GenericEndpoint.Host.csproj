@@ -32,7 +32,6 @@
       <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Tracing\GenericEndpoint.Tracing.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
-      <ProjectReference Include="..\GenericHost.Api\GenericHost.Api.csproj" />
       <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
     <ItemGroup>

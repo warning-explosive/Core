@@ -445,8 +445,6 @@
                     .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
                     .ToList();
 
-                var latency = 200;
-
                 var expectedDeliveryDelays = new[]
                 {
                     0,
@@ -463,16 +461,12 @@
                 Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
 
                 Assert.True(actualDeliveryDelays
-                    .Zip(expectedDeliveryDelays)
+                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
                     .All(delays =>
                     {
-                        var actualDelay = (int)delays.First;
-                        var expectedDelay = delays.Second;
-                        var leftBorder = expectedDelay;
-                        var rightBorder = expectedDelay + latency;
-
-                        Output.WriteLine($"{leftBorder} - {actualDelay} - {rightBorder}");
-                        return leftBorder <= actualDelay && actualDelay <= rightBorder;
+                        var (actual, expected) = delays;
+                        Output.WriteLine($"{expected} <= {actual}");
+                        return expected <= actual;
                     }));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);

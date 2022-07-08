@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 return IntegrationMessageTypes()
                     .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
                                    && !type.IsMessageContractAbstraction()
-                                   && type.OwnedByEndpoint(_endpointIdentity)
+                                   && type.IsOwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }
@@ -80,7 +80,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 return IntegrationMessageTypes()
                     .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
                                    && !type.IsMessageContractAbstraction()
-                                   && type.OwnedByEndpoint(_endpointIdentity)
+                                   && type.IsOwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }

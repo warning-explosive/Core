@@ -15,7 +15,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using Basics.Exceptions;
     using Basics.Primitives;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -187,31 +186,24 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
             message.OverwriteHeader(new ActualDeliveryDate(DateTime.UtcNow));
 
-            if (_topology.TryGetValue(message.ReflectedType, out var contravariantGroup))
+            var targetEndpointLogicalName = message.GetTargetEndpoint();
+
+            if (_topology.TryGetValue(message.ReflectedType.GenericTypeDefinitionOrSelf(), out var contravariantGroup))
             {
                 var messageHandlers = contravariantGroup
                    .SelectMany(logicalGroup =>
                    {
+                       // TODO: #172 - apply generics from message.ReflectedType
                        var reflectedType = logicalGroup.Key;
-                       Func<KeyValuePair<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>, bool> predicate;
-
-                       if (message.Payload is IIntegrationReply)
-                       {
-                           var replyTo = message.ReadRequiredHeader<ReplyTo>().Value;
-                           predicate = group => group.Key.Equals(replyTo.LogicalName, StringComparison.OrdinalIgnoreCase);
-                       }
-                       else
-                       {
-                           predicate = _ => true;
-                       }
 
                        return logicalGroup
                           .Value
-                          .Where(predicate)
+                          .Where(group => targetEndpointLogicalName.Equals("*", StringComparison.Ordinal)
+                                       || group.Key.Equals(targetEndpointLogicalName, StringComparison.OrdinalIgnoreCase))
                           .Select(group =>
                           {
                               var (_, instanceGroup) = group;
-                              var selectedEndpointInstanceIdentity = SelectedEndpointInstanceIdentity(message, instanceGroup);
+                              var selectedEndpointInstanceIdentity = _instanceSelectionBehavior.SelectInstance(message, instanceGroup.Keys.ToList());
                               var messageHandler = instanceGroup[selectedEndpointInstanceIdentity];
 
                               return new Func<Task>(() =>
@@ -235,27 +227,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                 }
             }
 
-            throw new NotFoundException($"Target endpoint for message '{message.ReflectedType.FullName}' not found");
-        }
-
-        private EndpointIdentity SelectedEndpointInstanceIdentity(
-            IntegrationMessage message,
-            ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> logicalGroup)
-        {
-            EndpointIdentity endpointIdentity;
-
-            if (message.Payload is IIntegrationReply)
-            {
-                var replyTo = message.ReadRequiredHeader<ReplyTo>().Value;
-
-                endpointIdentity = logicalGroup.Keys.Single(it => it.Equals(replyTo));
-            }
-            else
-            {
-                endpointIdentity = _instanceSelectionBehavior.SelectInstance(message, logicalGroup.Keys.ToList());
-            }
-
-            return endpointIdentity;
+            throw new NotFoundException($"Target endpoint {targetEndpointLogicalName} for message '{message.ReflectedType.FullName}' not found");
         }
 
         private static DateTime PrioritySelector(IntegrationMessage message)

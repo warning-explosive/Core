@@ -73,8 +73,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration
 
         internal bool IsOpenGenericFallback()
         {
-            return Implementation.IsGenericType
-                   && !Implementation.IsConstructedGenericType;
+            return !Implementation.IsConstructedOrNonGenericType();
         }
     }
 }

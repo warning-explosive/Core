@@ -31,12 +31,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Extensions
         /// <param name="type">Message type</param>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <returns>Message type is owned by specified endpoint</returns>
-        public static bool OwnedByEndpoint(this Type type, EndpointIdentity endpointIdentity)
+        public static bool IsOwnedByEndpoint(this Type type, EndpointIdentity endpointIdentity)
         {
-            return type
+            var endpointName = type
                .GetRequiredAttribute<OwnedByAttribute>()
-               .EndpointName
-               .Equals(endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
+               .EndpointName;
+
+            return endpointName.Equals(endpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase)
+                || endpointName.Equals(nameof(EndpointIdentity), StringComparison.OrdinalIgnoreCase);
         }
     }
 }

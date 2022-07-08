@@ -104,8 +104,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                     {
                         Output.WriteLine(type.FullName);
 
-                        var service = type.IsGenericType
-                                      && !type.IsConstructedGenericType
+                        var service = !type.IsConstructedOrNonGenericType()
                             ? genericTypeProvider.CloseByConstraints(type, HybridTypeArgumentSelector(DependencyContainer))
                             : type;
 

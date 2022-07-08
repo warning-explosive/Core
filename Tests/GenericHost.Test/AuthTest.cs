@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AuthorizationEndpoint.Contract.Messages;
+    using AuthorizationEndpoint.Domain;
     using AuthorizationEndpoint.Host;
     using AuthorizationEndpoint.JwtAuthentication;
     using Basics;
@@ -17,6 +18,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Host;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.DataAccess.EventSourcing;
     using IntegrationTransport.Host;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -151,7 +153,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
             Assert.Equal(password, credentials[1]);
         }
 
-        [Theory(Timeout = 60_000)]
+        [SuppressMessage("Analysis", "xUnit1004", Justification = "temporary")]
+        [Theory(Timeout = 60_000, Skip = "#172 - static domain event publishing affects parallel tests")]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task AuthorizeUserTest(
             Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
@@ -238,6 +241,64 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 Assert.Empty(collector.ErrorMessages);
                 Assert.NotEmpty(collector.Messages);
+
+                collector.Messages.Clear();
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var awaiter = Task.WhenAny(
+                        hostShutdown,
+                        Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<CreateUser>(),
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<UserCreated>>()));
+
+                    await integrationContext
+                       .Send(new CreateUser(username, password), cts.Token)
+                       .ConfigureAwait(false);
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+                }
+
+                Assert.Empty(collector.ErrorMessages);
+                Assert.NotEmpty(collector.Messages);
+
+                collector.Messages.Clear();
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var awaiter = Task.WhenAny(
+                        hostShutdown,
+                        integrationContext.RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None));
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    authorizationResult = await ((Task<UserAuthorizationResult>)result).ConfigureAwait(false);
+                }
+
+                Output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+
+                Assert.Equal(username, authorizationResult.Username);
+                Assert.NotEmpty(authorizationResult.Token);
+                Assert.NotEmpty(authorizationResult.Details);
+
+                Assert.Empty(collector.ErrorMessages);
+                Assert.NotEmpty(collector.Messages);
+
+                collector.Messages.Clear();
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

@@ -111,7 +111,7 @@
                        .Read<OutboxMessage, Guid>()
                        .All()
                        .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
-                                     && !outbox.Sent)
+                                     && !outbox.Sent) // TODO: add timestamp offset so as not to produce duplicates
                        .Select(outbox => outbox.Message)
                        .ToListAsync(token)
                        .ConfigureAwait(false))

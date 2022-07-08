@@ -58,6 +58,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
 
         /// <summary>
         /// Request data from target endpoint in blocking manner
+        /// TODO: move it to integration transport and warn about unique logical names
         /// </summary>
         /// <param name="query">Integration query</param>
         /// <param name="token">Cancellation token</param>

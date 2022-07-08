@@ -11,11 +11,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     internal class EventStore : IEventStore,
                                 IResolvable<IEventStore>
     {
-        public Task<TAggregate?> Get<TAggregate>(Guid id, DateTime utcNow)
+        public Task<TAggregate?> Get<TAggregate>(Guid id, DateTime timestamp)
             where TAggregate : class, IAggregate<TAggregate>
         {
             // TODO: #172 - implement reading/appending/snapshots
             return Task.FromResult<TAggregate?>(default);
+        }
+
+        public Task Append<TAggregate, TEvent>(Guid id, TEvent domainEvent)
+            where TAggregate : class, IAggregate<TAggregate>
+            where TEvent : IDomainEvent
+        {
+            // TODO: #172 - implement reading/appending/snapshots
+            return Task.CompletedTask;
         }
     }
 }

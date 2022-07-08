@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
+namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System;
     using System.Collections.Generic;
@@ -6,19 +6,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Verifiers
     using System.Reflection;
     using System.Text.RegularExpressions;
     using Api.Abstractions;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Abstractions.Registration;
-    using CompositionRoot.Api.Extensions;
     using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Contract.Extensions;
     using Extensions;
     using Messaging.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions;
+    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
+    using SpaceEngineers.Core.CompositionRoot.Api.Extensions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,

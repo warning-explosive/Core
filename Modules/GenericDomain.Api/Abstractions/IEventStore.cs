@@ -14,10 +14,22 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// Gets aggregate by it's identifier and version timestamp
         /// </summary>
         /// <param name="id">Identifier</param>
-        /// <param name="utcNow">Timestamp</param>
+        /// <param name="timestamp">Timestamp</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
         /// <returns>Aggregate</returns>
-        Task<TAggregate?> Get<TAggregate>(Guid id, DateTime utcNow)
+        Task<TAggregate?> Get<TAggregate>(Guid id, DateTime timestamp)
             where TAggregate : class, IAggregate<TAggregate>;
+
+        /// <summary>
+        /// Appends event to aggregate's event store
+        /// </summary>
+        /// <param name="id">Identifier</param>
+        /// <param name="domainEvent">Domain event</param>
+        /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+        /// <typeparam name="TEvent">TEvent type-argument</typeparam>
+        /// <returns>Aggregate</returns>
+        Task Append<TAggregate, TEvent>(Guid id, TEvent domainEvent)
+            where TAggregate : class, IAggregate<TAggregate>
+            where TEvent : IDomainEvent;
     }
 }

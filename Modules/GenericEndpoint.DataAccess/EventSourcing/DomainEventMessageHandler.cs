@@ -22,7 +22,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 
         public Task Handle(CaptureDomainEvent<TEvent> message, CancellationToken token)
         {
-            // TODO: #172 - test it
             return _domainEventHandler.Handle(message.Event, token);
         }
     }

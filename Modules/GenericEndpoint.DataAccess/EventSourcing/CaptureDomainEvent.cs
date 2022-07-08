@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     using DatabaseModel;
     using GenericDomain.Api.Abstractions;
 
-    [OwnedBy(nameof(EndpointIdentity))] // TODO: #172 - send to the same endpoint
+    [OwnedBy(nameof(EndpointIdentity))]
     internal class CaptureDomainEvent<TEvent> : IIntegrationCommand
         where TEvent : IDomainEvent
     {

@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <returns>Multiple relation type</returns>
         public static Type ConstructMultipleRelationType(this Type itemType)
         {
-            return !itemType.IsGenericType || itemType.IsConstructedGenericType
+            return itemType.IsConstructedOrNonGenericType()
                 ? MultipleRelation.MakeGenericType(itemType)
                 : throw new InvalidOperationException($"Type {itemType} should be non-generic or fully closed generic type");
         }

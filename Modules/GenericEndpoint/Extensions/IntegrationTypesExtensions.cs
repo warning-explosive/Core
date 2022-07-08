@@ -14,8 +14,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Extensions
             return registrations
                .Resolvable()
                .RegisteredComponents()
+               .Where(type => type.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
                .SelectMany(info => info.ExtractGenericArgumentsAt(typeof(IMessageHandler<>)))
-               .Any(messageType.IsAssignableFrom);
+               .Any(arg => messageType.IsAssignableFrom(arg.GenericTypeDefinitionOrSelf()));
         }
     }
 }

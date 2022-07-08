@@ -40,9 +40,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
         public Type CloseByConstraints(Type type, Func<TypeArgumentSelectionContext, Type?>? selector)
         {
-            return AlreadyClosed(type)
-                       ? type
-                       : CloseByConstraintsInternal(type, selector ?? DefaultSelector());
+            return type.IsConstructedOrNonGenericType()
+                ? type
+                : CloseByConstraintsInternal(type, selector ?? DefaultSelector());
         }
 
         public Func<TypeArgumentSelectionContext, Type?> DefaultSelector()
@@ -84,18 +84,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Implementations
 
             var closed = type.MakeGenericType(resolved.ToArray());
 
-            if (!AlreadyClosed(closed))
+            if (!closed.IsConstructedOrNonGenericType())
             {
                 throw new ArgumentException($"Type {type.FullName} is not closed");
             }
 
             return closed;
-        }
-
-        private static bool AlreadyClosed(Type type)
-        {
-            return !type.IsGenericType
-                   || type.IsConstructedGenericType;
         }
 
         private Type SingleSatisfyingType(

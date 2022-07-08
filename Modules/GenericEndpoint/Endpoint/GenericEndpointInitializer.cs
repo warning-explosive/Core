@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Initializers
+namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System;
     using System.Threading;
@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Initializers
     using Api.Abstractions;
     using Basics;
     using Contract;
-    using Endpoint;
     using Messaging;
     using Messaging.Abstractions;
     using Microsoft.Extensions.Logging;

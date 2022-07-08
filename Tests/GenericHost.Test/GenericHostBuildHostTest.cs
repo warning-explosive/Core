@@ -329,6 +329,7 @@
 
                     var expectedCommands = new[]
                     {
+                        typeof(CaptureDomainEvent<>),
                         typeof(Command),
                         typeof(OpenGenericHandlerCommand)
                     };

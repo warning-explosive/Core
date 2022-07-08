@@ -6,7 +6,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using System.Linq;
     using Abstractions;
     using Basics;
+    using Contract;
     using Contract.Abstractions;
+    using Contract.Attributes;
     using MessageHeaders;
 
     /// <summary>
@@ -196,6 +198,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             return new IntegrationMessage(Payload.DeepCopy(), ReflectedType, _headers.DeepCopy());
         }
 
+        /// <inheritdoc />
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
         /// <summary>
         /// Clones original message with specified contravariant type
         /// </summary>
@@ -203,7 +211,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <returns>Copy</returns>
         public IntegrationMessage ContravariantClone(Type reflectedType)
         {
-            if (!reflectedType.IsAssignableFrom(ReflectedType))
+            if (!reflectedType.IsAssignableFrom(ReflectedType)
+                || !reflectedType.IsConstructedOrNonGenericType())
             {
                 throw new InvalidOperationException($"{reflectedType} isn't suitable as contravariant analogue for {ReflectedType}");
             }
@@ -211,10 +220,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             return new IntegrationMessage(Payload.DeepCopy(), reflectedType, _headers.DeepCopy());
         }
 
-        /// <inheritdoc />
-        object ICloneable.Clone()
+        /// <summary>
+        /// Gets target endpoint logical name
+        /// </summary>
+        /// <returns>Target endpoint logical name</returns>
+        public string GetTargetEndpoint()
         {
-            return Clone();
+            var type = Payload.GetType();
+
+            var targetEndpoint = this.IsEvent()
+                ? "*"
+                : ReadHeader<ReplyTo>()?.Value.LogicalName ?? type.GetAttribute<OwnedByAttribute>().EndpointName;
+
+            return targetEndpoint.Equals(nameof(EndpointIdentity), StringComparison.OrdinalIgnoreCase)
+                ? ReadRequiredHeader<SentFrom>().Value.LogicalName
+                : targetEndpoint;
         }
 
         /// <summary>

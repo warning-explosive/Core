@@ -156,7 +156,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
                 await _transaction
                    .Write<InboxMessage, Guid>()
-                   .Insert(new[] { Inbox }, EnInsertBehavior.Default, token)
+                   .Insert(new[] { Inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
             }
             else

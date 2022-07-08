@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {
-            var isOwnedByCurrentEndpoint = typeof(TEvent).OwnedByEndpoint(_endpointIdentity);
+            var isOwnedByCurrentEndpoint = typeof(TEvent).IsOwnedByEndpoint(_endpointIdentity);
 
             if (isOwnedByCurrentEndpoint)
             {

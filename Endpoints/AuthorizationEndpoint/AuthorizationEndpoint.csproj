@@ -64,5 +64,8 @@
       <Compile Update="Domain\UserCreated.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>
+      <Compile Update="Domain\UserCreatedDomainEventHandler.cs">
+        <DependentUpon>UserCreated.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

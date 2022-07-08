@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using Builder;
     using CompositionRoot;
     using CompositionRoot.Api.Abstractions;
+    using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Extensions;
@@ -184,12 +185,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                            && !type.IsMessageContractAbstraction())
                .ToArray();
 
+            var domainEvents = AssembliesExtensions
+               .AllOurAssembliesFromCurrentDomain()
+               .SelectMany(assembly => assembly.GetTypes())
+               .Where(type => typeof(IDomainEvent).IsAssignableFrom(type))
+               .ToArray();
+
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
                .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
                    .WithAdditionalOurTypes(integrationMessageTypes)
+                   .WithAdditionalOurTypes(domainEvents)
                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
                    .WithManualRegistrations(new ConfigurationProviderManualRegistration())

@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract.Messages;
-    using DataAccess.Api.Transaction;
     using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
@@ -15,14 +14,10 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     internal class CreateUserMessageHandler : IMessageHandler<CreateUser>,
                                               IResolvable<IMessageHandler<CreateUser>>
     {
-        private readonly IDatabaseContext _databaseContext;
         private readonly IAggregateFactory<User, CreateUserSpecification> _createUserAggregateFactory;
 
-        public CreateUserMessageHandler(
-            IDatabaseContext databaseContext,
-            IAggregateFactory<User, CreateUserSpecification> createUserAggregateFactory)
+        public CreateUserMessageHandler(IAggregateFactory<User, CreateUserSpecification> createUserAggregateFactory)
         {
-            _databaseContext = databaseContext;
             _createUserAggregateFactory = createUserAggregateFactory;
         }
 

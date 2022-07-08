@@ -20,7 +20,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Extensions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Attributes;
     using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.Abstractions;
@@ -182,11 +181,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var body = message.EncodeIntegrationMessage(jsonSerializer);
 
-                var left = message.ReflectedType.FullName!.GetRoutingKeyPart();
+                var left = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName!.GetRoutingKeyPart();
 
-                var right = string.IsNullOrEmpty(basicProperties.ReplyTo)
-                    ? message.Payload.GetType().GetRequiredAttribute<OwnedByAttribute>().EndpointName
-                    : basicProperties.ReplyTo;
+                var right = basicProperties.ReplyTo;
 
                 var routingKey = string.Join(".", left, right);
 
@@ -210,7 +207,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 basicProperties.CorrelationId = message.ReadRequiredHeader<ConversationId>().Value.ToString();
                 basicProperties.Type = message.ReflectedType.FullName;
                 basicProperties.Headers = new Dictionary<string, object>();
-                basicProperties.ReplyTo = message.ReadHeader<ReplyTo>()?.Value.LogicalName ?? default;
+                basicProperties.ReplyTo = message.GetTargetEndpoint();
 
                 var deferredUntil = message.ReadHeader<DeferredUntil>();
                 var now = DateTime.UtcNow;

@@ -193,8 +193,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                 var messageHandlers = contravariantGroup
                    .SelectMany(logicalGroup =>
                    {
-                       // TODO: #172 - apply generics from message.ReflectedType
-                       var reflectedType = logicalGroup.Key;
+                       var reflectedType = logicalGroup.Key.ApplyGenericArguments(message.ReflectedType);
 
                        return logicalGroup
                           .Value

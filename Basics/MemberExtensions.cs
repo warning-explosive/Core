@@ -23,6 +23,17 @@ namespace SpaceEngineers.Core.Basics
             };
 
         /// <summary>
+        /// Does method have external access (public or internal)
+        /// </summary>
+        /// <param name="method">MethodBase</param>
+        /// <returns>True if method has external access (public or internal)</returns>
+        public static bool IsAccessible(this MethodBase method)
+        {
+            return (method.IsPublic || method.IsAssembly)
+                && !(method.IsPrivate || method.IsFamilyOrAssembly);
+        }
+
+        /// <summary>
         /// Check that object has property
         /// </summary>
         /// <param name="target">Target object</param>

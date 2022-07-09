@@ -21,4 +21,20 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         where TAggregate : class, IAggregate<TAggregate>
     {
     }
+
+    /// <summary>
+    /// IHasDomainEvent
+    /// </summary>
+    /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+    /// <typeparam name="TEvent">TEvent type-argument</typeparam>
+    public interface IHasDomainEvent<TAggregate, TEvent>
+        where TAggregate : class, IAggregate<TAggregate>
+        where TEvent : IDomainEvent<TAggregate>
+    {
+        /// <summary>
+        /// Applies domain event state to current aggregate
+        /// </summary>
+        /// <param name="domainEvent">Domain event</param>
+        void Apply(TEvent domainEvent);
+    }
 }

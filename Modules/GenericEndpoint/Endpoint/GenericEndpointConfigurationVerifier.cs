@@ -151,8 +151,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         {
             messageTypes
                .Where(messageType => messageType.IsConcreteType())
-               .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty))
-               .Where(property => !(property.HasInitializer() && property.SetMethod.IsPublic))
+               .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
+               .Where(property => !(property.HasInitializer() && property.SetMethod.IsAccessible()))
                .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be deserializable"));
         }
 

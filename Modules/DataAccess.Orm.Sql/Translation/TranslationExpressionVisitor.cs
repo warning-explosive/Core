@@ -449,7 +449,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             string Amb(IEnumerable<IIntermediateExpression?> infos)
             {
-                throw new InvalidOperationException($"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member");
+                return $"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member";
             }
         }
 

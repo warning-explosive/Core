@@ -509,6 +509,42 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Applies generic arguments having based on specified source type
+        /// </summary>
+        /// <param name="openGeneric">Open-generic</param>
+        /// <param name="source">Source with type-arguments</param>
+        /// <returns>Constructed generic type</returns>
+        public static Type ApplyGenericArguments(this Type openGeneric, Type source)
+        {
+            if (openGeneric.IsConstructedOrNonGenericType())
+            {
+                return openGeneric;
+            }
+
+            if (openGeneric.IsGenericType
+             && openGeneric.IsGenericTypeDefinition
+             && source.IsConstructedOrNonGenericType())
+            {
+                var genericArguments = source
+                   .ExtractGenericArguments(openGeneric)
+                   .InformativeSingle(Amb(openGeneric, source));
+
+                return openGeneric.MakeGenericType(genericArguments);
+            }
+
+            throw new InvalidOperationException($"Type {openGeneric.FullName} can't be closed from {source.FullName}");
+
+            static Func<IEnumerable<Type[]>, string> Amb(Type openGeneric, Type source)
+            {
+                return args =>
+                {
+                    var details = string.Join("; ", args.Select(genericArguments => string.Join(", ", genericArguments.Select(arg => arg.Name))));
+                    return $"Type {source.FullName} has different implementations of {openGeneric.FullName}: {details}";
+                };
+            }
+        }
+
+        /// <summary>
         /// Unwrap type parameter if possible
         /// </summary>
         /// <param name="typeToUnwrap">Type to unwrap</param>

@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
             }
 
             var user = await _eventStore
-               .Get<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow)
+               .Get<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow, token)
                .ConfigureAwait(false);
 
             if (user == null)

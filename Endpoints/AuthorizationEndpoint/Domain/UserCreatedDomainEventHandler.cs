@@ -27,16 +27,13 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
 
         public async Task Handle(UserCreated domainEvent, CancellationToken token)
         {
-            var primaryKey = Guid.NewGuid();
-
-            // TODO: #172 - store domain events automatically
             await _eventStore
-               .Append<User, UserCreated>(primaryKey, domainEvent)
+               .Append<User, UserCreated>(domainEvent, token)
                .ConfigureAwait(false);
 
             await _databaseContext
                .Write<DatabaseModel.User, Guid>()
-               .Insert(new[] { new DatabaseModel.User(primaryKey, domainEvent.Username) }, EnInsertBehavior.Default, token)
+               .Insert(new[] { new DatabaseModel.User(domainEvent.AggregateId, domainEvent.Username) }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
         }
     }

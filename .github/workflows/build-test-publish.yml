@@ -9,6 +9,11 @@ on:
       - develop
       - 'feature-[0-9]+'
       - 'pull-request-[0-9]+'
+    paths-ignore:
+      - '**.md'
+env:
+  DOT_NET_VERSION: 6.0.x
+  GIT_VERSION_VERSION: 5.*
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
@@ -43,9 +48,9 @@ jobs:
     - name: Setup .NET toolchain
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: ${{ env.DOT_NET_VERSION }}
     - name: Install GitVersion
-      run: dotnet tool install --global GitVersion.Tool --version 5.*
+      run: dotnet tool install --global GitVersion.Tool --version ${{ env.GIT_VERSION_VERSION }}
     - name: Generate assembly version
       run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
     - name: Dump environment variables

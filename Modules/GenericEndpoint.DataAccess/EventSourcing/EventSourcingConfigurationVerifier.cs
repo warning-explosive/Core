@@ -59,6 +59,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             {
                 yield return constructorException;
             }
+
+            foreach (var initializerException in MissingPropertyInitializers(type))
+            {
+                yield return initializerException;
+            }
         }
 
         private static bool AggregateHasNoDefaultCctor(Type type, [NotNullWhen(true)] out Exception? exception)
@@ -103,6 +108,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 
             exception = null;
             return false;
+        }
+
+        private static IEnumerable<Exception> MissingPropertyInitializers(Type type)
+        {
+            var properties = type
+               .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+               .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
+               .Where(property => !property.HasInitializer() || property.SetMethod.IsAccessible());
+
+            foreach (var property in properties)
+            {
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
+            }
         }
     }
 }

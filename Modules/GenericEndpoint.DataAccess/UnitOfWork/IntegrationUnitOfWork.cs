@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 }
                 else
                 {
-                    await Rollback(context, null, token).ConfigureAwait(false);
+                    await _transaction.Close(false, token).ConfigureAwait(false);
                 }
             }
             finally

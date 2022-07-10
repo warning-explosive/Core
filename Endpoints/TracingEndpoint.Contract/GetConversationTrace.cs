@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.TracingEndpoint.Contract.Messages
+namespace SpaceEngineers.Core.TracingEndpoint.Contract
 {
     using System;
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Attributes;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
 
     /// <summary>
     /// GetConversationTrace

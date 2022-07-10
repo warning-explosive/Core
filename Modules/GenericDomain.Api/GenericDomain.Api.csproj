@@ -66,5 +66,8 @@
       <Compile Update="Abstractions\IAggregateSpecification.cs">
         <DependentUpon>IAggregateFactory.cs</DependentUpon>
       </Compile>
+      <Compile Update="Abstractions\BaseDomainEvent.cs">
+        <DependentUpon>IDomainEvent.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

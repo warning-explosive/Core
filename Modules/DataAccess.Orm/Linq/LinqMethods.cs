@@ -269,6 +269,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Distinct()"));
         }
 
+        internal static MethodInfo QueryableOrderBy()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.OrderBy),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderBy()"));
+        }
+
         internal static MethodInfo QueryableSelectMany()
         {
             return new MethodFinder(typeof(Queryable),

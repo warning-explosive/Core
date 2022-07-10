@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Contract.Messages;
+    using Contract;
     using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
     using GenericEndpoint.Api.Abstractions;
@@ -18,14 +18,14 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     internal class GetConversationTraceMessageHandler : IMessageHandler<GetConversationTrace>,
                                                         IResolvable<IMessageHandler<GetConversationTrace>>
     {
-        private readonly IIntegrationContext _integrationContext;
+        private readonly IIntegrationContext _context;
         private readonly IDatabaseContext _databaseContext;
 
         public GetConversationTraceMessageHandler(
-            IIntegrationContext integrationContext,
+            IIntegrationContext context,
             IDatabaseContext databaseContext)
         {
-            _integrationContext = integrationContext;
+            _context = context;
             _databaseContext = databaseContext;
         }
 
@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
                 reply = new ConversationTrace(query.ConversationId);
             }
 
-            await _integrationContext
+            await _context
                .Reply(query, reply, token)
                .ConfigureAwait(false);
         }

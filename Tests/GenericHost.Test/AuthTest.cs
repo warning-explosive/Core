@@ -8,8 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using AuthorizationEndpoint.Contract.Messages;
-    using AuthorizationEndpoint.Domain;
+    using AuthorizationEndpoint.Contract;
     using AuthorizationEndpoint.Host;
     using AuthorizationEndpoint.JwtAuthentication;
     using Basics;
@@ -153,8 +152,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             Assert.Equal(password, credentials[1]);
         }
 
-        [SuppressMessage("Analysis", "xUnit1004", Justification = "temporary")]
-        [Theory(Timeout = 60_000, Skip = "#172 - static domain event publishing affects parallel tests")]
+        [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task AuthorizeUserTest(
             Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
@@ -239,11 +237,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 Assert.Empty(authorizationResult.Token);
                 Assert.NotEmpty(authorizationResult.Details);
 
-                Assert.Empty(collector.ErrorMessages);
-                Assert.NotEmpty(collector.Messages);
-
-                collector.Messages.Clear();
-
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
                     var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
@@ -252,7 +245,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         hostShutdown,
                         Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<UserCreated>>()));
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthorizationEndpoint.Domain.UserCreated>>(),
+                            collector.WaitUntilMessageIsNotReceived<UserCreated>()));
 
                     await integrationContext
                        .Send(new CreateUser(username, password), cts.Token)
@@ -264,12 +258,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         throw new InvalidOperationException("Host was unexpectedly stopped");
                     }
+
+                    await result.ConfigureAwait(false);
                 }
-
-                Assert.Empty(collector.ErrorMessages);
-                Assert.NotEmpty(collector.Messages);
-
-                collector.Messages.Clear();
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
@@ -293,12 +284,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 Assert.Equal(username, authorizationResult.Username);
                 Assert.NotEmpty(authorizationResult.Token);
-                Assert.NotEmpty(authorizationResult.Details);
-
-                Assert.Empty(collector.ErrorMessages);
-                Assert.NotEmpty(collector.Messages);
-
-                collector.Messages.Clear();
+                Assert.Empty(authorizationResult.Details);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

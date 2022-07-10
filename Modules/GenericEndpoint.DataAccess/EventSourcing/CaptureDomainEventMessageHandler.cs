@@ -9,13 +9,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
-    internal class DomainEventMessageHandler<TEvent> : IMessageHandler<CaptureDomainEvent<TEvent>>,
-                                                       IResolvable<IMessageHandler<CaptureDomainEvent<TEvent>>>
-        where TEvent : IDomainEvent
+    internal class CaptureDomainEventMessageHandler<TEvent> : IMessageHandler<CaptureDomainEvent<TEvent>>,
+                                                              IResolvable<IMessageHandler<CaptureDomainEvent<TEvent>>>
+        where TEvent : class, IDomainEvent
     {
         private readonly IDomainEventHandler<TEvent> _domainEventHandler;
 
-        public DomainEventMessageHandler(IDomainEventHandler<TEvent> domainEventHandler)
+        public CaptureDomainEventMessageHandler(IDomainEventHandler<TEvent> domainEventHandler)
         {
             _domainEventHandler = domainEventHandler;
         }

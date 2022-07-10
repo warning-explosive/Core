@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Extensions
     using GenericEndpoint.Pipeline;
     using Messaging.Abstractions;
     using TracingEndpoint.Contract;
-    using TracingEndpoint.Contract.Messages;
 
     internal static class TracingExtensions
     {
@@ -20,7 +19,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Tracing.Extensions
             IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
-            if (context.Message.Payload is not TracingEndpoint.Contract.Messages.CaptureTrace)
+            if (context.Message.Payload is not TracingEndpoint.Contract.CaptureTrace)
             {
                 var command = new CaptureTrace(
                     SerializedIntegrationMessage.FromIntegrationMessage(context.Message, jsonSerializer),

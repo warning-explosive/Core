@@ -7,7 +7,9 @@
     /// IAsyncQueryable
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface IAsyncQueryable<out T> : IQueryable<T>, IAsyncEnumerable<T>
+    public interface IAsyncQueryable<out T> : IQueryable<T>,
+                                              IOrderedQueryable<T>,
+                                              IAsyncEnumerable<T>
     {
     }
 }

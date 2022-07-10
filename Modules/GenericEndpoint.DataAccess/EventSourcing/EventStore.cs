@@ -1,35 +1,84 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Core.DataAccess.Api.Persisting;
+    using Core.DataAccess.Api.Reading;
+    using Core.DataAccess.Api.Transaction;
+    using CrossCuttingConcerns.Json;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]
     internal class EventStore : IEventStore,
                                 IResolvable<IEventStore>
     {
-        public Task<TAggregate?> Get<TAggregate>(
-            Guid id,
+        private readonly IDatabaseContext _databaseContext;
+        private readonly IJsonSerializer _jsonSerializer;
+
+        public EventStore(
+            IDatabaseContext databaseContext,
+            IJsonSerializer jsonSerializer)
+        {
+            _databaseContext = databaseContext;
+            _jsonSerializer = jsonSerializer;
+        }
+
+        public async Task<TAggregate?> Get<TAggregate>(
+            Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
         {
-            // TODO: #172 - implement reading/appending/snapshots
-            return Task.FromResult<TAggregate?>(default);
+            var databaseDomainEvents = await _databaseContext
+               .Read<DatabaseDomainEvent, Guid>()
+               .All()
+               .Where(domainEvent => domainEvent.AggregateId == aggregateId
+                                  && domainEvent.Timestamp <= timestamp)
+               /*TODO: #182 - sql ordering*/
+               /*.OrderBy(domainEvent => domainEvent.Timestamp)*/
+               .ToListAsync(token)
+               .ConfigureAwait(false);
+
+            var domainEvents = databaseDomainEvents
+                /*TODO: #182 - sql ordering*/
+               .OrderBy(domainEvent => domainEvent.Timestamp)
+               .Select(domainEvent => _jsonSerializer.DeserializeObject(domainEvent.SerializedEvent, domainEvent.EventType))
+               .OfType<IDomainEvent<TAggregate>>()
+               .ToArray();
+
+            if (domainEvents.Any())
+            {
+                return (TAggregate)typeof(TAggregate)
+                   .GetConstructor(new[] { typeof(IEnumerable<IDomainEvent<TAggregate>>) })
+                  !.Invoke(new object[] { domainEvents });
+            }
+
+            return default;
         }
 
         public Task Append<TAggregate, TEvent>(
             TEvent domainEvent,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : IDomainEvent
+            where TEvent : class, IDomainEvent
         {
-            // TODO: #172 - implement reading/appending/snapshots
-            return Task.CompletedTask;
+            var databaseDomainEvent = new DatabaseDomainEvent(
+                Guid.NewGuid(),
+                domainEvent.AggregateId,
+                domainEvent.Index,
+                domainEvent.Timestamp,
+                domainEvent.GetType(),
+                _jsonSerializer.SerializeObject(domainEvent));
+
+            return _databaseContext
+               .Write<DatabaseDomainEvent, Guid>()
+               .Insert(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
         }
     }
 }

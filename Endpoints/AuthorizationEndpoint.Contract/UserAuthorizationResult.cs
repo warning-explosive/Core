@@ -1,6 +1,6 @@
-namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
+namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract
 {
-    using GenericEndpoint.Contract.Abstractions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
 
     /// <summary>
     /// User authorization result

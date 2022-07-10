@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Contract.Messages;
+    using Contract;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
     using DatabaseModel;

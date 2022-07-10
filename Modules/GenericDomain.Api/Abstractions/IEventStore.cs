@@ -14,13 +14,13 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary>
         /// Gets aggregate by it's identifier and version timestamp
         /// </summary>
-        /// <param name="id">Identifier</param>
+        /// <param name="aggregateId">Aggregate identifier</param>
         /// <param name="timestamp">Timestamp</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
         /// <returns>Aggregate</returns>
         Task<TAggregate?> Get<TAggregate>(
-            Guid id,
+            Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>;
@@ -37,6 +37,6 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
             TEvent domainEvent,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : IDomainEvent;
+            where TEvent : class, IDomainEvent;
     }
 }

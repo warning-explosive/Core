@@ -53,5 +53,11 @@
       <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
         <DependentUpon>IntegrationMessage.cs</DependentUpon>
       </Compile>
+      <Compile Update="EventSourcing\CaptureDomainEvent.cs">
+        <DependentUpon>CaptureDomainEventMessageHandler.cs</DependentUpon>
+      </Compile>
+      <Compile Update="EventSourcing\DatabaseDomainEvent.cs">
+        <DependentUpon>EventStore.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

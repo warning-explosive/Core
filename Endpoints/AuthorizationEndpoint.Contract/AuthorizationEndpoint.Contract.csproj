@@ -40,9 +40,4 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Messages\UserAuthorizationResult.cs">
-        <DependentUpon>AuthorizeUser.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
 </Project>

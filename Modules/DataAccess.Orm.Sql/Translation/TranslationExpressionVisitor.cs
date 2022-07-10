@@ -41,6 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo Count = LinqMethods.QueryableCount();
         private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
         private static readonly MethodInfo Distinct = LinqMethods.QueryableDistinct();
+        private static readonly MethodInfo OrderBy = LinqMethods.QueryableOrderBy();
         private static readonly MethodInfo SelectMany = LinqMethods.QueryableSelectMany();
 
         public TranslationExpressionVisitor(
@@ -57,6 +58,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         internal TranslationContext Context { get; }
 
+        [SuppressMessage("Analysis", "CA1502", Justification = "complex expression visitor")]
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             var method = node.Method.IsGenericMethod
@@ -277,6 +279,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 projection.IsDistinct = true;
 
                 return node;
+            }
+
+            if (method == OrderBy)
+            {
+                throw new NotSupportedException(nameof(OrderBy));
             }
 
             if (method == SelectMany)

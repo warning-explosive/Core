@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     [Component(EnLifestyle.Scoped)]
     internal class DefaultDomainEventHandler<TEvent> : IDomainEventHandler<TEvent>,
                                                        IResolvable<IDomainEventHandler<TEvent>>
-        where TEvent : IDomainEvent
+        where TEvent : class, IDomainEvent
     {
         private readonly IEventStore _eventStore;
 

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Exceptions;
-    using Contract.Messages;
+    using Contract;
     using CrossCuttingConcerns.Settings;
     using Domain;
     using GenericDomain.Api.Abstractions;
@@ -20,18 +20,18 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     internal class AuthorizeUserMessageHandler : IMessageHandler<AuthorizeUser>,
                                                  IResolvable<IMessageHandler<AuthorizeUser>>
     {
-        private readonly IIntegrationContext _integrationContext;
+        private readonly IIntegrationContext _context;
         private readonly IAggregateFactory<User, FindUserSpecification> _findUserAggregateFactory;
         private readonly ITokenProvider _tokenProvider;
         private readonly ISettingsProvider<AuthorizationSettings> _authorizationSettingsProvider;
 
         public AuthorizeUserMessageHandler(
-            IIntegrationContext integrationContext,
+            IIntegrationContext context,
             IAggregateFactory<User, FindUserSpecification> findUserAggregateFactory,
             ITokenProvider tokenProvider,
             ISettingsProvider<AuthorizationSettings> authorizationSettingsProvider)
         {
-            _integrationContext = integrationContext;
+            _context = context;
             _findUserAggregateFactory = findUserAggregateFactory;
             _tokenProvider = tokenProvider;
             _authorizationSettingsProvider = authorizationSettingsProvider;
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
                 .Invoke((exception, _) => Task.FromResult(new UserAuthorizationResult(message.Username, string.Empty, exception.Message)), token)
                 .ConfigureAwait(false);
 
-            await _integrationContext
+            await _context
                 .Reply(message, reply, token)
                 .ConfigureAwait(false);
         }

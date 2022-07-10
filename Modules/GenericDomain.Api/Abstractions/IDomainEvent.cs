@@ -11,6 +11,16 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// Aggregate id
         /// </summary>
         public Guid AggregateId { get; }
+
+        /// <summary>
+        /// Index
+        /// </summary>
+        public long Index { get; }
+
+        /// <summary>
+        /// Timestamp
+        /// </summary>
+        public DateTime Timestamp { get; }
     }
 
     /// <summary>

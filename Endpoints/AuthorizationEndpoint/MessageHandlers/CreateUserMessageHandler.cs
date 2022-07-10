@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Contract.Messages;
+    using Contract;
     using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
@@ -14,10 +14,14 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     internal class CreateUserMessageHandler : IMessageHandler<CreateUser>,
                                               IResolvable<IMessageHandler<CreateUser>>
     {
+        private readonly IIntegrationContext _context;
         private readonly IAggregateFactory<User, CreateUserSpecification> _createUserAggregateFactory;
 
-        public CreateUserMessageHandler(IAggregateFactory<User, CreateUserSpecification> createUserAggregateFactory)
+        public CreateUserMessageHandler(
+            IIntegrationContext context,
+            IAggregateFactory<User, CreateUserSpecification> createUserAggregateFactory)
         {
+            _context = context;
             _createUserAggregateFactory = createUserAggregateFactory;
         }
 
@@ -26,6 +30,10 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
             _ = await _createUserAggregateFactory
                 .Build(new CreateUserSpecification(message.Username, message.Password), token)
                 .ConfigureAwait(false);
+
+            await _context
+               .Publish(new Contract.UserCreated(message.Username), token)
+               .ConfigureAwait(false);
         }
     }
 }

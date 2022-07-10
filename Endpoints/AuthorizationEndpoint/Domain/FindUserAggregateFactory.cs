@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
 
             if (user == null)
             {
-                throw new NotFoundException($"User '{userDatabaseEntity.Username}' with {userDatabaseEntity.PrimaryKey} PK doesn't exist");
+                throw new NotFoundException($"User '{spec.Username}' doesn't exist");
             }
 
             return user;

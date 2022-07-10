@@ -171,10 +171,14 @@
                        .ConfigureAwait(false);
                 }
 
-                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
                 {
                     throw new InvalidOperationException("Host was unexpectedly stopped");
                 }
+
+                await result.ConfigureAwait(false);
 
                 var errorMessages = collector.ErrorMessages.ToArray();
                 Assert.Single(errorMessages);
@@ -348,10 +352,14 @@
                        .ConfigureAwait(false);
                 }
 
-                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
                 {
                     throw new InvalidOperationException("Host was unexpectedly stopped");
                 }
+
+                await result.ConfigureAwait(false);
 
                 var errorMessages = collector.ErrorMessages.ToArray();
                 Assert.Equal(2, errorMessages.Length);
@@ -434,10 +442,14 @@
                     hostShutdown,
                     collector.WaitUntilErrorMessageIsNotReceived<Command>());
 
-                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
                 {
                     throw new InvalidOperationException("Host was unexpectedly stopped");
                 }
+
+                await result.ConfigureAwait(false);
 
                 Assert.Single(collector.ErrorMessages);
                 var (errorMessage, exception) = collector.ErrorMessages.Single();
@@ -578,10 +590,14 @@
                         collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10) || message.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
                         collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20))));
 
-                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
                 {
                     throw new InvalidOperationException("Host was unexpectedly stopped");
                 }
+
+                await result.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

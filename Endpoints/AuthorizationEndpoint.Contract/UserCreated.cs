@@ -1,31 +1,24 @@
-namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
+namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract
 {
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
 
     /// <summary>
-    /// Authorize user query
+    /// User created event
     /// </summary>
     [OwnedBy(AuthorizationEndpointIdentity.LogicalName)]
-    public class AuthorizeUser : IIntegrationQuery<UserAuthorizationResult>
+    public class UserCreated : IIntegrationEvent
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
-        /// <param name="password">Password</param>
-        public AuthorizeUser(string username, string password)
+        public UserCreated(string username)
         {
             Username = username;
-            Password = password;
         }
 
         /// <summary>
         /// Username
         /// </summary>
         public string Username { get; init; }
-
-        /// <summary>
-        /// Password
-        /// </summary>
-        public string Password { get; init; }
     }
 }

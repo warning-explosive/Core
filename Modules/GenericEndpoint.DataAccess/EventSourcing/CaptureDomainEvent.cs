@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 
     [OwnedBy(nameof(EndpointIdentity))]
     internal class CaptureDomainEvent<TEvent> : IIntegrationCommand
-        where TEvent : IDomainEvent
+        where TEvent : class, IDomainEvent
     {
         public CaptureDomainEvent(TEvent @event)
         {

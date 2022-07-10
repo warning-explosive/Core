@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
             Salt = SecurityExtensions.GenerateSalt();
             PasswordHash = rawPassword.GenerateSaltedHash(Salt);
 
-            PopulateEvent(new UserCreated(Id, username, Salt, PasswordHash));
+            PopulateEvent(new UserCreated(Id, NextDomainEventIndex(), DateTime.UtcNow, username, Salt, PasswordHash));
         }
 
         private string Username { get; set; } = default!;

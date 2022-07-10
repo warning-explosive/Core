@@ -7,6 +7,9 @@
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using CompositionRoot.Api.Exceptions;
+    using Contract;
+    using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
@@ -18,14 +21,20 @@
                                                       ICollectionResolvable<IEndpointInitializer>
     {
         private readonly IDependencyContainer _dependencyContainer;
+        private readonly EndpointIdentity _endpointIdentity;
         private readonly ITypeProvider _typeProvider;
+        private readonly ILogger _logger;
 
         public EventSourcingEndpointInitializer(
             IDependencyContainer dependencyContainer,
-            ITypeProvider typeProvider)
+            EndpointIdentity endpointIdentity,
+            ITypeProvider typeProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
+            _endpointIdentity = endpointIdentity;
             _typeProvider = typeProvider;
+            _logger = logger;
         }
 
         public Task Initialize(CancellationToken token)
@@ -59,31 +68,43 @@
         private void InitializeDomainEventsAutoTracking<TAggregate>(CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
         {
-            BaseAggregate<TAggregate>.OnDomainEvent += OnDomainEvent<TAggregate>(_dependencyContainer, token);
+            BaseAggregate<TAggregate>.OnDomainEvent += OnDomainEvent<TAggregate>(_dependencyContainer, _endpointIdentity, _logger, token);
         }
 
         private static EventHandler<IDomainEvent> OnDomainEvent<TAggregate>(
             IDependencyContainer dependencyContainer,
+            EndpointIdentity endpointIdentity,
+            ILogger logger,
             CancellationToken token)
         {
             return (_, domainEvent) => typeof(EventSourcingEndpointInitializer)
                .CallMethod(nameof(OnDomainEvent))
                .WithTypeArguments(typeof(TAggregate), domainEvent.GetType())
-               .WithArguments(dependencyContainer, domainEvent, token)
+               .WithArguments(dependencyContainer, endpointIdentity, logger, domainEvent, token)
                .Invoke<Task>()
                .Wait(token);
         }
 
-        private static Task OnDomainEvent<TAggregate, TEvent>(
+        private static async Task OnDomainEvent<TAggregate, TEvent>(
             IDependencyContainer dependencyContainer,
+            EndpointIdentity endpointIdentity,
+            ILogger logger,
             TEvent domainEvent,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : IDomainEvent
+            where TEvent : class, IDomainEvent
         {
-            return dependencyContainer
-               .Resolve<IIntegrationContext>()
-               .Send(new CaptureDomainEvent<TEvent>(domainEvent), token);
+            try
+            {
+                await dependencyContainer
+                   .Resolve<IIntegrationContext>()
+                   .Send(new CaptureDomainEvent<TEvent>(domainEvent), token)
+                   .ConfigureAwait(false);
+            }
+            catch (ComponentResolutionException exception)
+            {
+                logger.Error(exception, $"{endpointIdentity} -> Don't populate domain events outside of message handler scope");
+            }
         }
     }
 }

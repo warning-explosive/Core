@@ -32,11 +32,6 @@
       <ProjectReference Include="..\..\Modules\GenericEndpoint.Messaging\GenericEndpoint.Messaging.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Messages\ConversationTrace.cs">
-        <DependentUpon>GetConversationTrace.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

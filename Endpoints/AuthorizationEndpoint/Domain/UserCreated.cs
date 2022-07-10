@@ -3,31 +3,26 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
     using System;
     using GenericDomain.Api.Abstractions;
 
-    internal class UserCreated : IDomainEvent<User>
+    internal class UserCreated : BaseDomainEvent<User, UserCreated>
     {
         public UserCreated(
             Guid aggregateId,
+            long index,
+            DateTime timestamp,
             string username,
             string salt,
             string passwordHash)
+            : base(aggregateId, index, timestamp)
         {
-            AggregateId = aggregateId;
             Username = username;
             Salt = salt;
             PasswordHash = passwordHash;
         }
 
-        public Guid AggregateId { get; }
+        public string Username { get; private init; }
 
-        public string Username { get; }
+        public string Salt { get; private init; }
 
-        public string Salt { get; }
-
-        public string PasswordHash { get; }
-
-        public void Apply(User aggregate)
-        {
-            aggregate.Apply(this);
-        }
+        public string PasswordHash { get; private init; }
     }
 }

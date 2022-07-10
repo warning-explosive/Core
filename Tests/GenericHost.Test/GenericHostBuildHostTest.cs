@@ -5,7 +5,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Abstractions;
-    using AuthorizationEndpoint.Contract.Messages;
+    using AuthorizationEndpoint.Contract;
     using Basics;
     using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Host;
@@ -39,7 +39,7 @@
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
-    using TracingEndpoint.Contract.Messages;
+    using TracingEndpoint.Contract;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -496,8 +496,9 @@
                     {
                         typeof(CaptureDomainEvent<>),
                         typeof(AuthorizeUser),
-                        typeof(CreateUser),
                         typeof(UserAuthorizationResult),
+                        typeof(CreateUser),
+                        typeof(UserCreated),
                         typeof(BaseEvent),
                         typeof(InheritedEvent),
                         typeof(Event),

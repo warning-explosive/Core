@@ -1,18 +1,18 @@
-namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract.Messages
+namespace SpaceEngineers.Core.AuthorizationEndpoint.Contract
 {
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Attributes;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
 
     /// <summary>
-    /// Create user command
+    /// Authorize user query
     /// </summary>
     [OwnedBy(AuthorizationEndpointIdentity.LogicalName)]
-    public class CreateUser : IIntegrationCommand
+    public class AuthorizeUser : IIntegrationQuery<UserAuthorizationResult>
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
-        public CreateUser(string username, string password)
+        public AuthorizeUser(string username, string password)
         {
             Username = username;
             Password = password;

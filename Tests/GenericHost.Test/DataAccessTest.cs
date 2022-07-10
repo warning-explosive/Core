@@ -516,6 +516,21 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new IUniqueIdentified[] { user, blog, post },
                 timeout
             };
+            /*TODO: #182 - order by*/
+            /*yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
+                useInMemoryIntegrationTransport,
+                postgreSqlDatabaseProvider,
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity, Guid>>().All().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        string.Empty,
+                        emptyQueryParameters,
+                        write)),
+                new IUniqueIdentified[] { testDatabaseEntity },
+                timeout
+            };*/
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",
@@ -898,10 +913,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
 
-                if (hostShutdown == await awaiter.ConfigureAwait(false))
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
                 {
                     throw new InvalidOperationException("Host was unexpectedly stopped");
                 }
+
+                await result.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
             }

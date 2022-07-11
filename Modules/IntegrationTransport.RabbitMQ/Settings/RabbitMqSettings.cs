@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
             ApplicationName = "Andromeda";
             ChannelPrefetchCount = 100;
             QueueMaxLengthBytes = 1024 * 1024;
+            ConsumerPriority = 0;
         }
 
         /// <summary>
@@ -58,6 +59,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
 
         /// <summary>
         /// Channel prefetch count
+        /// Prefetch limit -> Consumer utilisation
+        /// 1 -> 14%
+        /// 3 -> 25%
+        /// 10 -> 46%
+        /// 30 -> 70%
+        /// 1000 -> 74%
         /// </summary>
         public ushort ChannelPrefetchCount { get; set; }
 
@@ -65,5 +72,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// Queue max length bytes
         /// </summary>
         public int QueueMaxLengthBytes { get; set; }
+
+        /// <summary>
+        /// Consumer priority
+        /// </summary>
+        public ushort ConsumerPriority { get; set; }
     }
 }

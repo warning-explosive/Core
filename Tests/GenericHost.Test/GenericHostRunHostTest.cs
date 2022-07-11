@@ -16,6 +16,7 @@
     using GenericEndpoint.Pipeline;
     using GenericHost;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RpcRequest;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Configuration;

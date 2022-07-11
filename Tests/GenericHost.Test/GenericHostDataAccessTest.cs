@@ -24,6 +24,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RpcRequest;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Configuration;

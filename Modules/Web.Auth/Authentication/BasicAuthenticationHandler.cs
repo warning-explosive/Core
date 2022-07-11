@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Web.Auth.Authentication
     using Basics;
     using CompositionRoot.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
+    using IntegrationTransport.RpcRequest;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;

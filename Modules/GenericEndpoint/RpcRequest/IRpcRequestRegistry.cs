@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
     public interface IRpcRequestRegistry
     {
         /// <summary>
-        /// Enroll RPC request
+        /// Try enroll rpc-request
         /// </summary>
         /// <param name="requestId">Request identifier</param>
         /// <param name="tcs">TaskCompletionSource</param>

@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.DataAccess.EventSourcing;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RpcRequest;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;

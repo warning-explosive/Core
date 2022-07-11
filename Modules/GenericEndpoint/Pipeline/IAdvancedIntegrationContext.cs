@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System.Threading.Tasks;
     using Api.Abstractions;
     using CompositionRoot.Api.Abstractions;
+    using Contract.Abstractions;
     using Messaging;
 
     /// <summary>
@@ -49,5 +50,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Retry(TimeSpan dueTime, CancellationToken token);
+
+        /// <summary>
+        /// Try enroll rpc-request
+        /// </summary>
+        /// <param name="query">Integration query</param>
+        /// <param name="tcs">TaskCompletionSource</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TReply">TReply type-argument</typeparam>
+        /// <returns>Ongoing enroll operation</returns>
+        Task<IntegrationMessage?> TryEnrollRpcRequest<TQuery, TReply>(
+            TQuery query,
+            TaskCompletionSource<IntegrationMessage> tcs,
+            CancellationToken token)
+            where TQuery : IIntegrationQuery<TReply>
+            where TReply : IIntegrationReply;
     }
 }

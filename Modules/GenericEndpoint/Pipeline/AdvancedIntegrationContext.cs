@@ -91,7 +91,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             await _messagesCollector.Collect(replyIntegrationMessage, token).ConfigureAwait(false);
         }
 
-        public async Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
+        public async Task<IntegrationMessage?> TryEnrollRpcRequest<TQuery, TReply>(
+            TQuery query,
+            TaskCompletionSource<IntegrationMessage> tcs,
+            CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
@@ -99,22 +102,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
             var requestId = message.ReadRequiredHeader<Id>().Value;
 
-            var tcs = new TaskCompletionSource<IntegrationMessage>();
-
-            await _rpcRequestRegistry
+            var wasEnrolled = await _rpcRequestRegistry
                .TryEnroll(requestId, tcs, token)
                .ConfigureAwait(false);
 
-            var wasSent = await SendMessage(message, token).ConfigureAwait(false);
-
-            if (!wasSent)
-            {
-                throw new InvalidOperationException("Rpc request wasn't successful");
-            }
-
-            var reply = await tcs.Task.ConfigureAwait(false);
-
-            return (TReply)reply.Payload;
+            return wasEnrolled
+                ? message
+                : default;
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)

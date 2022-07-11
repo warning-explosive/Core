@@ -55,18 +55,5 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply;
-
-        /// <summary>
-        /// Request data from target endpoint in blocking manner
-        /// TODO: move it to integration transport and warn about unique logical names
-        /// </summary>
-        /// <param name="query">Integration query</param>
-        /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
-        /// <typeparam name="TReply">TReply type-argument</typeparam>
-        /// <returns>Ongoing request operation</returns>
-        Task<TReply> RpcRequest<TQuery, TReply>(TQuery query, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
-            where TReply : IIntegrationReply;
     }
 }

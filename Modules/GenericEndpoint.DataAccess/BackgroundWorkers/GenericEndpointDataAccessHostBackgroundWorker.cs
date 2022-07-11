@@ -13,7 +13,7 @@
     using Core.DataAccess.Orm.Extensions;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
-    using DatabaseModel;
+    using Deduplication;
     using GenericEndpoint.UnitOfWork;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;

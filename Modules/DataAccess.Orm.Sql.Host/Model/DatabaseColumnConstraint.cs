@@ -1,8 +1,10 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
+    using Api.Model;
     using Views;
 
+    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     internal class DatabaseColumnConstraint : BaseSqlView<Guid>
     {
         public DatabaseColumnConstraint(

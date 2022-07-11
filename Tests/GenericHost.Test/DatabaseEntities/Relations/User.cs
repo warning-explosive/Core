@@ -3,6 +3,7 @@
     using System;
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
+    [Schema(nameof(GenericHost) + nameof(GenericHost.Test))]
     internal record User : BaseDatabaseEntity<Guid>
     {
         public User(Guid primaryKey, string nickname)

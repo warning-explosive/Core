@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Core.DataAccess.Api.Transaction;
-    using DatabaseModel;
+    using Deduplication;
     using GenericEndpoint.UnitOfWork;
     using IntegrationTransport.Api.Abstractions;
     using Messaging.MessageHeaders;

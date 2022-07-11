@@ -6,6 +6,7 @@
     using DataAccess.Api.Model;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    [Schema(nameof(GenericEndpoint.Tracing))]
     internal record IntegrationMessage : BaseDatabaseEntity<Guid>
     {
         public IntegrationMessage(

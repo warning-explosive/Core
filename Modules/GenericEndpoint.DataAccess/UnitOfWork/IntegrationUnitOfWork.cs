@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Json;
-    using DatabaseModel;
+    using Deduplication;
     using GenericEndpoint.UnitOfWork;
     using Messaging;
     using Messaging.MessageHeaders;
@@ -149,7 +149,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             if (Inbox == null)
             {
                 Inbox = new InboxMessage(Guid.NewGuid(),
-                    DatabaseModel.IntegrationMessage.Build(context.Message, _jsonSerializer),
+                    Deduplication.IntegrationMessage.Build(context.Message, _jsonSerializer),
                     _endpointIdentity,
                     false,
                     true);
@@ -175,7 +175,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             var outboxId = Guid.NewGuid();
 
             var messages = outgoingMessages
-               .Select(message => DatabaseModel.IntegrationMessage.Build(message, _jsonSerializer))
+               .Select(message => Deduplication.IntegrationMessage.Build(message, _jsonSerializer))
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, _endpointIdentity, message, false))
                .ToArray();
 

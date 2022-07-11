@@ -4,6 +4,7 @@
     using Api.Model;
     using Views;
 
+    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     [Index(nameof(Name), Unique = true)]
     internal class DatabaseSchema : BaseSqlView<Guid>
     {

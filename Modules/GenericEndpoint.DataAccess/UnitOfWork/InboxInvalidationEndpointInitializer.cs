@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
-    using DatabaseModel;
+    using Deduplication;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;

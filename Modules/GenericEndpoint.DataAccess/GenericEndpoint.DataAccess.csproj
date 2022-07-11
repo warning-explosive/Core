@@ -47,17 +47,17 @@
       <Compile Update="Model\InboxFactorySpecification.cs">
         <DependentUpon>InboxFactory.cs</DependentUpon>
       </Compile>
-      <Compile Update="DatabaseModel\EndpointIdentity.cs">
-        <DependentUpon>InboxMessage.cs</DependentUpon>
-      </Compile>
-      <Compile Update="DatabaseModel\IntegrationMessageHeader.cs">
-        <DependentUpon>IntegrationMessage.cs</DependentUpon>
-      </Compile>
       <Compile Update="EventSourcing\CaptureDomainEvent.cs">
         <DependentUpon>CaptureDomainEventMessageHandler.cs</DependentUpon>
       </Compile>
       <Compile Update="EventSourcing\DatabaseDomainEvent.cs">
         <DependentUpon>EventStore.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\EndpointIdentity.cs">
+        <DependentUpon>InboxMessage.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Deduplication\IntegrationMessageHeader.cs">
+        <DependentUpon>IntegrationMessage.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

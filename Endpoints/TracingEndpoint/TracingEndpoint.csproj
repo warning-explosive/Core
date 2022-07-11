@@ -30,6 +30,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Modules\DataAccess.Api\DataAccess.Api.csproj" />
       <ProjectReference Include="..\..\Modules\GenericEndpoint.Api\GenericEndpoint.Api.csproj" />
+      <ProjectReference Include="..\..\Modules\GenericEndpoint.Tracing\GenericEndpoint.Tracing.csproj" />
       <ProjectReference Include="..\TracingEndpoint.Contract\TracingEndpoint.Contract.csproj" />
     </ItemGroup>
     <ItemGroup>

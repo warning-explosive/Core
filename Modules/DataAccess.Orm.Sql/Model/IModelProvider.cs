@@ -9,11 +9,6 @@
     public interface IModelProvider
     {
         /// <summary>
-        /// Tables map
-        /// </summary>
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap { get; }
-
-        /// <summary>
         /// Tables
         /// </summary>
         IReadOnlyDictionary<Type, ITableInfo> Tables { get; }
@@ -22,6 +17,11 @@
         /// Mtm-tables
         /// </summary>
         public IReadOnlyDictionary<Type, MtmTableInfo> MtmTables { get; }
+
+        /// <summary>
+        /// Tables map
+        /// </summary>
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap { get; }
 
         /// <summary>
         /// Gets tables for specified database entities

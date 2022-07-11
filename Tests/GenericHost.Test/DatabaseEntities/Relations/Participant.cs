@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
+    [Schema(nameof(GenericHost) + nameof(GenericHost.Test))]
     internal record Participant : BaseDatabaseEntity<Guid>
     {
         public Participant(

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     using System;
     using Core.DataAccess.Api.Model;
 
+    [Schema(nameof(EventSourcing))]
     [Index(nameof(AggregateId), nameof(Index), Unique = true)]
     internal record DatabaseDomainEvent : BaseDatabaseEntity<Guid>
     {

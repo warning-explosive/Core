@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 {
     using Contract.Abstractions;
     using Contract.Attributes;
-    using DatabaseModel;
+    using Deduplication;
     using GenericDomain.Api.Abstractions;
 
     [OwnedBy(nameof(EndpointIdentity))]

@@ -3,6 +3,7 @@
     using System;
     using Api.Model;
 
+    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     [Index(nameof(Name), Unique = true)]
     internal record AppliedMigration : BaseDatabaseEntity<Guid>
     {

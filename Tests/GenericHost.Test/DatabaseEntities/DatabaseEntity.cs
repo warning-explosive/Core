@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    [Schema(nameof(GenericHost) + nameof(GenericHost.Test))]
     internal record DatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public DatabaseEntity(

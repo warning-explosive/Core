@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
     using System;
     using System.Collections.Generic;
@@ -10,6 +10,7 @@
     using Messaging.MessageHeaders;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    [Schema(nameof(Deduplication))]
     internal record IntegrationMessage : BaseDatabaseEntity<Guid>
     {
         public IntegrationMessage(

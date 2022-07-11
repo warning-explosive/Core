@@ -32,14 +32,43 @@
         {
             _typeProvider
                 .OurTypes
-                .Where(type => (typeof(IInlinedObject).IsAssignableFrom(type)
-                                || type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
+                .Where(type => type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                            && type.IsConcreteType())
+                .SelectMany(VerifyDatabaseEntity)
+                .Each(exception => throw exception.Rethrow());
+
+            _typeProvider
+                .OurTypes
+                .Where(type => typeof(IInlinedObject).IsAssignableFrom(type)
                                && type.IsConcreteType())
-                .SelectMany(Verify)
+                .SelectMany(VerifyInlinedObject)
                 .Each(exception => throw exception.Rethrow());
         }
 
-        private IEnumerable<Exception> Verify(Type type)
+        private IEnumerable<Exception> VerifyDatabaseEntity(Type type)
+        {
+            if (TypeHasWrongConstructor(type, out var constructorException))
+            {
+                yield return constructorException;
+            }
+
+            if (TypeHasWrongModifier(type, out var modifierException))
+            {
+                yield return modifierException;
+            }
+
+            foreach (var initPropertyException in MissingPropertyInitializers(type))
+            {
+                yield return initPropertyException;
+            }
+
+            if (TypeHasNoSchema(type, out var schemaException))
+            {
+                yield return schemaException;
+            }
+        }
+
+        private IEnumerable<Exception> VerifyInlinedObject(Type type)
         {
             if (TypeHasWrongConstructor(type, out var constructorException))
             {
@@ -103,6 +132,20 @@
             {
                 yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
             }
+        }
+
+        private static bool TypeHasNoSchema(Type type, [NotNullWhen(true)] out Exception? exception)
+        {
+            var schemaAttribute = type.GetAttribute<SchemaAttribute>();
+
+            if (schemaAttribute == null)
+            {
+                exception = new InvalidOperationException($"Type {type} should be declared with {typeof(SchemaAttribute).FullName}");
+                return true;
+            }
+
+            exception = default;
+            return false;
         }
     }
 }

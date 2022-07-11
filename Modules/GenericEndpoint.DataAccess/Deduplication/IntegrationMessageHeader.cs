@@ -1,12 +1,13 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using Core.DataAccess.Api.Model;
     using CrossCuttingConcerns.Json;
     using Messaging.Abstractions;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
+    [Schema(nameof(Deduplication))]
     internal record IntegrationMessageHeader : BaseDatabaseEntity<Guid>
     {
         public IntegrationMessageHeader(Guid primaryKey, JsonObject value)

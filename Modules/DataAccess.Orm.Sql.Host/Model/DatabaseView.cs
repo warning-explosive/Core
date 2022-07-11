@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Api.Model;
     using Views;
 
+    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     [Index(nameof(Schema), nameof(View), nameof(Query), Unique = true)]
     internal class DatabaseView : BaseSqlView<Guid>
     {

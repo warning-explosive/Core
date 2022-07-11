@@ -45,26 +45,26 @@
                 .Each(exception => throw exception.Rethrow());
         }
 
-        private IEnumerable<Exception> VerifyDatabaseEntity(Type type)
+        private IEnumerable<Exception> VerifyDatabaseEntity(Type databaseEntity)
         {
-            if (TypeHasWrongConstructor(type, out var constructorException))
+            if (TypeHasWrongConstructor(databaseEntity, out var constructorException))
             {
                 yield return constructorException;
             }
 
-            if (TypeHasWrongModifier(type, out var modifierException))
+            if (TypeHasWrongModifier(databaseEntity, out var modifierException))
             {
                 yield return modifierException;
             }
 
-            foreach (var initPropertyException in MissingPropertyInitializers(type))
+            foreach (var initializerException in MissingPropertyInitializers(databaseEntity))
             {
-                yield return initPropertyException;
+                yield return initializerException;
             }
 
-            if (TypeHasNoSchema(type, out var schemaException))
+            if (TypeHasMissingSchemaAttribute(databaseEntity, out var missingSchemaAttributeException))
             {
-                yield return schemaException;
+                yield return missingSchemaAttributeException;
             }
         }
 
@@ -80,13 +80,15 @@
                 yield return modifierException;
             }
 
-            foreach (var initPropertyException in MissingPropertyInitializers(type))
+            foreach (var initializerException in MissingPropertyInitializers(type))
             {
-                yield return initPropertyException;
+                yield return initializerException;
             }
         }
 
-        private bool TypeHasWrongConstructor(Type type, [NotNullWhen(true)] out Exception? exception)
+        private bool TypeHasWrongConstructor(
+            Type type,
+            [NotNullWhen(true)] out Exception? exception)
         {
             if (!_constructorResolutionBehavior.TryGetConstructor(type, out _))
             {
@@ -98,7 +100,9 @@
             return false;
         }
 
-        private static bool TypeHasWrongModifier(Type type, [NotNullWhen(true)] out Exception? exception)
+        private static bool TypeHasWrongModifier(
+            Type type,
+            [NotNullWhen(true)] out Exception? exception)
         {
             var hasGeneratedEqualityContract = ((TypeInfo)type)
                 .DeclaredProperties
@@ -134,7 +138,9 @@
             }
         }
 
-        private static bool TypeHasNoSchema(Type type, [NotNullWhen(true)] out Exception? exception)
+        private static bool TypeHasMissingSchemaAttribute(
+            Type type,
+            [NotNullWhen(true)] out Exception? exception)
         {
             var schemaAttribute = type.GetAttribute<SchemaAttribute>();
 

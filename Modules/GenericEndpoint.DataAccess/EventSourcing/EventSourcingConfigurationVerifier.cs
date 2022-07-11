@@ -42,43 +42,57 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 
         private static IEnumerable<Exception> VerifyAggregate(Type type)
         {
-            if (AggregateHasNoDefaultCctor(type, out var constructorException))
+            if (IsNotImplementOpenGeneric(type, typeof(IAggregate<>), out var implementationException))
             {
-                yield return constructorException;
+                yield return implementationException;
             }
 
-            foreach (var mutableAggregateException in AggregateHasPublicMutableProperties(type))
+            if (AggregateHasMissingDefaultCctor(type, out var missingConstructorException))
             {
-                yield return mutableAggregateException;
+                yield return missingConstructorException;
+            }
+
+            foreach (var mutablePropertyException in AggregateHasPublicMutableProperties(type))
+            {
+                yield return mutablePropertyException;
             }
         }
 
-        private static IEnumerable<Exception> VerifyDomainEvent(Type type)
+        private static IEnumerable<Exception> VerifyDomainEvent(Type domainEvent)
         {
-            if (DomainEventHasMultipleAggregates(type, out var constructorException))
+            if (IsNotImplementOpenGeneric(domainEvent, typeof(IDomainEvent<>), out var implementationException))
             {
-                yield return constructorException;
+                yield return implementationException;
             }
 
-            foreach (var initializerException in MissingPropertyInitializers(type))
+            if (DomainEventHasMultipleAggregates(domainEvent, out var multipleAggregatesException))
+            {
+                yield return multipleAggregatesException;
+            }
+
+            var aggregate = domainEvent
+               .ExtractGenericArgumentsAt(typeof(IDomainEvent<>))
+               .Single();
+
+            if (AggregateHasNoDomainEvent(aggregate, domainEvent, out var aggregateHasNoDomainEventException))
+            {
+                yield return aggregateHasNoDomainEventException;
+            }
+
+            foreach (var initializerException in DomainEventHasMissingPropertyInitializers(domainEvent))
             {
                 yield return initializerException;
             }
         }
 
-        private static bool AggregateHasNoDefaultCctor(Type type, [NotNullWhen(true)] out Exception? exception)
+        private static bool IsNotImplementOpenGeneric(
+            Type type,
+            Type openGeneric,
+            [NotNullWhen(true)] out Exception? exception)
         {
-            var parameterType = typeof(IEnumerable<>).MakeGenericType(typeof(IDomainEvent<>).MakeGenericType(type));
-
-            var cctor = type
-               .GetConstructors()
-               .SingleOrDefault(info => info.IsPublic
-                                        && info.GetParameters().Length == 1
-                                        && info.GetParameters().Single().ParameterType == parameterType);
-
-            if (cctor == null)
+            if (!type.IsSubclassOfOpenGeneric(openGeneric))
             {
-                exception = new InvalidOperationException($"Type {type.FullName} should have one public constructor with required parameter {parameterType.FullName}");
+                exception = new InvalidOperationException($"Type {type} should implement {openGeneric}");
                 return true;
             }
 
@@ -86,9 +100,31 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             return false;
         }
 
-        private static IEnumerable<Exception> AggregateHasPublicMutableProperties(Type type)
+        private static bool AggregateHasMissingDefaultCctor(
+            Type aggregate,
+            [NotNullWhen(true)] out Exception? exception)
         {
-            var properties = type
+            var parameterType = typeof(IEnumerable<>).MakeGenericType(typeof(IDomainEvent<>).MakeGenericType(aggregate));
+
+            var cctor = aggregate
+               .GetConstructors()
+               .SingleOrDefault(info => info.IsPublic
+                                        && info.GetParameters().Length == 1
+                                        && info.GetParameters().Single().ParameterType == parameterType);
+
+            if (cctor == null)
+            {
+                exception = new InvalidOperationException($"Type {aggregate.FullName} should have one public constructor with required parameter {parameterType.FullName}");
+                return true;
+            }
+
+            exception = null;
+            return false;
+        }
+
+        private static IEnumerable<Exception> AggregateHasPublicMutableProperties(Type aggregate)
+        {
+            var properties = aggregate
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty)
                .Where(property => property.SetMethod != null && property.SetMethod.IsAccessible());
 
@@ -98,11 +134,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             }
         }
 
-        private static bool DomainEventHasMultipleAggregates(Type type, [NotNullWhen(true)] out Exception? exception)
+        private static bool DomainEventHasMultipleAggregates(
+            Type domainEvent,
+            [NotNullWhen(true)] out Exception? exception)
         {
-            if (type.ExtractGenericArgumentsAt(typeof(IDomainEvent<>)).Count() > 1)
+            if (domainEvent.ExtractGenericArgumentsAt(typeof(IDomainEvent<>)).Count() > 1)
             {
-                exception = new InvalidOperationException($"Domain event {type.FullName} shouldn't have multiple implementations of {typeof(IDomainEvent<>).FullName} abstraction");
+                exception = new InvalidOperationException($"Domain event {domainEvent.FullName} shouldn't have multiple implementations of {typeof(IDomainEvent<>).FullName} abstraction");
                 return true;
             }
 
@@ -110,9 +148,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             return false;
         }
 
-        private static IEnumerable<Exception> MissingPropertyInitializers(Type type)
+        private static IEnumerable<Exception> DomainEventHasMissingPropertyInitializers(Type domainEvent)
         {
-            var properties = type
+            var properties = domainEvent
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
                .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
                .Where(property => !property.HasInitializer() || property.SetMethod.IsAccessible());
@@ -121,6 +159,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             {
                 yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
             }
+        }
+
+        private static bool AggregateHasNoDomainEvent(
+            Type aggregate,
+            Type domainEvent,
+            [NotNullWhen(true)] out Exception? exception)
+        {
+            var hasDomainEvent = typeof(IHasDomainEvent<,>).MakeGenericType(aggregate, domainEvent);
+
+            if (!hasDomainEvent.IsAssignableFrom(aggregate))
+            {
+                exception = new InvalidOperationException($"Type {aggregate} should implement {hasDomainEvent}");
+                return true;
+            }
+
+            exception = null;
+            return false;
         }
     }
 }

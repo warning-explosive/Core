@@ -11,18 +11,22 @@
         public OutboxMessage(
             Guid primaryKey,
             Guid outboxId,
+            DateTime timestamp,
             EndpointIdentity endpointIdentity,
             IntegrationMessage message,
             bool sent)
             : base(primaryKey)
         {
             OutboxId = outboxId;
+            Timestamp = timestamp;
             EndpointIdentity = endpointIdentity;
             Message = message;
             Sent = sent;
         }
 
         public Guid OutboxId { get; private init; }
+
+        public DateTime Timestamp { get; private init; }
 
         public EndpointIdentity EndpointIdentity { get; private init; }
 

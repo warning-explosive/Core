@@ -173,10 +173,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             CancellationToken token)
         {
             var outboxId = Guid.NewGuid();
+            var timestamp = DateTime.UtcNow;
 
             var messages = outgoingMessages
                .Select(message => Deduplication.IntegrationMessage.Build(message, _jsonSerializer))
-               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, _endpointIdentity, message, false))
+               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, _endpointIdentity, message, false))
                .ToArray();
 
             return _transaction

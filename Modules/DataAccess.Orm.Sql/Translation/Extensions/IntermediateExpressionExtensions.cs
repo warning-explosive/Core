@@ -29,25 +29,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
             return extractor.Parameters;
         }
 
-        internal static IReadOnlyCollection<QueryParameterExpression> ExtractQueryParameterExpressions(
-            this IIntermediateExpression expression)
-        {
-            var extractor = new ExtractQueryParametersVisitor();
-            _ = extractor.Visit(expression);
-            return extractor.QueryParameters;
-        }
-
-        internal static IReadOnlyDictionary<string, object?> ExtractQueryParameters(
-            this IIntermediateExpression expression)
-        {
-            return expression
-               .ExtractQueryParameterExpressions()
-               .ToDictionary(
-                    parameter => parameter.Name,
-                    parameter => parameter.Value,
-                    StringComparer.OrdinalIgnoreCase);
-        }
-
         internal static IIntermediateExpression ReplaceFilterExpression(
             this IIntermediateExpression expression,
             ProjectionExpression projection)
@@ -68,6 +49,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
             ParameterExpression parameterExpression)
         {
             return new ReplaceParameterVisitor(parameterExpression).Visit(expression);
+        }
+
+        internal static IReadOnlyDictionary<string, object?> ExtractQueryParameters(
+            this IIntermediateExpression expression)
+        {
+            return expression
+               .ExtractQueryParameterExpressions()
+               .ToDictionary(
+                    parameter => parameter.Name,
+                    parameter => parameter.Value,
+                    StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static IReadOnlyCollection<QueryParameterExpression> ExtractQueryParameterExpressions(
+            this IIntermediateExpression expression)
+        {
+            var extractor = new ExtractQueryParametersVisitor();
+            _ = extractor.Visit(expression);
+            return extractor.QueryParameters;
         }
     }
 }

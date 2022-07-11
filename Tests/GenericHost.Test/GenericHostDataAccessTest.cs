@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading.Tasks;
     using Basics;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host;
@@ -19,6 +20,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.DataAccess.Deduplication;
     using GenericEndpoint.DataAccess.EventSourcing;
+    using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
     using IntegrationTransport.Host;
@@ -491,6 +493,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(OutboxMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.OutboxId), "not null");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Timestamp), "not null");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Sent), "not null");
                     },
@@ -893,6 +899,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
@@ -906,6 +913,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 Reply reply;
+
+                var outboxSettings = await endpointDependencyContainer
+                   .Resolve<ISettingsProvider<OutboxSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(TimeSpan.FromSeconds(1), outboxSettings.OutboxDeliveryInterval);
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {

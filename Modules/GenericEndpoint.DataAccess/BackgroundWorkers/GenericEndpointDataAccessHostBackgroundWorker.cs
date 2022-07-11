@@ -40,6 +40,8 @@
                .ConfigureAwait(false);
 
             var endpointIdentity = _dependencyContainer.Resolve<EndpointIdentity>();
+            var transport = _dependencyContainer.Resolve<IIntegrationTransport>();
+            var jsonSerializer = _dependencyContainer.Resolve<IJsonSerializer>();
             var logger = _dependencyContainer.Resolve<ILogger>();
 
             while (!token.IsCancellationRequested)
@@ -54,7 +56,7 @@
                 }
 
                 await ExecutionExtensions
-                   .TryAsync(_dependencyContainer, DeliverMessages)
+                   .TryAsync((_dependencyContainer, endpointIdentity, transport, settings, jsonSerializer), DeliverMessages)
                    .Catch<Exception>(OnError(endpointIdentity, logger))
                    .Invoke(token)
                    .ConfigureAwait(false);
@@ -62,15 +64,15 @@
         }
 
         private static async Task DeliverMessages(
-            IDependencyContainer dependencyContainer,
+            (IDependencyContainer, EndpointIdentity, IIntegrationTransport, OutboxSettings, IJsonSerializer) state,
             CancellationToken token)
         {
-            var transport = dependencyContainer.Resolve<IIntegrationTransport>();
+            var (dependencyContainer, endpointIdentity, transport, settings, jsonSerializer) = state;
 
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
             {
                 var transportIsRunning = WaitUntilTransportIsRunning(transport, cts.Token);
-                var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, cts.Token);
+                var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, endpointIdentity, settings, jsonSerializer, cts.Token);
 
                 await Task
                    .WhenAny(transportIsRunning, outboxDelivery)
@@ -80,14 +82,14 @@
 
         private static async Task DeliverMessagesUnsafe(
             IDependencyContainer dependencyContainer,
+            EndpointIdentity endpointIdentity,
+            OutboxSettings settings,
+            IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
-            var endpointIdentity = dependencyContainer.Resolve<EndpointIdentity>();
-            var jsonSerializer = dependencyContainer.Resolve<IJsonSerializer>();
-
             var messages = await dependencyContainer
                .InvokeWithinTransaction(true,
-                    (endpointIdentity, jsonSerializer),
+                    (endpointIdentity, settings, jsonSerializer),
                     ReadMessages,
                     token)
                .ConfigureAwait(false);
@@ -102,16 +104,18 @@
 
             static async Task<IReadOnlyCollection<IntegrationMessage>> ReadMessages(
                 IDatabaseTransaction transaction,
-                (EndpointIdentity, IJsonSerializer) state,
+                (EndpointIdentity, OutboxSettings, IJsonSerializer) state,
                 CancellationToken token)
             {
-                var (endpointIdentity, serializer) = state;
+                var (endpointIdentity, settings, serializer) = state;
+                var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
                 return (await transaction
                        .Read<OutboxMessage, Guid>()
                        .All()
                        .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
-                                     && !outbox.Sent) // TODO: add timestamp offset so as not to produce duplicates
+                                     && !outbox.Sent
+                                     && outbox.Timestamp <= cutOff)
                        .Select(outbox => outbox.Message)
                        .ToListAsync(token)
                        .ConfigureAwait(false))

@@ -18,6 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using Sql.Extensions;
     using Sql.Model;
     using Sql.Translation.Extensions;
+    using Transaction;
 
     [Component(EnLifestyle.Scoped)]
     internal class Repository : IRepository,
@@ -71,14 +72,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .Values
                .OrderByDependencies(GetKey, GetDependencies(_modelProvider, map))
                .Stack(entity => entity.GetType())
-               .SelectMany(grp => InsertEntity(grp.Key, grp.Value, _dependencyContainer, _modelProvider, insertBehavior))
+               .Select(grp => InsertEntity(grp.Key, grp.Value, _dependencyContainer, _modelProvider, insertBehavior))
                .ToString(";" + Environment.NewLine);
 
             try
             {
+                var version = await _transaction
+                   .GetXid(settings, token)
+                   .ConfigureAwait(false);
+
                 _ = await _transaction
                    .InvokeScalar(commandText, settings, token)
                    .ConfigureAwait(false);
+
+                foreach (var entity in entities)
+                {
+                    var entityType = entity.GetType();
+
+                    var change = typeof(Repository)
+                       .CallMethod(nameof(CreateChange))
+                       .WithTypeArguments(entityType, entityType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
+                       .WithArguments(entity, version, insertBehavior)
+                       .Invoke<ITransactionalChange>();
+
+                    _transaction.CollectChange(change);
+                }
             }
             catch (Exception exception)
             {
@@ -108,7 +126,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 }
             }
 
-            static IEnumerable<string> InsertEntity(
+            static string InsertEntity(
                 Type type,
                 IEnumerable<IUniqueIdentified> entities,
                 IDependencyContainer dependencyContainer,
@@ -136,7 +154,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                            .ToString(", ")))
                    .ToString("," + Environment.NewLine);
 
-                yield return InsertQueryFormat.Format(
+                return InsertQueryFormat.Format(
                     table.Schema,
                     table.Name,
                     columns.ToString(", "),
@@ -193,6 +211,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 Type = type,
                 PrimaryKey = primaryKey
             };
+        }
+
+        private static ITransactionalChange CreateChange<TEntity, TKey>(
+            TEntity entity,
+            long version,
+            EnInsertBehavior insertBehavior)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            // TODO: #133 - entity.Version = version;
+            return new CreateEntityChange<TEntity, TKey>(entity, insertBehavior);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                 throw new InvalidOperationException();
             }
 
-            var viewKeyType = type.UnwrapTypeParameter(typeof(ISqlView<>));
+            var viewKeyType = type.ExtractGenericArgumentAt(typeof(ISqlView<>));
 
             return dependencyContainer
                 .ResolveGeneric(typeof(ISqlViewQueryProvider<,>), type, viewKeyType)

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -28,13 +29,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                                            IResolvable<IIntegrationUnitOfWork>
     {
         private readonly EndpointIdentity _endpointIdentity;
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IOutboxDelivery _outboxDelivery;
         private readonly IJsonSerializer _jsonSerializer;
 
         public IntegrationUnitOfWork(
             EndpointIdentity endpointIdentity,
-            IDatabaseTransaction transaction,
+            IAdvancedDatabaseTransaction transaction,
             IOutboxDelivery outboxDelivery,
             IOutboxStorage outboxStorage,
             IJsonSerializer jsonSerializer)
@@ -51,17 +52,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         private InboxMessage? Inbox { get; set; }
 
-        private bool ThereIsNoFuture => Inbox != null && (Inbox.Handled || Inbox.IsError);
-
         protected override async Task<EnUnitOfWorkBehavior> Start(
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
             await _transaction.Open(token).ConfigureAwait(false);
 
-            Inbox = await ReadInbox(context, token).ConfigureAwait(false);
+            Inbox = await ReadInbox(context, _transaction, _endpointIdentity, token).ConfigureAwait(false);
 
-            return ThereIsNoFuture
+            return Inbox != null && (Inbox.Handled || Inbox.IsError)
                 ? EnUnitOfWorkBehavior.SkipProducer
                 : EnUnitOfWorkBehavior.Regular;
         }
@@ -72,24 +71,40 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             try
             {
-                if (ValidateTransaction(context))
+                IReadOnlyCollection<ITransactionalChange> changes;
+
+                try
                 {
-                    await PersistInbox(context, token).ConfigureAwait(false);
+                    if (IsTransactionValid(context, _transaction, out var exception))
+                    {
+                        await PersistInbox(context, _transaction, _endpointIdentity, Inbox, _jsonSerializer, token).ConfigureAwait(false);
 
-                    await PersistOutgoingMessages(OutboxStorage.All(), token).ConfigureAwait(false);
+                        await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), _jsonSerializer, token).ConfigureAwait(false);
 
-                    await _transaction.Close(true, token).ConfigureAwait(false);
-
-                    await ExecutionExtensions
-                       .TryAsync((OutboxStorage.All(), _outboxDelivery), DeliverOutgoingMessages)
-                       .Catch<Exception>()
-                       .Invoke(token)
-                       .ConfigureAwait(false);
+                        changes = _transaction.Changes;
+                    }
+                    else
+                    {
+                        throw exception.Rethrow();
+                    }
                 }
-                else
+                finally
                 {
                     await _transaction.Close(false, token).ConfigureAwait(false);
                 }
+
+                if (changes.Any())
+                {
+                    await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
+                    {
+                        foreach (var change in changes)
+                        {
+                            await change.Apply(_transaction, token).ConfigureAwait(false);
+                        }
+                    }
+                }
+
+                await DeliverOutgoingMessages(_outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
             }
             finally
             {
@@ -114,83 +129,103 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
         }
 
-        private Task<InboxMessage?> ReadInbox(IAdvancedIntegrationContext context, CancellationToken token)
+        private static Task<InboxMessage?> ReadInbox(
+            IAdvancedIntegrationContext context,
+            IDatabaseContext databaseContext,
+            EndpointIdentity endpointIdentity,
+            CancellationToken token)
         {
-            return _transaction
+            return databaseContext
                .Read<InboxMessage, Guid>()
                .All()
                .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
-                              && message.EndpointIdentity.LogicalName == _endpointIdentity.LogicalName
-                              && message.EndpointIdentity.InstanceName == _endpointIdentity.InstanceName)
+                              && message.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
+                              && message.EndpointIdentity.InstanceName == endpointIdentity.InstanceName)
                .SingleOrDefaultAsync(token);
         }
 
-        private bool ValidateTransaction(IAdvancedIntegrationContext context)
+        private static bool IsTransactionValid(
+            IAdvancedIntegrationContext context,
+            IDatabaseContext databaseContext,
+            [NotNullWhen(false)] out Exception? exception)
         {
-            if (ThereIsNoFuture)
+            if (databaseContext.HasChanges && !context.Message.IsCommand())
             {
+                exception = new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
                 return false;
             }
 
-            var isCommand = context.Message.IsCommand();
-
-            if (_transaction.HasChanges && !isCommand)
-            {
-                throw new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
-            }
-
+            exception = null;
             return true;
         }
 
-        private async Task PersistInbox(
+        private static async Task PersistInbox(
             IAdvancedIntegrationContext context,
+            IDatabaseContext databaseContext,
+            EndpointIdentity endpointIdentity,
+            InboxMessage? inbox,
+            IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
-            if (Inbox == null)
+            if (inbox == null)
             {
-                Inbox = new InboxMessage(Guid.NewGuid(),
-                    Deduplication.IntegrationMessage.Build(context.Message, _jsonSerializer),
-                    _endpointIdentity,
+                inbox = new InboxMessage(Guid.NewGuid(),
+                    Deduplication.IntegrationMessage.Build(context.Message, jsonSerializer),
+                    endpointIdentity,
                     false,
                     true);
 
-                await _transaction
+                await databaseContext
                    .Write<InboxMessage, Guid>()
-                   .Insert(new[] { Inbox }, EnInsertBehavior.DoUpdate, token)
+                   .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
             }
             else
             {
-                await _transaction
+                await databaseContext
                    .Write<InboxMessage, Guid>()
-                   .Update(new[] { Inbox.PrimaryKey }, message => message.Handled, true, token)
+                   .Update(new[] { inbox.PrimaryKey }, message => message.Handled, true, token)
                    .ConfigureAwait(false);
             }
         }
 
-        private Task PersistOutgoingMessages(
-            IReadOnlyCollection<IntegrationMessage> outgoingMessages,
+        private static Task PersistOutgoingMessages(
+            IDatabaseContext databaseContext,
+            EndpointIdentity endpointIdentity,
+            IReadOnlyCollection<IntegrationMessage> messages,
+            IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
             var outboxId = Guid.NewGuid();
             var timestamp = DateTime.UtcNow;
 
-            var messages = outgoingMessages
-               .Select(message => Deduplication.IntegrationMessage.Build(message, _jsonSerializer))
-               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, _endpointIdentity, message, false))
+            var outboxMessages = messages
+               .Select(message => Deduplication.IntegrationMessage.Build(message, jsonSerializer))
+               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            return _transaction
+            return databaseContext
                .Write<OutboxMessage, Guid>()
-               .Insert(messages, EnInsertBehavior.Default, token);
+               .Insert(outboxMessages, EnInsertBehavior.Default, token);
         }
 
         private static Task DeliverOutgoingMessages(
-            (IReadOnlyCollection<IntegrationMessage>, IOutboxDelivery) state,
+            IOutboxDelivery outboxDelivery,
+            IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            var (messages, outboxDelivery) = state;
-            return outboxDelivery.DeliverMessages(messages, token);
+            return ExecutionExtensions
+               .TryAsync((outboxDelivery, messages), DeliverOutgoingMessagesUnsafe)
+               .Catch<Exception>()
+               .Invoke(token);
+
+            static Task DeliverOutgoingMessagesUnsafe(
+                (IOutboxDelivery, IReadOnlyCollection<IntegrationMessage>) state,
+                CancellationToken token)
+            {
+                var (outboxDelivery, messages) = state;
+                return outboxDelivery.DeliverMessages(messages, token);
+            }
         }
     }
 }

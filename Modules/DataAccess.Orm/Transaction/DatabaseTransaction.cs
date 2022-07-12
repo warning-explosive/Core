@@ -1,8 +1,10 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
+    using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
@@ -28,6 +30,8 @@
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly ITransactionalStore _transactionalStore;
 
+        private readonly List<ITransactionalChange> _changes;
+
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDatabaseConnection? _connection;
 
@@ -42,11 +46,13 @@
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
             _transactionalStore = transactionalStore;
+
+            _changes = new List<ITransactionalChange>();
         }
 
-        public int ChangesCount { get; set; }
+        public IReadOnlyCollection<ITransactionalChange> Changes => _changes.ToList();
 
-        public bool HasChanges => ChangesCount > 0;
+        public bool HasChanges => Changes.Any();
 
         public IDbTransaction DbTransaction
         {
@@ -135,6 +141,7 @@
             }
             finally
             {
+                _changes.Clear();
                 _transactionalStore.Dispose();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
@@ -163,11 +170,10 @@
             return _transactionalStore.TryGetValue(key, out entity);
         }
 
-        public void Invalidate<TEntry, TKey>(TKey key)
-            where TEntry : notnull
-            where TKey : notnull
+        public void CollectChange(ITransactionalChange change)
         {
-            _transactionalStore.Invalidate<TEntry, TKey>(key);
+            // TODO: #133 - update transactional store
+            _changes.Add(change);
         }
 
         private IDbTransaction Open()

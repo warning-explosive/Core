@@ -18,8 +18,8 @@
             RefuseReason = refuseReason;
         }
 
-        public IntegrationMessage Message { get; private init; }
+        public IntegrationMessage Message { get; init; }
 
-        public string? RefuseReason { get; private init; }
+        public string? RefuseReason { get; init; }
     }
 }

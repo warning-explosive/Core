@@ -19,8 +19,8 @@
             Name = name;
         }
 
-        public DateTime DateTime { get; private init; }
-        public string CommandText { get; private init; }
-        public string Name { get; private init; }
+        public DateTime DateTime { get; init; }
+        public string CommandText { get; init; }
+        public string Name { get; init; }
     }
 }

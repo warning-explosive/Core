@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
         }
 
         /// <inheritdoc />
-        public TKey PrimaryKey { get; private init; }
+        public TKey PrimaryKey { get; internal init; }
 
         object IUniqueIdentified.PrimaryKey => PrimaryKey;
     }

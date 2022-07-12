@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
 
             VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
-            VerifyDeserializationRequirement(_integrationTypeProvider.IntegrationMessageTypes());
+            MessageTypesHaveMissingPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes());
 
             VerifyMessageHandlersLifestyle();
 
@@ -147,13 +147,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                .Each(messageType => throw new InvalidOperationException($"Message {messageType.FullName} should have one public constructor"));
         }
 
-        private static void VerifyDeserializationRequirement(IEnumerable<Type> messageTypes)
+        private static void MessageTypesHaveMissingPropertyInitializers(IEnumerable<Type> messageTypes)
         {
             messageTypes
                .Where(messageType => messageType.IsConcreteType())
                .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
-               .Where(property => !(property.HasInitializer() && property.SetMethod.IsAccessible()))
-               .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be deserializable"));
+               .Where(property => !(property.HasInitializer() && property.SetIsAccessible()))
+               .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
         }
 
         private void VerifyMessageHandlersLifestyle()

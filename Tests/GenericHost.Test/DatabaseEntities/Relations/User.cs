@@ -12,6 +12,6 @@
             Nickname = nickname;
         }
 
-        public string Nickname { get; private init; }
+        public string Nickname { get; init; }
     }
 }

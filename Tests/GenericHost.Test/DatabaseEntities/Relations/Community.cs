@@ -17,8 +17,8 @@
             Participants = participants;
         }
 
-        public string Name { get; private init; }
+        public string Name { get; init; }
 
-        public IReadOnlyCollection<Participant> Participants { get; private init; }
+        public IReadOnlyCollection<Participant> Participants { get; init; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Api.Transaction
 {
+    using System.Collections.Generic;
     using System.Data;
 
     /// <summary>
@@ -23,8 +24,14 @@
         bool Connected { get; }
 
         /// <summary>
-        /// Changes count
+        /// Gets collected changes
         /// </summary>
-        int ChangesCount { get; set; }
+        IReadOnlyCollection<ITransactionalChange> Changes { get; }
+
+        /// <summary>
+        /// Collects change
+        /// </summary>
+        /// <param name="change">ITransactionalChange</param>
+        void CollectChange(ITransactionalChange change);
     }
 }

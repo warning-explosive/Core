@@ -37,6 +37,18 @@
                 .SelectMany(VerifyDatabaseEntity)
                 .Each(exception => throw exception.Rethrow());
 
+            var sqlView = AssembliesExtensions.FindType("SpaceEngineers.Core.DataAccess.Orm.Sql.Views.ISqlView`1");
+
+            if (sqlView != null)
+            {
+                _typeProvider
+                .OurTypes
+                .Where(type => type.IsSubclassOfOpenGeneric(sqlView)
+                            && type.IsConcreteType())
+                .SelectMany(VerifyDatabaseEntity)
+                .Each(exception => throw exception.Rethrow());
+            }
+
             _typeProvider
                 .OurTypes
                 .Where(type => typeof(IInlinedObject).IsAssignableFrom(type)
@@ -57,9 +69,9 @@
                 yield return modifierException;
             }
 
-            foreach (var initializerException in MissingPropertyInitializers(databaseEntity))
+            foreach (var setterException in DatabaseObjectHasMissingPropertySetter(databaseEntity))
             {
-                yield return initializerException;
+                yield return setterException;
             }
 
             if (TypeHasMissingSchemaAttribute(databaseEntity, out var missingSchemaAttributeException))
@@ -68,21 +80,21 @@
             }
         }
 
-        private IEnumerable<Exception> VerifyInlinedObject(Type type)
+        private IEnumerable<Exception> VerifyInlinedObject(Type inlinedObject)
         {
-            if (TypeHasWrongConstructor(type, out var constructorException))
+            if (TypeHasWrongConstructor(inlinedObject, out var constructorException))
             {
                 yield return constructorException;
             }
 
-            if (TypeHasWrongModifier(type, out var modifierException))
+            if (TypeHasWrongModifier(inlinedObject, out var modifierException))
             {
                 yield return modifierException;
             }
 
-            foreach (var initializerException in MissingPropertyInitializers(type))
+            foreach (var setterException in DatabaseObjectHasMissingPropertySetter(inlinedObject))
             {
-                yield return initializerException;
+                yield return setterException;
             }
         }
 
@@ -125,16 +137,16 @@
             return false;
         }
 
-        private static IEnumerable<Exception> MissingPropertyInitializers(Type type)
+        private static IEnumerable<Exception> DatabaseObjectHasMissingPropertySetter(Type type)
         {
             var properties = type
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
                .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-               .Where(property => !property.HasInitializer() || property.SetMethod.IsAccessible());
+               .Where(property => !property.SetIsAccessible());
 
             foreach (var property in properties)
             {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have accessible setter or initializer (init modifier) so as to be deserializable");
             }
         }
 

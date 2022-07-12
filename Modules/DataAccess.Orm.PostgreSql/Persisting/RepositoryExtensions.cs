@@ -3,12 +3,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Api.Model;
+    using Api.Transaction;
     using Basics;
+    using Settings;
+    using Sql.Extensions;
     using Sql.Model;
 
     internal static class RepositoryExtensions
     {
+        private const string TransactionIdCommandText = "select txid_current()";
+
+        internal static async Task<long> GetXid(
+            this IAdvancedDatabaseTransaction transaction,
+            OrmSettings settings,
+            CancellationToken token)
+        {
+            var dynamicValues = await transaction
+               .Invoke(TransactionIdCommandText, settings, token)
+               .ConfigureAwait(false);
+
+            var xid = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value;
+
+            return xid != null
+                ? (long)xid
+                : throw new InvalidOperationException("Unable to get txid_current()");
+        }
+
         internal static IEnumerable<IUniqueIdentified> Flatten(
             this IUniqueIdentified entity,
             IModelProvider modelProvider)
@@ -69,8 +92,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                                .CallMethod(nameof(CreateMtmInstance))
                                .WithTypeArguments(
                                     column.MultipleRelationTable!,
-                                    entity.GetType().ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single(),
-                                    dependency.GetType().ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single())
+                                    entity.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)),
+                                    dependency.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
                                .WithArguments(entity.PrimaryKey, dependency.PrimaryKey)
                                .Invoke<IUniqueIdentified>()));
                 };

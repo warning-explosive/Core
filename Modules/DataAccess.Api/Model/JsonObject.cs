@@ -21,11 +21,11 @@
         /// <summary>
         /// Value
         /// </summary>
-        public string Value { get; private init; }
+        public string Value { get; init; }
 
         /// <summary>
         /// System type
         /// </summary>
-        public SystemType SystemType { get; private init; }
+        public SystemType SystemType { get; init; }
     }
 }

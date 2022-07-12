@@ -38,24 +38,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
             static IEnumerable<PropertyInfo> ReflectedColumns(Type type)
             {
                 return type
-                    .GetProperties(
-                        BindingFlags.Public
-                        | BindingFlags.Instance
-                        | BindingFlags.GetProperty
-                        | BindingFlags.SetProperty);
+                   .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty)
+                   .Where(property => property.GetIsAccessible() && property.SetIsAccessible());
             }
 
             static IEnumerable<PropertyInfo> DeclaredColumns(Type type)
             {
                 return type
-                    .GetProperties(
-                        BindingFlags.Public
-                        | BindingFlags.Instance
-                        | BindingFlags.GetProperty
-                        | BindingFlags.SetProperty
-                        | BindingFlags.DeclaredOnly)
-                    .Concat(BaseDeclaredColumns(type))
-                    .Where(property => property.CanRead && (property.CanWrite || type.IsAnonymous()));
+                   .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty | BindingFlags.DeclaredOnly)
+                   .Where(property => property.GetIsAccessible() && property.SetIsAccessible())
+                   .Concat(BaseDeclaredColumns(type))
+                   .Where(property => property.CanRead && (property.CanWrite || type.IsAnonymous()));
             }
 
             static IEnumerable<PropertyInfo> BaseDeclaredColumns(Type type)

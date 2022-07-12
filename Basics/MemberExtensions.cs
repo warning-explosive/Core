@@ -34,6 +34,28 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Does property getter have external access (public or internal)
+        /// </summary>
+        /// <param name="property">PropertyInfo</param>
+        /// <returns>True if property getter has external access (public or internal)</returns>
+        public static bool GetIsAccessible(this PropertyInfo property)
+        {
+            var getMethod = property.GetGetMethod(true);
+            return getMethod != null && getMethod.IsAccessible();
+        }
+
+        /// <summary>
+        /// Does property setter have external access (public or internal)
+        /// </summary>
+        /// <param name="property">PropertyInfo</param>
+        /// <returns>True if property setter has external access (public or internal)</returns>
+        public static bool SetIsAccessible(this PropertyInfo property)
+        {
+            var setMethod = property.GetSetMethod(true);
+            return setMethod != null && setMethod.IsAccessible();
+        }
+
+        /// <summary>
         /// Check that object has property
         /// </summary>
         /// <param name="target">Target object</param>

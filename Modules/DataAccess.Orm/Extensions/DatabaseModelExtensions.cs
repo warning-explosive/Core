@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <returns>Model type supported or not</returns>
         public static bool IsTypeSupported(this Type type)
         {
-            type = type.UnwrapTypeParameter(typeof(Nullable<>));
+            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             return type.IsMultipleRelation(out var itemType)
                 ? IsItemTypeSupported(itemType)
@@ -73,7 +73,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             itemType = SupportedMultipleRelations
                 .Select(collection =>
                 {
-                    var collectionItemType = type.UnwrapTypeParameter(collection);
+                    var collectionItemType = type.ExtractGenericArgumentAtOrSelf(collection);
                     var isCollection = collectionItemType != type;
                     return (collectionItemType, isCollection);
                 })

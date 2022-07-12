@@ -74,8 +74,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             while (curr != null)
             {
                 var properties = curr
-                    .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
-                    .Where(info => info.SetMethod != null);
+                   .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty)
+                   .Where(property => property.SetIsAccessible());
 
                 foreach (var property in properties)
                 {

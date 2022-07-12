@@ -41,13 +41,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             return false;
         }
 
-        public void Invalidate<TEntry, TKey>(TKey key)
-            where TEntry : notnull
-            where TKey : notnull
-        {
-            throw new NotImplementedException();
-        }
-
         public void Dispose()
         {
             foreach (var entry in _store)

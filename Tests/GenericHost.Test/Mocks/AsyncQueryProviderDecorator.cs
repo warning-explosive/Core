@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
         {
-            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+            var itemType = expression.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             return (IQueryable)Activator.CreateInstance(
                 typeof(Queryable<>).MakeGenericType(itemType),

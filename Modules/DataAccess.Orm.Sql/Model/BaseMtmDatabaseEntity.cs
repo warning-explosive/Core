@@ -36,11 +36,11 @@
         /// <summary>
         /// Left
         /// </summary>
-        public TLeftKey Left { get; protected internal init; }
+        public TLeftKey Left { get; internal init; }
 
         /// <summary>
         /// Right
         /// </summary>
-        public TRightKey Right { get; protected internal init; }
+        public TRightKey Right { get; internal init; }
     }
 }

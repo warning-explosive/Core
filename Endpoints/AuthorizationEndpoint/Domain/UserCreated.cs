@@ -19,10 +19,10 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
             PasswordHash = passwordHash;
         }
 
-        public string Username { get; private init; }
+        public string Username { get; init; }
 
-        public string Salt { get; private init; }
+        public string Salt { get; init; }
 
-        public string PasswordHash { get; private init; }
+        public string PasswordHash { get; init; }
     }
 }

@@ -13,23 +13,41 @@
     internal class ColumnDataTypeProvider : IColumnDataTypeProvider,
                                             IResolvable<IColumnDataTypeProvider>
     {
-        public string GetColumnDataType(Type type)
+        public string GetColumnDataType(ColumnInfo columnInfo)
         {
-            if (!type.IsTypeSupported())
+            if (!columnInfo.Type.IsTypeSupported())
             {
-                throw new NotSupportedException($"Not supported column type: {type}");
+                throw new NotSupportedException($"Not supported column type: {columnInfo.Type}");
             }
 
-            if (TryGetPrimitiveDataType(type, out var dataType))
+            if (TryGetSpecialColumnType(columnInfo.Name, columnInfo.Type, out var specialColumnDataType))
+            {
+                return specialColumnDataType;
+            }
+
+            if (TryGetPrimitiveDataType(columnInfo.Type, out var dataType))
             {
                 return dataType;
             }
 
-            throw new NotSupportedException($"Not supported column type: {type}");
+            throw new NotSupportedException($"Not supported column type: {columnInfo.Type}");
+
+            static bool TryGetSpecialColumnType(string name, Type type, [NotNullWhen(true)] out string? dataType)
+            {
+                /*TODO: #133 - optimistic concurrency control*/
+                /*if (name.Equals(nameof(IDatabaseEntity<Guid>.Version), StringComparison.OrdinalIgnoreCase))
+                {
+                    dataType = EnPostgreSqlDataType.Xid.ToString();
+                    return true;
+                }*/
+
+                dataType = default;
+                return false;
+            }
 
             static bool TryGetPrimitiveDataType(Type type, [NotNullWhen(true)] out string? dataType)
             {
-                type = type.UnwrapTypeParameter(typeof(Nullable<>));
+                type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
                 if (type == typeof(Guid))
                 {

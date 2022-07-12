@@ -242,7 +242,8 @@ namespace SpaceEngineers.Core.DataExport.Excel
                     StringComparer.OrdinalIgnoreCase);
 
             var properties = type
-               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty)
+               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty)
+               .Where(property => property.GetIsAccessible())
                .Where(property => !property.PropertyType.IsCollection() || typeof(string) == property.PropertyType)
                .OrderBy(property => columnsPriorities.TryGetValue(GetPropertyName(property), out var priority)
                     ? priority
@@ -398,7 +399,7 @@ namespace SpaceEngineers.Core.DataExport.Excel
 
         private static CellValues GetDataType(Type type)
         {
-            type = type.UnwrapTypeParameter(typeof(Nullable<>));
+            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (type.IsNumeric())
             {
@@ -427,7 +428,7 @@ namespace SpaceEngineers.Core.DataExport.Excel
 
             var type = value
                .GetType()
-               .UnwrapTypeParameter(typeof(Nullable<>));
+               .ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (type.IsNumeric())
             {

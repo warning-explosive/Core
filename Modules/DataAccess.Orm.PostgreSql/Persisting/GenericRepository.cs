@@ -20,6 +20,7 @@
     using Sql.Model;
     using Sql.Translation;
     using Sql.Translation.Extensions;
+    using Transaction;
 
     [Component(EnLifestyle.Scoped)]
     internal class GenericRepository<TEntity, TKey> : IRepository<TEntity, TKey>,
@@ -67,53 +68,13 @@
                 token);
         }
 
-        public async Task Update<TValue>(
+        public Task Update<TValue>(
             IReadOnlyCollection<TKey> primaryKeys,
             Expression<Func<TEntity, TValue>> accessor,
             TValue value,
             CancellationToken token)
         {
-            if (!primaryKeys.Any())
-            {
-                return;
-            }
-
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            var type = typeof(TEntity);
-            var table = _modelProvider.Tables[type];
-
-            var visitor = new ExtractMemberChainExpressionVisitor();
-            _ = visitor.Visit(accessor);
-
-            var column = new ColumnInfo(
-                table,
-                visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
-                _modelProvider);
-
-            if (column.IsMultipleRelation)
-            {
-                throw new NotSupportedException($"Unable to update multiple relation: {column.Name}");
-            }
-
-            var commandText = UpdateValueQueryFormat.Format(
-                table.Schema,
-                table.Name,
-                SetExpressionFormat.Format(ColumnFormat.Format(column.Name), value.QueryParameterSqlExpression(_dependencyContainer)),
-                primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
-
-            try
-            {
-                _ = await _transaction
-                    .InvokeScalar(commandText, settings, token)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            return Update(primaryKeys, accessor, _ => value, token);
         }
 
         public async Task Update<TValue>(
@@ -159,9 +120,18 @@
 
             try
             {
+                var version = await _transaction
+                   .GetXid(settings, token)
+                   .ConfigureAwait(false);
+
                 _ = await _transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
+
+                foreach (var primaryKey in primaryKeys)
+                {
+                    _transaction.CollectChange(new UpdateEntityChange<TEntity, TKey, TValue>(primaryKey, version, accessor, valueProducer));
+                }
             }
             catch (Exception exception)
             {
@@ -193,9 +163,18 @@
 
             try
             {
+                var version = await _transaction
+                   .GetXid(settings, token)
+                   .ConfigureAwait(false);
+
                 _ = await _transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
+
+                foreach (var primaryKey in primaryKeys)
+                {
+                    _transaction.CollectChange(new DeleteEntityChange<TEntity, TKey>(primaryKey, version));
+                }
             }
             catch (Exception exception)
             {

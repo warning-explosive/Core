@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 {
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -23,9 +22,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 
         public Task Handle(TEvent domainEvent, CancellationToken token)
         {
-            var aggregateType = typeof(TEvent)
-               .ExtractGenericArgumentsAt(typeof(IDomainEvent<>))
-               .Single();
+            var aggregateType = typeof(TEvent).ExtractGenericArgumentAt(typeof(IDomainEvent<>));
 
             return this
                .CallMethod(nameof(Append))

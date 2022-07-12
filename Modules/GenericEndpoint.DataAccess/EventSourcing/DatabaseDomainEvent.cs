@@ -23,14 +23,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             SerializedEvent = serializedEvent;
         }
 
-        public Guid AggregateId { get; private init; }
+        public Guid AggregateId { get; init; }
 
-        public long Index { get; private init; }
+        public long Index { get; init; }
 
-        public DateTime Timestamp { get; private init; }
+        public DateTime Timestamp { get; init; }
 
-        public SystemType EventType { get; private init; }
+        public SystemType EventType { get; init; }
 
-        public string SerializedEvent { get; private init; }
+        public string SerializedEvent { get; init; }
     }
 }

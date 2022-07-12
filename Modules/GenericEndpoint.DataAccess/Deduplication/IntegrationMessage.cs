@@ -23,9 +23,9 @@
             Headers = headers;
         }
 
-        public JsonObject Payload { get; private init; }
+        public JsonObject Payload { get; init; }
 
-        public IReadOnlyCollection<IntegrationMessageHeader> Headers { get; private init; }
+        public IReadOnlyCollection<IntegrationMessageHeader> Headers { get; init; }
 
         public Messaging.IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer)
         {

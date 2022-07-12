@@ -70,9 +70,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
                 yield return multipleAggregatesException;
             }
 
-            var aggregate = domainEvent
-               .ExtractGenericArgumentsAt(typeof(IDomainEvent<>))
-               .Single();
+            var aggregate = domainEvent.ExtractGenericArgumentAt(typeof(IDomainEvent<>));
 
             if (AggregateHasNoDomainEvent(aggregate, domainEvent, out var aggregateHasNoDomainEventException))
             {
@@ -126,11 +124,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
         {
             var properties = aggregate
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty)
-               .Where(property => property.SetMethod != null && property.SetMethod.IsAccessible());
+               .Where(property => property.SetMethod != null && property.SetIsAccessible());
 
             foreach (var property in properties)
             {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private setter so as to grant aggregate immutability and behavior based design");
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have no setter or have private one so as to grant aggregate immutability and behavior based design");
             }
         }
 
@@ -153,11 +151,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             var properties = domainEvent
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
                .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-               .Where(property => !property.HasInitializer() || property.SetMethod.IsAccessible());
+               .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
 
             foreach (var property in properties)
             {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have private initializer (init modifier) so as to be deserializable");
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable");
             }
         }
 

@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
         {
-            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+            var itemType = expression.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             return (IQueryable)Activator.CreateInstance(
                 typeof(Queryable<>).MakeGenericType(itemType),
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var itemType = expression.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+            var itemType = expression.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             var isScalar = typeof(TResult) == itemType;
 

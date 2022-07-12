@@ -26,13 +26,13 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         }
 
         /// <inheritdoc />
-        public Guid AggregateId { get; private init; }
+        public Guid AggregateId { get; internal init; }
 
         /// <inheritdoc />
-        public long Index { get; private init; }
+        public long Index { get; internal init; }
 
         /// <inheritdoc />
-        public DateTime Timestamp { get; private init; }
+        public DateTime Timestamp { get; internal init; }
 
         /// <inheritdoc />
         public void Apply(TAggregate aggregate)

@@ -29,20 +29,20 @@
             ForeignColumn = foreignColumn;
         }
 
-        public string Schema { get; private init; }
+        public string Schema { get; init; }
 
-        public string Table { get; private init; }
+        public string Table { get; init; }
 
-        public string Column { get; private init; }
+        public string Column { get; init; }
 
-        public EnColumnConstraintType ConstraintType { get; private init; }
+        public EnColumnConstraintType ConstraintType { get; init; }
 
-        public string ConstraintName { get; private init; }
+        public string ConstraintName { get; init; }
 
-        public string ForeignSchema { get; private init; }
+        public string ForeignSchema { get; init; }
 
-        public string ForeignTable { get; private init; }
+        public string ForeignTable { get; init; }
 
-        public string ForeignColumn { get; private init; }
+        public string ForeignColumn { get; init; }
     }
 }

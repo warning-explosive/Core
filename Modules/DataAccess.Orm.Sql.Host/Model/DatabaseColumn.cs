@@ -34,24 +34,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             Length = length;
         }
 
-        public string Schema { get; private init; }
+        public string Schema { get; init; }
 
-        public string Table { get; private init; }
+        public string Table { get; init; }
 
-        public string Column { get; private init; }
+        public string Column { get; init; }
 
-        public int Position { get; private init; }
+        public int Position { get; init; }
 
-        public string DataType { get; private init; }
+        public string DataType { get; init; }
 
-        public bool Nullable { get; private init; }
+        public bool Nullable { get; init; }
 
-        public string? DefaultValue { get; private init; }
+        public string? DefaultValue { get; init; }
 
-        public int? Scale { get; private init; }
+        public int? Scale { get; init; }
 
-        public int? Precision { get; private init; }
+        public int? Precision { get; init; }
 
-        public int? Length { get; private init; }
+        public int? Length { get; init; }
     }
 }

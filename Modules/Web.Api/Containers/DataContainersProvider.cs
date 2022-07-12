@@ -17,10 +17,10 @@ namespace SpaceEngineers.Core.Web.Api.Containers
         public ViewEntity ToViewEntity<TEntity>(TEntity entity)
         {
             var containers = entity
-                .GetType()
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty)
-                .ToDictionary(
-                    property => property.Name,
+               .GetType()
+               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty)
+               .Where(property => property.GetIsAccessible())
+               .ToDictionary(property => property.Name,
                     property => ValueToContainer(property.GetValue(entity), property.PropertyType),
                     StringComparer.OrdinalIgnoreCase);
 
@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Web.Api.Containers
 
         private static IDataContainer ValueToContainer(object? value, Type type)
         {
-            type = type.UnwrapTypeParameter(typeof(Nullable<>));
+            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (type == typeof(string))
             {

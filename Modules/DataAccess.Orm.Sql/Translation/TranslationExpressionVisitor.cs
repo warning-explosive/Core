@@ -65,11 +65,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ? node.Method.GetGenericMethodDefinition()
                 : node.Method;
 
-            var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+            var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             var isQueryRoot = itemType.IsClass
               && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-              && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IUniqueIdentified<>)));
+              && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)));
 
             if (isQueryRoot)
             {
@@ -463,7 +463,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private void BuildJoinExpression(TranslationContext context, MethodCallExpression node, Type itemType)
         {
             var relations = TranslationContext.ExtractRelations(
-                node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>)),
+                node.Arguments[0].Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>)),
                 node.Arguments[1],
                 _modelProvider);
 
@@ -532,8 +532,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private void GroupBy(MethodCallExpression node, Type itemType, bool isGroupBy3)
         {
-            var sourceType = node.Arguments[0].Type.UnwrapTypeParameter(typeof(IQueryable<>));
-            var typeArguments = itemType.UnwrapTypeParameters(typeof(IGrouping<,>));
+            var sourceType = node.Arguments[0].Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
+            var typeArguments = itemType.ExtractGenericArguments(typeof(IGrouping<,>));
 
             var keyType = typeArguments[0];
             var valueType = typeArguments[1];

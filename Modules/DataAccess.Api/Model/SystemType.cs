@@ -20,12 +20,12 @@
         /// <summary>
         /// Assembly
         /// </summary>
-        public string Assembly { get; private init; }
+        public string Assembly { get; init; }
 
         /// <summary>
         /// Type
         /// </summary>
-        public string Type { get; private init; }
+        public string Type { get; init; }
 
         /// <summary>
         /// Implicit conversion operator to System.Type

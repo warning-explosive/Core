@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="settings">Orm settings</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
-        public static async Task<int> InvokeScalar(
+        public static async Task<long> InvokeScalar(
             this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
@@ -36,18 +36,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            var result = await transaction
+            return await transaction
                .DbTransaction
                .Connection
                .ExecuteAsync(command)
                .ConfigureAwait(false);
-
-            if (result > 0)
-            {
-                transaction.ChangesCount += result;
-            }
-
-            return result;
         }
 
         /// <summary>
@@ -87,7 +80,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="settings">Orm settings</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
-        public static Task<int> InvokeScalar(
+        public static async Task<long> InvokeScalar(
             this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
@@ -102,9 +95,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return connection
+            return await connection
                .UnderlyingDbConnection
-               .ExecuteAsync(command);
+               .ExecuteAsync(command)
+               .ConfigureAwait(false);
         }
 
         /// <summary>

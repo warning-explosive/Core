@@ -196,7 +196,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         {
             _ = _transaction
                 .CallMethod(nameof(_transaction.Store))
-                .WithTypeArguments(entity, entity.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single())
+                .WithTypeArguments(entity, entity.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
                 .WithArgument(built)
                 .Invoke();
         }
@@ -241,7 +241,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             object primaryKey,
             CancellationToken token)
         {
-            var keyType = type.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single();
+            var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
             var task = this
                 .CallMethod(nameof(MaterializeRelation))
@@ -318,7 +318,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             }
 
             var type = typeof(T);
-            var keyType = type.ExtractGenericArgumentsAt(typeof(IDatabaseEntity<>)).Single();
+            var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
             return this
                 .CallMethod(nameof(MaterializeMultipleRelations))
@@ -342,7 +342,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 }
 
                 var mtmType = column.MultipleRelationTable!;
-                var typeArguments = mtmType.ExtractGenericArguments(typeof(BaseMtmDatabaseEntity<,>)).Single();
+                var typeArguments = mtmType.ExtractGenericArguments(typeof(BaseMtmDatabaseEntity<,>));
                 var leftKeyType = typeArguments[0];
                 var rightKeyType = typeArguments[1];
 

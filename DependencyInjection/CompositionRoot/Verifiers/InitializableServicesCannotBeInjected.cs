@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 return cctor
                     .GetParameters()
                     .Select(parameter => parameter.ParameterType)
-                    .Select(t => t.UnwrapTypeParameter(typeof(IEnumerable<>)))
+                    .Select(t => t.ExtractGenericArgumentAtOrSelf(typeof(IEnumerable<>)))
                     .Select(t => t.GenericTypeDefinitionOrSelf())
                     .Any(parameter => WrongParameter(type, cctor, parameter, initializableComponents));
             };

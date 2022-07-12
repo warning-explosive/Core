@@ -370,8 +370,8 @@
 
         private Type BuildMtmType(Type left, Type right)
         {
-            var leftKey = left.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
-            var rightKey = right.ExtractGenericArgumentsAt(typeof(IUniqueIdentified<>)).Single();
+            var leftKey = left.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
+            var rightKey = right.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
             var mtmBaseType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
 

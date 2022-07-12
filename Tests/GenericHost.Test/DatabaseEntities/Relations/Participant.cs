@@ -17,8 +17,8 @@
             Communities = communities;
         }
 
-        public string Name { get; private init; }
+        public string Name { get; init; }
 
-        public IReadOnlyCollection<Community> Communities { get; private init; }
+        public IReadOnlyCollection<Community> Communities { get; init; }
     }
 }

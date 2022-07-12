@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.StringFormatter
 
         public string Format(object? value)
         {
-            var type = (value?.GetType() ?? typeof(object)).UnwrapTypeParameter(typeof(Nullable<>));
+            var type = (value?.GetType() ?? typeof(object)).ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             return _dependencyContainer
                 .ResolveGeneric(typeof(IStringFormatter<>), type)

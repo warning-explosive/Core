@@ -85,7 +85,7 @@ namespace SpaceEngineers.Core.Basics
         public static bool IsPrimitive(this Type type)
         {
             return type.IsNullable()
-                ? IsPrimitiveType(type.UnwrapTypeParameter(typeof(Nullable<>)))
+                ? IsPrimitiveType(type.ExtractGenericArgumentAt(typeof(Nullable<>)))
                 : IsPrimitiveType(type);
 
             static bool IsPrimitiveType(Type t)
@@ -118,7 +118,7 @@ namespace SpaceEngineers.Core.Basics
         public static bool IsNumeric(this Type type)
         {
             return type.IsNullable()
-                ? IsNumericType(type.UnwrapTypeParameter(typeof(Nullable<>)))
+                ? IsNumericType(type.ExtractGenericArgumentAt(typeof(Nullable<>)))
                 : IsNumericType(type);
 
             static bool IsNumericType(Type t)
@@ -229,7 +229,7 @@ namespace SpaceEngineers.Core.Basics
             {
                 return parameter
                     .ParameterType
-                    .UnwrapTypeParameter(typeof(IEnumerable<>)) == dependency;
+                    .ExtractGenericArgumentAt(typeof(IEnumerable<>)) == dependency;
             }
         }
 
@@ -459,7 +459,7 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Extract type-arguments from derived class of open-generic type at specified index
+        /// Extracts type-arguments from derived class of open-generic type at specified index
         /// Distinct, might be several implementations with different type-arguments
         /// </summary>
         /// <param name="source">Source type for extraction</param>
@@ -488,12 +488,37 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Extract all type-arguments from derived class of open-generic type
+        /// Extracts required type-argument from derived class of open-generic type at specified index
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <param name="typeArgumentAt">Type argument position</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type ExtractGenericArgumentAt(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        {
+            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).Single();
+        }
+
+        /// <summary>
+        /// Extracts type-argument from derived class of open-generic type at specified index if possible
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <param name="typeArgumentAt">Type argument position</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type ExtractGenericArgumentAtOrSelf(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        {
+            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault()
+                ?? typeToUnwrap;
+        }
+
+        /// <summary>
+        /// Extracts all type-arguments from derived class of open-generic type
         /// </summary>
         /// <param name="source">Source type for extraction</param>
         /// <param name="openGeneric">Open-generic which derived</param>
         /// <returns>Collection of type arguments at specified index.</returns>
-        public static IEnumerable<Type[]> ExtractGenericArguments(this Type source, Type openGeneric)
+        public static IEnumerable<Type[]> ExtractAllGenericArguments(this Type source, Type openGeneric)
         {
             if (!openGeneric.IsGenericTypeDefinition)
             {
@@ -506,6 +531,17 @@ namespace SpaceEngineers.Core.Basics
                            .IncludedTypes()
                            .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
                            .Select(type => type.GetGenericArguments().ToArray());
+        }
+
+        /// <summary>
+        /// Extracts required combination of type-arguments from derived class of open-generic type
+        /// </summary>
+        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="openGeneric">Open generic wrapper</param>
+        /// <returns>Unwrapped type</returns>
+        public static Type[] ExtractGenericArguments(this Type typeToUnwrap, Type openGeneric)
+        {
+            return typeToUnwrap.ExtractAllGenericArguments(openGeneric).Single();
         }
 
         /// <summary>
@@ -526,7 +562,7 @@ namespace SpaceEngineers.Core.Basics
              && source.IsConstructedOrNonGenericType())
             {
                 var genericArguments = source
-                   .ExtractGenericArguments(openGeneric)
+                   .ExtractAllGenericArguments(openGeneric)
                    .InformativeSingle(Amb(openGeneric, source));
 
                 return openGeneric.MakeGenericType(genericArguments);
@@ -542,30 +578,6 @@ namespace SpaceEngineers.Core.Basics
                     return $"Type {source.FullName} has different implementations of {openGeneric.FullName}: {details}";
                 };
             }
-        }
-
-        /// <summary>
-        /// Unwrap type parameter if possible
-        /// </summary>
-        /// <param name="typeToUnwrap">Type to unwrap</param>
-        /// <param name="openGeneric">Open generic wrapper</param>
-        /// <param name="typeArgumentAt">Type argument position</param>
-        /// <returns>Unwrapped type</returns>
-        public static Type UnwrapTypeParameter(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
-        {
-            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault()
-                   ?? typeToUnwrap;
-        }
-
-        /// <summary>
-        /// Unwrap type parameters is possible
-        /// </summary>
-        /// <param name="typeToUnwrap">Type to unwrap</param>
-        /// <param name="openGeneric">Open generic wrapper</param>
-        /// <returns>Unwrapped type</returns>
-        public static Type[] UnwrapTypeParameters(this Type typeToUnwrap, Type openGeneric)
-        {
-            return typeToUnwrap.ExtractGenericArguments(openGeneric).Single();
         }
 
         /// <summary>
@@ -624,7 +636,7 @@ namespace SpaceEngineers.Core.Basics
                 var genericParameters = typeArgument.GetGenericArguments();
 
                 return typeForCheck
-                    .ExtractGenericArguments(typeArgument.GetGenericTypeDefinition())
+                    .ExtractAllGenericArguments(typeArgument.GetGenericTypeDefinition())
                     .Any(set => set
                             .Zip(genericParameters, (arg, param) => (arg, param))
                             .All(pair => pair.arg.FitsForTypeArgument(pair.param)));
@@ -653,7 +665,7 @@ namespace SpaceEngineers.Core.Basics
 
                 bool HasSuitableTypeArguments()
                 {
-                    var typeArgumentsForCheck = ExtractGenericArguments(typeForCheck, constraintGenericTypeDefinition).ToArray();
+                    var typeArgumentsForCheck = ExtractAllGenericArguments(typeForCheck, constraintGenericTypeDefinition).ToArray();
 
                     return constraint
                         .GetGenericArguments()

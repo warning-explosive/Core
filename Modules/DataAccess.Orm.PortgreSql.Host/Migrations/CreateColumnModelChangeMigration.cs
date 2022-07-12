@@ -59,7 +59,7 @@
 
         internal (string Column, string DataType, IReadOnlyCollection<string> Constraints) CreateColumn(ColumnInfo column)
         {
-            var dataType = _columnDataTypeProvider.GetColumnDataType(column.Type);
+            var dataType = _columnDataTypeProvider.GetColumnDataType(column);
 
             return (column.Name, dataType, column.Constraints);
         }

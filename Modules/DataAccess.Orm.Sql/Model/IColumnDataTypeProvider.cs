@@ -1,7 +1,5 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
-    using System;
-
     /// <summary>
     /// IColumnDataTypeProvider
     /// </summary>
@@ -10,8 +8,8 @@
         /// <summary>
         /// Gets column data type
         /// </summary>
-        /// <param name="type">Type</param>
+        /// <param name="columnInfo">ColumnInfo</param>
         /// <returns>Column data type</returns>
-        string GetColumnDataType(Type type);
+        string GetColumnDataType(ColumnInfo columnInfo);
     }
 }

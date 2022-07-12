@@ -35,19 +35,23 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         {
             var argsDictionary = Init(args);
 
+            var properties = typeof(T)
+               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty)
+               .Where(property => property.SetIsAccessible());
+
             var joined = argsDictionary
-               .Join(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty),
+               .Join(properties,
                      cli => cli.Key.ToUpperInvariant(),
-                     pd => pd.Name.ToUpperInvariant(),
-                     (cli, pd) => new { Info = pd, CliValue = cli.Value });
+                     property => property.Name.ToUpperInvariant(),
+                     (cli, property) => new { PropertyInfo = property, CliValue = cli.Value });
 
             var instance = Activator.CreateInstance<T>();
 
-            foreach (var j in joined)
+            foreach (var pair in joined)
             {
-                if (TryGetValue(j.Info.PropertyType, j.CliValue, out var value))
+                if (TryGetValue(pair.PropertyInfo.PropertyType, pair.CliValue, out var value))
                 {
-                    j.Info.SetValue(instance, value);
+                    pair.PropertyInfo.SetValue(instance, value);
                 }
             }
 

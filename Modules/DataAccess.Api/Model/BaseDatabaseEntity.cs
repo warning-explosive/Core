@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
         /// <summary>
         /// Primary key
         /// </summary>
-        public TKey PrimaryKey { get; private init; }
+        public TKey PrimaryKey { get; internal init; }
 
         object IUniqueIdentified.PrimaryKey => PrimaryKey;
 

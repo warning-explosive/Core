@@ -24,11 +24,11 @@
                     ? node.Method.GetGenericMethodDefinition()
                     : node.Method;
 
-                var itemType = node.Type.UnwrapTypeParameter(typeof(IQueryable<>));
+                var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
                 var isQueryRoot = itemType.IsClass
                     && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                    && method == LinqMethods.All(itemType, itemType.UnwrapTypeParameter(typeof(IUniqueIdentified<>)));
+                    && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)));
 
                 if (!isQueryRoot)
                 {

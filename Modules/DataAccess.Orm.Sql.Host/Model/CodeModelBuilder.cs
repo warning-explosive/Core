@@ -76,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 
         private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
-            var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo.Type);
+            var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo);
 
             return new ColumnNode(columnInfo.Table.Schema, columnInfo.Table.Name, columnInfo.Name, dataType, columnInfo.Constraints);
         }

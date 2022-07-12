@@ -12,9 +12,9 @@
             InstanceName = instanceName;
         }
 
-        public string LogicalName { get; private init; }
+        public string LogicalName { get; init; }
 
-        public string InstanceName { get; private init; }
+        public string InstanceName { get; init; }
 
         public static implicit operator EndpointIdentity(Contract.EndpointIdentity endpointIdentity)
         {

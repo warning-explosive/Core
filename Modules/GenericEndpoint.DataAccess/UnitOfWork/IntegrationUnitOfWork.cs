@@ -71,37 +71,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             try
             {
-                IReadOnlyCollection<ITransactionalChange> changes;
-
-                try
+                if (IsTransactionValid(context, _transaction, out var exception))
                 {
-                    if (IsTransactionValid(context, _transaction, out var exception))
-                    {
-                        await PersistInbox(context, _transaction, _endpointIdentity, Inbox, _jsonSerializer, token).ConfigureAwait(false);
+                    await PersistInbox(context, _transaction, _endpointIdentity, Inbox, _jsonSerializer, token).ConfigureAwait(false);
 
-                        await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), _jsonSerializer, token).ConfigureAwait(false);
+                    await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), _jsonSerializer, token).ConfigureAwait(false);
 
-                        changes = _transaction.Changes;
-                    }
-                    else
-                    {
-                        throw exception.Rethrow();
-                    }
+                    await _transaction.Close(true, token).ConfigureAwait(false);
                 }
-                finally
+                else
                 {
                     await _transaction.Close(false, token).ConfigureAwait(false);
-                }
 
-                if (changes.Any())
-                {
-                    await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
-                    {
-                        foreach (var change in changes)
-                        {
-                            await change.Apply(_transaction, token).ConfigureAwait(false);
-                        }
-                    }
+                    throw exception.Rethrow();
                 }
 
                 await DeliverOutgoingMessages(_outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
@@ -119,9 +101,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         {
             try
             {
-                await _transaction
-                   .Close(false, token)
-                   .ConfigureAwait(false);
+                await _transaction.Close(false, token).ConfigureAwait(false);
             }
             finally
             {

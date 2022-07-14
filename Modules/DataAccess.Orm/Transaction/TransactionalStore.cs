@@ -41,6 +41,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             return false;
         }
 
+        public void Clear()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             foreach (var entry in _store)

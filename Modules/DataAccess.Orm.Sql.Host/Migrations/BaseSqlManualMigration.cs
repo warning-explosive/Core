@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using Orm.Extensions;
     using Orm.Host.Migrations;
     using Orm.Settings;
+    using Transaction;
 
     /// <summary>
     /// Base SQL manual migration
@@ -66,6 +67,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 _ = await transaction
                    .InvokeScalar(commandText, settings, token)
                    .ConfigureAwait(false);
+
+                transaction.CollectChange(new ModelChange(commandText, settings, static (tran, text, s, t) => tran.InvokeScalar(text, s, t)));
             }
             catch (Exception exception)
             {

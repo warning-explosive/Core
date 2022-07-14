@@ -28,8 +28,8 @@
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
-        private readonly ITransactionalStore _transactionalStore;
 
+        private readonly ITransactionalStore _transactionalStore;
         private readonly List<ITransactionalChange> _changes;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
@@ -45,14 +45,12 @@
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
-            _transactionalStore = transactionalStore;
 
+            _transactionalStore = transactionalStore;
             _changes = new List<ITransactionalChange>();
         }
 
-        public IReadOnlyCollection<ITransactionalChange> Changes => _changes.ToList();
-
-        public bool HasChanges => Changes.Any();
+        public bool HasChanges => _changes.Any();
 
         public IDbTransaction DbTransaction
         {
@@ -126,29 +124,51 @@
             return Task.CompletedTask;
         }
 
-        public Task Close(bool commit, CancellationToken token)
+        public async Task Close(bool commit, CancellationToken token)
         {
+            ICollection<ITransactionalChange> changes;
+
             try
             {
-                if (commit)
-                {
-                    _transaction?.Commit();
-                }
-                else
-                {
-                    _transaction?.Rollback();
-                }
+                changes = commit
+                    ? _changes.ToList()
+                    : Array.Empty<ITransactionalChange>();
+
+                _transaction?.Rollback();
             }
             finally
             {
                 _changes.Clear();
-                _transactionalStore.Dispose();
+                _transactionalStore.Clear();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 Interlocked.Exchange(ref _connection, default)?.Dispose();
             }
 
-            return Task.CompletedTask;
+            if (!changes.Any())
+            {
+                return;
+            }
+
+            try
+            {
+                foreach (var change in changes)
+                {
+                    await change
+                       .Apply(this, token)
+                       .ConfigureAwait(false);
+                }
+
+                _transaction?.Commit();
+            }
+            finally
+            {
+                _changes.Clear();
+                _transactionalStore.Clear();
+
+                Interlocked.Exchange(ref _transaction, default)?.Dispose();
+                Interlocked.Exchange(ref _connection, default)?.Dispose();
+            }
         }
 
         public void Dispose()

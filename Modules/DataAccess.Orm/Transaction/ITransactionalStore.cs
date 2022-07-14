@@ -32,5 +32,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         bool TryGetValue<TEntry, TKey>(TKey key, [NotNullWhen(true)] out TEntry? entry)
             where TEntry : notnull
             where TKey : notnull;
+
+        /// <summary>
+        /// Clears transactional store
+        /// </summary>
+        void Clear();
     }
 }

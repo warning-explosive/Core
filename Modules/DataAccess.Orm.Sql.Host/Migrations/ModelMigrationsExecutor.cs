@@ -25,6 +25,7 @@
     using Orm.Settings;
     using Reading;
     using Sql.Model;
+    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelMigrationsExecutor : IModelMigrationsExecutor,
@@ -141,6 +142,8 @@
                 _ = await transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
+
+                transaction.CollectChange(new ModelChange(commandText, settings, static (tran, text, s, t) => tran.InvokeScalar(text, s, t)));
             }
             catch (Exception exception)
             {

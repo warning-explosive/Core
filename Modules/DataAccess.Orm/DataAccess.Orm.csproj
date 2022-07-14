@@ -76,5 +76,8 @@
       <Compile Update="Transaction\DeleteEntityChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
+      <Compile Update="Transaction\ModelChange.cs">
+        <DependentUpon>TransactionalStore.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

@@ -62,19 +62,7 @@ jobs:
     - name: Build solution
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Run tests
-      run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:"trx;LogFileName=test-results.trx" --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
-    - name: Add tests report
-      if: ${{ success() || failure() }}
-      uses: dorny/test-reporter@v1
-      with:
-        name: test-report
-        path: '${{ env.TEST_RESULTS_PATH }}/test-results.trx'
-        reporter: 'dotnet-trx'
-        only-summary: 'false'
-        list-suites: 'all'
-        list-tests: 'all'
-        max-annotations: '10'
-        fail-on-error: 'true'
+      run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Add NuGet source

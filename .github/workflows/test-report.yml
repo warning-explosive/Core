@@ -1,0 +1,21 @@
+name: 'test-report'
+on:
+  workflow_run:
+    workflows: ['build-test-publish']
+    types:
+      - completed
+jobs:
+  test-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/test-reporter@v1
+        with:
+          artifact: test-results
+          name: test-report
+          path: '*.trx'
+          reporter: 'dotnet-trx'
+          only-summary: 'false'
+          list-suites: 'all'
+          list-tests: 'all'
+          max-annotations: '10'
+          fail-on-error: 'true'

@@ -14,6 +14,8 @@ on:
 env:
   DOT_NET_VERSION: 6.0.x
   GIT_VERSION_VERSION: 5.*
+  TEST_RESULTS_PATH: TEST_RESULTS
+  TEST_COVERAGE_PATH: TEST_COVERAGE
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
@@ -60,7 +62,18 @@ jobs:
     - name: Build solution
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Run tests
-      run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "TestResults" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../TestResults/Coverage/' /p:MergeWith='../../TestResults/Coverage/coverage.json'
+      run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:"trx;LogFileName=test-results.trx" --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
+    - name: Add tests report
+      if: ${{ always() }}
+      uses: dorny/test-reporter@v1
+      with:
+        path: '${{ env.TEST_RESULTS_PATH }}/test-results.trx'
+        reporter: 'dotnet-trx'
+        only-summary: 'false'
+        list-suites: 'all'
+        list-tests: 'all'
+        max-annotations: '10'
+        fail-on-error: 'true'
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Add NuGet source
@@ -76,8 +89,8 @@ jobs:
     - name: Generate coverage report
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
-        reports: 'TestResults/Coverage/coverage.opencover.xml'
-        targetdir: 'TestResults/Coverage'
+        reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
+        targetdir: '${{ env.TEST_COVERAGE_PATH }}'
         reporttypes: 'Html;Badges'
         verbosity: 'Info'
         tag: '${{ env.GitVersion_FullSemVer }}'
@@ -85,11 +98,11 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         fail_ci_if_error: true
-        files: ./TestResults/Coverage/coverage.opencover.xml
+        files: ./${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml
     - name: Upload test artifacts
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:
         name: test-results
-        path: TestResults
+        path: ${{ env.TEST_RESULTS_PATH }}
         if-no-files-found: error

@@ -64,9 +64,10 @@ jobs:
     - name: Run tests
       run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:"trx;LogFileName=test-results.trx" --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
     - name: Add tests report
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       uses: dorny/test-reporter@v1
       with:
+        name: test-report
         path: '${{ env.TEST_RESULTS_PATH }}/test-results.trx'
         reporter: 'dotnet-trx'
         only-summary: 'false'

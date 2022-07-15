@@ -44,7 +44,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer",
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected");
 
-        [Fact]
+        [SuppressMessage("Analysis", "xUnit1004", Justification = "#189")]
+        [Fact(Skip = "#189")]
         internal async Task AnalysisTest()
         {
             var analyzers = DependencyContainer

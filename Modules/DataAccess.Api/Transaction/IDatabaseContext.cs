@@ -31,7 +31,13 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>IRepository</returns>
         IRepository<TEntity, TKey> Write<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull;
+
+        /// <summary>
+        /// Gets access to IRepository so as to produce writes to database
+        /// </summary>
+        /// <returns>IRepository</returns>
+        IRepository Write();
     }
 }

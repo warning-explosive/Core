@@ -139,11 +139,17 @@
 
             try
             {
-                _ = await transaction
+                var affectedRowsCount = await transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
 
-                transaction.CollectChange(new ModelChange(commandText, settings, static (tran, text, s, t) => tran.InvokeScalar(text, s, t)));
+                var change = new ModelChange(
+                    commandText,
+                    affectedRowsCount,
+                    settings,
+                    static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
+
+                transaction.CollectChange(change);
             }
             catch (Exception exception)
             {

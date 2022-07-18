@@ -93,7 +93,7 @@
       <Compile Update="Translation\CollapseConstantsExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\EnumerableContainsMemberInfoTranslator.cs">
+      <Compile Update="Translation\ContainsMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\BinaryOperator.cs">

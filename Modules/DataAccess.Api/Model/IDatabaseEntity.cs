@@ -7,11 +7,10 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     public interface IDatabaseEntity<TKey> : IUniqueIdentified<TKey>
         where TKey : notnull
     {
-        /*TODO: #132 - historical entities*/
-        /*TODO: #133 - optimistic concurrency control*/
-        /*/// <summary>
+        /// <summary>
         /// Version
         /// </summary>
-        public long Version { get; }*/
+        /*TODO: #132 - historical entities*/
+        public long Version { get; }
     }
 }

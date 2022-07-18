@@ -67,7 +67,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                         && exceptionPredicate(eventArgs.Exception)
                         && predicate(eventArgs.Message))
                     {
-                        tcs.SetResult();
+                        _ = tcs.TrySetResult();
                     }
                 };
             }
@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                         && eventArgs.Message.Payload is TMessage message
                         && predicate(message))
                     {
-                        tcs.SetResult();
+                        _ = tcs.TrySetResult();
                     }
                 };
             }
@@ -125,7 +125,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                 {
                     if (predicate(eventArgs.Message))
                     {
-                        tcs.SetResult();
+                        _ = tcs.TrySetResult();
                     }
                 };
             }
@@ -151,7 +151,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                     if (eventArgs.Message.Payload is TMessage message
                         && predicate(message))
                     {
-                        tcs.SetResult();
+                        _ = tcs.TrySetResult();
                     }
                 };
             }

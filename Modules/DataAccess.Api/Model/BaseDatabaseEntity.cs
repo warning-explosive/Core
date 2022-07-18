@@ -21,12 +21,13 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
             PrimaryKey = primaryKey;
         }
 
-        /// <summary>
-        /// Primary key
-        /// </summary>
+        /// <inheritdoc />
         public TKey PrimaryKey { get; internal init; }
 
         object IUniqueIdentified.PrimaryKey => PrimaryKey;
+
+        /// <inheritdoc />
+        public long Version { get; internal init; }
 
         #region IEquatable
 
@@ -46,7 +47,8 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
         public bool SafeEquals(BaseDatabaseEntity<TKey> other)
         {
             return PrimaryKey.Equals(other.PrimaryKey)
-                   && GetType() == other.GetType();
+                && Version.Equals(other.Version)
+                && GetType() == other.GetType();
         }
 
         #endregion

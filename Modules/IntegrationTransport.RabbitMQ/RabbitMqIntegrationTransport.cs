@@ -777,7 +777,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             if (_outstandingConfirms.TryRemove(deliveryTag, out var tcs))
             {
-                tcs.SetResult(result);
+                _ = tcs.TrySetResult(result);
             }
         }
 

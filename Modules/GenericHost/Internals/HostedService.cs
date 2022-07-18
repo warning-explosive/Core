@@ -64,11 +64,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             catch (ObjectDisposedException)
             {
             }
-            finally
+
+            try
             {
-                _ = await Task
-                    .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
-                    .ConfigureAwait(false);
+                await Task
+                   .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
+                   .Unwrap()
+                   .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
             }
 
             _hostApplicationLifetime.StopApplication();

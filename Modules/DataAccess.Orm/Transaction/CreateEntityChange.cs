@@ -6,26 +6,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Persisting;
     using Api.Transaction;
 
-    internal class CreateEntityChange<TEntity, TKey> : ITransactionalChange
-        where TEntity : IUniqueIdentified<TKey>
-        where TKey : notnull
+    internal class CreateEntityChange : ITransactionalChange
     {
-        private readonly TEntity _entity;
+        private readonly IUniqueIdentified[] _entities;
         private readonly EnInsertBehavior _insertBehavior;
+        private readonly long _expectedAffectedRowsCount;
 
         public CreateEntityChange(
-            TEntity entity,
-            EnInsertBehavior insertBehavior)
+            IUniqueIdentified[] entities,
+            EnInsertBehavior insertBehavior,
+            long expectedAffectedRowsCount)
         {
-            _entity = entity;
+            _entities = entities;
             _insertBehavior = insertBehavior;
+            _expectedAffectedRowsCount = expectedAffectedRowsCount;
         }
 
-        public Task Apply(IDatabaseContext databaseContext, CancellationToken token)
+        public Task Apply(
+            IAdvancedDatabaseTransaction databaseTransaction,
+            CancellationToken token)
         {
-            return databaseContext
-               .Write<TEntity, TKey>()
-               .Insert(new[] { _entity }, _insertBehavior, token);
+            return databaseTransaction
+               .Write()
+               .Insert(_entities, _insertBehavior, token);
         }
     }
 }

@@ -164,7 +164,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             {
                 await databaseContext
                    .Write<InboxMessage, Guid>()
-                   .Update(new[] { inbox.PrimaryKey }, message => message.Handled, true, token)
+                   .Update(message => message.Handled,
+                        _ => true,
+                        message => message.PrimaryKey == inbox.PrimaryKey,
+                        token)
                    .ConfigureAwait(false);
             }
         }

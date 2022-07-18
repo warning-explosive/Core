@@ -81,9 +81,16 @@
             IntegrationMessage integrationMessage,
             CancellationToken token)
         {
+            var id = integrationMessage
+               .ReadRequiredHeader<Id>()
+               .Value;
+
             await transaction
                .Write<InboxMessage, Guid>()
-               .Update(new[] { integrationMessage.ReadRequiredHeader<Id>().Value }, message => message.IsError, true, token)
+               .Update(message => message.IsError,
+                    _ => true,
+                    message => message.PrimaryKey == id,
+                    token)
                .ConfigureAwait(false);
         }
 

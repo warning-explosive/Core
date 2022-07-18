@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
@@ -49,24 +50,41 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             _settingsProvider = settingsProvider;
         }
 
-        public async Task Insert(
+        public async Task<long> Insert(
             IUniqueIdentified[] entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
         {
             if (!entities.Any())
             {
-                return;
+                return default;
             }
 
             var settings = await _settingsProvider
                .Get(token)
                .ConfigureAwait(false);
 
+            var version = await _transaction
+               .GetXid(settings, token)
+               .ConfigureAwait(false);
+
             IReadOnlyDictionary<object, IUniqueIdentified> map = entities
                .SelectMany(entity => entity.Flatten(_modelProvider))
                .DistinctBy(GetKey)
                .ToDictionary(GetKey);
+
+            foreach (var entity in map.Values)
+            {
+                var type = entity.GetType();
+
+                if (!type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
+                {
+                    type
+                       .GetProperty(nameof(IDatabaseEntity<Guid>.Version), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty)
+                       .EnsureNotNull($"Database entity {type} should have column {nameof(IDatabaseEntity<Guid>.Version)}")
+                       .SetValue(entity, version);
+                }
+            }
 
             var commandText = map
                .Values
@@ -77,26 +95,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 
             try
             {
-                var version = await _transaction
-                   .GetXid(settings, token)
-                   .ConfigureAwait(false);
-
-                _ = await _transaction
+                var affectedRowsCount = await _transaction
                    .InvokeScalar(commandText, settings, token)
                    .ConfigureAwait(false);
 
-                foreach (var entity in entities)
-                {
-                    var entityType = entity.GetType();
+                var change = new CreateEntityChange(entities, insertBehavior, affectedRowsCount);
 
-                    var change = typeof(Repository)
-                       .CallMethod(nameof(CreateChange))
-                       .WithTypeArguments(entityType, entityType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
-                       .WithArguments(entity, version, insertBehavior)
-                       .Invoke<ITransactionalChange>();
+                _transaction.CollectChange(change);
 
-                    _transaction.CollectChange(change);
-                }
+                return affectedRowsCount;
             }
             catch (Exception exception)
             {
@@ -211,17 +218,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 Type = type,
                 PrimaryKey = primaryKey
             };
-        }
-
-        private static ITransactionalChange CreateChange<TEntity, TKey>(
-            TEntity entity,
-            long version,
-            EnInsertBehavior insertBehavior)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
-        {
-            // TODO: #133 - entity.Version = version;
-            return new CreateEntityChange<TEntity, TKey>(entity, insertBehavior);
         }
     }
 }

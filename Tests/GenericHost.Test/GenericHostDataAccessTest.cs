@@ -381,6 +381,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(IntegrationMessageHeader));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.Value)}", "not null");
@@ -389,6 +390,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), typeof(DatabaseDomainEvent));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Index), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Timestamp), "not null");
@@ -400,6 +402,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Blog));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.Theme), "not null");
                         AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                     },
@@ -407,6 +410,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Community));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.Name), "not null");
                         AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                     },
@@ -414,6 +418,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Participant));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.Name), "not null");
                         AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
                     },
@@ -421,12 +426,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(User));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.Nickname), "not null");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), typeof(AppliedMigration));
                         AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.Version), "not null");
                         AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.DateTime), "not null");
                         AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.CommandText), "not null");
                         AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.Name), "not null");
@@ -435,6 +442,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.Tracing), typeof(TracingEndpoint.DatabaseModel.IntegrationMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.MessageId), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.ConversationId), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.InitiatorMessageId), string.Empty);
@@ -446,6 +454,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(IntegrationMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessage.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessage.Payload)}_{nameof(JsonObject.Value)}", "not null");
@@ -455,6 +464,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Community)}_{nameof(Participant)}");
                         AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.PrimaryKey));
+                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.Version));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Community)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Participant)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                     },
@@ -462,7 +472,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Post));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.DateTime), "not null");
+                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                         AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Blog)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                     },
@@ -470,6 +482,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.Tracing), typeof(CapturedMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(CapturedMessage.Message)}_{nameof(CapturedMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.Tracing)}"".""{nameof(TracingEndpoint.DatabaseModel.IntegrationMessage)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.RefuseReason), string.Empty);
                     },
@@ -477,6 +490,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(InboxMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
@@ -487,6 +501,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateMtmTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}");
                         AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.PrimaryKey));
+                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.Version));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessageHeader)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                     },
@@ -494,6 +509,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(OutboxMessage));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Version), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.OutboxId), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Timestamp), "not null");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
@@ -505,6 +521,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Blog)}_{nameof(Post)}");
                         AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.PrimaryKey));
+                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity<Guid>.Version));
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Blog)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                         AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Post)}"" (""{nameof(IDatabaseEntity<Guid>.PrimaryKey)}"")");
                     },
@@ -865,13 +882,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new BackgroundOutboxDeliveryManualRegistration()
             };
 
-            var endpointOverridesList = new IComponentsOverride[]
+            var endpointOverrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
-
-            var endpointOverrides = endpointOverridesList.ToArray();
 
             var migrationOverrides = new IComponentsOverride[]
             {

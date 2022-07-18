@@ -31,9 +31,7 @@
 
             var sb = new StringBuilder();
 
-            sb.Append("(");
             sb.Append(sqlExpression);
-            sb.Append(")");
 
             return sb.ToString();
         }

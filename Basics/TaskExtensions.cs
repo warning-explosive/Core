@@ -31,13 +31,16 @@ namespace SpaceEngineers.Core.Basics
 
                 if (token.IsCancellationRequested)
                 {
-                    tcs.SetCanceled();
+                    _ = tcs.TrySetCanceled();
                     return;
                 }
 
                 using (token.Register(() => tcs.TrySetCanceled(token), useSynchronizationContext: false))
                 {
-                    await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+                    await Task
+                       .WhenAny(task, tcs.Task)
+                       .Unwrap()
+                       .ConfigureAwait(false);
                 }
             }
         }

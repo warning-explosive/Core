@@ -9,13 +9,13 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
     public interface ITransactionalChange
     {
         /// <summary>
-        /// Applies change
+        /// Applies transactional change
         /// </summary>
-        /// <param name="databaseContext">IDatabaseContext</param>
+        /// <param name="databaseTransaction">IAdvancedDatabaseTransaction</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Apply(
-            IDatabaseContext databaseContext,
+            IAdvancedDatabaseTransaction databaseTransaction,
             CancellationToken token);
     }
 }

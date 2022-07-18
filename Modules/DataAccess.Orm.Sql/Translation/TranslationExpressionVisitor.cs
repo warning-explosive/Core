@@ -370,7 +370,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            Context.WithinScope(Context.GetParameterExpression(node.Type), () => base.VisitParameter(node));
+            Context.WithinScope(Context.GetParameterExpression(node), () => base.VisitParameter(node));
 
             return node;
         }
@@ -462,7 +462,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private void BuildJoinExpression(TranslationContext context, MethodCallExpression node, Type itemType)
         {
-            var relations = TranslationContext.ExtractRelations(
+            var relations = context.ExtractRelations(
                 node.Arguments[0].Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>)),
                 node.Arguments[1],
                 _modelProvider);
@@ -540,7 +540,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var sourceExpression = node.Arguments[0];
 
-            var keyExpression = MakeSelectExpression(node, sourceExpression, sourceType, keyType, node.Arguments[1]);
+            var keyExpression = MakeSelectExpression(Context, node, sourceExpression, sourceType, keyType, node.Arguments[1]);
 
             var keyProjection = (ProjectionExpression)_translator.Translate(keyExpression);
             keyProjection.IsDistinct = true;
@@ -560,6 +560,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             Context.WithinScope(groupBy, () => Context.Apply(keyProjection));
 
             static MethodCallExpression MakeSelectExpression(
+                TranslationContext context,
                 MethodCallExpression node,
                 Expression sourceExpression,
                 Type sourceType,
@@ -569,10 +570,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return Expression.Call(null,
                     Select.MakeGenericMethod(sourceType, targetType),
                     sourceExpression,
-                    TranslationContext.ExtractLambdaExpression(node, selector));
+                    context.ExtractLambdaExpression(node, selector));
             }
 
             static MethodCallExpression MakeWhereExpression(
+                TranslationContext context,
                 MethodCallExpression node,
                 Expression sourceExpression,
                 Type sourceType,
@@ -581,7 +583,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return Expression.Call(null,
                     Where.MakeGenericMethod(sourceType),
                     sourceExpression,
-                    TranslationContext.ExtractLambdaExpression(node, selector));
+                    context.ExtractLambdaExpression(node, selector));
             }
 
             static LambdaExpression MakePredicate(
@@ -645,11 +647,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 {
                     var valuePredicate = MakePredicate(context, sourceType, keyProjection, keyValues);
 
-                    var valueExpression = MakeWhereExpression(node, sourceExpression, sourceType, valuePredicate);
+                    var valueExpression = MakeWhereExpression(context, node, sourceExpression, sourceType, valuePredicate);
 
                     if (isGroupBy3)
                     {
-                        valueExpression = MakeSelectExpression(node, valueExpression, sourceType, valueType, node.Arguments[2]);
+                        valueExpression = MakeSelectExpression(context, node, valueExpression, sourceType, valueType, node.Arguments[2]);
                     }
 
                     return translator.Translate(valueExpression);

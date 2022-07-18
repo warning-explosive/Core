@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
     [Component(EnLifestyle.Scoped)]
     internal class PrimaryKeyToEntityObjectTransformer<TEntity, TKey> : IObjectTransformer<TKey, TEntity>,
                                                                         IResolvable<IObjectTransformer<TKey, TEntity>>
-        where TEntity : IUniqueIdentified<TKey>
+        where TEntity : IDatabaseEntity<TKey>
         where TKey : notnull
     {
         private readonly IDatabaseContext _databaseContext;

@@ -104,10 +104,15 @@
         }
 
         public IRepository<TEntity, TKey> Write<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
             return _dependencyContainer.Resolve<IRepository<TEntity, TKey>>();
+        }
+
+        public IRepository Write()
+        {
+            return _dependencyContainer.Resolve<IRepository>();
         }
 
         public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)
@@ -193,6 +198,8 @@
         public void CollectChange(ITransactionalChange change)
         {
             // TODO: #133 - update transactional store
+            // TODO: #133 - transactional store update test
+            // TODO: #133 - optimistic concurrency test
             _changes.Add(change);
         }
 

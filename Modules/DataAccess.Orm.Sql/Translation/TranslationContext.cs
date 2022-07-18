@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics.Primitives;
     using Expressions;
     using Model;
-    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
     using ParameterExpression = Expressions.ParameterExpression;
 
     /// <summary>
@@ -20,28 +19,49 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     {
         internal const string QueryParameterFormat = "param_{0}";
 
+        private readonly Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression> _parameters;
+
         private int _queryParameterIndex;
         private int _lambdaParameterIndex;
-        private int _maxLambdaParameterIndex;
+        private int _lambdaParametersCount;
+
+        private IIntermediateExpression? _expression;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
-            _queryParameterIndex = 0;
-            _lambdaParameterIndex = 0;
+            _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>();
+
             Stack = new Stack<IIntermediateExpression>();
+
+            _queryParameterIndex = -1;
+            _lambdaParameterIndex = -1;
+            _lambdaParametersCount = 0;
         }
 
         /// <summary> .cctor </summary>
         /// <param name="context">TranslationContext</param>
-        internal TranslationContext(TranslationContext context)
+        protected TranslationContext(TranslationContext context)
         {
+            _parameters = context._parameters;
+
+            Stack = context.Stack;
+
             _queryParameterIndex = context._queryParameterIndex;
             _lambdaParameterIndex = context._lambdaParameterIndex;
-            Stack = context.Stack;
+            _lambdaParametersCount = context._lambdaParametersCount;
         }
 
-        internal IIntermediateExpression? Expression { get; private set; }
+        internal IIntermediateExpression? Expression
+        {
+            get => _expression;
+
+            private set
+            {
+                ReverseLambdaParametersNames();
+                _expression = value;
+            }
+        }
 
         internal IIntermediateExpression? Parent => Stack.TryPeek(out var parent) ? parent : default;
 
@@ -53,8 +73,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var copy = new TranslationContext
             {
                 Stack = new Stack<IIntermediateExpression>(Stack),
+
                 _queryParameterIndex = _queryParameterIndex,
-                _lambdaParameterIndex = _lambdaParameterIndex
+                _lambdaParameterIndex = _lambdaParameterIndex,
+                _lambdaParametersCount = _lambdaParametersCount
             };
 
             return copy;
@@ -72,7 +94,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <returns>Query parameter name</returns>
         public string NextQueryParameterName()
         {
-            return QueryParameterFormat.Format(_queryParameterIndex++);
+            return QueryParameterFormat.Format(++_queryParameterIndex);
         }
 
         /// <summary>
@@ -81,93 +103,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <returns>Lambda parameter name</returns>
         public Func<string> NextLambdaParameterName()
         {
-            var lambdaParameterIndex = _lambdaParameterIndex;
-            _lambdaParameterIndex++;
+            var capturedLambdaParameterIndex = ++_lambdaParameterIndex;
 
-            return () => (_maxLambdaParameterIndex - lambdaParameterIndex - 1).AlphabetIndex();
-        }
-
-        /// <summary>
-        /// Reverses lambda parameters names
-        /// </summary>
-        public void ReverseLambdaParametersNames()
-        {
-            _maxLambdaParameterIndex = _lambdaParameterIndex;
-        }
-
-        /// <summary>
-        /// Gets next parameter expression
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Parameter expression</returns>
-        public ParameterExpression NextParameterExpression(Type type)
-        {
-            return new ParameterExpression(this, type);
-        }
-
-        /// <summary>
-        /// Try get parameter expression
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Parameter expression was got successfully or not</returns>
-        public ParameterExpression GetParameterExpression(Type type)
-        {
-            var intermediateExpression = Stack
-                .FirstOrDefault(expression => expression is NamedSourceExpression or FilterExpression or ProjectionExpression or JoinExpression);
-
-            var namedSourceExpression = ExtractNamedSourceExpression(intermediateExpression, type);
-
-            var parameterExpression = namedSourceExpression?.Parameter as ParameterExpression;
-
-            return parameterExpression ?? new ParameterExpression(this, type);
-
-            static NamedSourceExpression? ExtractNamedSourceExpression(IIntermediateExpression? expression, Type type)
+            return () =>
             {
-                switch (expression)
-                {
-                    case NamedSourceExpression namedSourceExpression:
-                        return namedSourceExpression.Type == type
-                            ? namedSourceExpression
-                            : ExtractNamedSourceExpression(namedSourceExpression.Source, type);
-                    case FilterExpression filterExpression:
-                        return ExtractNamedSourceExpression(filterExpression.Source, type);
-                    case ProjectionExpression projectionExpression:
-                        return ExtractNamedSourceExpression(projectionExpression.Source, type);
-                    case JoinExpression joinExpression:
-                        return ExtractNamedSourceExpression(joinExpression.LeftSource, type)
-                               ?? ExtractNamedSourceExpression(joinExpression.RightSource, type);
-                    default:
-                        return default;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Try get projection expression
-        /// </summary>
-        /// <param name="intermediateExpression">IIntermediateExpression</param>
-        /// <returns>Projection expression was got successfully or not</returns>
-        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
-        public ProjectionExpression? GetProjectionExpression(IIntermediateExpression intermediateExpression)
-        {
-            return ExtractProjectionExpression(intermediateExpression);
-
-            static ProjectionExpression? ExtractProjectionExpression(IIntermediateExpression? expression)
-            {
-                switch (expression)
-                {
-                    case NamedSourceExpression namedSourceExpression:
-                        return ExtractProjectionExpression(namedSourceExpression.Source);
-                    case FilterExpression filterExpression:
-                        return ExtractProjectionExpression(filterExpression.Source);
-                    case ProjectionExpression projectionExpression:
-                        return projectionExpression;
-                    case JoinExpression:
-                        throw new InvalidOperationException("Ambiguous reference to join expression source");
-                    default:
-                        return default;
-                }
-            }
+                ReverseLambdaParametersNames();
+                return (_lambdaParametersCount - capturedLambdaParameterIndex - 1).AlphabetIndex();
+            };
         }
 
         internal void WithinScope<T>(T expression, Action? action = null)
@@ -212,7 +154,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        [SuppressMessage("Analysis", "CA1822", Justification = "desired instance method")]
+        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
         internal void WithinConditionalScope(
             bool condition,
             Action<Action?> conditionalAction,
@@ -258,7 +200,86 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal static IReadOnlyCollection<Relation> ExtractRelations(
+        internal ParameterExpression NextParameterExpression(Type type)
+        {
+            return new ParameterExpression(this, type);
+        }
+
+        internal ParameterExpression GetParameterExpression(System.Linq.Expressions.ParameterExpression parameterExpression)
+        {
+            return _parameters.GetOrAdd(parameterExpression, expression => GetParameterExpression(expression.Type));
+        }
+
+        internal ParameterExpression GetParameterExpression(Type type)
+        {
+            return ExtractNamedSourceParameterExpression(Stack, type)
+                ?? ExtractParameterExpression(_parameters, type)
+                ?? NextParameterExpression(type);
+
+            static ParameterExpression? ExtractNamedSourceParameterExpression(Stack<IIntermediateExpression> stack, Type type)
+            {
+                var intermediateExpression = stack
+                   .FirstOrDefault(expression => expression
+                        is NamedSourceExpression
+                        or FilterExpression
+                        or ProjectionExpression
+                        or JoinExpression);
+
+                var namedSourceExpression = ExtractNamedSourceExpression(intermediateExpression, type);
+
+                return namedSourceExpression?.Parameter as ParameterExpression;
+
+                static NamedSourceExpression? ExtractNamedSourceExpression(
+                    IIntermediateExpression? expression,
+                    Type type)
+                {
+                    switch (expression)
+                    {
+                        case NamedSourceExpression namedSourceExpression:
+                            return namedSourceExpression.Type == type
+                                ? namedSourceExpression
+                                : ExtractNamedSourceExpression(namedSourceExpression.Source, type);
+                        case FilterExpression filterExpression:
+                            return ExtractNamedSourceExpression(filterExpression.Source, type);
+                        case ProjectionExpression projectionExpression:
+                            return ExtractNamedSourceExpression(projectionExpression.Source, type);
+                        case JoinExpression joinExpression:
+                            return ExtractNamedSourceExpression(joinExpression.LeftSource, type)
+                                ?? ExtractNamedSourceExpression(joinExpression.RightSource, type);
+                        default:
+                            return default;
+                    }
+                }
+            }
+
+            static ParameterExpression? ExtractParameterExpression(
+                IReadOnlyDictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression> parameters,
+                Type type)
+            {
+                return parameters.SingleOrDefault(it => it.Key.Type == type).Value;
+            }
+        }
+
+        internal void ReverseLambdaParametersNames()
+        {
+            if (_lambdaParametersCount == 0)
+            {
+                _lambdaParametersCount = _lambdaParameterIndex + 1;
+            }
+        }
+
+        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
+        internal LambdaExpression ExtractLambdaExpression(
+            System.Linq.Expressions.MethodCallExpression node,
+            Expression selector)
+        {
+            return new ExtractLambdaExpressionVisitor()
+               .Extract(selector)
+               .EnsureNotNull(() => new NotSupportedException($"method: {node.Method}"));
+        }
+
+        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
+        internal IReadOnlyCollection<Relation> ExtractRelations(
             Type type,
             Expression node,
             IModelProvider modelProvider)
@@ -268,13 +289,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 : Array.Empty<Relation>();
         }
 
-        internal static LambdaExpression ExtractLambdaExpression(
-            MethodCallExpression node,
-            Expression selector)
+        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
+        internal ProjectionExpression? GetProjectionExpression(IIntermediateExpression intermediateExpression)
         {
-            return new ExtractLambdaExpressionVisitor()
-                .Extract(selector)
-                .EnsureNotNull(() => new NotSupportedException($"method: {node.Method}"));
+            return ExtractProjectionExpression(intermediateExpression);
+
+            static ProjectionExpression? ExtractProjectionExpression(IIntermediateExpression? expression)
+            {
+                switch (expression)
+                {
+                    case NamedSourceExpression namedSourceExpression:
+                        return ExtractProjectionExpression(namedSourceExpression.Source);
+                    case FilterExpression filterExpression:
+                        return ExtractProjectionExpression(filterExpression.Source);
+                    case ProjectionExpression projectionExpression:
+                        return projectionExpression;
+                    case JoinExpression:
+                        throw new InvalidOperationException("Ambiguous reference to join expression source");
+                    default:
+                        return default;
+                }
+            }
         }
     }
 }

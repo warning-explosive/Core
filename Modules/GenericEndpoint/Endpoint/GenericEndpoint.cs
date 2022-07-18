@@ -77,11 +77,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             catch (ObjectDisposedException)
             {
             }
-            finally
+
+            try
             {
                 await Task
-                    .WhenAny(_runningHandlers.Values.WhenAll(), Task.Delay(Timeout.InfiniteTimeSpan, token))
-                    .ConfigureAwait(false);
+                   .WhenAny(_runningHandlers.Values.WhenAll(), Task.Delay(Timeout.InfiniteTimeSpan, token))
+                   .Unwrap()
+                   .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
 

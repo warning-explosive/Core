@@ -76,6 +76,7 @@
 
                 await Task
                    .WhenAny(transportIsRunning, outboxDelivery)
+                   .Unwrap()
                    .ConfigureAwait(false);
             }
         }
@@ -156,7 +157,7 @@
                 {
                     if (args.CurrentStatus != EnIntegrationTransportStatus.Running)
                     {
-                        tcs.SetResult(default);
+                        _ = tcs.TrySetResult(default);
                     }
                 };
             }

@@ -45,6 +45,8 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.Equal(waitAll, actual);
 
+            await actual.ConfigureAwait(false);
+
             Assert.True(manualResetEvent.WaitAsync().IsCompleted);
 
             manualResetEvent.Reset();
@@ -64,6 +66,8 @@ namespace SpaceEngineers.Core.Basics.Test
             var actualAfterReset = await Task.WhenAny(waitAllAfterReset, Task.Delay(TestTimeout)).ConfigureAwait(false);
 
             Assert.Equal(waitAllAfterReset, actualAfterReset);
+
+            await actualAfterReset.ConfigureAwait(false);
         }
 
         [Theory]
@@ -85,6 +89,8 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Assert.Equal(timeout, actual);
 
+            await actual.ConfigureAwait(false);
+
             var range = isSet ? 2 : 3;
             Enumerable.Range(0, range).Each(_ => autoResetEvent.Set());
 
@@ -92,6 +98,9 @@ namespace SpaceEngineers.Core.Basics.Test
             actual = await Task.WhenAny(waitAll, timeout).ConfigureAwait(false);
 
             Assert.Equal(waitAll, actual);
+
+            await actual.ConfigureAwait(false);
+
             Assert.False(autoResetEvent.WaitAsync().IsCompleted);
         }
 

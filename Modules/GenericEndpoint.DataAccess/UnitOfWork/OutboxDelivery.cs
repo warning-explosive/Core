@@ -54,9 +54,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     }
                 }
 
+                if (!sent.Any())
+                {
+                    return;
+                }
+
                 await _transaction
                    .Write<OutboxMessage, Guid>()
-                   .Update(sent, outbox => outbox.Sent, true, token)
+                   .Update(outbox => outbox.Sent,
+                        _ => true,
+                        message => sent.Contains(message.PrimaryKey),
+                        token)
                    .ConfigureAwait(false);
             }
         }

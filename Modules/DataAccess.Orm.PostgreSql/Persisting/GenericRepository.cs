@@ -25,14 +25,13 @@
     [Component(EnLifestyle.Scoped)]
     internal class GenericRepository<TEntity, TKey> : IRepository<TEntity, TKey>,
                                                       IResolvable<IRepository<TEntity, TKey>>
-        where TEntity : IUniqueIdentified<TKey>
+        where TEntity : IDatabaseEntity<TKey>
         where TKey : notnull
     {
-        private const string UpdateValueQueryFormat = @"update ""{0}"".""{1}"" set {2} where ""PrimaryKey"" in {3}";
-        private const string DeleteValueQueryFormat = @"delete ""{0}"".""{1}"" where ""PrimaryKey"" in {2}";
-
+        private const string UpdateValueQueryFormat = @"update ""{0}"".""{1}"" a set {2} where {3}";
         private const string SetExpressionFormat = @"{0} = {1}";
-        private const string ColumnFormat = @"""{0}""";
+
+        private const string DeleteValueQueryFormat = @"delete ""{0}"".""{1}"" a where {2}";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IRepository _repository;
@@ -57,7 +56,7 @@
             _expressionTranslator = expressionTranslator;
         }
 
-        public Task Insert(
+        public Task<long> Insert(
             IReadOnlyCollection<TEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
@@ -68,26 +67,12 @@
                 token);
         }
 
-        public Task Update<TValue>(
-            IReadOnlyCollection<TKey> primaryKeys,
-            Expression<Func<TEntity, TValue>> accessor,
-            TValue value,
-            CancellationToken token)
-        {
-            return Update(primaryKeys, accessor, _ => value, token);
-        }
-
-        public async Task Update<TValue>(
-            IReadOnlyCollection<TKey> primaryKeys,
+        public async Task<long> Update<TValue>(
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
+            Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
-            if (!primaryKeys.Any())
-            {
-                return;
-            }
-
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
@@ -108,15 +93,27 @@
                 throw new NotSupportedException($"Unable to update multiple relation: {column.Name}");
             }
 
-            var valueExpression = _expressionTranslator
-                .Translate(valueProducer)
-                .Translate(_dependencyContainer, 0);
+            var columnExpression = @$"""{column.Name}""";
+
+            var valueIntermediateExpression = _expressionTranslator.Translate(valueProducer);
+
+            var valueExpression = InlineQueryParameters(
+                _dependencyContainer,
+                valueIntermediateExpression.Translate(_dependencyContainer, 0),
+                valueIntermediateExpression.ExtractQueryParameters());
+
+            var predicateIntermediateExpression = _expressionTranslator.Translate(predicate);
+
+            var predicateExpression = InlineQueryParameters(
+                _dependencyContainer,
+                predicateIntermediateExpression.Translate(_dependencyContainer, 0),
+                predicateIntermediateExpression.ExtractQueryParameters());
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
                 table.Name,
-                SetExpressionFormat.Format(ColumnFormat.Format(column.Name), valueExpression),
-                primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
+                SetExpressionFormat.Format(columnExpression, valueExpression),
+                predicateExpression);
 
             try
             {
@@ -124,14 +121,20 @@
                    .GetXid(settings, token)
                    .ConfigureAwait(false);
 
-                _ = await _transaction
+                var affectedRowsCount = await _transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
 
-                foreach (var primaryKey in primaryKeys)
-                {
-                    _transaction.CollectChange(new UpdateEntityChange<TEntity, TKey, TValue>(primaryKey, version, accessor, valueProducer));
-                }
+                var change = new UpdateEntityChange<TEntity, TKey, TValue>(
+                    version,
+                    affectedRowsCount,
+                    accessor,
+                    valueProducer,
+                    predicate);
+
+                _transaction.CollectChange(change);
+
+                return affectedRowsCount;
             }
             catch (Exception exception)
             {
@@ -139,16 +142,11 @@
             }
         }
 
-        public async Task Delete(
-            IReadOnlyCollection<TKey> primaryKeys,
+        public async Task<long> Delete(
+            Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
             // TODO: #178 - add delete behaviors
-            if (!primaryKeys.Any())
-            {
-                return;
-            }
-
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
@@ -156,10 +154,17 @@
             var type = typeof(TEntity);
             var table = _modelProvider.Tables[type];
 
+            var predicateIntermediateExpression = _expressionTranslator.Translate(predicate);
+
+            var predicateExpression = InlineQueryParameters(
+                _dependencyContainer,
+                predicateIntermediateExpression.Translate(_dependencyContainer, 0),
+                predicateIntermediateExpression.ExtractQueryParameters());
+
             var commandText = DeleteValueQueryFormat.Format(
                 table.Type,
                 table.Name,
-                primaryKeys.QueryParameterSqlExpression(_dependencyContainer));
+                predicateExpression);
 
             try
             {
@@ -167,19 +172,41 @@
                    .GetXid(settings, token)
                    .ConfigureAwait(false);
 
-                _ = await _transaction
+                var affectedRowsCount = await _transaction
                     .InvokeScalar(commandText, settings, token)
                     .ConfigureAwait(false);
 
-                foreach (var primaryKey in primaryKeys)
-                {
-                    _transaction.CollectChange(new DeleteEntityChange<TEntity, TKey>(primaryKey, version));
-                }
+                var change = new DeleteEntityChange<TEntity, TKey>(
+                    predicate,
+                    version,
+                    affectedRowsCount);
+
+                _transaction.CollectChange(change);
+
+                return affectedRowsCount;
             }
             catch (Exception exception)
             {
                 throw new InvalidOperationException(commandText, exception);
             }
+        }
+
+        private static string InlineQueryParameters(
+            IDependencyContainer dependencyContainer,
+            string query,
+            IReadOnlyDictionary<string, object?> queryParameters)
+        {
+            foreach (var (name, value) in queryParameters)
+            {
+                if (!query.Contains($"@{name}", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                query = query.Replace($"@{name}", value.QueryParameterSqlExpression(dependencyContainer), StringComparison.OrdinalIgnoreCase);
+            }
+
+            return query;
         }
     }
 }

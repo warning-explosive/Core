@@ -89,11 +89,6 @@
         /// 00:00:00 to 24:00:00
         /// 1 microsecond resolution
         /// </summary>
-        Time,
-
-        /// <summary>
-        /// transaction id (xid)
-        /// </summary>
-        Xid
+        Time
     }
 }

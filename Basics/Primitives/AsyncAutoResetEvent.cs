@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             if (_waits.TryDequeue(out var toRelease))
             {
-                toRelease.SetResult(true);
+                _ = toRelease.TrySetResult(true);
             }
             else
             {
@@ -71,7 +71,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         private static TaskCompletionSource<TResult> CreateCompletedCompletionSource<TResult>(TResult result)
         {
             var tcs = CreateCompletionSource<TResult>();
-            tcs.SetResult(result);
+            _ = tcs.TrySetResult(result);
             return tcs;
         }
     }

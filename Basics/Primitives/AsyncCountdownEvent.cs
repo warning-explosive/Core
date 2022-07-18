@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
                 if (result <= 0)
                 {
-                    _tcs.SetResult(true);
+                    _ = _tcs.TrySetResult(true);
                 }
 
                 return result;

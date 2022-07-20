@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
-    [ManuallyRegisteredComponent("We need register instance of this class so as to collect and assert messages inside test")]
+    [ManuallyRegisteredComponent(nameof(RunHostTest))]
     internal class TestMessagesCollector : IResolvable<TestMessagesCollector>
     {
         public TestMessagesCollector(IIntegrationTransport integrationTransport)

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Implementations
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Xml.Linq;
     using Abstractions;
@@ -43,15 +44,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 .Flatten(node => node.ChildNodesAndTokens())
                 .SelectMany(node => node.GetLeadingTrivia().Concat(node.GetTrailingTrivia()))
                 .Where(trivia => trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
-                .Select(trivia =>
-                {
-                    if (TryGetAlias(trivia.ToFullString(), out var content))
-                    {
-                        return (content, trivia.Span);
-                    }
-
-                    return default;
-                })
+                .Select(trivia => TryGetAlias(trivia.ToFullString(), out var content)
+                    ? (content, trivia.Span)
+                    : default)
                 .Where(pair => pair != default)
                 .ToList();
 
@@ -65,33 +60,30 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             return false;
         }
 
-        private static bool TryGetAlias(string comment, out string content)
+        private static bool TryGetAlias(string comment, [NotNullWhen(true)] out string? content)
         {
-            content = string.Empty;
+            content = ExecutionExtensions
+               .Try(comment, GetAlias)
+               .Catch<System.Xml.XmlException>()
+               .Invoke(_ => default);
 
-            try
+            return content != default;
+        }
+
+        private static string? GetAlias(string comment)
+        {
+            var element = XElement.Parse(comment.Trim('/').Trim('*').Trim());
+
+            if (element.Name != Conventions.Analyzer)
             {
-                var element = XElement.Parse(comment.Trim('/').Trim('*').Trim());
-
-                if (element.Name != Conventions.Analyzer)
-                {
-                    return false;
-                }
-
-                var analyzerName = element.Attribute(Conventions.NameAttribute)?.Value;
-
-                if (analyzerName.IsNullOrEmpty())
-                {
-                    return false;
-                }
-
-                content = element.Value;
-                return true;
+                return default;
             }
-            catch (System.Xml.XmlException)
-            {
-                return false;
-            }
+
+            var analyzerName = element.Attribute(Conventions.NameAttribute)?.Value;
+
+            return analyzerName.IsNullOrEmpty()
+                ? default
+                : element.Value;
         }
     }
 }

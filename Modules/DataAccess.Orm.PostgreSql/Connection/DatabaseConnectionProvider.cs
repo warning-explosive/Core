@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Exceptions;
     using CrossCuttingConcerns.Settings;
+    using Extensions;
     using Npgsql;
     using Orm.Connection;
     using Sql.Settings;
@@ -44,7 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return ExecutionExtensions
                 .TryAsync(DoesDatabaseExistUnsafe)
                 .Catch<PostgresException>()
-                .Invoke(DatabaseDoesNotExist, token);
+                .Invoke(static (exception, _) => Task.FromResult(!exception.DatabaseDoesNotExist()), token);
         }
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
@@ -100,14 +101,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             {
                 return true;
             }
-        }
-
-        private static Task<bool> DatabaseDoesNotExist(Exception exception, CancellationToken token)
-        {
-            return exception is PostgresException postgresException
-                && postgresException.SqlState.Equals(PostgresErrorCodes.InvalidCatalogName, StringComparison.OrdinalIgnoreCase)
-                ? Task.FromResult(false)
-                : Task.FromResult(true);
         }
     }
 }

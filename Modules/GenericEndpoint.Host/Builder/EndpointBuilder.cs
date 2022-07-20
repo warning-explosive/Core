@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     using DataAccess.BackgroundWorkers;
     using GenericHost.Api.Abstractions;
     using Overrides;
+    using Registrations;
 
     internal class EndpointBuilder : IEndpointBuilder
     {
@@ -50,10 +51,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         public IEndpointBuilder WithTracing()
         {
-            var genericEndpointTracingAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Tracing)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.Tracing)));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
-               .Concat(new[] { genericEndpointTracingAssembly })
+               .Concat(new[] { assembly })
                .ToList();
 
             return this;
@@ -61,21 +62,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         public IEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider)
         {
-            var genericEndpointDataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
-            var dataAccessModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithOverrides(new DataAccessOverride()));
-            var backgroundWorkerProducer = new Func<IDependencyContainer, IHostBackgroundWorker>(dependencyContainer => new GenericEndpointDataAccessHostBackgroundWorker(dependencyContainer));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericEndpoint), nameof(Core.GenericEndpoint.DataAccess)));
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(new DatabaseProviderManualRegistration(databaseProvider)).WithOverrides(new DataAccessOverride()));
+            var backgroundWorker = new Func<IDependencyContainer, IHostBackgroundWorker>(dependencyContainer => new GenericEndpointDataAccessHostBackgroundWorker(dependencyContainer));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
-               .Concat(new[] { genericEndpointDataAccessAssembly })
+               .Concat(new[] { assembly })
                .Concat(databaseProvider.Implementation())
                .ToList();
 
             Modifiers = Modifiers
-               .Concat(new[] { dataAccessModifier })
+               .Concat(new[] { modifier })
                .ToList();
 
             BackgroundWorkers = BackgroundWorkers
-               .Concat(new[] { backgroundWorkerProducer })
+               .Concat(new[] { backgroundWorker })
                .ToList();
 
             return this;

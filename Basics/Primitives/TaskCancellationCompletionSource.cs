@@ -17,9 +17,14 @@ namespace SpaceEngineers.Core.Basics.Primitives
         public TaskCancellationCompletionSource(CancellationToken token)
             : base(TaskCreationOptions.RunContinuationsAsynchronously)
         {
+            if (!token.CanBeCanceled)
+            {
+                throw new InvalidOperationException("Cancellation token can't be in cancelled state");
+            }
+
             if (token.IsCancellationRequested)
             {
-                SetCanceled();
+                _ = TrySetCanceled();
                 return;
             }
 

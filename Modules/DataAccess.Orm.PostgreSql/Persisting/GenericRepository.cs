@@ -15,6 +15,8 @@
     using Basics;
     using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
+    using DataAccess.Orm.Extensions;
+    using Orm.Connection;
     using Settings;
     using Sql.Extensions;
     using Sql.Model;
@@ -31,7 +33,7 @@
         private const string UpdateValueQueryFormat = @"update ""{0}"".""{1}"" a set {2} where {3}";
         private const string SetExpressionFormat = @"{0} = {1}";
 
-        private const string DeleteValueQueryFormat = @"delete ""{0}"".""{1}"" a where {2}";
+        private const string DeleteValueQueryFormat = @"delete from ""{0}"".""{1}"" a where {2}";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IRepository _repository;
@@ -39,6 +41,7 @@
         private readonly IModelProvider _modelProvider;
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IExpressionTranslator _expressionTranslator;
+        private readonly IDatabaseProvider _databaseProvider;
 
         public GenericRepository(
             IDependencyContainer dependencyContainer,
@@ -46,7 +49,8 @@
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
             IAdvancedDatabaseTransaction transaction,
-            IExpressionTranslator expressionTranslator)
+            IExpressionTranslator expressionTranslator,
+            IDatabaseProvider databaseProvider)
         {
             _dependencyContainer = dependencyContainer;
             _repository = repository;
@@ -54,6 +58,7 @@
             _modelProvider = modelProvider;
             _transaction = transaction;
             _expressionTranslator = expressionTranslator;
+            _databaseProvider = databaseProvider;
         }
 
         public Task<long> Insert(
@@ -67,9 +72,22 @@
                 token);
         }
 
-        public async Task<long> Update<TValue>(
+        public Task<long> Update<TValue>(
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken token)
+        {
+            return Update(new[] { new UpdateInfo<TEntity, TKey>(Lift(accessor), Lift(valueProducer)) }, predicate, token);
+
+            static Expression<Func<TEntity, object?>> Lift(Expression<Func<TEntity, TValue>> expression)
+            {
+                return Expression.Lambda<Func<TEntity, object?>>(Expression.Convert(expression.Body, typeof(object)), expression.Parameters);
+            }
+        }
+
+        public async Task<long> Update(
+            IReadOnlyCollection<UpdateInfo<TEntity, TKey>> infos,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
@@ -80,27 +98,34 @@
             var type = typeof(TEntity);
             var table = _modelProvider.Tables[type];
 
-            var visitor = new ExtractMemberChainExpressionVisitor();
-            _ = visitor.Visit(accessor);
+            var setExpressions = new List<string>(infos.Count);
 
-            var column = new ColumnInfo(
-                table,
-                visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
-                _modelProvider);
-
-            if (column.IsMultipleRelation)
+            foreach (var info in infos)
             {
-                throw new NotSupportedException($"Unable to update multiple relation: {column.Name}");
+                var visitor = new ExtractMemberChainExpressionVisitor();
+                _ = visitor.Visit(info.Accessor);
+
+                var column = new ColumnInfo(
+                    table,
+                    visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
+                    _modelProvider);
+
+                if (column.IsMultipleRelation)
+                {
+                    throw new NotSupportedException($"Unable to update multiple relation: {column.Name}");
+                }
+
+                var columnExpression = @$"""{column.Name}""";
+
+                var valueIntermediateExpression = _expressionTranslator.Translate(info.ValueProducer);
+
+                var valueExpression = InlineQueryParameters(
+                    _dependencyContainer,
+                    valueIntermediateExpression.Translate(_dependencyContainer, 0),
+                    valueIntermediateExpression.ExtractQueryParameters());
+
+                setExpressions.Add(SetExpressionFormat.Format(columnExpression, valueExpression));
             }
-
-            var columnExpression = @$"""{column.Name}""";
-
-            var valueIntermediateExpression = _expressionTranslator.Translate(valueProducer);
-
-            var valueExpression = InlineQueryParameters(
-                _dependencyContainer,
-                valueIntermediateExpression.Translate(_dependencyContainer, 0),
-                valueIntermediateExpression.ExtractQueryParameters());
 
             var predicateIntermediateExpression = _expressionTranslator.Translate(predicate);
 
@@ -112,34 +137,28 @@
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
                 table.Name,
-                SetExpressionFormat.Format(columnExpression, valueExpression),
+                string.Join(", ", setExpressions),
                 predicateExpression);
 
-            try
-            {
-                var version = await _transaction
-                   .GetXid(settings, token)
-                   .ConfigureAwait(false);
+            var version = await _transaction
+               .GetXid(settings, token)
+               .ConfigureAwait(false);
 
-                var affectedRowsCount = await _transaction
-                    .InvokeScalar(commandText, settings, token)
-                    .ConfigureAwait(false);
+            var affectedRowsCount = await ExecutionExtensions
+               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .ConfigureAwait(false);
 
-                var change = new UpdateEntityChange<TEntity, TKey, TValue>(
-                    version,
-                    affectedRowsCount,
-                    accessor,
-                    valueProducer,
-                    predicate);
+            var change = new UpdateEntityChange<TEntity, TKey>(
+                version,
+                affectedRowsCount,
+                infos,
+                predicate);
 
-                _transaction.CollectChange(change);
+            _transaction.CollectChange(change);
 
-                return affectedRowsCount;
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            return affectedRowsCount;
         }
 
         public async Task<long> Delete(
@@ -162,33 +181,28 @@
                 predicateIntermediateExpression.ExtractQueryParameters());
 
             var commandText = DeleteValueQueryFormat.Format(
-                table.Type,
+                table.Schema,
                 table.Name,
                 predicateExpression);
 
-            try
-            {
-                var version = await _transaction
-                   .GetXid(settings, token)
-                   .ConfigureAwait(false);
+            var version = await _transaction
+               .GetXid(settings, token)
+               .ConfigureAwait(false);
 
-                var affectedRowsCount = await _transaction
-                    .InvokeScalar(commandText, settings, token)
-                    .ConfigureAwait(false);
+            var affectedRowsCount = await ExecutionExtensions
+               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .ConfigureAwait(false);
 
-                var change = new DeleteEntityChange<TEntity, TKey>(
-                    predicate,
-                    version,
-                    affectedRowsCount);
+            var change = new DeleteEntityChange<TEntity, TKey>(
+                predicate,
+                version,
+                affectedRowsCount);
 
-                _transaction.CollectChange(change);
+            _transaction.CollectChange(change);
 
-                return affectedRowsCount;
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            return affectedRowsCount;
         }
 
         private static string InlineQueryParameters(

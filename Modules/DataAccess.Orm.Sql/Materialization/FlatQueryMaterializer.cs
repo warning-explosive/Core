@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Api.Abstractions;
+    using Connection;
     using CrossCuttingConcerns.ObjectBuilder;
     using CrossCuttingConcerns.Settings;
     using Extensions;
@@ -33,19 +34,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
+        private readonly IDatabaseProvider _databaseProvider;
 
         public FlatQueryMaterializer(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
-            IObjectBuilder objectBuilder)
+            IObjectBuilder objectBuilder,
+            IDatabaseProvider databaseProvider)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _transaction = transaction;
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
+            _databaseProvider = databaseProvider;
         }
 
         public Task<T> MaterializeScalar(FlatQuery query, CancellationToken token)
@@ -86,16 +90,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var commandText = InlineQueryParameters(_dependencyContainer, query);
 
-            try
-            {
-                return await _transaction
-                    .Invoke(commandText, settings, token)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            return await ExecutionExtensions
+               .TryAsync((commandText, settings), _transaction.Invoke)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<IEnumerable<dynamic>>(commandText), token)
+               .ConfigureAwait(false);
 
             static string InlineQueryParameters(
                 IDependencyContainer dependencyContainer,

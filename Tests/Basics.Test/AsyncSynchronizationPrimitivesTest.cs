@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Primitives;
     using Xunit;
@@ -19,6 +20,48 @@ namespace SpaceEngineers.Core.Basics.Test
         public AsyncSynchronizationPrimitivesTest(ITestOutputHelper output)
             : base(output)
         {
+        }
+
+        [Fact]
+        internal async Task TaskCancellationCompletionSourceTest()
+        {
+            try
+            {
+                using (var cts = new CancellationTokenSource())
+                using (var tcs = new TaskCancellationCompletionSource<object?>(cts.Token))
+                {
+                    cts.Cancel();
+                    await tcs.Task.ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            Assert.True(false);
+        }
+
+        [Fact]
+        internal async Task WaitAsyncCancellationTest()
+        {
+            try
+            {
+                using (var cts = new CancellationTokenSource())
+                {
+                    var tcs = new TaskCompletionSource<object?>();
+                    var task = Basics.TaskExtensions.WaitAsync(tcs.Task, cts.Token);
+
+                    cts.Cancel();
+                    await task.ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            Assert.True(false);
         }
 
         [Theory]

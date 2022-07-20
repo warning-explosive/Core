@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
         private readonly DeferredQueue<IntegrationMessage> _delayedDeliveryQueue;
         private readonly IEndpointInstanceSelectionBehavior _instanceSelectionBehavior;
 
-        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>>> _topology;
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>> _topology;
         private readonly ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>> _errorMessageHandlers;
 
         private EnIntegrationTransportStatus _status;
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
             _instanceSelectionBehavior = instanceSelectionBehavior;
 
-            _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>>>();
+            _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>>();
             _errorMessageHandlers = new ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>>();
         }
 
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
         public void Bind(
             EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+            Func<IntegrationMessage, Task> messageHandler,
             IIntegrationTypeProvider integrationTypeProvider)
         {
             BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointCommands(), _topology);
@@ -85,17 +85,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
             static void BindTopology(
                 EndpointIdentity endpointIdentity,
-                Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+                Func<IntegrationMessage, Task> messageHandler,
                 IReadOnlyCollection<Type> messageTypes,
-                ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>>> topology)
+                ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>> topology)
             {
                 foreach (var source in messageTypes)
                 {
                     foreach (var destination in source.IncludedTypes().Where(messageTypes.Contains))
                     {
-                        var contravariantGroup = topology.GetOrAdd(source, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>>());
-                        var logicalGroup = contravariantGroup.GetOrAdd(destination, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>>(StringComparer.OrdinalIgnoreCase));
-                        var physicalGroup = logicalGroup.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>());
+                        var contravariantGroup = topology.GetOrAdd(source, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>());
+                        var logicalGroup = contravariantGroup.GetOrAdd(destination, _ => new ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>(StringComparer.OrdinalIgnoreCase));
+                        var physicalGroup = logicalGroup.GetOrAdd(endpointIdentity.LogicalName, _ => new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>());
                         physicalGroup.Add(endpointIdentity, messageHandler);
                     }
                 }
@@ -209,7 +209,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                               {
                                   var copy = message.ContravariantClone(reflectedType);
                                   MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(copy, default));
-                                  return messageHandler.Invoke(copy, token);
+                                  return messageHandler.Invoke(copy);
                               });
                           });
                    })

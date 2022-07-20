@@ -78,5 +78,8 @@
       <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
         <DependentUpon>IDatabaseTransactionStore.cs</DependentUpon>
       </Compile>
+      <Compile Update="Exceptions\DatabaseConcurrentUpdateException.cs">
+        <DependentUpon>DatabaseException.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

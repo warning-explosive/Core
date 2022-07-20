@@ -70,7 +70,15 @@
                     switch (_connection?.UnderlyingDbConnection.State)
                     {
                         case ConnectionState.Connecting:
-                            Task.Delay(TimeSpan.FromMilliseconds(50));
+                            try
+                            {
+                                Task.Delay(TimeSpan.FromMilliseconds(50)).Wait();
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                break;
+                            }
+
                             continue;
                         case ConnectionState.Open:
                         case ConnectionState.Executing:

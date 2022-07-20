@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <param name="integrationTypeProvider">IIntegrationTypeProvider</param>
         public void Bind(
             EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+            Func<IntegrationMessage, Task> messageHandler,
             IIntegrationTypeProvider integrationTypeProvider);
 
         /// <summary>

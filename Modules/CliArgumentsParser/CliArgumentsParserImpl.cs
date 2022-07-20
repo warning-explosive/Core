@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
@@ -59,21 +60,15 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         }
 
         /// <inheritdoc />
-        public bool TryParse<T>(string[] args, out T? arguments)
+        public bool TryParse<T>(string[] args, [NotNullWhen(true)] out T? arguments)
             where T : class, new()
         {
-            arguments = default;
+            arguments = ExecutionExtensions
+               .Try(args, a => (T?)Parse<T>(a))
+               .Catch<ArgumentException>()
+               .Invoke(_ => default);
 
-            try
-            {
-                arguments = Parse<T>(args);
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-
-            return true;
+            return arguments != default;
         }
 
         private static Dictionary<string, string?> Init(string[] args)

@@ -5,7 +5,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading.Tasks;
     using Api.Persisting;
     using Api.Transaction;
+    using Basics;
     using CompositionRoot.Api.Abstractions;
+    using Connection;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Model;
@@ -21,16 +23,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
+        private readonly IDatabaseProvider _databaseProvider;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <param name="settingsProvider">Orm setting provider</param>
+        /// <param name="databaseProvider">IDatabaseProvider</param>
         protected BaseSqlManualMigration(
             IDependencyContainer dependencyContainer,
-            ISettingsProvider<OrmSettings> settingsProvider)
+            ISettingsProvider<OrmSettings> settingsProvider,
+            IDatabaseProvider databaseProvider)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
+            _databaseProvider = databaseProvider;
         }
 
         /// <summary>
@@ -62,24 +68,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             var manualMigration = Name;
             var commandText = CommandText;
 
-            try
-            {
-                var affectedRowsCount = await transaction
-                   .InvokeScalar(commandText, settings, token)
-                   .ConfigureAwait(false);
+            var affectedRowsCount = await ExecutionExtensions
+               .TryAsync((commandText, settings), transaction.InvokeScalar)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .ConfigureAwait(false);
 
-                var change = new ModelChange(
-                    commandText,
-                    affectedRowsCount,
-                    settings,
-                    static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
+            var change = new ModelChange(
+                commandText,
+                affectedRowsCount,
+                settings,
+                static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
 
-                transaction.CollectChange(change);
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            transaction.CollectChange(change);
 
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),

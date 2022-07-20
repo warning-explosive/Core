@@ -6,12 +6,12 @@
     public enum BinaryOperator
     {
         /// <summary>
-        /// Equal
+        /// Equal (==)
         /// </summary>
         Equal,
 
         /// <summary>
-        /// NotEqual
+        /// NotEqual (!=)
         /// </summary>
         NotEqual,
 
@@ -36,33 +36,58 @@
         LessThanOrEqual,
 
         /// <summary>
-        /// AndAlso
+        /// AndAlso (and)
         /// </summary>
         AndAlso,
 
         /// <summary>
-        /// OrElse
+        /// OrElse (or)
         /// </summary>
         OrElse,
 
         /// <summary>
-        /// ExclusiveOr
+        /// ExclusiveOr (^)
         /// </summary>
         ExclusiveOr,
 
         /// <summary>
-        /// Coalesce
+        /// Coalesce (??)
         /// </summary>
         Coalesce,
 
         /// <summary>
-        /// Contains
+        /// Contains (sql in)
         /// </summary>
         Contains,
 
         /// <summary>
-        /// Like
+        /// Like (sql like)
         /// </summary>
-        Like
+        Like,
+
+        /// <summary>
+        /// Add (a + b)
+        /// </summary>
+        Add,
+
+        /// <summary>
+        /// Subtract (a - b)
+        /// </summary>
+        Subtract,
+
+        /// <summary>
+        /// Divide (a / b)
+        /// </summary>
+        Divide,
+
+        /// <summary>
+        /// Multiply (a * b)
+        /// </summary>
+        Multiply,
+
+        /// <summary>
+        /// Modulo (a % b)
+        /// </summary>
+        Modulo
     }
 }

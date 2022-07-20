@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.CliArgumentsParser
 {
+    using System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// Cli arguments parser service
     /// </summary>
@@ -21,7 +23,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         /// <param name="arguments">Out typed cli args instance</param>
         /// <typeparam name="T">Cli args type-argument</typeparam>
         /// <returns>True - parse success / False - parse failure</returns>
-        bool TryParse<T>(string[] args, out T? arguments)
+        bool TryParse<T>(string[] args, [NotNullWhen(true)] out T? arguments)
             where T : class, new();
     }
 }

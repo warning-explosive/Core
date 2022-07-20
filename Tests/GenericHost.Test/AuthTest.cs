@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
@@ -13,12 +14,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using AuthorizationEndpoint.JwtAuthentication;
     using Basics;
     using CompositionRoot.Api.Abstractions.Registration;
+    using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Host;
+    using DataAccess.Orm.Sql.Settings;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.EventSourcing;
+    using GenericEndpoint.Host;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -34,7 +40,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Xunit.Abstractions;
 
     /// <summary>
-    /// WebAuth assembly tests
+    /// AuthTest
     /// </summary>
     [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
     public class AuthTest : TestBase
@@ -45,18 +51,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
         public AuthTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
-        }
-
-        /// <summary>
-        /// databaseProvider
-        /// </summary>
-        /// <returns>DatabaseProviders</returns>
-        public static IEnumerable<IDatabaseProvider> DatabaseProviders()
-        {
-            return new IDatabaseProvider[]
-            {
-                new PostgreSqlDatabaseProvider()
-            };
         }
 
         /// <summary>
@@ -75,8 +69,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (test, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
@@ -84,12 +78,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
                            .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (test, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
@@ -97,8 +92,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
                            .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -107,14 +103,27 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 useRabbitMqIntegrationTransport
             };
 
+            var databaseProviders = new IDatabaseProvider[]
+            {
+                new PostgreSqlDatabaseProvider()
+            };
+
+            var isolationLevels = new[]
+            {
+                IsolationLevel.Snapshot,
+                IsolationLevel.ReadCommitted
+            };
+
             return integrationTransportProviders
-               .SelectMany(useTransport => DatabaseProviders()
-                   .Select(databaseProvider => new object[]
-                   {
-                       useTransport,
-                       databaseProvider,
-                       timeout
-                   }));
+               .SelectMany(useTransport => databaseProviders
+                   .SelectMany(databaseProvider => isolationLevels
+                       .Select(isolationLevel => new object[]
+                       {
+                           useTransport,
+                           databaseProvider,
+                           isolationLevel,
+                           timeout
+                       })));
         }
 
         [Fact]
@@ -156,50 +165,85 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task AuthorizeUserTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
+            IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
+            Output.WriteLine(databaseProvider.GetType().FullName);
+            Output.WriteLine(isolationLevel.ToString());
+
             var logger = Fixture.CreateLogger(Output);
+
+            var settingsScope = nameof(AuthorizeUserTest);
+            var virtualHost = settingsScope + isolationLevel;
 
             var manualMigrations = new[]
             {
                 typeof(RecreatePostgreSqlDatabaseManualMigration)
             };
 
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new IsolationLevelManualRegistration(isolationLevel)
+            };
+
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(AuthorizeUserTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(AuthorizeUserTest),
+                    settingsScope,
+                    isolationLevel,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseAuthorizationEndpoint(0, builder => builder
                    .WithDataAccess(databaseProvider)
                    .WithTracing()
-                   .ModifyContainerOptions(options => options.WithOverrides(overrides))
+                   .ModifyContainerOptions(options => options
+                       .WithManualRegistrations(manualRegistrations)
+                       .WithOverrides(overrides))
                    .BuildOptions())
                .UseTracingEndpoint(0, builder => builder
                    .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options.WithOverrides(overrides))
+                   .ModifyContainerOptions(options => options
+                       .WithManualRegistrations(manualRegistrations)
+                       .WithOverrides(overrides))
                    .BuildOptions())
                .ExecuteMigrations(builder => builder
                    .WithDataAccess(databaseProvider)
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(manualMigrations)
+                       .WithManualRegistrations(manualRegistrations)
                        .WithOverrides(overrides))
                    .BuildOptions())
                .BuildHost();
 
             var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var endpointDependencyContainer = host.GetEndpointDependencyContainer(new EndpointIdentity(AuthorizationEndpointIdentity.LogicalName, 0));
             var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var sqlDatabaseSettings = await endpointDependencyContainer
+                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
@@ -288,6 +332,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 Assert.Empty(authorizationResult.Details);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
     }

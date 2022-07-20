@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
-    [ManuallyRegisteredComponent(nameof(DataAccess))]
+    [ManuallyRegisteredComponent(nameof(TranslationTest))]
     internal class QueryProviderDecorator : IQueryProvider,
                                             IDecorator<IQueryProvider>
     {

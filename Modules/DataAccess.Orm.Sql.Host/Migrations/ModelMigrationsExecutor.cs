@@ -38,17 +38,20 @@
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IModelProvider _modelProvider;
+        private readonly IDatabaseProvider _databaseProvider;
 
         public ModelMigrationsExecutor(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseConnectionProvider connectionProvider,
-            IModelProvider modelProvider)
+            IModelProvider modelProvider,
+            IDatabaseProvider databaseProvider)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _connectionProvider = connectionProvider;
             _modelProvider = modelProvider;
+            _databaseProvider = databaseProvider;
         }
 
         public async Task ExecuteManualMigrations(
@@ -88,8 +91,7 @@
                 return;
             }
 
-            var commandText = await BuildCommands(modelChanges.ToArray(), token)
-                .ConfigureAwait(false);
+            var commandText = await BuildCommands(modelChanges.ToArray(), token).ConfigureAwait(false);
 
             await _dependencyContainer
                 .InvokeWithinTransaction(true, commandText, ExecuteAutoMigrations, token)
@@ -137,24 +139,19 @@
                 .Get(token)
                 .ConfigureAwait(false);
 
-            try
-            {
-                var affectedRowsCount = await transaction
-                    .InvokeScalar(commandText, settings, token)
-                    .ConfigureAwait(false);
+            var affectedRowsCount = await ExecutionExtensions
+               .TryAsync((commandText, settings), transaction.InvokeScalar)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .ConfigureAwait(false);
 
-                var change = new ModelChange(
-                    commandText,
-                    affectedRowsCount,
-                    settings,
-                    static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
+            var change = new ModelChange(
+                commandText,
+                affectedRowsCount,
+                settings,
+                static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
 
-                transaction.CollectChange(change);
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            transaction.CollectChange(change);
 
             var indexes = (await transaction
                     .Read<AppliedMigration, Guid>()

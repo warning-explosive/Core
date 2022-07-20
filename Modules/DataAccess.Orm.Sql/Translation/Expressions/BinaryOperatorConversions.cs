@@ -50,6 +50,11 @@
                 ExpressionType.OrElse => BinaryOperator.OrElse,
                 ExpressionType.ExclusiveOr => BinaryOperator.ExclusiveOr,
                 ExpressionType.Coalesce => BinaryOperator.Coalesce,
+                ExpressionType.Add => BinaryOperator.Add,
+                ExpressionType.Subtract => BinaryOperator.Subtract,
+                ExpressionType.Divide => BinaryOperator.Divide,
+                ExpressionType.Multiply => BinaryOperator.Multiply,
+                ExpressionType.Modulo => BinaryOperator.Modulo,
                 _ => throw new NotSupportedException($"Not supported conversion from {nameof(ExpressionType)}.{type} to {nameof(BinaryOperator)}")
             };
         }

@@ -62,6 +62,18 @@
             CancellationToken token);
 
         /// <summary>
+        /// Updates entity in the database
+        /// </summary>
+        /// <param name="infos">Update infos</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Affected rows count</returns>
+        Task<long> Update(
+            IReadOnlyCollection<UpdateInfo<TEntity, TKey>> infos,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken token);
+
+        /// <summary>
         /// Deletes entity from the database
         /// </summary>
         /// <param name="predicate">Predicate</param>

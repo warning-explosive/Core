@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Builder
     using System.Reflection;
     using CompositionRoot;
     using Connection;
+    using Registrations;
 
     internal class MigrationsEndpointBuilder : IMigrationsEndpointBuilder
     {
@@ -21,6 +22,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Builder
 
         public IMigrationsEndpointBuilder WithDataAccess(IDatabaseProvider databaseProvider)
         {
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(new DatabaseProviderManualRegistration(databaseProvider)));
+
+            Modifiers = Modifiers
+               .Concat(new[] { modifier })
+               .ToList();
+
             EndpointPluginAssemblies = EndpointPluginAssemblies
                .Concat(databaseProvider.Migrations())
                .ToList();

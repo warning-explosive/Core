@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
+    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -19,5 +20,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// </summary>
         /// <returns>Implementation</returns>
         IEnumerable<Assembly> Migrations();
+
+        /// <summary>
+        /// Handles ORM exception and throws provider dependent exceptions
+        /// </summary>
+        /// <param name="commandText">Command text</param>
+        /// <param name="exception">Exception</param>
+        void Handle(string commandText, Exception exception);
     }
 }

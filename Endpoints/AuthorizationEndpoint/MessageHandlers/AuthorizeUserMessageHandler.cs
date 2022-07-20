@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Basics.Exceptions;
     using Contract;
     using CrossCuttingConcerns.Settings;
     using Domain;
@@ -54,27 +53,14 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
             AuthorizeUser message,
             CancellationToken token)
         {
-            User? user;
-            NotFoundException? notFoundException;
-
-            try
-            {
-                user = await _findUserAggregateFactory
-                   .Build(new FindUserSpecification(message.Username), token)
-                   .ConfigureAwait(false);
-
-                notFoundException = null;
-            }
-            catch (NotFoundException exception)
-            {
-                user = null;
-                notFoundException = exception;
-            }
+            var user = await _findUserAggregateFactory
+               .Build(new FindUserSpecification(message.Username), token)
+               .ConfigureAwait(false);
 
             string authorizationToken;
             string resultMessage;
 
-            if (user != null && user.CheckPassword(message.Password))
+            if (user.CheckPassword(message.Password))
             {
                 var settings = await _authorizationSettingsProvider
                     .Get(token)
@@ -82,11 +68,6 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.MessageHandlers
 
                 authorizationToken = _tokenProvider.GenerateToken(message.Username, settings.TokenExpirationTimeout);
                 resultMessage = string.Empty;
-            }
-            else if (user == null && notFoundException != null)
-            {
-                authorizationToken = string.Empty;
-                resultMessage = notFoundException.Message;
             }
             else
             {

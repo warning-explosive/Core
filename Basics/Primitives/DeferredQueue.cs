@@ -133,7 +133,14 @@ namespace SpaceEngineers.Core.Basics.Primitives
                     var args = DequeueSync();
                     var planned = _prioritySelector(args);
 
-                    await WaitForBreadcrumbs(planned, token).ConfigureAwait(false);
+                    try
+                    {
+                        await WaitForBreadcrumbs(planned, token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+
                     await callback(args, token).ConfigureAwait(false);
                 }
             }

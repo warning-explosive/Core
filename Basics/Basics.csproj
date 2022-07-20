@@ -91,6 +91,15 @@
     <Compile Update="Primitives\RecursiveEnumerable.cs">
       <DependentUpon>IRecursiveEnumerable.cs</DependentUpon>
     </Compile>
+    <Compile Update="FunctionExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="StatelessGenericAsyncOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="StatelessAsyncOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

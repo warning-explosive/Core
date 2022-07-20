@@ -21,17 +21,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="settings">Orm settings</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
-        public static async Task<long> InvokeScalar(
+        public static Task<long> InvokeScalar(
             this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
         {
+            return transaction.InvokeScalar((commandText, settings), token);
+        }
+
+        /// <summary>
+        /// Invokes scalar command
+        /// </summary>
+        /// <param name="transaction">IDbTransaction</param>
+        /// <param name="state">State</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>The number of rows affected</returns>
+        public static async Task<long> InvokeScalar(
+            this IAdvancedDatabaseTransaction transaction,
+            (string commandText, OrmSettings settings) state,
+            CancellationToken token)
+        {
             var command = new CommandDefinition(
-                commandText,
+                state.commandText,
                 null,
                 transaction.DbTransaction,
-                settings.QueryTimeout.Seconds,
+                state.settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);
@@ -57,11 +72,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
             OrmSettings settings,
             CancellationToken token)
         {
+            return transaction.Invoke((commandText, settings), token);
+        }
+
+        /// <summary>
+        /// Invokes command
+        /// </summary>
+        /// <param name="transaction">IDbTransaction</param>
+        /// <param name="state">State</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Query result</returns>
+        public static Task<IEnumerable<dynamic>> Invoke(
+            this IAdvancedDatabaseTransaction transaction,
+            (string commandText, OrmSettings settings) state,
+            CancellationToken token)
+        {
             var command = new CommandDefinition(
-                commandText,
+                state.commandText,
                 null,
                 transaction.DbTransaction,
-                settings.QueryTimeout.Seconds,
+                state.settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);
@@ -80,17 +110,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="settings">Orm settings</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
-        public static async Task<long> InvokeScalar(
+        public static Task<long> InvokeScalar(
             this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
             CancellationToken token)
         {
+            return connection.InvokeScalar((commandText, settings), token);
+        }
+
+        /// <summary>
+        /// Invokes scalar command
+        /// </summary>
+        /// <param name="connection">IDbConnection</param>
+        /// <param name="state">State</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>The number of rows affected</returns>
+        public static async Task<long> InvokeScalar(
+            this IDatabaseConnection connection,
+            (string commandText, OrmSettings settings) state,
+            CancellationToken token)
+        {
             var command = new CommandDefinition(
-                commandText,
+                state.commandText,
                 null,
                 null,
-                settings.QueryTimeout.Seconds,
+                state.settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);
@@ -115,11 +160,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
             OrmSettings settings,
             CancellationToken token)
         {
+            return connection.Invoke((commandText, settings), token);
+        }
+
+        /// <summary>
+        /// Invokes command
+        /// </summary>
+        /// <param name="connection">IDbConnection</param>
+        /// <param name="state">State</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Query result</returns>
+        public static Task<IEnumerable<dynamic>> Invoke(
+            this IDatabaseConnection connection,
+            (string commandText, OrmSettings settings) state,
+            CancellationToken token)
+        {
             var command = new CommandDefinition(
-                commandText,
+                state.commandText,
                 null,
                 null,
-                settings.QueryTimeout.Seconds,
+                state.settings.QueryTimeout.Seconds,
                 CommandType.Text,
                 CommandFlags.Buffered,
                 token);

@@ -59,4 +59,9 @@
         <ProjectReference Include="..\..\Modules\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
         <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Mocks\QueryProviderDecorator.cs">
+        <DependentUpon>AsyncQueryProviderDecorator.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

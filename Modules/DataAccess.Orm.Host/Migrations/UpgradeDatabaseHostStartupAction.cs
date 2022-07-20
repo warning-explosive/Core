@@ -3,9 +3,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using Basics.Attributes;
     using CompositionRoot.Api.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericHost.Api.Abstractions;
+    using Microsoft.Extensions.Logging;
 
     [Dependent("SpaceEngineers.Core.GenericEndpoint.Host.StartupActions.GenericEndpointHostStartupAction")]
     internal class UpgradeDatabaseHostStartupAction : IHostStartupAction
@@ -18,15 +21,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
             _dependencyContainer = dependencyContainer;
         }
 
-        public Task Run(CancellationToken token)
+        public async Task Run(CancellationToken token)
         {
             var manualMigrations = _dependencyContainer
                .ResolveCollection<IManualMigration>()
                .ToList();
 
-            return _dependencyContainer
+            await _dependencyContainer
                .Resolve<IModelMigrator>()
-               .Upgrade(manualMigrations, token);
+               .Upgrade(manualMigrations, token)
+               .ConfigureAwait(false);
+
+            _dependencyContainer
+               .Resolve<ILogger>()
+               .Information($"{_dependencyContainer.Resolve<EndpointIdentity>()} have been applied");
         }
     }
 }

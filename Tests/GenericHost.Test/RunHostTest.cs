@@ -9,6 +9,7 @@
     using System.Threading.Tasks;
     using Basics;
     using CompositionRoot.Api.Abstractions.Registration;
+    using CrossCuttingConcerns.Settings;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Host;
@@ -16,6 +17,7 @@
     using GenericEndpoint.Pipeline;
     using GenericHost;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
     using MessageHandlers;
     using Messages;
@@ -32,15 +34,15 @@
     using Xunit.Abstractions;
 
     /// <summary>
-    /// GenericHost assembly tests
+    /// RunHostTest
     /// </summary>
     [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
-    public class GenericHostRunHostTest : TestBase
+    public class RunHostTest : TestBase
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
-        public GenericHostRunHostTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        public RunHostTest(ITestOutputHelper output, ModulesTestFixture fixture)
             : base(output, fixture)
         {
         }
@@ -62,27 +64,29 @@
                .FullName;
 
             var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (test, logger, hostBuilder) => hostBuilder
+                (settingsScope, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
                            .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
             var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (test, logger, hostBuilder) => hostBuilder
+                (settingsScope, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
                            .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(test)))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -107,6 +111,8 @@
         {
             var logger = Fixture.CreateLogger(Output);
 
+            var settingsScope = nameof(RequestReplyTest);
+
             var messageTypes = new[]
             {
                 typeof(RequestQueryCommand),
@@ -126,11 +132,11 @@
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(RequestReplyTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(RequestReplyTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
@@ -147,6 +153,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
@@ -192,6 +205,8 @@
                 Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
 
@@ -202,6 +217,8 @@
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
+
+            var settingsScope = nameof(RpcRequestTest);
 
             var messageTypes = new[]
             {
@@ -219,11 +236,11 @@
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(RpcRequestTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(RpcRequestTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
@@ -254,6 +271,13 @@
 
                 await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(cts.Token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                     var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
                     var awaiter = Task.WhenAny(
@@ -279,6 +303,8 @@
                 Assert.Equal(query.Id, reply.Id);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
 
@@ -289,6 +315,8 @@
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
+
+            var settingsScope = nameof(ContravariantMessageHandlerTest);
 
             var messageTypes = new[]
             {
@@ -309,11 +337,11 @@
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(ContravariantMessageHandlerTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(ContravariantMessageHandlerTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
@@ -330,6 +358,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
@@ -374,6 +409,8 @@
                 Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
 
@@ -384,6 +421,8 @@
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
+
+            var settingsScope = nameof(ThrowingMessageHandlerTest);
 
             var messageTypes = new[]
             {
@@ -400,14 +439,17 @@
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(ThrowingMessageHandlerTest)),
+                new TestSettingsScopeProviderOverride(settingsScope),
                 Fixture.DelegateOverride(container =>
                 {
                     container.Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton);
                 })
             };
 
-            var host = useTransport(nameof(ThrowingMessageHandlerTest), logger, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(
+                    settingsScope,
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -422,6 +464,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
@@ -486,7 +535,7 @@
                 Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
 
                 Assert.True(actualDeliveryDelays
-                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
+                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual + 1, expected))
                     .All(delays =>
                     {
                         var (actual, expected) = delays;
@@ -495,6 +544,8 @@
                     }));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
 
@@ -505,6 +556,8 @@
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
+
+            var settingsScope = nameof(EventSubscriptionBetweenEndpointsTest);
 
             var endpoint1MessageTypes = new[]
             {
@@ -534,11 +587,11 @@
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(EventSubscriptionBetweenEndpointsTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(EventSubscriptionBetweenEndpointsTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
@@ -567,6 +620,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
@@ -601,6 +661,8 @@
                 await result.ConfigureAwait(false);
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
 
@@ -612,17 +674,19 @@
         {
             var logger = Fixture.CreateLogger(Output);
 
+            var settingsScope = nameof(RunTest);
+
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(RunTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(RunTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(new EndpointIdentity(nameof(RunTest), 0),
+               .UseEndpoint(new EndpointIdentity(settingsScope, 0),
                     (_, builder) => builder
                        .WithTracing()
                        .ModifyContainerOptions(options => options
@@ -636,6 +700,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 var runningHost = host.RunAsync(cts.Token);
@@ -662,17 +733,19 @@
         {
             var logger = Fixture.CreateLogger(Output);
 
+            var settingsScope = nameof(StartStopTest);
+
             var overrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(nameof(StartStopTest))
+                new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
-                    nameof(StartStopTest),
+                    settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(new EndpointIdentity(nameof(StartStopTest), 0),
+               .UseEndpoint(new EndpointIdentity(settingsScope, 0),
                     (_, builder) => builder
                        .WithTracing()
                        .ModifyContainerOptions(options => options
@@ -686,6 +759,13 @@
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
                 var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericHost.Test.Overrides
+namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
     using GenericEndpoint.UnitOfWork;
     using Mocks;

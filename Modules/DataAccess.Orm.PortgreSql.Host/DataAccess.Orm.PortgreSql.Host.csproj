@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+      <ProjectReference Include="..\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
       <ProjectReference Include="..\DataAccess.Orm.Sql.Host\DataAccess.Orm.Sql.Host.csproj" />
     </ItemGroup>
     <ItemGroup>

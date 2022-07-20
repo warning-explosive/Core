@@ -26,67 +26,72 @@ namespace SpaceEngineers.Core.DataExport.Excel
 
             try
             {
-                using (var spreadsheetDocument = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
-                {
-                    var workbookPart = spreadsheetDocument.AddWorkbookPart();
-                    workbookPart.Workbook = new Workbook();
+                FillStream(infos, stream);
 
-                    var sheets = workbookPart.Workbook.AppendChild(new Sheets());
-
-                    var sharedStringTable = workbookPart.AddNewPart<SharedStringTablePart>();
-                    sharedStringTable.SharedStringTable = new SharedStringTable();
-
-                    var workbookStyles = workbookPart.AddNewPart<WorkbookStylesPart>();
-                    workbookStyles.Stylesheet = InitializeStylesheet(
-                        out var defaultCellFormatIndex,
-                        out var decimalCellFormatIndex,
-                        out var dateCellFormatIndex);
-
-                    var documentInfo = new DocumentInfo(
-                        sharedStringTable.SharedStringTable,
-                        workbookStyles.Stylesheet,
-                        defaultCellFormatIndex,
-                        decimalCellFormatIndex,
-                        dateCellFormatIndex);
-
-                    for (uint i = 0; i < infos.Length; i++)
-                    {
-                        var info = infos[i];
-                        var sheetInfo = new SheetInfo(documentInfo);
-
-                        var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                        var sheetData = new SheetData();
-                        worksheetPart.Worksheet = new Worksheet(sheetData);
-
-                        var sheet = new Sheet
-                        {
-                            Id = workbookPart.GetIdOfPart(worksheetPart),
-                            SheetId = i + 1,
-                            Name = info.SheetName
-                        };
-
-                        sheets.AppendChild(sheet);
-
-                        var type = info.GetType();
-
-                        if (type.IsSubclassOfOpenGeneric(typeof(FlatTableSheetInfo<>)))
-                        {
-                            FillFlatTable(sheetInfo, info, sheetData);
-                        }
-                        else
-                        {
-                            throw new NotSupportedException(type.FullName);
-                        }
-                    }
-
-                    stream.Seek(0, SeekOrigin.Begin);
-                    return stream;
-                }
+                stream.Seek(0, SeekOrigin.Begin);
+                return stream;
             }
             catch (Exception)
             {
                 stream.Dispose();
                 throw;
+            }
+        }
+
+        private static void FillStream(ISheetInfo[] infos, MemoryStream stream)
+        {
+            using (var spreadsheetDocument = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+            {
+                var workbookPart = spreadsheetDocument.AddWorkbookPart();
+                workbookPart.Workbook = new Workbook();
+
+                var sheets = workbookPart.Workbook.AppendChild(new Sheets());
+
+                var sharedStringTable = workbookPart.AddNewPart<SharedStringTablePart>();
+                sharedStringTable.SharedStringTable = new SharedStringTable();
+
+                var workbookStyles = workbookPart.AddNewPart<WorkbookStylesPart>();
+                workbookStyles.Stylesheet = InitializeStylesheet(
+                    out var defaultCellFormatIndex,
+                    out var decimalCellFormatIndex,
+                    out var dateCellFormatIndex);
+
+                var documentInfo = new DocumentInfo(
+                    sharedStringTable.SharedStringTable,
+                    workbookStyles.Stylesheet,
+                    defaultCellFormatIndex,
+                    decimalCellFormatIndex,
+                    dateCellFormatIndex);
+
+                for (uint i = 0; i < infos.Length; i++)
+                {
+                    var info = infos[i];
+                    var sheetInfo = new SheetInfo(documentInfo);
+
+                    var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                    var sheetData = new SheetData();
+                    worksheetPart.Worksheet = new Worksheet(sheetData);
+
+                    var sheet = new Sheet
+                    {
+                        Id = workbookPart.GetIdOfPart(worksheetPart),
+                        SheetId = i + 1,
+                        Name = info.SheetName
+                    };
+
+                    sheets.AppendChild(sheet);
+
+                    var type = info.GetType();
+
+                    if (type.IsSubclassOfOpenGeneric(typeof(FlatTableSheetInfo<>)))
+                    {
+                        FillFlatTable(sheetInfo, info, sheetData);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(type.FullName);
+                    }
+                }
             }
         }
 

@@ -35,7 +35,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.OrElse] = "OR",
                 [BinaryOperator.ExclusiveOr] = "XOR",
                 [BinaryOperator.Contains] = "IN",
-                [BinaryOperator.Like] = "LIKE"
+                [BinaryOperator.Like] = "LIKE",
+                [BinaryOperator.Add] = "+",
+                [BinaryOperator.Subtract] = "-",
+                [BinaryOperator.Divide] = "/",
+                [BinaryOperator.Multiply] = "*",
+                [BinaryOperator.Modulo] = "%"
             };
 
         private static readonly IReadOnlyDictionary<BinaryOperator, string> AltOperators

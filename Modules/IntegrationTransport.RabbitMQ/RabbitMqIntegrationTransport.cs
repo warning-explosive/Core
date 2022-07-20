@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private readonly ConcurrentDictionary<EndpointIdentity, object?> _endpoints;
         private readonly ConcurrentDictionary<EndpointIdentity, IIntegrationTypeProvider> _integrationMessageTypes;
 
-        private readonly ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> _messageHandlers;
+        private readonly ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> _messageHandlers;
         private readonly ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>> _errorMessageHandlers;
 
         private readonly ConcurrentDictionary<EndpointIdentity, IModel> _channels;
@@ -62,6 +62,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private readonly ConcurrentDictionary<ulong, TaskCompletionSource<bool>> _outstandingConfirms;
 
         private readonly AsyncManualResetEvent _ready;
+        private readonly AsyncAutoResetEvent _sync;
 
         private readonly TaskCompletionSource<object?> _backgroundMessageProcessingTcs;
 
@@ -95,7 +96,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             _endpoints = new ConcurrentDictionary<EndpointIdentity, object?>();
             _integrationMessageTypes = new ConcurrentDictionary<EndpointIdentity, IIntegrationTypeProvider>();
 
-            _messageHandlers = new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>();
+            _messageHandlers = new ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>();
             _errorMessageHandlers = new ConcurrentDictionary<EndpointIdentity, ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>>();
 
             _channels = new ConcurrentDictionary<EndpointIdentity, IModel>();
@@ -103,6 +104,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             _outstandingConfirms = new ConcurrentDictionary<ulong, TaskCompletionSource<bool>>();
 
             _ready = new AsyncManualResetEvent(false);
+            _sync = new AsyncAutoResetEvent(true);
 
             _backgroundMessageProcessingTcs = new TaskCompletionSource<object?>();
 
@@ -138,8 +140,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             }
         }
 
+        private CancellationToken Token => GetCancellationToken();
+
         public void Dispose()
         {
+            _ready.Reset();
+
             foreach (var (_, channel) in _channels)
             {
                 channel.ModelShutdown -= _handleChannelShutdownSubscription;
@@ -163,11 +169,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 connection.Close();
                 connection.Dispose();
             }
+
+            if (Status != EnIntegrationTransportStatus.Stopped)
+            {
+                Status = EnIntegrationTransportStatus.Stopped;
+            }
         }
 
         public void Bind(
             EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, CancellationToken, Task> messageHandler,
+            Func<IntegrationMessage, Task> messageHandler,
             IIntegrationTypeProvider integrationTypeProvider)
         {
             _endpoints.TryAdd(endpointIdentity, default);
@@ -298,7 +309,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             ConfigureErrorHandlers(_channels, _endpoints.Keys, BindErrorHandler);
 
-            return RestartBackgroundMessageProcessing(_backgroundMessageProcessingTcs, GetCancellationToken());
+            return RestartBackgroundMessageProcessing(_backgroundMessageProcessingTcs, Token);
         }
 
         private CancellationToken GetCancellationToken()
@@ -308,6 +319,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         }
 
         private async Task RestartBackgroundMessageProcessing(
+            TaskCompletionSource<object?> backgroundMessageProcessingTcs,
+            CancellationToken token)
+        {
+            try
+            {
+                await _sync.WaitAsync(token).ConfigureAwait(false);
+                await RestartBackgroundMessageProcessingUnsafe(backgroundMessageProcessingTcs, token).ConfigureAwait(false);
+            }
+            finally
+            {
+                _sync.Set();
+            }
+        }
+
+        private async Task RestartBackgroundMessageProcessingUnsafe(
             TaskCompletionSource<object?> backgroundMessageProcessingTcs,
             CancellationToken token)
         {
@@ -366,9 +392,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 _handleReceivedMessageSubscription,
                 _handleConsumerShutdownSubscription);
 
-            _ready.Set();
-
             Status = EnIntegrationTransportStatus.Running;
+
+            _ready.Set();
 
             await backgroundMessageProcessingTcs.Task.ConfigureAwait(false);
         }
@@ -384,7 +410,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             for (var i = 0; i < 4; i++)
             {
-                logger.Debug($"Trying to establish connection with RabbitMQ broker: {i}");
+                logger.Information($"Trying to establish connection with RabbitMQ broker: {i}");
 
                 try
                 {
@@ -407,7 +433,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                     connection.ConnectionShutdown += handleConnectionShutdownSubscription;
 
-                    logger.Debug("Connection with RabbitMQ broker was successfully established");
+                    logger.Information("Connection with RabbitMQ broker was successfully established");
 
                     return connection;
                 }
@@ -416,9 +442,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     logger.Error(brokerUnreachableException, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(ConfigureConnection)}");
                 }
 
-                await Task
-                   .Delay(TimeSpan.FromSeconds(15), token)
-                   .ConfigureAwait(false);
+                try
+                {
+                    await Task
+                       .Delay(TimeSpan.FromSeconds(15), token)
+                       .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
 
             throw new BrokerUnreachableException(new InvalidOperationException("Unable to establish connection with RabbitMQ message broker"));
@@ -708,7 +741,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             return (_, args) =>
             {
-                Shutdown(logger, ready, tcs, new InvalidOperationException(args.ToString()), nameof(HandleChannelCallbackException));
+                Shutdown(logger, ready, tcs, new InvalidOperationException(ShowDetails(args.Detail), args.Exception), nameof(HandleChannelCallbackException));
+
+                static string ShowDetails(IDictionary<string, object> dict)
+                {
+                    if ((dict.TryGetValue("consumer", out var value) || dict.TryGetValue("context", out value))
+                        && value is AsyncEventingBasicConsumer consumer
+                        && !consumer.IsRunning)
+                    {
+                        return $"{nameof(AsyncEventingBasicConsumer.ShutdownReason)}: {consumer.ShutdownReason}";
+                    }
+
+                    return nameof(HandleChannelCallbackException);
+                }
             };
         }
 
@@ -719,13 +764,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             Exception exception,
             string message)
         {
-            ready.Reset();
-
-            Status = EnIntegrationTransportStatus.Stopped;
-
             logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{message}");
 
-            RestartBackgroundMessageProcessing(tcs, GetCancellationToken()).Wait(GetCancellationToken());
+            RestartBackgroundMessageProcessing(tcs, Token).Wait(Token);
         }
 
         #endregion
@@ -830,7 +871,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private static AsyncEventHandler<BasicDeliverEventArgs> HandleReceivedMessage(
             ILogger logger,
             IReadOnlyDictionary<string, EndpointIdentity> consumers,
-            IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> messageHandlers,
+            IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> messageHandlers,
             Action<IntegrationMessage, Exception?> onMessageReceived,
             IJsonSerializer jsonSerializer,
             AsyncManualResetEvent ready,
@@ -854,8 +895,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                    .ConfigureAwait(false);
             };
 
-            static async Task InvokeMessageHandlers(
-                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, IReadOnlyDictionary<string, EndpointIdentity>, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>>, Action<IntegrationMessage, Exception?>, IJsonSerializer) state,
+            static Task InvokeMessageHandlers(
+                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, IReadOnlyDictionary<string, EndpointIdentity>, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>, Action<IntegrationMessage, Exception?>, IJsonSerializer) state,
                 CancellationToken token)
             {
                 var (consumer, args, consumers, messageHandlers, onMessageReceived, jsonSerializer) = state;
@@ -866,9 +907,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 onMessageReceived(message, default);
 
-                await GetMessageHandler(consumer, consumers, messageHandlers)
-                   .Invoke(message, token)
-                   .ConfigureAwait(false);
+                return GetMessageHandler(consumer, consumers, messageHandlers).Invoke(message);
             }
 
             static void ManageMessageHeaders(
@@ -879,10 +918,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 integrationMessage.OverwriteHeader(new DeliveryTag(args.DeliveryTag));
             }
 
-            static Func<IntegrationMessage, CancellationToken, Task> GetMessageHandler(
+            static Func<IntegrationMessage, Task> GetMessageHandler(
                 AsyncEventingBasicConsumer consumer,
                 IReadOnlyDictionary<string, EndpointIdentity> consumers,
-                IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, CancellationToken, Task>> messageHandlers)
+                IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> messageHandlers)
             {
                 if (consumer.ConsumerTags.Length != 1)
                 {

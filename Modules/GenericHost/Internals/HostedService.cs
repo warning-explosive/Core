@@ -25,12 +25,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             IEnumerable<IHostStartupAction> startupActions,
             IEnumerable<IHostBackgroundWorker> backgroundWorkers)
         {
+            Id = Guid.NewGuid();
+
             Logger = loggerFactory.CreateLogger<HostedService>();
 
             _hostApplicationLifetime = hostApplicationLifetime;
             _startupActions = startupActions;
             _backgroundWorkers = backgroundWorkers;
         }
+
+        private Guid Id { get; }
 
         private ILogger Logger { get; }
 
@@ -107,7 +111,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             return async (exception, token) =>
             {
-                logger.Critical(exception, "Hosted service unhandled exception");
+                logger.Critical(exception, $"Hosted service {Id} unhandled exception");
 
                 await StopAsync(token).ConfigureAwait(false);
             };

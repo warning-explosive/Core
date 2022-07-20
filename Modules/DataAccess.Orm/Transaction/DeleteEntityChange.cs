@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
             if (actualAffectedRowsCount != _expectedAffectedRowsCount)
             {
-                throw new DbConcurrentUpdateException(typeof(TEntity));
+                throw new DatabaseConcurrentUpdateException(typeof(TEntity));
             }
         }
     }

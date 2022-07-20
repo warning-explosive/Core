@@ -6,7 +6,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Extensions;
+    using Orm.Extensions;
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]

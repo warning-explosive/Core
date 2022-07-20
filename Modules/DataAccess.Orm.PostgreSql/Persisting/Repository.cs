@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -15,12 +16,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using Basics;
     using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
+    using DataAccess.Orm.Extensions;
+    using Orm.Connection;
     using Settings;
     using Sql.Extensions;
     using Sql.Model;
     using Sql.Translation.Extensions;
     using Transaction;
 
+    [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [Component(EnLifestyle.Scoped)]
     internal class Repository : IRepository,
                                 IResolvable<IRepository>
@@ -37,17 +41,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
+        private readonly IDatabaseProvider _databaseProvider;
 
         public Repository(
             IDependencyContainer dependencyContainer,
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
-            ISettingsProvider<OrmSettings> settingsProvider)
+            ISettingsProvider<OrmSettings> settingsProvider,
+            IDatabaseProvider databaseProvider)
         {
             _dependencyContainer = dependencyContainer;
             _transaction = transaction;
             _modelProvider = modelProvider;
             _settingsProvider = settingsProvider;
+            _databaseProvider = databaseProvider;
         }
 
         public async Task<long> Insert(
@@ -93,22 +100,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .Select(grp => InsertEntity(grp.Key, grp.Value, _dependencyContainer, _modelProvider, insertBehavior))
                .ToString(";" + Environment.NewLine);
 
-            try
-            {
-                var affectedRowsCount = await _transaction
-                   .InvokeScalar(commandText, settings, token)
-                   .ConfigureAwait(false);
+            var affectedRowsCount = await ExecutionExtensions
+               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .Catch<Exception>()
+               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .ConfigureAwait(false);
 
-                var change = new CreateEntityChange(entities, insertBehavior, affectedRowsCount);
+            var change = new CreateEntityChange(entities, insertBehavior, affectedRowsCount);
 
-                _transaction.CollectChange(change);
+            _transaction.CollectChange(change);
 
-                return affectedRowsCount;
-            }
-            catch (Exception exception)
-            {
-                throw new InvalidOperationException(commandText, exception);
-            }
+            return affectedRowsCount;
 
             static Func<IUniqueIdentified, IEnumerable<IUniqueIdentified>> GetDependencies(
                 IModelProvider modelProvider,

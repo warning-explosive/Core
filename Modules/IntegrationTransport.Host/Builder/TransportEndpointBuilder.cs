@@ -20,7 +20,7 @@
 
         public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder)
         {
-            var inMemoryIntegrationTransportAssembly = AssembliesExtensions.FindRequiredAssembly(
+            var assembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
@@ -31,14 +31,14 @@
             var inMemoryIntegrationTransport = new InMemoryIntegrationTransport(EndpointIdentity, endpointInstanceSelectionBehavior);
             var inMemoryIntegrationTransportManualRegistration = new InMemoryIntegrationTransportManualRegistration(inMemoryIntegrationTransport, endpointInstanceSelectionBehavior);
 
-            var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
-               .Concat(new[] { inMemoryIntegrationTransportAssembly })
+               .Concat(new[] { assembly })
                .ToList();
 
             Modifiers = Modifiers
-               .Concat(new[] { inMemoryIntegrationTransportModifier })
+               .Concat(new[] { modifier })
                .ToList();
 
             return this;
@@ -46,23 +46,23 @@
 
         public ITransportEndpointBuilder WithRabbitMqIntegrationTransport(IHostBuilder hostBuilder)
         {
-            var inMemoryIntegrationTransportAssembly = AssembliesExtensions.FindRequiredAssembly(
+            var assembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
                     nameof(Core.IntegrationTransport),
                     nameof(Core.IntegrationTransport.RabbitMQ)));
 
-            var inMemoryIntegrationTransportManualRegistration = new RabbitMqIntegrationTransportManualRegistration();
+            var manualRegistration = new RabbitMqIntegrationTransportManualRegistration();
 
-            var inMemoryIntegrationTransportModifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(manualRegistration));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
-               .Concat(new[] { inMemoryIntegrationTransportAssembly })
+               .Concat(new[] { assembly })
                .ToList();
 
             Modifiers = Modifiers
-               .Concat(new[] { inMemoryIntegrationTransportModifier })
+               .Concat(new[] { modifier })
                .ToList();
 
             return this;

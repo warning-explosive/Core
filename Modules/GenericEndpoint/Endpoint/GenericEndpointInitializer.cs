@@ -47,12 +47,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             return Task.CompletedTask;
         }
 
-        private static Func<IntegrationMessage, CancellationToken, Task> MessageHandler(
-            IDependencyContainer dependencyContainer)
+        private static Func<IntegrationMessage, Task> MessageHandler(IDependencyContainer dependencyContainer)
         {
-            return (message, token) => dependencyContainer
+            return message => dependencyContainer
                 .Resolve<IExecutableEndpoint>()
-                .ExecuteMessageHandler(message, token);
+                .ExecuteMessageHandler(message);
         }
 
         private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(

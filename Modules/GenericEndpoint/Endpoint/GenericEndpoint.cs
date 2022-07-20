@@ -90,7 +90,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        public async Task ExecuteMessageHandler(IntegrationMessage message, CancellationToken token)
+        public async Task ExecuteMessageHandler(IntegrationMessage message)
         {
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
@@ -102,7 +102,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 runningHandler = DependencyContainer
                     .ResolveGeneric(typeof(IMessageHandlerExecutor<>), message.ReflectedType)
                     .CallMethod(nameof(IMessageHandlerExecutor<IIntegrationMessage>.Invoke))
-                    .WithArguments(message, token)
+                    .WithArguments(message, Token)
                     .Invoke<Task>();
 
                 _runningHandlers.Add(executionId, runningHandler);

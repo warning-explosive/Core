@@ -69,16 +69,13 @@
         {
             var (dependencyContainer, endpointIdentity, transport, settings, jsonSerializer) = state;
 
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
-            {
-                var transportIsRunning = WaitUntilTransportIsRunning(transport, cts.Token);
-                var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, endpointIdentity, settings, jsonSerializer, cts.Token);
+            var transportIsRunning = WaitUntilTransportIsRunning(transport, token);
+            var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, endpointIdentity, settings, jsonSerializer, token);
 
-                await Task
-                   .WhenAny(transportIsRunning, outboxDelivery)
-                   .Unwrap()
-                   .ConfigureAwait(false);
-            }
+            await Task
+               .WhenAny(transportIsRunning, outboxDelivery)
+               .Unwrap()
+               .ConfigureAwait(false);
         }
 
         private static async Task DeliverMessagesUnsafe(

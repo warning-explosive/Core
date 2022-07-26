@@ -18,6 +18,7 @@
     using Connection;
     using CrossCuttingConcerns.Settings;
     using Extensions;
+    using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;
     using Orm.Host.Migrations;
@@ -39,19 +40,22 @@
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IModelProvider _modelProvider;
         private readonly IDatabaseProvider _databaseProvider;
+        private readonly ILogger _logger;
 
         public ModelMigrationsExecutor(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseConnectionProvider connectionProvider,
             IModelProvider modelProvider,
-            IDatabaseProvider databaseProvider)
+            IDatabaseProvider databaseProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _connectionProvider = connectionProvider;
             _modelProvider = modelProvider;
             _databaseProvider = databaseProvider;
+            _logger = logger;
         }
 
         public async Task ExecuteManualMigrations(
@@ -139,17 +143,16 @@
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings), transaction.InvokeScalar)
+            _ = await ExecutionExtensions
+               .TryAsync((commandText, settings, _logger), transaction.InvokeScalar)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             var change = new ModelChange(
                 commandText,
-                affectedRowsCount,
                 settings,
-                static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
+                static (transaction, commandText, ormSettings, logger, token) => transaction.InvokeScalar(commandText, ormSettings, logger, token));
 
             transaction.CollectChange(change);
 

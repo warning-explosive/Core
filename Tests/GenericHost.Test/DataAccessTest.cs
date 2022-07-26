@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
+    using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host;
@@ -576,8 +577,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
         }
 
-        [SuppressMessage("Analysis", "xUnit1004", Justification = "#133")]
-        [Theory(Timeout = 60_000, Skip = "#133")]
+        [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
             Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
@@ -667,7 +667,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var primaryKey = Guid.NewGuid();
-                var delay = TimeSpan.FromMilliseconds(100);
+                var delay = TimeSpan.FromMilliseconds(10);
 
                 // #1 - create/create
                 {
@@ -686,8 +686,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     }
 
                     Assert.NotNull(exception);
+                    Assert.True(exception is DatabaseException);
                     Assert.NotNull(exception.InnerException);
                     Assert.True(exception.InnerException!.IsUniqueViolation());
+
+                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
+
+                    Assert.NotNull(entity);
+                    Assert.NotEqual(default, entity.Version);
+                    Assert.Equal(42, entity.IntField);
                 }
 
                 // #2 - update/update
@@ -707,18 +714,24 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     }
 
                     Assert.NotNull(exception);
+
+                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
+
+                    Assert.NotNull(entity);
+                    Assert.NotEqual(default, entity.Version);
+                    Assert.Equal(43, entity.IntField);
                 }
 
                 // #3 - update/delete
                 {
+                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token);
+                    var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, cts.Token);
+
                     Exception? exception = null;
 
                     try
                     {
-                        await Task.WhenAll(
-                                UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token),
-                                DeleteEntity(endpointDependencyContainer, primaryKey, cts.Token))
-                           .ConfigureAwait(false);
+                        await Task.WhenAll(updateTask, deleteTask).ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
                     {
@@ -726,6 +739,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     }
 
                     Assert.NotNull(exception);
+
+                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
+
+                    if (updateTask.IsFaulted || deleteTask.IsCompletedSuccessfully)
+                    {
+                        Assert.Null(entity);
+                    }
+                    else
+                    {
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(44, entity.IntField);
+                    }
                 }
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
@@ -742,6 +768,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 {
                     var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
+                    long version;
+
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         var entity = new DatabaseEntity(
@@ -751,17 +779,37 @@ namespace SpaceEngineers.Core.GenericHost.Test
                             "SomeNullableString",
                             42);
 
-                        var inserted = await transaction
+                        _ = await transaction
                            .Write<DatabaseEntity, Guid>()
                            .Insert(new[] { entity }, EnInsertBehavior.Default, token)
                            .ConfigureAwait(false);
 
-                        Assert.Equal(1, inserted);
+                        version = entity.Version;
                     }
 
                     dependencyContainer
                        .Resolve<ILogger>()
-                       .Debug($"{nameof(CreateEntity)}: {primaryKey}");
+                       .Debug($"{nameof(CreateEntity)}: {primaryKey} {version}");
+                }
+            }
+
+            static async Task<DatabaseEntity?> ReadEntity(
+                IDependencyContainer dependencyContainer,
+                Guid primaryKey,
+                CancellationToken token)
+            {
+                await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+
+                    await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
+                    {
+                        return await transaction
+                           .Read<DatabaseEntity, Guid>()
+                           .All()
+                           .SingleOrDefaultAsync(entity => entity.PrimaryKey == primaryKey, token)
+                           .ConfigureAwait(false);
+                    }
                 }
             }
 

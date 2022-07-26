@@ -18,6 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using CrossCuttingConcerns.ObjectBuilder;
     using CrossCuttingConcerns.Settings;
     using Extensions;
+    using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;
     using Orm.Linq;
@@ -35,6 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
         private readonly IDatabaseProvider _databaseProvider;
+        private readonly ILogger _logger;
 
         public FlatQueryMaterializer(
             IDependencyContainer dependencyContainer,
@@ -42,7 +44,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             IObjectBuilder objectBuilder,
-            IDatabaseProvider databaseProvider)
+            IDatabaseProvider databaseProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
@@ -50,6 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
             _databaseProvider = databaseProvider;
+            _logger = logger;
         }
 
         public Task<T> MaterializeScalar(FlatQuery query, CancellationToken token)
@@ -91,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             var commandText = InlineQueryParameters(_dependencyContainer, query);
 
             return await ExecutionExtensions
-               .TryAsync((commandText, settings), _transaction.Invoke)
+               .TryAsync((commandText, settings, _logger), _transaction.Invoke)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<IEnumerable<dynamic>>(commandText), token)
                .ConfigureAwait(false);

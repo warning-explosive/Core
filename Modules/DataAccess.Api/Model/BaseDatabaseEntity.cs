@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
         object IUniqueIdentified.PrimaryKey => PrimaryKey;
 
         /// <inheritdoc />
-        public long Version { get; internal init; }
+        public long Version { get; set; }
 
         #region IEquatable
 

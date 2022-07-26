@@ -8,35 +8,37 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Model;
     using Api.Transaction;
     using Basics;
+    using Microsoft.Extensions.Logging;
 
     internal class DeleteEntityChange<TEntity, TKey> : ITransactionalChange
         where TEntity : IDatabaseEntity<TKey>
         where TKey : notnull
     {
-        private readonly Expression<Func<TEntity, bool>> _predicate;
         private readonly long _version;
-        private readonly long _expectedAffectedRowsCount;
+        private readonly long _affectedRowsCount;
+        private readonly Expression<Func<TEntity, bool>> _predicate;
 
         public DeleteEntityChange(
-            Expression<Func<TEntity, bool>> predicate,
             long version,
-            long expectedAffectedRowsCount)
+            long affectedRowsCount,
+            Expression<Func<TEntity, bool>> predicate)
         {
-            _predicate = predicate;
             _version = version;
-            _expectedAffectedRowsCount = expectedAffectedRowsCount;
+            _affectedRowsCount = affectedRowsCount;
+            _predicate = predicate;
         }
 
         public async Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
+            ILogger logger,
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
                .Write<TEntity, TKey>()
-               .Delete(_predicate.And(entity => entity.Version < _version), token)
+               .Delete(_predicate.And(entity => entity.Version == _version), token)
                .ConfigureAwait(false);
 
-            if (actualAffectedRowsCount != _expectedAffectedRowsCount)
+            if (actualAffectedRowsCount != _affectedRowsCount)
             {
                 throw new DatabaseConcurrentUpdateException(typeof(TEntity));
             }

@@ -2,12 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
     using Api.Persisting;
+    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -16,6 +18,7 @@
     using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
+    using Microsoft.Extensions.Logging;
     using Orm.Connection;
     using Settings;
     using Sql.Extensions;
@@ -24,6 +27,7 @@
     using Sql.Translation.Extensions;
     using Transaction;
 
+    [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [Component(EnLifestyle.Scoped)]
     internal class GenericRepository<TEntity, TKey> : IRepository<TEntity, TKey>,
                                                       IResolvable<IRepository<TEntity, TKey>>
@@ -42,6 +46,7 @@
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IExpressionTranslator _expressionTranslator;
         private readonly IDatabaseProvider _databaseProvider;
+        private readonly ILogger _logger;
 
         public GenericRepository(
             IDependencyContainer dependencyContainer,
@@ -50,7 +55,8 @@
             IModelProvider modelProvider,
             IAdvancedDatabaseTransaction transaction,
             IExpressionTranslator expressionTranslator,
-            IDatabaseProvider databaseProvider)
+            IDatabaseProvider databaseProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _repository = repository;
@@ -59,6 +65,7 @@
             _transaction = transaction;
             _expressionTranslator = expressionTranslator;
             _databaseProvider = databaseProvider;
+            _logger = logger;
         }
 
         public Task<long> Insert(
@@ -140,23 +147,39 @@
                 string.Join(", ", setExpressions),
                 predicateExpression);
 
-            var version = await _transaction
-               .GetXid(settings, token)
+            var versions = (await _transaction
+                   .Read<TEntity, TKey>()
+                   .All()
+                   .Where(predicate)
+                   .Select(entity => entity.Version)
+                   .ToListAsync(token)
+                   .ConfigureAwait(false))
+               .GroupBy(version => version)
+               .ToDictionary(
+                    grp => grp.Key,
+                    grp => grp.Count());
+
+            var updateVersion = await _transaction
+               .GetXid(settings, _logger, token)
                .ConfigureAwait(false);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
-            var change = new UpdateEntityChange<TEntity, TKey>(
-                version,
-                affectedRowsCount,
-                infos,
-                predicate);
+            foreach (var (version, count) in versions)
+            {
+                var change = new UpdateEntityChange<TEntity, TKey>(
+                    version,
+                    count,
+                    infos,
+                    predicate,
+                    updateVersion);
 
-            _transaction.CollectChange(change);
+                _transaction.CollectChange(change);
+            }
 
             return affectedRowsCount;
         }
@@ -185,22 +208,33 @@
                 table.Name,
                 predicateExpression);
 
-            var version = await _transaction
-               .GetXid(settings, token)
-               .ConfigureAwait(false);
+            var versions = (await _transaction
+                   .Read<TEntity, TKey>()
+                   .All()
+                   .Where(predicate)
+                   .Select(entity => entity.Version)
+                   .ToListAsync(token)
+                   .ConfigureAwait(false))
+               .GroupBy(version => version)
+               .ToDictionary(
+                    grp => grp.Key,
+                    grp => grp.Count());
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
-            var change = new DeleteEntityChange<TEntity, TKey>(
-                predicate,
-                version,
-                affectedRowsCount);
+            foreach (var (version, count) in versions)
+            {
+                var change = new DeleteEntityChange<TEntity, TKey>(
+                    version,
+                    count,
+                    predicate);
 
-            _transaction.CollectChange(change);
+                _transaction.CollectChange(change);
+            }
 
             return affectedRowsCount;
         }

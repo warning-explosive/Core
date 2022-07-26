@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
@@ -17,6 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
+    using Microsoft.Extensions.Logging;
     using Orm.Connection;
     using Settings;
     using Sql.Extensions;
@@ -42,19 +42,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private readonly IModelProvider _modelProvider;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseProvider _databaseProvider;
+        private readonly ILogger _logger;
 
         public Repository(
             IDependencyContainer dependencyContainer,
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             ISettingsProvider<OrmSettings> settingsProvider,
-            IDatabaseProvider databaseProvider)
+            IDatabaseProvider databaseProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _transaction = transaction;
             _modelProvider = modelProvider;
             _settingsProvider = settingsProvider;
             _databaseProvider = databaseProvider;
+            _logger = logger;
         }
 
         public async Task<long> Insert(
@@ -72,7 +75,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .ConfigureAwait(false);
 
             var version = await _transaction
-               .GetXid(settings, token)
+               .GetXid(settings, _logger, token)
                .ConfigureAwait(false);
 
             IReadOnlyDictionary<object, IUniqueIdentified> map = entities
@@ -80,17 +83,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .DistinctBy(GetKey)
                .ToDictionary(GetKey);
 
-            foreach (var entity in map.Values)
+            foreach (var entity in map.Values.OfType<IDatabaseEntity>())
             {
-                var type = entity.GetType();
-
-                if (!type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
-                {
-                    type
-                       .GetProperty(nameof(IDatabaseEntity<Guid>.Version), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty)
-                       .EnsureNotNull($"Database entity {type} should have column {nameof(IDatabaseEntity<Guid>.Version)}")
-                       .SetValue(entity, version);
-                }
+                entity.Version = version;
             }
 
             var commandText = map
@@ -101,12 +96,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .ToString(";" + Environment.NewLine);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
-            var change = new CreateEntityChange(entities, insertBehavior, affectedRowsCount);
+            var change = new CreateEntityChange(entities, insertBehavior);
 
             _transaction.CollectChange(change);
 
@@ -187,7 +182,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 static string ApplyUpdateInsertBehavior(ITableInfo table, string[] columns)
                 {
                     columns = columns
-                       .Where(column => !column.Equals(nameof(IDatabaseEntity<Guid>.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+                       .Where(column => !column.Equals(nameof(IUniqueIdentified.PrimaryKey), StringComparison.OrdinalIgnoreCase))
                        .ToArray();
 
                     return !columns.Any() || table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))

@@ -5,7 +5,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Transaction;
+    using Basics;
     using Dapper;
+    using Microsoft.Extensions.Logging;
     using Orm.Settings;
 
     /// <summary>
@@ -19,15 +21,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="transaction">IDbTransaction</param>
         /// <param name="commandText">Sql command text</param>
         /// <param name="settings">Orm settings</param>
+        /// <param name="logger">ILogger</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
         public static Task<long> InvokeScalar(
             this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
+            ILogger logger,
             CancellationToken token)
         {
-            return transaction.InvokeScalar((commandText, settings), token);
+            return transaction.InvokeScalar((commandText, settings, logger), token);
         }
 
         /// <summary>
@@ -39,9 +43,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <returns>The number of rows affected</returns>
         public static async Task<long> InvokeScalar(
             this IAdvancedDatabaseTransaction transaction,
-            (string commandText, OrmSettings settings) state,
+            (string commandText, OrmSettings settings, ILogger logger) state,
             CancellationToken token)
         {
+            if (state.settings.DumpQueries)
+            {
+                state.logger.Debug(state.commandText);
+            }
+
             var command = new CommandDefinition(
                 state.commandText,
                 null,
@@ -64,15 +73,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="transaction">IDbTransaction</param>
         /// <param name="commandText">Sql command text</param>
         /// <param name="settings">Orm settings</param>
+        /// <param name="logger">ILogger</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
             this IAdvancedDatabaseTransaction transaction,
             string commandText,
             OrmSettings settings,
+            ILogger logger,
             CancellationToken token)
         {
-            return transaction.Invoke((commandText, settings), token);
+            return transaction.Invoke((commandText, settings, logger), token);
         }
 
         /// <summary>
@@ -84,9 +95,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
             this IAdvancedDatabaseTransaction transaction,
-            (string commandText, OrmSettings settings) state,
+            (string commandText, OrmSettings settings, ILogger logger) state,
             CancellationToken token)
         {
+            if (state.settings.DumpQueries)
+            {
+                state.logger.Debug(state.commandText);
+            }
+
             var command = new CommandDefinition(
                 state.commandText,
                 null,
@@ -108,15 +124,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="connection">IDbConnection</param>
         /// <param name="commandText">Sql command text</param>
         /// <param name="settings">Orm settings</param>
+        /// <param name="logger">ILogger</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>The number of rows affected</returns>
         public static Task<long> InvokeScalar(
             this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
+            ILogger logger,
             CancellationToken token)
         {
-            return connection.InvokeScalar((commandText, settings), token);
+            return connection.InvokeScalar((commandText, settings, logger), token);
         }
 
         /// <summary>
@@ -128,9 +146,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <returns>The number of rows affected</returns>
         public static async Task<long> InvokeScalar(
             this IDatabaseConnection connection,
-            (string commandText, OrmSettings settings) state,
+            (string commandText, OrmSettings settings, ILogger logger) state,
             CancellationToken token)
         {
+            if (state.settings.DumpQueries)
+            {
+                state.logger.Debug(state.commandText);
+            }
+
             var command = new CommandDefinition(
                 state.commandText,
                 null,
@@ -152,15 +175,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <param name="connection">IDbConnection</param>
         /// <param name="commandText">Sql command text</param>
         /// <param name="settings">Orm settings</param>
+        /// <param name="logger">ILogger</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
             this IDatabaseConnection connection,
             string commandText,
             OrmSettings settings,
+            ILogger logger,
             CancellationToken token)
         {
-            return connection.Invoke((commandText, settings), token);
+            return connection.Invoke((commandText, settings, logger), token);
         }
 
         /// <summary>
@@ -172,9 +197,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
         /// <returns>Query result</returns>
         public static Task<IEnumerable<dynamic>> Invoke(
             this IDatabaseConnection connection,
-            (string commandText, OrmSettings settings) state,
+            (string commandText, OrmSettings settings, ILogger logger) state,
             CancellationToken token)
         {
+            if (state.settings.DumpQueries)
+            {
+                state.logger.Debug(state.commandText);
+            }
+
             var command = new CommandDefinition(
                 state.commandText,
                 null,

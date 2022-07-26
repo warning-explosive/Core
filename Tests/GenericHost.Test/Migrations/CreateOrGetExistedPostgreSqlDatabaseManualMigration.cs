@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
     using DataAccess.Orm.Sql.Extensions;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Transaction;
+    using Microsoft.Extensions.Logging;
     using Npgsql;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -42,13 +43,16 @@ $do$;";
 
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
+        private readonly ILogger _logger;
 
         public CreateOrGetExistedPostgreSqlDatabaseManualMigration(
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
-            ISettingsProvider<OrmSettings> ormSettingsProvider)
+            ISettingsProvider<OrmSettings> ormSettingsProvider,
+            ILogger logger)
         {
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
+            _logger = logger;
         }
 
         public string Name { get; } = ModelMigrationsExecutor.GetAutomaticMigrationName(-1);
@@ -85,7 +89,7 @@ $do$;";
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
                 _ = await connection
-                   .InvokeScalar(commandText, ormSettings, token)
+                   .InvokeScalar(commandText, ormSettings, _logger, token)
                    .ConfigureAwait(false);
             }
 

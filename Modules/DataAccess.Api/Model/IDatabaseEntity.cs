@@ -3,14 +3,20 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     /// <summary>
     /// IDatabaseEntity
     /// </summary>
-    /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public interface IDatabaseEntity<TKey> : IUniqueIdentified<TKey>
-        where TKey : notnull
+    public interface IDatabaseEntity
     {
         /// <summary>
         /// Version
         /// </summary>
-        /*TODO: #132 - historical entities*/
-        public long Version { get; }
+        public long Version { get; set; }
+    }
+
+    /// <summary>
+    /// IDatabaseEntity
+    /// </summary>
+    /// <typeparam name="TKey">TKey type-argument</typeparam>
+    public interface IDatabaseEntity<TKey> : IDatabaseEntity, IUniqueIdentified<TKey>
+        where TKey : notnull
+    {
     }
 }

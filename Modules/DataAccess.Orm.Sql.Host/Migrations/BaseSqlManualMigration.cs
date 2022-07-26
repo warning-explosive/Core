@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using Connection;
     using CrossCuttingConcerns.Settings;
     using Extensions;
+    using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;
     using Orm.Host.Migrations;
@@ -24,19 +25,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseProvider _databaseProvider;
+        private readonly ILogger _logger;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <param name="settingsProvider">Orm setting provider</param>
         /// <param name="databaseProvider">IDatabaseProvider</param>
+        /// <param name="logger">ILogger</param>
         protected BaseSqlManualMigration(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
-            IDatabaseProvider databaseProvider)
+            IDatabaseProvider databaseProvider,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _databaseProvider = databaseProvider;
+            _logger = logger;
         }
 
         /// <summary>
@@ -68,17 +73,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             var manualMigration = Name;
             var commandText = CommandText;
 
-            var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings), transaction.InvokeScalar)
+            _ = await ExecutionExtensions
+               .TryAsync((commandText, settings, _logger), transaction.InvokeScalar)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             var change = new ModelChange(
                 commandText,
-                affectedRowsCount,
                 settings,
-                static (tran, text, s, t) => tran.InvokeScalar(text, s, t));
+                static (transaction, commandText, ormSettings, logger, token) => transaction.InvokeScalar(commandText, ormSettings, logger, token));
 
             transaction.CollectChange(change);
 

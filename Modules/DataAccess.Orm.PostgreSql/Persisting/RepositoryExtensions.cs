@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using Api.Model;
     using Api.Transaction;
     using Basics;
+    using Microsoft.Extensions.Logging;
     using Settings;
     using Sql.Extensions;
     using Sql.Model;
@@ -19,10 +20,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         internal static async Task<long> GetXid(
             this IAdvancedDatabaseTransaction transaction,
             OrmSettings settings,
+            ILogger logger,
             CancellationToken token)
         {
             var dynamicValues = await transaction
-               .Invoke(TransactionIdCommandText, settings, token)
+               .Invoke(TransactionIdCommandText, settings, logger, token)
                .ConfigureAwait(false);
 
             var xid = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value;

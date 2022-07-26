@@ -11,8 +11,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Settings
         /// <summary> .cctor </summary>
         public OrmSettings()
         {
+            DumpQueries = false;
             QuerySecondsTimeout = 60;
         }
+
+        /// <summary>
+        /// Dump queries
+        /// </summary>
+        public bool DumpQueries { get; set; }
 
         /// <summary>
         /// Query timeout (seconds)

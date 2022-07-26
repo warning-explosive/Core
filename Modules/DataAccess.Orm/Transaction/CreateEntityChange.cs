@@ -5,25 +5,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Model;
     using Api.Persisting;
     using Api.Transaction;
+    using Microsoft.Extensions.Logging;
 
     internal class CreateEntityChange : ITransactionalChange
     {
         private readonly IUniqueIdentified[] _entities;
         private readonly EnInsertBehavior _insertBehavior;
-        private readonly long _expectedAffectedRowsCount;
 
         public CreateEntityChange(
             IUniqueIdentified[] entities,
-            EnInsertBehavior insertBehavior,
-            long expectedAffectedRowsCount)
+            EnInsertBehavior insertBehavior)
         {
             _entities = entities;
             _insertBehavior = insertBehavior;
-            _expectedAffectedRowsCount = expectedAffectedRowsCount;
         }
 
         public Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
+            ILogger logger,
             CancellationToken token)
         {
             return databaseTransaction

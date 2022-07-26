@@ -17,6 +17,7 @@
     using Basics.Primitives;
     using CompositionRoot.Api.Abstractions;
     using Connection;
+    using Microsoft.Extensions.Logging;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
@@ -32,6 +33,8 @@
         private readonly ITransactionalStore _transactionalStore;
         private readonly List<ITransactionalChange> _changes;
 
+        private readonly ILogger _logger;
+
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDatabaseConnection? _connection;
 
@@ -41,13 +44,16 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
-            ITransactionalStore transactionalStore)
+            ITransactionalStore transactionalStore,
+            ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
 
             _transactionalStore = transactionalStore;
             _changes = new List<ITransactionalChange>();
+
+            _logger = logger;
         }
 
         public bool HasChanges => _changes.Any();
@@ -168,7 +174,7 @@
                 foreach (var change in changes)
                 {
                     await change
-                       .Apply(this, token)
+                       .Apply(this, _logger, token)
                        .ConfigureAwait(false);
                 }
 
@@ -205,9 +211,7 @@
 
         public void CollectChange(ITransactionalChange change)
         {
-            // TODO: #133 - update transactional store
-            // TODO: #133 - transactional store update test
-            // TODO: #133 - optimistic concurrency test
+            // TODO: #133 - update transactional store and test it
             _changes.Add(change);
         }
 

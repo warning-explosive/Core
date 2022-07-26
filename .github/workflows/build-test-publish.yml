@@ -63,6 +63,28 @@ jobs:
       run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
     - name: Run tests
       run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[Test.*]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
+    - name: Generate coverage report
+      if: ${{ always() }}
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
+      with:
+        reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
+        targetdir: '${{ env.TEST_COVERAGE_PATH }}'
+        reporttypes: 'Html;Badges'
+        verbosity: 'Info'
+        tag: '${{ env.GitVersion_FullSemVer }}'
+    - name: Upload coverage to Codecov
+      if: ${{ always() }}
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true
+        files: ./${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml
+    - name: Upload test artifacts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: ${{ env.TEST_RESULTS_PATH }}
+        if-no-files-found: error
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Add NuGet source
@@ -74,24 +96,4 @@ jobs:
       with:
         name: built-packages
         path: packages/*.nupkg
-        if-no-files-found: error
-    - name: Generate coverage report
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
-      with:
-        reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
-        targetdir: '${{ env.TEST_COVERAGE_PATH }}'
-        reporttypes: 'Html;Badges'
-        verbosity: 'Info'
-        tag: '${{ env.GitVersion_FullSemVer }}'
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        fail_ci_if_error: true
-        files: ./${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml
-    - name: Upload test artifacts
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: ${{ env.TEST_RESULTS_PATH }}
         if-no-files-found: error

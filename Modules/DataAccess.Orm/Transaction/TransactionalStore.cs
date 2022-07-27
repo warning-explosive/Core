@@ -2,7 +2,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using Api.Model;
+    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -18,26 +23,53 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             _store = new ConcurrentDictionary<Type, ConcurrentDictionary<object, object>>();
         }
 
-        public void Store<TEntry, TKey>(TEntry obj, Func<TEntry, TKey> keySelector)
-            where TEntry : notnull
+        public void Store<TEntity, TKey>(TEntity entity)
+            where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
-            var inner = _store.GetOrAdd(typeof(TEntry), _ => new ConcurrentDictionary<object, object>());
-            _ = inner.GetOrAdd<object>(keySelector(obj), static (_, o) => o, obj);
+            var inner = _store.GetOrAdd(typeof(TEntity), _ => new ConcurrentDictionary<object, object>());
+            _ = inner.GetOrAdd<object>(entity.PrimaryKey, static (_, entity) => entity, entity);
         }
 
-        public bool TryGetValue<TEntry, TKey>(TKey key, [NotNullWhen(true)] out TEntry? entry)
-            where TEntry : notnull
+        public IEnumerable<TEntity> GetValues<TEntity, TKey>(Expression<Func<TEntity, bool>> predicate)
+            where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
         {
-            if (_store.TryGetValue(typeof(TEntry), out var inner)
+            if (_store.TryGetValue(typeof(TEntity), out var inner))
+            {
+                return inner.Values.OfType<TEntity>();
+            }
+
+            return Enumerable.Empty<TEntity>();
+        }
+
+        public bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            if (_store.TryGetValue(typeof(TEntity), out var inner)
                 && inner.TryGetValue(key, out var value))
             {
-                entry = (TEntry)value;
+                entity = (TEntity)value;
                 return true;
             }
 
-            entry = default;
+            entity = default;
+            return false;
+        }
+
+        public bool TryRemove<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            if (_store.TryGetValue(typeof(TEntity), out var inner)
+                && inner.TryRemove(key, out var value))
+            {
+                entity = (TEntity)value;
+                return true;
+            }
+
+            entity = default;
             return false;
         }
 
@@ -46,11 +78,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             Dispose();
         }
 
+        public void Apply(ITransactionalChange change)
+        {
+            change.Apply(this);
+        }
+
         public void Dispose()
         {
-            foreach (var entry in _store)
+            foreach (var entity in _store)
             {
-                entry.Value.Clear();
+                entity.Value.Clear();
             }
 
             _store.Clear();

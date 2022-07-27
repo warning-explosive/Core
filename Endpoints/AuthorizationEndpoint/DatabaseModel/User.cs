@@ -16,6 +16,6 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.DatabaseModel
             Username = username;
         }
 
-        public string Username { get; init; }
+        public string Username { get; set; }
     }
 }

@@ -24,14 +24,14 @@
             Sent = sent;
         }
 
-        public Guid OutboxId { get; init; }
+        public Guid OutboxId { get; set; }
 
-        public DateTime Timestamp { get; init; }
+        public DateTime Timestamp { get; set; }
 
-        public EndpointIdentity EndpointIdentity { get; init; }
+        public EndpointIdentity EndpointIdentity { get; set; }
 
-        public IntegrationMessage Message { get; init; }
+        public IntegrationMessage Message { get; set; }
 
-        public bool Sent { get; init; }
+        public bool Sent { get; set; }
     }
 }

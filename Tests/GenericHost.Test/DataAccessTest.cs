@@ -867,5 +867,309 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }
             }
         }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        internal async Task ReactiveTransactionalStoreTest(
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            IDatabaseProvider databaseProvider,
+            IsolationLevel isolationLevel,
+            TimeSpan timeout)
+        {
+            Output.WriteLine(databaseProvider.GetType().FullName);
+            Output.WriteLine(isolationLevel.ToString());
+
+            var logger = Fixture.CreateLogger(Output);
+
+            var additionalOurTypes = new[]
+            {
+                typeof(DatabaseEntity)
+            };
+
+            var settingsScope = nameof(ReactiveTransactionalStoreTest);
+            var virtualHost = settingsScope + isolationLevel;
+
+            var manualMigrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseManualMigration)
+            };
+
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new IsolationLevelManualRegistration(isolationLevel)
+            };
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(settingsScope)
+            };
+
+            var host = useTransport(
+                    settingsScope,
+                    isolationLevel,
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithManualRegistrations(manualRegistrations)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(manualMigrations)
+                       .WithManualRegistrations(manualRegistrations)
+                       .WithOverrides(overrides))
+                   .BuildOptions())
+               .BuildHost();
+
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+
+            using (host)
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                var sqlDatabaseSettings = await endpointDependencyContainer
+                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                // [I] - update transactional store without explicit reads
+                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
+
+                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    {
+                        var primaryKey = Guid.NewGuid();
+
+                        // #0 - zero checks
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                        Assert.Null(storedEntry);
+
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+
+                        // #1 - create
+                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+
+                        Assert.NotNull(storedEntry);
+                        Assert.NotEqual(default, storedEntry.Version);
+                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                        Assert.Equal(42, storedEntry.IntField);
+
+                        // #2 - update
+                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+
+                        Assert.NotNull(storedEntry);
+                        Assert.NotEqual(default, storedEntry.Version);
+                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                        Assert.Equal(43, storedEntry.IntField);
+
+                        // #3 - delete
+                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                        Assert.Null(storedEntry);
+
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                    }
+                }
+
+                // [II] - update transactional store through explicit reads
+                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
+
+                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    {
+                        var primaryKey = Guid.NewGuid();
+
+                        // #0 - zero checks
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                        Assert.Null(storedEntry);
+
+                        // #1 - create
+                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        var entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(primaryKey, entity.PrimaryKey);
+                        Assert.Equal(42, entity.IntField);
+
+                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+
+                        Assert.NotNull(storedEntry);
+                        Assert.NotEqual(default, storedEntry.Version);
+                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                        Assert.Equal(42, storedEntry.IntField);
+
+                        Assert.Same(entity, storedEntry);
+
+                        // #2 - update
+                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(primaryKey, entity.PrimaryKey);
+                        Assert.Equal(43, entity.IntField);
+
+                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+
+                        Assert.NotNull(storedEntry);
+                        Assert.NotEqual(default, storedEntry.Version);
+                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                        Assert.Equal(43, storedEntry.IntField);
+
+                        Assert.Same(entity, storedEntry);
+
+                        // #3 - delete
+                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                        Assert.Null(storedEntry);
+                    }
+                }
+
+                // [III] - keep reactive reference
+                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
+
+                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    {
+                        var primaryKey = Guid.NewGuid();
+
+                        // #0 - zero checks
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                        Assert.Null(storedEntry);
+
+                        // #1 - create
+                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        var entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(primaryKey, entity.PrimaryKey);
+                        Assert.Equal(42, entity.IntField);
+
+                        // #2 - update
+                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(primaryKey, entity.PrimaryKey);
+                        Assert.Equal(43, entity.IntField);
+
+                        // #3 - delete
+                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+
+                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+
+                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                        Assert.Null(storedEntry);
+                    }
+                }
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
+            }
+
+            static async Task CreateEntity(
+                IDatabaseTransaction transaction,
+                Guid primaryKey,
+                CancellationToken token)
+            {
+                var entity = new DatabaseEntity(
+                    primaryKey,
+                    true,
+                    "SomeString",
+                    "SomeNullableString",
+                    42);
+
+                _ = await transaction
+                   .Write<DatabaseEntity, Guid>()
+                   .Insert(new[] { entity }, EnInsertBehavior.Default, token)
+                   .ConfigureAwait(false);
+            }
+
+            static async Task<DatabaseEntity?> ReadEntity(
+                IDatabaseTransaction transaction,
+                Guid primaryKey,
+                CancellationToken token)
+            {
+                return await transaction
+                   .Read<DatabaseEntity, Guid>()
+                   .All()
+                   .SingleOrDefaultAsync(entity => entity.PrimaryKey == primaryKey, token)
+                   .ConfigureAwait(false);
+            }
+
+            static async Task UpdateEntity(
+                IDatabaseTransaction transaction,
+                Guid primaryKey,
+                CancellationToken token)
+            {
+                _ = await transaction
+                   .Write<DatabaseEntity, Guid>()
+                   .Update(entity => entity.IntField,
+                        entity => entity.IntField + 1,
+                        entity => entity.PrimaryKey == primaryKey,
+                        token)
+                   .ConfigureAwait(false);
+            }
+
+            static async Task DeleteEntity(
+                IDatabaseTransaction transaction,
+                Guid primaryKey,
+                CancellationToken token)
+            {
+                _ = await transaction
+                   .Write<DatabaseEntity, Guid>()
+                   .Delete(entity => entity.PrimaryKey == primaryKey, token)
+                   .ConfigureAwait(false);
+            }
+        }
     }
 }

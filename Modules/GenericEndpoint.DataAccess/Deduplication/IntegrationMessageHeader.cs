@@ -16,7 +16,7 @@
             Value = value;
         }
 
-        public JsonObject Value { get; init; }
+        public JsonObject Value { get; set; }
 
         public IIntegrationMessageHeader BuildIntegrationMessageHeader(IJsonSerializer serializer)
         {

@@ -22,12 +22,12 @@
             Handled = handled;
         }
 
-        public IntegrationMessage Message { get; init; }
+        public IntegrationMessage Message { get; set; }
 
-        public EndpointIdentity EndpointIdentity { get; init; }
+        public EndpointIdentity EndpointIdentity { get; set; }
 
-        public bool IsError { get; init; }
+        public bool IsError { get; set; }
 
-        public bool Handled { get; init; }
+        public bool Handled { get; set; }
     }
 }

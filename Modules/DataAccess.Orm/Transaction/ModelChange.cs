@@ -30,5 +30,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         {
             return _applyModelChange(databaseTransaction, _commandText, _settings, logger, token);
         }
+
+        public void Apply(ITransactionalStore transactionalStore)
+        {
+        }
     }
 }

@@ -72,14 +72,14 @@
       <Compile Update="Transaction\IDatabaseTransaction.cs">
         <DependentUpon>IDatabaseContext.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\IDatabaseTransactionStore.cs">
-        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
-      </Compile>
       <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
-        <DependentUpon>IDatabaseTransactionStore.cs</DependentUpon>
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
       </Compile>
       <Compile Update="Exceptions\DatabaseConcurrentUpdateException.cs">
         <DependentUpon>DatabaseException.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\ITransactionalChange.cs">
+        <DependentUpon>ITransactionalStore.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

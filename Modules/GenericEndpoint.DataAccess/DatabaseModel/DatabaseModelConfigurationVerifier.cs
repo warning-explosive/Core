@@ -69,7 +69,7 @@
                 yield return modifierException;
             }
 
-            foreach (var setterException in DatabaseObjectHasMissingPropertySetter(databaseEntity))
+            foreach (var setterException in DatabaseEntityHasMissingPropertySetter(databaseEntity))
             {
                 yield return setterException;
             }
@@ -92,7 +92,7 @@
                 yield return modifierException;
             }
 
-            foreach (var setterException in DatabaseObjectHasMissingPropertySetter(inlinedObject))
+            foreach (var setterException in DatabaseInlinedObjectHasMissingPropertyInitializer(inlinedObject))
             {
                 yield return setterException;
             }
@@ -137,16 +137,29 @@
             return false;
         }
 
-        private static IEnumerable<Exception> DatabaseObjectHasMissingPropertySetter(Type type)
+        private static IEnumerable<Exception> DatabaseEntityHasMissingPropertySetter(Type type)
         {
             var properties = type
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
                .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-               .Where(property => !property.SetIsAccessible());
+               .Where(property => !property.SetIsAccessible() || property.HasInitializer());
 
             foreach (var property in properties)
             {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have accessible setter or initializer (init modifier) so as to be deserializable");
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public setter so as to be mutable and deserializable");
+            }
+        }
+
+        private static IEnumerable<Exception> DatabaseInlinedObjectHasMissingPropertyInitializer(Type type)
+        {
+            var properties = type
+               .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+               .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
+               .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
+
+            foreach (var property in properties)
+            {
+                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable");
             }
         }
 

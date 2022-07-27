@@ -70,7 +70,15 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             var instance = cctor.Invoke(cctorArguments);
 
             // 4. fill instance with the leftover properties
+            Fill(type, instance, values);
+
+            return instance;
+        }
+
+        public void Fill(Type type, object instance, IDictionary<string, object?> values)
+        {
             var curr = type;
+
             while (curr != null)
             {
                 var properties = curr
@@ -92,8 +100,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             {
                 throw new InvalidOperationException($"Couldn't set value: {values.ToString(", ", pair => $"[{pair.Key}] - {pair.Value}")}");
             }
-
-            return instance;
         }
 
         private object? ConvertTo(object? value, Type targetType)

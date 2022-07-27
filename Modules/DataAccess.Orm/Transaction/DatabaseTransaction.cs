@@ -23,14 +23,12 @@
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
                                          IDisposable,
                                          IResolvable<IAdvancedDatabaseTransaction>,
-                                         IResolvable<IDatabaseTransactionStore>,
                                          IResolvable<IDatabaseTransaction>,
                                          IResolvable<IDatabaseContext>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
-        private readonly ITransactionalStore _transactionalStore;
         private readonly List<ITransactionalChange> _changes;
 
         private readonly ILogger _logger;
@@ -50,7 +48,7 @@
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
 
-            _transactionalStore = transactionalStore;
+            Store = transactionalStore;
             _changes = new List<ITransactionalChange>();
 
             _logger = logger;
@@ -110,6 +108,8 @@
 
         public bool Connected => _connection?.UnderlyingDbConnection != null;
 
+        public ITransactionalStore Store { get; }
+
         public IReadRepository<TEntity, TKey> Read<TEntity, TKey>()
             where TEntity : IUniqueIdentified<TKey>
             where TKey : notnull
@@ -158,7 +158,7 @@
             finally
             {
                 _changes.Clear();
-                _transactionalStore.Clear();
+                Store.Clear();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 Interlocked.Exchange(ref _connection, default)?.Dispose();
@@ -183,7 +183,7 @@
             finally
             {
                 _changes.Clear();
-                _transactionalStore.Clear();
+                Store.Clear();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
                 Interlocked.Exchange(ref _connection, default)?.Dispose();
@@ -195,24 +195,10 @@
             Close(false, CancellationToken.None).Wait();
         }
 
-        public void Store<TEntity, TKey>(TEntity entity)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull
-        {
-            _transactionalStore.Store(entity, static e => e.PrimaryKey);
-        }
-
-        public bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull
-        {
-            return _transactionalStore.TryGetValue(key, out entity);
-        }
-
         public void CollectChange(ITransactionalChange change)
         {
-            // TODO: #133 - update transactional store and test it
             _changes.Add(change);
+            Store.Apply(change);
         }
 
         private IDbTransaction Open()

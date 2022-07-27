@@ -20,12 +20,12 @@
             Text = text;
         }
 
-        public Blog Blog { get; init; }
+        public Blog Blog { get; set; }
 
-        public User User { get; init; }
+        public User User { get; set; }
 
-        public DateTime DateTime { get; init; }
+        public DateTime DateTime { get; set; }
 
-        public string Text { get; init; }
+        public string Text { get; set; }
     }
 }

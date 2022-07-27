@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
 
     [Component(EnLifestyle.Singleton)]
     internal class DynamicClassProvider : IDynamicClassProvider,
-                                        IResolvable<IDynamicClassProvider>
+                                          IResolvable<IDynamicClassProvider>
     {
         private const TypeAttributes DynamicClassTypeAttributes = TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed;
         private const MethodAttributes GetSetMethodAttributes = MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig;
@@ -45,7 +45,10 @@ namespace SpaceEngineers.Core.Dynamic.Internals
 
         public Type CreateType(DynamicClass dynamicClass)
         {
-            return TypesCache.GetOrAdd(dynamicClass, BuildClass);
+            lock (TypesCache)
+            {
+                return TypesCache.GetOrAdd(dynamicClass, BuildClass);
+            }
         }
 
         private static Type BuildClass(DynamicClass dynamicClass)

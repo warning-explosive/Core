@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
     public interface ITransactionalChange
     {
         /// <summary>
-        /// Applies transactional change
+        /// Applies transactional change to physical storage
         /// </summary>
         /// <param name="databaseTransaction">IAdvancedDatabaseTransaction</param>
         /// <param name="logger">ILogger</param>
@@ -20,5 +20,11 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
             IAdvancedDatabaseTransaction databaseTransaction,
             ILogger logger,
             CancellationToken token);
+
+        /// <summary>
+        /// Applies transactional change to transactional store
+        /// </summary>
+        /// <param name="transactionalStore">ITransactionalStore</param>
+        void Apply(ITransactionalStore transactionalStore);
     }
 }

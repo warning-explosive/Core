@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.Basics
             foreach (var argument in arguments)
             {
                 _args.Add(argument);
-                _argumentTypes.Add(argument.GetType());
+                _argumentTypes.Add(argument?.GetType() ?? typeof(object));
             }
 
             return this;

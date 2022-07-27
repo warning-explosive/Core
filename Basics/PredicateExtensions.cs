@@ -85,6 +85,24 @@ namespace SpaceEngineers.Core.Basics
             return new ReplaceParameterVisitor(parameterExpression).Visit(expression);
         }
 
+        /// <summary>
+        /// Unwraps Quote, Convert, ConvertChecked unary expressions
+        /// </summary>
+        /// <param name="expression">Source expression</param>
+        /// <returns>Source expression without unary expressions</returns>
+        public static Expression UnwrapUnaryExpression(
+            this Expression expression)
+        {
+            var expressionTypes = new[]
+            {
+                ExpressionType.Quote,
+                ExpressionType.Convert,
+                ExpressionType.ConvertChecked
+            };
+
+            return new UnwrapUnaryExpressionVisitor(expressionTypes).Visit(expression);
+        }
+
         private class ReplaceParameterVisitor : ExpressionVisitor
         {
             private readonly Expression _replacement;
@@ -97,6 +115,23 @@ namespace SpaceEngineers.Core.Basics
             protected override Expression VisitParameter(ParameterExpression node)
             {
                 return _replacement;
+            }
+        }
+
+        private class UnwrapUnaryExpressionVisitor : ExpressionVisitor
+        {
+            private readonly ExpressionType[] _expressionTypes;
+
+            public UnwrapUnaryExpressionVisitor(ExpressionType[] expressionTypes)
+            {
+                _expressionTypes = expressionTypes;
+            }
+
+            protected override Expression VisitUnary(UnaryExpression node)
+            {
+                return _expressionTypes.Contains(node.NodeType)
+                    ? node.Operand
+                    : base.VisitUnary(node);
             }
         }
     }

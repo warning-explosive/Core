@@ -64,19 +64,16 @@
       <Compile Update="Linq\LinqMethods.cs">
         <DependentUpon>ReadRepository.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\TransactionalStore.cs">
-        <DependentUpon>ITransactionalStore.cs</DependentUpon>
+      <Compile Update="Transaction\UpdateEntityChange.cs">
+        <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\CreateEntityChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\UpdateEntityChange.cs">
+      <Compile Update="Transaction\ModelChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\DeleteEntityChange.cs">
-        <DependentUpon>TransactionalStore.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Transaction\ModelChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
     </ItemGroup>

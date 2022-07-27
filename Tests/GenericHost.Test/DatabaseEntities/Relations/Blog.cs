@@ -17,8 +17,8 @@
             Posts = posts;
         }
 
-        public string Theme { get; init; }
+        public string Theme { get; set; }
 
-        public IReadOnlyCollection<Post> Posts { get; init; }
+        public IReadOnlyCollection<Post> Posts { get; set; }
     }
 }

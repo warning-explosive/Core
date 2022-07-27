@@ -23,13 +23,13 @@
             Payload = payload;
         }
 
-        public Guid MessageId { get; init; }
+        public Guid MessageId { get; set; }
 
-        public Guid ConversationId { get; init; }
+        public Guid ConversationId { get; set; }
 
-        public Guid? InitiatorMessageId { get; init; }
+        public Guid? InitiatorMessageId { get; set; }
 
-        public JsonObject Payload { get; init; }
+        public JsonObject Payload { get; set; }
 
         public SerializedIntegrationMessage BuildSerializedIntegrationMessage()
         {

@@ -74,16 +74,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .Get(token)
                .ConfigureAwait(false);
 
-            var version = await _transaction
-               .GetXid(settings, _logger, token)
-               .ConfigureAwait(false);
-
             IReadOnlyDictionary<object, IUniqueIdentified> map = entities
                .SelectMany(entity => entity.Flatten(_modelProvider))
                .DistinctBy(GetKey)
                .ToDictionary(GetKey);
 
-            foreach (var entity in map.Values.OfType<IDatabaseEntity>())
+            var version = await _transaction
+               .GetXid(settings, _logger, token)
+               .ConfigureAwait(false);
+
+            foreach (var entity in map.Values.OfType<IDatabaseEntity>().Where(entity => entity.Version == default))
             {
                 entity.Version = version;
             }

@@ -28,6 +28,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             _predicate = predicate;
         }
 
+        private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
+
         public async Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
             ILogger logger,
@@ -35,12 +37,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         {
             var actualAffectedRowsCount = await databaseTransaction
                .Write<TEntity, TKey>()
-               .Delete(_predicate.And(entity => entity.Version == _version), token)
+               .Delete(Predicate, token)
                .ConfigureAwait(false);
 
             if (actualAffectedRowsCount != _affectedRowsCount)
             {
                 throw new DatabaseConcurrentUpdateException(typeof(TEntity));
+            }
+        }
+
+        public void Apply(ITransactionalStore transactionalStore)
+        {
+            var values = transactionalStore.GetValues<TEntity, TKey>(Predicate);
+
+            foreach (var value in values)
+            {
+                transactionalStore.TryRemove<TEntity, TKey>(value.PrimaryKey, out _);
             }
         }
     }

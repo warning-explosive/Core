@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
@@ -130,11 +131,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var multipleRelationValues = AddMultipleRelations(type, values);
 
-            var built = (T)Build(type, values) !;
+            T built;
 
-            if (type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
+            if (!type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
             {
-                Store(type, built);
+                built = (T)Build(type, values) !;
+            }
+            else
+            {
+                if (TryGetValue(type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
+                {
+                    Fill(type, stored, values);
+                    built = (T)stored;
+                }
+                else
+                {
+                    built = (T)Build(type, values) !;
+                    Store(type, built);
+                }
             }
 
             await MaterializeRelations(built, relationValues, token).ConfigureAwait(false);
@@ -144,8 +158,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             return built;
         }
 
-        private object? Build(Type type, IDictionary<string, object?> values)
+        private void Fill(Type type, object instance, IDictionary<string, object?> rawValues)
         {
+            _objectBuilder.Fill(type, instance, ArrangeValues(type, rawValues));
+        }
+
+        private object? Build(Type type, IDictionary<string, object?> rawValues)
+        {
+            var values = ArrangeValues(type, rawValues);
+
             if (type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
                 && values.Count == 1
                 && values.Single().Value == null)
@@ -157,6 +178,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 && values.Count == 1)
             {
                 return values.Single().Value;
+            }
+
+            return _objectBuilder.Build(type, values);
+        }
+
+        private IDictionary<string, object?> ArrangeValues(Type type, IDictionary<string, object?> values)
+        {
+            if (type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
+                && values.Count == 1
+                && values.Single().Value == null)
+            {
+                return values;
+            }
+
+            if (type.IsMultipleRelation(out _)
+                && values.Count == 1)
+            {
+                return values;
             }
 
             if (type.IsAnonymous())
@@ -192,16 +231,47 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                         StringComparer.OrdinalIgnoreCase);
             }
 
-            return _objectBuilder.Build(type, values);
+            return values;
         }
 
-        private void Store(Type entity, T built)
+        private bool TryGetValue(Type entity, object key, [NotNullWhen(true)] out object? stored)
         {
-            _ = _transaction
-                .CallMethod(nameof(_transaction.Store))
-                .WithTypeArguments(entity, entity.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
-                .WithArgument(built)
-                .Invoke();
+            stored = GetType()
+               .CallMethod(nameof(TryGetValue))
+               .WithTypeArguments(entity, entity.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
+               .WithArguments(_transaction.Store, key)
+               .Invoke();
+
+            return stored != default;
+        }
+
+        private static TEntity? TryGetValue<TEntity, TKey>(
+            ITransactionalStore transactionalStore,
+            TKey key)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            return transactionalStore.TryGetValue<TEntity, TKey>(key, out var stored)
+                ? stored
+                : default;
+        }
+
+        private void Store(Type entity, object built)
+        {
+            _ = GetType()
+               .CallMethod(nameof(Store))
+               .WithTypeArguments(entity, entity.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
+               .WithArguments(_transaction.Store, built)
+               .Invoke();
+        }
+
+        private static void Store<TEntity, TKey>(
+            ITransactionalStore transactionalStore,
+            TEntity entity)
+            where TEntity : IUniqueIdentified<TKey>
+            where TKey : notnull
+        {
+            transactionalStore.Store<TEntity, TKey>(entity);
         }
 
         private IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
@@ -265,7 +335,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
-            if (_transaction.TryGetValue<TEntity, TKey>(primaryKey, out var entity))
+            if (_transaction.Store.TryGetValue<TEntity, TKey>(primaryKey, out var entity))
             {
                 return Task.FromResult<TEntity?>(entity);
             }

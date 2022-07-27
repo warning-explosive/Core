@@ -20,10 +20,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             Query = query;
         }
 
-        public string Schema { get; init; }
+        public string Schema { get; set; }
 
-        public string View { get; init; }
+        public string View { get; set; }
 
-        public string Query { get; init; }
+        public string Query { get; set; }
     }
 }

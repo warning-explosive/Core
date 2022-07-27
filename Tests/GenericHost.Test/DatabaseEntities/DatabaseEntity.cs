@@ -22,12 +22,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
             IntField = intField;
         }
 
-        public bool BooleanField { get; init; }
+        public bool BooleanField { get; set; }
 
-        public string StringField { get; init; }
+        public string StringField { get; set; }
 
-        public string? NullableStringField { get; init; }
+        public string? NullableStringField { get; set; }
 
-        public int IntField { get; init; }
+        public int IntField { get; set; }
     }
 }

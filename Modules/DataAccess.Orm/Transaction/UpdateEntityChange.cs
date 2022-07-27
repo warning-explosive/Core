@@ -37,23 +37,48 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             _updateVersion = updateVersion;
         }
 
+        private IReadOnlyCollection<UpdateInfo<TEntity, TKey>> UpdateInfos => _infos
+           .Concat(new[] { new UpdateInfo<TEntity, TKey>(entity => entity.Version, _ => _updateVersion) })
+           .ToList();
+
+        private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
+
         public async Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
             ILogger logger,
             CancellationToken token)
         {
-            var infos = _infos
-               .Concat(new[] { new UpdateInfo<TEntity, TKey>(entity => entity.Version, _ => _updateVersion) })
-               .ToList();
-
             var actualAffectedRowsCount = await databaseTransaction
                .Write<TEntity, TKey>()
-               .Update(infos, _predicate.And(entity => entity.Version == _version), token)
+               .Update(UpdateInfos, Predicate, token)
                .ConfigureAwait(false);
 
             if (actualAffectedRowsCount != _affectedRowsCount)
             {
                 throw new DatabaseConcurrentUpdateException(typeof(TEntity));
+            }
+        }
+
+        public void Apply(ITransactionalStore transactionalStore)
+        {
+            var entities = transactionalStore.GetValues<TEntity, TKey>(Predicate);
+
+            foreach (var entity in entities)
+            {
+                foreach (var info in UpdateInfos)
+                {
+                    var parameter = info.Accessor.Parameters.Single();
+
+                    var body = Expression.Assign(
+                        info.Accessor.Body.UnwrapUnaryExpression().ReplaceParameter(parameter),
+                        info.ValueProducer.Body.UnwrapUnaryExpression().ReplaceParameter(parameter));
+
+                    Expression.Lambda<Action<TEntity>>(body, parameter)
+                       .Compile()
+                       .Invoke(entity);
+                }
+
+                transactionalStore.Store<TEntity, TKey>(entity);
             }
         }
     }

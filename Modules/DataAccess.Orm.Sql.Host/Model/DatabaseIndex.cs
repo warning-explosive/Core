@@ -22,12 +22,12 @@
             Definition = definition;
         }
 
-        public string Schema { get; init; }
+        public string Schema { get; set; }
 
-        public string Table { get; init; }
+        public string Table { get; set; }
 
-        public string Index { get; init; }
+        public string Index { get; set; }
 
-        public string Definition { get; init; }
+        public string Definition { get; set; }
     }
 }

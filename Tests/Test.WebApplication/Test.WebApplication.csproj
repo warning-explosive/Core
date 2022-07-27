@@ -37,8 +37,8 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.3.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.4.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Endpoints\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataImport.Excel
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using Abstractions;
 
@@ -18,12 +19,12 @@ namespace SpaceEngineers.Core.DataImport.Excel
             Stream file,
             string sheetName,
             Range range,
-            ExcelTableMetadata tableMetadata)
+            ExcelTableMetadata? tableMetadata = null)
         {
             File = file;
             SheetName = sheetName;
             Range = range;
-            TableMetadata = tableMetadata;
+            TableMetadata = tableMetadata ?? new ExcelTableMetadata(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase));
         }
 
         /// <summary>

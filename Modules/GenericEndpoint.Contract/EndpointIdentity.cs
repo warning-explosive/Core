@@ -9,8 +9,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
     /// EndpointIdentity
     /// </summary>
     [ManuallyRegisteredComponent("Is created manually during endpoint's DependencyContainer initialization")]
-    public class EndpointIdentity : ISafelyEquatable<EndpointIdentity>,
-                                    IEquatable<EndpointIdentity>,
+    public class EndpointIdentity : IEquatable<EndpointIdentity>,
+                                    ISafelyEquatable<EndpointIdentity>,
                                     IResolvable<EndpointIdentity>
     {
         /// <summary> .cctor </summary>

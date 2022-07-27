@@ -74,7 +74,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             var commandText = CommandText;
 
             _ = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             var change = new ModelChange(
                 commandText,
                 settings,
-                static (transaction, commandText, ormSettings, logger, token) => transaction.InvokeScalar(commandText, ormSettings, logger, token));
+                static (transaction, commandText, ormSettings, logger, token) => transaction.Execute(commandText, ormSettings, logger, token));
 
             transaction.CollectChange(change);
 

@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             CancellationToken token)
         {
             var dynamicValues = await transaction
-               .Invoke(TransactionIdCommandText, settings, logger, token)
+               .Query(TransactionIdCommandText, settings, logger, token)
                .ConfigureAwait(false);
 
             var xid = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value;

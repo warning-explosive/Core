@@ -75,7 +75,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
                 _ = await connection
-                   .InvokeScalar(commandText, ormSettings, _logger, token)
+                   .Execute(commandText, ormSettings, _logger, token)
                    .ConfigureAwait(false);
             }
 

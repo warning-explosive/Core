@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             var commandText = InlineQueryParameters(_dependencyContainer, query);
 
             return await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.Invoke)
+               .TryAsync((commandText, settings, _logger), _transaction.Query)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<IEnumerable<dynamic>>(commandText), token)
                .ConfigureAwait(false);

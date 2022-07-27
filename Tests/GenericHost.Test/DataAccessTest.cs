@@ -667,7 +667,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
                 var primaryKey = Guid.NewGuid();
-                var delay = TimeSpan.FromMilliseconds(10);
 
                 // #1 - create/create
                 {
@@ -703,9 +702,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     try
                     {
+                        var delay = TimeSpan.FromMilliseconds(100);
+
                         await Task.WhenAll(
                                 UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token),
-                                UpdateEntity(endpointDependencyContainer, primaryKey, TimeSpan.Zero, cts.Token))
+                                UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token))
                            .ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
@@ -724,7 +725,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 // #3 - update/delete
                 {
-                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token);
+                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, TimeSpan.Zero, cts.Token);
                     var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, cts.Token);
 
                     Exception? exception = null;
@@ -833,9 +834,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                 token)
                            .ConfigureAwait(false);
 
-                        await Task
-                           .Delay(delay, token)
-                           .ConfigureAwait(false);
+                        await Task.Delay(delay, token).ConfigureAwait(false);
                     }
 
                     dependencyContainer

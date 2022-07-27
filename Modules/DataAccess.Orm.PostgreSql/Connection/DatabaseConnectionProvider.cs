@@ -68,7 +68,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 MinPoolSize = 0,
                 MaxPoolSize = (int)settings.ConnectionPoolSize,
                 ConnectionPruningInterval = 1,
-                ConnectionIdleLifetime = 1
+                ConnectionIdleLifetime = 1,
+                IncludeErrorDetail = true
             };
 
             var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);

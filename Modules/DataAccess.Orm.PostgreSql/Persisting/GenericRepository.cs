@@ -164,7 +164,7 @@
                .ConfigureAwait(false);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
@@ -221,7 +221,7 @@
                     grp => grp.Count());
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);

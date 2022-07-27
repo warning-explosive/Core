@@ -14,6 +14,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Basics.Primitives;
     using CompositionRoot.Api.Abstractions;
     using Connection;
     using CrossCuttingConcerns.Settings;
@@ -34,6 +35,8 @@
     {
         private const string AutomaticMigration = "Automatic migration";
         private const string CommandFormat = @"--[{0}]{1}";
+
+        private static readonly AsyncAutoResetEvent Sync = new AsyncAutoResetEvent(true);
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
@@ -81,9 +84,20 @@
 
                 if (!appliedMigrations.Contains(migration.Name))
                 {
-                    await migration
-                       .ExecuteManualMigration(token)
-                       .ConfigureAwait(false);
+                    try
+                    {
+                        await Sync
+                           .WaitAsync(token)
+                           .ConfigureAwait(false);
+
+                        await migration
+                           .ExecuteManualMigration(token)
+                           .ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        Sync.Set();
+                    }
                 }
             }
         }
@@ -144,7 +158,7 @@
                 .ConfigureAwait(false);
 
             _ = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);
@@ -152,7 +166,7 @@
             var change = new ModelChange(
                 commandText,
                 settings,
-                static (transaction, commandText, ormSettings, logger, token) => transaction.InvokeScalar(commandText, ormSettings, logger, token));
+                static (transaction, commandText, ormSettings, logger, token) => transaction.Execute(commandText, ormSettings, logger, token));
 
             transaction.CollectChange(change);
 

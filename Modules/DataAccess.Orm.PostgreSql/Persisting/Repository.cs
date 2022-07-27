@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .ToString(";" + Environment.NewLine);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.InvokeScalar)
+               .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseProvider.Handle<long>(commandText), token)
                .ConfigureAwait(false);

@@ -64,7 +64,7 @@ jobs:
     - name: Run tests
       run: dotnet test ${{ env.CONFIGURATION != 'Release' && '--filter FullyQualifiedName\!~Benchmark' || '' }} -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Include="[*.Test]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
     - name: Generate coverage report
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.9
       with:
         reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
@@ -73,13 +73,13 @@ jobs:
         verbosity: 'Info'
         tag: '${{ env.GitVersion_FullSemVer }}'
     - name: Upload coverage to Codecov
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       uses: codecov/codecov-action@v3
       with:
         fail_ci_if_error: true
         files: ./${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml
     - name: Upload test artifacts
-      if: ${{ always() }}
+      if: ${{ success() || failure() }}
       uses: actions/upload-artifact@v3
       with:
         name: test-results

@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
+    using Basics.Primitives;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
@@ -702,11 +703,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     try
                     {
-                        var delay = TimeSpan.FromMilliseconds(100);
+                        var sync = new AsyncAutoResetEvent(true);
 
                         await Task.WhenAll(
-                                UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token),
-                                UpdateEntity(endpointDependencyContainer, primaryKey, delay, cts.Token))
+                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token),
+                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token))
                            .ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
@@ -725,7 +726,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 // #3 - update/delete
                 {
-                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, TimeSpan.Zero, cts.Token);
+                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, cts.Token);
                     var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, cts.Token);
 
                     Exception? exception = null;
@@ -814,10 +815,52 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }
             }
 
+            static async Task UpdateEntityConcurrently(
+                IDependencyContainer dependencyContainer,
+                Guid primaryKey,
+                AsyncAutoResetEvent sync,
+                CancellationToken token)
+            {
+                await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
+
+                    try
+                    {
+                        await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
+                        {
+                            _ = await transaction
+                               .Write<DatabaseEntity, Guid>()
+                               .Update(entity => entity.IntField,
+                                    entity => entity.IntField + 1,
+                                    entity => entity.PrimaryKey == primaryKey,
+                                    token)
+                               .ConfigureAwait(false);
+
+                            // TODO: #190
+                            /*await Task
+                               .Delay(TimeSpan.FromMilliseconds(100), token)
+                               .ConfigureAwait(false);*/
+                            /*await sync
+                               .WaitAsync(token)
+                               .ConfigureAwait(false);*/
+                        }
+                    }
+                    finally
+                    {
+                        // TODO: #190
+                        /*sync.Set();*/
+                    }
+
+                    dependencyContainer
+                       .Resolve<ILogger>()
+                       .Debug($"{nameof(UpdateEntityConcurrently)}: {primaryKey}");
+                }
+            }
+
             static async Task UpdateEntity(
                 IDependencyContainer dependencyContainer,
                 Guid primaryKey,
-                TimeSpan delay,
                 CancellationToken token)
             {
                 await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
@@ -833,8 +876,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                 entity => entity.PrimaryKey == primaryKey,
                                 token)
                            .ConfigureAwait(false);
-
-                        await Task.Delay(delay, token).ConfigureAwait(false);
                     }
 
                     dependencyContainer

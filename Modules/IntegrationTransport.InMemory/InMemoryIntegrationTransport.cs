@@ -198,6 +198,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                               return new Func<Task>(async () =>
                               {
                                   var copy = message.ContravariantClone(reflectedType);
+
                                   MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(copy, default));
 
                                   await messageHandler

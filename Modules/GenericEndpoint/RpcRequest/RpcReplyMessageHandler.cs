@@ -41,7 +41,6 @@
 
             if (!resultWasSet)
             {
-                // TODO: #195 - test it
                 _logger.Warning($"Rpc request {requestId} was timed out");
             }
 

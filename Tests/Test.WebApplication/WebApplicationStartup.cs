@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.IO;
     using System.IO.Compression;
     using Basics;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.Host.Builder;
     using IntegrationTransport.Host.Builder;
     using IntegrationTransport.WebHost;
@@ -27,8 +28,9 @@ namespace SpaceEngineers.Core.Test.WebApplication
         public WebApplicationStartup(
             IHostBuilder hostBuilder,
             IConfiguration configuration,
+            EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
-            : base(hostBuilder, configuration, optionsFactory)
+            : base(hostBuilder, configuration, endpointIdentity, optionsFactory)
         {
         }
 

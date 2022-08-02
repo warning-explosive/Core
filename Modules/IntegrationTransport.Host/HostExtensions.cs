@@ -94,22 +94,30 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         /// Use in-memory integration transport inside specified host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="optionsFactory">Transport endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseIntegrationTransport(
             this IHostBuilder hostBuilder,
+            EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
 
-            return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(hostBuilder, optionsFactory)(serviceCollection));
+            return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(hostBuilder, endpointIdentity, optionsFactory)(serviceCollection));
         }
 
         internal static Action<IServiceCollection> InitializeIntegrationTransport(
             IHostBuilder hostBuilder,
+            EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
-            var builder = ConfigureBuilder(hostBuilder);
+            if (!endpointIdentity.LogicalName.Contains(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Integration transport endpoint should have literal '{TransportEndpointIdentity.LogicalName}' as part of logical name");
+            }
+
+            var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
             var options = optionsFactory(builder);
 
@@ -154,7 +162,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 return container
                    .Resolve<EndpointIdentity>()
                    .LogicalName
-                   .Equals(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
+                   .Contains(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -166,15 +174,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         }
 
         private static ITransportEndpointBuilder ConfigureBuilder(
-            IHostBuilder hostBuilder)
+            IHostBuilder hostBuilder,
+            EndpointIdentity endpointIdentity)
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
                     nameof(Core.CrossCuttingConcerns)));
-
-            var endpointIdentity = new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid());
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 

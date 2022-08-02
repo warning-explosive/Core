@@ -286,7 +286,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             Exception exception,
             CancellationToken token)
         {
-            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(message, exception));
+            OnMessageReceived(() => message, exception);
 
             if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
             {
@@ -822,7 +822,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         private static EventHandler<BasicReturnEventArgs> HandleChannelBasicReturn(
             ILogger logger,
-            Action<IntegrationMessage, Exception?> onMessageReceived,
+            Action<Func<IntegrationMessage>, Exception?> onMessageReceived,
             IJsonSerializer jsonSerializer,
             AsyncManualResetEvent ready,
             Func<CancellationToken> token)
@@ -843,7 +843,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             };
 
             static Task EnqueueReturnedErrorMessage(
-                (IModel, BasicReturnEventArgs, Action<IntegrationMessage, Exception?>, IJsonSerializer, ILogger) state,
+                (IModel, BasicReturnEventArgs, Action<Func<IntegrationMessage>, Exception?>, IJsonSerializer, ILogger) state,
                 CancellationToken token)
             {
                 var (recoveryAwareModel, args, onMessageReceived, jsonSerializer, logger) = state;
@@ -852,7 +852,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)} - {args.BasicProperties.MessageId}");
 
-                onMessageReceived(args.DecodeIntegrationMessage(jsonSerializer), exception);
+                onMessageReceived(() => args.DecodeIntegrationMessage(jsonSerializer), exception);
 
                 recoveryAwareModel.Publish(DeadLetterExchange, args.RoutingKey, args.BasicProperties, args.Body.ToArray());
 
@@ -860,9 +860,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             }
         }
 
-        private void OnMessageReceived(IntegrationMessage message, Exception? exception)
+        private void OnMessageReceived(Func<IntegrationMessage> messageProducer, Exception? exception)
         {
-            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(message, exception));
+            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(messageProducer(), exception));
         }
 
         [SuppressMessage("Analysis", "CA1031", Justification = "async event handler with void as retun value")]
@@ -870,7 +870,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             ILogger logger,
             IReadOnlyDictionary<string, EndpointIdentity> consumers,
             IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> messageHandlers,
-            Action<IntegrationMessage, Exception?> onMessageReceived,
+            Action<Func<IntegrationMessage>, Exception?> onMessageReceived,
             IJsonSerializer jsonSerializer,
             AsyncManualResetEvent ready,
             Func<CancellationToken> token)
@@ -905,19 +905,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 }
 
                 await ExecutionExtensions
-                   .TryAsync((consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived), InvokeMessageHandlers)
+                   .TryAsync((consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived), InvokeMessageHandler)
                    .Catch<Exception>((exception, t) => EnqueueError(endpointIdentity, message, exception, t))
                    .Invoke(token())
                    .ConfigureAwait(false);
             };
 
-            static async Task InvokeMessageHandlers(
-                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, EndpointIdentity, IntegrationMessage, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>, Action<IntegrationMessage, Exception?>) state,
+            static async Task InvokeMessageHandler(
+                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, EndpointIdentity, IntegrationMessage, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>, Action<Func<IntegrationMessage>, Exception?>) state,
                 CancellationToken token)
             {
                 var (consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived) = state;
 
-                onMessageReceived(message, default);
+                onMessageReceived(() => message, default);
 
                 await GetMessageHandler(endpointIdentity, messageHandlers)
                    .Invoke(message)

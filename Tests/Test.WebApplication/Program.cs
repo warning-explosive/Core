@@ -1,12 +1,15 @@
 namespace SpaceEngineers.Core.Test.WebApplication
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
     using AuthorizationEndpoint.Host;
     using Basics;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.PostgreSql.Host;
+    using GenericEndpoint.Contract;
     using GenericHost;
+    using IntegrationTransport.Host;
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -36,6 +39,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
                .UseIntegrationTransport(hostBuilder =>
                     context => new WebApplicationStartup(hostBuilder,
                         context.Configuration,
+                        new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                         builder => builder
                            .WithInMemoryIntegrationTransport(hostBuilder)
                            .WithWebApi()

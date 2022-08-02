@@ -8,6 +8,8 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Api.Abstractions;
     using CompositionRoot.Api.Abstractions.Registration;
     using CrossCuttingConcerns.Settings;
     using GenericEndpoint.Api.Abstractions;
@@ -16,7 +18,9 @@
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.Pipeline;
     using GenericHost;
+    using IntegrationTransport.Api.Abstractions;
     using IntegrationTransport.Host;
+    using IntegrationTransport.InMemory;
     using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
     using MessageHandlers;
@@ -63,31 +67,35 @@
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, logger, hostBuilder, modifier) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .ModifyContainerOptions(modifier)
+                           .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, logger, hostBuilder, modifier) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .ModifyContainerOptions(modifier)
+                           .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -106,7 +114,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -136,9 +144,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -213,7 +223,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -239,10 +249,14 @@
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
+            var transportEndpointIdentity = new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid());
+
             var host = useTransport(
+                    transportEndpointIdentity,
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -251,20 +265,90 @@
                        .BuildOptions())
                .BuildHost();
 
+            var gatewayTransportEndpointIdentity = new EndpointIdentity("Gateway" + TransportEndpointIdentity.LogicalName, Guid.NewGuid());
+
+            var gatewayHost = useTransport(
+                    gatewayTransportEndpointIdentity,
+                    settingsScope,
+                    logger,
+                    Fixture.CreateHostBuilder(Output),
+                    options =>
+                    {
+                        var integrationTransport = host
+                           .GetTransportDependencyContainer()
+                           .Resolve<IIntegrationTransport>();
+
+                        return integrationTransport is InMemoryIntegrationTransport
+                            ? options.WithOverrides(Fixture.DelegateOverride(container => container.OverrideInstance(integrationTransport)))
+                            : options;
+                    })
+               .BuildHost();
+
             var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            var gatewayTransportDependencyContainer = gatewayHost.GetTransportDependencyContainer();
+
+            Assert.NotEqual(transportDependencyContainer.Resolve<EndpointIdentity>(), gatewayTransportDependencyContainer.Resolve<EndpointIdentity>());
+            Assert.NotEqual(transportDependencyContainer.Resolve<EndpointIdentity>().LogicalName, gatewayTransportDependencyContainer.Resolve<EndpointIdentity>().LogicalName);
 
             using (host)
+            using (gatewayHost)
             using (var cts = new CancellationTokenSource(timeout))
             {
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+                var waitUntilTransportIsNotRunning = Task.WhenAll(
+                    host.WaitUntilTransportIsNotRunning(Output.WriteLine),
+                    gatewayHost.WaitUntilTransportIsNotRunning(Output.WriteLine));
 
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
+                await Task.WhenAll(
+                        host.StartAsync(cts.Token),
+                        gatewayHost.StartAsync(cts.Token))
+                   .ConfigureAwait(false);
 
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+                var hostShutdown = Task.WhenAll(
+                    host.WaitForShutdownAsync(cts.Token),
+                    gatewayHost.WaitForShutdownAsync(cts.Token));
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
+                await Task.WhenAll(
+                        Run(transportDependencyContainer, settingsScope, hostShutdown, cts.Token),
+                        Run(gatewayTransportDependencyContainer, settingsScope, hostShutdown, cts.Token))
+                   .ConfigureAwait(false);
+
+                var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+                Assert.Empty(collector.ErrorMessages);
+
+                var gatewayCollector = gatewayTransportDependencyContainer.Resolve<TestMessagesCollector>();
+                Assert.Empty(gatewayCollector.ErrorMessages);
+
+                var messages = collector.Messages
+                   .Concat(gatewayCollector.Messages)
+                   .Distinct()
+                   .ToArray();
+
+                Assert.Equal(4, messages.Length);
+
+                var firstQuery = messages.Where(message => message.ReflectedType == typeof(Query) && message.ReadRequiredHeader<SentFrom>().Value.Equals(transportEndpointIdentity)).ToArray();
+                Assert.Single(firstQuery);
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(firstQuery.Single().ReadRequiredHeader<Id>().Value)));
+
+                var secondQuery = messages.Where(message => message.ReflectedType == typeof(Query) && message.ReadRequiredHeader<SentFrom>().Value.Equals(gatewayTransportEndpointIdentity)).ToArray();
+                Assert.Single(secondQuery);
+                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(secondQuery.Single().ReadRequiredHeader<Id>().Value)));
+
+                await Task.WhenAll(
+                        host.StopAsync(cts.Token),
+                        gatewayHost.StopAsync(cts.Token))
+                   .ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
+            }
+
+            static async Task Run(
+                IDependencyContainer transportDependencyContainer,
+                string settingsScope,
+                Task hostShutdown,
+                CancellationToken token)
+            {
                 var query = new Query(42);
 
                 Reply reply;
@@ -273,7 +357,7 @@
                 {
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(cts.Token)
+                       .Get(token)
                        .ConfigureAwait(false);
 
                     Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
@@ -282,7 +366,7 @@
 
                     var awaiter = Task.WhenAny(
                         hostShutdown,
-                        integrationContext.RpcRequest<Query, Reply>(query, cts.Token));
+                        integrationContext.RpcRequest<Query, Reply>(query, token));
 
                     var result = await awaiter.ConfigureAwait(false);
 
@@ -294,34 +378,14 @@
                     reply = await ((Task<Reply>)result).ConfigureAwait(false);
                 }
 
-                Assert.Empty(collector.ErrorMessages);
-
-                var messages = collector.Messages.ToArray();
-                Assert.Equal(2, messages.Length);
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
                 Assert.Equal(query.Id, reply.Id);
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
             }
         }
-
-        // TODO: #195
-        /*[Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostTestData))]
-        internal async Task RpcRequestWithDifferentTransportsTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
-            TimeSpan timeout)
-        {
-            throw new NotImplementedException("#195");
-        }*/
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -351,9 +415,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -427,7 +493,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -457,9 +523,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -562,7 +630,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -601,9 +669,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -679,7 +749,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RunTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -693,9 +763,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(new EndpointIdentity(settingsScope, 0),
                     (_, builder) => builder
                        .WithTracing()
@@ -738,7 +810,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, Func<DependencyContainerOptions, DependencyContainerOptions>, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -752,9 +824,11 @@
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
-                    Fixture.CreateHostBuilder(Output))
+                    Fixture.CreateHostBuilder(Output),
+                    options => options)
                .UseEndpoint(new EndpointIdentity(settingsScope, 0),
                     (_, builder) => builder
                        .WithTracing()

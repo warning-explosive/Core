@@ -83,23 +83,25 @@
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
-                (logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .WithTracing()
+                           .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
+                           .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
-                (logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .WithTracing()
+                           .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
+                           .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -128,25 +130,27 @@
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -170,11 +174,14 @@
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void SameTransportTest(Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
+        internal void SameTransportTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
             var logger = Fixture.CreateLogger(Output);
 
-            var host = useTransport(logger, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -189,23 +196,25 @@
                         .BuildOptions())
                 .BuildHost();
 
+            var gatewayHost = useTransport(
+                    new EndpointIdentity("Gateway" + TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .BuildHost();
+
             var integrationTransport = host.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
+            var gatewayIntegrationTransport = gatewayHost.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
+
             Output.WriteLine($"{nameof(IIntegrationTransport)}: {integrationTransport.GetType().FullName}");
 
-            var transportIsSame = new[]
-                {
-                    host.GetEndpointDependencyContainer(TestIdentity.Endpoint10),
-                    host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)
-                }
-                .Select(container => container.Resolve<IIntegrationTransport>())
-                .All(endpointTransport => ReferenceEquals(integrationTransport, endpointTransport));
-
-            Assert.True(transportIsSame);
+            Assert.NotSame(integrationTransport, gatewayIntegrationTransport);
+            Assert.Same(integrationTransport, host.GetEndpointDependencyContainer(TestIdentity.Endpoint10).Resolve<IIntegrationTransport>());
+            Assert.Same(integrationTransport, host.GetEndpointDependencyContainer(TestIdentity.Endpoint20).Resolve<IIntegrationTransport>());
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void BuildTest(Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
+        internal void BuildTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
             var logger = Fixture.CreateLogger(Output);
 
@@ -241,7 +250,10 @@
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(logger, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider)
@@ -667,7 +679,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
@@ -680,7 +692,11 @@
                 new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
             };
 
-            var host = useTransport(nameof(CompareEquivalentDatabaseDatabaseModelsTest), logger, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    nameof(CompareEquivalentDatabaseDatabaseModelsTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)
@@ -727,7 +743,7 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
@@ -749,7 +765,11 @@
                 new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
             };
 
-            var host = useTransport(nameof(ExtractDatabaseModelChangesDiffTest), logger, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    nameof(ExtractDatabaseModelChangesDiffTest),
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
                .UseTracingEndpoint(TestIdentity.Instance0,
                     builder => builder
                        .WithDataAccess(databaseProvider)

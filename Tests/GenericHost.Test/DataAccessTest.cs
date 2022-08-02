@@ -22,6 +22,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Settings;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging.MessageHeaders;
@@ -76,31 +77,33 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -147,33 +150,35 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .WithTracing()
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .WithTracing()
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
+                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -207,7 +212,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
         internal async Task GetConversationTraceTest(
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -250,6 +255,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
@@ -437,7 +443,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -492,6 +498,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
@@ -581,7 +588,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -616,6 +623,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
@@ -911,7 +919,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostWithDataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -946,6 +954,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,

@@ -21,6 +21,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Translation.Extensions;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.Host;
     using GenericHost;
     using IntegrationTransport.Host;
@@ -76,15 +77,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var postgreSqlDatabaseProvider = new PostgreSqlDatabaseProvider();
             var isolationLevel = IsolationLevel.ReadCommitted;
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
+                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
                    .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
+                   .UseIntegrationTransport(transportEndpointIdentity,
+                        builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions()));
 
             var emptyQueryParameters = new Dictionary<string, object?>();
 
@@ -884,7 +886,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(QueryTranslationTestData))]
         internal async Task QueryTranslationTest(
             string section,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             Func<IDependencyContainer, object?> queryProducer,
@@ -928,6 +930,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))

@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
 {
     using System;
     using CompositionRoot;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.Host.Builder;
     using Host;
     using Host.Builder;
@@ -20,18 +21,22 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
         private readonly IHostBuilder _hostBuilder;
         private readonly Func<ITransportEndpointBuilder, EndpointOptions> _optionsFactory;
         private readonly IConfiguration _configuration;
+        private readonly EndpointIdentity _endpointIdentity;
 
         /// <summary> .cctor </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="configuration">IConfiguration</param>
+        /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <param name="optionsFactory">Transport endpoint options factory</param>
         protected BaseStartup(
             IHostBuilder hostBuilder,
             IConfiguration configuration,
+            EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
             _hostBuilder = hostBuilder;
             _configuration = configuration;
+            _endpointIdentity = endpointIdentity;
             _optionsFactory = optionsFactory;
         }
 
@@ -40,7 +45,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
         {
             ConfigureAspNetCoreServices(serviceCollection, _configuration);
 
-            HostExtensions.InitializeIntegrationTransport(_hostBuilder, WithSimpleInjector(_optionsFactory, serviceCollection))(serviceCollection);
+            HostExtensions.InitializeIntegrationTransport(
+                _hostBuilder,
+                _endpointIdentity,
+                WithSimpleInjector(_optionsFactory, serviceCollection))(serviceCollection);
 
             static Func<ITransportEndpointBuilder, EndpointOptions> WithSimpleInjector(
                 Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,

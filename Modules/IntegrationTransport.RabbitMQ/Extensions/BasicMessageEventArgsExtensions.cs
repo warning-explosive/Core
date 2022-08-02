@@ -73,14 +73,22 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
         }
 
         public static void Ack(
-            this IntegrationMessage integrationMessage,
+            this BasicDeliverEventArgs args,
             IModel channel)
         {
-            var deliveryTag = integrationMessage.ReadRequiredHeader<DeliveryTag>().Value;
-
             lock (channel)
             {
-                channel.BasicAck(deliveryTag, false);
+                channel.BasicAck(args.DeliveryTag, false);
+            }
+        }
+
+        public static void Nack(
+            this BasicDeliverEventArgs args,
+            IModel channel)
+        {
+            lock (channel)
+            {
+                channel.BasicNack(args.DeliveryTag, false, false);
             }
         }
 
@@ -93,16 +101,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             lock (channel)
             {
                 channel.BasicNack(deliveryTag, false, false);
-            }
-        }
-
-        public static void Nack(
-            this BasicDeliverEventArgs args,
-            IModel channel)
-        {
-            lock (channel)
-            {
-                channel.BasicNack(args.DeliveryTag, false, false);
             }
         }
 

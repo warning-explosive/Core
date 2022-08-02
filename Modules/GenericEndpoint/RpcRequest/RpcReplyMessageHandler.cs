@@ -3,8 +3,10 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using Basics;
     using Contract.Abstractions;
     using Messaging.MessageHeaders;
+    using Microsoft.Extensions.Logging;
     using Pipeline;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -17,13 +19,16 @@
     {
         private readonly IIntegrationContext _context;
         private readonly IRpcRequestRegistry _registry;
+        private readonly ILogger _logger;
 
         public RpcReplyMessageHandler(
             IIntegrationContext context,
-            IRpcRequestRegistry registry)
+            IRpcRequestRegistry registry,
+            ILogger logger)
         {
             _context = context;
             _registry = registry;
+            _logger = logger;
         }
 
         public Task Handle(TReply message, CancellationToken token)
@@ -32,7 +37,13 @@
 
             var requestId = integrationMessage.ReadRequiredHeader<InitiatorMessageId>().Value;
 
-            _registry.TrySetResult(requestId, integrationMessage);
+            var resultWasSet = _registry.TrySetResult(requestId, integrationMessage);
+
+            if (!resultWasSet)
+            {
+                // TODO: #195 - test it
+                _logger.Warning($"Rpc request {requestId} was timed out");
+            }
 
             return Task.CompletedTask;
         }

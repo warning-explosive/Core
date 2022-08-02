@@ -21,19 +21,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         IntegrationMessage Message { get; }
 
         /// <summary>
-        /// Sends integration message immediately
+        /// Immediately sends integration message
         /// </summary>
         /// <param name="message">IntegrationMessage</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task<bool> SendMessage(IntegrationMessage message, CancellationToken token);
-
-        /// <summary>
-        /// Accepts further message processing
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Accept(CancellationToken token);
 
         /// <summary>
         /// Rejects further message processing and moves message to errors

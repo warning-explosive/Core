@@ -59,30 +59,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
             CancellationToken token);
 
         /// <summary>
-        /// Enqueue message into error queue
-        /// </summary>
-        /// <param name="endpointIdentity">Endpoint identity</param>
-        /// <param name="message">Integration message</param>
-        /// <param name="exception">Exception</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task EnqueueError(
-            EndpointIdentity endpointIdentity,
-            IntegrationMessage message,
-            Exception exception,
-            CancellationToken token);
-
-        /// <summary>
-        /// Accepts processed message
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Accept(
-            IntegrationMessage message,
-            CancellationToken token);
-
-        /// <summary>
         /// Starts message processing in background thread
         /// </summary>
         /// <param name="token">Cancellation token</param>

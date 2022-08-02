@@ -116,14 +116,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return _transport.Enqueue(message, token);
         }
 
-        public Task Accept(CancellationToken token)
-        {
-            return _transport.Accept(Message, token);
-        }
-
         public Task Reject(Exception exception, CancellationToken token)
         {
-            return _transport.EnqueueError(_endpointIdentity, Message, exception, token);
+            Message.WriteHeader(new RejectReason(exception));
+
+            return Task.CompletedTask;
         }
 
         public async Task Retry(TimeSpan dueTime, CancellationToken token)
@@ -139,10 +136,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             {
                 throw new InvalidOperationException("Retry wasn't successful");
             }
-
-            await _transport
-               .Accept(Message, token)
-               .ConfigureAwait(false);
         }
 
         private IntegrationMessage CreateGeneralMessage<TMessage>(

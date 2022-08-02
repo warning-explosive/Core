@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
+    using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
     [Dependency(typeof(UnitOfWorkPipeline))]
@@ -31,53 +32,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            var exception = await ExecutionExtensions
+            await ExecutionExtensions
                .TryAsync((producer, context), Process)
-               .Catch<Exception>()
-               .Invoke(OnError(context), token)
+               .Catch<Exception>(OnError(context))
+               .Invoke(token)
                .ConfigureAwait(false);
-
-            if (exception == null)
-            {
-                await context
-                   .Accept(token)
-                   .ConfigureAwait(false);
-            }
         }
 
-        private async Task<Exception?> Process(
+        private Task Process(
             (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
             CancellationToken token)
         {
             var (producer, context) = state;
 
-            await Decoratee
-               .Process(producer, context, token)
-               .ConfigureAwait(false);
-
-            return default;
+            return Decoratee.Process(producer, context, token);
         }
 
-        private Func<Exception, CancellationToken, Task<Exception?>> OnError(
+        private Func<Exception, CancellationToken, Task> OnError(
             IAdvancedIntegrationContext context)
         {
-            return async (exception, token) =>
-            {
-                var errorHandlingException = await ExecutionExtensions
-                   .TryAsync((context, _errorHandlers, exception), InvokeErrorHandlers)
-                   .Catch<Exception>()
-                   .Invoke(OnErrorHandlingError, token)
-                   .ConfigureAwait(false);
-
-                return errorHandlingException ?? exception;
-            };
+            return (exception, token) => ExecutionExtensions
+               .TryAsync((context, exception, _errorHandlers), InvokeErrorHandlers)
+               .Catch<Exception>(OnErrorHandlingError(context))
+               .Invoke(token);
         }
 
-        private static async Task<Exception?> InvokeErrorHandlers(
-            (IAdvancedIntegrationContext, IEnumerable<IErrorHandler>, Exception) state,
+        private static async Task InvokeErrorHandlers(
+            (IAdvancedIntegrationContext, Exception, IEnumerable<IErrorHandler>) state,
             CancellationToken token)
         {
-            var (context, errorHandlers, exception) = state;
+            var (context, exception, errorHandlers) = state;
 
             foreach (var handler in errorHandlers)
             {
@@ -85,15 +69,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
                    .Handle(context, exception, token)
                    .ConfigureAwait(false);
             }
-
-            return default;
         }
 
-        private static Task<Exception?> OnErrorHandlingError(
-            Exception exception,
-            CancellationToken token)
+        private static Func<Exception, CancellationToken, Task> OnErrorHandlingError(
+            IAdvancedIntegrationContext context)
         {
-            return Task.FromResult<Exception?>(exception);
+            return (exception, _) =>
+            {
+                context.Message.WriteHeader(new RejectReason(exception));
+                return Task.CompletedTask;
+            };
         }
     }
 }

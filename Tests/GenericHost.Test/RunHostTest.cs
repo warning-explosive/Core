@@ -308,6 +308,16 @@
             }
         }
 
+        // TODO: #195
+        /*[Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostTestData))]
+        internal async Task RpcRequestWithDifferentTransportsTest(
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            TimeSpan timeout)
+        {
+            throw new NotImplementedException("#195");
+        }*/
+
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
@@ -535,12 +545,12 @@
                 Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
 
                 Assert.True(actualDeliveryDelays
-                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual + 1, expected))
+                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
                     .All(delays =>
                     {
                         var (actual, expected) = delays;
-                        Output.WriteLine($"{expected} <= {actual}");
-                        return expected <= actual;
+                        Output.WriteLine($"{0.95 * expected} ({0.95} * {expected}) <= {actual}");
+                        return 0.95 * expected <= actual;
                     }));
 
                 await host.StopAsync(cts.Token).ConfigureAwait(false);

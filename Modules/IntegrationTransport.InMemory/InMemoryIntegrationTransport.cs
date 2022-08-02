@@ -142,11 +142,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             throw new InvalidOperationException($"Unable to process error message. Please register error handler for {endpointIdentity} endpoint.");
         }
 
-        public Task Accept(IntegrationMessage message, CancellationToken token)
-        {
-            return Task.CompletedTask;
-        }
-
         public Task StartBackgroundMessageProcessing(CancellationToken token)
         {
             Status = EnIntegrationTransportStatus.Starting;
@@ -167,16 +162,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             return _inputQueue.Enqueue(message, token);
         }
 
-        private Func<Exception, CancellationToken, Task> EnqueueError(IntegrationMessage message)
-        {
-            return (exception, token) => EnqueueError(_endpointIdentity, message, exception, token);
-        }
-
         private Task MessageProcessingCallback(IntegrationMessage message, CancellationToken token)
         {
             return ExecutionExtensions
                 .TryAsync(message, DispatchToEndpoint)
-                .Catch<Exception>(EnqueueError(message))
+                .Catch<Exception>((exception, t) => EnqueueError(_endpointIdentity, message, exception, t))
                 .Invoke(token);
         }
 
@@ -205,11 +195,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                               var selectedEndpointInstanceIdentity = _instanceSelectionBehavior.SelectInstance(message, instanceGroup.Keys.ToList());
                               var messageHandler = instanceGroup[selectedEndpointInstanceIdentity];
 
-                              return new Func<Task>(() =>
+                              return new Func<Task>(async () =>
                               {
                                   var copy = message.ContravariantClone(reflectedType);
                                   MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(copy, default));
-                                  return messageHandler.Invoke(copy);
+
+                                  await messageHandler
+                                     .Invoke(copy)
+                                     .ConfigureAwait(false);
+
+                                  var rejectReason = copy.ReadHeader<RejectReason>();
+
+                                  if (rejectReason?.Value != null)
+                                  {
+                                      throw rejectReason.Value.Rethrow();
+                                  }
                               });
                           });
                    })

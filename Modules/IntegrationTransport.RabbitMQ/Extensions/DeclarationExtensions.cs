@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
     using System.Threading.Tasks;
     using CrossCuttingConcerns.Json;
     using global::RabbitMQ.Client;
+    using Microsoft.Extensions.Logging;
     using Settings;
 
     internal static class DeclarationExtensions
@@ -14,10 +15,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
         public static async Task DeclareVirtualHost(
             this RabbitMqSettings rabbitMqSettings,
             IJsonSerializer jsonSerializer,
+            ILogger logger,
             CancellationToken token)
         {
             var virtualHosts = (await rabbitMqSettings
-                   .ReadVirtualHosts(jsonSerializer, token)
+                   .ReadVirtualHosts(jsonSerializer, logger, token)
                    .ConfigureAwait(false))
                .Select(virtualHost => virtualHost.Name)
                .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -25,7 +27,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             if (!virtualHosts.Contains(rabbitMqSettings.VirtualHost))
             {
                 await rabbitMqSettings
-                   .CreateVirtualHost(token)
+                   .CreateVirtualHost(logger, token)
                    .ConfigureAwait(false);
             }
         }

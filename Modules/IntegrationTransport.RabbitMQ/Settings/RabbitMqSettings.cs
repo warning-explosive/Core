@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
 {
+    using System.Diagnostics.CodeAnalysis;
     using CrossCuttingConcerns.Settings;
 
     /// <summary>
@@ -10,22 +11,23 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// <summary> .cctor </summary>
         public RabbitMqSettings()
         {
-            Host = "127.0.0.1";
+            Hosts = new[] { "127.0.0.1" };
             Port = 5672;
             HttpApiPort = 15672;
             User = "guest";
             Password = "guest";
             VirtualHost = "/";
             ApplicationName = "Andromeda";
-            ChannelPrefetchCount = 100;
+            ConsumerPrefetchCount = 100;
             QueueMaxLengthBytes = 1024 * 1024;
             ConsumerPriority = 0;
         }
 
         /// <summary>
-        /// Host
+        /// Hosts
         /// </summary>
-        public string Host { get; set; }
+        [SuppressMessage("Analysis", "CA1819", Justification = "Settings")]
+        public string[] Hosts { get; set; }
 
         /// <summary>
         /// Port
@@ -66,7 +68,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// 30 -> 70%
         /// 1000 -> 74%
         /// </summary>
-        public ushort ChannelPrefetchCount { get; set; }
+        public ushort ConsumerPrefetchCount { get; set; }
 
         /// <summary>
         /// Queue max length bytes

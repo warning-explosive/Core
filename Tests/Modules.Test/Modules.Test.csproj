@@ -47,6 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
     <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+    <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
     <ProjectReference Include="..\..\Modules\DataExport\DataExport.csproj" />
     <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
     <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />

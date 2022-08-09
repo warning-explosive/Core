@@ -107,7 +107,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             return Type == other.Type
                    && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
                    && Source == other.Source
-                   && Arguments.Equals(other.Arguments);
+                   && Arguments.SequenceEqual(other.Arguments);
         }
 
         #endregion

@@ -713,11 +713,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         var sync = new AsyncManualResetEvent(false);
 
-                        await Task.WhenAll(
-                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token),
-                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token),
-                                Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default))
-                           .ConfigureAwait(false);
+                        var updateTask1 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
+                        var updateTask2 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
+                        var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+                        await Task.WhenAll(updateTask1, updateTask2, syncTask).ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
                     {
@@ -735,14 +735,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 // #3 - update/delete
                 {
-                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, cts.Token);
-                    var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, cts.Token);
+                    var sync = new AsyncManualResetEvent(false);
+
+                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
+                    var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
+                    var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
                     Exception? exception = null;
 
                     try
                     {
-                        await Task.WhenAll(updateTask, deleteTask).ConfigureAwait(false);
+                        await Task.WhenAll(updateTask, deleteTask, syncTask).ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
                     {
@@ -824,7 +827,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }
             }
 
-            static async Task UpdateEntityConcurrently(
+            static async Task UpdateEntity(
                 IDependencyContainer dependencyContainer,
                 Guid primaryKey,
                 AsyncManualResetEvent sync,
@@ -851,32 +854,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     dependencyContainer
                        .Resolve<ILogger>()
-                       .Debug($"{nameof(UpdateEntityConcurrently)}: {primaryKey}");
-                }
-            }
-
-            static async Task UpdateEntity(
-                IDependencyContainer dependencyContainer,
-                Guid primaryKey,
-                CancellationToken token)
-            {
-                await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
-
-                    await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
-                    {
-                        _ = await transaction
-                           .Write<DatabaseEntity, Guid>()
-                           .Update(entity => entity.IntField,
-                                entity => entity.IntField + 1,
-                                entity => entity.PrimaryKey == primaryKey,
-                                token)
-                           .ConfigureAwait(false);
-                    }
-
-                    dependencyContainer
-                       .Resolve<ILogger>()
                        .Debug($"{nameof(UpdateEntity)}: {primaryKey}");
                 }
             }
@@ -884,6 +861,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             static async Task DeleteEntity(
                 IDependencyContainer dependencyContainer,
                 Guid primaryKey,
+                AsyncManualResetEvent sync,
                 CancellationToken token)
             {
                 await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
@@ -895,6 +873,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         _ = await transaction
                            .Write<DatabaseEntity, Guid>()
                            .Delete(entity => entity.PrimaryKey == primaryKey, token)
+                           .ConfigureAwait(false);
+
+                        await sync
+                           .WaitAsync(token)
                            .ConfigureAwait(false);
                     }
 

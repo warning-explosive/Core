@@ -102,8 +102,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
-            hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
-
             return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(hostBuilder, endpointIdentity, optionsFactory)(serviceCollection));
         }
 
@@ -112,6 +110,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             EndpointIdentity endpointIdentity,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
         {
+            hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
+
             if (!endpointIdentity.LogicalName.Contains(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException($"Integration transport endpoint should have literal '{TransportEndpointIdentity.LogicalName}' as part of logical name");

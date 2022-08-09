@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
         private const string RequireTransportInjection = "Unable to find IIntegrationTransport injection.";
         private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
-        private const string RequireExecuteMigrationsCall = ".ExecuteMigrations() should be called after all endpoint declarations";
+        private const string RequireExecuteMigrationsCall = ".ExecuteMigrations() should be called after all endpoint declarations {0}";
         private const string RequireUseEndpointCallBeforeMigrationsCall = ".UseEndpoint() with identity {0} should be called before migrations declaration";
 
         /// <summary>

@@ -176,6 +176,20 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void SameTransportTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
+            SameComponentTest(useTransport, dependencyContainer => dependencyContainer.Resolve<IIntegrationTransport>());
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(BuildHostTestData))]
+        internal void SameRpcRequestRegistryTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
+        {
+            SameComponentTest(useTransport, dependencyContainer => dependencyContainer.Resolve<IRpcRequestRegistry>());
+        }
+
+        internal void SameComponentTest(
+            Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<IDependencyContainer, object> resolve)
+        {
             var logger = Fixture.CreateLogger(Output);
 
             var host = useTransport(
@@ -202,14 +216,12 @@
                     Fixture.CreateHostBuilder(Output))
                .BuildHost();
 
-            var integrationTransport = host.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
-            var gatewayIntegrationTransport = gatewayHost.GetTransportDependencyContainer().Resolve<IIntegrationTransport>();
+            var component = resolve(host.GetTransportDependencyContainer());
+            var gatewayComponent = resolve(gatewayHost.GetTransportDependencyContainer());
 
-            Output.WriteLine($"{nameof(IIntegrationTransport)}: {integrationTransport.GetType().FullName}");
-
-            Assert.NotSame(integrationTransport, gatewayIntegrationTransport);
-            Assert.Same(integrationTransport, host.GetEndpointDependencyContainer(TestIdentity.Endpoint10).Resolve<IIntegrationTransport>());
-            Assert.Same(integrationTransport, host.GetEndpointDependencyContainer(TestIdentity.Endpoint20).Resolve<IIntegrationTransport>());
+            Assert.NotSame(component, gatewayComponent);
+            Assert.Same(component, resolve(host.GetEndpointDependencyContainer(TestIdentity.Endpoint10)));
+            Assert.Same(component, resolve(host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)));
         }
 
         [Theory(Timeout = 60_000)]
@@ -469,6 +481,7 @@
 
                     var expectedErrorHandlers = new[]
                     {
+                        typeof(RpcRequestErrorHandler),
                         typeof(TracingErrorHandler),
                         typeof(RetryErrorHandler)
                     };
@@ -580,6 +593,7 @@
                         typeof(BaseEvent),
                         typeof(InheritedEvent),
                         typeof(Event),
+                        typeof(TransportEvent),
                         typeof(PublishEventCommand),
                         typeof(PublishInheritedEventCommand),
                         typeof(Command),
@@ -643,6 +657,7 @@
 
                     var expectedErrorHandlers = new[]
                     {
+                        typeof(RpcRequestErrorHandler),
                         typeof(TracingErrorHandler),
                         typeof(RetryErrorHandler)
                     };

@@ -91,7 +91,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var emptyQueryParameters = new Dictionary<string, object?>();
 
             var schema = nameof(GenericHost) + nameof(GenericHost.Test);
-            var testDatabaseEntity = new DatabaseEntity(Guid.NewGuid(), true, "SomeString", "SomeNullableString", 42);
+            var testDatabaseEntity = DatabaseEntity.Generate();
             var user = new User(Guid.NewGuid(), "SpaceEngineer");
             var posts = new List<Post>();
             var blog = new Blog(Guid.NewGuid(), "MilkyWay", posts);

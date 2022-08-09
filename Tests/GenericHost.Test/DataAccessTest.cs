@@ -25,7 +25,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.Host;
+    using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.Abstractions;
     using GenericEndpoint.Messaging.MessageHeaders;
+    using GenericEndpoint.Pipeline;
+    using GenericEndpoint.Settings;
     using IntegrationTransport.Host;
     using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
@@ -786,12 +790,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
-                        var entity = new DatabaseEntity(
-                            primaryKey,
-                            true,
-                            "SomeString",
-                            "SomeNullableString",
-                            42);
+                        var entity = DatabaseEntity.Generate(primaryKey);
 
                         _ = await transaction
                            .Write<DatabaseEntity, Guid>()
@@ -1141,12 +1140,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 Guid primaryKey,
                 CancellationToken token)
             {
-                var entity = new DatabaseEntity(
-                    primaryKey,
-                    true,
-                    "SomeString",
-                    "SomeNullableString",
-                    42);
+                var entity = DatabaseEntity.Generate(primaryKey);
 
                 _ = await transaction
                    .Write<DatabaseEntity, Guid>()
@@ -1189,6 +1183,235 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .Write<DatabaseEntity, Guid>()
                    .Delete(entity => entity.PrimaryKey == primaryKey, token)
                    .ConfigureAwait(false);
+            }
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        internal async Task OnlyCommandsCanIntroduceChanges(
+            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            IDatabaseProvider databaseProvider,
+            IsolationLevel isolationLevel,
+            TimeSpan timeout)
+        {
+            Output.WriteLine(databaseProvider.GetType().FullName);
+            Output.WriteLine(isolationLevel.ToString());
+
+            var logger = Fixture.CreateLogger(Output);
+
+            var messageTypes = new[]
+            {
+                typeof(Command),
+                typeof(Query),
+                typeof(Reply),
+                typeof(TransportEvent)
+            };
+
+            var databaseTypes = new[]
+            {
+                typeof(DatabaseEntity)
+            };
+
+            var messageHandlerTypes = new Type[]
+            {
+                typeof(CommandIntroduceDatabaseChanges),
+                typeof(QueryIntroduceDatabaseChanges),
+                typeof(ReplyIntroduceDatabaseChanges),
+                typeof(TransportEventIntroduceDatabaseChanges)
+            };
+
+            var additionalOurTypes = messageTypes
+               .Concat(messageHandlerTypes)
+               .Concat(databaseTypes)
+               .ToArray();
+
+            var settingsScope = nameof(OnlyCommandsCanIntroduceChanges);
+            var virtualHost = settingsScope + isolationLevel;
+
+            var manualMigrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseManualMigration)
+            };
+
+            var manualRegistrations = new IManualRegistration[]
+            {
+                new IsolationLevelManualRegistration(isolationLevel)
+            };
+
+            var overrides = new IComponentsOverride[]
+            {
+                new TestLoggerOverride(logger),
+                new TestSettingsScopeProviderOverride(settingsScope)
+            };
+
+            var host = useTransport(
+                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                    settingsScope,
+                    isolationLevel,
+                    logger,
+                    Fixture.CreateHostBuilder(Output))
+               .UseEndpoint(TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                       .WithDataAccess(databaseProvider)
+                       .ModifyContainerOptions(options => options
+                           .WithAdditionalOurTypes(additionalOurTypes)
+                           .WithManualRegistrations(manualRegistrations)
+                           .WithOverrides(overrides))
+                       .BuildOptions())
+               .ExecuteMigrations(builder => builder
+                   .WithDataAccess(databaseProvider)
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(manualMigrations)
+                       .WithManualRegistrations(manualRegistrations)
+                       .WithOverrides(overrides))
+                   .BuildOptions())
+               .BuildHost();
+
+            var transportDependencyContainer = host.GetTransportDependencyContainer();
+            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+            using (host)
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                var sqlDatabaseSettings = await endpointDependencyContainer
+                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                var genericEndpointSettings = await endpointDependencyContainer
+                   .Resolve<ISettingsProvider<GenericEndpointSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(1u, genericEndpointSettings.RpcRequestSecondsTimeout);
+
+                var rabbitMqSettings = await transportDependencyContainer
+                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                   .Get(cts.Token)
+                   .ConfigureAwait(false);
+
+                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+
+                await host.StartAsync(cts.Token).ConfigureAwait(false);
+
+                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
+
+                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilMessageIsNotReceived(message => message.Payload is Command));
+
+                    await integrationContext
+                       .Send(new Command(42), cts.Token)
+                       .ConfigureAwait(false);
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    await result.ConfigureAwait(false);
+
+                    Assert.Empty(collector.ErrorMessages);
+                    collector.ErrorMessages.Clear();
+                }
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query));
+
+                    try
+                    {
+                        _ = await integrationContext
+                           .RpcRequest<Query, Reply>(new Query(42), cts.Token)
+                           .ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    await result.ConfigureAwait(false);
+
+                    Assert.Single(collector.ErrorMessages);
+                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                    collector.ErrorMessages.Clear();
+                }
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
+                    var query = new Query(42);
+                    var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, TestIdentity.Endpoint10, null);
+                    var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
+
+                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply));
+
+                    await integrationContext
+                       .Reply(query, new Reply(query.Id), cts.Token)
+                       .ConfigureAwait(false);
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    await result.ConfigureAwait(false);
+
+                    Assert.Single(collector.ErrorMessages);
+                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                    collector.ErrorMessages.Clear();
+                }
+
+                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                {
+                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is TransportEvent));
+
+                    await integrationContext
+                       .Publish(new TransportEvent(42), cts.Token)
+                       .ConfigureAwait(false);
+
+                    var result = await awaiter.ConfigureAwait(false);
+
+                    if (hostShutdown == result)
+                    {
+                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                    }
+
+                    await result.ConfigureAwait(false);
+
+                    Assert.Single(collector.ErrorMessages);
+                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                    collector.ErrorMessages.Clear();
+                }
+
+                await host.StopAsync(cts.Token).ConfigureAwait(false);
+
+                await hostShutdown.ConfigureAwait(false);
             }
         }
     }

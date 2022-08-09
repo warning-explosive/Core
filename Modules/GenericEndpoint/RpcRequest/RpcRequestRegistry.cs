@@ -8,10 +8,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
     using Settings;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
 
-    [Component(EnLifestyle.Singleton)]
+    [ManuallyRegisteredComponent("Should be unique per single generic host")]
     internal class RpcRequestRegistry : IRpcRequestRegistry,
                                         IDisposable,
                                         IResolvable<IRpcRequestRegistry>
@@ -58,6 +57,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
 
             return cacheItem?.Value is TaskCompletionSource<IntegrationMessage> tcs
                    && tcs.TrySetResult(reply);
+        }
+
+        public bool TrySetCancelled(Guid requestId)
+        {
+            var cacheItem = _memoryCache.GetCacheItem(requestId.ToString());
+
+            return cacheItem?.Value is TaskCompletionSource<IntegrationMessage> tcs
+                && tcs.TrySetCanceled();
         }
     }
 }

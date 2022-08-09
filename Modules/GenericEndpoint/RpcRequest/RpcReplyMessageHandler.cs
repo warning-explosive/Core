@@ -18,16 +18,16 @@
         where TReply : IIntegrationReply
     {
         private readonly IIntegrationContext _context;
-        private readonly IRpcRequestRegistry _registry;
+        private readonly IRpcRequestRegistry _rpcRequestRegistry;
         private readonly ILogger _logger;
 
         public RpcReplyMessageHandler(
             IIntegrationContext context,
-            IRpcRequestRegistry registry,
+            IRpcRequestRegistry rpcRequestRegistry,
             ILogger logger)
         {
             _context = context;
-            _registry = registry;
+            _rpcRequestRegistry = rpcRequestRegistry;
             _logger = logger;
         }
 
@@ -37,9 +37,7 @@
 
             var requestId = integrationMessage.ReadRequiredHeader<InitiatorMessageId>().Value;
 
-            var resultWasSet = _registry.TrySetResult(requestId, integrationMessage);
-
-            if (!resultWasSet)
+            if (!_rpcRequestRegistry.TrySetResult(requestId, integrationMessage))
             {
                 _logger.Warning($"Rpc request {requestId} was timed out");
             }

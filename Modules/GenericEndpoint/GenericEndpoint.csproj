@@ -96,6 +96,9 @@
     <Compile Update="Pipeline\MessagesCollector.cs">
       <DependentUpon>IMessagesCollector.cs</DependentUpon>
     </Compile>
+    <Compile Update="Pipeline\RpcRequestErrorHandler.cs">
+      <DependentUpon>IErrorHandler.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />

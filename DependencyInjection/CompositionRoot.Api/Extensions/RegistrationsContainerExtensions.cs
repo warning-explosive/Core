@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Api.Extensions
                 {
                     InstanceRegistrationInfo instanceRegistrationInfo => instanceRegistrationInfo.Instance.GetType(),
                     ServiceRegistrationInfo serviceRegistrationInfo => serviceRegistrationInfo.Implementation,
-                    DelegateRegistrationInfo delegateRegistrationInfo => delegateRegistrationInfo.Service,
+                    DelegateRegistrationInfo delegateRegistrationInfo => delegateRegistrationInfo.InstanceProducer().GetType(),
                     DecoratorRegistrationInfo decoratorRegistrationInfo => decoratorRegistrationInfo.Implementation,
                     _ => throw new NotSupportedException(info.GetType().Name)
                 };

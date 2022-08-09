@@ -173,11 +173,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
 
         private static void AppendCollectionInstanceProducer<TService>(
             this Container container,
-            Func<TService> instanceProducer,
+            Func<object> instanceProducer,
             EnLifestyle lifestyle)
             where TService : class
         {
-            container.Collection.Append(instanceProducer, lifestyle.MapLifestyle());
+            container.Collection.Append(() => (TService)instanceProducer(), lifestyle.MapLifestyle());
         }
     }
 }

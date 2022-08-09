@@ -29,5 +29,15 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
         public string? NullableStringField { get; set; }
 
         public int IntField { get; set; }
+
+        public static DatabaseEntity Generate()
+        {
+            return Generate(Guid.NewGuid());
+        }
+
+        public static DatabaseEntity Generate(Guid primaryKey)
+        {
+            return new DatabaseEntity(primaryKey, true, "SomeString", "SomeNullableString", 42);
+        }
     }
 }

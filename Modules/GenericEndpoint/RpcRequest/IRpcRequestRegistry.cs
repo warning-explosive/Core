@@ -26,5 +26,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
         /// <param name="reply">Reply</param>
         /// <returns>Result</returns>
         bool TrySetResult(Guid requestId, IntegrationMessage reply);
+
+        /// <summary>
+        /// Try set cancelled state to RPC request
+        /// </summary>
+        /// <param name="requestId">Request identifier</param>
+        /// <returns>Result</returns>
+        bool TrySetCancelled(Guid requestId);
     }
 }

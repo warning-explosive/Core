@@ -10,6 +10,7 @@
     using InMemory.Registrations;
     using Microsoft.Extensions.Hosting;
     using RabbitMQ.Registrations;
+    using Registrations;
 
     internal class TransportEndpointBuilder : EndpointBuilder, ITransportEndpointBuilder
     {
@@ -30,8 +31,10 @@
             var endpointInstanceSelectionBehavior = new EndpointInstanceSelectionBehavior();
             var inMemoryIntegrationTransport = new InMemoryIntegrationTransport(EndpointIdentity, endpointInstanceSelectionBehavior);
             var inMemoryIntegrationTransportManualRegistration = new InMemoryIntegrationTransportManualRegistration(inMemoryIntegrationTransport, endpointInstanceSelectionBehavior);
+            var rpcRequestRegistryManualRegistration = new RpcRequestRegistryManualRegistration();
 
-            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(inMemoryIntegrationTransportManualRegistration));
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options
+               .WithManualRegistrations(inMemoryIntegrationTransportManualRegistration, rpcRequestRegistryManualRegistration));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
                .Concat(new[] { assembly })
@@ -53,9 +56,11 @@
                     nameof(Core.IntegrationTransport),
                     nameof(Core.IntegrationTransport.RabbitMQ)));
 
-            var manualRegistration = new RabbitMqIntegrationTransportManualRegistration();
+            var rabbitMqIntegrationTransportManualRegistration = new RabbitMqIntegrationTransportManualRegistration();
+            var rpcRequestRegistryManualRegistration = new RpcRequestRegistryManualRegistration();
 
-            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options.WithManualRegistrations(manualRegistration));
+            var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options
+               .WithManualRegistrations(rabbitMqIntegrationTransportManualRegistration, rpcRequestRegistryManualRegistration));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
                .Concat(new[] { assembly })

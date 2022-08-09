@@ -58,9 +58,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             ILogger logger,
             EndpointIdentity endpointIdentity)
         {
-            return (_, exception, _) =>
+            return (message, exception, _) =>
             {
-                logger.Error(exception, $"{endpointIdentity} -> Message handling error");
+                logger.Error(exception, $"{endpointIdentity} -> Message handling error: {message.Payload.GetType().Name}");
                 return Task.CompletedTask;
             };
         }

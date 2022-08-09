@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Registrations
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
-    [UnregisteredComponent] // ("It is created manually and registered as delegate so as to perform intersection between different database models")
+    [ManuallyRegisteredComponent("It is created manually and registered as delegate so as to perform intersection between different database models")]
     internal class EndpointDatabaseTypeProvider : IEndpointDatabaseTypeProvider,
                                                   ICollectionResolvable<IEndpointDatabaseTypeProvider>
     {

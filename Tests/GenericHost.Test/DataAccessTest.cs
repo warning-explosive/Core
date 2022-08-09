@@ -711,11 +711,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     try
                     {
-                        var sync = new AsyncAutoResetEvent(true);
+                        var sync = new AsyncManualResetEvent(false);
 
                         await Task.WhenAll(
                                 UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token),
-                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token))
+                                UpdateEntityConcurrently(endpointDependencyContainer, primaryKey, sync, cts.Token),
+                                Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default))
                            .ConfigureAwait(false);
                     }
                     catch (DatabaseConcurrentUpdateException concurrentUpdateException)
@@ -826,38 +827,26 @@ namespace SpaceEngineers.Core.GenericHost.Test
             static async Task UpdateEntityConcurrently(
                 IDependencyContainer dependencyContainer,
                 Guid primaryKey,
-                AsyncAutoResetEvent sync,
+                AsyncManualResetEvent sync,
                 CancellationToken token)
             {
                 await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
                     var transaction = dependencyContainer.Resolve<IDatabaseTransaction>();
 
-                    try
+                    await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
-                        await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
-                        {
-                            _ = await transaction
-                               .Write<DatabaseEntity, Guid>()
-                               .Update(entity => entity.IntField,
-                                    entity => entity.IntField + 1,
-                                    entity => entity.PrimaryKey == primaryKey,
-                                    token)
-                               .ConfigureAwait(false);
+                        _ = await transaction
+                           .Write<DatabaseEntity, Guid>()
+                           .Update(entity => entity.IntField,
+                                entity => entity.IntField + 1,
+                                entity => entity.PrimaryKey == primaryKey,
+                                token)
+                           .ConfigureAwait(false);
 
-                            // TODO: #190
-                            /*await Task
-                               .Delay(TimeSpan.FromMilliseconds(100), token)
-                               .ConfigureAwait(false);*/
-                            /*await sync
-                               .WaitAsync(token)
-                               .ConfigureAwait(false);*/
-                        }
-                    }
-                    finally
-                    {
-                        // TODO: #190
-                        /*sync.Set();*/
+                        await sync
+                           .WaitAsync(token)
+                           .ConfigureAwait(false);
                     }
 
                     dependencyContainer

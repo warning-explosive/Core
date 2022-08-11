@@ -7,9 +7,6 @@
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
-    using CompositionRoot.Api.Exceptions;
-    using Contract;
-    using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
@@ -21,90 +18,94 @@
                                                       ICollectionResolvable<IEndpointInitializer>
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly EndpointIdentity _endpointIdentity;
         private readonly ITypeProvider _typeProvider;
-        private readonly ILogger _logger;
+
+        private IReadOnlyDictionary<Type, EventHandler<IDomainEvent>> _subscriptions;
 
         public EventSourcingEndpointInitializer(
             IDependencyContainer dependencyContainer,
-            EndpointIdentity endpointIdentity,
-            ITypeProvider typeProvider,
-            ILogger logger)
+            ITypeProvider typeProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _endpointIdentity = endpointIdentity;
             _typeProvider = typeProvider;
-            _logger = logger;
+
+            _subscriptions = new Dictionary<Type, EventHandler<IDomainEvent>>();
         }
 
         public Task Initialize(CancellationToken token)
         {
-            InitializeDomainEventsAutoTracking(token);
+            _subscriptions = _typeProvider
+               .OurTypes
+               .Where(type => type.IsSubclassOfOpenGeneric(typeof(IAggregate<>))
+                           && type.IsConcreteType())
+               .ToDictionary(type => type, type => OnDomainEvent(_dependencyContainer, type, token));
+
+            foreach (var (aggregate, subscription) in _subscriptions)
+            {
+                Subscribe(aggregate, subscription);
+
+                token.Register(() => Unsubscribe(aggregate, subscription));
+            }
 
             return Task.CompletedTask;
         }
 
-        private IEnumerable<Type> Aggregates()
+        private static void Subscribe(Type aggregate, EventHandler<IDomainEvent> subscription)
         {
-            return _typeProvider
-               .OurTypes
-               .Where(type => type.IsSubclassOfOpenGeneric(typeof(IAggregate<>))
-                           && type.IsConcreteType())
-               .ToList();
+            typeof(EventSourcingEndpointInitializer)
+               .CallMethod(nameof(Subscribe))
+               .WithTypeArgument(aggregate)
+               .WithArguments(subscription)
+               .Invoke();
         }
 
-        private void InitializeDomainEventsAutoTracking(CancellationToken token)
+        private static void Unsubscribe(Type aggregate, EventHandler<IDomainEvent> subscription)
         {
-            foreach (var aggregate in Aggregates())
-            {
-                this
-                   .CallMethod(nameof(InitializeDomainEventsAutoTracking))
-                   .WithTypeArgument(aggregate)
-                   .WithArgument(token)
-                   .Invoke();
-            }
+            typeof(EventSourcingEndpointInitializer)
+               .CallMethod(nameof(Unsubscribe))
+               .WithTypeArgument(aggregate)
+               .WithArguments(subscription)
+               .Invoke();
         }
 
-        private void InitializeDomainEventsAutoTracking<TAggregate>(CancellationToken token)
+        private static void Subscribe<TAggregate>(EventHandler<IDomainEvent> subscription)
             where TAggregate : class, IAggregate<TAggregate>
         {
-            BaseAggregate<TAggregate>.OnDomainEvent += OnDomainEvent<TAggregate>(_dependencyContainer, _endpointIdentity, _logger, token);
+            BaseAggregate<TAggregate>.OnDomainEvent += subscription;
         }
 
-        private static EventHandler<IDomainEvent> OnDomainEvent<TAggregate>(
+        private static void Unsubscribe<TAggregate>(EventHandler<IDomainEvent> subscription)
+            where TAggregate : class, IAggregate<TAggregate>
+        {
+            BaseAggregate<TAggregate>.OnDomainEvent -= subscription;
+        }
+
+        private static EventHandler<IDomainEvent> OnDomainEvent(
             IDependencyContainer dependencyContainer,
-            EndpointIdentity endpointIdentity,
-            ILogger logger,
+            Type aggregate,
             CancellationToken token)
         {
-            return (_, domainEvent) => typeof(EventSourcingEndpointInitializer)
-               .CallMethod(nameof(OnDomainEvent))
-               .WithTypeArguments(typeof(TAggregate), domainEvent.GetType())
-               .WithArguments(dependencyContainer, endpointIdentity, logger, domainEvent, token)
-               .Invoke<Task>()
-               .Wait(token);
+            return (_, domainEvent) =>
+            {
+                typeof(EventSourcingEndpointInitializer)
+                   .CallMethod(nameof(OnDomainEvent))
+                   .WithTypeArguments(aggregate, domainEvent.GetType())
+                   .WithArguments(dependencyContainer, domainEvent, token)
+                   .Invoke<Task>()
+                   .Wait(token);
+            };
         }
 
-        private static async Task OnDomainEvent<TAggregate, TEvent>(
+        private static Task OnDomainEvent<TAggregate, TEvent>(
             IDependencyContainer dependencyContainer,
-            EndpointIdentity endpointIdentity,
-            ILogger logger,
             TEvent domainEvent,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
             where TEvent : class, IDomainEvent
         {
-            try
-            {
-                await dependencyContainer
-                   .Resolve<IIntegrationContext>()
-                   .Send(new CaptureDomainEvent<TEvent>(domainEvent), token)
-                   .ConfigureAwait(false);
-            }
-            catch (ComponentResolutionException exception)
-            {
-                logger.Error(exception, $"{endpointIdentity} -> Don't populate domain events outside of message handler scope");
-            }
+            return dependencyContainer
+               .Resolve<IIntegrationContext>()
+               .Send(new CaptureDomainEvent<TEvent>(domainEvent), token);
         }
     }
 }

@@ -28,7 +28,7 @@
 
                 var isQueryRoot = itemType.IsClass
                     && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                    && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)));
+                    && method == LinqMethods.All(itemType);
 
                 if (!isQueryRoot)
                 {

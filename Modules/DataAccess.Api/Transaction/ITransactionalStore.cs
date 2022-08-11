@@ -15,22 +15,16 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// Puts entity into transactional store
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
-        void Store<TEntity, TKey>(TEntity entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
+        void Store(IUniqueIdentified entity);
 
         /// <summary>
         /// Gets entities from transactional store by predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Request result</returns>
-        IEnumerable<TEntity> GetValues<TEntity, TKey>(Expression<Func<TEntity, bool>> predicate)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
+        IEnumerable<TEntity> GetValues<TEntity>(Expression<Func<TEntity, bool>> predicate)
+            where TEntity : IUniqueIdentified;
 
         /// <summary>
         /// Gets entity from transactional store by key
@@ -38,11 +32,9 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// <param name="key">Key</param>
         /// <param name="entity">Entity</param>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Request result</returns>
-        bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
+        bool TryGetValue<TEntity>(object key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified;
 
         /// <summary>
         /// Tries to remove specified entity from transactional store
@@ -50,11 +42,9 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// <param name="key">Key</param>
         /// <param name="entity">Removed entity</param>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Removal result</returns>
-        bool TryRemove<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
+        bool TryRemove<TEntity>(object key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified;
 
         /// <summary>
         /// Clears transactional store

@@ -86,7 +86,7 @@
                .Value;
 
             await transaction
-               .Write<InboxMessage, Guid>()
+               .Write<InboxMessage>()
                .Update(message => message.IsError,
                     _ => true,
                     message => message.PrimaryKey == id,

@@ -68,8 +68,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             var isQueryRoot = itemType.IsClass
-              && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-              && method == LinqMethods.All(itemType, itemType.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)));
+                && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                && method == LinqMethods.All(itemType);
 
             if (isQueryRoot)
             {
@@ -384,7 +384,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            if (node.Type.IsSubclassOfOpenGeneric(typeof(IReadRepository<,>)))
+            if (node.Type.IsSubclassOfOpenGeneric(typeof(IReadRepository<>)))
             {
                 return base.VisitConstant(node);
             }

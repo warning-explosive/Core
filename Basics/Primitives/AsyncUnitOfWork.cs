@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// <inheritdoc />
     public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
     {
-        private readonly State _state = new State();
+        private readonly SyncState _syncState = new SyncState();
 
         /// <inheritdoc />
         public async Task ExecuteInTransaction(
@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             bool saveChanges,
             CancellationToken token)
         {
-            using (_state.StartExclusiveOperation())
+            using (_syncState.StartExclusiveOperation(nameof(AsyncUnitOfWork<TContext>)))
             {
                 var (behavior, startError) = await ExecutionExtensions
                     .TryAsync(context, StartTransactionUnsafe)

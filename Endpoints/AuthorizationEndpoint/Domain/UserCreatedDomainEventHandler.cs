@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -32,7 +31,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
                .ConfigureAwait(false);
 
             await _databaseContext
-               .Write<DatabaseModel.User, Guid>()
+               .Write<DatabaseModel.User>()
                .Insert(new[] { new DatabaseModel.User(domainEvent.AggregateId, domainEvent.Username) }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
         }

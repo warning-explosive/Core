@@ -8,10 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Api.Persisting
     /// UpdateInfo
     /// </summary>
     /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-    /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public class UpdateInfo<TEntity, TKey>
-        where TEntity : IDatabaseEntity<TKey>
-        where TKey : notnull
+    public class UpdateInfo<TEntity>
+        where TEntity : IDatabaseEntity
     {
         /// <summary> .cctor </summary>
         /// <param name="accessor">Accessor</param>

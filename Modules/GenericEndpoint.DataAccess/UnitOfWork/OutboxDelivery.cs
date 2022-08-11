@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 }
 
                 await _transaction
-                   .Write<OutboxMessage, Guid>()
+                   .Write<OutboxMessage>()
                    .Update(outbox => outbox.Sent,
                         _ => true,
                         message => sent.Contains(message.PrimaryKey),

@@ -13,20 +13,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Basics;
     using Microsoft.Extensions.Logging;
 
-    internal class UpdateEntityChange<TEntity, TKey> : ITransactionalChange
-        where TEntity : IDatabaseEntity<TKey>
-        where TKey : notnull
+    internal class UpdateEntityChange<TEntity> : ITransactionalChange
+        where TEntity : IDatabaseEntity
     {
         private readonly long _version;
         private readonly long _affectedRowsCount;
-        private readonly IReadOnlyCollection<UpdateInfo<TEntity, TKey>> _infos;
+        private readonly IReadOnlyCollection<UpdateInfo<TEntity>> _infos;
         private readonly Expression<Func<TEntity, bool>> _predicate;
         private readonly long _updateVersion;
 
         public UpdateEntityChange(
             long version,
             long affectedRowsCount,
-            IReadOnlyCollection<UpdateInfo<TEntity, TKey>> infos,
+            IReadOnlyCollection<UpdateInfo<TEntity>> infos,
             Expression<Func<TEntity, bool>> predicate,
             long updateVersion)
         {
@@ -37,8 +36,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             _updateVersion = updateVersion;
         }
 
-        private IReadOnlyCollection<UpdateInfo<TEntity, TKey>> UpdateInfos => _infos
-           .Concat(new[] { new UpdateInfo<TEntity, TKey>(entity => entity.Version, _ => _updateVersion) })
+        private IReadOnlyCollection<UpdateInfo<TEntity>> UpdateInfos => _infos
+           .Concat(new[] { new UpdateInfo<TEntity>(entity => entity.Version, _ => _updateVersion) })
            .ToList();
 
         private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
@@ -49,7 +48,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
-               .Write<TEntity, TKey>()
+               .Write<TEntity>()
                .Update(UpdateInfos, Predicate, token)
                .ConfigureAwait(false);
 
@@ -61,7 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         public void Apply(ITransactionalStore transactionalStore)
         {
-            var entities = transactionalStore.GetValues<TEntity, TKey>(Predicate);
+            var entities = transactionalStore.GetValues(Predicate);
 
             foreach (var entity in entities)
             {
@@ -77,8 +76,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
                        .Compile()
                        .Invoke(entity);
                 }
-
-                transactionalStore.Store<TEntity, TKey>(entity);
             }
         }
     }

@@ -116,7 +116,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             CancellationToken token)
         {
             return databaseContext
-               .Read<InboxMessage, Guid>()
+               .Read<InboxMessage>()
                .All()
                .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
                               && message.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
@@ -156,14 +156,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     true);
 
                 await databaseContext
-                   .Write<InboxMessage, Guid>()
+                   .Write<InboxMessage>()
                    .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
             }
             else
             {
                 await databaseContext
-                   .Write<InboxMessage, Guid>()
+                   .Write<InboxMessage>()
                    .Update(message => message.Handled,
                         _ => true,
                         message => message.PrimaryKey == inbox.PrimaryKey,
@@ -188,7 +188,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .ToArray();
 
             return databaseContext
-               .Write<OutboxMessage, Guid>()
+               .Write<OutboxMessage>()
                .Insert(outboxMessages, EnInsertBehavior.Default, token);
         }
 

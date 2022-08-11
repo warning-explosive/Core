@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -26,7 +25,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
         public Task Handle(Reply message, CancellationToken token)
         {
             return _databaseContext
-               .Write<DatabaseEntity, Guid>()
+               .Write<DatabaseEntity>()
                .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token);
         }
     }

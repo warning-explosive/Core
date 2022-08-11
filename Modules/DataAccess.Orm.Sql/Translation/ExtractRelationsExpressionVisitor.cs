@@ -28,7 +28,7 @@
         protected override Expression VisitMember(MemberExpression node)
         {
             if (node.Member is PropertyInfo property
-                && node.Type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>)))
+                && node.Type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
             {
                 _relations.Add(new Relation(node.Expression.Type, node.Type, new ColumnProperty(property, property), _modelProvider));
             }

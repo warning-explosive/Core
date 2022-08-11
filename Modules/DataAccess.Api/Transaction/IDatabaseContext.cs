@@ -18,21 +18,17 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// Gets access to IReadRepository so as to produce reads from database
         /// </summary>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>IReadRepository</returns>
-        IReadRepository<TEntity, TKey> Read<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull;
+        IReadRepository<TEntity> Read<TEntity>()
+            where TEntity : IUniqueIdentified;
 
         /// <summary>
         /// Gets access to IRepository so as to produce writes to database
         /// </summary>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>IRepository</returns>
-        IRepository<TEntity, TKey> Write<TEntity, TKey>()
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull;
+        IRepository<TEntity> Write<TEntity>()
+            where TEntity : IDatabaseEntity;
 
         /// <summary>
         /// Gets access to IRepository so as to produce writes to database

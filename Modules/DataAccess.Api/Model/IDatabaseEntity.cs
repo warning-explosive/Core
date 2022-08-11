@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Model
     /// <summary>
     /// IDatabaseEntity
     /// </summary>
-    public interface IDatabaseEntity
+    public interface IDatabaseEntity : IUniqueIdentified
     {
         /// <summary>
         /// Version

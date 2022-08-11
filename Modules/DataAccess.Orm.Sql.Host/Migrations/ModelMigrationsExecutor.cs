@@ -171,7 +171,7 @@
             transaction.CollectChange(change);
 
             var indexes = (await transaction
-                    .Read<AppliedMigration, Guid>()
+                    .Read<AppliedMigration>()
                     .All()
                     .Select(migration => migration.Name)
                     .Where(name => name.Like(AutomaticMigration + "%"))
@@ -191,7 +191,7 @@
                 GetAutomaticMigrationName(nextNumber));
 
             await transaction
-                .Write<AppliedMigration, Guid>()
+                .Write<AppliedMigration>()
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }
@@ -201,14 +201,14 @@
             CancellationToken token)
         {
             var isSecondaryMigration = await transaction
-                .Read<DatabaseColumnConstraint, Guid>()
+                .Read<DatabaseColumnConstraint>()
                 .All()
                 .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
                 .ConfigureAwait(false);
 
             return isSecondaryMigration
                 ? await transaction
-                    .Read<AppliedMigration, Guid>()
+                    .Read<AppliedMigration>()
                     .All()
                     .Select(migration => migration.Name)
                     .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)

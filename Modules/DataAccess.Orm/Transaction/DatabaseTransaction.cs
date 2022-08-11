@@ -110,18 +110,16 @@
 
         public ITransactionalStore Store { get; }
 
-        public IReadRepository<TEntity, TKey> Read<TEntity, TKey>()
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
+        public IReadRepository<TEntity> Read<TEntity>()
+            where TEntity : IUniqueIdentified
         {
-            return _dependencyContainer.Resolve<IReadRepository<TEntity, TKey>>();
+            return _dependencyContainer.Resolve<IReadRepository<TEntity>>();
         }
 
-        public IRepository<TEntity, TKey> Write<TEntity, TKey>()
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull
+        public IRepository<TEntity> Write<TEntity>()
+            where TEntity : IDatabaseEntity
         {
-            return _dependencyContainer.Resolve<IRepository<TEntity, TKey>>();
+            return _dependencyContainer.Resolve<IRepository<TEntity>>();
         }
 
         public IRepository Write()

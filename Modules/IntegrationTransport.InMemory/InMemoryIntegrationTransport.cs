@@ -201,9 +201,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
                                   MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(copy, default));
 
-                                  await messageHandler
-                                     .Invoke(copy)
-                                     .ConfigureAwait(false);
+                                  try
+                                  {
+                                      await messageHandler
+                                         .Invoke(copy)
+                                         .ConfigureAwait(false);
+                                  }
+                                  catch (OperationCanceledException)
+                                  {
+                                      return;
+                                  }
 
                                   var rejectReason = copy.ReadHeader<RejectReason>();
 

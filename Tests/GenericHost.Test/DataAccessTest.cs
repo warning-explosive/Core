@@ -13,7 +13,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
-    using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host;
@@ -793,7 +792,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         var entity = DatabaseEntity.Generate(primaryKey);
 
                         _ = await transaction
-                           .Write<DatabaseEntity, Guid>()
+                           .Write<DatabaseEntity>()
                            .Insert(new[] { entity }, EnInsertBehavior.Default, token)
                            .ConfigureAwait(false);
 
@@ -818,9 +817,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         return await transaction
-                           .Read<DatabaseEntity, Guid>()
-                           .All()
-                           .SingleOrDefaultAsync(entity => entity.PrimaryKey == primaryKey, token)
+                           .Read<DatabaseEntity>()
+                           .SingleOrDefaultAsync(primaryKey, token)
                            .ConfigureAwait(false);
                     }
                 }
@@ -839,7 +837,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Write<DatabaseEntity, Guid>()
+                           .Write<DatabaseEntity>()
                            .Update(entity => entity.IntField,
                                 entity => entity.IntField + 1,
                                 entity => entity.PrimaryKey == primaryKey,
@@ -870,7 +868,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Write<DatabaseEntity, Guid>()
+                           .Write<DatabaseEntity>()
                            .Delete(entity => entity.PrimaryKey == primaryKey, token)
                            .ConfigureAwait(false);
 
@@ -1143,7 +1141,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var entity = DatabaseEntity.Generate(primaryKey);
 
                 _ = await transaction
-                   .Write<DatabaseEntity, Guid>()
+                   .Write<DatabaseEntity>()
                    .Insert(new[] { entity }, EnInsertBehavior.Default, token)
                    .ConfigureAwait(false);
             }
@@ -1154,9 +1152,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 return await transaction
-                   .Read<DatabaseEntity, Guid>()
-                   .All()
-                   .SingleOrDefaultAsync(entity => entity.PrimaryKey == primaryKey, token)
+                   .Read<DatabaseEntity>()
+                   .SingleOrDefaultAsync(primaryKey, token)
                    .ConfigureAwait(false);
             }
 
@@ -1166,7 +1163,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Write<DatabaseEntity, Guid>()
+                   .Write<DatabaseEntity>()
                    .Update(entity => entity.IntField,
                         entity => entity.IntField + 1,
                         entity => entity.PrimaryKey == primaryKey,
@@ -1180,7 +1177,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Write<DatabaseEntity, Guid>()
+                   .Write<DatabaseEntity>()
                    .Delete(entity => entity.PrimaryKey == primaryKey, token)
                    .ConfigureAwait(false);
             }

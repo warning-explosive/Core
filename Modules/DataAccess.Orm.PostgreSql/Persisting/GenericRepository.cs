@@ -29,10 +29,9 @@
 
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [Component(EnLifestyle.Scoped)]
-    internal class GenericRepository<TEntity, TKey> : IRepository<TEntity, TKey>,
-                                                      IResolvable<IRepository<TEntity, TKey>>
-        where TEntity : IDatabaseEntity<TKey>
-        where TKey : notnull
+    internal class GenericRepository<TEntity> : IRepository<TEntity>,
+                                                IResolvable<IRepository<TEntity>>
+        where TEntity : IDatabaseEntity
     {
         private const string UpdateValueQueryFormat = @"update ""{0}"".""{1}"" a set {2} where {3}";
         private const string SetExpressionFormat = @"{0} = {1}";
@@ -85,7 +84,7 @@
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
-            return Update(new[] { new UpdateInfo<TEntity, TKey>(Lift(accessor), Lift(valueProducer)) }, predicate, token);
+            return Update(new[] { new UpdateInfo<TEntity>(Lift(accessor), Lift(valueProducer)) }, predicate, token);
 
             static Expression<Func<TEntity, object?>> Lift(Expression<Func<TEntity, TValue>> expression)
             {
@@ -94,7 +93,7 @@
         }
 
         public async Task<long> Update(
-            IReadOnlyCollection<UpdateInfo<TEntity, TKey>> infos,
+            IReadOnlyCollection<UpdateInfo<TEntity>> infos,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
@@ -148,7 +147,7 @@
                 predicateExpression);
 
             var versions = (await _transaction
-                   .Read<TEntity, TKey>()
+                   .Read<TEntity>()
                    .All()
                    .Where(predicate)
                    .Select(entity => entity.Version)
@@ -171,7 +170,7 @@
 
             foreach (var (version, count) in versions)
             {
-                var change = new UpdateEntityChange<TEntity, TKey>(
+                var change = new UpdateEntityChange<TEntity>(
                     version,
                     count,
                     infos,
@@ -209,7 +208,7 @@
                 predicateExpression);
 
             var versions = (await _transaction
-                   .Read<TEntity, TKey>()
+                   .Read<TEntity>()
                    .All()
                    .Where(predicate)
                    .Select(entity => entity.Version)
@@ -228,7 +227,7 @@
 
             foreach (var (version, count) in versions)
             {
-                var change = new DeleteEntityChange<TEntity, TKey>(
+                var change = new DeleteEntityChange<TEntity>(
                     version,
                     count,
                     predicate);

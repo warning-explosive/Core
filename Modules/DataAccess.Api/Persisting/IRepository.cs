@@ -29,10 +29,8 @@
     /// IRepository
     /// </summary>
     /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-    /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public interface IRepository<TEntity, TKey>
-        where TEntity : IDatabaseEntity<TKey>
-        where TKey : notnull
+    public interface IRepository<TEntity>
+        where TEntity : IDatabaseEntity
     {
         /// <summary>
         /// Inserts entity in the database
@@ -69,7 +67,7 @@
         /// <param name="token">Cancellation token</param>
         /// <returns>Affected rows count</returns>
         Task<long> Update(
-            IReadOnlyCollection<UpdateInfo<TEntity, TKey>> infos,
+            IReadOnlyCollection<UpdateInfo<TEntity>> infos,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token);
 

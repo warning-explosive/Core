@@ -10,9 +10,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Basics;
     using Microsoft.Extensions.Logging;
 
-    internal class DeleteEntityChange<TEntity, TKey> : ITransactionalChange
-        where TEntity : IDatabaseEntity<TKey>
-        where TKey : notnull
+    internal class DeleteEntityChange<TEntity> : ITransactionalChange
+        where TEntity : IDatabaseEntity
     {
         private readonly long _version;
         private readonly long _affectedRowsCount;
@@ -36,7 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
-               .Write<TEntity, TKey>()
+               .Write<TEntity>()
                .Delete(Predicate, token)
                .ConfigureAwait(false);
 
@@ -48,11 +47,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         public void Apply(ITransactionalStore transactionalStore)
         {
-            var values = transactionalStore.GetValues<TEntity, TKey>(Predicate);
+            var values = transactionalStore.GetValues(Predicate);
 
-            foreach (var value in values)
+            foreach (var entity in values)
             {
-                transactionalStore.TryRemove<TEntity, TKey>(value.PrimaryKey, out _);
+                transactionalStore.TryRemove<TEntity>(entity.PrimaryKey, out _);
             }
         }
     }

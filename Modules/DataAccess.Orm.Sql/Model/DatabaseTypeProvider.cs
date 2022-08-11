@@ -41,12 +41,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
             static bool IsNotAbstraction(Type type)
             {
-                return type != typeof(IUniqueIdentified<>)
-                       && type != typeof(IDatabaseEntity<>)
-                       && type != typeof(BaseDatabaseEntity<>)
-                       && type != typeof(ISqlView<>)
-                       && type != typeof(BaseSqlView<>)
-                       && type != typeof(BaseMtmDatabaseEntity<,>);
+                return type != typeof(IUniqueIdentified)
+                    && type != typeof(IUniqueIdentified<>)
+                    && type != typeof(IDatabaseEntity)
+                    && type != typeof(IDatabaseEntity<>)
+                    && type != typeof(BaseDatabaseEntity<>)
+                    && type != typeof(ISqlView<>)
+                    && type != typeof(BaseSqlView<>)
+                    && type != typeof(BaseMtmDatabaseEntity<,>);
             }
         }
     }

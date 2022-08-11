@@ -320,6 +320,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 await _sync.WaitAsync(token).ConfigureAwait(false);
                 await RestartBackgroundMessageProcessingUnsafe(backgroundMessageProcessingTcs, token).ConfigureAwait(false);
             }
+            catch (OperationCanceledException)
+            {
+            }
             finally
             {
                 _sync.Set();
@@ -919,9 +922,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 onMessageReceived(() => message, default);
 
-                await GetMessageHandler(endpointIdentity, messageHandlers)
-                   .Invoke(message)
-                   .ConfigureAwait(false);
+                try
+                {
+                    await GetMessageHandler(endpointIdentity, messageHandlers)
+                       .Invoke(message)
+                       .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
 
                 var rejectReason = message.ReadHeader<RejectReason>();
 

@@ -23,17 +23,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             _store = new ConcurrentDictionary<Type, ConcurrentDictionary<object, object>>();
         }
 
-        public void Store<TEntity, TKey>(TEntity entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
+        public void Store(IUniqueIdentified entity)
         {
-            var inner = _store.GetOrAdd(typeof(TEntity), _ => new ConcurrentDictionary<object, object>());
+            var inner = _store.GetOrAdd(entity.GetType(), _ => new ConcurrentDictionary<object, object>());
             _ = inner.GetOrAdd<object>(entity.PrimaryKey, static (_, entity) => entity, entity);
         }
 
-        public IEnumerable<TEntity> GetValues<TEntity, TKey>(Expression<Func<TEntity, bool>> predicate)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
+        public IEnumerable<TEntity> GetValues<TEntity>(Expression<Func<TEntity, bool>> predicate)
+            where TEntity : IUniqueIdentified
         {
             if (_store.TryGetValue(typeof(TEntity), out var inner))
             {
@@ -43,9 +40,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             return Enumerable.Empty<TEntity>();
         }
 
-        public bool TryGetValue<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
+        public bool TryGetValue<TEntity>(object key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified
         {
             if (_store.TryGetValue(typeof(TEntity), out var inner)
                 && inner.TryGetValue(key, out var value))
@@ -58,9 +54,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             return false;
         }
 
-        public bool TryRemove<TEntity, TKey>(TKey key, [NotNullWhen(true)] out TEntity? entity)
-            where TEntity : IUniqueIdentified<TKey>
-            where TKey : notnull
+        public bool TryRemove<TEntity>(object key, [NotNullWhen(true)] out TEntity? entity)
+            where TEntity : IUniqueIdentified
         {
             if (_store.TryGetValue(typeof(TEntity), out var inner)
                 && inner.TryRemove(key, out var value))

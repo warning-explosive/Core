@@ -12,20 +12,24 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class HostedService : IHostedService, IDisposable
     {
+        private static readonly SyncState SyncState = new SyncState();
+
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly IEnumerable<IHostStartupAction> _startupActions;
         private readonly IEnumerable<IHostBackgroundWorker> _backgroundWorkers;
 
         private CancellationTokenSource? _cts;
         private Task? _backgroundWorkersTask;
+        private IDisposable? _runningHostedService;
 
         public HostedService(
+            Guid identifier,
             IHostApplicationLifetime hostApplicationLifetime,
             ILoggerFactory loggerFactory,
             IEnumerable<IHostStartupAction> startupActions,
             IEnumerable<IHostBackgroundWorker> backgroundWorkers)
         {
-            Id = Guid.NewGuid();
+            Identifier = identifier;
 
             Logger = loggerFactory.CreateLogger<HostedService>();
 
@@ -34,7 +38,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             _backgroundWorkers = backgroundWorkers;
         }
 
-        private Guid Id { get; }
+        public Guid Identifier { get; }
 
         private ILogger Logger { get; }
 
@@ -42,6 +46,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public async Task StartAsync(CancellationToken token)
         {
+            _runningHostedService = SyncState.StartExclusiveOperation(string.Join(".", nameof(HostedService), nameof(StartAsync)));
+
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
             foreach (var action in _startupActions.OrderByDependencyAttribute(action => action.GetType()))
@@ -95,6 +101,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
             finally
             {
+                _runningHostedService?.Dispose();
                 _cts?.Dispose();
             }
         }
@@ -111,7 +118,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             return async (exception, token) =>
             {
-                logger.Critical(exception, $"Hosted service {Id} unhandled exception");
+                logger.Critical(exception, $"Hosted service {Identifier} unhandled exception");
 
                 await StopAsync(token).ConfigureAwait(false);
             };

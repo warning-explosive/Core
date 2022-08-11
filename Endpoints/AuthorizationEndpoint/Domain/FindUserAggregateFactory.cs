@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.AuthorizationEndpoint.Domain
         public async Task<User> Build(FindUserSpecification spec, CancellationToken token)
         {
             var userDatabaseEntity = await _databaseContext
-               .Read<DatabaseModel.User, Guid>()
+               .Read<DatabaseModel.User>()
                .All()
                .Where(user => user.Username == spec.Username)
                .SingleOrDefaultAsync(token)

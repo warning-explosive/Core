@@ -32,20 +32,22 @@
         {
             _typeProvider
                 .OurTypes
-                .Where(type => type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>))
-                            && type.IsConcreteType())
-                .SelectMany(VerifyDatabaseEntity)
+                .Where(type => typeof(IDatabaseEntity).IsAssignableFrom(type)
+                               && type.IsConcreteType())
+                .SelectMany(type => VerifyDatabaseEntity(type, typeof(BaseDatabaseEntity<>)))
                 .Each(exception => throw exception.Rethrow());
 
             var sqlView = AssembliesExtensions.FindType("SpaceEngineers.Core.DataAccess.Orm.Sql.Views.ISqlView`1");
 
             if (sqlView != null)
             {
+                var baseSqlView = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.DataAccess.Orm.Sql.Views.BaseSqlView`1");
+
                 _typeProvider
                 .OurTypes
                 .Where(type => type.IsSubclassOfOpenGeneric(sqlView)
                             && type.IsConcreteType())
-                .SelectMany(VerifyDatabaseEntity)
+                .SelectMany(type => VerifyDatabaseEntity(type, baseSqlView))
                 .Each(exception => throw exception.Rethrow());
             }
 
@@ -57,7 +59,7 @@
                 .Each(exception => throw exception.Rethrow());
         }
 
-        private IEnumerable<Exception> VerifyDatabaseEntity(Type databaseEntity)
+        private IEnumerable<Exception> VerifyDatabaseEntity(Type databaseEntity, Type baseOpenGenericType)
         {
             if (TypeHasWrongConstructor(databaseEntity, out var constructorException))
             {
@@ -67,6 +69,11 @@
             if (TypeHasWrongModifier(databaseEntity, out var modifierException))
             {
                 yield return modifierException;
+            }
+
+            if (TypeDoesNotInheritFrom(databaseEntity, baseOpenGenericType, out var inheritanceException))
+            {
+                yield return inheritanceException;
             }
 
             foreach (var setterException in DatabaseEntityHasMissingPropertySetter(databaseEntity))
@@ -130,6 +137,24 @@
             if (!isRecord)
             {
                 exception = new InvalidOperationException($"Type {type} should be defined as record");
+                return true;
+            }
+
+            exception = default;
+            return false;
+        }
+
+        private static bool TypeDoesNotInheritFrom(
+            Type type,
+            Type baseType,
+            [NotNullWhen(true)] out Exception? exception)
+        {
+            var inherits = (baseType.IsGenericType && type.IsSubclassOfOpenGeneric(baseType))
+                        || baseType.IsAssignableFrom(type);
+
+            if (!inherits)
+            {
+                exception = new InvalidOperationException($"Type {type} should implement {baseType}");
                 return true;
             }
 

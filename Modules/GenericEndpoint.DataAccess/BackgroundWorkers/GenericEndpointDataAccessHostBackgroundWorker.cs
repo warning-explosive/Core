@@ -72,10 +72,16 @@
             var transportIsRunning = WaitUntilTransportIsRunning(transport, token);
             var outboxDelivery = DeliverMessagesUnsafe(dependencyContainer, endpointIdentity, settings, jsonSerializer, token);
 
-            await Task
-               .WhenAny(transportIsRunning, outboxDelivery)
-               .Unwrap()
-               .ConfigureAwait(false);
+            try
+            {
+                await Task
+                   .WhenAny(transportIsRunning, outboxDelivery)
+                   .Unwrap()
+                   .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         private static async Task DeliverMessagesUnsafe(
@@ -109,7 +115,7 @@
                 var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
                 return (await transaction
-                       .Read<OutboxMessage, Guid>()
+                       .Read<OutboxMessage>()
                        .All()
                        .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
                                      && !outbox.Sent

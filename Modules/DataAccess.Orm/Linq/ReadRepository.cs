@@ -13,12 +13,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Scoped)]
-    internal class ReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>,
-                                                   IResolvable<IReadRepository<TEntity, TKey>>
-        where TEntity : IUniqueIdentified<TKey>
-        where TKey : notnull
+    internal class ReadRepository<TEntity> : IReadRepository<TEntity>,
+                                             IResolvable<IReadRepository<TEntity>>
+        where TEntity : IUniqueIdentified
     {
-        private static readonly MethodInfo LinqAll = LinqMethods.All(typeof(TEntity), typeof(TKey));
+        private static readonly MethodInfo LinqAll = LinqMethods.All(typeof(TEntity));
         private static readonly MethodInfo LinqWhere = LinqMethods.QueryableWhere();
 
         private readonly IAsyncQueryProvider _queryProvider;
@@ -33,34 +32,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return _queryProvider.CreateQuery<TEntity>(QueryAll(this));
         }
 
-        public TEntity Single(TKey key)
+        public TEntity Single<TKey>(TKey key)
+            where TKey : notnull
         {
             return SingleByPrimaryKey(key).Single();
         }
 
-        public TEntity? SingleOrDefault(TKey key)
+        public TEntity? SingleOrDefault<TKey>(TKey key)
+            where TKey : notnull
         {
             return SingleByPrimaryKey(key).SingleOrDefault();
         }
 
-        public Task<TEntity> SingleAsync(TKey key, CancellationToken token)
+        public Task<TEntity> SingleAsync<TKey>(TKey key, CancellationToken token)
+            where TKey : notnull
         {
             return SingleByPrimaryKey(key).SingleAsync(token);
         }
 
-        public Task<TEntity?> SingleOrDefaultAsync(TKey key, CancellationToken token)
+        public Task<TEntity?> SingleOrDefaultAsync<TKey>(TKey key, CancellationToken token)
+            where TKey : notnull
         {
             return SingleByPrimaryKey(key).SingleOrDefaultAsync(token);
         }
 
-        private static Expression QueryAll(IReadRepository<TEntity, TKey> readRepository)
+        private static Expression QueryAll(IReadRepository<TEntity> readRepository)
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
                 LinqAll);
         }
 
-        private IQueryable<TEntity> SingleByPrimaryKey(TKey key)
+        private IQueryable<TEntity> SingleByPrimaryKey<TKey>(TKey key)
+            where TKey : notnull
         {
             var expression = Expression.Call(
                 null,

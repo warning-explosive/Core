@@ -13,10 +13,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
-        internal static MethodInfo All(Type itemType, Type primaryKeyType)
+        internal static MethodInfo All(Type itemType)
         {
-            return new MethodFinder(typeof(IReadRepository<,>).MakeGenericType(itemType, primaryKeyType),
-                    nameof(IReadRepository<IDatabaseEntity<Guid>, Guid>.All),
+            return new MethodFinder(typeof(IReadRepository<>).MakeGenericType(itemType),
+                    nameof(IReadRepository<IDatabaseEntity<Guid>>.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository<>.All()"));

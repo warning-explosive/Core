@@ -4,15 +4,15 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Concurrent;
 
     /// <summary>
-    /// State
+    /// SyncState
     /// </summary>
-    public class State
+    public class SyncState
     {
         private readonly ConcurrentDictionary<string, object?> _state;
         private readonly ConcurrentDictionary<string, object> _sync;
 
         /// <summary> .cctor </summary>
-        public State()
+        public SyncState()
         {
             _state = new ConcurrentDictionary<string, object?>();
             _sync = new ConcurrentDictionary<string, object>();
@@ -27,12 +27,9 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Original state value</returns>
         public TState? Exchange<TState>(string key, Func<TState?, TState> producer)
         {
-            var compositeKey = string.Join(typeof(TState).FullName, key);
-
-            lock (_sync.GetOrAdd(compositeKey, _ => new object()))
+            lock (_sync.GetOrAdd(key, _ => new object()))
             {
-                var originalValue = _state.TryGetValue(key, out var value)
-                                    && value is TState typed
+                var originalValue = _state.TryGetValue(key, out var value) && value is TState typed
                     ? typed
                     : default;
 
@@ -55,12 +52,9 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Original state value</returns>
         public TState? Exchange<TState, TContext>(string key, TContext context, Func<TState?, TContext, TState> producer)
         {
-            var compositeKey = string.Join(typeof(TState).FullName, key);
-
-            lock (_sync.GetOrAdd(compositeKey, _ => new object()))
+            lock (_sync.GetOrAdd(key, _ => new object()))
             {
-                var originalValue = _state.TryGetValue(key, out var value)
-                                    && value is TState typed
+                var originalValue = _state.TryGetValue(key, out var value) && value is TState typed
                     ? typed
                     : default;
 

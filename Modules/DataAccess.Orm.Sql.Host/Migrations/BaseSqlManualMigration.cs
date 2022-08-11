@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 manualMigration);
 
             await transaction
-                .Write<AppliedMigration, Guid>()
+                .Write<AppliedMigration>()
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
         }

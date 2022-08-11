@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <returns>Type is an database entity or not</returns>
         public static bool IsDatabaseEntity(this Type type)
         {
-            return type.IsSubclassOfOpenGeneric(typeof(IDatabaseEntity<>));
+            return typeof(IDatabaseEntity).IsAssignableFrom(type);
         }
 
         /// <summary>

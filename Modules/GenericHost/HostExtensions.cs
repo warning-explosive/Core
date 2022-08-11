@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.GenericHost
                 .ConfigureServices((_, serviceCollection) =>
                 {
                     serviceCollection.AddSingleton(SetupFrameworkDependenciesProvider(frameworkDependenciesProvider));
-                    serviceCollection.AddHostedService(BuildHostedService(hostBuilder));
+                    serviceCollection.AddHostedService(BuildHostedService);
                 })
                 .Build();
 
@@ -92,8 +92,7 @@ namespace SpaceEngineers.Core.GenericHost
 
             return host;
 
-            static FrameworkDependenciesProvider InitializeFrameworkDependenciesProvider(
-                IHostBuilder hostBuilder)
+            static FrameworkDependenciesProvider InitializeFrameworkDependenciesProvider(IHostBuilder hostBuilder)
             {
                 var frameworkDependenciesProvider = new FrameworkDependenciesProvider();
                 hostBuilder.Properties[nameof(IFrameworkDependenciesProvider)] = frameworkDependenciesProvider;
@@ -110,9 +109,10 @@ namespace SpaceEngineers.Core.GenericHost
                 };
             }
 
-            static Func<IServiceProvider, HostedService> BuildHostedService(IHostBuilder hostBuilder)
+            static HostedService BuildHostedService(IServiceProvider serviceProvider)
             {
-                return serviceProvider => new HostedService(
+                return new HostedService(
+                    Guid.NewGuid(),
                     serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
                     serviceProvider.GetRequiredService<ILoggerFactory>(),
                     serviceProvider.GetServices<IHostStartupAction>(),

@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         private readonly IHeap<HeapEntry<TElement, DateTime>> _heap;
         private readonly PriorityQueue<TElement, DateTime> _priorityQueue;
         private readonly Func<TElement, DateTime> _prioritySelector;
-        private readonly State _state;
+        private readonly SyncState _syncState;
 
         private Task? _delay;
         private CancellationTokenSource? _cts;
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             _heap = heap;
             _prioritySelector = prioritySelector;
             _priorityQueue = new PriorityQueue<TElement, DateTime>(heap, prioritySelector);
-            _state = new State();
+            _syncState = new SyncState();
         }
 
         #region IQueue
@@ -113,7 +113,11 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <inheritdoc />
         public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
-            using (_state.StartExclusiveOperation())
+            var key = string.Join(".",
+                nameof(DeferredQueue<HeapEntry<object, string>>),
+                nameof(DeferredQueue<HeapEntry<object, string>>.Run));
+
+            using (_syncState.StartExclusiveOperation(key))
             using (Disposable.Create(() => _heap.RootNodeChanged += CancelScheduleOnRootNodeChanged,
                 () => _heap.RootNodeChanged -= CancelScheduleOnRootNodeChanged))
             {

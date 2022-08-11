@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
             var capturedMessage = new CapturedMessage(Guid.NewGuid(), message, command.Exception?.ToString());
 
             return _databaseContext
-               .Write<CapturedMessage, Guid>()
+               .Write<CapturedMessage>()
                .Insert(new[] { capturedMessage }, EnInsertBehavior.Default, token);
         }
     }

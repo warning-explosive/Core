@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -30,7 +29,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
         public async Task Handle(Query message, CancellationToken token)
         {
             await _databaseContext
-               .Write<DatabaseEntity, Guid>()
+               .Write<DatabaseEntity>()
                .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 

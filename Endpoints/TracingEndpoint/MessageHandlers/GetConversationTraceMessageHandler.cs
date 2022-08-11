@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.TracingEndpoint.MessageHandlers
         public async Task Handle(GetConversationTrace query, CancellationToken token)
         {
             var capturedMessages = (await _databaseContext
-                    .Read<CapturedMessage, Guid>()
+                    .Read<CapturedMessage>()
                     .All()
                     .Where(captured => captured.Message.ConversationId == query.ConversationId)
                     .ToListAsync(token)

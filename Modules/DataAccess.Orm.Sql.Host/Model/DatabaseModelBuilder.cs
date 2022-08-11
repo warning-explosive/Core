@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         private async Task<DatabaseNode> BuildModel(IDatabaseTransaction transaction, CancellationToken token)
         {
             var constraints = transaction
-                .Read<DatabaseColumnConstraint, Guid>()
+                .Read<DatabaseColumnConstraint>()
                 .All()
                 .AsEnumerable()
                 .GroupBy(constraint => constraint.Schema)
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                     StringComparer.OrdinalIgnoreCase);
 
             var schemas = await (await transaction
-                    .Read<DatabaseSchema, Guid>()
+                    .Read<DatabaseSchema>()
                     .All()
                     .Select(schema => schema.Name)
                     .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseColumn, Guid>()
+                    .Read<DatabaseColumn>()
                     .All()
                     .Where(column => column.Schema == schema)
                     .GroupBy(column => column.Table)
@@ -167,7 +167,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseView, Guid>()
+                    .Read<DatabaseView>()
                     .All()
                     .Where(view => view.Schema == schema)
                     .ToListAsync(token)
@@ -187,7 +187,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseIndex, Guid>()
+                    .Read<DatabaseIndex>()
                     .All()
                     .Where(index => index.Schema == schema)
                     .ToListAsync(token)

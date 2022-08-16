@@ -40,29 +40,36 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             Assert.Equal(expectedSource.Text.ToString(), actualSource.ToString());
         }
 
-        private static async Task<Document> ApplyFix(CodeFixProvider codeFix, Document document, ImmutableArray<Diagnostic> actualDiagnostics)
+        private static async Task<Document> ApplyFix(
+            CodeFixProvider codeFix,
+            Document document,
+            ImmutableArray<Diagnostic> actualDiagnostics)
         {
             var actions = new List<CodeAction>();
 
             foreach (var diagnostic in actualDiagnostics)
             {
-                var context = new CodeFixContext(document,
-                                                 diagnostic,
-                                                 (a, d) => actions.Add(a),
-                                                 CancellationToken.None);
+                var context = new CodeFixContext(
+                    document,
+                    diagnostic,
+                    (a, d) => actions.Add(a),
+                    CancellationToken.None);
 
-                await codeFix.RegisterCodeFixesAsync(context).ConfigureAwait(false);
+                await codeFix
+                   .RegisterCodeFixesAsync(context)
+                   .ConfigureAwait(false);
             }
 
             foreach (var codeAction in actions)
             {
-                document = codeAction.GetOperationsAsync(CancellationToken.None)
-                                     .Result
-                                     .OfType<ApplyChangesOperation>()
-                                     .Single()
-                                     .ChangedSolution
-                                     .GetDocument(document.Id)
-                                     .EnsureNotNull($"{nameof(ApplyChangesOperation.ChangedSolution)} must contains document {document.Id}");
+                document = (await codeAction
+                       .GetOperationsAsync(CancellationToken.None)
+                       .ConfigureAwait(false))
+                   .OfType<ApplyChangesOperation>()
+                   .Single()
+                   .ChangedSolution
+                   .GetDocument(document.Id)
+                   .EnsureNotNull($"{nameof(ApplyChangesOperation.ChangedSolution)} must contains document {document.Id}");
             }
 
             return document;

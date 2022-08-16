@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         /// <returns>Ongoing operation</returns>
         public static async Task WaitUntilTransportIsNotRunning(this IHost host, Action<string> log)
         {
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             var subscription = MakeSubscription(tcs, log);
 
             var integrationTransport = host

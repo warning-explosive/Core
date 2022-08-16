@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             _ready = new AsyncManualResetEvent(false);
             _sync = new AsyncAutoResetEvent(true);
 
-            _backgroundMessageProcessingTcs = new TaskCompletionSource<object?>();
+            _backgroundMessageProcessingTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             _handleConnectionShutdownSubscription = HandleConnectionShutdown(_logger, _backgroundMessageProcessingTcs);
 

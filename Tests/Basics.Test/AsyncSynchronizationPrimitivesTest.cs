@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.Basics.Test
             {
                 using (var cts = new CancellationTokenSource())
                 {
-                    var tcs = new TaskCompletionSource<object?>();
+                    var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
                     var task = Basics.TaskExtensions.WaitAsync(tcs.Task, cts.Token);
 
                     cts.Cancel();

@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
             Predicate<IntegrationMessage>? messagePredicate = null,
             Predicate<Exception>? exceptionPredicate = null)
         {
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var subscription = MakeSubscription(
                 messagePredicate ?? (_ => true),
                 exceptionPredicate ?? (_ => true),
@@ -78,7 +78,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
             Predicate<Exception>? exceptionPredicate = null)
             where TMessage : IIntegrationMessage
         {
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var subscription = MakeSubscription(
                 messagePredicate ?? (_ => true),
                 exceptionPredicate ?? (_ => true),
@@ -109,7 +109,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
         public async Task WaitUntilMessageIsNotReceived(Predicate<IntegrationMessage>? predicate = null)
         {
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var subscription = MakeSubscription(predicate ?? (_ => true), tcs);
 
             using (Disposable.Create((this, subscription), Subscribe, Unsubscribe))
@@ -134,7 +134,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
         public async Task WaitUntilMessageIsNotReceived<TMessage>(Predicate<TMessage>? predicate = null)
             where TMessage : IIntegrationMessage
         {
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var subscription = MakeSubscription(predicate ?? (_ => true), tcs);
 
             using (Disposable.Create((this, subscription), Subscribe, Unsubscribe))

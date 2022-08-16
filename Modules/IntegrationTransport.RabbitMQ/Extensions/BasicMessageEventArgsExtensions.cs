@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             lock (channel)
             {
                 confirmedPublication = outstandingConfirms
-                   .GetOrAdd(channel.NextPublishSeqNo, _ => new TaskCompletionSource<bool>())
+                   .GetOrAdd(channel.NextPublishSeqNo, _ => new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously))
                    .Task;
 
                 channel.BasicPublish(exchange, routingKey, true, basicProperties, body);

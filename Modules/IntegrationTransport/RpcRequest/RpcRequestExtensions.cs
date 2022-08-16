@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
         {
             var advancedIntegrationContext = (IAdvancedIntegrationContext)integrationContext;
 
-            var tcs = new TaskCompletionSource<IntegrationMessage>();
+            var tcs = new TaskCompletionSource<IntegrationMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             var message = await advancedIntegrationContext
                .TryEnrollRpcRequest<TQuery, TReply>(query, tcs, token)

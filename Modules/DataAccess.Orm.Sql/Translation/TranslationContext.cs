@@ -156,11 +156,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
         internal void WithinConditionalScope(
-            bool condition,
+            Func<IIntermediateExpression?, bool> condition,
             Action<Action?> conditionalAction,
             Action? action = null)
         {
-            if (condition)
+            if (condition(Parent))
             {
                 conditionalAction(action);
             }
@@ -223,7 +223,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         is NamedSourceExpression
                         or FilterExpression
                         or ProjectionExpression
-                        or JoinExpression);
+                        or JoinExpression
+                        or OrderByExpression);
 
                 var namedSourceExpression = ExtractNamedSourceExpression(intermediateExpression, type);
 
@@ -246,6 +247,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         case JoinExpression joinExpression:
                             return ExtractNamedSourceExpression(joinExpression.LeftSource, type)
                                 ?? ExtractNamedSourceExpression(joinExpression.RightSource, type);
+                        case OrderByExpression orderByExpression:
+                            return ExtractNamedSourceExpression(orderByExpression.Source, type);
                         default:
                             return default;
                     }
@@ -306,6 +309,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         return projectionExpression;
                     case JoinExpression:
                         throw new InvalidOperationException("Ambiguous reference to join expression source");
+                    case OrderByExpression orderByExpression:
+                        return ExtractProjectionExpression(orderByExpression.Source);
                     default:
                         return default;
                 }

@@ -23,6 +23,18 @@ namespace SpaceEngineers.Core.Basics
             };
 
         /// <summary>
+        /// Extract GenericMethodDefinition or return argument method
+        /// </summary>
+        /// <param name="method">MethodInfo</param>
+        /// <returns>GenericMethodDefinition or argument method</returns>
+        public static MethodInfo GenericMethodDefinitionOrSelf(this MethodInfo method)
+        {
+            return method.IsGenericMethod
+                ? method.GetGenericMethodDefinition()
+                : method;
+        }
+
+        /// <summary>
         /// Does method have external access (public or internal)
         /// </summary>
         /// <param name="method">MethodBase</param>

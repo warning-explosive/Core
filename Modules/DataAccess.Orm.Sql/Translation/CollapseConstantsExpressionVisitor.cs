@@ -20,9 +20,7 @@
             if (visitedNode is MethodCallExpression { Object: ConstantExpression or null } methodCallExpression
                 && methodCallExpression.Arguments.All(argument => argument is ConstantExpression))
             {
-                var method = node.Method.IsGenericMethod
-                    ? node.Method.GetGenericMethodDefinition()
-                    : node.Method;
+                var method = node.Method.GenericMethodDefinitionOrSelf();
 
                 var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 

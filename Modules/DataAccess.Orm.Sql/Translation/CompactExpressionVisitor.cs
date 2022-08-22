@@ -7,12 +7,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics.Primitives;
     using Expressions;
 
-    internal class ReplaceFilterExpressionVisitor : IntermediateExpressionVisitorBase
+    internal class CompactExpressionVisitor : IntermediateExpressionVisitorBase
     {
         private readonly IReadOnlyDictionary<string, IIntermediateExpression> _replacements;
         private readonly Stack<string> _scope;
 
-        public ReplaceFilterExpressionVisitor(ProjectionExpression projection)
+        public CompactExpressionVisitor(ProjectionExpression projection)
         {
             _replacements = projection
                 .Bindings

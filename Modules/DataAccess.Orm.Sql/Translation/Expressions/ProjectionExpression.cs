@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal ProjectionExpression(Type type)
-            : this(type, null!, new List<IIntermediateExpression>())
+            : this(type, null!, Array.Empty<IIntermediateExpression>())
         {
         }
 

@@ -548,8 +548,37 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new IUniqueIdentified[] { user, blog, post },
                 timeout
             };
-            /*TODO: #182 - order by*/
-            /*yield return new object[]
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by join",
+                useInMemoryIntegrationTransport,
+                postgreSqlDatabaseProvider,
+                isolationLevel,
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(User.Nickname)}"" ASC",
+                        emptyQueryParameters,
+                        write)),
+                new IUniqueIdentified[] { user, blog, post },
+                timeout
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by then by",
+                useInMemoryIntegrationTransport,
+                postgreSqlDatabaseProvider,
+                isolationLevel,
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
+                new Action<IQuery, Action<string>>(
+                    (query, write) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
+                        emptyQueryParameters,
+                        write)),
+                new IUniqueIdentified[] { testDatabaseEntity },
+                timeout
+            };
+            yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
                 useInMemoryIntegrationTransport,
@@ -558,12 +587,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, write) => CheckFlatQuery(query,
-                        string.Empty,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
                         emptyQueryParameters,
                         write)),
                 new IUniqueIdentified[] { testDatabaseEntity },
                 timeout
-            };*/
+            };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",

@@ -188,7 +188,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             }
             else if (Source is ProjectionExpression projection)
             {
-                expression = expression.ReplaceFilterExpression(projection);
+                expression = expression.CompactExpression(projection);
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {

@@ -235,6 +235,46 @@ namespace SpaceEngineers.Core.Modules.Test
             }
 
             {
+                var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
+
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var property = typeof(string).GetProperty(nameof(string.Length)) !;
+                var bindingExpression = new DataAccess.Orm.Sql.Translation.Expressions.SimpleBindingExpression(property, typeof(string), parameter);
+                var orderByBindingExpressionAsc = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.ASC);
+                var orderByBindingExpressionDesc = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.DESC);
+
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByExpression(typeof(object), source, new[] { orderByBindingExpressionAsc });
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByExpression(typeof(object), source, new[] { orderByBindingExpressionAsc });
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByExpression(typeof(string), source, new[] { orderByBindingExpressionDesc });
+
+                yield return new object[]
+                {
+                    typeof(DataAccess.Orm.Sql.Translation.Expressions.OrderByExpression),
+                    expression,
+                    equalExpression,
+                    notEqualExpression
+                };
+            }
+
+            {
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var property = typeof(string).GetProperty(nameof(string.Length)) !;
+                var bindingExpression = new DataAccess.Orm.Sql.Translation.Expressions.SimpleBindingExpression(property, typeof(string), parameter);
+
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.ASC);
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.ASC);
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.DESC);
+
+                yield return new object[]
+                {
+                    typeof(DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression),
+                    expression,
+                    equalExpression,
+                    notEqualExpression
+                };
+            }
+
+            {
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(object));
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(object));
                 var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));

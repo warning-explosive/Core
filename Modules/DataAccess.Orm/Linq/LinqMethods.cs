@@ -282,6 +282,45 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderBy()"));
         }
 
+        internal static MethodInfo QueryableOrderByDescending()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.OrderByDescending),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderByDescending()"));
+        }
+
+        internal static MethodInfo QueryableThenBy()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.ThenBy),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IOrderedQueryable<object>), typeof(Expression<Func<object, object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenBy()"));
+        }
+
+        internal static MethodInfo QueryableThenByDescending()
+        {
+            return new MethodFinder(typeof(Queryable),
+                    nameof(System.Linq.Queryable.ThenByDescending),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object), typeof(object) },
+                    ArgumentTypes = new[] { typeof(IOrderedQueryable<object>), typeof(Expression<Func<object, object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenByDescending()"));
+        }
+
         internal static MethodInfo QueryableSelectMany()
         {
             return new MethodFinder(typeof(Queryable),

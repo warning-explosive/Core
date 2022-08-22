@@ -60,7 +60,7 @@
       <Compile Update="Translation\ExtractQueryParametersVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ReplaceFilterExpressionVisitor.cs">
+      <Compile Update="Translation\CompactExpressionVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\StringEmptyMemberInfoTranslator.cs">
@@ -230,6 +230,15 @@
       </Compile>
       <Compile Update="Views\BaseSqlView.cs">
         <DependentUpon>ISqlView.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\OrderByExpression.cs">
+        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\EnOrderingDirection.cs">
+        <DependentUpon>OrderByExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\OrderByBindingExpression.cs">
+        <DependentUpon>OrderByExpression.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

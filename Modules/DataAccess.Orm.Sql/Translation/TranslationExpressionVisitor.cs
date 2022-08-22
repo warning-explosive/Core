@@ -42,6 +42,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
         private static readonly MethodInfo Distinct = LinqMethods.QueryableDistinct();
         private static readonly MethodInfo OrderBy = LinqMethods.QueryableOrderBy();
+        private static readonly MethodInfo OrderByDescending = LinqMethods.QueryableOrderByDescending();
+        private static readonly MethodInfo ThenBy = LinqMethods.QueryableThenBy();
+        private static readonly MethodInfo ThenByDescending = LinqMethods.QueryableThenByDescending();
         private static readonly MethodInfo SelectMany = LinqMethods.QueryableSelectMany();
 
         public TranslationExpressionVisitor(
@@ -59,11 +62,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         internal TranslationContext Context { get; }
 
         [SuppressMessage("Analysis", "CA1502", Justification = "complex expression visitor")]
+        [SuppressMessage("Analysis", "CA1506", Justification = "complex expression visitor")]
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            var method = node.Method.IsGenericMethod
-                ? node.Method.GetGenericMethodDefinition()
-                : node.Method;
+            var method = node.Method.GenericMethodDefinitionOrSelf();
 
             var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
@@ -74,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (isQueryRoot)
             {
                 Context.WithinConditionalScope(
-                    Context.Parent is not JoinExpression,
+                    parent => parent is not JoinExpression,
                     action => Context.WithoutScopeDuplication(
                         () => new ProjectionExpression(itemType),
                         action),
@@ -96,21 +98,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            var applyNamedSourceCondition = Context.Parent is JoinExpression
-                 || (Context.Parent is not FilterExpression
-                  && Context.Parent is not RowsFetchLimitExpression
-                  && Context.Parent != null);
-
             if (method == Select)
             {
                 Context.WithinConditionalScope(
-                    applyNamedSourceCondition,
+                    parent => parent is ProjectionExpression || parent is JoinExpression,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
                     () => Context.WithoutScopeDuplication(
                         () => new ProjectionExpression(itemType),
-                        () => BuildJoinExpression(Context, node, itemType)));
+                        () =>
+                        {
+                            var bindings = new[] { node.Arguments[1] };
+
+                            if (TryBuildJoinExpression(Context, node.Arguments[0], bindings, itemType))
+                            {
+                                Visit(bindings[0]);
+                            }
+                            else
+                            {
+                                base.VisitMethodCall(node);
+                            }
+                        }));
 
                 return node;
             }
@@ -118,13 +127,82 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == Where)
             {
                 Context.WithinConditionalScope(
-                    applyNamedSourceCondition,
+                    parent => parent is ProjectionExpression || parent is JoinExpression,
                     action => Context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, Context),
                         action),
                     () => Context.WithoutScopeDuplication(
                         () => new FilterExpression(itemType),
-                        () => BuildJoinExpression(Context, node, itemType)));
+                        () =>
+                        {
+                            var bindings = new[] { node.Arguments[1] };
+
+                            if (TryBuildJoinExpression(Context, node.Arguments[0], bindings, itemType))
+                            {
+                                Visit(bindings[0]);
+                            }
+                            else
+                            {
+                                base.VisitMethodCall(node);
+                            }
+                        }));
+
+                return node;
+            }
+
+            if (method == OrderBy
+                || method == OrderByDescending
+                || method == ThenBy
+                || method == ThenByDescending)
+            {
+                Context.WithinConditionalScope(
+                    parent => parent is ProjectionExpression || parent is JoinExpression,
+                    action => Context.WithoutScopeDuplication(
+                        () => new NamedSourceExpression(itemType, Context),
+                        action),
+                    () => Context.WithoutScopeDuplication(
+                        () => new OrderByExpression(itemType),
+                        () =>
+                        {
+                            var bindings = new Stack<Expression>();
+                            var orderByBindings = new Stack<(Expression, EnOrderingDirection)>();
+
+                            Expression source = node;
+
+                            while (source is MethodCallExpression methodCallExpression)
+                            {
+                                var methodDefinition = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
+
+                                if (methodDefinition == OrderBy
+                                    || methodDefinition == OrderByDescending
+                                    || methodDefinition == ThenBy
+                                    || methodDefinition == ThenByDescending)
+                                {
+                                    var direction = methodDefinition == OrderBy || methodDefinition == ThenBy
+                                        ? EnOrderingDirection.ASC
+                                        : EnOrderingDirection.DESC;
+
+                                    bindings.Push(methodCallExpression.Arguments[1]);
+                                    orderByBindings.Push((methodCallExpression.Arguments[1], direction));
+
+                                    source = methodCallExpression.Arguments[0];
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (!TryBuildJoinExpression(Context, source, bindings, itemType))
+                            {
+                                Visit(source);
+                            }
+
+                            foreach (var (binding, orderingDirection) in orderByBindings)
+                            {
+                                Context.WithinScope(new OrderByBindingExpression(orderingDirection), () => Visit(binding));
+                            }
+                        }));
 
                 return node;
             }
@@ -258,7 +336,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == Contains)
             {
-                Context.WithinScope(new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Contains),
+                Context.WithinScope(
+                    new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Contains),
                     () =>
                     {
                         Visit(node.Arguments[1]);
@@ -279,11 +358,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 projection.IsDistinct = true;
 
                 return node;
-            }
-
-            if (method == OrderBy)
-            {
-                throw new NotSupportedException(nameof(OrderBy));
             }
 
             if (method == SelectMany)
@@ -460,32 +534,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        private void BuildJoinExpression(TranslationContext context, MethodCallExpression node, Type itemType)
+        private bool TryBuildJoinExpression(
+            TranslationContext context,
+            Expression source,
+            IReadOnlyCollection<Expression> bindings,
+            Type itemType)
         {
-            var relations = context.ExtractRelations(
-                node.Arguments[0].Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>)),
-                node.Arguments[1],
-                _modelProvider);
+            var relations = bindings
+               .SelectMany(binding => context.ExtractRelations(
+                    source.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>)),
+                    binding,
+                    _modelProvider))
+               .ToHashSet();
 
-            if (relations.Any())
+            if (!relations.Any())
             {
-                using (var recursiveEnumerable = relations.MoveNext())
-                {
-                    context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
-                        () =>
-                        {
-                            BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(node.Arguments[0]));
-
-                            SelectAll(Context.Parent!);
-                        });
-
-                    Visit(node.Arguments[1]);
-                }
+                return false;
             }
-            else
+
+            using (var recursiveEnumerable = relations.MoveNext())
             {
-                base.VisitMethodCall(node);
+                context.WithoutScopeDuplication(() => new ProjectionExpression(itemType),
+                    () =>
+                    {
+                        BuildJoinExpressionRecursive(Context, recursiveEnumerable, () => Visit(source));
+
+                        SelectAll(Context.Parent!);
+                    });
             }
+
+            return true;
 
             static void BuildJoinExpressionRecursive(
                 TranslationContext context,
@@ -494,7 +572,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 if (recursiveEnumerable.TryMoveNext(out var relation))
                 {
-                    context.WithinScope(new JoinExpression(),
+                    context.WithinScope(
+                        new JoinExpression(),
                         () =>
                         {
                             context.WithoutScopeDuplication(() => new NamedSourceExpression(relation.Target, context),

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Reflection;
+    using Basics;
     using Orm.Linq;
 
     internal class UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor : ExpressionVisitor
@@ -29,9 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            var method = node.Method.IsGenericMethod
-                ? node.Method.GetGenericMethodDefinition()
-                : node.Method;
+            var method = node.Method.GenericMethodDefinitionOrSelf();
 
             var isScalarWithPredicate = method == Single2
                                         || method == SingleOrDefault2

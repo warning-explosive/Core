@@ -29,11 +29,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
             return extractor.Parameters;
         }
 
-        internal static IIntermediateExpression ReplaceFilterExpression(
+        internal static IIntermediateExpression CompactExpression(
             this IIntermediateExpression expression,
             ProjectionExpression projection)
         {
-            return new ReplaceFilterExpressionVisitor(projection).Visit(expression);
+            return new CompactExpressionVisitor(projection).Visit(expression);
         }
 
         internal static IIntermediateExpression ReplaceJoinBindings(

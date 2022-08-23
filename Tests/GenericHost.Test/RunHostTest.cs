@@ -41,8 +41,8 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public RunHostTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public RunHostTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

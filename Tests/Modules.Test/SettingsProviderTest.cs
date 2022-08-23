@@ -28,8 +28,8 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public SettingsProviderTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public SettingsProviderTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             var assemblies = new[]

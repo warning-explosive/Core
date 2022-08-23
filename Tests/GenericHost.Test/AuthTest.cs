@@ -47,8 +47,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public AuthTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public AuthTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

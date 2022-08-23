@@ -40,14 +40,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
                .All()
                .Where(domainEvent => domainEvent.AggregateId == aggregateId
                                   && domainEvent.Timestamp <= timestamp)
-               /*TODO: #182 - sql ordering*/
-               /*.OrderBy(domainEvent => domainEvent.Timestamp)*/
+               .OrderBy(domainEvent => domainEvent.Timestamp)
                .ToListAsync(token)
                .ConfigureAwait(false);
 
             var domainEvents = databaseDomainEvents
-                /*TODO: #182 - sql ordering*/
-               .OrderBy(domainEvent => domainEvent.Timestamp)
                .Select(domainEvent => _jsonSerializer.DeserializeObject(domainEvent.SerializedEvent, domainEvent.EventType))
                .OfType<IDomainEvent<TAggregate>>()
                .ToArray();

@@ -21,8 +21,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DependencyContainerAssemblyLimitationsTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DependencyContainerAssemblyLimitationsTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

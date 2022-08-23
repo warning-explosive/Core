@@ -28,8 +28,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public SolutionAnalysis(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public SolutionAnalysis(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

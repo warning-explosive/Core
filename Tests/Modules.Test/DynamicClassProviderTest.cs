@@ -22,8 +22,8 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DynamicClassProviderTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DynamicClassProviderTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)));

@@ -16,9 +16,9 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using Xunit.Abstractions;
 
     /// <summary>
-    /// ModulesTestFixture
+    /// TestFixture
     /// </summary>
-    public sealed class ModulesTestFixture : IModulesTestFixture
+    public sealed class TestFixture : IModulesTestFixture
     {
         private const string Settings = nameof(Settings);
 
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
             = new ConcurrentDictionary<int, IDependencyContainer>();
 
         /// <summary> .cctor </summary>
-        public ModulesTestFixture()
+        public TestFixture()
         {
             SolutionExtensions
                 .ProjectFile()

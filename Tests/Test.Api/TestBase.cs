@@ -7,12 +7,12 @@ namespace SpaceEngineers.Core.Test.Api
     /// <summary>
     /// TestBase
     /// </summary>
-    public abstract class TestBase : IClassFixture<ModulesTestFixture>
+    public abstract class TestBase : IClassFixture<TestFixture>
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        protected TestBase(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        protected TestBase(ITestOutputHelper output, TestFixture fixture)
         {
             Output = output;
             Fixture = fixture;
@@ -24,8 +24,8 @@ namespace SpaceEngineers.Core.Test.Api
         protected ITestOutputHelper Output { get; }
 
         /// <summary>
-        /// ModulesTestFixture
+        /// TestFixture
         /// </summary>
-        protected ModulesTestFixture Fixture { get; }
+        protected TestFixture Fixture { get; }
     }
 }

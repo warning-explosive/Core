@@ -27,8 +27,8 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DataExportImportTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DataExportImportTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             var assemblies = new[]

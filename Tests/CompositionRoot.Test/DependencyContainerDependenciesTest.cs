@@ -20,8 +20,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DependencyContainerDependenciesTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DependencyContainerDependenciesTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             var assemblies = new[]

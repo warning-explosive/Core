@@ -22,8 +22,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DependencyContainerOverridesTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DependencyContainerOverridesTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }
@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 Assert.Throws<ContainerConfigurationException>(() => Fixture.BoundedAboveContainer(Output, options, assemblies));
             }
 
-            static DependencyContainerOptions OverrideManuallyRegistered(ModulesTestFixture fixture)
+            static DependencyContainerOptions OverrideManuallyRegistered(TestFixture fixture)
             {
                 var registration = fixture.DelegateRegistration(container =>
                 {
@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.Throws<ContainerConfigurationException>(() => resolve(OverrideResolvable<ScopedServiceTransientOverride>(Fixture, additionalOurTypes, EnLifestyle.Transient)).GetType());
 
             static DependencyContainerOptions OverrideResolvable<TOverride>(
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Type[] additionalOurTypes,
                 EnLifestyle lifestyle)
                 where TOverride : IScopedService
@@ -123,7 +123,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             static Func<DependencyContainerOptions, IScopedService> Resolve(
                 ITestOutputHelper output,
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>
@@ -162,7 +162,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.Equal(typeof(ScopedCollectionResolvableTransientOverride), resolve(OverrideCollectionResolvable<ScopedCollectionResolvableTransientOverride>(Fixture, additionalOurTypes, EnLifestyle.Transient)).GetType());
 
             static DependencyContainerOptions OverrideCollectionResolvable<TOverride>(
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Type[] additionalOurTypes,
                 EnLifestyle lifestyle)
                 where TOverride : IScopedCollectionResolvable
@@ -182,7 +182,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             static Func<DependencyContainerOptions, IScopedCollectionResolvable> Resolve(
                 ITestOutputHelper output,
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>
@@ -239,7 +239,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.Equal(typeof(ScopedCollectionResolvable), Decoratee(instance).GetType());
 
             static DependencyContainerOptions OverrideDecoratee<TOverride>(
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Type[] additionalOurTypes,
                 EnLifestyle lifestyle)
                 where TOverride : IScopedCollectionResolvable
@@ -264,7 +264,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             }
 
             static DependencyContainerOptions OverrideDecorator<TOverride>(
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Type[] additionalOurTypes,
                 EnLifestyle lifestyle)
                 where TOverride : IScopedCollectionResolvable, IDecorator<IScopedCollectionResolvable>
@@ -287,7 +287,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             static Func<DependencyContainerOptions, IScopedCollectionResolvable> Resolve(
                 ITestOutputHelper output,
-                ModulesTestFixture fixture,
+                TestFixture fixture,
                 Assembly[] assemblies)
             {
                 return options =>

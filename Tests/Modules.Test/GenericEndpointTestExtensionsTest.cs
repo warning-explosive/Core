@@ -18,8 +18,8 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public GenericEndpointTestExtensionsTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public GenericEndpointTestExtensionsTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

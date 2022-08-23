@@ -10,8 +10,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
+    using Basics.Primitives;
+    using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Connection;
     using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Host;
     using DataAccess.Orm.Linq;
@@ -28,7 +29,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Messages;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
     using Overrides;
@@ -40,7 +40,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using SpaceEngineers.Core.DataAccess.Api.Reading;
     using SpaceEngineers.Core.DataAccess.Api.Transaction;
     using SpaceEngineers.Core.Test.Api;
-    using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -50,19 +49,41 @@ namespace SpaceEngineers.Core.GenericHost.Test
     [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
     public class TranslationTest : TestBase
     {
+        private static ITestOutputHelper? _staticOutput;
+        private static TestFixture? _staticFixture;
+
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
         /// <param name="fixture">ModulesTestFixture</param>
-        public TranslationTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        public TranslationTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
+            _staticOutput = output;
+            _staticFixture = fixture;
         }
+
+        private static ITestOutputHelper StaticOutput => _staticOutput.EnsureNotNull(nameof(_staticOutput));
+
+        private static TestFixture StaticFixture => _staticFixture.EnsureNotNull(nameof(_staticFixture));
 
         /// <summary>
         /// QueryTranslationTestData
         /// </summary>
         /// <returns>Test data</returns>
         public static IEnumerable<object> QueryTranslationTestData()
+        {
+            var hosts = QueryTranslationTestHosts().ToArray();
+            var testCases = QueryTranslationTestCases().ToArray();
+            var countdownEvent = new AsyncCountdownEvent(testCases.Length);
+
+            return hosts
+               .SelectMany(host => testCases
+                   .Select(testCase => host
+                       .Concat(new object[] { countdownEvent })
+                       .Concat(testCase).ToArray()));
+        }
+
+        internal static IEnumerable<object[]> QueryTranslationTestHosts()
         {
             var timeout = TimeSpan.FromSeconds(60);
 
@@ -74,20 +95,85 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .GetFile("appsettings", ".json")
                .FullName;
 
-            var postgreSqlDatabaseProvider = new PostgreSqlDatabaseProvider();
-            var isolationLevel = IsolationLevel.ReadCommitted;
+            var cts = new CancellationTokenSource(timeout);
 
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
+            var host = new Lazy<IHost>(() =>
+                {
+                    var databaseProvider = new PostgreSqlDatabaseProvider();
+                    var isolationLevel = IsolationLevel.ReadCommitted;
+                    var settingsScope = nameof(QueryTranslationTest);
+                    var logger = StaticFixture.CreateLogger(StaticOutput);
+                    var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
+
+                    var additionalOurTypes = new[]
+                    {
+                        typeof(DatabaseEntity),
+                        typeof(Blog),
+                        typeof(Post),
+                        typeof(User),
+                        typeof(Community),
+                        typeof(Participant)
+                    };
+
+                    var manualMigrations = new[]
+                    {
+                        typeof(CreateOrGetExistedPostgreSqlDatabaseManualMigration)
+                    };
+
+                    var manualRegistrations = new IManualRegistration[]
+                    {
+                        new QueryExpressionsCollectorManualRegistration(),
+                        new IsolationLevelManualRegistration(isolationLevel)
+                    };
+
+                    var overrides = new IComponentsOverride[]
+                    {
+                        new TestLoggerOverride(logger),
+                        new TestSettingsScopeProviderOverride(settingsScope)
+                    };
+
+                    var host = hostBuilder
+                       .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
+                       .UseIntegrationTransport(
+                            new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
+                            builder => builder
+                               .WithInMemoryIntegrationTransport(hostBuilder)
+                               .ModifyContainerOptions(options => options
+                                   .WithOverrides(new TestLoggerOverride(logger))
+                                   .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                               .BuildOptions())
+                       .UseEndpoint(TestIdentity.Endpoint10,
+                            (_, builder) => builder
+                               .WithDataAccess(databaseProvider)
+                               .ModifyContainerOptions(options => options
+                                   .WithAdditionalOurTypes(additionalOurTypes)
+                                   .WithManualRegistrations(manualRegistrations)
+                                   .WithOverrides(overrides))
+                               .BuildOptions())
+                       .ExecuteMigrations(builder => builder
+                           .WithDataAccess(databaseProvider)
                            .ModifyContainerOptions(options => options
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+                               .WithAdditionalOurTypes(manualMigrations)
+                               .WithManualRegistrations(manualRegistrations)
+                               .WithOverrides(overrides))
+                           .BuildOptions())
+                       .BuildHost();
 
+                    var awaiter = host.WaitUntilTransportIsNotRunning(StaticOutput.WriteLine);
+
+                    host.StartAsync(cts.Token).Wait(cts.Token);
+
+                    awaiter.Wait(cts.Token);
+
+                    return host;
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+            yield return new object[] { host, cts };
+        }
+
+        internal static IEnumerable<object[]> QueryTranslationTestCases()
+        {
             var emptyQueryParameters = new Dictionary<string, object?>();
 
             var schema = nameof(GenericHost) + nameof(GenericHost.Test);
@@ -101,786 +187,578 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - all",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All()),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - anonymous projections chain",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.StringField, it.IntField, it.BooleanField }).Select(it => new { it.StringField, it.IntField }).Select(it => new { it.IntField }).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b) c) d",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison !=",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField != 43)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 43 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison <",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField < 43)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 43 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison <=",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField <= 42)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison ==",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField == 42)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison >",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField > 41)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 41 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison >=",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField >= 42)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary filter",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.NullableStringField).Where(it => it != null)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - boolean property filter after anonymous projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - boolean property filter",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - change anonymous projection parameter name",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - coalesce projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.NullableStringField ?? string.Empty)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to anonymous type",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).Select(it => new { it.StringField }).Distinct()),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to primitive type",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).Select(it => it.StringField).Distinct()),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with join expression",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.Theme)}"" = @param_0) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
                         new Dictionary<string, object?> { ["param_0"] = "MilkyWay" },
-                        write)),
-                new IUniqueIdentified[] { user, blog, post },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { user, blog, post }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with predicate",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.StringField, it.BooleanField }).Where(it => it.BooleanField).Distinct()),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - anonymous class key test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - projection source test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - single field key test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().GroupBy(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - anonymous class key test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - projection source test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - single field key test",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().GroupBy(it => it.StringField, it => it.IntField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckGroupedQuery(query,
+                    (query, log) => CheckGroupedQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - bool",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - guid",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.PrimaryKey)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - int",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - string",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
                         new Dictionary<string, object?> { ["param_0"] = "MilkyWay", ["param_1"] = "SpaceEngineer" },
-                        write)),
-                new IUniqueIdentified[] { user, blog, post },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { user, blog, post }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection with filter as source",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().Where(it => it.DateTime > DateTime.MinValue).Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         new Dictionary<string, object?> { ["param_0"] = DateTime.MinValue },
-                        write)),
-                new IUniqueIdentified[] { user, blog, post },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { user, blog, post }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { user, blog, post },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { user, blog, post }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - order by join",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<Post>>().All().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(User.Nickname)}"" ASC",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { user, blog, post },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { user, blog, post }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - order by then by",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField <= 42).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_0 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_1) d",
                         new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - property chain with translated member",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.StringField.Length)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}length(a.""{nameof(DatabaseEntity.StringField)}""){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().All(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN 1 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Any(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > 0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Count(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().First(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single async by primary key",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().SingleAsync(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single by primary key",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().Single(testDatabaseEntity.PrimaryKey)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default async by primary key",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().SingleOrDefaultAsync(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default by primary key",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().SingleOrDefault(testDatabaseEntity.PrimaryKey)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - Scalar result - single",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Single(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - sub-query",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container =>
                 {
                     var subQuery = container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.PrimaryKey);
                     return container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => subQuery.Contains(it.PrimaryKey));
                 }),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" IN (SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a)",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection with renaming",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - ternary projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - unary filter",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Where(it => !it.BooleanField || it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection to anonymous class",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => new { Negation = !it.BooleanField })),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(NOT a.""{nameof(DatabaseEntity.BooleanField)}"") AS ""Negation""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection",
-                useInMemoryIntegrationTransport,
-                postgreSqlDatabaseProvider,
-                isolationLevel,
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseEntity>>().All().Select(it => !it.BooleanField)),
                 new Action<IQuery, Action<string>>(
-                    (query, write) => CheckFlatQuery(query,
+                    (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
-                        write)),
-                new IUniqueIdentified[] { testDatabaseEntity },
-                timeout
+                        log)),
+                new IUniqueIdentified[] { testDatabaseEntity }
             };
         }
 
@@ -914,98 +792,35 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(QueryTranslationTestData))]
         internal async Task QueryTranslationTest(
+            Lazy<IHost> host,
+            CancellationTokenSource cts,
+            AsyncCountdownEvent asyncCountdownEvent,
             string section,
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider,
-            IsolationLevel isolationLevel,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
-            IUniqueIdentified[] databaseEntities,
-            TimeSpan timeout)
+            IUniqueIdentified[] databaseEntities)
         {
-            Output.WriteLine(section);
-            Output.WriteLine(databaseProvider.GetType().FullName);
-            Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
-
-            var additionalOurTypes = new[]
+            try
             {
-                typeof(DatabaseEntity),
-                typeof(Blog),
-                typeof(Post),
-                typeof(User),
-                typeof(Community),
-                typeof(Participant)
-            };
+                Output.WriteLine(section);
 
-            var settingsScope = nameof(QueryTranslationTest);
+                var endpointDependencyContainer = host.Value.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-            var manualMigrations = new Type[]
-            {
-                typeof(CreateOrGetExistedPostgreSqlDatabaseManualMigration)
-            };
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new QueryExpressionsCollectorManualRegistration(),
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
-                    settingsScope,
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
-                       .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
-
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
-
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
-            {
                 var sqlDatabaseSettings = await endpointDependencyContainer
                    .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
                    .Get(cts.Token)
                    .ConfigureAwait(false);
 
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                Assert.Equal(nameof(QueryTranslationTest), sqlDatabaseSettings.Database);
+                Assert.Equal(IsolationLevel.ReadCommitted, sqlDatabaseSettings.IsolationLevel);
                 Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
+                var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);
 
                 var assert = endpointDependencyContainer
                    .InvokeWithinTransaction(
                         false,
-                        Run(endpointDependencyContainer, queryProducer, checkQuery, databaseEntities, Output.WriteLine),
+                        Run(endpointDependencyContainer, queryProducer, checkQuery, databaseEntities, s => { } /*Output.WriteLine*/),
                         cts.Token);
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
@@ -1018,10 +833,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }
 
                 await result.ConfigureAwait(false);
+            }
+            finally
+            {
+                asyncCountdownEvent.Decrement();
+            }
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+            if (asyncCountdownEvent.Read() == 0)
+            {
+                Output.WriteLine("CLEANUP");
 
-                await hostShutdown.ConfigureAwait(false);
+                try
+                {
+                    await host
+                       .Value
+                       .StopAsync(cts.Token)
+                       .ConfigureAwait(false);
+                }
+                finally
+                {
+                    cts.Dispose();
+                    host.Value.Dispose();
+                }
             }
         }
 

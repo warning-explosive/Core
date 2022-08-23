@@ -58,8 +58,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DataAccessTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DataAccessTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

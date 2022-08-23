@@ -15,8 +15,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public Benchmarks(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public Benchmarks(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }

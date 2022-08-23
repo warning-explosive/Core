@@ -41,8 +41,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        protected AnalysisBase(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        protected AnalysisBase(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             output.WriteLine($"Used framework version: {Version}");

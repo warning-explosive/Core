@@ -18,8 +18,8 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public CompositionInfoExtractorTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(

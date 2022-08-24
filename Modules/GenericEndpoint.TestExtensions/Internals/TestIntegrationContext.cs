@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -18,11 +19,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
                                           IResolvable<IIntegrationContext>
     {
         private readonly List<IIntegrationMessage> _messages;
+        private readonly List<(IIntegrationMessage, DateTime)> _delayedMessages;
 
         /// <summary> .cctor </summary>
         public TestIntegrationContext()
         {
             _messages = new List<IIntegrationMessage>();
+            _delayedMessages = new List<(IIntegrationMessage, DateTime)>();
         }
 
         /// <inheritdoc />
@@ -38,10 +41,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         }
 
         /// <inheritdoc />
+        public IReadOnlyCollection<(IIntegrationMessage, DateTime)> DelayedMessages
+        {
+            get
+            {
+                lock (_delayedMessages)
+                {
+                    return _delayedMessages.ToList();
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
             return Collect(command);
+        }
+
+        /// <inheritdoc />
+        public Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
+            where TCommand : IIntegrationCommand
+        {
+            return CollectDelayed(command, DateTime.UtcNow + dueTime);
+        }
+
+        /// <inheritdoc />
+        public Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
+            where TCommand : IIntegrationCommand
+        {
+            return CollectDelayed(command, dateTime.ToUniversalTime());
         }
 
         /// <inheritdoc />
@@ -73,6 +102,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             lock (_messages)
             {
                 _messages.Add(message);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private Task CollectDelayed<TMessage>(TMessage message, DateTime dateTime)
+            where TMessage : IIntegrationMessage
+        {
+            lock (_delayedMessages)
+            {
+                _delayedMessages.Add((message, dateTime));
             }
 
             return Task.CompletedTask;

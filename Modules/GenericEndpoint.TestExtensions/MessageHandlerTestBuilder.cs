@@ -93,6 +93,31 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         }
 
         /// <summary>
+        /// Validates that message handler delays command that corresponds to specified predicate
+        /// </summary>
+        /// <param name="predicate">Predicate</param>
+        /// <typeparam name="TCommand">TCommand type-argument</typeparam>
+        /// <returns>MessageHandlerTestBuilder</returns>
+        public MessageHandlerTestBuilder<TMessage> Delays<TCommand>(Expression<Func<TCommand, DateTime, bool>> predicate)
+            where TCommand : IIntegrationCommand
+        {
+            _testCases.Add(new MessageHandlerProducesDelayedMessageTestCase<TCommand>(predicate));
+            return this;
+        }
+
+        /// <summary>
+        /// Validates that message handler doesn't delay any commands with specified type
+        /// </summary>
+        /// <typeparam name="TCommand">TCommand type-argument</typeparam>
+        /// <returns>MessageHandlerTestBuilder</returns>
+        public MessageHandlerTestBuilder<TMessage> DoesNotDelay<TCommand>()
+            where TCommand : IIntegrationCommand
+        {
+            _testCases.Add(new MessageHandlerDoesNotProduceDelayedMessageTestCase<TCommand>());
+            return this;
+        }
+
+        /// <summary>
         /// Validates that message handler publishes event that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
@@ -178,6 +203,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         public MessageHandlerTestBuilder<TMessage> ProducesNothing()
         {
             _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<IIntegrationMessage>());
+            _testCases.Add(new MessageHandlerDoesNotProduceDelayedMessageTestCase<IIntegrationMessage>());
             return this;
         }
 

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using Contract.Abstractions;
@@ -18,6 +19,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         /// <typeparam name="TCommand">TCommand type-argument</typeparam>
         /// <returns>Ongoing send operation</returns>
         Task Send<TCommand>(TCommand command, CancellationToken token)
+            where TCommand : IIntegrationCommand;
+
+        /// <summary>
+        /// Send integration command to logical owner with delay
+        /// </summary>
+        /// <param name="command">Integration command</param>
+        /// <param name="dueTime">Time that transport waits before deliver command</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TCommand">TCommand type-argument</typeparam>
+        /// <returns>Ongoing send operation</returns>
+        Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
+            where TCommand : IIntegrationCommand;
+
+        /// <summary>
+        /// Send integration command to logical owner with delay
+        /// </summary>
+        /// <param name="command">Integration command</param>
+        /// <param name="dateTime">DateTime that transport waits before deliver command</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TCommand">TCommand type-argument</typeparam>
+        /// <returns>Ongoing send operation</returns>
+        Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
             where TCommand : IIntegrationCommand;
 
         /// <summary>

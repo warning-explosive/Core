@@ -57,6 +57,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return _messagesCollector.Collect(CreateGeneralMessage(command), token);
         }
 
+        public Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
+            where TCommand : IIntegrationCommand
+        {
+            return Delay(command, DateTime.UtcNow + dueTime, token);
+        }
+
+        public Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
+            where TCommand : IIntegrationCommand
+        {
+            var message = CreateGeneralMessage(command);
+
+            message.WriteHeader(new DeferredUntil(dateTime.ToUniversalTime()));
+
+            return _messagesCollector.Collect(message, token);
+        }
+
         public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
             where TEvent : IIntegrationEvent
         {

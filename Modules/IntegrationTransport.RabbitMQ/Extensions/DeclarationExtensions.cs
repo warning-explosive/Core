@@ -42,25 +42,30 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
         public static void DeclareExchange(
             this IModel channel,
             string exchange,
-            string type)
+            string type,
+            bool durable = true,
+            bool autoDelete = false)
         {
             channel.ExchangeDeclare(
                 exchange,
                 type,
-                true,
-                false,
+                durable,
+                autoDelete,
                 new Dictionary<string, object>());
         }
 
         public static void DeclareQueue(
             this IModel channel,
             string queue,
-            IDictionary<string, object> arguments)
+            IDictionary<string, object> arguments,
+            bool durable = true,
+            bool exclusive = false,
+            bool autoDelete = false)
         {
             channel.QueueDeclare(queue,
-                true,
-                false,
-                false,
+                durable,
+                exclusive,
+                autoDelete,
                 arguments);
         }
 

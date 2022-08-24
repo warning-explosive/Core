@@ -123,12 +123,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return Task.CompletedTask;
         }
 
-        public async Task Retry(TimeSpan dueTime, CancellationToken token)
+        public Task Retry(TimeSpan dueTime, CancellationToken token)
+        {
+            return Retry(DateTime.UtcNow + dueTime, token);
+        }
+
+        public async Task Retry(DateTime dateTime, CancellationToken token)
         {
             var copy = Message.Clone();
 
             copy.OverwriteHeader(new RetryCounter((copy.ReadHeader<RetryCounter>()?.Value ?? 0) + 1));
-            copy.OverwriteHeader(new DeferredUntil(DateTime.UtcNow + dueTime));
+            copy.OverwriteHeader(new DeferredUntil(dateTime.ToUniversalTime()));
 
             var wasSent = await SendMessage(copy, token).ConfigureAwait(false);
 

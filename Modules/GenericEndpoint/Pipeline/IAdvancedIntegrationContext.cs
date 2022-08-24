@@ -39,10 +39,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         /// <summary>
         /// Retries integration message processing using specified retry policy
         /// </summary>
-        /// <param name="dueTime">Time that transport waits before deliver message again</param>
+        /// <param name="dueTime">Time that transport waits before deliver message</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Retry(TimeSpan dueTime, CancellationToken token);
+
+        /// <summary>
+        /// Retries integration message processing using specified retry policy
+        /// </summary>
+        /// <param name="dateTime">DateTime that transport waits before deliver message</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Retry(DateTime dateTime, CancellationToken token);
 
         /// <summary>
         /// Try enroll rpc-request

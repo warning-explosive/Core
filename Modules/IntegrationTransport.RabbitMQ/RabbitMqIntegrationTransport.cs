@@ -45,7 +45,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private const string DeadLetterQueue = nameof(DeadLetterQueue);
 
         private const string DeferredExchange = nameof(DeferredExchange);
-        private const string DeferredQueue = nameof(DeferredQueue);
 
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
@@ -78,6 +77,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         private readonly AsyncEventHandler<ShutdownEventArgs> _handleConsumerShutdownSubscription;
 
         private EnIntegrationTransportStatus _status;
+
+        private RabbitMqSettings? _rabbitMqSettings;
 
         private IConnection? _connection;
 
@@ -215,7 +216,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             foreach (var type in messageTypes)
             {
                 var copy = message.ContravariantClone(type);
-                result = await Publish(copy, channel, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
+                result = await Publish(copy, channel, _rabbitMqSettings!, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
             }
 
             return result;
@@ -223,20 +224,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             static Task<bool> Publish(
                 IntegrationMessage message,
                 IModel channel,
+                RabbitMqSettings rabbitMqSettings,
                 ConcurrentDictionary<ulong, TaskCompletionSource<bool>> outstandingConfirms,
                 IJsonSerializer jsonSerializer)
             {
-                var basicProperties = CreateBasicProperties(channel, message);
+                var basicProperties = CreateBasicProperties(channel, message, rabbitMqSettings);
 
                 var exchange = string.IsNullOrEmpty(basicProperties.Expiration)
                     ? InputExchange
-                    : DeferredExchange;
+                    : (string)basicProperties.Headers[DeferredExchange];
 
                 var body = message.EncodeIntegrationMessage(jsonSerializer);
 
                 var left = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName!.GetRoutingKeyPart();
 
-                var right = basicProperties.ReplyTo;
+                var right = message.GetTargetEndpoint();
 
                 var routingKey = string.Join(".", left, right);
 
@@ -245,7 +247,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             static IBasicProperties CreateBasicProperties(
                 IModel channel,
-                IntegrationMessage message)
+                IntegrationMessage message,
+                RabbitMqSettings rabbitMqSettings)
             {
                 var basicProperties = channel.CreateBasicProperties();
 
@@ -260,23 +263,55 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 basicProperties.CorrelationId = message.ReadRequiredHeader<ConversationId>().Value.ToString();
                 basicProperties.Type = message.ReflectedType.FullName;
                 basicProperties.Headers = new Dictionary<string, object>();
-                basicProperties.ReplyTo = message.GetTargetEndpoint();
 
                 var deferredUntil = message.ReadHeader<DeferredUntil>();
                 var now = DateTime.UtcNow;
-
                 var expirationMilliseconds = deferredUntil != null && deferredUntil.Value >= now
-                    ? (ulong)Math.Round((deferredUntil.Value - now).TotalMilliseconds, MidpointRounding.AwayFromZero)
+                    ? (int)Math.Round((deferredUntil.Value - now).TotalMilliseconds, MidpointRounding.AwayFromZero)
                     : 0;
 
-                var isDeferred = expirationMilliseconds > 0;
+                var isDeferred = expirationMilliseconds > 100;
 
                 if (isDeferred)
                 {
                     basicProperties.Expiration = expirationMilliseconds.ToString(CultureInfo.InvariantCulture);
+                    var deferredExchange = BuildDeferredPath(channel, expirationMilliseconds, rabbitMqSettings);
+                    basicProperties.Headers[DeferredExchange] = deferredExchange;
                 }
 
                 return basicProperties;
+            }
+
+            static string BuildDeferredPath(
+                IModel channel,
+                int expirationMilliseconds,
+                RabbitMqSettings rabbitMqSettings)
+            {
+                var generatedName = Guid.NewGuid().ToString();
+
+                channel.DeclareExchange(
+                    generatedName,
+                    ExchangeType.Fanout,
+                    autoDelete: true);
+
+                channel.DeclareQueue(
+                    generatedName,
+                    new Dictionary<string, object>
+                    {
+                        ["x-queue-type"] = "quorum",
+                        ["x-max-length-bytes"] = rabbitMqSettings.QueueMaxLengthBytes,
+                        ["x-dead-letter-exchange"] = InputExchange,
+                        ["x-dead-letter-strategy"] = "at-least-once",
+                        ["x-overflow"] = "reject-publish",
+                        ["x-expires"] = expirationMilliseconds + 4200
+                    });
+
+                channel.BindQueue(
+                    generatedName,
+                    generatedName,
+                    string.Empty);
+
+                return generatedName;
             }
         }
 
@@ -337,17 +372,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             Status = EnIntegrationTransportStatus.Starting;
 
-            var rabbitMqSettings = await _rabbitMqSettingsProvider
+            _rabbitMqSettings = await _rabbitMqSettingsProvider
                .Get(token)
                .ConfigureAwait(false);
 
-            await rabbitMqSettings
+            await _rabbitMqSettings
                .DeclareVirtualHost(_jsonSerializer, _logger, token)
                .ConfigureAwait(false);
 
             _connection = await ConfigureConnection(
                     _logger,
-                    rabbitMqSettings,
+                    _rabbitMqSettings,
                     (ushort)_endpoints.Keys.Count,
                     _handleConnectionShutdownSubscription,
                     token)
@@ -355,7 +390,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             using (var commonChannel = ConfigureChannel(
                        _connection,
-                       rabbitMqSettings,
+                       _rabbitMqSettings,
                        (_, _) => { },
                        (_, _) => { },
                        (_, _) => { },
@@ -363,7 +398,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                        (_, _) => { }))
             {
                 BuildTopology(commonChannel,
-                    rabbitMqSettings,
+                    _rabbitMqSettings,
                     _endpoints.Keys,
                     _integrationMessageTypes);
 
@@ -374,7 +409,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 _connection,
                 _channels,
                 _endpoints.Keys,
-                rabbitMqSettings,
+                _rabbitMqSettings,
                 _handleChannelShutdownSubscription,
                 _handleChannelCallbackExceptionSubscription,
                 _handleChannelBasicReturnSubscription,
@@ -382,7 +417,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 _handleChannelBasicNacksSubscription);
 
             StartConsumers(
-                rabbitMqSettings,
+                _rabbitMqSettings,
                 _channels,
                 _consumers,
                 _handleReceivedMessageSubscription,
@@ -513,7 +548,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             IReadOnlyDictionary<EndpointIdentity, IIntegrationTypeProvider> integrationMessageTypes)
         {
             BuildDeadLetterPath(channel, rabbitMqSettings);
-            BuildDeferredPath(channel, rabbitMqSettings);
             BuildInputPath(channel, rabbitMqSettings, endpoints, integrationMessageTypes);
 
             static void BuildDeadLetterPath(IModel channel, RabbitMqSettings rabbitMqSettings)
@@ -534,29 +568,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 channel.BindQueue(
                     DeadLetterQueue,
                     DeadLetterExchange,
-                    string.Empty);
-            }
-
-            static void BuildDeferredPath(IModel channel, RabbitMqSettings rabbitMqSettings)
-            {
-                channel.DeclareExchange(
-                    DeferredExchange,
-                    ExchangeType.Fanout);
-
-                channel.DeclareQueue(
-                    DeferredQueue,
-                    new Dictionary<string, object>
-                    {
-                        ["x-queue-type"] = "quorum",
-                        ["x-max-length-bytes"] = rabbitMqSettings.QueueMaxLengthBytes,
-                        ["x-dead-letter-exchange"] = InputExchange,
-                        ["x-dead-letter-strategy"] = "at-least-once",
-                        ["x-overflow"] = "reject-publish"
-                    });
-
-                channel.BindQueue(
-                    DeferredQueue,
-                    DeferredExchange,
                     string.Empty);
             }
 

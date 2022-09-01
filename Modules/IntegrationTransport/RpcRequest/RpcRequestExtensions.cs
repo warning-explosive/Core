@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
     using System.Threading.Tasks;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Messaging;
     using GenericEndpoint.Pipeline;
 
     /// <summary>
@@ -31,11 +30,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
         {
             var advancedIntegrationContext = (IAdvancedIntegrationContext)integrationContext;
 
-            var tcs = new TaskCompletionSource<IntegrationMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            var message = await advancedIntegrationContext
-               .TryEnrollRpcRequest<TQuery, TReply>(query, tcs, token)
-               .ConfigureAwait(false);
+            var (message, replyTask) = advancedIntegrationContext.EnrollRpcRequest<TQuery, TReply>(query, token);
 
             if (message == null)
             {
@@ -51,7 +46,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
                 throw new InvalidOperationException("Rpc request wasn't successful");
             }
 
-            var reply = await tcs.Task.ConfigureAwait(false);
+            var reply = await replyTask.ConfigureAwait(false);
 
             return (TReply)reply.Payload;
         }

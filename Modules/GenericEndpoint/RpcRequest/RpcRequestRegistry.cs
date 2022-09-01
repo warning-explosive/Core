@@ -29,41 +29,65 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
             _memoryCache.Dispose();
         }
 
-        public async Task<bool> TryEnroll(Guid requestId, TaskCompletionSource<IntegrationMessage> tcs, CancellationToken token)
+        public async Task<IntegrationMessage> Enroll(Guid requestId, CancellationToken token)
         {
             var settings = await _genericEndpointSettingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
+
+            var tcs = new TaskCompletionSource<IntegrationMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             var cacheItem = new CacheItem(requestId.ToString(), tcs);
 
             var cacheItemPolicy = new CacheItemPolicy
             {
                 AbsoluteExpiration = DateTimeOffset.Now.Add(settings.RpcRequestTimeout),
-                RemovedCallback = RemovedCallback(tcs)
+                RemovedCallback = RemovedCallback(tcs, requestId, settings)
             };
 
-            return _memoryCache.Add(cacheItem, cacheItemPolicy);
-
-            static CacheEntryRemovedCallback RemovedCallback(TaskCompletionSource<IntegrationMessage> tcs)
+            if (!_memoryCache.Add(cacheItem, cacheItemPolicy))
             {
-                return _ => tcs.TrySetCanceled();
+                tcs.TrySetException(new InvalidOperationException($"Rpc-request registry has already had enrolled request {requestId}"));
+            }
+
+            return await tcs.Task.ConfigureAwait(false);
+
+            static CacheEntryRemovedCallback RemovedCallback(
+                TaskCompletionSource<IntegrationMessage> tcs,
+                Guid requestId,
+                GenericEndpointSettings settings)
+            {
+                return args =>
+                {
+                    if (args.RemovedReason != CacheEntryRemovedReason.Removed)
+                    {
+                        tcs.TrySetException(new TimeoutException($"Rpc-request {requestId} was timed out of {settings.RpcRequestTimeout.TotalSeconds} seconds"));
+                    }
+                };
             }
         }
 
         public bool TrySetResult(Guid requestId, IntegrationMessage reply)
         {
-            var cacheItem = _memoryCache.GetCacheItem(requestId.ToString());
+            var cacheItem = _memoryCache.Remove(requestId.ToString());
 
-            return cacheItem?.Value is TaskCompletionSource<IntegrationMessage> tcs
-                   && tcs.TrySetResult(reply);
+            return cacheItem is TaskCompletionSource<IntegrationMessage> tcs
+                && tcs.TrySetResult(reply);
+        }
+
+        public bool TrySetException(Guid requestId, Exception exception)
+        {
+            var cacheItem = _memoryCache.Remove(requestId.ToString());
+
+            return cacheItem is TaskCompletionSource<IntegrationMessage> tcs
+                && tcs.TrySetException(exception);
         }
 
         public bool TrySetCancelled(Guid requestId)
         {
-            var cacheItem = _memoryCache.GetCacheItem(requestId.ToString());
+            var cacheItem = _memoryCache.Remove(requestId.ToString());
 
-            return cacheItem?.Value is TaskCompletionSource<IntegrationMessage> tcs
+            return cacheItem is TaskCompletionSource<IntegrationMessage> tcs
                 && tcs.TrySetCanceled();
         }
     }

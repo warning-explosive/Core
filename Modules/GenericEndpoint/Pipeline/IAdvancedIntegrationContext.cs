@@ -53,17 +53,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         Task Retry(DateTime dateTime, CancellationToken token);
 
         /// <summary>
-        /// Try enroll rpc-request
+        /// Enroll rpc-request
         /// </summary>
         /// <param name="query">Integration query</param>
-        /// <param name="tcs">TaskCompletionSource</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TQuery">TQuery type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
-        /// <returns>Ongoing enroll operation</returns>
-        Task<IntegrationMessage?> TryEnrollRpcRequest<TQuery, TReply>(
+        /// <returns>Enrollment result - query</returns>
+        (IntegrationMessage query, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TQuery, TReply>(
             TQuery query,
-            TaskCompletionSource<IntegrationMessage> tcs,
             CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply;

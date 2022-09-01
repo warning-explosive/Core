@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             {
                 var requestId = context.Message.ReadRequiredHeader<Id>().Value;
 
-                if (_rpcRequestRegistry.TrySetCancelled(requestId))
+                if (_rpcRequestRegistry.TrySetException(requestId, exception))
                 {
                     _logger.Warning($"Rpc request {requestId} was cancelled due to error: {exception}");
                 }

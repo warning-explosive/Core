@@ -11,13 +11,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
     public interface IRpcRequestRegistry
     {
         /// <summary>
-        /// Try enroll rpc-request
+        /// Enroll rpc-request
         /// </summary>
         /// <param name="requestId">Request identifier</param>
-        /// <param name="tcs">TaskCompletionSource</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing enroll operation</returns>
-        public Task<bool> TryEnroll(Guid requestId, TaskCompletionSource<IntegrationMessage> tcs, CancellationToken token);
+        public Task<IntegrationMessage> Enroll(Guid requestId, CancellationToken token);
 
         /// <summary>
         /// Try set RPC request result
@@ -28,10 +27,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
         bool TrySetResult(Guid requestId, IntegrationMessage reply);
 
         /// <summary>
-        /// Try set cancelled state to RPC request
+        /// Try set RPC request exception
         /// </summary>
         /// <param name="requestId">Request identifier</param>
+        /// <param name="exception">Exception</param>
         /// <returns>Result</returns>
-        bool TrySetCancelled(Guid requestId);
+        bool TrySetException(Guid requestId, Exception exception);
     }
 }

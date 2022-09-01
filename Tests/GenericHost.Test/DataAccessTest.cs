@@ -1337,7 +1337,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                            .RpcRequest<Query, Reply>(new Query(42), cts.Token)
                            .ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException)
+                    catch (InvalidOperationException)
                     {
                     }
 

@@ -107,9 +107,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             await _messagesCollector.Collect(replyIntegrationMessage, token).ConfigureAwait(false);
         }
 
-        public async Task<IntegrationMessage?> TryEnrollRpcRequest<TQuery, TReply>(
+        public (IntegrationMessage query, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TQuery, TReply>(
             TQuery query,
-            TaskCompletionSource<IntegrationMessage> tcs,
             CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
@@ -118,13 +117,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
             var requestId = message.ReadRequiredHeader<Id>().Value;
 
-            var wasEnrolled = await _rpcRequestRegistry
-               .TryEnroll(requestId, tcs, token)
-               .ConfigureAwait(false);
-
-            return wasEnrolled
-                ? message
-                : default;
+            return (message, _rpcRequestRegistry.Enroll(requestId, token));
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)

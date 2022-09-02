@@ -4,9 +4,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Api.Abstractions;
     using Basics;
-    using GenericHost.Internals;
     using Registrations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
@@ -26,12 +24,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Test))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test))),
             };
 
-            var options = new DependencyContainerOptions().WithManualRegistrations(
-                new ManuallyRegisteredServiceManualRegistration(),
-                new ConfigurationProviderManualRegistration());
+            var options = new DependencyContainerOptions()
+               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
         }
@@ -46,7 +43,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             var ourAssembliesNames = solutionFile
                 .Directory
-                .EnsureNotNull("Solution directory not found")
+                .EnsureNotNull("Solution directory wasn't found")
                 .ProjectFiles()
                 .Select(p => p.AssemblyName())
                 .ToHashSet();
@@ -151,16 +148,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             var expectedAssemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Basics))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
 
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.AutoRegistration), nameof(Core.AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
 
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Test), nameof(Core.Test.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Test))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test))),
 
                 AssembliesExtensions.FindRequiredAssembly("System.Private.CoreLib")
             };

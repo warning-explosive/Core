@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using GenericEndpoint.DataAccess.BackgroundWorkers;
+    using GenericEndpoint.Host.BackgroundWorkers;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.UnitOfWork;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;

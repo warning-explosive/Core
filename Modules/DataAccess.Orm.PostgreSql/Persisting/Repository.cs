@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
     using Microsoft.Extensions.Logging;
@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         }
 
         public async Task<long> Insert(
-            IUniqueIdentified[] entities,
+            IDatabaseEntity[] entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
         {

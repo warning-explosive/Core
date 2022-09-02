@@ -4,29 +4,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
     using Basics.Primitives;
-    using CrossCuttingConcerns.Json;
+    using CompositionRoot;
+    using CompositionRoot.Registration;
+    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host;
     using DataAccess.Orm.PostgreSql.Extensions;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Settings;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging;
-    using GenericEndpoint.Messaging.Abstractions;
-    using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.Pipeline;
     using GenericEndpoint.Settings;
     using IntegrationTransport.Host;
@@ -34,19 +33,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using IntegrationTransport.RpcRequest;
     using MessageHandlers;
     using Messages;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
     using Overrides;
     using Registrations;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
-    using TracingEndpoint.Contract;
-    using TracingEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -65,48 +59,40 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         /// <summary>
-        /// useContainer; useTransport; collector; databaseProvider; timeout;
+        /// DataAccessTestData
         /// </summary>
-        /// <returns>RunHostWithDataAccessTestData</returns>
-        public static IEnumerable<object[]> RunHostWithDataAccessTestData()
+        /// <returns>Test data</returns>
+        public static IEnumerable<object[]> DataAccessTestData()
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var commonAppSettingsJson = SolutionExtensions
+            var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .EnsureNotNull("Project directory wasn't found")
+               .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -130,81 +116,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .SelectMany(databaseProvider => isolationLevels
                        .Select(isolationLevel => new object[]
                        {
-                           useTransport,
-                           databaseProvider,
-                           isolationLevel,
-                           timeout
-                       })));
-        }
-
-        /// <summary>
-        /// useContainer; useTransport; collector; databaseProvider; timeout;
-        /// </summary>
-        /// <returns>RunHostWithDataAccessTestData</returns>
-        public static IEnumerable<object[]> RunHostWithDataAccessAndIntegrationTransportTracingTestData()
-        {
-            var timeout = TimeSpan.FromSeconds(60);
-
-            var commonAppSettingsJson = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
-
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .WithTracing()
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
-
-            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .WithTracing()
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
-
-            var integrationTransportProviders = new[]
-            {
-                useInMemoryIntegrationTransport,
-                useRabbitMqIntegrationTransport
-            };
-
-            var databaseProviders = new IDatabaseProvider[]
-            {
-                new PostgreSqlDatabaseProvider()
-            };
-
-            var isolationLevels = new[]
-            {
-                IsolationLevel.Snapshot,
-                IsolationLevel.ReadCommitted
-            };
-
-            return integrationTransportProviders
-               .SelectMany(useTransport => databaseProviders
-                   .SelectMany(databaseProvider => isolationLevels
-                       .Select(isolationLevel => new object[]
-                       {
+                           settingsDirectory,
                            useTransport,
                            databaseProvider,
                            isolationLevel,
@@ -213,240 +125,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostWithDataAccessAndIntegrationTransportTracingTestData))]
-        internal async Task GetConversationTraceTest(
-            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
-        {
-            Output.WriteLine(databaseProvider.GetType().FullName);
-            Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
-
-            var messageTypes = new[]
-            {
-                typeof(Query),
-                typeof(Reply)
-            };
-
-            var messageHandlerTypes = new[]
-            {
-                typeof(QueryAlwaysReplyMessageHandler)
-            };
-
-            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
-
-            var settingsScope = nameof(GetConversationTraceTest);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var manualMigrations = new[]
-            {
-                typeof(RecreatePostgreSqlDatabaseManualMigration)
-            };
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
-                    settingsScope,
-                    isolationLevel,
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
-                       .BuildOptions())
-               .UseTracingEndpoint(TestIdentity.Instance0,
-                    builder => builder
-                       .WithDataAccess(databaseProvider)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
-                       .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
-
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
-
-            var jsonSerializer = host
-               .GetEndpointDependencyContainer(TestIdentity.Endpoint10)
-               .Resolve<IJsonSerializer>();
-
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
-            {
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var conversationId = Guid.NewGuid();
-
-                var awaiter = Task.WhenAny(
-                    hostShutdown,
-                    Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
-                        collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace))));
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                    var trace = await integrationContext
-                        .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
-                        .ConfigureAwait(false);
-
-                    var result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
-                    {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
-                    }
-
-                    await result.ConfigureAwait(false);
-
-                    Assert.Empty(collector.ErrorMessages);
-                    Assert.Equal(4, collector.Messages.Count);
-                    var messages = collector.Messages.ToArray();
-                    collector.Messages.Clear();
-
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(GetConversationTrace)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(ConversationTrace)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace)));
-
-                    Assert.Equal(conversationId, trace.ConversationId);
-                    Assert.Null(trace.SerializedMessage);
-                    Assert.Null(trace.RefuseReason);
-                    Assert.NotNull(trace.SubsequentTrace);
-                    Assert.Empty(trace.SubsequentTrace);
-
-                    awaiter = Task.WhenAny(
-                        hostShutdown,
-                        Task.WhenAll(
-                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)),
-                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply))));
-
-                    var reply = await integrationContext
-                        .RpcRequest<Query, Reply>(new Query(42), cts.Token)
-                        .ConfigureAwait(false);
-
-                    result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
-                    {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
-                    }
-
-                    await result.ConfigureAwait(false);
-
-                    Assert.Empty(collector.ErrorMessages);
-                    Assert.Equal(4, collector.Messages.Count);
-                    messages = collector.Messages.ToArray();
-                    collector.Messages.Clear();
-
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Query)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(CaptureTrace) && ((CaptureTrace)message.Payload).SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(Reply)));
-
-                    conversationId = messages[0].ReadRequiredHeader<ConversationId>().Value;
-
-                    awaiter = Task.WhenAny(
-                        hostShutdown,
-                        Task.WhenAll(
-                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(GetConversationTrace)),
-                            collector.WaitUntilMessageIsNotReceived<CaptureTrace>(message => message.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType == typeof(ConversationTrace))));
-
-                    trace = await integrationContext
-                        .RpcRequest<GetConversationTrace, ConversationTrace>(new GetConversationTrace(conversationId), cts.Token)
-                        .ConfigureAwait(false);
-
-                    result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
-                    {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
-                    }
-
-                    await result.ConfigureAwait(false);
-
-                    Assert.Empty(collector.ErrorMessages);
-                    Assert.Equal(4, collector.Messages.Count);
-                    collector.Messages.Clear();
-
-                    Assert.Equal(conversationId, trace.ConversationId);
-                    Assert.NotNull(trace.SerializedMessage);
-                    Assert.NotEmpty(trace.SerializedMessage.Payload);
-                    Assert.Equal(typeof(Query), trace.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
-                    Assert.Equal(42, ((Query)trace.SerializedMessage.ToIntegrationMessage(jsonSerializer).Payload).Id);
-                    Assert.Null(trace.RefuseReason);
-                    Assert.NotNull(trace.SubsequentTrace);
-                    Assert.Single(trace.SubsequentTrace);
-
-                    var subsequentTrace = trace.SubsequentTrace.Single();
-                    Assert.NotNull(subsequentTrace.SerializedMessage);
-                    Assert.NotEmpty(subsequentTrace.SerializedMessage.Payload);
-                    Assert.Equal(typeof(Reply), subsequentTrace.SerializedMessage.ToIntegrationMessage(jsonSerializer).ReflectedType);
-                    Assert.Equal(reply.Id, ((Reply)subsequentTrace.SerializedMessage.ToIntegrationMessage(jsonSerializer).Payload).Id);
-                    Assert.Null(subsequentTrace.RefuseReason);
-                    Assert.NotNull(subsequentTrace.SubsequentTrace);
-                    Assert.Empty(subsequentTrace.SubsequentTrace);
-
-                    await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                    await hostShutdown.ConfigureAwait(false);
-                }
-            }
-        }
-
-        [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        [MemberData(nameof(DataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
-            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -467,12 +149,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(QueryAlwaysReplyMessageHandler)
             };
 
-            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
-
             var manualMigrations = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseManualMigration)
+                typeof(RecreatePostgreSqlDatabaseMigration)
             };
+
+            var additionalOurTypes = messageTypes
+               .Concat(messageHandlerTypes)
+               .Concat(manualMigrations)
+               .ToArray();
 
             var settingsScope = nameof(BackgroundOutboxDeliveryTest);
             var virtualHost = settingsScope + isolationLevel;
@@ -483,115 +168,89 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new IsolationLevelManualRegistration(isolationLevel)
             };
 
-            var migrationManualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
             var endpointOverrides = new IComponentsOverride[]
             {
                 new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var migrationOverrides = new IComponentsOverride[]
-            {
-                new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithManualRegistrations(endpointManualRegistrations)
                            .WithOverrides(endpointOverrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(migrationManualRegistrations)
-                       .WithOverrides(migrationOverrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+            await RunHostTest.RunTestHost(Output,
+                    host,
+                    BackgroundOutboxDeliveryTestInternal(settingsScope, virtualHost, isolationLevel),
+                    timeout)
+               .ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> BackgroundOutboxDeliveryTestInternal(
+                string settingsScope,
+                string virtualHost,
+                IsolationLevel isolationLevel)
             {
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                Reply reply;
-
-                var outboxSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<OutboxSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(TimeSpan.FromSeconds(1), outboxSettings.OutboxDeliveryInterval);
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-                    var awaiter = Task.WhenAny(
-                        hostShutdown,
-                        integrationContext.RpcRequest<Query, Reply>(new Query(42), cts.Token));
+                    var sqlDatabaseSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
 
-                    var result = await awaiter.ConfigureAwait(false);
+                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                    Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    if (hostShutdown == result)
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                    Reply reply;
+
+                    var outboxSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<OutboxSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(TimeSpan.FromSeconds(1), outboxSettings.OutboxDeliveryInterval);
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        reply = await integrationContext
+                           .RpcRequest<Query, Reply>(new Query(42), token)
+                           .ConfigureAwait(false);
                     }
 
-                    reply = await ((Task<Reply>)result).ConfigureAwait(false);
-                }
-
-                Assert.Equal(42, reply.Id);
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
+                    Assert.Equal(42, reply.Id);
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        [MemberData(nameof(DataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
-            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -601,18 +260,22 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var logger = Fixture.CreateLogger(Output);
 
-            var additionalOurTypes = new[]
+            var databaseEntities = new[]
             {
                 typeof(DatabaseEntity)
             };
 
-            var settingsScope = nameof(OptimisticConcurrencyTest);
-            var virtualHost = settingsScope + isolationLevel;
-
             var manualMigrations = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseManualMigration)
+                typeof(RecreatePostgreSqlDatabaseMigration)
             };
+
+            var additionalOurTypes = databaseEntities
+               .Concat(manualMigrations)
+               .ToArray();
+
+            var settingsScope = nameof(OptimisticConcurrencyTest);
+            var virtualHost = settingsScope + isolationLevel;
 
             var manualRegistrations = new IManualRegistration[]
             {
@@ -626,154 +289,147 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithManualRegistrations(manualRegistrations)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+            await RunHostTest.RunTestHost(Output,
+                    host,
+                    OptimisticConcurrencyTestInternal(settingsScope, virtualHost, isolationLevel),
+                    timeout)
+               .ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> OptimisticConcurrencyTestInternal(
+                string settingsScope,
+                string virtualHost,
+                IsolationLevel isolationLevel)
             {
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                Assert.Equal(3u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var primaryKey = Guid.NewGuid();
-
-                // #1 - create/create
+                return async (_, host, token) =>
                 {
-                    Exception? exception = null;
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-                    try
+                    var sqlDatabaseSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                    Assert.Equal(3u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                    var primaryKey = Guid.NewGuid();
+
+                    // #1 - create/create
                     {
-                        await Task.WhenAll(
-                                CreateEntity(endpointDependencyContainer, primaryKey, cts.Token),
-                                CreateEntity(endpointDependencyContainer, primaryKey, cts.Token))
-                           .ConfigureAwait(false);
+                        Exception? exception = null;
+
+                        try
+                        {
+                            await Task.WhenAll(
+                                    CreateEntity(endpointDependencyContainer, primaryKey, token),
+                                    CreateEntity(endpointDependencyContainer, primaryKey, token))
+                               .ConfigureAwait(false);
+                        }
+                        catch (DatabaseException databaseException) when (databaseException is not DatabaseConcurrentUpdateException)
+                        {
+                            exception = databaseException;
+                        }
+
+                        Assert.NotNull(exception);
+                        Assert.True(exception is DatabaseException);
+                        Assert.NotNull(exception.InnerException);
+                        Assert.True(exception.InnerException!.IsUniqueViolation());
+
+                        var entity = await ReadEntity(endpointDependencyContainer, primaryKey, token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(42, entity.IntField);
                     }
-                    catch (DatabaseException databaseException) when (databaseException is not DatabaseConcurrentUpdateException)
+
+                    // #2 - update/update
                     {
-                        exception = databaseException;
+                        Exception? exception = null;
+
+                        try
+                        {
+                            var sync = new AsyncManualResetEvent(false);
+
+                            var updateTask1 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, token);
+                            var updateTask2 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, token);
+                            var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), token).ContinueWith(_ => sync.Set(), token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+                            await Task.WhenAll(updateTask1, updateTask2, syncTask).ConfigureAwait(false);
+                        }
+                        catch (DatabaseConcurrentUpdateException concurrentUpdateException)
+                        {
+                            exception = concurrentUpdateException;
+                        }
+
+                        Assert.NotNull(exception);
+
+                        var entity = await ReadEntity(endpointDependencyContainer, primaryKey, token).ConfigureAwait(false);
+
+                        Assert.NotNull(entity);
+                        Assert.NotEqual(default, entity.Version);
+                        Assert.Equal(43, entity.IntField);
                     }
 
-                    Assert.NotNull(exception);
-                    Assert.True(exception is DatabaseException);
-                    Assert.NotNull(exception.InnerException);
-                    Assert.True(exception.InnerException!.IsUniqueViolation());
-
-                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
-
-                    Assert.NotNull(entity);
-                    Assert.NotEqual(default, entity.Version);
-                    Assert.Equal(42, entity.IntField);
-                }
-
-                // #2 - update/update
-                {
-                    Exception? exception = null;
-
-                    try
+                    // #3 - update/delete
                     {
                         var sync = new AsyncManualResetEvent(false);
 
-                        var updateTask1 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
-                        var updateTask2 = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
-                        var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                        var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, sync, token);
+                        var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, sync, token);
+                        var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), token).ContinueWith(_ => sync.Set(), token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-                        await Task.WhenAll(updateTask1, updateTask2, syncTask).ConfigureAwait(false);
+                        Exception? exception = null;
+
+                        try
+                        {
+                            await Task.WhenAll(updateTask, deleteTask, syncTask).ConfigureAwait(false);
+                        }
+                        catch (DatabaseConcurrentUpdateException concurrentUpdateException)
+                        {
+                            exception = concurrentUpdateException;
+                        }
+
+                        Assert.NotNull(exception);
+
+                        var entity = await ReadEntity(endpointDependencyContainer, primaryKey, token).ConfigureAwait(false);
+
+                        if (updateTask.IsFaulted || deleteTask.IsCompletedSuccessfully)
+                        {
+                            Assert.Null(entity);
+                        }
+                        else
+                        {
+                            Assert.NotNull(entity);
+                            Assert.NotEqual(default, entity.Version);
+                            Assert.Equal(44, entity.IntField);
+                        }
                     }
-                    catch (DatabaseConcurrentUpdateException concurrentUpdateException)
-                    {
-                        exception = concurrentUpdateException;
-                    }
-
-                    Assert.NotNull(exception);
-
-                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
-
-                    Assert.NotNull(entity);
-                    Assert.NotEqual(default, entity.Version);
-                    Assert.Equal(43, entity.IntField);
-                }
-
-                // #3 - update/delete
-                {
-                    var sync = new AsyncManualResetEvent(false);
-
-                    var updateTask = UpdateEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
-                    var deleteTask = DeleteEntity(endpointDependencyContainer, primaryKey, sync, cts.Token);
-                    var syncTask = Task.Delay(TimeSpan.FromMilliseconds(100), cts.Token).ContinueWith(_ => sync.Set(), cts.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-
-                    Exception? exception = null;
-
-                    try
-                    {
-                        await Task.WhenAll(updateTask, deleteTask, syncTask).ConfigureAwait(false);
-                    }
-                    catch (DatabaseConcurrentUpdateException concurrentUpdateException)
-                    {
-                        exception = concurrentUpdateException;
-                    }
-
-                    Assert.NotNull(exception);
-
-                    var entity = await ReadEntity(endpointDependencyContainer, primaryKey, cts.Token).ConfigureAwait(false);
-
-                    if (updateTask.IsFaulted || deleteTask.IsCompletedSuccessfully)
-                    {
-                        Assert.Null(entity);
-                    }
-                    else
-                    {
-                        Assert.NotNull(entity);
-                        Assert.NotEqual(default, entity.Version);
-                        Assert.Equal(44, entity.IntField);
-                    }
-                }
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
+                };
             }
 
             static async Task CreateEntity(
@@ -885,9 +541,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        [MemberData(nameof(DataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
-            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -897,18 +554,22 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var logger = Fixture.CreateLogger(Output);
 
-            var additionalOurTypes = new[]
+            var databaseEntities = new[]
             {
                 typeof(DatabaseEntity)
             };
 
-            var settingsScope = nameof(ReactiveTransactionalStoreTest);
-            var virtualHost = settingsScope + isolationLevel;
-
             var manualMigrations = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseManualMigration)
+                typeof(RecreatePostgreSqlDatabaseMigration)
             };
+
+            var additionalOurTypes = databaseEntities
+               .Concat(manualMigrations)
+               .ToArray();
+
+            var settingsScope = nameof(ReactiveTransactionalStoreTest);
+            var virtualHost = settingsScope + isolationLevel;
 
             var manualRegistrations = new IManualRegistration[]
             {
@@ -922,215 +583,209 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithManualRegistrations(manualRegistrations)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+            await RunHostTest.RunTestHost(
+                    Output,
+                    host,
+                    ReactiveTransactionalStoreTestInternal(settingsScope, virtualHost, isolationLevel),
+                    timeout)
+               .ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> ReactiveTransactionalStoreTestInternal(
+                string settingsScope,
+                string virtualHost,
+                IsolationLevel isolationLevel)
             {
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                // [I] - update transactional store without explicit reads
-                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
-                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
-                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    var sqlDatabaseSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                    Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                    // [I] - update transactional store without explicit reads
+                    await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var primaryKey = Guid.NewGuid();
+                        var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                        var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
 
-                        // #0 - zero checks
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
-                        Assert.Null(storedEntry);
+                        await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
+                        {
+                            var primaryKey = Guid.NewGuid();
 
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                            // #0 - zero checks
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                            Assert.Null(storedEntry);
 
-                        // #1 - create
-                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
 
-                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            // #1 - create
+                            await CreateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.NotNull(storedEntry);
-                        Assert.NotEqual(default, storedEntry.Version);
-                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
-                        Assert.Equal(42, storedEntry.IntField);
+                            Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
 
-                        // #2 - update
-                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.NotNull(storedEntry);
+                            Assert.NotEqual(default, storedEntry.Version);
+                            Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                            Assert.Equal(42, storedEntry.IntField);
 
-                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            // #2 - update
+                            await UpdateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.NotNull(storedEntry);
-                        Assert.NotEqual(default, storedEntry.Version);
-                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
-                        Assert.Equal(43, storedEntry.IntField);
+                            Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
 
-                        // #3 - delete
-                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.NotNull(storedEntry);
+                            Assert.NotEqual(default, storedEntry.Version);
+                            Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                            Assert.Equal(43, storedEntry.IntField);
 
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
-                        Assert.Null(storedEntry);
+                            // #3 - delete
+                            await DeleteEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            Assert.Null(storedEntry);
+
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
+                        }
                     }
-                }
 
-                // [II] - update transactional store through explicit reads
-                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
-                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
-
-                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    // [II] - update transactional store through explicit reads
+                    await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var primaryKey = Guid.NewGuid();
+                        var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                        var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
 
-                        // #0 - zero checks
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                        await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
+                        {
+                            var primaryKey = Guid.NewGuid();
 
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
-                        Assert.Null(storedEntry);
+                            // #0 - zero checks
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
 
-                        // #1 - create
-                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                            Assert.Null(storedEntry);
 
-                        var entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            // #1 - create
+                            await CreateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.NotNull(entity);
-                        Assert.NotEqual(default, entity.Version);
-                        Assert.Equal(primaryKey, entity.PrimaryKey);
-                        Assert.Equal(42, entity.IntField);
+                            var entity = await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            Assert.NotNull(entity);
+                            Assert.NotEqual(default, entity.Version);
+                            Assert.Equal(primaryKey, entity.PrimaryKey);
+                            Assert.Equal(42, entity.IntField);
 
-                        Assert.NotNull(storedEntry);
-                        Assert.NotEqual(default, storedEntry.Version);
-                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
-                        Assert.Equal(42, storedEntry.IntField);
+                            Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
 
-                        Assert.Same(entity, storedEntry);
+                            Assert.NotNull(storedEntry);
+                            Assert.NotEqual(default, storedEntry.Version);
+                            Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                            Assert.Equal(42, storedEntry.IntField);
 
-                        // #2 - update
-                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.Same(entity, storedEntry);
 
-                        entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            // #2 - update
+                            await UpdateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.NotNull(entity);
-                        Assert.NotEqual(default, entity.Version);
-                        Assert.Equal(primaryKey, entity.PrimaryKey);
-                        Assert.Equal(43, entity.IntField);
+                            entity = await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            Assert.NotNull(entity);
+                            Assert.NotEqual(default, entity.Version);
+                            Assert.Equal(primaryKey, entity.PrimaryKey);
+                            Assert.Equal(43, entity.IntField);
 
-                        Assert.NotNull(storedEntry);
-                        Assert.NotEqual(default, storedEntry.Version);
-                        Assert.Equal(primaryKey, storedEntry.PrimaryKey);
-                        Assert.Equal(43, storedEntry.IntField);
+                            Assert.True(transactionalStore.TryGetValue(primaryKey, out storedEntry));
 
-                        Assert.Same(entity, storedEntry);
+                            Assert.NotNull(storedEntry);
+                            Assert.NotEqual(default, storedEntry.Version);
+                            Assert.Equal(primaryKey, storedEntry.PrimaryKey);
+                            Assert.Equal(43, storedEntry.IntField);
 
-                        // #3 - delete
-                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.Same(entity, storedEntry);
 
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                            // #3 - delete
+                            await DeleteEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
-                        Assert.Null(storedEntry);
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
+
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            Assert.Null(storedEntry);
+                        }
                     }
-                }
 
-                // [III] - keep reactive reference
-                await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
-                    var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
-
-                    await using (await transaction.OpenScope(true, cts.Token).ConfigureAwait(false))
+                    // [III] - keep reactive reference
+                    await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var primaryKey = Guid.NewGuid();
+                        var transaction = endpointDependencyContainer.Resolve<IDatabaseTransaction>();
+                        var transactionalStore = endpointDependencyContainer.Resolve<ITransactionalStore>();
 
-                        // #0 - zero checks
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                        await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
+                        {
+                            var primaryKey = Guid.NewGuid();
 
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
-                        Assert.Null(storedEntry);
+                            // #0 - zero checks
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
 
-                        // #1 - create
-                        await CreateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out DatabaseEntity? storedEntry));
+                            Assert.Null(storedEntry);
 
-                        var entity = await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            // #1 - create
+                            await CreateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.NotNull(entity);
-                        Assert.NotEqual(default, entity.Version);
-                        Assert.Equal(primaryKey, entity.PrimaryKey);
-                        Assert.Equal(42, entity.IntField);
+                            var entity = await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        // #2 - update
-                        await UpdateEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.NotNull(entity);
+                            Assert.NotEqual(default, entity.Version);
+                            Assert.Equal(primaryKey, entity.PrimaryKey);
+                            Assert.Equal(42, entity.IntField);
 
-                        Assert.NotNull(entity);
-                        Assert.NotEqual(default, entity.Version);
-                        Assert.Equal(primaryKey, entity.PrimaryKey);
-                        Assert.Equal(43, entity.IntField);
+                            // #2 - update
+                            await UpdateEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        // #3 - delete
-                        await DeleteEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false);
+                            Assert.NotNull(entity);
+                            Assert.NotEqual(default, entity.Version);
+                            Assert.Equal(primaryKey, entity.PrimaryKey);
+                            Assert.Equal(43, entity.IntField);
 
-                        Assert.Null(await ReadEntity(transaction, primaryKey, cts.Token).ConfigureAwait(false));
+                            // #3 - delete
+                            await DeleteEntity(transaction, primaryKey, token).ConfigureAwait(false);
 
-                        Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
-                        Assert.Null(storedEntry);
+                            Assert.Null(await ReadEntity(transaction, primaryKey, token).ConfigureAwait(false));
+
+                            Assert.False(transactionalStore.TryGetValue(primaryKey, out storedEntry));
+                            Assert.Null(storedEntry);
+                        }
                     }
-                }
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
+                };
             }
 
             static async Task CreateEntity(
@@ -1184,9 +839,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostWithDataAccessTestData))]
+        [MemberData(nameof(DataAccessTestData))]
         internal async Task OnlyCommandsCanIntroduceChanges(
-            Func<EndpointIdentity, string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
@@ -1204,11 +860,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(TransportEvent)
             };
 
-            var databaseTypes = new[]
-            {
-                typeof(DatabaseEntity)
-            };
-
             var messageHandlerTypes = new Type[]
             {
                 typeof(CommandIntroduceDatabaseChanges),
@@ -1217,18 +868,24 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(TransportEventIntroduceDatabaseChanges)
             };
 
+            var databaseEntities = new[]
+            {
+                typeof(DatabaseEntity)
+            };
+
+            var manualMigrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseMigration)
+            };
+
             var additionalOurTypes = messageTypes
                .Concat(messageHandlerTypes)
-               .Concat(databaseTypes)
+               .Concat(databaseEntities)
+               .Concat(manualMigrations)
                .ToArray();
 
             var settingsScope = nameof(OnlyCommandsCanIntroduceChanges);
             var virtualHost = settingsScope + isolationLevel;
-
-            var manualMigrations = new[]
-            {
-                typeof(RecreatePostgreSqlDatabaseManualMigration)
-            };
 
             var manualRegistrations = new IManualRegistration[]
             {
@@ -1242,173 +899,138 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     isolationLevel,
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithManualRegistrations(manualRegistrations)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunHostTest.RunTestHost(Output,
+                    host,
+                    OnlyCommandsCanIntroduceChangesInternal(settingsScope, virtualHost, isolationLevel),
+                    timeout)
+               .ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> OnlyCommandsCanIntroduceChangesInternal(
+                string settingsScope,
+                string virtualHost,
+                IsolationLevel isolationLevel)
             {
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                var genericEndpointSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<GenericEndpointSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(1u, genericEndpointSettings.RpcRequestSecondsTimeout);
-
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (output, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilMessageIsNotReceived(message => message.Payload is Command));
-
-                    await integrationContext
-                       .Send(new Command(42), cts.Token)
+                    var sqlDatabaseSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                       .Get(token)
                        .ConfigureAwait(false);
 
-                    var result = await awaiter.ConfigureAwait(false);
+                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                    Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    if (hostShutdown == result)
+                    var genericEndpointSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<GenericEndpointSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(1u, genericEndpointSettings.RpcRequestSecondsTimeout);
+
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
-                    }
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                    await result.ConfigureAwait(false);
+                        var awaiter = collector.WaitUntilMessageIsNotReceived(message => message.Payload is Command);
 
-                    Assert.Empty(collector.ErrorMessages);
-                    collector.ErrorMessages.Clear();
-                }
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query));
-
-                    try
-                    {
-                        _ = await integrationContext
-                           .RpcRequest<Query, Reply>(new Query(42), cts.Token)
+                        await integrationContext
+                           .Send(new Command(42), token)
                            .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+
+                        Assert.Empty(collector.ErrorMessages);
+                        collector.ErrorMessages.Clear();
                     }
-                    catch (InvalidOperationException)
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query);
+
+                        try
+                        {
+                            _ = await integrationContext
+                               .RpcRequest<Query, Reply>(new Query(42), token)
+                               .ConfigureAwait(false);
+                        }
+                        catch (InvalidOperationException)
+                        {
+                        }
+
+                        await awaiter.ConfigureAwait(false);
+
+                        Assert.Single(collector.ErrorMessages);
+                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                        collector.ErrorMessages.Clear();
                     }
 
-                    var result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                        var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
+                        var query = new Query(42);
+                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, TestIdentity.Endpoint10, null);
+                        var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply);
+
+                        await integrationContext
+                           .Reply(query, new Reply(query.Id), token)
+                           .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+
+                        Assert.Single(collector.ErrorMessages);
+                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                        collector.ErrorMessages.Clear();
                     }
 
-                    await result.ConfigureAwait(false);
-
-                    Assert.Single(collector.ErrorMessages);
-                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
-                    collector.ErrorMessages.Clear();
-                }
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
-                    var query = new Query(42);
-                    var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, TestIdentity.Endpoint10, null);
-                    var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
-
-                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply));
-
-                    await integrationContext
-                       .Reply(query, new Reply(query.Id), cts.Token)
-                       .ConfigureAwait(false);
-
-                    var result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is TransportEvent);
+
+                        await integrationContext
+                           .Publish(new TransportEvent(42), token)
+                           .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+
+                        Assert.Single(collector.ErrorMessages);
+                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                        collector.ErrorMessages.Clear();
                     }
-
-                    await result.ConfigureAwait(false);
-
-                    Assert.Single(collector.ErrorMessages);
-                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
-                    collector.ErrorMessages.Clear();
-                }
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                    var awaiter = Task.WhenAny(hostShutdown, collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is TransportEvent));
-
-                    await integrationContext
-                       .Publish(new TransportEvent(42), cts.Token)
-                       .ConfigureAwait(false);
-
-                    var result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
-                    {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
-                    }
-
-                    await result.ConfigureAwait(false);
-
-                    Assert.Single(collector.ErrorMessages);
-                    Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
-                    collector.ErrorMessages.Clear();
-                }
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
+                };
             }
         }
     }

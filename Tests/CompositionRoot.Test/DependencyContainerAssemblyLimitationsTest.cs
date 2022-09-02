@@ -2,17 +2,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
     using System.Linq;
-    using Api.Abstractions;
-    using Api.Abstractions.CompositionInfo;
-    using Api.Abstractions.Registration;
     using Basics;
+    using CompositionInfo;
     using CompositionRoot;
-    using CrossCuttingConcerns.Settings;
-    using GenericHost.Internals;
+    using Microsoft.Extensions.Configuration;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
+    using IConfigurationProvider = CrossCuttingConcerns.Settings.IConfigurationProvider;
 
     /// <summary>
     /// DependencyContainerAssemblyLimitationsTest
@@ -55,7 +53,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
             };
@@ -97,18 +94,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             var assemblies = new[]
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
             };
 
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new ConfigurationProviderManualRegistration()
-            };
-
-            var options = new DependencyContainerOptions()
-               .WithManualRegistrations(manualRegistrations);
+            var options = new DependencyContainerOptions();
 
             var boundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
 
@@ -124,8 +114,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             };
 
             options = new DependencyContainerOptions()
-               .WithAdditionalOurTypes(additionalTypes)
-               .WithManualRegistrations(manualRegistrations);
+               .WithAdditionalOurTypes(additionalTypes);
 
             var compositionInfo = Fixture
                .ExactlyBoundedContainer(Output, options, assemblies)
@@ -142,7 +131,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(YamlDotNet))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
             };

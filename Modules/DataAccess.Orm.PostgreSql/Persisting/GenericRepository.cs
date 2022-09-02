@@ -15,7 +15,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
     using Microsoft.Extensions.Logging;
@@ -73,7 +73,7 @@
             CancellationToken token)
         {
             return _repository.Insert(
-                entities.Cast<IUniqueIdentified>().ToArray(),
+                entities.Cast<IDatabaseEntity>().ToArray(),
                 insertBehavior,
                 token);
         }
@@ -108,12 +108,15 @@
 
             foreach (var info in infos)
             {
-                var visitor = new ExtractMemberChainExpressionVisitor();
-                _ = visitor.Visit(info.Accessor);
+                var chain = info
+                   .Accessor
+                   .ExtractMembersChain()
+                   .Select(property => new ColumnProperty(property, property))
+                   .ToArray();
 
                 var column = new ColumnInfo(
                     table,
-                    visitor.Chain.Select(property => new ColumnProperty(property, property)).ToArray(),
+                    chain,
                     _modelProvider);
 
                 if (column.IsMultipleRelation)

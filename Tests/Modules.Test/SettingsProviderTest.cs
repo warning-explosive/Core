@@ -10,11 +10,9 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using GenericHost.Internals;
     using Newtonsoft.Json;
     using Overrides;
     using Settings;
@@ -34,7 +32,7 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(MongoDB), nameof(MongoDB.Driver)))
             };
 
@@ -58,7 +56,6 @@ namespace SpaceEngineers.Core.Modules.Test
                    container.Register<ISettingsProvider<TestPersistenceSettings>, TestPersistenceSettingsProvider>(EnLifestyle.Singleton);
                    container.RegisterCollectionEntry<JsonConverter, MongoServerAddressJsonConverter>(EnLifestyle.Singleton);
                }))
-               .WithManualRegistrations(new ConfigurationProviderManualRegistration())
                .WithOverrides(new TestSettingsScopeProviderOverride(nameof(ReadSettingsTest)));
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
@@ -232,6 +229,13 @@ namespace SpaceEngineers.Core.Modules.Test
         [MemberData(nameof(ReadSettingsTestData))]
         internal async Task ReadSettingsTest(Type settingsType, object arrange, object assert)
         {
+            SolutionExtensions
+               .ProjectFile()
+               .Directory
+               .EnsureNotNull("Project directory not found")
+               .StepInto("Settings")
+               .SetupFileSystemSettingsDirectory();
+
             Output.WriteLine(settingsType.Name);
 
             var fileSystemSettings = await DependencyContainer

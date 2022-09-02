@@ -28,15 +28,12 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot\CompositionRoot.csproj" />
+      <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
       <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj" />
       <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Migrations\ModelMigrator.cs">
-        <DependentUpon>IModelMigrator.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\AlterColumn.cs">
         <DependentUpon>IModelChange.cs</DependentUpon>
       </Compile>
@@ -87,15 +84,6 @@
       </Compile>
       <Compile Update="Model\ModelComparator.cs">
         <DependentUpon>IModelComparator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Builder\MigrationsEndpointBuilder.cs">
-        <DependentUpon>IMigrationsEndpointBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ManualRegistrations\EndpointDatabaseTypeProvider.cs">
-        <DependentUpon>IEndpointDatabaseTypeProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Registrations\EndpointDatabaseTypeProvider.cs">
-        <DependentUpon>IEndpointDatabaseTypeProvider.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

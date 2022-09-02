@@ -42,40 +42,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
         }
 
         /// <summary>
-        /// Gets authorized username
-        /// </summary>
-        /// <returns>Authorized username</returns>
-        [HttpGet]
-        public async Task<ActionResult<ScalarResponse<string>>> GetUsername()
-        {
-            /*
-             * Authorization steps:
-             * 1. Log on
-             * 2. Call IdentityProvider and receive identity token
-             * 3. Call AuthorizationProvider and receive API/Service/UI-specific roles and permissions
-             *    AuthorizationProvider maps identity data (who) to authorization data (permission and roles - what principal can do)
-             *    Mappings can be static (common rules, conditions and conventions) or dynamic (claims transformations)
-             *
-             * Each application (web-api endpoint, micro-service, UI application, etc.) should have their scoped roles, permissions and mapping rules.
-             * Application can register authorization client so as to ask for authorization data from authorization service.
-             * For dynamically defined policies we can use custom PolicyProvider for policy-based authorization (ASP.NET CORE) and inject policy name into AuthorizeAttribute.
-             */
-
-            var response = new ScalarResponse<string>();
-
-            var username = User.FindFirst(ClaimTypes.Name).Value;
-            response.WithItem(username);
-
-            var result = new JsonResult(response)
-            {
-                ContentType = MediaTypeNames.Application.Json,
-                StatusCode = (int)(response.Success ? HttpStatusCode.OK : HttpStatusCode.InternalServerError)
-            };
-
-            return await Task.FromResult(result).ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// Anonymously gets application info
         /// </summary>
         /// <returns>Application info</returns>
@@ -105,13 +71,47 @@ namespace SpaceEngineers.Core.Test.WebApplication
         }
 
         /// <summary>
+        /// Gets authorized username
+        /// </summary>
+        /// <returns>Authorized username</returns>
+        [HttpGet]
+        public Task<ActionResult<ScalarResponse<string>>> Username()
+        {
+            /*
+             * Authorization steps:
+             * 1. Log on
+             * 2. Call IdentityProvider and receive identity token
+             * 3. Call AuthorizationProvider and receive API/Service/UI-specific roles and permissions
+             *    AuthorizationProvider maps identity data (who) to authorization data (permission and roles - what principal can do)
+             *    Mappings can be static (common rules, conditions and conventions) or dynamic (claims transformations)
+             *
+             * Each application (web-api endpoint, micro-service, UI application, etc.) should have their scoped roles, permissions and mapping rules.
+             * Application can register authorization client so as to ask for authorization data from authorization service.
+             * For dynamically defined policies we can use custom PolicyProvider for policy-based authorization (ASP.NET CORE) and inject policy name into AuthorizeAttribute.
+             */
+
+            var response = new ScalarResponse<string>();
+
+            var username = HttpContext.User.FindFirst(ClaimTypes.Name).Value;
+            response.WithItem(username);
+
+            var result = new JsonResult(response)
+            {
+                ContentType = MediaTypeNames.Application.Json,
+                StatusCode = (int)(response.Success ? HttpStatusCode.OK : HttpStatusCode.InternalServerError)
+            };
+
+            return Task.FromResult<ActionResult<ScalarResponse<string>>>(result);
+        }
+
+        /// <summary>
         /// Reads posts from https://jsonplaceholder.typicode.com/posts and converts to view entity
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Post view entities</returns>
-        [HttpGet]
+        [HttpGet("List")]
         [SuppressMessage("Analysis", "CA1031", Justification = "desired behavior")]
-        public async Task<ActionResult<CollectionResponse<ViewEntity>>> ReadFakePosts(CancellationToken token)
+        public async Task<ActionResult<CollectionResponse<ViewEntity>>> FakePost(CancellationToken token)
         {
             var response = new CollectionResponse<ViewEntity>();
 

@@ -28,6 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\DataAccess.Orm.Host\DataAccess.Orm.Host.csproj" />
       <ProjectReference Include="..\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
     </ItemGroup>
@@ -49,6 +50,9 @@
       </Compile>
       <Compile Update="Model\DatabaseColumn.cs">
         <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\InitialMigration.cs">
+        <DependentUpon>ApplyDeltaMigration.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

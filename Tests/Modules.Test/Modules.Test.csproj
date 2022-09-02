@@ -35,25 +35,22 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.11.6" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
-    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
     <ProjectReference Include="..\..\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
-    <ProjectReference Include="..\..\Modules\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-    <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
     <ProjectReference Include="..\..\Modules\DataExport\DataExport.csproj" />
     <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
     <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
-    <ProjectReference Include="..\..\Modules\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
     <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
-    <ProjectReference Include="..\..\Modules\Web.Auth\Web.Auth.csproj" />
     <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
   </ItemGroup>
   <ItemGroup>

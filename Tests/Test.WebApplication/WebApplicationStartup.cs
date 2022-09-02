@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.IO;
     using System.IO.Compression;
     using Basics;
-    using GenericEndpoint.Contract;
     using GenericEndpoint.Host.Builder;
     using IntegrationTransport.Host.Builder;
     using IntegrationTransport.WebHost;
@@ -20,7 +19,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Hosting;
     using Microsoft.OpenApi.Models;
     using Web.Auth;
-    using Web.Auth.Authentication;
+    using Web.Auth.Extensions;
 
     [SuppressMessage("Analysis", "CA1506", Justification ="web application composition root")]
     internal class WebApplicationStartup : BaseStartup
@@ -28,9 +27,9 @@ namespace SpaceEngineers.Core.Test.WebApplication
         public WebApplicationStartup(
             IHostBuilder hostBuilder,
             IConfiguration configuration,
-            EndpointIdentity endpointIdentity,
-            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory)
-            : base(hostBuilder, configuration, endpointIdentity, optionsFactory)
+            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
+            string? logicalName = null)
+            : base(hostBuilder, configuration, optionsFactory, logicalName)
         {
         }
 
@@ -129,7 +128,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
             serviceCollection.AddResponseCompression(options => options.Providers.Add<GzipCompressionProvider>());
             serviceCollection.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
 
-            serviceCollection.AddAuth(configuration);
+            serviceCollection.AddAuth();
         }
 
         protected sealed override void ConfigureAspNetCoreRequestPipeline(

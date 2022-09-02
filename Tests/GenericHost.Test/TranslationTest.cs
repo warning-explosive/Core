@@ -11,10 +11,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading.Tasks;
     using Basics;
     using Basics.Primitives;
+    using CompositionRoot;
+    using CompositionRoot.Registration;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
-    using DataAccess.Orm.Host;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Settings;
@@ -22,19 +23,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Translation.Extensions;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
-    using GenericEndpoint.Contract;
     using GenericEndpoint.Host;
     using GenericHost;
     using IntegrationTransport.Host;
     using Messages;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Migrations;
     using Mocks;
     using Overrides;
     using Registrations;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
     using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.DataAccess.Api.Persisting;
     using SpaceEngineers.Core.DataAccess.Api.Reading;
@@ -70,7 +67,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         /// QueryTranslationTestData
         /// </summary>
         /// <returns>Test data</returns>
-        public static IEnumerable<object> QueryTranslationTestData()
+        public static IEnumerable<object[]> QueryTranslationTestData()
         {
             var hosts = QueryTranslationTestHosts().ToArray();
             var testCases = QueryTranslationTestCases().ToArray();
@@ -80,20 +77,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .SelectMany(host => testCases
                    .Select(testCase => host
                        .Concat(new object[] { countdownEvent })
-                       .Concat(testCase).ToArray()));
+                       .Concat(testCase)
+                       .ToArray()));
         }
 
         internal static IEnumerable<object[]> QueryTranslationTestHosts()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-
-            var commonAppSettingsJson = SolutionExtensions
+            var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .EnsureNotNull("Project directory wasn't found")
+               .StepInto("Settings");
+
+            var timeout = TimeSpan.FromSeconds(60);
 
             var cts = new CancellationTokenSource(timeout);
 
@@ -105,7 +101,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var logger = StaticFixture.CreateLogger(StaticOutput);
                     var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
 
-                    var additionalOurTypes = new[]
+                    var databaseEntities = new[]
                     {
                         typeof(DatabaseEntity),
                         typeof(Blog),
@@ -117,8 +113,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var manualMigrations = new[]
                     {
-                        typeof(CreateOrGetExistedPostgreSqlDatabaseManualMigration)
+                        typeof(CreateOrGetExistedPostgreSqlDatabaseMigration)
                     };
+
+                    var additionalOurTypes = databaseEntities
+                       .Concat(manualMigrations)
+                       .ToArray();
 
                     var manualRegistrations = new IManualRegistration[]
                     {
@@ -133,31 +133,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     };
 
                     var host = hostBuilder
-                       .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                       .UseIntegrationTransport(
-                            new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
-                            builder => builder
-                               .WithInMemoryIntegrationTransport(hostBuilder)
-                               .ModifyContainerOptions(options => options
-                                   .WithOverrides(new TestLoggerOverride(logger))
-                                   .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                               .BuildOptions())
+                       .UseIntegrationTransport(builder => builder
+                           .WithInMemoryIntegrationTransport(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithOverrides(new TestLoggerOverride(logger))
+                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .BuildOptions())
                        .UseEndpoint(TestIdentity.Endpoint10,
                             (_, builder) => builder
-                               .WithDataAccess(databaseProvider)
+                               .WithDataAccess(databaseProvider,
+                                    options => options
+                                       .ExecuteMigrations())
                                .ModifyContainerOptions(options => options
                                    .WithAdditionalOurTypes(additionalOurTypes)
                                    .WithManualRegistrations(manualRegistrations)
                                    .WithOverrides(overrides))
                                .BuildOptions())
-                       .ExecuteMigrations(builder => builder
-                           .WithDataAccess(databaseProvider)
-                           .ModifyContainerOptions(options => options
-                               .WithAdditionalOurTypes(manualMigrations)
-                               .WithManualRegistrations(manualRegistrations)
-                               .WithOverrides(overrides))
-                           .BuildOptions())
-                       .BuildHost();
+                       .BuildHost(settingsDirectory);
 
                     var awaiter = host.WaitUntilTransportIsNotRunning(StaticOutput.WriteLine);
 
@@ -176,7 +168,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             var emptyQueryParameters = new Dictionary<string, object?>();
 
-            var schema = nameof(GenericHost) + nameof(GenericHost.Test);
+            var schema = nameof(GenericHost) + nameof(Test);
             var testDatabaseEntity = DatabaseEntity.Generate();
             var user = new User(Guid.NewGuid(), "SpaceEngineer");
             var posts = new List<Post>();
@@ -193,7 +185,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -204,7 +196,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b) c) d",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -215,7 +207,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 43 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -226,7 +218,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 43 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -237,7 +229,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -248,7 +240,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -259,7 +251,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 41 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -270,7 +262,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -281,7 +273,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -292,7 +284,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -303,7 +295,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -314,7 +306,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -325,7 +317,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -336,7 +328,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -347,7 +339,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -358,7 +350,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.Theme)}"" = @param_0) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
                         new Dictionary<string, object?> { ["param_0"] = "MilkyWay" },
                         log)),
-                new IUniqueIdentified[] { user, blog, post }
+                new IDatabaseEntity[] { user, blog, post }
             };
             yield return new object[]
             {
@@ -369,7 +361,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -380,7 +372,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -391,7 +383,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -402,7 +394,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -413,7 +405,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -424,7 +416,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
                         new Dictionary<string, object?> { ["param_0"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -435,7 +427,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -446,7 +438,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -457,7 +449,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -468,7 +460,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -479,7 +471,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -490,7 +482,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
                         new Dictionary<string, object?> { ["param_0"] = "MilkyWay", ["param_1"] = "SpaceEngineer" },
                         log)),
-                new IUniqueIdentified[] { user, blog, post }
+                new IDatabaseEntity[] { user, blog, post }
             };
             yield return new object[]
             {
@@ -501,7 +493,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         new Dictionary<string, object?> { ["param_0"] = DateTime.MinValue },
                         log)),
-                new IUniqueIdentified[] { user, blog, post }
+                new IDatabaseEntity[] { user, blog, post }
             };
             yield return new object[]
             {
@@ -512,7 +504,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { user, blog, post }
+                new IDatabaseEntity[] { user, blog, post }
             };
             yield return new object[]
             {
@@ -523,7 +515,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(User.Nickname)}"" ASC",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { user, blog, post }
+                new IDatabaseEntity[] { user, blog, post }
             };
             yield return new object[]
             {
@@ -534,7 +526,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -545,7 +537,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -556,7 +548,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_0 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_1) d",
                         new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -567,7 +559,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}length(a.""{nameof(DatabaseEntity.StringField)}""){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -578,7 +570,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN 1 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -589,7 +581,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > 0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -600,7 +592,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -611,7 +603,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -622,7 +614,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -633,7 +625,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -644,7 +636,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -655,7 +647,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
                         new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -666,7 +658,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -681,7 +673,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" IN (SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a)",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -692,7 +684,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -703,7 +695,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -714,7 +706,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
                         new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -725,7 +717,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         new Dictionary<string, object?> { ["param_0"] = string.Empty },
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -736,7 +728,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -747,7 +739,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}(NOT a.""{nameof(DatabaseEntity.BooleanField)}"") AS ""Negation""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
@@ -758,7 +750,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         $@"SELECT{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
-                new IUniqueIdentified[] { testDatabaseEntity }
+                new IDatabaseEntity[] { testDatabaseEntity }
             };
         }
 
@@ -798,7 +790,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             string section,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
-            IUniqueIdentified[] databaseEntities)
+            IDatabaseEntity[] databaseEntities)
         {
             try
             {
@@ -820,7 +812,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var assert = endpointDependencyContainer
                    .InvokeWithinTransaction(
                         false,
-                        Run(endpointDependencyContainer, queryProducer, checkQuery, databaseEntities, s => { } /*Output.WriteLine*/),
+                        Run(endpointDependencyContainer, queryProducer, checkQuery, databaseEntities, Output.WriteLine),
                         cts.Token);
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
@@ -837,23 +829,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
             finally
             {
                 asyncCountdownEvent.Decrement();
-            }
 
-            if (asyncCountdownEvent.Read() == 0)
-            {
-                Output.WriteLine("CLEANUP");
+                if (asyncCountdownEvent.Read() == 0)
+                {
+                    Output.WriteLine("CLEANUP");
 
-                try
-                {
-                    await host
-                       .Value
-                       .StopAsync(cts.Token)
-                       .ConfigureAwait(false);
-                }
-                finally
-                {
-                    cts.Dispose();
-                    host.Value.Dispose();
+                    try
+                    {
+                        await host
+                           .Value
+                           .StopAsync(cts.Token)
+                           .ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        cts.Dispose();
+                        host.Value.Dispose();
+                    }
                 }
             }
         }
@@ -862,7 +854,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IDependencyContainer dependencyContainer,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
-            IUniqueIdentified[] databaseEntities,
+            IDatabaseEntity[] databaseEntities,
             Action<string> log)
         {
             return async (_, token) =>
@@ -939,7 +931,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
         private static Task Insert(
             IDependencyContainer dependencyContainer,
-            IUniqueIdentified[] entities,
+            IDatabaseEntity[] entities,
             CancellationToken token)
         {
             return dependencyContainer

@@ -3,17 +3,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api;
-    using Api.Abstractions;
-    using Api.Exceptions;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using AutoRegistrationTest;
     using Basics;
     using CompositionRoot;
-    using GenericHost.Internals;
+    using Exceptions;
+    using Registration;
     using Registrations;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -32,12 +30,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Test))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test))),
             };
 
-            var options = new DependencyContainerOptions().WithManualRegistrations(
-                new ManuallyRegisteredServiceManualRegistration(),
-                new ConfigurationProviderManualRegistration());
+            var options = new DependencyContainerOptions()
+               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
         }
@@ -306,8 +303,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                 .Select(r => r.GetType())
                 .ToList();
 
-            Assert.True(expectedCollection.OrderByDependencyAttribute().SequenceEqual(expectedCollection.Reverse()));
-            Assert.True(expectedCollection.OrderByDependencyAttribute().SequenceEqual(actual));
+            Assert.True(expectedCollection.OrderByDependencies().SequenceEqual(expectedCollection.Reverse()));
+            Assert.True(expectedCollection.OrderByDependencies().SequenceEqual(actual));
 
             localContainer.Resolve<IOpenGenericTestService<object>>();
             localContainer.Resolve<OpenGenericTestService<object>>();

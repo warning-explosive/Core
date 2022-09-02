@@ -4,8 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Abstractions.CompositionInfo;
+    using CompositionRoot.CompositionInfo;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -26,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
-                    nameof(Core.CompositionRoot)));
+                    nameof(CompositionRoot)));
 
             var options = new DependencyContainerOptions();
 

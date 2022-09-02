@@ -27,7 +27,7 @@
         <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.8" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -41,13 +41,10 @@
         <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.4.0" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Endpoints\TracingEndpoint.Host\TracingEndpoint.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\IntegrationTransport.WebHost\IntegrationTransport.WebHost.csproj" />
       <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
-      <ProjectReference Include="..\..\Modules\DataAccess.Orm.PostgreSql\DataAccess.Orm.PostgreSql.csproj" />
-      <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
-      <ProjectReference Include="..\..\Modules\IntegrationTransport.WebHost\IntegrationTransport.WebHost.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Api.Host\Web.Api.Host.csproj" />
-      <ProjectReference Include="..\..\Modules\Web.Api\Web.Api.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Auth\Web.Auth.csproj" />
     </ItemGroup>
 </Project>

@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using CliArgumentsParser;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -23,7 +22,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public CliArgumentsParserTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CliArgumentsParser)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)));
 
             var options = new DependencyContainerOptions();
 

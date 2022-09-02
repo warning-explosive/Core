@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
     using IntegrationTransport.RabbitMQ.Settings;
     using Mocks;

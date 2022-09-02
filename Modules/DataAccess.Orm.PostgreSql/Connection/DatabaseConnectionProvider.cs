@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Exceptions;
+    using CompositionRoot;
+    using CompositionRoot.Exceptions;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Npgsql;

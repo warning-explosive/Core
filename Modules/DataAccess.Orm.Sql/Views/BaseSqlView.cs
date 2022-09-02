@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Views
     /// BaseSqlView
     /// </summary>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
-    public abstract class BaseSqlView<TKey> : ISqlView<TKey>
+    public abstract record BaseSqlView<TKey> : ISqlView<TKey>
         where TKey : notnull
     {
         /// <summary> .cctor </summary>

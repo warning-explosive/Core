@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using CrossCuttingConcerns.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -50,7 +51,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            foreach (var action in _startupActions.OrderByDependencyAttribute(action => action.GetType()))
+            foreach (var action in _startupActions.OrderByDependencies(action => action.GetType()))
             {
                 await Run(action.Run, Token).ConfigureAwait(false);
             }
@@ -62,8 +63,12 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public async Task StopAsync(CancellationToken token)
         {
+            Logger.Information("Application is being shut down");
+
             if (_backgroundWorkersTask == null)
             {
+                _hostApplicationLifetime.StopApplication();
+
                 return;
             }
 

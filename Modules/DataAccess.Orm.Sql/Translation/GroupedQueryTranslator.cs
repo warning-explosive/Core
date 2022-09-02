@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Expressions;
     using Extensions;
     using Orm.Linq;

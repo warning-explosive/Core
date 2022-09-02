@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Engines;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using CrossCuttingConcerns.Settings;
 
     /// <summary>
@@ -29,7 +28,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
             SolutionExtensions
                 .SolutionFile()
                 .Directory
-                .EnsureNotNull("Solution directory not found")
+                .EnsureNotNull("Solution directory wasn't found")
                 .StepInto(nameof(Benchmarks))
                 .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Benchmark)))
                 .StepInto("Settings")
@@ -40,7 +39,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(CompositionRoot.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),

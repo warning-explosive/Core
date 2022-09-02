@@ -1,7 +1,11 @@
 namespace SpaceEngineers.Core.Web.Api.Host
 {
     using Basics;
+    using GenericHost;
     using IntegrationTransport.Host.Builder;
+    using JwtAuthentication;
+    using Microsoft.Extensions.Hosting;
+    using Registrations;
 
     /// <summary>
     /// HostExtensions
@@ -12,17 +16,26 @@ namespace SpaceEngineers.Core.Web.Api.Host
         /// Adds Web.Api as plugin assembly
         /// </summary>
         /// <param name="builder">Transport endpoint builder</param>
+        /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>ITransportEndpointBuilder</returns>
-        public static ITransportEndpointBuilder WithWebApi(this ITransportEndpointBuilder builder)
+        public static ITransportEndpointBuilder WithWebApi(
+            this ITransportEndpointBuilder builder,
+            IHostBuilder hostBuilder)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(
-                    nameof(SpaceEngineers),
-                    nameof(SpaceEngineers.Core),
-                    nameof(SpaceEngineers.Core.Web),
-                    nameof(SpaceEngineers.Core.Web.Api)));
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Web), nameof(SpaceEngineers.Core.Web.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Web), nameof(Auth)))
+            };
 
-            return (ITransportEndpointBuilder)builder.WithEndpointPluginAssemblies(assembly);
+            var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
+
+            return (ITransportEndpointBuilder)builder
+               .WithEndpointPluginAssemblies(assemblies)
+               .ModifyContainerOptions(options => options
+                   .WithManualRegistrations(new HttpContextAccessorManualRegistration(frameworkDependenciesProvider))
+                   .WithManualRegistrations(new JwtAuthenticationConfigurationManualRegistration(
+                        JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
         }
     }
 }

@@ -4,10 +4,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Api.Model;
     using Views;
 
+    /// <summary>
+    /// DatabaseView
+    /// </summary>
     [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     [Index(nameof(Schema), nameof(View), nameof(Query), Unique = true)]
-    internal class DatabaseView : BaseSqlView<Guid>
+    public record DatabaseView : BaseSqlView<Guid>
     {
+        /// <summary> .cctor </summary>
+        /// <param name="primaryKey">Primary key</param>
+        /// <param name="schema">Schema</param>
+        /// <param name="view">View</param>
+        /// <param name="query">Query</param>
         public DatabaseView(
             Guid primaryKey,
             string schema,
@@ -20,10 +28,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             Query = query;
         }
 
+        /// <summary>
+        /// Schema
+        /// </summary>
         public string Schema { get; set; }
 
+        /// <summary>
+        /// View
+        /// </summary>
         public string View { get; set; }
 
+        /// <summary>
+        /// Query
+        /// </summary>
         public string Query { get; set; }
     }
 }

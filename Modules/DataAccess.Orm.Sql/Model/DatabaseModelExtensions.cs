@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Views;
 
     /// <summary>

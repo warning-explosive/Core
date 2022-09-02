@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using DataExport.Excel;
@@ -33,8 +32,8 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataExport))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataImport)))
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(DataExport))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(DataImport)))
             };
 
             var options = new DependencyContainerOptions()

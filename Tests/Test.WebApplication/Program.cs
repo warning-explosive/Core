@@ -2,61 +2,96 @@ namespace SpaceEngineers.Core.Test.WebApplication
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Threading.Tasks;
-    using AuthorizationEndpoint.Host;
+    using AuthEndpoint.Host;
     using Basics;
-    using CrossCuttingConcerns.Settings;
+    using CrossCuttingConcerns.Extensions;
     using DataAccess.Orm.PostgreSql.Host;
-    using GenericEndpoint.Contract;
     using GenericHost;
-    using IntegrationTransport.Host;
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
-    using TracingEndpoint.Host;
+    using Migrations;
     using Web.Api.Host;
 
-    internal static class Program
+    /// <summary>
+    /// Program
+    /// </summary>
+    public static class Program
     {
+        /// <summary> Main </summary>
+        /// <param name="args">args</param>
+        /// <returns>Ongoing operation</returns>
         [SuppressMessage("Analysis", "CA1506", Justification = "web application composition root")]
-        public static async Task Main(string[] args)
+        public static Task Main(string[] args)
         {
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings");
+            return BuildHost(args).RunAsync();
+        }
 
-            settingsDirectory.SetupFileSystemSettingsDirectory();
+        /// <summary>
+        /// BuildHost
+        /// </summary>
+        /// <param name="args">args</param>
+        /// <returns>IHost</returns>
+        public static IHost BuildHost(string[] args)
+        {
+            var migrations = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseMigration),
+                typeof(AddSeedDataMigration)
+            };
 
-            var commonAppSettingsJson = settingsDirectory
-               .GetFile("appsettings", ".json")
-               .FullName;
-
-            await Host
+            return Host
                .CreateDefaultBuilder(args)
-               .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
                .UseIntegrationTransport(hostBuilder =>
                     context => new WebApplicationStartup(hostBuilder,
                         context.Configuration,
-                        new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                         builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .WithWebApi()
-                           .WithTracing()
-                           .BuildOptions()))
-               .UseAuthorizationEndpoint(0,
-                    builder => builder
-                       .WithDataAccess(new PostgreSqlDatabaseProvider())
-                       .WithTracing()
-                       .BuildOptions())
-               .UseTracingEndpoint(0,
-                    builder => builder
-                       .WithDataAccess(new PostgreSqlDatabaseProvider())
-                       .BuildOptions())
-               .BuildWebHost()
-               .RunAsync()
-               .ConfigureAwait(false);
+                           .WithRabbitMqIntegrationTransport(hostBuilder)
+                           .WithWebApi(hostBuilder)
+                           .BuildOptions(),
+                        "Gateway"))
+               .UseAuthEndpoint(builder => builder
+                   .WithDataAccess(new PostgreSqlDatabaseProvider(),
+                        options => options
+                           .ExecuteMigrations())
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(migrations))
+                   .BuildOptions())
+               .BuildWebHost(GetFileSystemSettingsDirectory());
+        }
+
+        private static DirectoryInfo GetFileSystemSettingsDirectory()
+        {
+            return SolutionExtensions
+               .SolutionFile()
+               .Directory
+               .EnsureNotNull("Solution directory wasn't found")
+               .StepInto("Tests")
+               .StepInto("Test.WebApplication")
+               .StepInto("Settings");
+        }
+
+        private static string GetEndpointInstanceName(string endpointLogicalName)
+        {
+            var endpointSettingsFilePath = SolutionExtensions
+               .SolutionFile()
+               .Directory
+               .EnsureNotNull("Solution directory wasn't found")
+               .StepInto("Tests")
+               .StepInto("Test.WebApplication")
+               .StepInto("Settings")
+               .StepInto(endpointLogicalName)
+               .GetFile("appsettings", ".json")
+               .FullName;
+
+            var endpointConfiguration = new ConfigurationBuilder()
+               .AddJsonFile(endpointSettingsFilePath)
+               .Build();
+
+            return endpointConfiguration.GetRequiredValue<string>("InstanceName")
+                ?? throw new InvalidOperationException($"Unable to find 'InstanceName' for {endpointLogicalName} in scoped settings");
         }
     }
 }

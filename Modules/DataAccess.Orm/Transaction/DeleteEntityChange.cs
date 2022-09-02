@@ -8,15 +8,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Model;
     using Api.Transaction;
     using Basics;
-    using Microsoft.Extensions.Logging;
 
-    internal class DeleteEntityChange<TEntity> : ITransactionalChange
+    /// <summary>
+    /// DeleteEntityChange
+    /// </summary>
+    /// <typeparam name="TEntity">TEntity type-argument</typeparam>
+    public class DeleteEntityChange<TEntity> : ITransactionalChange
         where TEntity : IDatabaseEntity
     {
         private readonly long _version;
         private readonly long _affectedRowsCount;
         private readonly Expression<Func<TEntity, bool>> _predicate;
 
+        /// <summary> .cctor </summary>
+        /// <param name="version">Version</param>
+        /// <param name="affectedRowsCount">Affected rows count</param>
+        /// <param name="predicate">Predicate</param>
         public DeleteEntityChange(
             long version,
             long affectedRowsCount,
@@ -29,9 +36,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
 
+        /// <inheritdoc />
         public async Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
-            ILogger logger,
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
@@ -45,6 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             }
         }
 
+        /// <inheritdoc />
         public void Apply(ITransactionalStore transactionalStore)
         {
             var values = transactionalStore.GetValues(Predicate);

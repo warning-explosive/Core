@@ -28,8 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\Basics\Basics.csproj" />
-        <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+        <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
         <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
         <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     </ItemGroup>
@@ -195,7 +194,7 @@
       <Compile Update="Translation\ExtractParametersVisitor.cs">
         <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ExtractMemberChainExpressionVisitor.cs">
+      <Compile Update="Translation\ExtractMembersChainExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor.cs">
@@ -233,9 +232,6 @@
       </Compile>
       <Compile Update="Translation\Expressions\OrderByExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\Expressions\EnOrderingDirection.cs">
-        <DependentUpon>OrderByExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\OrderByBindingExpression.cs">
         <DependentUpon>OrderByExpression.cs</DependentUpon>

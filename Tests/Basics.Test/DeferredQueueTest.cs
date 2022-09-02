@@ -26,9 +26,9 @@ namespace SpaceEngineers.Core.Basics.Test
         /// OnRootNodeChangedTestData
         /// </summary>
         /// <returns>TestData</returns>
-        public static IEnumerable<object> DeferredQueueTestData()
+        public static IEnumerable<object[]> DeferredQueueTestData()
         {
-            var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingKind.Asc), PrioritySelector);
+            var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingDirection.Asc), PrioritySelector);
 
             yield return new object[] { emptyQueue };
 

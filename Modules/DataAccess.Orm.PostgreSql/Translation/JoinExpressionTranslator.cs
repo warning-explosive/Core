@@ -5,7 +5,7 @@
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
     using Sql.Translation.Extensions;

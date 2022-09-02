@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
     using System.Data;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Sql.Settings;
     using Mocks;

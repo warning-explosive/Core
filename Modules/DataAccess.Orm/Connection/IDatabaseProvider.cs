@@ -16,12 +16,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         IEnumerable<Assembly> Implementation();
 
         /// <summary>
-        /// Database provider implementation for migrations
-        /// </summary>
-        /// <returns>Implementation</returns>
-        IEnumerable<Assembly> Migrations();
-
-        /// <summary>
         /// Handles ORM exception and throws provider dependent exceptions
         /// </summary>
         /// <param name="commandText">Command text</param>

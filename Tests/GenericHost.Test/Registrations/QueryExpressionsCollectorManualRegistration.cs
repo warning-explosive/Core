@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
     using System.Linq;
+    using CompositionRoot.Registration;
     using DataAccess.Orm.Linq;
     using Mocks;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
 
     internal class QueryExpressionsCollectorManualRegistration : IManualRegistration
     {

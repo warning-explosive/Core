@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Transaction;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
 
     /// <summary>
     /// Query invocation extensions
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             Func<IAdvancedDatabaseTransaction, CancellationToken, Task> producer,
             CancellationToken token)
         {
-            await using (dependencyContainer.OpenScopeAsync())
+            await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
                 var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             Func<IAdvancedDatabaseTransaction, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
-            await using (dependencyContainer.OpenScopeAsync())
+            await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
                 var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task> producer,
             CancellationToken token)
         {
-            await using (dependencyContainer.OpenScopeAsync())
+            await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
                 var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
@@ -108,7 +108,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
             Func<IAdvancedDatabaseTransaction, TState, CancellationToken, Task<TResult>> producer,
             CancellationToken token)
         {
-            await using (dependencyContainer.OpenScopeAsync())
+            await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
                 var transaction = dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 

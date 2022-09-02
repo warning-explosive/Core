@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.CrossCuttingConcerns</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.CrossCuttingConcerns</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.CrossCuttingConcerns</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.CrossCuttingConcerns</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Internals\GenericObjectBuilder.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\ObjectStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\DateTimeStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\StringToCharArrayTransformer.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Internals\CharArrayToStringTransformer.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ObjectTreeJsonEnumerator.cs">
+        <DependentUpon>EnumerableObjectTreeReader.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\SecureSerializationBinder.cs">
+        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\TypeNode.cs">
+        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\DefaultObjectTreeValueReader.cs">
+        <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\GenericObjectBuilder.cs">
+        <DependentUpon>ObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\StringToCharArrayTransformer.cs">
+        <DependentUpon>IObjectTransformer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
+        <DependentUpon>IObjectTransformer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\JsonSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\YamlSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ArrayNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\NodeBase.cs">
+        <DependentUpon>IObjectTreeNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ObjectNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\RootNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\ValueNode.cs">
+        <DependentUpon>NodeBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\StringFormatter.cs">
+        <DependentUpon>IStringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\ObjectStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="StringFormatter\DateTimeStringFormatter.cs">
+        <DependentUpon>StringFormatter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Json\JsonSerializerImpl.cs">
+        <DependentUpon>IJsonSerializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\ObjectBuilder.cs">
+        <DependentUpon>IObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettingsProviderBase.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\EnvironmentSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\DefaultSettingsScopeProvider.cs">
+        <DependentUpon>ISettingsScopeProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\ConfigurationSettingsProvider.cs">
+        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\BaseSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettings.cs">
+        <DependentUpon>ISettings.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\FileSystemSettingsProvider.cs">
+        <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Settings\ConfigurationProvider.cs">
+        <DependentUpon>IConfigurationProvider.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="YamlDotNet" Version="12.0.0" />
+    </ItemGroup>
+</Project>

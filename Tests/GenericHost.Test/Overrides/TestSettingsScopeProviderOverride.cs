@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Overrides
 {
+    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
     using Mocks;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
 
     internal class TestSettingsScopeProviderOverride : IComponentsOverride
     {

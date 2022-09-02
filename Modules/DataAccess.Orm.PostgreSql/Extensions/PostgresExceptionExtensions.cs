@@ -3,21 +3,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Extensions
     using System;
     using Npgsql;
 
-    internal static class PostgresExceptionExtensions
+    /// <summary>
+    /// PostgresExceptionExtensions
+    /// </summary>
+    public static class PostgresExceptionExtensions
     {
-        internal static bool IsSerializationFailure(this Exception exception)
+        /// <summary>
+        /// IsSerializationFailure
+        /// </summary>
+        /// <param name="exception">Exception</param>
+        /// <returns>Result of check</returns>
+        public static bool IsSerializationFailure(this Exception exception)
         {
             return exception is PostgresException postgresException
                 && postgresException.SqlState.Equals(PostgresErrorCodes.SerializationFailure, StringComparison.OrdinalIgnoreCase);
         }
 
-        internal static bool IsUniqueViolation(this Exception exception)
+        /// <summary>
+        /// IsUniqueViolation
+        /// </summary>
+        /// <param name="exception">Exception</param>
+        /// <returns>Result of check</returns>
+        public static bool IsUniqueViolation(this Exception exception)
         {
             return exception is PostgresException postgresException
                 && postgresException.SqlState.Equals(PostgresErrorCodes.UniqueViolation, StringComparison.OrdinalIgnoreCase);
         }
 
-        internal static bool DatabaseDoesNotExist(this Exception exception)
+        /// <summary>
+        /// DatabaseDoesNotExist
+        /// </summary>
+        /// <param name="exception">Exception</param>
+        /// <returns>Result of check</returns>
+        public static bool DatabaseDoesNotExist(this Exception exception)
         {
             return exception is PostgresException postgresException
                 && postgresException.SqlState.Equals(PostgresErrorCodes.InvalidCatalogName, StringComparison.OrdinalIgnoreCase);

@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.Basics.Test
                            typeof(OrderByDependencyTestData.CycleDependencyTest3)
                        };
 
-            Assert.Throws<InvalidOperationException>(() => test1.OrderByDependencyAttribute().ToArray());
+            Assert.Throws<InvalidOperationException>(() => test1.OrderByDependencies().ToArray());
 
             var test2 = new[]
                        {
@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.Basics.Test
                            typeof(OrderByDependencyTestData.CycleDependencyTest4)
                        };
 
-            Assert.Throws<InvalidOperationException>(() => test2.OrderByDependencyAttribute().ToArray());
+            Assert.Throws<InvalidOperationException>(() => test2.OrderByDependencies().ToArray());
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.DependencyTest4)
             };
 
-            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencyAttribute()));
+            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencies()));
 
             var test2 = new[]
             {
@@ -65,7 +65,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.DependencyTest4)
             };
 
-            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencyAttribute()));
+            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencies()));
 
             var test3 = new[]
             {
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest4<>)
             };
 
-            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencyAttribute()));
+            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencies()));
 
             var test4 = new[]
             {
@@ -85,7 +85,7 @@ namespace SpaceEngineers.Core.Basics.Test
                 typeof(OrderByDependencyTestData.GenericDependencyTest4<bool>)
             };
 
-            Assert.True(test4.Reverse().SequenceEqual(test4.OrderByDependencyAttribute()));
+            Assert.True(test4.Reverse().SequenceEqual(test4.OrderByDependencies()));
         }
 
         [Fact]

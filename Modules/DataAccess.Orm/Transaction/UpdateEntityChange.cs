@@ -11,9 +11,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Persisting;
     using Api.Transaction;
     using Basics;
-    using Microsoft.Extensions.Logging;
 
-    internal class UpdateEntityChange<TEntity> : ITransactionalChange
+    /// <summary>
+    /// UpdateEntityChange
+    /// </summary>
+    /// <typeparam name="TEntity">TEntity type-argument</typeparam>
+    public class UpdateEntityChange<TEntity> : ITransactionalChange
         where TEntity : IDatabaseEntity
     {
         private readonly long _version;
@@ -22,6 +25,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         private readonly Expression<Func<TEntity, bool>> _predicate;
         private readonly long _updateVersion;
 
+        /// <summary> .cctor </summary>
+        /// <param name="version">Version</param>
+        /// <param name="affectedRowsCount">Affected rows count</param>
+        /// <param name="infos">Update infos</param>
+        /// <param name="predicate">Predicate</param>
+        /// <param name="updateVersion">Update version</param>
         public UpdateEntityChange(
             long version,
             long affectedRowsCount,
@@ -42,9 +51,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
 
+        /// <inheritdoc />
         public async Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
-            ILogger logger,
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
@@ -58,6 +67,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             }
         }
 
+        /// <inheritdoc />
         public void Apply(ITransactionalStore transactionalStore)
         {
             var entities = transactionalStore.GetValues(Predicate);

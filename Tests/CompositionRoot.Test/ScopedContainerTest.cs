@@ -1,11 +1,9 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System.Threading.Tasks;
-    using Api.Abstractions;
-    using Api.Exceptions;
     using AutoRegistrationTest;
     using Basics;
-    using GenericHost.Internals;
+    using Exceptions;
     using Registrations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
@@ -25,12 +23,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.Test))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test))),
             };
 
-            var options = new DependencyContainerOptions().WithManualRegistrations(
-                new ManuallyRegisteredServiceManualRegistration(),
-                new ConfigurationProviderManualRegistration());
+            var options = new DependencyContainerOptions()
+               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
         }

@@ -1,13 +1,15 @@
 namespace SpaceEngineers.Core.GenericHost
 {
     using System;
+    using System.IO;
     using System.Linq;
     using Api;
     using Api.Abstractions;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
+    using CrossCuttingConcerns.Settings;
     using Internals;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -54,39 +56,52 @@ namespace SpaceEngineers.Core.GenericHost
         /// Builds configured host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="settingsDirectory">Settings directory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHost BuildWebHost(this IHostBuilder hostBuilder)
+        public static IHost BuildWebHost(
+            this IHostBuilder hostBuilder,
+            DirectoryInfo settingsDirectory)
         {
-            return hostBuilder.BuildHostInternal();
+            return hostBuilder.BuildHostInternal(settingsDirectory);
         }
 
         /// <summary>
         /// Builds configured host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="settingsDirectory">Settings directory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHost BuildHost(this IHostBuilder hostBuilder)
+        public static IHost BuildHost(
+            this IHostBuilder hostBuilder,
+            DirectoryInfo settingsDirectory)
         {
-            var host = hostBuilder.BuildHostInternal();
+            var host = hostBuilder.BuildHostInternal(settingsDirectory);
 
             host.Services.VerifyDependencyContainers();
 
             return host;
         }
 
-        private static IHost BuildHostInternal(this IHostBuilder hostBuilder)
+        private static IHost BuildHostInternal(
+            this IHostBuilder hostBuilder,
+            DirectoryInfo settingsDirectory)
         {
             hostBuilder.CheckMultipleCalls(nameof(BuildHost));
+
+            settingsDirectory.SetupFileSystemSettingsDirectory();
+
+            var commonSettingsFile = settingsDirectory.GetFile("appsettings", ".json");
 
             var frameworkDependenciesProvider = InitializeFrameworkDependenciesProvider(hostBuilder);
 
             var host = hostBuilder
-                .ConfigureServices((_, serviceCollection) =>
-                {
-                    serviceCollection.AddSingleton(SetupFrameworkDependenciesProvider(frameworkDependenciesProvider));
-                    serviceCollection.AddHostedService(BuildHostedService);
-                })
-                .Build();
+               .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonSettingsFile.FullName))
+               .ConfigureServices((_, serviceCollection) =>
+               {
+                   serviceCollection.AddSingleton(SetupFrameworkDependenciesProvider(frameworkDependenciesProvider));
+                   serviceCollection.AddHostedService(BuildHostedService);
+               })
+               .Build();
 
             _ = host.Services.GetRequiredService<IFrameworkDependenciesProvider>();
 

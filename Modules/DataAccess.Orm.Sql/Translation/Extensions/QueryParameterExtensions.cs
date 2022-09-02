@@ -3,11 +3,19 @@
     using System;
     using System.Collections.Generic;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
 
-    internal static class QueryParameterExtensions
+    /// <summary>
+    /// QueryParameterExtensions
+    /// </summary>
+    public static class QueryParameterExtensions
     {
-        internal static IReadOnlyDictionary<string, object?> AsQueryParametersValues(this object? obj)
+        /// <summary>
+        /// AsQueryParametersValues
+        /// </summary>
+        /// <param name="obj">Object</param>
+        /// <returns>Query parameters values</returns>
+        public static IReadOnlyDictionary<string, object?> AsQueryParametersValues(this object? obj)
         {
             return obj?.GetType().IsPrimitive() == true
                 ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
@@ -18,7 +26,13 @@
                   ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
 
-        internal static string QueryParameterSqlExpression(this object? value, IDependencyContainer dependencyContainer)
+        /// <summary>
+        /// Translates value to QueryParameterSqlExpression
+        /// </summary>
+        /// <param name="value">Value</param>
+        /// <param name="dependencyContainer">IDependencyContainer</param>
+        /// <returns>QueryParameterSqlExpression</returns>
+        public static string QueryParameterSqlExpression(this object? value, IDependencyContainer dependencyContainer)
         {
             return dependencyContainer
                 .ResolveGeneric(typeof(IQueryParameterTranslator<>), value?.GetType() ?? typeof(object))

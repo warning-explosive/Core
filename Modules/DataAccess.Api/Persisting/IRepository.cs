@@ -20,7 +20,7 @@
         /// <param name="token">Cancellation token</param>
         /// <returns>Affected rows count</returns>
         Task<long> Insert(
-            IUniqueIdentified[] entities,
+            IDatabaseEntity[] entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token);
     }

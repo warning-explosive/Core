@@ -4,11 +4,12 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
@@ -21,7 +22,6 @@
     using IntegrationTransport.RpcRequest;
     using MessageHandlers;
     using Messages;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Mocks;
@@ -48,48 +48,40 @@
         }
 
         /// <summary>
-        /// useContainer; useTransport; timeout;
+        /// RunHostTestData
         /// </summary>
-        /// <returns>RunHostTestData</returns>
+        /// <returns>Test data</returns>
         public static IEnumerable<object[]> RunHostTestData()
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var commonAppSettingsJson = SolutionExtensions
+            var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .EnsureNotNull("Project directory wasn't found")
+               .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                               .WithManualRegistrations(new AnonymousUserScopeProviderManualRegistration())
-                               .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -100,6 +92,7 @@
             return integrationTransportProviders
                .Select(useTransport => new object[]
                {
+                   settingsDirectory,
                    useTransport,
                    timeout
                });
@@ -108,7 +101,8 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -138,7 +132,6 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
@@ -148,75 +141,59 @@
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunTestHost(Output, host, RequestReplyTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> RequestReplyTestInternal(string settingsScope)
             {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var command = new RequestQueryCommand(42);
-
-                var awaiter = Task.WhenAny(
-                    hostShutdown,
-                    Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler))));
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                    await integrationContext
-                       .Send(command, cts.Token)
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
                        .ConfigureAwait(false);
-                }
 
-                var result = await awaiter.ConfigureAwait(false);
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
 
-                if (hostShutdown == result)
-                {
-                    throw new InvalidOperationException("Host was unexpectedly stopped");
-                }
+                    var command = new RequestQueryCommand(42);
 
-                await result.ConfigureAwait(false);
+                    var awaiter = Task.WhenAll(
+                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler)));
 
-                var errorMessages = collector.ErrorMessages.ToArray();
-                Assert.Single(errorMessages);
-                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(ReplyEmptyMessageHandler)));
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                var messages = collector.Messages.ToArray();
-                Assert.Equal(3, messages.Length);
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(RequestQueryCommand)));
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
+                        await integrationContext
+                           .Send(command, token)
+                           .ConfigureAwait(false);
+                    }
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                    await awaiter.ConfigureAwait(false);
 
-                await hostShutdown.ConfigureAwait(false);
+                    var errorMessages = collector.ErrorMessages.ToArray();
+                    Assert.Single(errorMessages);
+                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(ReplyEmptyMessageHandler)));
+
+                    var messages = collector.Messages.ToArray();
+                    Assert.Equal(3, messages.Length);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(RequestQueryCommand)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -242,10 +219,7 @@
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var transportEndpointIdentity = new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid());
-
             var host = useTransport(
-                    transportEndpointIdentity,
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
@@ -255,72 +229,56 @@
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetEndpointDependencyContainer(transportEndpointIdentity);
+            await RunTestHost(Output, host, RpcRequestTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> RpcRequestTestInternal(string settingsScope)
             {
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var query = new Query(42);
-
-                Reply reply;
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(cts.Token)
+                       .Get(token)
                        .ConfigureAwait(false);
 
                     Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
 
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var query = new Query(42);
 
-                    var awaiter = Task.WhenAny(
-                        hostShutdown,
-                        integrationContext.RpcRequest<Query, Reply>(query, cts.Token));
+                    Reply reply;
 
-                    var result = await awaiter.ConfigureAwait(false);
-
-                    if (hostShutdown == result)
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Host was unexpectedly stopped");
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        reply = await integrationContext
+                           .RpcRequest<Query, Reply>(query, token)
+                           .ConfigureAwait(false);
                     }
 
-                    reply = await ((Task<Reply>)result).ConfigureAwait(false);
-                }
+                    Assert.Equal(query.Id, reply.Id);
 
-                Assert.Equal(query.Id, reply.Id);
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+                    Assert.Empty(collector.ErrorMessages);
 
-                var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
-                Assert.Empty(collector.ErrorMessages);
+                    var messages = collector.Messages.ToArray();
+                    Assert.Equal(2, messages.Length);
 
-                var messages = collector.Messages.ToArray();
-                Assert.Equal(2, messages.Length);
-
-                var integrationQuery = messages.Where(message => message.ReflectedType == typeof(Query) && message.ReadRequiredHeader<SentFrom>().Value.Equals(transportEndpointIdentity)).ToArray();
-                Assert.Single(integrationQuery);
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationQuery.Single().ReadRequiredHeader<Id>().Value)));
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
+                    var integrationQuery = messages.Where(message => message.ReflectedType == typeof(Query) && message.ReadRequiredHeader<SentFrom>().Value.LogicalName.Equals(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    Assert.Single(integrationQuery);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationQuery.Single().ReadRequiredHeader<Id>().Value)));
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -350,7 +308,6 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
@@ -360,74 +317,58 @@
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunTestHost(Output, host, ContravariantMessageHandlerTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> ContravariantMessageHandlerTestInternal(string settingsScope)
             {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                var awaiter = Task.WhenAny(
-                        hostShutdown,
-                        Task.WhenAll(
-                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
-                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler))));
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                    await integrationContext
-                       .Send(new PublishInheritedEventCommand(42), cts.Token)
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
                        .ConfigureAwait(false);
-                }
 
-                var result = await awaiter.ConfigureAwait(false);
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
 
-                if (hostShutdown == result)
-                {
-                    throw new InvalidOperationException("Host was unexpectedly stopped");
-                }
+                    var awaiter = Task.WhenAll(
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler)));
 
-                await result.ConfigureAwait(false);
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                var errorMessages = collector.ErrorMessages.ToArray();
-                Assert.Equal(2, errorMessages.Length);
-                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(BaseEventEmptyMessageHandler)));
-                Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(InheritedEventEmptyMessageHandler)));
+                        await integrationContext
+                           .Send(new PublishInheritedEventCommand(42), token)
+                           .ConfigureAwait(false);
+                    }
 
-                var messages = collector.Messages.ToArray();
-                Assert.Equal(3, messages.Length);
-                Assert.Single(messages.Where(message => message.ReflectedType == typeof(PublishInheritedEventCommand)));
-                Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(BaseEvent)));
-                Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
+                    await awaiter.ConfigureAwait(false);
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                    var errorMessages = collector.ErrorMessages.ToArray();
+                    Assert.Equal(2, errorMessages.Length);
+                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(BaseEventEmptyMessageHandler)));
+                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(InheritedEventEmptyMessageHandler)));
 
-                await hostShutdown.ConfigureAwait(false);
+                    var messages = collector.Messages.ToArray();
+                    Assert.Equal(3, messages.Length);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(PublishInheritedEventCommand)));
+                    Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(BaseEvent)));
+                    Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -446,7 +387,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var overrides = new IComponentsOverride[]
+            var overrides = new[]
             {
                 new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope),
@@ -457,7 +398,6 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
@@ -467,103 +407,87 @@
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunTestHost(Output, host, ThrowingMessageHandlerTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> ThrowingMessageHandlerTestInternal(string settingsScope)
             {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (output, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                    await integrationContext
-                       .Send(new Command(42), cts.Token)
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
                        .ConfigureAwait(false);
-                }
 
-                var awaiter = Task.WhenAny(
-                    hostShutdown,
-                    collector.WaitUntilErrorMessageIsNotReceived<Command>());
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
 
-                var result = await awaiter.ConfigureAwait(false);
+                    var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Command>();
 
-                if (hostShutdown == result)
-                {
-                    throw new InvalidOperationException("Host was unexpectedly stopped");
-                }
-
-                await result.ConfigureAwait(false);
-
-                Assert.Single(collector.ErrorMessages);
-                var (errorMessage, exception) = collector.ErrorMessages.Single();
-                Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
-                Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>()?.Value);
-
-                var expectedRetryCounters = new[] { 0, 1, 2, 3 };
-                var actualRetryCounters = collector
-                   .Messages
-                   .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
-                   .ToList();
-
-                Assert.Equal(expectedRetryCounters, actualRetryCounters);
-
-                var actualDeliveries = collector
-                    .Messages
-                    .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
-                    .ToList();
-
-                var expectedDeliveryDelays = new[]
-                {
-                    0,
-                    1000,
-                    2000
-                };
-
-                var actualDeliveryDelays = actualDeliveries
-                    .Zip(actualDeliveries.Skip(1))
-                    .Select(period => period.Second - period.First)
-                    .Select(span => span.TotalMilliseconds)
-                    .ToList();
-
-                Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
-
-                Assert.True(actualDeliveryDelays
-                    .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
-                    .All(delays =>
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var (actual, expected) = delays;
-                        Output.WriteLine($"{0.95 * expected} ({0.95} * {expected}) <= {actual}");
-                        return 0.95 * expected <= actual;
-                    }));
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                        await integrationContext
+                           .Send(new Command(42), token)
+                           .ConfigureAwait(false);
+                    }
 
-                await hostShutdown.ConfigureAwait(false);
+                    await awaiter.ConfigureAwait(false);
+
+                    Assert.Single(collector.ErrorMessages);
+                    var (errorMessage, exception) = collector.ErrorMessages.Single();
+                    Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
+                    Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>()?.Value);
+
+                    var expectedRetryCounters = new[] { 0, 1, 2, 3 };
+                    var actualRetryCounters = collector
+                       .Messages
+                       .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
+                       .ToList();
+
+                    Assert.Equal(expectedRetryCounters, actualRetryCounters);
+
+                    var actualDeliveries = collector
+                        .Messages
+                        .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
+                        .ToList();
+
+                    var expectedDeliveryDelays = new[]
+                    {
+                        0,
+                        1000,
+                        2000
+                    };
+
+                    var actualDeliveryDelays = actualDeliveries
+                        .Zip(actualDeliveries.Skip(1))
+                        .Select(period => period.Second - period.First)
+                        .Select(span => span.TotalMilliseconds)
+                        .ToList();
+
+                    Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
+
+                    Assert.True(actualDeliveryDelays
+                        .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
+                        .All(delays =>
+                        {
+                            var (actual, expected) = delays;
+                            output.WriteLine($"{0.95 * expected} ({0.95} * {expected}) <= {actual}");
+                            return 0.95 * expected <= actual;
+                        }));
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -602,7 +526,6 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
@@ -624,124 +547,48 @@
                            .WithAdditionalOurTypes(endpoint2AdditionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunTestHost(Output, host, EventSubscriptionBetweenEndpointsTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> EventSubscriptionBetweenEndpointsTestInternal(string settingsScope)
             {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                await host.StartAsync(cts.Token).ConfigureAwait(false);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                return async (_, host, token) =>
                 {
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                    await integrationContext
-                       .Send(new PublishEventCommand(42), cts.Token)
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
                        .ConfigureAwait(false);
-                }
 
-                var awaiter = Task.WhenAny(
-                    hostShutdown,
-                    Task.WhenAll(
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
+                    var awaiter = Task.WhenAll(
                         collector.WaitUntilMessageIsNotReceived<Event>(),
                         collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10) || message.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20))));
+                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)));
 
-                var result = await awaiter.ConfigureAwait(false);
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                if (hostShutdown == result)
-                {
-                    throw new InvalidOperationException("Host was unexpectedly stopped");
-                }
+                        await integrationContext
+                           .Send(new PublishEventCommand(42), token)
+                           .ConfigureAwait(false);
+                    }
 
-                await result.ConfigureAwait(false);
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await hostShutdown.ConfigureAwait(false);
-            }
-        }
-
-        [Theory(Timeout = 60_000)]
-        [MemberData(nameof(RunHostTestData))]
-        internal async Task RunTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
-            TimeSpan timeout)
-        {
-            var logger = Fixture.CreateLogger(Output);
-
-            var settingsScope = nameof(RunTest);
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestLoggerOverride(logger),
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
-                    settingsScope,
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(new EndpointIdentity(settingsScope, 0),
-                    (_, builder) => builder
-                       .WithTracing()
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(overrides))
-                       .BuildOptions())
-               .BuildHost();
-
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
-
-            using (host)
-            using (var cts = new CancellationTokenSource(timeout))
-            {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
-
-                var runningHost = host.RunAsync(cts.Token);
-
-                var hostShutdown = host.WaitForShutdownAsync(cts.Token);
-
-                await waitUntilTransportIsNotRunning.ConfigureAwait(false);
-
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
-
-                await runningHost.ConfigureAwait(false);
-                await hostShutdown.ConfigureAwait(false);
-
-                Assert.Empty(collector.ErrorMessages);
-                Assert.Empty(collector.Messages);
+                    await awaiter.ConfigureAwait(false);
+                };
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var logger = Fixture.CreateLogger(Output);
@@ -755,32 +602,48 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     settingsScope,
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .UseEndpoint(new EndpointIdentity(settingsScope, 0),
+               .UseEndpoint(new EndpointIdentity(settingsScope, Guid.NewGuid().ToString()),
                     (_, builder) => builder
-                       .WithTracing()
                        .ModifyContainerOptions(options => options
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var transportDependencyContainer = host.GetTransportDependencyContainer();
-            var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+            await RunTestHost(Output, host, StartStopTestInternal(settingsScope), timeout).ConfigureAwait(false);
 
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> StartStopTestInternal(string settingsScope)
+            {
+                return async (_, host, token) =>
+                {
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
+
+                    Assert.Empty(collector.ErrorMessages);
+                    Assert.Empty(collector.Messages);
+                };
+            }
+        }
+
+        internal static async Task RunTestHost(
+            ITestOutputHelper output,
+            IHost host,
+            Func<ITestOutputHelper, IHost, CancellationToken, Task> producer,
+            TimeSpan timeout)
+        {
             using (host)
             using (var cts = new CancellationTokenSource(timeout))
             {
-                var rabbitMqSettings = await transportDependencyContainer
-                   .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
-
-                Assert.Equal(settingsScope, rabbitMqSettings.VirtualHost);
-
-                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(Output.WriteLine);
+                var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(output.WriteLine);
 
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
@@ -788,12 +651,20 @@
 
                 await waitUntilTransportIsNotRunning.ConfigureAwait(false);
 
+                var awaiter = Task.WhenAny(producer(output, host, cts.Token), hostShutdown);
+
+                var result = await awaiter.ConfigureAwait(false);
+
+                if (hostShutdown == result)
+                {
+                    throw new InvalidOperationException("Host was unexpectedly stopped");
+                }
+
+                await result.ConfigureAwait(false);
+
                 await host.StopAsync(cts.Token).ConfigureAwait(false);
 
                 await hostShutdown.ConfigureAwait(false);
-
-                Assert.Empty(collector.ErrorMessages);
-                Assert.Empty(collector.Messages);
             }
         }
     }

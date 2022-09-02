@@ -28,8 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\DependencyInjection\CompositionRoot.Api\CompositionRoot.Api.csproj" />
-      <ProjectReference Include="..\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+      <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
       <ProjectReference Include="..\DataAccess.Api\DataAccess.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -60,9 +59,6 @@
       </Compile>
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Linq\LinqMethods.cs">
-        <DependentUpon>ReadRepository.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\UpdateEntityChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>

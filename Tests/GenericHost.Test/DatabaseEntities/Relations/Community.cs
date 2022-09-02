@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
-    [Schema(nameof(GenericHost) + nameof(GenericHost.Test))]
+    [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Community : BaseDatabaseEntity<Guid>
     {
         public Community(

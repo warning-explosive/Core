@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     [ManuallyRegisteredComponent(nameof(RunHostTest))]
     internal class TestMessagesCollector : IResolvable<TestMessagesCollector>
     {
-        public TestMessagesCollector(IIntegrationTransport integrationTransport)
+        public TestMessagesCollector(IExecutableIntegrationTransport integrationTransport)
         {
             Messages = new ConcurrentQueue<IntegrationMessage>();
             ErrorMessages = new ConcurrentQueue<(IntegrationMessage, Exception?)>();

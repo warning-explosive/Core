@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.PathResolver
         where TKey : struct
         where TValue : IEquatable<TValue>
     {
-        private const string NotFound = "Path not found";
+        private const string NotFound = "Path wasn't found";
 
         private const string AmbiguousMatch = "Ambiguous number of paths";
 

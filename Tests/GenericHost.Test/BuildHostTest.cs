@@ -3,16 +3,22 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AuthorizationEndpoint.Contract;
+    using AuthEndpoint.Contract.Commands;
+    using AuthEndpoint.Contract.Events;
+    using AuthEndpoint.Contract.Queries;
+    using AuthEndpoint.Contract.Replies;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
+    using CompositionRoot.Exceptions;
+    using CompositionRoot.Extensions;
+    using CompositionRoot.Registration;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host;
     using DataAccess.Orm.Host.Model;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Host.Model;
@@ -22,34 +28,25 @@
     using GenericEndpoint.DataAccess.Deduplication;
     using GenericEndpoint.DataAccess.EventSourcing;
     using GenericEndpoint.Host;
+    using GenericEndpoint.Host.BackgroundWorkers;
     using GenericEndpoint.Host.StartupActions;
-    using GenericEndpoint.Messaging.Abstractions;
+    using GenericEndpoint.Messaging;
     using GenericEndpoint.Pipeline;
     using GenericEndpoint.RpcRequest;
-    using GenericEndpoint.Tracing.Pipeline;
     using GenericHost;
     using IntegrationTransport.Host;
     using IntegrationTransport.Host.BackgroundWorkers;
     using IntegrationTransport.Integration;
     using MessageHandlers;
     using Messages;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Overrides;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
-    using SpaceEngineers.Core.CompositionRoot.Api.Exceptions;
-    using SpaceEngineers.Core.CompositionRoot.Api.Extensions;
-    using SpaceEngineers.Core.DataAccess.Orm.Host.Migrations;
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
-    using SpaceEngineers.Core.GenericEndpoint.DataAccess.BackgroundWorkers;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
-    using TracingEndpoint.Contract;
-    using TracingEndpoint.DatabaseModel;
-    using TracingEndpoint.Host;
     using Xunit;
     using Xunit.Abstractions;
     using EndpointIdentity = GenericEndpoint.Contract.EndpointIdentity;
@@ -75,33 +72,27 @@
         /// <returns>BuildHostTestData</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
-            var commonAppSettingsJson = SolutionExtensions
+            var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .EnsureNotNull("Project directory wasn't found")
+               .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .WithTracing()
-                           .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                           .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
+                (logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(logger)))
+                       .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .WithTracing()
-                           .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                           .BuildOptions()));
+            var useRabbitMqIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
+                (logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(logger)))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -112,6 +103,7 @@
             return integrationTransportProviders
                .Select(useTransport => new object[]
                {
+                   settingsDirectory,
                    useTransport
                });
         }
@@ -122,35 +114,29 @@
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
-            var commonAppSettingsJson = SolutionExtensions
+            var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
-               .EnsureNotNull("Project directory not found")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .EnsureNotNull("Project directory wasn't found")
+               .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder>(
-                (transportEndpointIdentity, settingsScope, logger, hostBuilder) => hostBuilder
-                   .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonAppSettingsJson))
-                   .UseIntegrationTransport(transportEndpointIdentity,
-                        builder => builder
-                           .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithOverrides(new TestLoggerOverride(logger))
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                           .BuildOptions()));
+            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
+                (settingsScope, logger, hostBuilder) => hostBuilder
+                   .UseIntegrationTransport(builder => builder
+                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .ModifyContainerOptions(options => options
+                           .WithOverrides(new TestLoggerOverride(logger))
+                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                       .BuildOptions()));
 
             var integrationTransportProviders = new[]
             {
@@ -167,6 +153,7 @@
                .SelectMany(useTransport => databaseProviders
                    .Select(databaseProvider => new object[]
                    {
+                       settingsDirectory,
                        useTransport,
                        databaseProvider
                    }));
@@ -174,47 +161,54 @@
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void SameTransportTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
+        internal void SameTransportTest(
+            DirectoryInfo settingsDirectory,
+            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
-            SameComponentTest(useTransport, dependencyContainer => dependencyContainer.Resolve<IIntegrationTransport>());
+            SameComponentTest(
+                settingsDirectory,
+                useTransport,
+                dependencyContainer => dependencyContainer.Resolve<IIntegrationTransport>());
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void SameRpcRequestRegistryTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
+        internal void SameRpcRequestRegistryTest(
+            DirectoryInfo settingsDirectory,
+            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
-            SameComponentTest(useTransport, dependencyContainer => dependencyContainer.Resolve<IRpcRequestRegistry>());
+            SameComponentTest(
+                settingsDirectory,
+                useTransport,
+                dependencyContainer => dependencyContainer.Resolve<IRpcRequestRegistry>());
         }
 
         internal void SameComponentTest(
-            Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<ILogger, IHostBuilder, IHostBuilder> useTransport,
             Func<IDependencyContainer, object> resolve)
         {
             var logger = Fixture.CreateLogger(Output);
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     logger,
                     Fixture.CreateHostBuilder(Output))
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder
-                        .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                         .BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
                     (_, builder) => builder
-                        .WithTracing()
                         .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
                         .BuildOptions())
-                .BuildHost();
+                .BuildHost(settingsDirectory);
 
             var gatewayHost = useTransport(
-                    new EndpointIdentity("Gateway" + TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
             var component = resolve(host.GetTransportDependencyContainer());
             var gatewayComponent = resolve(gatewayHost.GetTransportDependencyContainer());
@@ -226,7 +220,9 @@
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
-        internal void BuildTest(Func<EndpointIdentity, ILogger, IHostBuilder, IHostBuilder> useTransport)
+        internal void BuildTest(
+            DirectoryInfo settingsDirectory,
+            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
         {
             var logger = Fixture.CreateLogger(Output);
 
@@ -263,23 +259,18 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider)
-                       .WithTracing()
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithOverrides(overrides)
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
             using (host)
             {
@@ -378,7 +369,6 @@
                     var expectedPipeline = new[]
                     {
                         typeof(ErrorHandlingPipeline),
-                        typeof(TracingPipeline),
                         typeof(UnitOfWorkPipeline),
                         typeof(QueryReplyValidationPipeline),
                         typeof(HandledByEndpointPipeline),
@@ -403,10 +393,7 @@
                         typeof(Command),
                         typeof(OpenGenericHandlerCommand),
                         typeof(Query),
-                        typeof(Reply),
-                        typeof(CaptureTrace),
-                        typeof(GetConversationTrace),
-                        typeof(ConversationTrace)
+                        typeof(Reply)
                     };
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
@@ -482,7 +469,6 @@
                     var expectedErrorHandlers = new[]
                     {
                         typeof(RpcRequestErrorHandler),
-                        typeof(TracingErrorHandler),
                         typeof(RetryErrorHandler)
                     };
 
@@ -554,7 +540,6 @@
                     var expectedPipeline = new[]
                     {
                         typeof(ErrorHandlingPipeline),
-                        typeof(TracingPipeline),
                         typeof(UnitOfWorkPipeline),
                         typeof(QueryReplyValidationPipeline),
                         typeof(HandledByEndpointPipeline),
@@ -601,9 +586,6 @@
                         typeof(Query),
                         typeof(Reply),
                         typeof(RequestQueryCommand),
-                        typeof(CaptureTrace),
-                        typeof(GetConversationTrace),
-                        typeof(ConversationTrace),
                         typeof(Endpoint1HandlerInvoked),
                         typeof(Endpoint2HandlerInvoked)
                     };
@@ -635,8 +617,7 @@
                     var expectedReplies = new[]
                     {
                         typeof(UserAuthorizationResult),
-                        typeof(Reply),
-                        typeof(ConversationTrace)
+                        typeof(Reply)
                     };
 
                     var actualReplies = integrationTypeProvider
@@ -658,7 +639,6 @@
                     var expectedErrorHandlers = new[]
                     {
                         typeof(RpcRequestErrorHandler),
-                        typeof(TracingErrorHandler),
                         typeof(RetryErrorHandler)
                     };
 
@@ -688,13 +668,28 @@
 
                     Assert.Equal(expectedRpcReplyHandlers, actualRpcReplyHandlers);
                 }
+
+                var expectedUserScopeProviders = new[]
+                {
+                    typeof(IntegrationMessageUserScopeProvider),
+                    typeof(AnonymousUserScopeProvider)
+                };
+
+                var actualUserScopeProviders = transportDependencyContainer
+                   .ResolveCollection<IUserScopeProvider>()
+                   .Select(obj => obj.GetType())
+                   .ShowTypes(nameof(IErrorHandler), log)
+                   .ToList();
+
+                Assert.Equal(expectedUserScopeProviders, actualUserScopeProviders);
             }
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
@@ -708,24 +703,20 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     nameof(CompareEquivalentDatabaseDatabaseModelsTest),
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .UseTracingEndpoint(TestIdentity.Instance0,
-                    builder => builder
-                       .WithDataAccess(databaseProvider)
+               .UseEndpoint(TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var migrationsContainer = host.GetMigrationsDependencyContainer();
+            var migrationsContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
             var actualModel = await migrationsContainer
                 .Resolve<IDatabaseModelBuilder>()
@@ -758,7 +749,8 @@
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
-            Func<EndpointIdentity, string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory,
+            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
@@ -781,49 +773,42 @@
             };
 
             var host = useTransport(
-                    new EndpointIdentity(TransportEndpointIdentity.LogicalName, Guid.NewGuid()),
                     nameof(ExtractDatabaseModelChangesDiffTest),
                     logger,
                     Fixture.CreateHostBuilder(Output))
-               .UseTracingEndpoint(TestIdentity.Instance0,
-                    builder => builder
-                       .WithDataAccess(databaseProvider)
+               .UseEndpoint(TestIdentity.Endpoint10,
+                    (_, builder) => builder
+                       .WithDataAccess(databaseProvider,
+                            options => options
+                               .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .ExecuteMigrations(builder => builder
-                   .WithDataAccess(databaseProvider)
-                   .ModifyContainerOptions(options => options
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost();
+               .BuildHost(settingsDirectory);
 
-            var tracingEndpointContainer = host.GetEndpointDependencyContainer(
-                new EndpointIdentity(TracingEndpointIdentity.LogicalName, TestIdentity.Instance0));
+            var endpointContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-            var migrationsContainer = host.GetMigrationsDependencyContainer();
-
-            var actualModel = await migrationsContainer
+            var actualModel = await endpointContainer
                 .Resolve<IDatabaseModelBuilder>()
                 .BuildModel(CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var databaseEntities = migrationsContainer
+            var databaseEntities = endpointContainer
                .Resolve<IDatabaseTypeProvider>()
                .DatabaseEntities()
                .ToArray();
 
-            var expectedModel = await migrationsContainer
+            var expectedModel = await endpointContainer
                 .Resolve<ICodeModelBuilder>()
                 .BuildModel(databaseEntities, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            var unorderedModelChanges = migrationsContainer
+            var unorderedModelChanges = endpointContainer
                 .Resolve<IModelComparator>()
                 .ExtractDiff(actualModel, expectedModel);
 
-            var modelChanges = migrationsContainer
+            var modelChanges = endpointContainer
                 .Resolve<IModelChangesSorter>()
                 .Sort(unorderedModelChanges)
                 .ToArray();
@@ -837,156 +822,135 @@
                     index => AssertCreateDataBase(modelChanges, index, nameof(ExtractDatabaseModelChangesDiffTest)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing)),
-                    index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test)),
+                    index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
                     index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations)),
-                    index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.Tracing)),
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(IntegrationMessageHeader));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.Value)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Value)}_{nameof(JsonObject.Value)}", "not null");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), typeof(DatabaseDomainEvent));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Index), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Timestamp), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(DatabaseDomainEvent.EventType)}_{nameof(SystemType.Assembly)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(DatabaseDomainEvent.EventType)}_{nameof(SystemType.Type)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.SerializedEvent), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Index), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Timestamp), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(DatabaseDomainEvent.EventType)}_{nameof(SystemType.Assembly)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(DatabaseDomainEvent.EventType)}_{nameof(SystemType.Type)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.SerializedEvent), "not null");
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Blog));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Blog.Theme), "not null");
-                        AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Blog));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.Theme), "not null");
+                        AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Community));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Community.Name), "not null");
-                        AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Community));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Name), "not null");
+                        AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Participant));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Participant.Name), "not null");
-                        AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
+                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Participant));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.Name), "not null");
+                        AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(User));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(User.Nickname), "not null");
+                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(User));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.Nickname), "not null");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), typeof(AppliedMigration));
-                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.Version), "not null");
-                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.DateTime), "not null");
-                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.CommandText), "not null");
-                        AssertColumnConstraints(migrationsContainer, modelChanges, index, nameof(AppliedMigration.Name), "not null");
-                    },
-                    index =>
-                    {
-                        AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.Tracing), typeof(TracingEndpoint.DatabaseModel.IntegrationMessage));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.MessageId), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.ConversationId), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.InitiatorMessageId), string.Empty);
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(TracingEndpoint.DatabaseModel.IntegrationMessage.Payload)}_{nameof(JsonObject.Value)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.DateTime), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.CommandText), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.Name), "not null");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.Value)}", "not null");
-                        AssertMtmColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Headers)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Assembly)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.SystemType)}_{nameof(SystemType.Type)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Payload)}_{nameof(JsonObject.Value)}", "not null");
+                        AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Headers)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
                     },
                     index =>
                     {
-                        AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Community)}_{nameof(Participant)}");
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Community)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Participant)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}");
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Community)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Participant)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), typeof(Post));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(Post.DateTime), "not null");
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                    },
-                    index =>
-                    {
-                        AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.Tracing), typeof(CapturedMessage));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(CapturedMessage.Message)}_{nameof(CapturedMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.Tracing)}"".""{nameof(TracingEndpoint.DatabaseModel.IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(CapturedMessage.RefuseReason), string.Empty);
+                        AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Post));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.DateTime), "not null");
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(InboxMessage));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.IsError), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(InboxMessage.Handled), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.IsError), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.Handled), "not null");
                     },
                     index =>
                     {
                         AssertCreateMtmTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}");
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessageHeader)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessageHeader)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
                     },
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(OutboxMessage));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.PrimaryKey), "not null primary key");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Version), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.OutboxId), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Timestamp), "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, $"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(OutboxMessage.Sent), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.OutboxId), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Timestamp), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.LogicalName)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Deduplication.EndpointIdentity.InstanceName)}", "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Sent), "not null");
                     },
                     index =>
                     {
-                        AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Blog)}_{nameof(Post)}");
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                        AssertHasNoColumn(tracingEndpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
-                        AssertColumnConstraints(tracingEndpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(GenericHost.Test)}"".""{nameof(Post)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}");
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
+                        AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Post)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")");
                     },
                     index => AssertCreateView(modelChanges, index, nameof(DatabaseColumn)),
                     index => AssertCreateView(modelChanges, index, nameof(DatabaseColumnConstraint)),
@@ -995,8 +959,8 @@
                     index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), nameof(DatabaseDomainEvent), $"{nameof(DatabaseDomainEvent.AggregateId)}_{nameof(DatabaseDomainEvent.Index)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Blog)}_{nameof(Post)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(GenericHost.Test), $"{nameof(Community)}_{nameof(Participant)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseIndex), $"{nameof(DatabaseIndex.Index)}_{nameof(DatabaseIndex.Schema)}_{nameof(DatabaseIndex.Table)}"),

@@ -15,9 +15,8 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Connection;
-    using Microsoft.Extensions.Logging;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
@@ -31,8 +30,6 @@
 
         private readonly List<ITransactionalChange> _changes;
 
-        private readonly ILogger _logger;
-
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDatabaseConnection? _connection;
 
@@ -42,16 +39,13 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
-            ITransactionalStore transactionalStore,
-            ILogger logger)
+            ITransactionalStore transactionalStore)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
 
             Store = transactionalStore;
             _changes = new List<ITransactionalChange>();
-
-            _logger = logger;
         }
 
         public bool HasChanges => _changes.Any();
@@ -172,7 +166,7 @@
                 foreach (var change in changes)
                 {
                     await change
-                       .Apply(this, _logger, token)
+                       .Apply(this, token)
                        .ConfigureAwait(false);
                 }
 

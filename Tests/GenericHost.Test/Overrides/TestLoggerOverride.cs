@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Overrides
 {
+    using CompositionRoot.Registration;
     using Microsoft.Extensions.Logging;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
 
     internal class TestLoggerOverride : IComponentsOverride
     {

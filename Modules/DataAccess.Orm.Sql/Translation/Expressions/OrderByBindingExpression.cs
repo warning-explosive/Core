@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
+    using Basics.Enumerations;
 
     /// <summary>
     /// OrderByBindingExpression

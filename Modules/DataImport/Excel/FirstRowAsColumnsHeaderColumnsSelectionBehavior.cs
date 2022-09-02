@@ -11,26 +11,19 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using Basics;
     using DocumentFormat.OpenXml.Spreadsheet;
 
-    /// <summary>
-    /// First row as columns header columns selection behavior
-    /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior,
-                                                                   IResolvable<IExcelColumnsSelectionBehavior>
+    internal class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior,
+                                                                     IResolvable<IExcelColumnsSelectionBehavior>
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
 
-        /// <summary> .cctor </summary>
-        /// <param name="cellValueExtractor">IExcelCellValueExtractor</param>
         public FirstRowAsColumnsHeaderColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
         {
             _cellValueExtractor = cellValueExtractor;
         }
 
-        /// <inheritdoc />
         public bool FirstRowIsHeader { get; } = true;
 
-        /// <inheritdoc />
         public DataColumn[] ExtractColumns(
             IEnumerable<Row> rows,
             IReadOnlyDictionary<int, string> sharedStrings,

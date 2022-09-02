@@ -1,73 +1,56 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 {
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System;
+    using System.Collections.Generic;
+    using Api.Model;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
+    using Connection;
+    using CrossCuttingConcerns.Settings;
+    using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Host.Migrations;
     using Orm.Host.Model;
+    using Orm.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class InitialMigration : IManualMigration,
-                                      ICollectionResolvable<IManualMigration>
+    internal class InitialMigration : ApplyDeltaMigration
     {
-        private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseModelBuilder _databaseModelBuilder;
-        private readonly ICodeModelBuilder _codeModelBuilder;
-        private readonly IModelValidator _modelValidator;
-        private readonly IModelChangesSorter _modelChangesSorter;
-        private readonly IModelComparator _modelComparator;
-
         public InitialMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseModelBuilder databaseModelBuilder,
-            ICodeModelBuilder codeModelBuilder,
-            IModelValidator modelValidator,
-            IModelComparator modelComparator,
-            IModelChangesSorter modelChangesSorter)
+            IDatabaseProvider databaseProvider,
+            ISettingsProvider<OrmSettings> settingsProvider,
+            IModelChangesExtractor modelChangesExtractor,
+            ILogger logger)
+            : base(dependencyContainer,
+                databaseProvider,
+                settingsProvider,
+                new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration) }),
+                modelChangesExtractor,
+                logger)
         {
-            _dependencyContainer = dependencyContainer;
-            _databaseModelBuilder = databaseModelBuilder;
-            _codeModelBuilder = codeModelBuilder;
-            _modelValidator = modelValidator;
-            _modelChangesSorter = modelChangesSorter;
-            _modelComparator = modelComparator;
         }
 
-        public string Name { get; } = ModelMigrationsExecutor.GetAutomaticMigrationName(0);
+        public override string Name { get; } = nameof(InitialMigration);
 
-        public async Task ExecuteManualMigration(CancellationToken token)
+        public override bool ApplyEveryTime { get; } = false;
+
+        [UnregisteredComponent]
+        private class InitialMigrationDatabaseTypeProvider : IDatabaseTypeProvider,
+                                                             IResolvable<IDatabaseTypeProvider>
         {
-            var actualModel = await _databaseModelBuilder
-               .BuildModel(token)
-               .ConfigureAwait(false);
+            private readonly Type[] _databaseEntities;
 
-            var databaseEntities = new[]
+            public InitialMigrationDatabaseTypeProvider(Type[] databaseEntities)
             {
-                typeof(AppliedMigration)
-            };
-
-            var expectedModel = await _codeModelBuilder
-                .BuildModel(databaseEntities, token)
-                .ConfigureAwait(false);
-
-            if (expectedModel != null)
-            {
-                _modelValidator.Validate(expectedModel);
+                _databaseEntities = databaseEntities;
             }
 
-            var modelChanges = _modelChangesSorter
-                .Sort(_modelComparator.ExtractDiff(actualModel, expectedModel))
-                .ToList();
-
-            await _dependencyContainer
-                .Resolve<IModelMigrationsExecutor>()
-                .ExecuteAutoMigrations(modelChanges, token)
-                .ConfigureAwait(false);
+            public IEnumerable<Type> DatabaseEntities()
+            {
+                return _databaseEntities;
+            }
         }
     }
 }

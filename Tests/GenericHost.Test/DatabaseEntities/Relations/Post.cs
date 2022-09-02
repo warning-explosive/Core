@@ -3,7 +3,7 @@
     using System;
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
-    [Schema(nameof(GenericHost) + nameof(GenericHost.Test))]
+    [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Post : BaseDatabaseEntity<Guid>
     {
         public Post(

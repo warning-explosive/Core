@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Test.Overrides
 {
-    using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
     using Mocks;
 

@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Api.Model;
     using Api.Reading;
     using Basics;
+    using Basics.Enumerations;
     using Basics.Primitives;
     using Expressions;
     using Extensions;
@@ -179,8 +180,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                     || methodDefinition == ThenByDescending)
                                 {
                                     var direction = methodDefinition == OrderBy || methodDefinition == ThenBy
-                                        ? EnOrderingDirection.ASC
-                                        : EnOrderingDirection.DESC;
+                                        ? EnOrderingDirection.Asc
+                                        : EnOrderingDirection.Desc;
 
                                     bindings.Push(methodCallExpression.Arguments[1]);
                                     orderByBindings.Push((methodCallExpression.Arguments[1], direction));

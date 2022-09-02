@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Registrations
     using System.Linq;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CompositionRoot.Registration;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
-    using SpaceEngineers.Core.CompositionRoot.Api.Abstractions.Registration;
 
     internal class AnalyzersManualRegistration : IManualRegistration
     {

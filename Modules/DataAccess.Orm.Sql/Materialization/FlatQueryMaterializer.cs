@@ -14,16 +14,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Connection;
     using CrossCuttingConcerns.ObjectBuilder;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Extensions;
     using Orm.Linq;
     using Orm.Settings;
+    using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using Translation;
     using Translation.Extensions;
 

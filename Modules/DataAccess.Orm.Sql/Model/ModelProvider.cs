@@ -10,7 +10,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Dynamic;
     using Dynamic.Abstractions;
     using Extensions;

@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 
         /// <summary> .cctor </summary>
         /// <param name="events">Domain events</param>
-        protected BaseAggregate(IEnumerable<IDomainEvent<TAggregate>> events)
+        protected BaseAggregate(IDomainEvent<TAggregate>[] events)
         {
             _events = new List<IDomainEvent>();
             _index = -1;
@@ -28,7 +28,10 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
             }
         }
 
-        internal static event EventHandler<IDomainEvent>? OnDomainEvent;
+        /// <summary>
+        /// OnDomainEvent
+        /// </summary>
+        public static event EventHandler<DomainEventArgs>? OnDomainEvent;
 
         /// <inheritdoc />
         public IEnumerable<IDomainEvent> Events => _events;
@@ -49,7 +52,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 
             _index++;
 
-            OnDomainEvent?.Invoke(this, domainEvent);
+            OnDomainEvent?.Invoke(this, new DomainEventArgs(domainEvent));
         }
     }
 }

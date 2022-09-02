@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test.AutoRegistrationTest
 {
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
 
     [ComponentOverride]
     internal class ScopedCollectionResolvableTransientOverride : IScopedCollectionResolvable, ICollectionResolvable<IScopedCollectionResolvable>

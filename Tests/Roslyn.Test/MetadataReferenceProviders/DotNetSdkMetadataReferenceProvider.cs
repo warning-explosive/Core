@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.MetadataReferenceProviders
                 .Location
                 .AsFileInfo()
                 .Directory
-                .EnsureNotNull(".NET Framework directory not found");
+                .EnsureNotNull(".NET Framework directory wasn't found");
 
             yield return frameworkDirectory.GetFile("netstandard", ".dll").AsMetadataReference();
             yield return frameworkDirectory.GetFile("mscorlib", ".dll").AsMetadataReference();

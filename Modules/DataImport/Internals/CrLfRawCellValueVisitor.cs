@@ -6,12 +6,9 @@ namespace SpaceEngineers.Core.DataImport.Internals
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    /// <summary>
-    /// CrLfRawCellValueVisitor
-    /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class CrLfRawCellValueVisitor : IRawCellValueVisitor,
-                                           ICollectionResolvable<IRawCellValueVisitor>
+    internal class CrLfRawCellValueVisitor : IRawCellValueVisitor,
+                                             ICollectionResolvable<IRawCellValueVisitor>
     {
         /// <inheritdoc />
         public string Visit(string value)

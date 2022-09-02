@@ -5,24 +5,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Model;
     using Api.Persisting;
     using Api.Transaction;
-    using Microsoft.Extensions.Logging;
 
-    internal class CreateEntityChange : ITransactionalChange
+    /// <summary>
+    /// CreateEntityChange
+    /// </summary>
+    public class CreateEntityChange : ITransactionalChange
     {
-        private readonly IUniqueIdentified[] _entities;
+        private readonly IDatabaseEntity[] _entities;
         private readonly EnInsertBehavior _insertBehavior;
 
+        /// <summary> .cctor </summary>
+        /// <param name="entities">Entities</param>
+        /// <param name="insertBehavior">Insert behavior</param>
         public CreateEntityChange(
-            IUniqueIdentified[] entities,
+            IDatabaseEntity[] entities,
             EnInsertBehavior insertBehavior)
         {
             _entities = entities;
             _insertBehavior = insertBehavior;
         }
 
+        /// <inheritdoc />
         public Task Apply(
             IAdvancedDatabaseTransaction databaseTransaction,
-            ILogger logger,
             CancellationToken token)
         {
             return databaseTransaction
@@ -30,6 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
                .Insert(_entities, _insertBehavior, token);
         }
 
+        /// <inheritdoc />
         public void Apply(ITransactionalStore transactionalStore)
         {
             foreach (var entity in _entities)

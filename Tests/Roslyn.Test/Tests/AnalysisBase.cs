@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Microsoft.Build.Locator;

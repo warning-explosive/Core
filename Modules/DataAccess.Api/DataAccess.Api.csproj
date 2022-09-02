@@ -28,8 +28,8 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Basics\Basics.csproj" />
-      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+      <ProjectReference Include="..\..\Common\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">

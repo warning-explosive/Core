@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Linq;
     using Orm.Linq;
     using Translation;

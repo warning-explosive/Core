@@ -5,11 +5,8 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using System.Linq;
     using System.Reflection;
     using Abstractions;
-    using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
-    using CompositionRoot.Api.Abstractions.Registration;
-    using CrossCuttingConcerns.Settings;
+    using CompositionRoot.Registration;
     using Internals;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -20,20 +17,12 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     /// </summary>
     public sealed class TestFixture : IModulesTestFixture
     {
-        private const string Settings = nameof(Settings);
-
         private static readonly ConcurrentDictionary<int, IDependencyContainer> Cache
             = new ConcurrentDictionary<int, IDependencyContainer>();
 
         /// <summary> .cctor </summary>
         public TestFixture()
         {
-            SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
-                .StepInto(Settings)
-                .SetupFileSystemSettingsDirectory();
         }
 
         /// <inheritdoc />

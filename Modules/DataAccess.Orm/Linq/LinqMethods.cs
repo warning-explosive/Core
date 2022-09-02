@@ -9,11 +9,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using Api.Reading;
     using Basics;
 
-    internal static class LinqMethods
+    /// <summary>
+    /// LinqMethods
+    /// </summary>
+    public static class LinqMethods
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
-        internal static MethodInfo All(Type itemType)
+        /// <summary>
+        /// IReadRepository.All
+        /// </summary>
+        /// <param name="itemType">Item type</param>
+        /// <returns>IReadRepository.All MethodInfo</returns>
+        public static MethodInfo All(Type itemType)
         {
             return new MethodFinder(typeof(IReadRepository<>).MakeGenericType(itemType),
                     nameof(IReadRepository<IDatabaseEntity<Guid>>.All),
@@ -22,7 +30,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository<>.All()"));
         }
 
-        internal static MethodInfo QueryableSingle()
+        /// <summary>
+        /// Queryable.Single
+        /// </summary>
+        /// <returns>Queryable.Single MethodInfo</returns>
+        public static MethodInfo QueryableSingle()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Single),
@@ -35,7 +47,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
         }
 
-        internal static MethodInfo QueryableSingle2()
+        /// <summary>
+        /// Queryable.Single
+        /// </summary>
+        /// <returns>Queryable.Single MethodInfo</returns>
+        public static MethodInfo QueryableSingle2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Single),
@@ -48,7 +64,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
         }
 
-        internal static MethodInfo QueryableSingleOrDefault()
+        /// <summary>
+        /// Queryable.SingleOrDefault
+        /// </summary>
+        /// <returns>Queryable.SingleOrDefault MethodInfo</returns>
+        public static MethodInfo QueryableSingleOrDefault()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.SingleOrDefault),
@@ -61,7 +81,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
         }
 
-        internal static MethodInfo QueryableSingleOrDefault2()
+        /// <summary>
+        /// Queryable.SingleOrDefault
+        /// </summary>
+        /// <returns>Queryable.SingleOrDefault MethodInfo</returns>
+        public static MethodInfo QueryableSingleOrDefault2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.SingleOrDefault),
@@ -74,7 +98,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
         }
 
-        internal static MethodInfo QueryableFirst()
+        /// <summary>
+        /// Queryable.First
+        /// </summary>
+        /// <returns>Queryable.First MethodInfo</returns>
+        public static MethodInfo QueryableFirst()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.First),
@@ -87,7 +115,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
         }
 
-        internal static MethodInfo QueryableFirst2()
+        /// <summary>
+        /// Queryable.First
+        /// </summary>
+        /// <returns>Queryable.First MethodInfo</returns>
+        public static MethodInfo QueryableFirst2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.First),
@@ -100,7 +132,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
         }
 
-        internal static MethodInfo QueryableFirstOrDefault()
+        /// <summary>
+        /// Queryable.FirstOrDefault
+        /// </summary>
+        /// <returns>Queryable.FirstOrDefault MethodInfo</returns>
+        public static MethodInfo QueryableFirstOrDefault()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.FirstOrDefault),
@@ -113,7 +149,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
         }
 
-        internal static MethodInfo QueryableFirstOrDefault2()
+        /// <summary>
+        /// Queryable.FirstOrDefault
+        /// </summary>
+        /// <returns>Queryable.FirstOrDefault MethodInfo</returns>
+        public static MethodInfo QueryableFirstOrDefault2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.FirstOrDefault),
@@ -126,7 +166,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
         }
 
-        internal static MethodInfo QueryableSelect()
+        /// <summary>
+        /// Queryable.Select
+        /// </summary>
+        /// <returns>Queryable.Select MethodInfo</returns>
+        public static MethodInfo QueryableSelect()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Select),
@@ -139,7 +183,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Select()"));
         }
 
-        internal static MethodInfo QueryableWhere()
+        /// <summary>
+        /// Queryable.Where
+        /// </summary>
+        /// <returns>Queryable.Where MethodInfo</returns>
+        public static MethodInfo QueryableWhere()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Where),
@@ -152,7 +200,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Where()"));
         }
 
-        internal static MethodInfo QueryableAny()
+        /// <summary>
+        /// Queryable.Any
+        /// </summary>
+        /// <returns>Queryable.Any MethodInfo</returns>
+        public static MethodInfo QueryableAny()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Any),
@@ -165,7 +217,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
         }
 
-        internal static MethodInfo QueryableAny2()
+        /// <summary>
+        /// Queryable.Any
+        /// </summary>
+        /// <returns>Queryable.Any MethodInfo</returns>
+        public static MethodInfo QueryableAny2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Any),
@@ -178,7 +234,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
         }
 
-        internal static MethodInfo QueryableAll()
+        /// <summary>
+        /// Queryable.All
+        /// </summary>
+        /// <returns>Queryable.All MethodInfo</returns>
+        public static MethodInfo QueryableAll()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.All),
@@ -191,7 +251,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
-        internal static MethodInfo QueryableCount()
+        /// <summary>
+        /// Queryable.Count
+        /// </summary>
+        /// <returns>Queryable.Count MethodInfo</returns>
+        public static MethodInfo QueryableCount()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Count),
@@ -204,7 +268,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
-        internal static MethodInfo QueryableCount2()
+        /// <summary>
+        /// Queryable.Count
+        /// </summary>
+        /// <returns>Queryable.Count MethodInfo</returns>
+        public static MethodInfo QueryableCount2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Count),
@@ -217,7 +285,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
-        internal static MethodInfo QueryableGroupBy2()
+        /// <summary>
+        /// Queryable.GroupBy
+        /// </summary>
+        /// <returns>Queryable.GroupBy MethodInfo</returns>
+        public static MethodInfo QueryableGroupBy2()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.GroupBy),
@@ -230,7 +302,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
 
-        internal static MethodInfo QueryableGroupBy3()
+        /// <summary>
+        /// Queryable.GroupBy
+        /// </summary>
+        /// <returns>Queryable.GroupBy MethodInfo</returns>
+        public static MethodInfo QueryableGroupBy3()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.GroupBy),
@@ -243,7 +319,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
 
-        internal static MethodInfo QueryableContains()
+        /// <summary>
+        /// Queryable.Contains
+        /// </summary>
+        /// <returns>Queryable.Contains MethodInfo</returns>
+        public static MethodInfo QueryableContains()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Contains),
@@ -256,7 +336,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Contains()"));
         }
 
-        internal static MethodInfo QueryableDistinct()
+        /// <summary>
+        /// Queryable.Distinct
+        /// </summary>
+        /// <returns>Queryable.Distinct MethodInfo</returns>
+        public static MethodInfo QueryableDistinct()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Distinct),
@@ -269,7 +353,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Distinct()"));
         }
 
-        internal static MethodInfo QueryableOrderBy()
+        /// <summary>
+        /// Queryable.OrderBy
+        /// </summary>
+        /// <returns>Queryable.OrderBy MethodInfo</returns>
+        public static MethodInfo QueryableOrderBy()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.OrderBy),
@@ -282,7 +370,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderBy()"));
         }
 
-        internal static MethodInfo QueryableOrderByDescending()
+        /// <summary>
+        /// Queryable.OrderByDescending
+        /// </summary>
+        /// <returns>Queryable.OrderByDescending MethodInfo</returns>
+        public static MethodInfo QueryableOrderByDescending()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.OrderByDescending),
@@ -295,7 +387,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderByDescending()"));
         }
 
-        internal static MethodInfo QueryableThenBy()
+        /// <summary>
+        /// Queryable.ThenBy
+        /// </summary>
+        /// <returns>Queryable.ThenBy MethodInfo</returns>
+        public static MethodInfo QueryableThenBy()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.ThenBy),
@@ -308,7 +404,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenBy()"));
         }
 
-        internal static MethodInfo QueryableThenByDescending()
+        /// <summary>
+        /// Queryable.ThenByDescending
+        /// </summary>
+        /// <returns>Queryable.ThenByDescending MethodInfo</returns>
+        public static MethodInfo QueryableThenByDescending()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.ThenByDescending),
@@ -321,7 +421,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenByDescending()"));
         }
 
-        internal static MethodInfo QueryableSelectMany()
+        /// <summary>
+        /// Queryable.SelectMany
+        /// </summary>
+        /// <returns>Queryable.SelectMany MethodInfo</returns>
+        public static MethodInfo QueryableSelectMany()
         {
             return new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.SelectMany),

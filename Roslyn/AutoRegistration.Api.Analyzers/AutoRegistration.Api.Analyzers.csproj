@@ -39,7 +39,7 @@
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+    <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj" />
     <ProjectReference Include="..\Analyzers.Api\Analyzers.Api.csproj" />
   </ItemGroup>
 </Project>

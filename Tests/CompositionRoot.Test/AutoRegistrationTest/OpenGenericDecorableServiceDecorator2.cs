@@ -1,11 +1,11 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test.AutoRegistrationTest
 {
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Transient)]
-    [Dependency(typeof(OpenGenericDecorableServiceDecorator3<>))]
+    [After(typeof(OpenGenericDecorableServiceDecorator3<>))]
     internal class OpenGenericDecorableServiceDecorator2<T> : IOpenGenericDecorableService<T>,
                                                               IOpenGenericDecorableServiceDecorator<T>
     {

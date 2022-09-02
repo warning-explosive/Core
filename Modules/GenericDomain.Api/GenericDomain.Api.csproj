@@ -28,8 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Basics\Basics.csproj" />
-      <ProjectReference Include="..\..\DependencyInjection\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+      <ProjectReference Include="..\..\Common\Basics\Basics.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
@@ -68,6 +67,9 @@
       </Compile>
       <Compile Update="Abstractions\BaseDomainEvent.cs">
         <DependentUpon>IDomainEvent.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\DomainEventArgs.cs">
+        <DependentUpon>BaseAggregate.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

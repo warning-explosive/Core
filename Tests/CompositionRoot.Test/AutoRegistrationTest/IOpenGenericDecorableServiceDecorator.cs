@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.CompositionRoot.Test.AutoRegistrationTest
 {
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
 
     internal interface IOpenGenericDecorableServiceDecorator<T> : IDecorator<IOpenGenericDecorableService<T>>
     {

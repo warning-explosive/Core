@@ -8,7 +8,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions;
+    using CompositionRoot;
     using Extensions;
 
     [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]

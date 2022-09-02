@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Dynamic;
@@ -26,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public DynamicClassProviderTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic)));
 
             var options = new DependencyContainerOptions();
 

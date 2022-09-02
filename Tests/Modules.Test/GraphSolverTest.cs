@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using Basics.Exceptions;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using PathResolver;
@@ -62,7 +61,7 @@ namespace SpaceEngineers.Core.Modules.Test
         public GraphSolverTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.PathResolver)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(PathResolver)));
 
             var options = new DependencyContainerOptions();
 
@@ -272,7 +271,7 @@ namespace SpaceEngineers.Core.Modules.Test
                 .Catch<NotFoundException>(ex =>
                 {
                     Output.WriteLine(ex.Message);
-                    Assert.Contains("Path not found", ex.Message, StringComparison.Ordinal);
+                    Assert.Contains("Path wasn't found", ex.Message, StringComparison.Ordinal);
                 })
                 .Invoke();
         }
@@ -443,7 +442,7 @@ namespace SpaceEngineers.Core.Modules.Test
             {
                 var occurrence = strPaths.SingleOrDefault(path => path == candidate);
 
-                occurrence.EnsureNotNull($"Path not found: {candidate}");
+                occurrence.EnsureNotNull($"Path wasn't found: {candidate}");
             }
         }
     }

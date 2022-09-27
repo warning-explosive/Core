@@ -13,8 +13,8 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateTableDatabaseModelChangeMigration : IModelChangeMigration<CreateTable>,
-                                                             IResolvable<IModelChangeMigration<CreateTable>>
+    internal class CreateTableDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateTable>,
+                                                                  IResolvable<IModelChangeCommandBuilder<CreateTable>>
     {
         private const string CommandFormat = @"create table ""{0}"".""{1}""
 (
@@ -24,17 +24,17 @@
         private const string ColumnFormat = @"""{0}"" {1}{2}";
 
         private readonly IModelProvider _modelProvider;
-        private readonly CreateColumnModelChangeMigration _createColumnMigration;
+        private readonly CreateColumnModelChangeCommandBuilder _createColumnCommandBuilder;
 
-        public CreateTableDatabaseModelChangeMigration(
+        public CreateTableDatabaseModelChangeCommandBuilder(
             IModelProvider modelProvider,
-            CreateColumnModelChangeMigration createColumnMigration)
+            CreateColumnModelChangeCommandBuilder createColumnCommandBuilder)
         {
             _modelProvider = modelProvider;
-            _createColumnMigration = createColumnMigration;
+            _createColumnCommandBuilder = createColumnCommandBuilder;
         }
 
-        public Task<string> Migrate(CreateTable change, CancellationToken token)
+        public Task<string> BuildCommand(CreateTable change, CancellationToken token)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
@@ -57,7 +57,7 @@
 
         private string CreateColumn(ColumnInfo column)
         {
-            var (columnName, dataType, constraints) = _createColumnMigration.CreateColumn(column);
+            var (columnName, dataType, constraints) = _createColumnCommandBuilder.CreateColumn(column);
 
             return ColumnFormat.Format(
                 columnName,

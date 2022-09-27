@@ -887,6 +887,15 @@
                     },
                     index =>
                     {
+                        AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), typeof(SqlView));
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.PrimaryKey), "not null primary key");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Version), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Schema), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.View), "not null");
+                        AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Query), "not null");
+                    },
+                    index =>
+                    {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage));
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication.IntegrationMessage.Version), "not null");
@@ -965,7 +974,8 @@
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseIndex), $"{nameof(DatabaseIndex.Index)}_{nameof(DatabaseIndex.Schema)}_{nameof(DatabaseIndex.Table)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseSchema), $"{nameof(DatabaseSchema.Name)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Query)}_{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}")
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(SqlView), $"{nameof(SqlView.Schema)}_{nameof(SqlView.View)}")
                 };
 
                 Assert.Equal(assertions.Length, modelChanges.Length);

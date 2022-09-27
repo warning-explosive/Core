@@ -64,12 +64,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task<(string name, string commandText)> Migrate(CancellationToken token)
+        public Task<string> Migrate(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }
 
-        private async Task<(string name, string commandText)> ExecuteManualMigration(
+        private async Task<string> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
@@ -102,7 +102,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
 
-            return (Name, CommandText);
+            return CommandText;
         }
     }
 }

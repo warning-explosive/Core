@@ -60,10 +60,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return transaction
+            var result = transaction
                .DbTransaction
                .Connection
                .QueryAsync(command);
+
+            transaction.CollectCommand(state.commandText);
+
+            return result;
         }
 
         /// <summary>
@@ -161,11 +165,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
                 CommandFlags.Buffered,
                 token);
 
-            return await transaction
+            var result = await transaction
                .DbTransaction
                .Connection
                .ExecuteAsync(command)
                .ConfigureAwait(false);
+
+            transaction.CollectCommand(state.commandText);
+
+            return result;
         }
 
         /// <summary>

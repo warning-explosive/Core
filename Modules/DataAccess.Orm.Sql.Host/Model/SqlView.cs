@@ -2,21 +2,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
     using Api.Model;
-    using Views;
 
     /// <summary>
-    /// DatabaseView
+    /// SqlView
     /// </summary>
     [Schema(nameof(DataAccess.Orm.Host.Migrations))]
     [Index(nameof(Schema), nameof(View), Unique = true)]
-    public record DatabaseView : BaseSqlView<Guid>
+    public record SqlView : BaseDatabaseEntity<Guid>
     {
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>
         /// <param name="schema">Schema</param>
         /// <param name="view">View</param>
         /// <param name="query">Query</param>
-        public DatabaseView(
+        public SqlView(
             Guid primaryKey,
             string schema,
             string view,

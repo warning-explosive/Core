@@ -23,6 +23,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Migrations
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<(string name, string commandText)> Migrate(CancellationToken token);
+        Task<string> Migrate(CancellationToken token);
     }
 }

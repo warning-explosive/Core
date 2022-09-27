@@ -10,11 +10,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
     public interface IDatabaseContext
     {
         /// <summary>
-        /// Are there any changes in the database transaction
-        /// </summary>
-        bool HasChanges { get; }
-
-        /// <summary>
         /// Gets access to IReadRepository so as to produce reads from database
         /// </summary>
         /// <typeparam name="TEntity">TEntity type-argument</typeparam>

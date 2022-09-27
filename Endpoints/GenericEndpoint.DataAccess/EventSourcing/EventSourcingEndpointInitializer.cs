@@ -40,6 +40,8 @@
                            && type.IsConcreteType())
                .ToDictionary(type => type, type => OnDomainEvent(_dependencyContainer, type, token));
 
+            // TODO: #172 - why foreach for static event?
+            // TODO: #172 - separate by endpoint identity
             foreach (var (aggregate, subscription) in _subscriptions)
             {
                 Subscribe(aggregate, subscription);

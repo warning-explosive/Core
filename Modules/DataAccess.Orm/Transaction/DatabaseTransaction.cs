@@ -104,6 +104,8 @@
 
         public ITransactionalStore Store { get; }
 
+        public string? LastCommand { get; private set; }
+
         public IReadRepository<TEntity> Read<TEntity>()
             where TEntity : IUniqueIdentified
         {
@@ -191,6 +193,11 @@
         {
             _changes.Add(change);
             Store.Apply(change);
+        }
+
+        public void CollectCommand(string commandText)
+        {
+            LastCommand = commandText;
         }
 
         private IDbTransaction Open()

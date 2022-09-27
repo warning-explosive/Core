@@ -1,6 +1,9 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Migrations
 {
+    using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
@@ -29,20 +32,29 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
         private const string CommandText = @"
 create extension if not exists dblink;
 
-do
-$do$
+create or replace function CreateOrGetExistedDatabase() returns boolean as
+$BODY$
+    declare isDatabaseExists boolean default false;
+
     begin
-        if exists
-            (select * from pg_catalog.pg_database where datname = '{0}')
+        select exists(select * from pg_catalog.pg_database where datname = '{0}') into isDatabaseExists;
+    
+        if
+            isDatabaseExists
         then
             raise notice 'database already exists';
         else
-            PERFORM dblink_connect('host=localhost user=' || '{1}' || ' password=' || '{2}' || ' dbname=' || current_database());
+            perform dblink_connect('host=localhost user=' || '{1}' || ' password=' || '{2}' || ' dbname=' || current_database());
             perform dblink_exec('create database ""{0}""');
             perform dblink_exec('grant all privileges on database ""{0}"" to ""{1}""');
         end if;
+    
+        return not isDatabaseExists;
     end
-$do$;";
+$BODY$
+language plpgsql;
+
+select CreateOrGetExistedDatabase();";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseProvider _databaseProvider;
@@ -75,7 +87,7 @@ $do$;";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<(string name, string commandText)> Migrate(CancellationToken token)
+        public async Task<string> Migrate(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
@@ -99,29 +111,42 @@ $do$;";
                 Password = sqlDatabaseSettings.Password
             };
 
+            bool databaseWasCreated;
+
             var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
 
             using (var connection = new DatabaseConnection(npgSqlConnection))
             {
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
-                _ = await connection
-                   .Execute(commandText, ormSettings, _logger, token)
+                var dynamicValues = await connection
+                   .Query(commandText, ormSettings, _logger, token)
                    .ConfigureAwait(false);
+
+                databaseWasCreated = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value is bool value
+                    ? value
+                    : throw new InvalidOperationException($"Unable to identify {sqlDatabaseSettings.Database} database state");
             }
 
             NpgsqlConnection.ClearAllPools();
 
-            var migrations = new[]
+            if (databaseWasCreated)
             {
-                new InitialMigration(_dependencyContainer, _databaseProvider, _ormSettingsProvider, _modelChangesExtractor, _logger)
-            };
+                var migrations = new[]
+                {
+                    new InitialMigration(_dependencyContainer,
+                        _databaseProvider,
+                        _ormSettingsProvider,
+                        _modelChangesExtractor,
+                        _logger)
+                };
 
-            await _migrationsExecutor
-               .Migrate(migrations, token)
-               .ConfigureAwait(false);
+                await _migrationsExecutor
+                   .Migrate(migrations, token)
+                   .ConfigureAwait(false);
+            }
 
-            return (Name, commandText);
+            return commandText;
         }
     }
 }

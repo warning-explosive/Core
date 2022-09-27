@@ -126,10 +126,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
         private static bool IsTransactionValid(
             IAdvancedIntegrationContext context,
-            IDatabaseContext databaseContext,
+            IAdvancedDatabaseTransaction transaction,
             [NotNullWhen(false)] out Exception? exception)
         {
-            if (databaseContext.HasChanges && !context.Message.IsCommand())
+            if (transaction.HasChanges && !context.Message.IsCommand())
             {
                 exception = new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
                 return false;

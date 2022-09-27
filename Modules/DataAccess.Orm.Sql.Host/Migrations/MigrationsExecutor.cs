@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -18,6 +19,7 @@
     using Model;
     using Orm.Extensions;
     using Orm.Host.Migrations;
+    using Reading;
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -78,15 +80,15 @@
                     continue;
                 }
 
-                var (name, commandText) = await migration
+                var commandText = await migration
                    .Migrate(token)
                    .ConfigureAwait(false);
 
                 await _dependencyContainer
-                   .InvokeWithinTransaction(true, (name, commandText), PersistAudit, token)
+                   .InvokeWithinTransaction(true, (migration, commandText), PersistAppliedMigration, token)
                    .ConfigureAwait(false);
 
-                _logger.Information($"{name} was applied: {commandText}");
+                _logger.Information($"{migration.Name} was applied: {commandText}");
             }
         }
 
@@ -110,12 +112,16 @@
                 : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private static Task PersistAudit(
+        private static async Task PersistAppliedMigration(
             IAdvancedDatabaseTransaction transaction,
-            (string name, string commandText) state,
+            (IMigration migration, string commandText) state,
             CancellationToken token)
         {
-            var (name, commandText) = state;
+            var (migration, commandText) = state;
+
+            var name = migration.ApplyEveryTime
+                ? $"{migration.Name} {(await GetMigrationIndex(transaction, migration.Name, token).ConfigureAwait(false)).ToString(CultureInfo.InvariantCulture)}"
+                : migration.Name;
 
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
@@ -123,9 +129,32 @@
                 commandText,
                 name);
 
-            return transaction
+            await transaction
                .Write<AppliedMigration>()
-               .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token);
+               .Insert(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
+               .ConfigureAwait(false);
+        }
+
+        private static async Task<int> GetMigrationIndex(
+            IAdvancedDatabaseTransaction transaction,
+            string name,
+            CancellationToken token)
+        {
+            var pattern = name + "%";
+
+            var indexes = (await transaction
+                   .Read<AppliedMigration>()
+                   .All()
+                   .Where(migration => migration.Name.Like(pattern))
+                   .Select(migration => migration.Name)
+                   .ToArrayAsync(token)
+                   .ConfigureAwait(false))
+               .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))
+               .ToArray();
+
+            return indexes.Any()
+                ? indexes.Max() + 1
+                : 0;
         }
     }
 }

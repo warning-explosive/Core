@@ -13,19 +13,19 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateIndexModelChangeMigration : IModelChangeMigration<CreateIndex>,
-                                                     IResolvable<IModelChangeMigration<CreateIndex>>
+    internal class CreateIndexModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateIndex>,
+                                                          IResolvable<IModelChangeCommandBuilder<CreateIndex>>
     {
         private const string CommandFormat = @"create {4}index ""{2}"" on ""{0}"".""{1}"" ({3})";
 
         private readonly IModelProvider _modelProvider;
 
-        public CreateIndexModelChangeMigration(IModelProvider modelProvider)
+        public CreateIndexModelChangeCommandBuilder(IModelProvider modelProvider)
         {
             _modelProvider = modelProvider;
         }
 
-        public Task<string> Migrate(CreateIndex change, CancellationToken token)
+        public Task<string> BuildCommand(CreateIndex change, CancellationToken token)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)

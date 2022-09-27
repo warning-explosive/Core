@@ -5,10 +5,10 @@
     using Orm.Host.Model;
 
     /// <summary>
-    /// IModelChangeMigration
+    /// IModelChangeCommandBuilder
     /// </summary>
     /// <typeparam name="TChange">TChange type-argument</typeparam>
-    public interface IModelChangeMigration<TChange>
+    public interface IModelChangeCommandBuilder<TChange>
         where TChange : IModelChange
     {
         /// <summary>
@@ -17,6 +17,6 @@
         /// <param name="change">Database model change</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<string> Migrate(TChange change, CancellationToken token);
+        Task<string> BuildCommand(TChange change, CancellationToken token);
     }
 }

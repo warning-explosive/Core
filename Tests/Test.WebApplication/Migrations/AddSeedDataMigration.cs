@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 {
     using System;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -32,16 +33,18 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
         public bool ApplyEveryTime { get; } = false;
 
-        public Task<(string name, string commandText)> Migrate(CancellationToken token)
+        public Task<string> Migrate(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
         }
 
-        private async Task<(string name, string commandText)> ExecuteManualMigration(
+        private async Task<string> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             IDependencyContainer dependencyContainer,
             CancellationToken token)
         {
+            var sb = new StringBuilder();
+
             var username = "qwerty";
             var password = "12345678";
 
@@ -61,6 +64,9 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                .Append<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>(userCreatedDomainEvent, token)
                .ConfigureAwait(false);
 
+            sb.AppendLine($"--{nameof(AuthEndpoint.Domain.Model.UserCreated)}");
+            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.Domain.Model.UserCreated)} domain event"));
+
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 
             await transaction
@@ -68,7 +74,10 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 
-            return (Name, $"-- {nameof(AddSeedDataMigration)}");
+            sb.AppendLine($"--{nameof(AuthEndpoint.DatabaseModel.User)}");
+            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.DatabaseModel.User)} database entity"));
+
+            return sb.ToString();
         }
     }
 }

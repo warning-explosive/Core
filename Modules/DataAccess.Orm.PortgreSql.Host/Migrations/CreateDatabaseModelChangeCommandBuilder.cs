@@ -12,17 +12,17 @@
     using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateDatabaseModelChangeMigration : IModelChangeMigration<CreateDatabase>,
-                                                        IResolvable<IModelChangeMigration<CreateDatabase>>
+    internal class CreateDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateDatabase>,
+                                                             IResolvable<IModelChangeCommandBuilder<CreateDatabase>>
     {
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        public CreateDatabaseModelChangeMigration(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
+        public CreateDatabaseModelChangeCommandBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
             _settingsProvider = settingsProvider;
         }
 
-        public async Task<string> Migrate(CreateDatabase change, CancellationToken token)
+        public async Task<string> BuildCommand(CreateDatabase change, CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)

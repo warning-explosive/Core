@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             : base(dependencyContainer,
                 databaseProvider,
                 settingsProvider,
-                new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration) }),
+                new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
                 modelChangesExtractor,
                 logger)
         {

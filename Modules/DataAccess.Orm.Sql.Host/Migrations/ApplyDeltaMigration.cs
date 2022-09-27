@@ -2,12 +2,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -18,11 +16,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Microsoft.Extensions.Logging;
-    using Model;
     using Orm.Extensions;
     using Orm.Host.Migrations;
     using Orm.Settings;
-    using Reading;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.DataAccess.Orm.Host.Model;
@@ -62,7 +58,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
         public virtual bool ApplyEveryTime { get; } = true;
 
-        public async Task<(string name, string commandText)> Migrate(CancellationToken token)
+        public async Task<string> Migrate(CancellationToken token)
         {
             var databaseEntities = _databaseTypeProvider
                .DatabaseEntities()
@@ -72,32 +68,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                .ExtractChanges(databaseEntities, token)
                .ConfigureAwait(false);
 
-            return await Migrate(Name, modelChanges, token).ConfigureAwait(false);
+            return await Migrate(modelChanges, token).ConfigureAwait(false);
         }
 
-        private async Task<(string name, string commandText)> Migrate(
-            string name,
+        private async Task<string> Migrate(
             IReadOnlyCollection<IModelChange> modelChanges,
             CancellationToken token)
         {
             if (!modelChanges.Any())
             {
-                var migrationName = await _dependencyContainer
-                   .InvokeWithinTransaction(false, name, GetMigrationName, token)
-                   .ConfigureAwait(false);
-
-                return (migrationName, "-- nothing changed");
+                return "--nothing was changed";
             }
-            else
-            {
-                var commandText = await BuildCommands(modelChanges.ToArray(), token).ConfigureAwait(false);
 
-                var migrationName = await _dependencyContainer
-                   .InvokeWithinTransaction(true, (name, commandText), Migrate, token)
-                   .ConfigureAwait(false);
+            var commandText = await BuildCommands(modelChanges.ToArray(), token).ConfigureAwait(false);
 
-                return (migrationName, commandText);
-            }
+            await _dependencyContainer
+               .InvokeWithinTransaction(true, commandText, Migrate, token)
+               .ConfigureAwait(false);
+
+            return commandText;
         }
 
         private async Task<string> BuildCommands(IModelChange[] modelChanges, CancellationToken token)
@@ -109,8 +98,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 var modelChange = modelChanges[i];
 
                 var command = await _dependencyContainer
-                    .ResolveGeneric(typeof(IModelChangeMigration<>), modelChange.GetType())
-                    .CallMethod(nameof(IModelChangeMigration<IModelChange>.Migrate))
+                    .ResolveGeneric(typeof(IModelChangeCommandBuilder<>), modelChange.GetType())
+                    .CallMethod(nameof(IModelChangeCommandBuilder<IModelChange>.BuildCommand))
                     .WithArguments(modelChange, token)
                     .Invoke<Task<string>>()
                     .ConfigureAwait(false);
@@ -127,16 +116,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             return sb.ToString();
         }
 
-        private async Task<string> Migrate(
+        private async Task Migrate(
             IAdvancedDatabaseTransaction transaction,
-            (string name, string commandText) state,
+            string commandText,
             CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
-
-            var (name, commandText) = state;
 
             _ = await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), transaction.Execute)
@@ -151,32 +138,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 static (transaction, commandText, ormSettings, logger, token) => transaction.Execute(commandText, ormSettings, logger, token));
 
             transaction.CollectChange(change);
-
-            return await GetMigrationName(transaction, name, token).ConfigureAwait(false);
-        }
-
-        private static async Task<string> GetMigrationName(
-            IAdvancedDatabaseTransaction transaction,
-            string name,
-            CancellationToken token)
-        {
-            var pattern = name + "%";
-
-            var indexes = (await transaction
-                   .Read<AppliedMigration>()
-                   .All()
-                   .Where(migration => migration.Name.Like(pattern))
-                   .Select(migration => migration.Name)
-                   .ToArrayAsync(token)
-                   .ConfigureAwait(false))
-               .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))
-               .ToArray();
-
-            var nextNumber = indexes.Any()
-                ? indexes.Max() + 1
-                : 0;
-
-            return string.Join(string.Empty, name, " ", nextNumber);
         }
     }
 }

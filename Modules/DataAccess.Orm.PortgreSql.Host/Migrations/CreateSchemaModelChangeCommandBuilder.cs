@@ -10,12 +10,12 @@
     using Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateSchemaModelChangeMigration : IModelChangeMigration<CreateSchema>,
-                                                      IResolvable<IModelChangeMigration<CreateSchema>>
+    internal class CreateSchemaModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateSchema>,
+                                                           IResolvable<IModelChangeCommandBuilder<CreateSchema>>
     {
         private const string CommandFormat = @"create schema ""{0}""";
 
-        public Task<string> Migrate(CreateSchema change, CancellationToken token)
+        public Task<string> BuildCommand(CreateSchema change, CancellationToken token)
         {
             var commandText = CommandFormat.Format(change.Schema);
 

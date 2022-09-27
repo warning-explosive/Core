@@ -14,16 +14,16 @@
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class CreateColumnModelChangeMigration : IModelChangeMigration<CreateColumn>,
-                                                      IResolvable<IModelChangeMigration<CreateColumn>>,
-                                                      IResolvable<CreateColumnModelChangeMigration>
+    internal class CreateColumnModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateColumn>,
+                                                           IResolvable<IModelChangeCommandBuilder<CreateColumn>>,
+                                                           IResolvable<CreateColumnModelChangeCommandBuilder>
     {
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 
         private readonly IModelProvider _modelProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
-        public CreateColumnModelChangeMigration(
+        public CreateColumnModelChangeCommandBuilder(
             IModelProvider modelProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
@@ -31,7 +31,7 @@
             _columnDataTypeProvider = columnDataTypeProvider;
         }
 
-        public Task<string> Migrate(CreateColumn change, CancellationToken token)
+        public Task<string> BuildCommand(CreateColumn change, CancellationToken token)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)

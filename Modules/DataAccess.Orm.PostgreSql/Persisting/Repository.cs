@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     {
         private const string InsertQueryFormat = @"insert into ""{0}"".""{1}""({2}) values {3}{4}";
         private const string OnConflictDoNothing = @" on conflict do nothing";
-        private const string OnConflictDoUpdate = @" on conflict (""PrimaryKey"") do update set {0}";
+        private const string OnConflictDoUpdate = @" on conflict ({0}) do update set {1}";
         private const string SetExpressionFormat = @"{0} = {1}";
         private const string ValuesFormat = @"({0})";
         private const string ColumnFormat = @"""{0}""";
@@ -187,7 +187,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 
                     return !columns.Any() || table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
                         ? OnConflictDoNothing
-                        : OnConflictDoUpdate.Format(Update(columns));
+                        : OnConflictDoUpdate.Format(KeyColumns(table), Update(columns));
+
+                    static string KeyColumns(ITableInfo table)
+                    {
+                        var uniqueIndexColumns = table.Indexes.Values.SingleOrDefault(index => index.Unique)?.Columns.Select(column => column.Name)
+                                              ?? new[] { nameof(IDatabaseEntity.PrimaryKey) };
+
+                        return string.Join(", ", uniqueIndexColumns.Select(column => ColumnFormat.Format(column)));
+                    }
 
                     static string Update(IEnumerable<string> columns)
                     {

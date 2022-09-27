@@ -18,9 +18,19 @@
         IDatabaseConnection DbConnection { get; }
 
         /// <summary>
+        /// Are there any changes in the database transaction
+        /// </summary>
+        bool HasChanges { get; }
+
+        /// <summary>
         /// Gets access to transactional store
         /// </summary>
         ITransactionalStore Store { get; }
+
+        /// <summary>
+        /// Last successfully executed command
+        /// </summary>
+        string? LastCommand { get; }
 
         /// <summary>
         /// Returns true if connection to the database was requested earlier
@@ -32,5 +42,11 @@
         /// </summary>
         /// <param name="change">ITransactionalChange</param>
         void CollectChange(ITransactionalChange change);
+
+        /// <summary>
+        /// Collects command text
+        /// </summary>
+        /// <param name="commandText">Command text</param>
+        void CollectCommand(string commandText);
     }
 }

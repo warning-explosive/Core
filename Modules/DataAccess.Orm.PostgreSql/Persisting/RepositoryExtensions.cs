@@ -27,10 +27,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .Query(TransactionIdCommandText, settings, logger, token)
                .ConfigureAwait(false);
 
-            var xid = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value;
-
-            return xid != null
-                ? (long)xid
+            return (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value is long xid
+                ? xid
                 : throw new InvalidOperationException("Unable to get txid_current()");
         }
 

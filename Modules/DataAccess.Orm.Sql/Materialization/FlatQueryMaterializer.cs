@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
 
         public FlatQueryMaterializer(
@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             IObjectBuilder objectBuilder,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
@@ -53,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             _transaction = transaction;
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             return await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), _transaction.Query)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<IEnumerable<dynamic>>(commandText), token)
+               .Invoke(_databaseImplementation.Handle<IEnumerable<dynamic>>(commandText), token)
                .ConfigureAwait(false);
 
             static string InlineQueryParameters(

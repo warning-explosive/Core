@@ -44,7 +44,7 @@
         private readonly IModelProvider _modelProvider;
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IExpressionTranslator _expressionTranslator;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
 
         public GenericRepository(
@@ -54,7 +54,7 @@
             IModelProvider modelProvider,
             IAdvancedDatabaseTransaction transaction,
             IExpressionTranslator expressionTranslator,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
@@ -63,7 +63,7 @@
             _modelProvider = modelProvider;
             _transaction = transaction;
             _expressionTranslator = expressionTranslator;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
@@ -168,7 +168,7 @@
             var affectedRowsCount = await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             foreach (var (version, count) in versions)
@@ -225,7 +225,7 @@
             var affectedRowsCount = await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             foreach (var (version, count) in versions)

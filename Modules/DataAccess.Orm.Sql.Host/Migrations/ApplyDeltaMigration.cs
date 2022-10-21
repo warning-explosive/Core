@@ -16,12 +16,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Microsoft.Extensions.Logging;
+    using Model;
     using Orm.Extensions;
-    using Orm.Host.Migrations;
+    using Orm.Host.Abstractions;
     using Orm.Settings;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.DataAccess.Api.Model;
-    using SpaceEngineers.Core.DataAccess.Orm.Host.Model;
     using Transaction;
 
     [Component(EnLifestyle.Singleton)]
@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         private const string CommandFormat = @"--[{0}]{1}";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
@@ -40,14 +40,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
         public ApplyDeltaMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseTypeProvider databaseTypeProvider,
             IModelChangesExtractor modelChangesExtractor,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _settingsProvider = settingsProvider;
             _databaseTypeProvider = databaseTypeProvider;
             _modelChangesExtractor = modelChangesExtractor;
@@ -128,7 +128,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             _ = await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             var change = new ModelChange(

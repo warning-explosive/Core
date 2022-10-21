@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using CrossCuttingConcerns.Settings;
     using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Host.Model;
     using Orm.Settings;
 
     [Component(EnLifestyle.Singleton)]
@@ -19,12 +18,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     {
         public InitialMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelChangesExtractor modelChangesExtractor,
             ILogger logger)
             : base(dependencyContainer,
-                databaseProvider,
+                databaseImplementation,
                 settingsProvider,
                 new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
                 modelChangesExtractor,

@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
 
         public Repository(
@@ -49,14 +49,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             ISettingsProvider<OrmSettings> settingsProvider,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _transaction = transaction;
             _modelProvider = modelProvider;
             _settingsProvider = settingsProvider;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             var affectedRowsCount = await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), _transaction.Execute)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<long>(commandText), token)
+               .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             var change = new CreateEntityChange(entities, insertBehavior);

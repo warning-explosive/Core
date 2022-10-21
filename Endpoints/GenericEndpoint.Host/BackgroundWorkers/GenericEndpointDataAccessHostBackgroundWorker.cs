@@ -3,9 +3,11 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Primitives;
-    using CompositionRoot;
+    using Contract;
     using DataAccess.UnitOfWork;
     using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
@@ -15,26 +17,36 @@
     using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
     using SpaceEngineers.Core.GenericEndpoint.DataAccess.Settings;
 
-    internal class GenericEndpointDataAccessHostBackgroundWorker : IHostBackgroundWorker
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
+    internal class GenericEndpointDataAccessHostBackgroundWorker : IHostBackgroundWorker,
+                                                                   ICollectionResolvable<IHostBackgroundWorker>,
+                                                                   IResolvable<GenericEndpointDataAccessHostBackgroundWorker>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly EndpointIdentity _endpointIdentity;
+        private readonly IExecutableIntegrationTransport _transport;
+        private readonly ISettingsProvider<OutboxSettings> _outboxSettingProvider;
+        private readonly IOutboxBackgroundDelivery _outboxDelivery;
+        private readonly ILogger _logger;
 
-        public GenericEndpointDataAccessHostBackgroundWorker(IDependencyContainer dependencyContainer)
+        public GenericEndpointDataAccessHostBackgroundWorker(
+            EndpointIdentity endpointIdentity,
+            IExecutableIntegrationTransport transport,
+            ISettingsProvider<OutboxSettings> outboxSettingProvider,
+            IOutboxBackgroundDelivery outboxDelivery,
+            ILogger logger)
         {
-            _dependencyContainer = dependencyContainer;
+            _endpointIdentity = endpointIdentity;
+            _transport = transport;
+            _outboxSettingProvider = outboxSettingProvider;
+            _outboxDelivery = outboxDelivery;
+            _logger = logger;
         }
 
         public async Task Run(CancellationToken token)
         {
-            var settings = await _dependencyContainer
-               .Resolve<ISettingsProvider<OutboxSettings>>()
+            var settings = await _outboxSettingProvider
                .Get(token)
                .ConfigureAwait(false);
-
-            var endpointIdentity = _dependencyContainer.Resolve<Contract.EndpointIdentity>();
-            var transport = _dependencyContainer.Resolve<IExecutableIntegrationTransport>();
-            var outboxBackgroundDelivery = _dependencyContainer.Resolve<IOutboxBackgroundDelivery>();
-            var logger = _dependencyContainer.Resolve<ILogger>();
 
             while (!token.IsCancellationRequested)
             {
@@ -48,8 +60,8 @@
                 }
 
                 await ExecutionExtensions
-                   .TryAsync((transport, outboxBackgroundDelivery), DeliverMessages)
-                   .Catch<Exception>(OnError(endpointIdentity, logger))
+                   .TryAsync((_transport, _outboxDelivery), DeliverMessages)
+                   .Catch<Exception>(OnError(_endpointIdentity, _logger))
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -77,7 +89,7 @@
         }
 
         private static Func<Exception, CancellationToken, Task> OnError(
-            Contract.EndpointIdentity endpointIdentity,
+            EndpointIdentity endpointIdentity,
             ILogger logger)
         {
             return (exception, _) =>

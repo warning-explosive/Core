@@ -11,10 +11,11 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host.Model;
+    using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.Settings;
     using DataAccess.Orm.Sql.Extensions;
     using DataAccess.Orm.Sql.Host.Migrations;
+    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Transaction;
     using Microsoft.Extensions.Logging;
@@ -22,7 +23,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.DataAccess.Orm.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
     [Before(typeof(InitialMigration))]
@@ -57,7 +57,7 @@ language plpgsql;
 select CreateOrGetExistedDatabase();";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
@@ -66,7 +66,7 @@ select CreateOrGetExistedDatabase();";
 
         public CreateOrGetExistedPostgreSqlDatabaseMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
             IModelChangesExtractor modelChangesExtractor,
@@ -74,7 +74,7 @@ select CreateOrGetExistedDatabase();";
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
             _modelChangesExtractor = modelChangesExtractor;
@@ -135,7 +135,7 @@ select CreateOrGetExistedDatabase();";
                 var migrations = new[]
                 {
                     new InitialMigration(_dependencyContainer,
-                        _databaseProvider,
+                        _databaseImplementation,
                         _ormSettingsProvider,
                         _modelChangesExtractor,
                         _logger)

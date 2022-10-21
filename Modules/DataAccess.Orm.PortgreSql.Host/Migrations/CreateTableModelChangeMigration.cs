@@ -8,8 +8,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Orm.Host.Model;
-    using Sql.Host.Migrations;
+    using Sql.Host.Model;
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]

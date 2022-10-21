@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         {
             if (!type.IsSqlView())
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"{type.FullName} should represent sql view");
             }
 
             var viewKeyType = type.ExtractGenericArgumentAt(typeof(ISqlView<>));

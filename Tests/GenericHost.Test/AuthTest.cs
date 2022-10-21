@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Basics;
     using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Connection;
+    using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Settings;
     using GenericEndpoint.Api.Abstractions;
@@ -29,7 +29,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
     using Overrides;
@@ -69,25 +68,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .StepInto("Settings")
                .StepInto(nameof(AuthorizeUserTest));
 
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
@@ -168,15 +165,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(AuthTestData))]
         internal async Task AuthorizeUserTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
 
             var settingsScope = nameof(AuthorizeUserTest);
             var virtualHost = settingsScope + isolationLevel;
@@ -193,14 +188,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
                     isolationLevel,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseAuthEndpoint(builder => builder
                    .WithDataAccess(databaseProvider,

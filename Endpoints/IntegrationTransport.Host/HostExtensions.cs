@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Api.Enumerations;
-    using BackgroundWorkers;
     using Basics;
     using Basics.Primitives;
     using Builder;
@@ -18,10 +17,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.Overrides;
     using GenericEndpoint.Host.Registrations;
-    using GenericEndpoint.Host.StartupActions;
     using GenericHost;
     using GenericHost.Api;
-    using GenericHost.Api.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Overrides;
@@ -130,16 +127,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             {
                 serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
                 serviceCollection.AddSingleton<ITransportDependencyContainer>(new TransportDependencyContainer(dependencyContainer));
-
-                foreach (var producer in builder.StartupActions)
-                {
-                    serviceCollection.AddSingleton<IHostStartupAction>(producer(dependencyContainer));
-                }
-
-                foreach (var producer in builder.BackgroundWorkers)
-                {
-                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(dependencyContainer));
-                }
             };
         }
 
@@ -183,14 +170,15 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                .ToArray();
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
-               .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
-               .WithBackgroundWorker(dependencyContainer => new IntegrationTransportHostBackgroundWorker(dependencyContainer))
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
                    .WithAdditionalOurTypes(integrationMessageTypes)
                    .WithAdditionalOurTypes(domainEvents)
                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                   .WithManualRegistrations(new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider))
+                   .WithManualRegistrations(new GenericEndpointHostStartupActionManualRegistration())
+                   .WithManualRegistrations(new IntegrationTransportHostBackgroundWorkerManualRegistration())
                    .WithOverrides(new SettingsProviderOverride())
                    .WithOverrides(new IntegrationTransportOverride())
                    .WithManualVerification(true));

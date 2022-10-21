@@ -6,7 +6,7 @@
     /// <summary>
     /// AppliedMigration
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
+    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
     [Index(nameof(Name), Unique = true)]
     public record AppliedMigration : BaseDatabaseEntity<Guid>
     {

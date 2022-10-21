@@ -1,45 +1,54 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Basics.Attributes;
     using Basics.Primitives;
-    using CompositionRoot;
     using Contract;
-    using Core.DataAccess.Orm.Host.Migrations;
+    using Core.DataAccess.Orm.Host.Abstractions;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.GenericHost.Api.Abstractions;
 
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
     [Before(typeof(GenericEndpointHostStartupAction))]
-    internal class UpgradeDatabaseHostStartupAction : IHostStartupAction
+    internal class UpgradeDatabaseHostStartupAction : IHostStartupAction,
+                                                      ICollectionResolvable<IHostStartupAction>,
+                                                      IResolvable<UpgradeDatabaseHostStartupAction>
     {
         private static readonly AsyncAutoResetEvent Sync = new AsyncAutoResetEvent(true);
 
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly EndpointIdentity _endpointIdentity;
+        private readonly IMigrationsExecutor _migrationsExecutor;
+        private readonly IEnumerable<IMigration> _migrations;
+        private readonly ILogger _logger;
 
         public UpgradeDatabaseHostStartupAction(
-            IDependencyContainer dependencyContainer)
+            EndpointIdentity endpointIdentity,
+            IMigrationsExecutor migrationsExecutor,
+            IEnumerable<IMigration> migrations,
+            ILogger logger)
         {
-            _dependencyContainer = dependencyContainer;
+            _endpointIdentity = endpointIdentity;
+            _logger = logger;
+            _migrationsExecutor = migrationsExecutor;
+            _migrations = migrations;
         }
 
         public async Task Run(CancellationToken token)
         {
-            var migrations = _dependencyContainer
-               .ResolveCollection<IMigration>()
-               .ToList();
-
             try
             {
                 await Sync
                    .WaitAsync(token)
                    .ConfigureAwait(false);
 
-                await _dependencyContainer
-                   .Resolve<IMigrationsExecutor>()
-                   .Migrate(migrations, token)
+                await _migrationsExecutor
+                   .Migrate(_migrations.ToList(), token)
                    .ConfigureAwait(false);
             }
             finally
@@ -47,9 +56,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
                 Sync.Set();
             }
 
-            _dependencyContainer
-               .Resolve<ILogger>()
-               .Information($"{_dependencyContainer.Resolve<EndpointIdentity>()} have been migrated");
+            _logger.Information($"{_endpointIdentity} have been migrated");
         }
     }
 }

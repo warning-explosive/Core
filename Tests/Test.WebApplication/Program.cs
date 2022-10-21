@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Migrations;
     using Web.Api.Host;
 
@@ -44,6 +45,11 @@ namespace SpaceEngineers.Core.Test.WebApplication
 
             return Host
                .CreateDefaultBuilder(args)
+               .ConfigureLogging(context =>
+               {
+                   context.AddConsole();
+                   context.SetMinimumLevel(LogLevel.Trace);
+               })
                .UseIntegrationTransport(hostBuilder =>
                     context => new WebApplicationStartup(hostBuilder,
                         context.Configuration,

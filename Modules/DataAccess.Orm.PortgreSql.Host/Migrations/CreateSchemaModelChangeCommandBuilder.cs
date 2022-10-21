@@ -6,8 +6,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Orm.Host.Model;
-    using Sql.Host.Migrations;
+    using Sql.Host.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateSchemaModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateSchema>,

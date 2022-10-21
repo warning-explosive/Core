@@ -7,6 +7,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using CompositionRoot;
+    using CompositionRoot.Exceptions;
     using CrossCuttingConcerns.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -16,8 +18,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         private static readonly SyncState SyncState = new SyncState();
 
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
-        private readonly IEnumerable<IHostStartupAction> _startupActions;
-        private readonly IEnumerable<IHostBackgroundWorker> _backgroundWorkers;
+        private readonly IEnumerable<IDependencyContainer> _dependencyContainers;
+        private readonly IHostStartupActionsRegistry _hostStartupActionsRegistry;
 
         private CancellationTokenSource? _cts;
         private Task? _backgroundWorkersTask;
@@ -27,16 +29,16 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             Guid identifier,
             IHostApplicationLifetime hostApplicationLifetime,
             ILoggerFactory loggerFactory,
-            IEnumerable<IHostStartupAction> startupActions,
-            IEnumerable<IHostBackgroundWorker> backgroundWorkers)
+            IEnumerable<IDependencyContainer> dependencyContainers,
+            IHostStartupActionsRegistry hostStartupActionsRegistry)
         {
             Identifier = identifier;
 
             Logger = loggerFactory.CreateLogger<HostedService>();
 
             _hostApplicationLifetime = hostApplicationLifetime;
-            _startupActions = startupActions;
-            _backgroundWorkers = backgroundWorkers;
+            _dependencyContainers = dependencyContainers;
+            _hostStartupActionsRegistry = hostStartupActionsRegistry;
         }
 
         public Guid Identifier { get; }
@@ -51,14 +53,26 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            foreach (var action in _startupActions.OrderByDependencies(action => action.GetType()))
+            var startupActions = _dependencyContainers
+               .SelectMany(dependencyContainer => ExecutionExtensions
+                   .Try(dependencyContainer, container => container.ResolveCollection<IHostStartupAction>())
+                   .Catch<ComponentResolutionException>()
+                   .Invoke(_ => Enumerable.Empty<IHostStartupAction>()));
+
+            foreach (var action in startupActions)
             {
                 await Run(action.Run, Token).ConfigureAwait(false);
+
+                _hostStartupActionsRegistry.Enroll(action);
             }
 
-            _backgroundWorkersTask = _backgroundWorkers
-                .Select(worker => Run(worker.Run, Token))
-                .WhenAll();
+            _backgroundWorkersTask = _dependencyContainers
+               .SelectMany(dependencyContainer => ExecutionExtensions
+                   .Try(dependencyContainer, container => container.ResolveCollection<IHostBackgroundWorker>())
+                   .Catch<ComponentResolutionException>()
+                   .Invoke(_ => Enumerable.Empty<IHostBackgroundWorker>()))
+               .Select(worker => Run(worker.Run, Token))
+               .WhenAll();
         }
 
         public async Task StopAsync(CancellationToken token)

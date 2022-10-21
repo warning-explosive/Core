@@ -7,7 +7,7 @@
     /// <summary>
     /// DatabaseColumnConstraint
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
+    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
     public record DatabaseColumnConstraint : BaseSqlView<Guid>
     {
         /// <summary> .cctor </summary>

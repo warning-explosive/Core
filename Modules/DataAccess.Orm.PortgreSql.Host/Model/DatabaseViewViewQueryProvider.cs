@@ -29,7 +29,7 @@ from (select
           schemaname as schema
       from pg_catalog.pg_matviews
       where schemaname not in ('information_schema', 'public') and schemaname not like 'pg_%') pgView
-join ""Migrations"".""SqlView"" sqlView
+join ""{nameof(Sql.Host.Migrations)}"".""{nameof(SqlView)}"" sqlView
 on pgView.schema = sqlView.""Schema"" and pgView.viewName = sqlView.""View""";
 
         public string GetQuery()

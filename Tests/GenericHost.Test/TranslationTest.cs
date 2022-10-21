@@ -18,6 +18,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.PostgreSql.Host;
+    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
     using DataAccess.Orm.Sql.Translation.Extensions;
@@ -98,7 +99,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var databaseProvider = new PostgreSqlDatabaseProvider();
                     var isolationLevel = IsolationLevel.ReadCommitted;
                     var settingsScope = nameof(QueryTranslationTest);
-                    var logger = StaticFixture.CreateLogger(StaticOutput);
                     var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
 
                     var databaseEntities = new[]
@@ -128,7 +128,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var overrides = new IComponentsOverride[]
                     {
-                        new TestLoggerOverride(logger),
                         new TestSettingsScopeProviderOverride(settingsScope)
                     };
 
@@ -136,7 +135,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .UseIntegrationTransport(builder => builder
                            .WithInMemoryIntegrationTransport(hostBuilder)
                            .ModifyContainerOptions(options => options
-                               .WithOverrides(new TestLoggerOverride(logger))
                                .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                            .BuildOptions())
                        .UseEndpoint(TestIdentity.Endpoint10,
@@ -751,6 +749,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view tanslation",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository<DatabaseColumn>>().All().Select(it => new { it.Schema, it.Table, it.Column }).First()),
+                new Action<IQuery, Action<string>>(
+                    (query, log) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(DatabaseColumn)}"" a{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                Array.Empty<IDatabaseEntity>()
             };
         }
 

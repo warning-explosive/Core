@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 {
     using Basics;
-    using StartupActions;
+    using Registrations;
 
     /// <summary>
     /// DataAccessOptions
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
             _ = _endpointBuilder
                .WithEndpointPluginAssemblies(assembly)
-               .WithStartupAction(dependencyContainer => new UpgradeDatabaseHostStartupAction(dependencyContainer));
+               .ModifyContainerOptions(options => options.WithManualRegistrations(new UpgradeDatabaseHostStartupActionManualRegistration()));
 
             return this;
         }

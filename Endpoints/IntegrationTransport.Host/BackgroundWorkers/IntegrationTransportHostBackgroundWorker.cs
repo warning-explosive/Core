@@ -4,28 +4,33 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using CompositionRoot;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using CrossCuttingConcerns.Extensions;
     using GenericHost.Api.Abstractions;
     using Microsoft.Extensions.Logging;
 
-    internal class IntegrationTransportHostBackgroundWorker : IHostBackgroundWorker
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
+    internal class IntegrationTransportHostBackgroundWorker : IHostBackgroundWorker,
+                                                              ICollectionResolvable<IHostBackgroundWorker>,
+                                                              IResolvable<IntegrationTransportHostBackgroundWorker>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IExecutableIntegrationTransport _transport;
+        private readonly ILogger _logger;
 
-        public IntegrationTransportHostBackgroundWorker(IDependencyContainer dependencyContainer)
+        public IntegrationTransportHostBackgroundWorker(
+            IExecutableIntegrationTransport transport,
+            ILogger logger)
         {
-            _dependencyContainer = dependencyContainer;
+            _transport = transport;
+            _logger = logger;
         }
 
         public async Task Run(CancellationToken token)
         {
-            var transport = _dependencyContainer.Resolve<IExecutableIntegrationTransport>();
-            var logger = _dependencyContainer.Resolve<ILogger>();
+            _transport.StatusChanged += OnStatusChanged(_logger);
 
-            transport.StatusChanged += OnStatusChanged(logger);
-
-            await transport
+            await _transport
                 .StartBackgroundMessageProcessing(token)
                 .ConfigureAwait(false);
         }

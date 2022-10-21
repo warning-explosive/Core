@@ -13,12 +13,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <summary>
         /// Handle
         /// </summary>
-        /// <param name="databaseProvider">IDatabaseProvider</param>
+        /// <param name="databaseProvider">IDatabaseImplementation</param>
         /// <param name="commandText">Command text</param>
         /// <typeparam name="TResult">TResult type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Func<Exception, CancellationToken, Task<TResult>> Handle<TResult>(
-            this IDatabaseProvider databaseProvider, string commandText)
+            this IDatabaseImplementation databaseProvider, string commandText)
         {
             return (exception, _) =>
             {

@@ -7,7 +7,7 @@
     /// <summary>
     /// DatabaseIndex
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
+    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
     [Index(nameof(Schema), nameof(Table), nameof(Index), Unique = true)]
     public record DatabaseIndex : BaseSqlView<Guid>
     {

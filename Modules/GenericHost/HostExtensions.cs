@@ -98,6 +98,7 @@ namespace SpaceEngineers.Core.GenericHost
                .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonSettingsFile.FullName))
                .ConfigureServices((_, serviceCollection) =>
                {
+                   serviceCollection.AddSingleton<IHostStartupActionsRegistry>(new HostStartupActionsRegistry());
                    serviceCollection.AddSingleton(SetupFrameworkDependenciesProvider(frameworkDependenciesProvider));
                    serviceCollection.AddHostedService(BuildHostedService);
                })
@@ -130,8 +131,8 @@ namespace SpaceEngineers.Core.GenericHost
                     Guid.NewGuid(),
                     serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
                     serviceProvider.GetRequiredService<ILoggerFactory>(),
-                    serviceProvider.GetServices<IHostStartupAction>(),
-                    serviceProvider.GetServices<IHostBackgroundWorker>());
+                    serviceProvider.GetServices<IDependencyContainer>(),
+                    serviceProvider.GetRequiredService<IHostStartupActionsRegistry>());
             }
         }
     }

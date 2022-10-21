@@ -13,8 +13,8 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
     using DataAccess.Orm.Extensions;
+    using DataAccess.Orm.Host.Abstractions;
     using GenericDomain.Api.Abstractions;
-    using SpaceEngineers.Core.DataAccess.Orm.Host.Migrations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]

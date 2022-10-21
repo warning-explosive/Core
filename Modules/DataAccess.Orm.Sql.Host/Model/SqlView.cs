@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     /// <summary>
     /// SqlView
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Host.Migrations))]
+    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
     [Index(nameof(Schema), nameof(View), Unique = true)]
     public record SqlView : BaseDatabaseEntity<Guid>
     {

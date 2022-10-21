@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Connection;
-    using Orm.Host.Model;
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]

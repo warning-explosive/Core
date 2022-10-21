@@ -18,8 +18,7 @@
     using CompositionRoot.Extensions;
     using CompositionRoot.Registration;
     using DataAccess.Api.Model;
-    using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host.Model;
+    using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
@@ -41,7 +40,6 @@
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Overrides;
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
@@ -78,20 +76,16 @@
                .EnsureNotNull("Project directory wasn't found")
                .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
-                (logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                hostBuilder => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<ILogger, IHostBuilder, IHostBuilder>(
-                (logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                hostBuilder => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -120,21 +114,19 @@
                .EnsureNotNull("Project directory wasn't found")
                .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
+                (settingsScope, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
+                (settingsScope, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
@@ -163,7 +155,7 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void SameTransportTest(
             DirectoryInfo settingsDirectory,
-            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             SameComponentTest(
                 settingsDirectory,
@@ -175,7 +167,7 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void SameRpcRequestRegistryTest(
             DirectoryInfo settingsDirectory,
-            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
             SameComponentTest(
                 settingsDirectory,
@@ -185,30 +177,19 @@
 
         internal void SameComponentTest(
             DirectoryInfo settingsDirectory,
-            Func<ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             Func<IDependencyContainer, object> resolve)
         {
-            var logger = Fixture.CreateLogger(Output);
-
-            var host = useTransport(
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder(Output))
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                        .BuildOptions())
+                    (_, builder) => builder.BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options.WithOverrides(new TestLoggerOverride(logger)))
-                        .BuildOptions())
+                    (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            var gatewayHost = useTransport(
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
-               .BuildHost(settingsDirectory);
+            var gatewayHost = useTransport(Fixture.CreateHostBuilder(Output)).BuildHost(settingsDirectory);
 
             var component = resolve(host.GetTransportDependencyContainer());
             var gatewayComponent = resolve(gatewayHost.GetTransportDependencyContainer());
@@ -222,10 +203,8 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void BuildTest(
             DirectoryInfo settingsDirectory,
-            Func<ILogger, IHostBuilder, IHostBuilder> useTransport)
+            Func<IHostBuilder, IHostBuilder> useTransport)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var messageTypes = new[]
             {
                 typeof(BaseEvent),
@@ -254,13 +233,10 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(
-                    logger,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithDataAccess(databaseProvider,
@@ -291,11 +267,12 @@
                 };
 
                 var actualHostStartupActions = host
-                    .Services
-                    .GetServices<IHostStartupAction>()
-                    .Select(startup => startup.GetType())
-                    .OrderBy(type => type.FullName)
-                    .ToList();
+                   .Services
+                   .GetServices<IDependencyContainer>()
+                   .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostStartupAction>())
+                   .Select(startup => startup.GetType())
+                   .OrderBy(type => type.FullName)
+                   .ToList();
 
                 Assert.Equal(expectedHostStartupActions.OrderBy(type => type.FullName).ToList(), actualHostStartupActions);
 
@@ -306,11 +283,12 @@
                 };
 
                 var actualHostBackgroundWorkers = host
-                    .Services
-                    .GetServices<IHostBackgroundWorker>()
-                    .Select(startup => startup.GetType())
-                    .OrderBy(type => type.FullName)
-                    .ToList();
+                   .Services
+                   .GetServices<IDependencyContainer>()
+                   .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostBackgroundWorker>())
+                   .Select(startup => startup.GetType())
+                   .OrderBy(type => type.FullName)
+                   .ToList();
 
                 Assert.Equal(expectedHostBackgroundWorkers.OrderBy(type => type.FullName).ToList(), actualHostBackgroundWorkers);
             }
@@ -689,22 +667,18 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
 
-            var logger = Fixture.CreateLogger(Output);
-
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
             };
 
             var host = useTransport(
                     nameof(CompareEquivalentDatabaseDatabaseModelsTest),
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -750,12 +724,10 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
-
-            var logger = Fixture.CreateLogger(Output);
 
             var additionalOurTypes = new[]
             {
@@ -768,13 +740,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
             };
 
             var host = useTransport(
                     nameof(ExtractDatabaseModelChangesDiffTest),
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -823,7 +793,7 @@
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
-                    index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations)),
+                    index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
                     index =>
                     {
                         AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), typeof(IntegrationMessageHeader));
@@ -878,7 +848,7 @@
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), typeof(AppliedMigration));
+                        AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), typeof(AppliedMigration));
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.PrimaryKey), "not null primary key");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.Version), "not null");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.DateTime), "not null");
@@ -887,7 +857,7 @@
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), typeof(SqlView));
+                        AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), typeof(SqlView));
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.PrimaryKey), "not null primary key");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Version), "not null");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Schema), "not null");
@@ -970,12 +940,12 @@
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), nameof(DatabaseDomainEvent), $"{nameof(DatabaseDomainEvent.AggregateId)}_{nameof(DatabaseDomainEvent.Index)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseIndex), $"{nameof(DatabaseIndex.Index)}_{nameof(DatabaseIndex.Schema)}_{nameof(DatabaseIndex.Table)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseSchema), $"{nameof(DatabaseSchema.Name)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Host.Migrations), nameof(SqlView), $"{nameof(SqlView.Schema)}_{nameof(SqlView.View)}")
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndex), $"{nameof(DatabaseIndex.Index)}_{nameof(DatabaseIndex.Schema)}_{nameof(DatabaseIndex.Table)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), $"{nameof(DatabaseSchema.Name)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), $"{nameof(SqlView.Schema)}_{nameof(SqlView.View)}")
                 };
 
                 Assert.Equal(assertions.Length, modelChanges.Length);

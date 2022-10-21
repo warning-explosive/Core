@@ -2,28 +2,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Endpoint;
     using GenericHost.Api.Abstractions;
 
-    internal class GenericEndpointHostStartupAction : IHostStartupAction
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
+    internal class GenericEndpointHostStartupAction : IHostStartupAction,
+                                                      ICollectionResolvable<IHostStartupAction>,
+                                                      IResolvable<GenericEndpointHostStartupAction>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IExecutableEndpoint _executableEndpoint;
 
-        public GenericEndpointHostStartupAction(IDependencyContainer dependencyContainer)
+        public GenericEndpointHostStartupAction(IExecutableEndpoint executableEndpoint)
         {
-            _dependencyContainer = dependencyContainer;
+            _executableEndpoint = executableEndpoint;
         }
 
         public Task Run(CancellationToken token)
         {
-            token.Register(
-                () => _dependencyContainer.Resolve<IExecutableEndpoint>().StopAsync(token),
-                useSynchronizationContext: false);
+            token.Register(() => _executableEndpoint.StopAsync(token), useSynchronizationContext: false);
 
-            return _dependencyContainer
-                .Resolve<IExecutableEndpoint>()
-                .StartAsync(token);
+            return _executableEndpoint.StartAsync(token);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;
-    using Orm.Host.Migrations;
+    using Orm.Host.Abstractions;
     using Orm.Settings;
     using Transaction;
 
@@ -24,23 +24,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <param name="settingsProvider">Orm setting provider</param>
-        /// <param name="databaseProvider">IDatabaseProvider</param>
+        /// <param name="databaseImplementation">IDatabaseProvider</param>
         /// <param name="logger">ILogger</param>
         protected BaseSqlMigration(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
@@ -80,7 +80,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             _ = await ExecutionExtensions
                .TryAsync((CommandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
-               .Invoke(_databaseProvider.Handle<long>(CommandText), token)
+               .Invoke(_databaseImplementation.Handle<long>(CommandText), token)
                .ConfigureAwait(false);
 
             var change = new ModelChange(

@@ -8,8 +8,6 @@
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using Orm.Host.Model;
-    using Sql.Host.Migrations;
     using Sql.Host.Model;
     using Sql.Model;
     using Sql.Translation.Extensions;
@@ -20,7 +18,7 @@
     {
         private const string CommandFormat = $@"create materialized view ""{{0}}"".""{{1}}"" as {{2}};
 
-insert into ""{nameof(DataAccess.Orm.Host.Migrations)}"".""{nameof(SqlView)}""(""{nameof(SqlView.PrimaryKey)}"", ""{nameof(SqlView.Version)}"", ""{nameof(SqlView.Schema)}"", ""{nameof(SqlView.View)}"", ""{nameof(SqlView.Query)}"") values ({{3}})";
+insert into ""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(SqlView)}""(""{nameof(SqlView.PrimaryKey)}"", ""{nameof(SqlView.Version)}"", ""{nameof(SqlView.Schema)}"", ""{nameof(SqlView.View)}"", ""{nameof(SqlView.Query)}"") values ({{3}})";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IModelProvider _modelProvider;

@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
-    using DataAccess.Orm.Connection;
+    using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.PostgreSql.Extensions;
     using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Settings;
@@ -72,25 +72,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .EnsureNotNull("Project directory wasn't found")
                .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
+                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
@@ -128,15 +126,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
 
             var messageTypes = new[]
             {
@@ -170,14 +166,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var endpointOverrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
                     isolationLevel,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -250,15 +244,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
 
             var databaseEntities = new[]
             {
@@ -284,14 +276,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
                     isolationLevel,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -544,15 +534,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
 
             var databaseEntities = new[]
             {
@@ -578,14 +566,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
                     isolationLevel,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -842,15 +828,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OnlyCommandsCanIntroduceChanges(
             DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             IDatabaseProvider databaseProvider,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
             Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
-
-            var logger = Fixture.CreateLogger(Output);
 
             var messageTypes = new[]
             {
@@ -894,14 +878,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
                     isolationLevel,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder

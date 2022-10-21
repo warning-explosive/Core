@@ -18,7 +18,7 @@
     using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;
-    using Orm.Host.Migrations;
+    using Orm.Host.Abstractions;
     using Reading;
     using Sql.Model;
 

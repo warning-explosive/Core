@@ -9,13 +9,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot.Registration;
     using Contract;
     using GenericHost;
-    using GenericHost.Api.Abstractions;
     using IntegrationTransport.Api.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Overrides;
     using Registrations;
-    using StartupActions;
 
     /// <summary>
     /// HostExtensions
@@ -111,16 +109,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 var dependencyContainer = BuildDependencyContainer(options);
 
                 serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
-
-                foreach (var producer in builder.StartupActions)
-                {
-                    serviceCollection.AddSingleton<IHostStartupAction>(producer(dependencyContainer));
-                }
-
-                foreach (var producer in builder.BackgroundWorkers)
-                {
-                    serviceCollection.AddSingleton<IHostBackgroundWorker>(producer(dependencyContainer));
-                }
             });
         }
 
@@ -168,12 +156,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             return new EndpointBuilder(endpointIdentity)
-               .WithStartupAction(dependencyContainer => new GenericEndpointHostStartupAction(dependencyContainer))
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
                    .WithManualRegistrations(integrationTransportInjection)
                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
+                   .WithManualRegistrations(new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider))
+                   .WithManualRegistrations(new GenericEndpointHostStartupActionManualRegistration())
                    .WithOverrides(new SettingsProviderOverride())
                    .WithManualVerification(true));
         }

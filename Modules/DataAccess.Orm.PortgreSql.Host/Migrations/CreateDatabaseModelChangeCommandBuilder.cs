@@ -7,8 +7,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Settings;
-    using Orm.Host.Model;
-    using Sql.Host.Migrations;
+    using Sql.Host.Model;
     using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]

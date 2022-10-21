@@ -23,7 +23,6 @@
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Mocks;
     using Overrides;
     using Registrations;
@@ -61,25 +60,23 @@
                .EnsureNotNull("Project directory wasn't found")
                .StepInto("Settings");
 
-            var useInMemoryIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
+                (settingsScope, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, ILogger, IHostBuilder, IHostBuilder>(
-                (settingsScope, logger, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
+                (settingsScope, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope))
-                           .WithOverrides(new TestLoggerOverride(logger))
                            .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
@@ -102,11 +99,9 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(RequestReplyTest);
 
             var messageTypes = new[]
@@ -127,13 +122,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -193,11 +186,9 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(RpcRequestTest);
 
             var messageTypes = new[]
@@ -215,13 +206,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -278,11 +267,9 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(ContravariantMessageHandlerTest);
 
             var messageTypes = new[]
@@ -303,13 +290,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -368,11 +353,9 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(ThrowingMessageHandlerTest);
 
             var messageTypes = new[]
@@ -389,7 +372,6 @@
 
             var overrides = new[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope),
                 Fixture.DelegateOverride(container =>
                 {
@@ -399,7 +381,6 @@
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -487,11 +468,9 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(EventSubscriptionBetweenEndpointsTest);
 
             var endpoint1MessageTypes = new[]
@@ -521,13 +500,11 @@
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
@@ -588,22 +565,18 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
             DirectoryInfo settingsDirectory,
-            Func<string, ILogger, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var logger = Fixture.CreateLogger(Output);
-
             var settingsScope = nameof(StartStopTest);
 
             var overrides = new IComponentsOverride[]
             {
-                new TestLoggerOverride(logger),
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
             var host = useTransport(
                     settingsScope,
-                    logger,
                     Fixture.CreateHostBuilder(Output))
                .UseEndpoint(new EndpointIdentity(settingsScope, Guid.NewGuid().ToString()),
                     (_, builder) => builder

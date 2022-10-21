@@ -4,12 +4,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using BackgroundWorkers;
     using Basics;
     using CompositionRoot;
     using Contract;
-    using Core.DataAccess.Orm.Connection;
-    using GenericHost.Api.Abstractions;
+    using Core.DataAccess.Orm.Host.Abstractions;
     using Overrides;
     using Registrations;
 
@@ -25,15 +23,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             EndpointIdentity = endpointIdentity;
             EndpointPluginAssemblies = Array.Empty<Assembly>();
             Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
-            StartupActions = Array.Empty<Func<IDependencyContainer, IHostStartupAction>>();
-            BackgroundWorkers = Array.Empty<Func<IDependencyContainer, IHostBackgroundWorker>>();
         }
 
         public EndpointIdentity EndpointIdentity { get; }
-
-        public IReadOnlyCollection<Func<IDependencyContainer, IHostStartupAction>> StartupActions { get; protected set; }
-
-        public IReadOnlyCollection<Func<IDependencyContainer, IHostBackgroundWorker>> BackgroundWorkers { get; protected set; }
 
         public IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; protected set; }
 
@@ -55,10 +47,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(DataAccess)));
 
             var modifier = new Func<DependencyContainerOptions, DependencyContainerOptions>(options => options
-               .WithManualRegistrations(new DatabaseProviderManualRegistration(databaseProvider))
+               .WithManualRegistrations(new GenericEndpointDataAccessHostBackgroundWorkerManualRegistration())
                .WithOverrides(new DataAccessOverride()));
-
-            var backgroundWorker = new Func<IDependencyContainer, IHostBackgroundWorker>(dependencyContainer => new GenericEndpointDataAccessHostBackgroundWorker(dependencyContainer));
 
             EndpointPluginAssemblies = EndpointPluginAssemblies
                .Concat(new[] { assembly })
@@ -67,10 +57,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
             Modifiers = Modifiers
                .Concat(new[] { modifier })
-               .ToList();
-
-            BackgroundWorkers = BackgroundWorkers
-               .Concat(new[] { backgroundWorker })
                .ToList();
 
             dataAccessOptions?.Invoke(new DataAccessOptions(this));
@@ -82,24 +68,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         {
             Modifiers = Modifiers
                .Concat(new[] { modifier })
-               .ToList();
-
-            return this;
-        }
-
-        public IEndpointBuilder WithStartupAction(Func<IDependencyContainer, IHostStartupAction> producer)
-        {
-            StartupActions = StartupActions
-               .Concat(new[] { producer })
-               .ToList();
-
-            return this;
-        }
-
-        public IEndpointBuilder WithBackgroundWorker(Func<IDependencyContainer, IHostBackgroundWorker> producer)
-        {
-            BackgroundWorkers = BackgroundWorkers
-               .Concat(new[] { producer })
                .ToList();
 
             return this;

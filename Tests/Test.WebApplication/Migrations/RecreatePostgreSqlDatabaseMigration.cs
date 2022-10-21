@@ -11,14 +11,14 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host.Model;
+    using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.Settings;
     using DataAccess.Orm.Sql.Extensions;
+    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Transaction;
     using Microsoft.Extensions.Logging;
     using Npgsql;
-    using SpaceEngineers.Core.DataAccess.Orm.Host.Migrations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
@@ -34,7 +34,7 @@ create database ""{0}"";
 grant all privileges on database ""{0}"" to ""{1}""";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseProvider _databaseProvider;
+        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
@@ -43,7 +43,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
 
         public RecreatePostgreSqlDatabaseMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseProvider databaseProvider,
+            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
             IModelChangesExtractor modelChangesExtractor,
@@ -51,7 +51,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseProvider = databaseProvider;
+            _databaseImplementation = databaseImplementation;
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
             _modelChangesExtractor = modelChangesExtractor;
@@ -100,7 +100,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
 
             var migrations = new[]
             {
-                new InitialMigration(_dependencyContainer, _databaseProvider, _ormSettingsProvider, _modelChangesExtractor, _logger)
+                new InitialMigration(_dependencyContainer, _databaseImplementation, _ormSettingsProvider, _modelChangesExtractor, _logger)
             };
 
             await _migrationsExecutor

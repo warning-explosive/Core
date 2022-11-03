@@ -107,8 +107,6 @@
                 {
                     yield return element;
                 }
-
-                _dataTableReader.AfterTableRead();
             }
         }
 

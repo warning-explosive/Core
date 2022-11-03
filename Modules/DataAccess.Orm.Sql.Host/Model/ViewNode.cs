@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using SpaceEngineers.Core.Basics;
+    using Basics;
 
     /// <summary>
     /// ViewNode

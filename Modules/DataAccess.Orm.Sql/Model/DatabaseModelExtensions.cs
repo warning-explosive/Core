@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using Api.Sql;
     using Basics;
     using CompositionRoot;
-    using Views;
 
     /// <summary>
     /// DatabaseModelExtensions

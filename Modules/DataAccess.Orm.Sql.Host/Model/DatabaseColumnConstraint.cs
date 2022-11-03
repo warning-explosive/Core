@@ -1,13 +1,13 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
-    using Api.Model;
-    using Views;
+    using Api.Sql;
+    using Api.Sql.Attributes;
 
     /// <summary>
     /// DatabaseColumnConstraint
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
+    [Schema(nameof(Migrations))]
     public record DatabaseColumnConstraint : BaseSqlView<Guid>
     {
         /// <summary> .cctor </summary>

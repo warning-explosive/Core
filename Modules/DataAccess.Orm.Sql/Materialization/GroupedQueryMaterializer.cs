@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Basics;
     using CompositionRoot;
     using Linq;
-    using Orm.Linq;
     using Translation;
     using Translation.Extensions;
 

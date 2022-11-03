@@ -118,7 +118,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.Condition(
+            return Expression.Condition(
                 When.AsExpressionTree(),
                 Then.AsExpressionTree(),
                 Else.AsExpressionTree());

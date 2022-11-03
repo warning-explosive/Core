@@ -1,7 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
 {
-    using System;
+    using System.Linq;
     using Api.Exceptions;
+    using Basics;
     using Extensions;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -13,11 +14,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql
                                                       IResolvable<IDatabaseImplementation>
     {
         /// <inheritdoc />
-        public void Handle(string commandText, Exception exception)
+        public void Handle(DatabaseCommandExecutionException exception)
         {
-            var databaseException = exception.IsSerializationFailure()
-                ? new DatabaseConcurrentUpdateException(commandText, exception)
-                : new DatabaseException(commandText, exception);
+            DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())
+                ? new DatabaseConcurrentUpdateException(exception.CommandText, exception)
+                : exception;
 
             throw databaseException;
         }

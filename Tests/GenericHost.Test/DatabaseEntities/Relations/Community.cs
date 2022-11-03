@@ -2,7 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using DataAccess.Api.Sql;
+    using DataAccess.Api.Sql.Attributes;
 
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Community : BaseDatabaseEntity<Guid>

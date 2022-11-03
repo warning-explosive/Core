@@ -1,8 +1,9 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Model
+namespace SpaceEngineers.Core.DataAccess.Api.Sql
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
     using Basics;
+    using Model;
 
     /// <summary>
     /// Base class for database entities

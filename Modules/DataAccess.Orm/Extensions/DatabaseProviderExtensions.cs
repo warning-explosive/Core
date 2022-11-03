@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Exceptions;
     using Connection;
 
     /// <summary>
@@ -22,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         {
             return (exception, _) =>
             {
-                databaseProvider.Handle(commandText, exception);
+                databaseProvider.Handle(new DatabaseCommandExecutionException(commandText, exception));
                 return Task.FromResult<TResult>(default!);
             };
         }

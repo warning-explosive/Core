@@ -29,10 +29,5 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
             TTableMeta tableMeta);
-
-        /// <summary>
-        /// After table read
-        /// </summary>
-        void AfterTableRead();
     }
 }

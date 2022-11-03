@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using CompositionRoot;
     using Expressions;
-    using Orm.Linq;
+    using Linq;
 
     [Component(EnLifestyle.Scoped)]
     internal class QueryTranslator : IQueryTranslator,

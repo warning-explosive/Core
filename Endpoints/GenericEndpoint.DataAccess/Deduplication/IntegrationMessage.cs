@@ -6,6 +6,8 @@
     using System.Linq;
     using Contract.Abstractions;
     using Core.DataAccess.Api.Model;
+    using Core.DataAccess.Api.Sql;
+    using Core.DataAccess.Api.Sql.Attributes;
     using CrossCuttingConcerns.Json;
     using Messaging.MessageHeaders;
 

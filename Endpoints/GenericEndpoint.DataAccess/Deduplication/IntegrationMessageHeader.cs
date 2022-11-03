@@ -2,6 +2,8 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using Core.DataAccess.Api.Sql;
+    using Core.DataAccess.Api.Sql.Attributes;
     using CrossCuttingConcerns.Json;
     using Messaging.MessageHeaders;
     using SpaceEngineers.Core.DataAccess.Api.Model;

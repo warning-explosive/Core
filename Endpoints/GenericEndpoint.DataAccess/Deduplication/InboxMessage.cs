@@ -2,7 +2,8 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Core.DataAccess.Api.Sql;
+    using Core.DataAccess.Api.Sql.Attributes;
 
     /// <summary>
     /// InboxMessage

@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Collections.Generic;
-    using Orm.Linq;
+    using Linq;
 
     /// <summary>
     /// Flat query

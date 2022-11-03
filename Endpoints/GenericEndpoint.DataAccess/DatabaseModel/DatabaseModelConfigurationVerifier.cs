@@ -14,6 +14,8 @@
     using CompositionRoot.Registration;
     using CompositionRoot.Verifiers;
     using Core.DataAccess.Api.Model;
+    using Core.DataAccess.Api.Sql;
+    using Core.DataAccess.Api.Sql.Attributes;
 
     [Component(EnLifestyle.Singleton)]
     internal class DataAccessConfigurationVerifier : IConfigurationVerifier,

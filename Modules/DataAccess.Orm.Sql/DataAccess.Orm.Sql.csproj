@@ -30,6 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
         <ProjectReference Include="..\DataAccess.Orm\DataAccess.Orm.csproj" />
+        <ProjectReference Include="..\DataAccess.Api.Sql\DataAccess.Api.Sql.csproj" />
         <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -226,9 +227,6 @@
       </Compile>
       <Compile Update="Translation\Expressions\UnaryOperatorConversions.cs">
         <DependentUpon>UnaryExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Views\BaseSqlView.cs">
-        <DependentUpon>ISqlView.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\OrderByExpression.cs">
         <DependentUpon>IIntermediateExpression.cs</DependentUpon>

@@ -11,7 +11,7 @@
     internal class StringQueryParameterTranslator : IQueryParameterTranslator<string>,
                                                     IResolvable<IQueryParameterTranslator<string>>
     {
-        private static readonly IReadOnlyDictionary<string, string> _replacements = new Dictionary<string, string>
+        private static readonly IReadOnlyDictionary<string, string> Replacements = new Dictionary<string, string>
         {
             ["\'"] = "\'\'"
         };
@@ -23,7 +23,7 @@
 
         private static string EscapeSpecialCharacters(string value)
         {
-            return _replacements.Aggregate(value, (acc, pair) => acc.Replace(pair.Key, pair.Value, StringComparison.OrdinalIgnoreCase));
+            return Replacements.Aggregate(value, (acc, pair) => acc.Replace(pair.Key, pair.Value, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

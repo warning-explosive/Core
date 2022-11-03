@@ -2,11 +2,11 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using Api.Sql;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Host.Model;
-    using Sql.Views;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseColumnConstraintViewQueryProvider : ISqlViewQueryProvider<DatabaseColumnConstraint, Guid>,

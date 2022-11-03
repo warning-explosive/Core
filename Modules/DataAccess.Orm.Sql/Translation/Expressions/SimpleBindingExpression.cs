@@ -121,7 +121,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
+            return Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
         }
 
         /// <summary>

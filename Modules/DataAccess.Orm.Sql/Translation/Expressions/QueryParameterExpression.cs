@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.Constant(Value, Type);
+            return Expression.Constant(Value, Type);
         }
 
         /// <summary>

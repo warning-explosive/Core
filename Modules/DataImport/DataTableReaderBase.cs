@@ -40,11 +40,6 @@ namespace SpaceEngineers.Core.DataImport
             IReadOnlyDictionary<string, string> propertyToColumn,
             TTableMeta tableMeta);
 
-        /// <inheritdoc />
-        public virtual void AfterTableRead()
-        {
-        }
-
         /// <summary>
         /// DataRow is empty (each column has no value)
         /// </summary>

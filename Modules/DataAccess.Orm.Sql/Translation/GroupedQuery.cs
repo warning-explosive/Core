@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System;
     using System.Collections.Generic;
     using Expressions;
-    using Orm.Linq;
+    using Linq;
 
     /// <summary>
     /// Grouped query

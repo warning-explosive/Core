@@ -6,6 +6,7 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Model;
+    using Api.Sql.Attributes;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

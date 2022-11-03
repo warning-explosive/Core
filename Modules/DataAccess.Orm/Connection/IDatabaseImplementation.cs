@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
-    using System;
+    using Api.Exceptions;
 
     /// <summary>
     /// IDatabaseImplementation
@@ -10,8 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// <summary>
         /// Handles ORM exception and throws provider dependent exceptions
         /// </summary>
-        /// <param name="commandText">Command text</param>
-        /// <param name="exception">Exception</param>
-        void Handle(string commandText, Exception exception);
+        /// <param name="exception">DatabaseCommandExecutionException</param>
+        void Handle(DatabaseCommandExecutionException exception);
     }
 }

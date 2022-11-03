@@ -2,6 +2,7 @@
 {
     using System;
     using Api.Model;
+    using Api.Sql.Attributes;
 
     /// <summary>
     /// BaseMtmDatabaseEntity

@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using CompositionRoot;
     using Expressions;
     using Extensions;
-    using Orm.Linq;
+    using Linq;
 
     [Component(EnLifestyle.Scoped)]
     internal class GroupedQueryTranslator : IIntermediateQueryTranslator<GroupByExpression>,

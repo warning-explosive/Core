@@ -1,13 +1,13 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
-    using Api.Model;
-    using Views;
+    using Api.Sql;
+    using Api.Sql.Attributes;
 
     /// <summary>
     /// DatabaseSchema
     /// </summary>
-    [Schema(nameof(DataAccess.Orm.Sql.Host.Migrations))]
+    [Schema(nameof(Migrations))]
     [Index(nameof(Name), Unique = true)]
     public record DatabaseSchema : BaseSqlView<Guid>
     {

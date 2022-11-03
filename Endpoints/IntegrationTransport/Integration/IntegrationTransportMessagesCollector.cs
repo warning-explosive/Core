@@ -2,11 +2,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
+    using GenericEndpoint.Messaging;
+    using GenericEndpoint.Pipeline;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.GenericEndpoint.Messaging;
-    using SpaceEngineers.Core.GenericEndpoint.Pipeline;
-    using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
 
     [ComponentOverride]
     internal class IntegrationTransportMessagesCollector : IMessagesCollector,

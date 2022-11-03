@@ -4,7 +4,7 @@
     using System.Linq.Expressions;
     using Api.Model;
     using Basics;
-    using Orm.Linq;
+    using Linq;
 
     internal class CollapseConstantsExpressionVisitor : ExpressionVisitor
     {

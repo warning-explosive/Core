@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using SpaceEngineers.Core.Basics;
+    using Basics;
 
     /// <summary>
     /// ColumnNode

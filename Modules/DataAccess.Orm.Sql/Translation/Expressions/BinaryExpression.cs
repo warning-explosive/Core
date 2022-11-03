@@ -120,7 +120,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.MakeBinary(Operator.AsExpressionType(), Left.AsExpressionTree(), Right.AsExpressionTree());
+            return Expression.MakeBinary(Operator.AsExpressionType(), Left.AsExpressionTree(), Right.AsExpressionTree());
         }
 
         #region IApplicable

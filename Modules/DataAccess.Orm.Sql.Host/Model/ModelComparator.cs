@@ -3,10 +3,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Basics;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.Basics;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelComparator : IModelComparator,

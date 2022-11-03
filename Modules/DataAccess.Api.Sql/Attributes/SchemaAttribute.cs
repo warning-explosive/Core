@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Model
+namespace SpaceEngineers.Core.DataAccess.Api.Sql.Attributes
 {
     using System;
 

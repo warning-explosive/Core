@@ -348,7 +348,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         Assert.NotNull(exception);
                         Assert.True(exception is DatabaseException);
                         Assert.NotNull(exception.InnerException);
-                        Assert.True(exception.InnerException!.IsUniqueViolation());
+                        Assert.Contains(exception.Flatten(), ex => ex.IsUniqueViolation());
 
                         var entity = await ReadEntity(endpointDependencyContainer, primaryKey, token).ConfigureAwait(false);
 

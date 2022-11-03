@@ -109,7 +109,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public Expression AsExpressionTree()
         {
-            return System.Linq.Expressions.Expression.MakeUnary(Operator.AsExpressionType(), Source.AsExpressionTree(), Type);
+            return Expression.MakeUnary(Operator.AsExpressionType(), Source.AsExpressionTree(), Type);
         }
 
         #region IApplicable

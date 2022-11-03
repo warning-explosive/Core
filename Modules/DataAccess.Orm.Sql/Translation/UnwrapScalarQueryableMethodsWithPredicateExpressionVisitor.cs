@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq.Expressions;
     using System.Reflection;
     using Basics;
-    using Orm.Linq;
+    using Linq;
 
     internal class UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor : ExpressionVisitor
     {

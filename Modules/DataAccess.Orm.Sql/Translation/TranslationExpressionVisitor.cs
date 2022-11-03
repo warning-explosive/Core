@@ -13,8 +13,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics.Primitives;
     using Expressions;
     using Extensions;
+    using Linq;
     using Model;
-    using Orm.Linq;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using ConstantExpression = System.Linq.Expressions.ConstantExpression;

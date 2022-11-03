@@ -4,12 +4,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System.Collections.Generic;
     using System.Linq;
     using Api.Model;
+    using Api.Sql;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using Views;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseTypeProvider : IDatabaseTypeProvider,

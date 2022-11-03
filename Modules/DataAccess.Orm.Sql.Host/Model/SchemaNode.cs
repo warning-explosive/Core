@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using SpaceEngineers.Core.Basics;
+    using Basics;
 
     /// <summary>
     /// SchemaNode

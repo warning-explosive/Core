@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using Expressions;
-    using Orm.Linq;
+    using Linq;
 
     /// <summary>
     /// IQueryTranslator

@@ -1,7 +1,8 @@
 ﻿namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities.Relations
 {
     using System;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using DataAccess.Api.Sql;
+    using DataAccess.Api.Sql.Attributes;
 
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Post : BaseDatabaseEntity<Guid>

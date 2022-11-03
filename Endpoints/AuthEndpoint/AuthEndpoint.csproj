@@ -29,7 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-        <ProjectReference Include="..\..\Modules\DataAccess.Api\DataAccess.Api.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Api.Sql\DataAccess.Api.Sql.csproj" />
         <ProjectReference Include="..\..\Modules\JwtAuthentication\JwtAuthentication.csproj" />
         <ProjectReference Include="..\AuthEndpoint.Contract\AuthEndpoint.Contract.csproj" />
         <ProjectReference Include="..\AuthEndpoint.Domain\AuthEndpoint.Domain.csproj" />

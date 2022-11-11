@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -20,30 +19,25 @@
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ITypeProvider _typeProvider;
 
-        private IReadOnlyDictionary<Type, EventHandler<DomainEventArgs>> _subscriptions;
-
         public EventSourcingEndpointInitializer(
             IDependencyContainer dependencyContainer,
             ITypeProvider typeProvider)
         {
             _dependencyContainer = dependencyContainer;
             _typeProvider = typeProvider;
-
-            _subscriptions = new Dictionary<Type, EventHandler<DomainEventArgs>>();
         }
 
         public Task Initialize(CancellationToken token)
         {
-            _subscriptions = _typeProvider
+            var aggregates = _typeProvider
                .OurTypes
                .Where(type => type.IsSubclassOfOpenGeneric(typeof(IAggregate<>))
-                           && type.IsConcreteType())
-               .ToDictionary(type => type, type => OnDomainEvent(_dependencyContainer, type, token));
+                           && type.IsConcreteType());
 
-            // TODO: #172 - why foreach for static event?
-            // TODO: #172 - separate by endpoint identity
-            foreach (var (aggregate, subscription) in _subscriptions)
+            foreach (var aggregate in aggregates)
             {
+                var subscription = OnDomainEvent(_dependencyContainer, aggregate, token);
+
                 Subscribe(aggregate, subscription);
 
                 token.Register(() => Unsubscribe(aggregate, subscription));
@@ -92,7 +86,7 @@
                 typeof(EventSourcingEndpointInitializer)
                    .CallMethod(nameof(OnDomainEvent))
                    .WithTypeArguments(aggregate, args.DomainEvent.GetType())
-                   .WithArguments(dependencyContainer, args.DomainEvent, token)
+                   .WithArguments(dependencyContainer, args, token)
                    .Invoke<Task>()
                    .Wait(token);
             };
@@ -100,14 +94,14 @@
 
         private static Task OnDomainEvent<TAggregate, TEvent>(
             IDependencyContainer dependencyContainer,
-            TEvent domainEvent,
+            DomainEventArgs args,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent
+            where TEvent : class, IDomainEvent<TAggregate>
         {
             return dependencyContainer
                .Resolve<IIntegrationContext>()
-               .Send(new CaptureDomainEvent<TEvent>(domainEvent), token);
+               .Send(new CaptureDomainEvent<TAggregate, TEvent>(args), token);
         }
     }
 }

@@ -8,15 +8,24 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     public class DomainEventArgs : EventArgs
     {
         /// <summary> .cctor </summary>
+        /// <param name="details">DomainEventDetails</param>
         /// <param name="domainEvent">IDomainEvent</param>
-        public DomainEventArgs(IDomainEvent domainEvent)
+        public DomainEventArgs(
+            DomainEventDetails details,
+            IDomainEvent domainEvent)
         {
+            Details = details;
             DomainEvent = domainEvent;
         }
 
         /// <summary>
-        /// IDomainEvent
+        /// Details
         /// </summary>
-        public IDomainEvent DomainEvent { get; }
+        public DomainEventDetails Details { get; init; }
+
+        /// <summary>
+        /// DomainEvent
+        /// </summary>
+        public IDomainEvent DomainEvent { get; init; }
     }
 }

@@ -1,26 +1,27 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Core.DataAccess.Api.Persisting;
-    using Core.DataAccess.Api.Reading;
-    using Core.DataAccess.Api.Transaction;
     using CrossCuttingConcerns.Json;
-    using GenericDomain.Api.Abstractions;
+    using DataAccess.Api.Persisting;
+    using DataAccess.Api.Reading;
+    using DataAccess.Api.Transaction;
 
     [Component(EnLifestyle.Scoped)]
-    internal class EventStore : IEventStore,
-                                IResolvable<IEventStore>
+    internal class SqlEventStore : IEventStore,
+                                   IResolvable<IEventStore>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IJsonSerializer _jsonSerializer;
 
-        public EventStore(
+        public SqlEventStore(
             IDatabaseContext databaseContext,
             IJsonSerializer jsonSerializer)
         {
@@ -28,7 +29,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
             _jsonSerializer = jsonSerializer;
         }
 
-        public async Task<TAggregate?> Get<TAggregate>(
+        public async Task<TAggregate?> GetAggregate<TAggregate>(
+            Guid aggregateId,
+            DateTime timestamp,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>
+        {
+            var domainEvents = await GetEvents<TAggregate>(aggregateId, timestamp, token).ConfigureAwait(false);
+
+            return domainEvents.Any()
+                ? (TAggregate)typeof(TAggregate)
+                   .GetConstructor(new[] { typeof(IDomainEvent<TAggregate>[]) })
+                  !.Invoke(new object[] { domainEvents })
+                : default;
+        }
+
+        public async Task<IReadOnlyCollection<IDomainEvent<TAggregate>>> GetEvents<TAggregate>(
             Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)
@@ -39,36 +55,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
                .All()
                .Where(domainEvent => domainEvent.AggregateId == aggregateId
                                   && domainEvent.Timestamp <= timestamp)
-               .OrderBy(domainEvent => domainEvent.Timestamp)
+               .OrderBy(domainEvent => domainEvent.Index)
                .ToListAsync(token)
                .ConfigureAwait(false);
 
-            var domainEvents = databaseDomainEvents
+            return databaseDomainEvents
                .Select(domainEvent => _jsonSerializer.DeserializeObject(domainEvent.SerializedEvent, domainEvent.EventType))
                .OfType<IDomainEvent<TAggregate>>()
                .ToArray();
-
-            if (domainEvents.Any())
-            {
-                return (TAggregate)typeof(TAggregate)
-                   .GetConstructor(new[] { typeof(IDomainEvent<TAggregate>[]) })
-                  !.Invoke(new object[] { domainEvents });
-            }
-
-            return default;
         }
 
         public Task Append<TAggregate, TEvent>(
             TEvent domainEvent,
+            DomainEventDetails details,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent
+            where TEvent : class, IDomainEvent<TAggregate>
         {
             var databaseDomainEvent = new DatabaseDomainEvent(
                 Guid.NewGuid(),
-                domainEvent.AggregateId,
-                domainEvent.Index,
-                domainEvent.Timestamp,
+                details.AggregateId,
+                details.Index,
+                details.Timestamp,
                 domainEvent.GetType(),
                 _jsonSerializer.SerializeObject(domainEvent));
 

@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
+namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host
 {
     using Basics;
+    using GenericEndpoint.Host.Builder;
     using Registrations;
 
     /// <summary>

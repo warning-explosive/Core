@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
+namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.Registrations
 {
-    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Registration;
-    using GenericHost.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.GenericHost.Api.Abstractions;
     using StartupActions;
 
     internal class UpgradeDatabaseHostStartupActionManualRegistration : IManualRegistration

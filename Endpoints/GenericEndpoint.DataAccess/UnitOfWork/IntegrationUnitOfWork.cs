@@ -14,11 +14,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Persisting;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
+    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Json;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
     using Messaging.Extensions;
     using Messaging.MessageHeaders;
+    using Microsoft.Extensions.Logging;
     using Pipeline;
     using EndpointIdentity = Contract.EndpointIdentity;
     using IntegrationMessage = Messaging.IntegrationMessage;
@@ -32,18 +34,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IOutboxDelivery _outboxDelivery;
         private readonly IJsonSerializer _jsonSerializer;
+        private readonly ILogger _logger;
 
         public IntegrationUnitOfWork(
             EndpointIdentity endpointIdentity,
             IAdvancedDatabaseTransaction transaction,
             IOutboxDelivery outboxDelivery,
             IOutboxStorage outboxStorage,
-            IJsonSerializer jsonSerializer)
+            IJsonSerializer jsonSerializer,
+            ILogger logger)
         {
             _endpointIdentity = endpointIdentity;
             _transaction = transaction;
             _outboxDelivery = outboxDelivery;
             _jsonSerializer = jsonSerializer;
+            _logger = logger;
 
             OutboxStorage = outboxStorage;
         }
@@ -86,7 +91,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     throw exception.Rethrow();
                 }
 
-                await DeliverOutgoingMessages(_outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
+                await DeliverOutgoingMessages(_logger, _endpointIdentity, _outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
             }
             finally
             {
@@ -192,14 +197,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Insert(outboxMessages, EnInsertBehavior.Default, token);
         }
 
+        // TODO: add logger templates with endpoint identity
         private static Task DeliverOutgoingMessages(
+            ILogger logger,
+            EndpointIdentity endpointIdentity,
             IOutboxDelivery outboxDelivery,
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
             return ExecutionExtensions
                .TryAsync((outboxDelivery, messages), DeliverOutgoingMessagesUnsafe)
-               .Catch<Exception>()
+               .Catch<Exception>((exception, _) =>
+               {
+                   logger.Error(exception, $"{endpointIdentity} -> Outbox delivery error");
+                   return Task.CompletedTask;
+               })
                .Invoke(token);
 
             static Task DeliverOutgoingMessagesUnsafe(

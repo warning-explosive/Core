@@ -7,10 +7,9 @@
     /// IAggregateFactory
     /// </summary>
     /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
-    /// <typeparam name="TSpec">TSpec type-argument</typeparam>
-    public interface IAggregateFactory<TAggregate, TSpec>
+    /// <typeparam name="TSpecification">TSpecification type-argument</typeparam>
+    public interface IAggregateFactory<TAggregate, TSpecification>
         where TAggregate : class, IAggregate<TAggregate>
-        where TSpec : IAggregateSpecification
     {
         /// <summary>
         /// Builds aggregate
@@ -18,6 +17,6 @@
         /// <param name="spec">Specification</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Built aggregate</returns>
-        Task<TAggregate> Build(TSpec spec, CancellationToken token);
+        Task<TAggregate> Build(TSpecification spec, CancellationToken token);
     }
 }

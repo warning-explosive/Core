@@ -12,7 +12,7 @@
     internal class ModelValidator : IModelValidator,
                                     IResolvable<IModelValidator>
     {
-        private const int PostgresNameDataLength = 64 - 1 - 5;
+        private const int PostgreSqlNameDataLength = 64 - 1 - 5;
 
         public void Validate(DatabaseNode model)
         {
@@ -22,8 +22,8 @@
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Views.Select(viewNode => viewNode.View)))
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Tables.Select(tableNode => tableNode.Table)))
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Tables.SelectMany(tableNode => tableNode.Columns.Select(columnNode => columnNode.Column))))
-                .Where(objectName => objectName.Length > PostgresNameDataLength)
-                .Each(objectName => throw new InvalidOperationException($"Postgres object name {objectName} should be less than {PostgresNameDataLength} bytes (actual {objectName.Length} bytes)"));
+                .Where(objectName => objectName.Length > PostgreSqlNameDataLength)
+                .Each(objectName => throw new InvalidOperationException($"PostgreSQL object name {objectName} should be less than {PostgreSqlNameDataLength} bytes (actual {objectName.Length} bytes)"));
         }
     }
 }

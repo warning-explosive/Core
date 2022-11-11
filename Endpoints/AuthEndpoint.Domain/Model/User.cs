@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
             _salt = SecurityExtensions.GenerateSalt();
             _passwordHash = rawPassword.GeneratePasswordHash(_salt);
 
-            PopulateEvent(new UserCreated(Id, NextDomainEventIndex(), DateTime.UtcNow, username, _salt, _passwordHash));
+            PopulateEvent(new UserCreated(Id, username, _salt, _passwordHash));
         }
 
         /// <summary>

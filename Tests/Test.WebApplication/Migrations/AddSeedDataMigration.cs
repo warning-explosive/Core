@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Host.Abstractions;
     using GenericDomain.Api.Abstractions;
+    using GenericDomain.EventSourcing;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
@@ -53,15 +54,15 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             var userCreatedDomainEvent = new AuthEndpoint.Domain.Model.UserCreated(
                 aggregateId,
-                0,
-                DateTime.UtcNow,
                 new AuthEndpoint.Domain.Model.Username(username),
                 salt,
                 new AuthEndpoint.Domain.Model.Password(password).GeneratePasswordHash(salt));
 
+            var details = new DomainEventDetails(aggregateId, 0, DateTime.UtcNow);
+
             await dependencyContainer
                .Resolve<IEventStore>()
-               .Append<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>(userCreatedDomainEvent, token)
+               .Append<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>(userCreatedDomainEvent, details, token)
                .ConfigureAwait(false);
 
             sb.AppendLine($"--{nameof(AuthEndpoint.Domain.Model.UserCreated)}");

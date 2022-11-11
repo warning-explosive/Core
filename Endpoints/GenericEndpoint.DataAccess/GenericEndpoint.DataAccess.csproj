@@ -29,7 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
-      <ProjectReference Include="..\..\Modules\GenericDomain.Api\GenericDomain.Api.csproj" />
+      <ProjectReference Include="..\..\Modules\GenericDomain.EventSourcing\GenericDomain.EventSourcing.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -48,9 +48,6 @@
       </Compile>
       <Compile Update="EventSourcing\CaptureDomainEvent.cs">
         <DependentUpon>CaptureDomainEventMessageHandler.cs</DependentUpon>
-      </Compile>
-      <Compile Update="EventSourcing\DatabaseDomainEvent.cs">
-        <DependentUpon>EventStore.cs</DependentUpon>
       </Compile>
       <Compile Update="Deduplication\EndpointIdentity.cs">
         <DependentUpon>InboxMessage.cs</DependentUpon>

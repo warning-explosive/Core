@@ -512,12 +512,6 @@
                            .WithAdditionalOurTypes(endpoint1AdditionalOurTypes)
                            .WithOverrides(overrides))
                        .BuildOptions())
-               .UseEndpoint(TestIdentity.Endpoint11,
-                    (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(endpoint1AdditionalOurTypes)
-                           .WithOverrides(overrides))
-                       .BuildOptions())
                .UseEndpoint(TestIdentity.Endpoint20,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -544,7 +538,7 @@
 
                     var awaiter = Task.WhenAll(
                         collector.WaitUntilMessageIsNotReceived<Event>(),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10) || message.EndpointIdentity.Equals(TestIdentity.Endpoint11)),
+                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10)),
                         collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)));
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))

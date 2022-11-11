@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using DataAccess.Api.Transaction;
     using Domain.Model;
     using GenericDomain.Api.Abstractions;
+    using GenericDomain.EventSourcing;
 
     [Component(EnLifestyle.Scoped)]
     internal class FindUserAggregateFactory : IAggregateFactory<User, FindUserSpecification>,
@@ -43,7 +44,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             }
 
             var user = await _eventStore
-               .Get<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow, token)
+               .GetAggregate<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow, token)
                .ConfigureAwait(false);
 
             if (user == null)

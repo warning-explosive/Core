@@ -17,12 +17,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Basics;
     using CompositionRoot.Registration;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Settings;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.DataAccess.EventSourcing;
+    using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.Host;
+    using GenericEndpoint.Host.Builder;
     using IntegrationTransport.Host;
     using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         /// <summary>
-        /// useContainer; useTransport; collector; databaseProvider; timeout;
+        /// AuthTest test cases
         /// </summary>
         /// <returns>AuthTestData</returns>
         public static IEnumerable<object[]> AuthTestData()
@@ -94,9 +94,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 useRabbitMqIntegrationTransport
             };
 
-            var databaseProviders = new IDatabaseProvider[]
+            var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
             {
-                new PostgreSqlDatabaseProvider()
+                (builder, dataAccessOptions) => builder.WithPostgreSqlDataAccess(dataAccessOptions)
+            };
+
+            var eventSourcingProviders = new Func<IEndpointBuilder, IEndpointBuilder>[]
+            {
+                builder => builder.WithSqlEventSourcing()
             };
 
             var isolationLevels = new[]
@@ -106,16 +111,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             return integrationTransportProviders
-               .SelectMany(useTransport => databaseProviders
-                   .SelectMany(databaseProvider => isolationLevels
-                       .Select(isolationLevel => new object[]
-                       {
-                           settingsDirectory,
-                           useTransport,
-                           databaseProvider,
-                           isolationLevel,
-                           timeout
-                       })));
+               .SelectMany(useTransport => dataAccessProviders
+                   .SelectMany(withDataAccess => eventSourcingProviders
+                       .SelectMany(withEventSourcing => isolationLevels
+                           .Select(isolationLevel => new object[]
+                           {
+                               settingsDirectory,
+                               useTransport,
+                               withDataAccess,
+                               withEventSourcing,
+                               isolationLevel,
+                               timeout
+                           }))));
         }
 
         [Fact]
@@ -166,11 +173,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         internal async Task AuthorizeUserTest(
             DirectoryInfo settingsDirectory,
             Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider,
+            Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
+            Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            Output.WriteLine(databaseProvider.GetType().FullName);
             Output.WriteLine(isolationLevel.ToString());
 
             var settingsScope = nameof(AuthorizeUserTest);
@@ -191,14 +198,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new TestSettingsScopeProviderOverride(settingsScope)
             };
 
-            var host = useTransport(
-                    settingsScope,
-                    isolationLevel,
-                    Fixture.CreateHostBuilder(Output))
-               .UseAuthEndpoint(builder => builder
-                   .WithDataAccess(databaseProvider,
-                        options => options
-                           .ExecuteMigrations())
+            var host = useTransport(settingsScope, isolationLevel, Fixture.CreateHostBuilder(Output))
+               .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(manualMigrations)
                        .WithManualRegistrations(manualRegistrations)
@@ -267,7 +268,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.UserCreated>>(),
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>>(),
                             collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserCreated>());
 
                         await integrationContext

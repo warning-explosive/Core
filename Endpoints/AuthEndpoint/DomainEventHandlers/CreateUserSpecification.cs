@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
 {
-    using GenericDomain.Api.Abstractions;
-
-    internal class CreateUserSpecification : IAggregateSpecification
+    internal class CreateUserSpecification
     {
         public CreateUserSpecification(string username, string password)
         {

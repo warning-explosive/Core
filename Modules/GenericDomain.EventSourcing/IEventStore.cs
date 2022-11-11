@@ -1,9 +1,11 @@
-namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
+namespace SpaceEngineers.Core.GenericDomain.EventSourcing
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
 
     /// <summary>
     /// IEventStore
@@ -18,8 +20,22 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <param name="timestamp">Timestamp</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
-        /// <returns>Aggregate</returns>
-        Task<TAggregate?> Get<TAggregate>(
+        /// <returns>Ongoing operation</returns>
+        Task<TAggregate?> GetAggregate<TAggregate>(
+            Guid aggregateId,
+            DateTime timestamp,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>;
+
+        /// <summary>
+        /// Gets aggregate by it's identifier and version timestamp
+        /// </summary>
+        /// <param name="aggregateId">Aggregate identifier</param>
+        /// <param name="timestamp">Timestamp</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        Task<IReadOnlyCollection<IDomainEvent<TAggregate>>> GetEvents<TAggregate>(
             Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)
@@ -29,14 +45,16 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// Appends event to aggregate's event store
         /// </summary>
         /// <param name="domainEvent">Domain event</param>
+        /// <param name="details">DomainEventDetails</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
         /// <typeparam name="TEvent">TEvent type-argument</typeparam>
-        /// <returns>Aggregate</returns>
+        /// <returns>Ongoing operation</returns>
         Task Append<TAggregate, TEvent>(
             TEvent domainEvent,
+            DomainEventDetails details,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent;
+            where TEvent : class, IDomainEvent<TAggregate>;
     }
 }

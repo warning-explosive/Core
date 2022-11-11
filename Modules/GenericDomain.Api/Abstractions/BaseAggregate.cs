@@ -2,15 +2,16 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
+    using Basics;
 
     /// <summary>
     /// BaseAggregate
     /// </summary>
     /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
-    public abstract class BaseAggregate<TAggregate> : BaseEntity, IAggregate
+    public abstract class BaseAggregate<TAggregate> : BaseEntity, IAggregate<TAggregate>
         where TAggregate : class, IAggregate<TAggregate>
     {
-        private readonly ICollection<IDomainEvent> _events;
+        private readonly List<IDomainEvent> _events;
         private long _index;
 
         /// <summary> .cctor </summary>
@@ -22,7 +23,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 
             foreach (var domainEvent in events)
             {
-                domainEvent.Apply((this as TAggregate) !);
+                Apply(domainEvent);
 
                 _index++;
             }
@@ -34,25 +35,33 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         public static event EventHandler<DomainEventArgs>? OnDomainEvent;
 
         /// <inheritdoc />
-        public IEnumerable<IDomainEvent> Events => _events;
+        public IReadOnlyCollection<IDomainEvent> Events => _events;
 
         /// <summary>
-        /// Gets next domain event index without any state changes
-        /// </summary>
-        /// <returns>Next domain event index</returns>
-        protected long NextDomainEventIndex() => _index + 1;
-
-        /// <summary>
-        /// Populates domain event and increases domain event index counter
+        /// Populates domain event and maintains internal state
         /// </summary>
         /// <param name="domainEvent">Domain event</param>
-        protected void PopulateEvent(IDomainEvent domainEvent)
+        /// <typeparam name="TEvent">TEvent type-argument</typeparam>
+        public void PopulateEvent<TEvent>(TEvent domainEvent)
+            where TEvent : class, IDomainEvent<TAggregate>
         {
             _events.Add(domainEvent);
 
-            _index++;
+            var details = new DomainEventDetails(Id, _index + 1, DateTime.UtcNow);
 
-            OnDomainEvent?.Invoke(this, new DomainEventArgs(domainEvent));
+            var args = new DomainEventArgs(details, domainEvent);
+
+            OnDomainEvent?.Invoke(this, args);
+
+            _index++;
+        }
+
+        private void Apply(IDomainEvent domainEvent)
+        {
+            _ = this
+               .CallMethod(nameof(Apply)) // IHasDomainEvent.Apply
+               .WithArguments(domainEvent)
+               .Invoke();
         }
     }
 }

@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using Basics.Primitives;
     using Builder;
     using CompositionRoot;
-    using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Extensions;
@@ -163,16 +162,38 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                            && !type.IsMessageContractAbstraction())
                .ToArray();
 
-            var domainEvents = AssembliesExtensions
-               .AllOurAssembliesFromCurrentDomain()
-               .SelectMany(assembly => assembly.GetTypes())
-               .Where(type => typeof(IDomainEvent).IsAssignableFrom(type))
-               .ToArray();
+            Type[] aggregates;
+            Type[] domainEvents;
+
+            if (AssembliesExtensions.FindAssembly("SpaceEngineers.Core.GenericDomain.Api") != null)
+            {
+                var aggregateType = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate");
+
+                aggregates = AssembliesExtensions
+                   .AllOurAssembliesFromCurrentDomain()
+                   .SelectMany(assembly => assembly.GetTypes())
+                   .Where(type => aggregateType.IsAssignableFrom(type))
+                   .ToArray();
+
+                var domainEventType = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent");
+
+                domainEvents = AssembliesExtensions
+                   .AllOurAssembliesFromCurrentDomain()
+                   .SelectMany(assembly => assembly.GetTypes())
+                   .Where(type => domainEventType.IsAssignableFrom(type))
+                   .ToArray();
+            }
+            else
+            {
+                aggregates = Array.Empty<Type>();
+                domainEvents = Array.Empty<Type>();
+            }
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
                    .WithAdditionalOurTypes(integrationMessageTypes)
+                   .WithAdditionalOurTypes(aggregates)
                    .WithAdditionalOurTypes(domainEvents)
                    .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
                    .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))

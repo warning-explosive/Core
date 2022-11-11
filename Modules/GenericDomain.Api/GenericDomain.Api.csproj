@@ -62,14 +62,11 @@
       <Compile Update="Abstractions\BaseEntity.cs">
         <DependentUpon>IEntity.cs</DependentUpon>
       </Compile>
-      <Compile Update="Abstractions\IAggregateSpecification.cs">
-        <DependentUpon>IAggregateFactory.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Abstractions\BaseDomainEvent.cs">
-        <DependentUpon>IDomainEvent.cs</DependentUpon>
-      </Compile>
       <Compile Update="Abstractions\DomainEventArgs.cs">
         <DependentUpon>BaseAggregate.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\DomainEventDetails.cs">
+        <DependentUpon>DomainEventArgs.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

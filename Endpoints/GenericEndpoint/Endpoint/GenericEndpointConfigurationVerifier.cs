@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             static bool HasWrongName(EndpointIdentity endpointIdentity, Type type)
             {
-                var left = type.FullName!;
+                var left = type.GenericTypeDefinitionOrSelf().FullName!;
                 var right = endpointIdentity.LogicalName;
 
                 return left.Length + right.Length + 1 > 255;

@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
 {
     using System;
-    using Core.DataAccess.Api.Model;
-    using Core.DataAccess.Api.Sql;
-    using Core.DataAccess.Api.Sql.Attributes;
+    using DataAccess.Api.Model;
+    using DataAccess.Api.Sql;
+    using DataAccess.Api.Sql.Attributes;
 
     /// <summary>
     /// DatabaseDomainEvent

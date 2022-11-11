@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using AuthEndpoint.Host;
     using Basics;
     using CrossCuttingConcerns.Extensions;
-    using DataAccess.Orm.PostgreSql.Host;
+    using GenericEndpoint.DataAccess.Host;
     using GenericHost;
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Configuration;
@@ -59,9 +59,9 @@ namespace SpaceEngineers.Core.Test.WebApplication
                            .BuildOptions(),
                         "Gateway"))
                .UseAuthEndpoint(builder => builder
-                   .WithDataAccess(new PostgreSqlDatabaseProvider(),
-                        options => options
-                           .ExecuteMigrations())
+                   .WithPostgreSqlDataAccess(options => options
+                       .ExecuteMigrations())
+                   .WithSqlEventSourcing()
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(migrations))
                    .BuildOptions())

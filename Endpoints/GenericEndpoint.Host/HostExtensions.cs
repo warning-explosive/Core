@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     /// </summary>
     public static class HostExtensions
     {
-        private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}";
+        private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}. Horizontal scaling in the same process doesn't make sense.";
         private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
         private const string RequireTransportInjection = "Unable to find IIntegrationTransport injection.";
         private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
@@ -123,7 +123,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             var duplicates = identities
                 .Concat(new[] { endpointIdentity })
-                .GroupBy(identity => identity)
+                .GroupBy(identity => identity.LogicalName)
                 .Where(grp => grp.Count() > 1)
                 .Select(grp => grp.Key.ToString())
                 .ToList();
@@ -145,11 +145,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
         private static IEndpointBuilder ConfigureBuilder(IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
-            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(
-                    nameof(SpaceEngineers),
-                    nameof(Core),
-                    nameof(CrossCuttingConcerns)));
+            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
 
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
 

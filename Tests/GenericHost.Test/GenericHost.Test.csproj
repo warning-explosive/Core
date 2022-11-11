@@ -45,6 +45,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
+        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Host\GenericEndpoint.DataAccess.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
         <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />

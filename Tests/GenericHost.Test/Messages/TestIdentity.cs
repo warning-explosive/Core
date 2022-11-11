@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
         public const string Instance1 = nameof(Instance1);
 
         public static readonly EndpointIdentity Endpoint10 = new EndpointIdentity(Endpoint1, Instance0);
-        public static readonly EndpointIdentity Endpoint11 = new EndpointIdentity(Endpoint1, Instance1);
         public static readonly EndpointIdentity Endpoint20 = new EndpointIdentity(Endpoint2, Instance0);
     }
 }

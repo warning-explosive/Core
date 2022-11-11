@@ -18,16 +18,20 @@
     using CompositionRoot.Extensions;
     using CompositionRoot.Registration;
     using DataAccess.Api.Model;
-    using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.PostgreSql.Host;
+    using DataAccess.Orm.Connection;
+    using DataAccess.Orm.PostgreSql;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
     using DatabaseEntities.Relations;
+    using GenericDomain.EventSourcing.Sql;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.DataAccess.Deduplication;
     using GenericEndpoint.DataAccess.EventSourcing;
+    using GenericEndpoint.DataAccess.Host;
+    using GenericEndpoint.DataAccess.Host.BackgroundWorkers;
+    using GenericEndpoint.DataAccess.Host.StartupActions;
     using GenericEndpoint.Host;
-    using GenericEndpoint.Host.BackgroundWorkers;
+    using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.StartupActions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Pipeline;
@@ -103,7 +107,7 @@
         }
 
         /// <summary>
-        /// useContainer; useTransport; databaseProvider;
+        /// BuildHostTest test cases
         /// </summary>
         /// <returns>RunHostWithDataAccessTestData</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
@@ -136,19 +140,26 @@
                 useRabbitMqIntegrationTransport
             };
 
-            var databaseProviders = new IDatabaseProvider[]
+            var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
             {
-                new PostgreSqlDatabaseProvider()
+                (builder, dataAccessOptions) => builder.WithPostgreSqlDataAccess(dataAccessOptions)
+            };
+
+            var eventSourcingProviders = new Func<IEndpointBuilder, IEndpointBuilder>[]
+            {
+                builder => builder.WithSqlEventSourcing()
             };
 
             return integrationTransportProviders
-               .SelectMany(useTransport => databaseProviders
-                   .Select(databaseProvider => new object[]
-                   {
-                       settingsDirectory,
-                       useTransport,
-                       databaseProvider
-                   }));
+               .SelectMany(useTransport => dataAccessProviders
+                   .SelectMany(withDataAccess => eventSourcingProviders
+                       .Select(withEventSourcing => new object[]
+                       {
+                           settingsDirectory,
+                           useTransport,
+                           withDataAccess,
+                           withEventSourcing
+                       })));
         }
 
         [Theory(Timeout = 60_000)]
@@ -227,8 +238,6 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var databaseProvider = new PostgreSqlDatabaseProvider();
-
             var settingsScope = nameof(BuildTest);
 
             var overrides = new IComponentsOverride[]
@@ -239,9 +248,8 @@
             var host = useTransport(Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
-                       .WithDataAccess(databaseProvider,
-                            options => options
-                               .ExecuteMigrations())
+                       .WithPostgreSqlDataAccess(options => options
+                           .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
                            .WithOverrides(overrides)
                            .WithAdditionalOurTypes(additionalOurTypes))
@@ -365,7 +373,7 @@
 
                     var expectedIntegrationMessageTypes = new[]
                     {
-                        typeof(CaptureDomainEvent<>),
+                        typeof(CaptureDomainEvent<,>),
                         typeof(BaseEvent),
                         typeof(InheritedEvent),
                         typeof(Command),
@@ -384,7 +392,7 @@
 
                     var expectedCommands = new[]
                     {
-                        typeof(CaptureDomainEvent<>),
+                        typeof(CaptureDomainEvent<,>),
                         typeof(Command),
                         typeof(OpenGenericHandlerCommand)
                     };
@@ -548,7 +556,7 @@
 
                     var expectedIntegrationMessageTypes = new[]
                     {
-                        typeof(CaptureDomainEvent<>),
+                        typeof(CaptureDomainEvent<,>),
                         typeof(AuthorizeUser),
                         typeof(UserAuthorizationResult),
                         typeof(CreateUser),
@@ -668,25 +676,18 @@
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
             DirectoryInfo settingsDirectory,
             Func<string, IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider)
+            Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
+            Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing)
         {
-            Output.WriteLine(databaseProvider.GetType().FullName);
-
             var overrides = new IComponentsOverride[]
             {
                 new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
             };
 
-            var host = useTransport(
-                    nameof(CompareEquivalentDatabaseDatabaseModelsTest),
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(nameof(CompareEquivalentDatabaseDatabaseModelsTest), Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                       .WithDataAccess(databaseProvider,
-                            options => options
-                               .ExecuteMigrations())
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(overrides))
+                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                       .ModifyContainerOptions(options => options.WithOverrides(overrides))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
@@ -725,10 +726,9 @@
         internal async Task ExtractDatabaseModelChangesDiffTest(
             DirectoryInfo settingsDirectory,
             Func<string, IHostBuilder, IHostBuilder> useTransport,
-            IDatabaseProvider databaseProvider)
+            Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
+            Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing)
         {
-            Output.WriteLine(databaseProvider.GetType().FullName);
-
             var additionalOurTypes = new[]
             {
                 typeof(Community),
@@ -743,14 +743,9 @@
                 new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
             };
 
-            var host = useTransport(
-                    nameof(ExtractDatabaseModelChangesDiffTest),
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(nameof(ExtractDatabaseModelChangesDiffTest), Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
-                       .WithDataAccess(databaseProvider,
-                            options => options
-                               .ExecuteMigrations())
+                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
                            .WithOverrides(overrides))
@@ -785,7 +780,9 @@
 
             modelChanges.Each((change, i) => Output.WriteLine($"[{i}] {change}"));
 
-            if (databaseProvider.GetType() == typeof(PostgreSqlDatabaseProvider))
+            var databaseImplementation = endpointContainer.Resolve<IDatabaseImplementation>();
+
+            if (databaseImplementation.GetType() == typeof(PostgreSqlDatabaseImplementation))
             {
                 var assertions = new Action<int>[]
                 {
@@ -805,7 +802,7 @@
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), typeof(DatabaseDomainEvent));
+                        AssertCreateTable(modelChanges, index, nameof(SpaceEngineers.Core.GenericDomain.EventSourcing), typeof(DatabaseDomainEvent));
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");
@@ -1023,7 +1020,7 @@
             }
             else
             {
-                throw new NotSupportedException(databaseProvider.GetType().FullName);
+                throw new NotSupportedException(databaseImplementation.GetType().FullName);
             }
 
             static void AssertCreateDataBase(IModelChange[] modelChanges, int index, string database)

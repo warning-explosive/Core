@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
 {
-    using GenericDomain.Api.Abstractions;
-
-    internal class FindUserSpecification : IAggregateSpecification
+    internal class FindUserSpecification
     {
         public FindUserSpecification(string username)
         {

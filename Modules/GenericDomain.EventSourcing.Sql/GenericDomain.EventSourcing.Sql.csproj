@@ -4,13 +4,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.DataAccess.Api.Sql</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.DataAccess.Api.Sql</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.GenericDomain.EventSourcing.Sql</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericDomain.EventSourcing.Sql</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.DataAccess.Api.Sql</Title>
+        <Title>SpaceEngineers.Core.GenericDomain.EventSourcing.Sql</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.DataAccess.Api.Sql</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.GenericDomain.EventSourcing.Sql</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -28,21 +28,17 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\DataAccess.Api\DataAccess.Api.csproj" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="BaseSqlView.cs">
-        <DependentUpon>ISqlView.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+      <ProjectReference Include="..\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
+      <ProjectReference Include="..\GenericDomain.EventSourcing\GenericDomain.EventSourcing.csproj" />
     </ItemGroup>
 </Project>

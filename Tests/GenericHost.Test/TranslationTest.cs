@@ -17,13 +17,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Linq;
-    using DataAccess.Orm.PostgreSql.Host;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
     using DataAccess.Orm.Sql.Translation.Extensions;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.Host;
     using GenericHost;
     using IntegrationTransport.Host;
@@ -96,7 +96,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var host = new Lazy<IHost>(() =>
                 {
-                    var databaseProvider = new PostgreSqlDatabaseProvider();
                     var isolationLevel = IsolationLevel.ReadCommitted;
                     var settingsScope = nameof(QueryTranslationTest);
                     var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
@@ -139,9 +138,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                            .BuildOptions())
                        .UseEndpoint(TestIdentity.Endpoint10,
                             (_, builder) => builder
-                               .WithDataAccess(databaseProvider,
-                                    options => options
-                                       .ExecuteMigrations())
+                               .WithPostgreSqlDataAccess(options => options
+                                   .ExecuteMigrations())
+                               .WithSqlEventSourcing()
                                .ModifyContainerOptions(options => options
                                    .WithAdditionalOurTypes(additionalOurTypes)
                                    .WithManualRegistrations(manualRegistrations)

@@ -6,28 +6,29 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
     /// <summary>
     /// UserCreated
     /// </summary>
-    public class UserCreated : BaseDomainEvent<User, UserCreated>
+    public class UserCreated : IDomainEvent<User>
     {
         /// <summary> .cctor </summary>
         /// <param name="aggregateId">AggregateId</param>
-        /// <param name="index">Index</param>
-        /// <param name="timestamp">Timestamp</param>
         /// <param name="username">Username</param>
         /// <param name="salt">Salt</param>
         /// <param name="passwordHash">Password hash</param>
         public UserCreated(
             Guid aggregateId,
-            long index,
-            DateTime timestamp,
             Username username,
             string salt,
             string passwordHash)
-            : base(aggregateId, index, timestamp)
         {
+            AggregateId = aggregateId;
             Username = username;
             Salt = salt;
             PasswordHash = passwordHash;
         }
+
+        /// <summary>
+        /// AggregateId
+        /// </summary>
+        public Guid AggregateId { get; init; }
 
         /// <summary>
         /// Username

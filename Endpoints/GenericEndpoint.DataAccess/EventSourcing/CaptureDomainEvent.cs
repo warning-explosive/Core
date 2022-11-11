@@ -6,14 +6,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
     using GenericDomain.Api.Abstractions;
 
     [OwnedBy(nameof(EndpointIdentity))]
-    internal class CaptureDomainEvent<TEvent> : IIntegrationCommand
-        where TEvent : class, IDomainEvent
+    internal class CaptureDomainEvent<TAggregate, TEvent> : IIntegrationCommand
+        where TAggregate : class, IAggregate<TAggregate>
+        where TEvent : class, IDomainEvent<TAggregate>
     {
-        public CaptureDomainEvent(TEvent @event)
+        public CaptureDomainEvent(DomainEventArgs args)
         {
-            Event = @event;
+            Args = args;
         }
 
-        public TEvent Event { get; init; }
+        public DomainEventArgs Args { get; init; }
     }
 }

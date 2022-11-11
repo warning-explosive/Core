@@ -47,6 +47,7 @@
         /// <returns>Type</returns>
         public Type ToType()
         {
+            // TODO: support generic types
             return AssembliesExtensions.FindRequiredType(Assembly, Type);
         }
 

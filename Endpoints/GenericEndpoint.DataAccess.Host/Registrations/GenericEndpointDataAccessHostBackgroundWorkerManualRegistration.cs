@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
+namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.Registrations
 {
     using BackgroundWorkers;
     using CompositionRoot.Registration;

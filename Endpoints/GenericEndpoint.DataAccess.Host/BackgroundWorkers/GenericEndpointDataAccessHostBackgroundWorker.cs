@@ -1,21 +1,21 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.Host.BackgroundWorkers
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.BackgroundWorkers
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Primitives;
     using Contract;
-    using DataAccess.UnitOfWork;
-    using GenericHost.Api.Abstractions;
-    using IntegrationTransport.Api.Abstractions;
-    using IntegrationTransport.Api.Enumerations;
     using Microsoft.Extensions.Logging;
+    using Settings;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
-    using SpaceEngineers.Core.GenericEndpoint.DataAccess.Settings;
+    using SpaceEngineers.Core.GenericHost.Api.Abstractions;
+    using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
+    using SpaceEngineers.Core.IntegrationTransport.Api.Enumerations;
+    using UnitOfWork;
 
     [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
     internal class GenericEndpointDataAccessHostBackgroundWorker : IHostBackgroundWorker,

@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary>
         /// Domain events
         /// </summary>
-        IEnumerable<IDomainEvent> Events { get; }
+        IReadOnlyCollection<IDomainEvent> Events { get; }
     }
 
     /// <summary>
@@ -20,6 +20,13 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     public interface IAggregate<TAggregate> : IAggregate
         where TAggregate : class, IAggregate<TAggregate>
     {
+        /// <summary>
+        /// Populates domain event and maintains internal state
+        /// </summary>
+        /// <param name="domainEvent">Domain event</param>
+        /// <typeparam name="TEvent">TEvent type-argument</typeparam>
+        void PopulateEvent<TEvent>(TEvent domainEvent)
+            where TEvent : class, IDomainEvent<TAggregate>;
     }
 
     /// <summary>

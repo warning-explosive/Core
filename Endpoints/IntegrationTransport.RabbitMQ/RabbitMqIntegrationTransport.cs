@@ -265,7 +265,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 basicProperties.ClusterId = message.ReadRequiredHeader<SentFrom>().Value.InstanceName;
                 basicProperties.MessageId = message.ReadRequiredHeader<Id>().Value.ToString();
                 basicProperties.CorrelationId = message.ReadRequiredHeader<ConversationId>().Value.ToString();
-                basicProperties.Type = message.ReflectedType.FullName;
+                basicProperties.Type = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName;
                 basicProperties.Headers = new Dictionary<string, object>();
 
                 var deferredUntil = message.ReadHeader<DeferredUntil>();
@@ -899,6 +899,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var consumer = (AsyncEventingBasicConsumer)sender;
 
+                // TODO: handle redelivery - clear queues before tests
                 if (args.Redelivered)
                 {
                     logger.Debug($"Message redelivery: {args.BasicProperties.Type} - {args.BasicProperties.MessageId}");

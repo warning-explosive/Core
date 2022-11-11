@@ -1,26 +1,10 @@
 namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 {
-    using System;
-
     /// <summary>
     /// IDomainEvent
     /// </summary>
     public interface IDomainEvent
     {
-        /// <summary>
-        /// Aggregate id
-        /// </summary>
-        public Guid AggregateId { get; }
-
-        /// <summary>
-        /// Index
-        /// </summary>
-        public long Index { get; }
-
-        /// <summary>
-        /// Timestamp
-        /// </summary>
-        public DateTime Timestamp { get; }
     }
 
     /// <summary>
@@ -30,10 +14,5 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     public interface IDomainEvent<TAggregate> : IDomainEvent
         where TAggregate : class, IAggregate<TAggregate>
     {
-        /// <summary>
-        /// Applies event to aggregate
-        /// </summary>
-        /// <param name="aggregate">Aggregate</param>
-        void Apply(TAggregate aggregate);
     }
 }

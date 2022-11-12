@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using Microsoft.AspNetCore.Http;
 
     [Component(EnLifestyle.Scoped)]
-    [Before("SpaceEngineers.Core.GenericEndpoint.Messaging.IntegrationMessageUserScopeProvider")]
+    [Before("SpaceEngineers.Core.GenericEndpoint.Messaging SpaceEngineers.Core.GenericEndpoint.Messaging.IntegrationMessageUserScopeProvider")]
     internal class WebRequestUserScopeProvider : IUserScopeProvider,
                                                  ICollectionResolvable<IUserScopeProvider>
     {

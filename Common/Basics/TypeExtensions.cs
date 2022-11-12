@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.Basics
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
@@ -13,6 +14,37 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// Finds type by type full name
+        /// </summary>
+        /// <param name="typeNode">TypeNode</param>
+        /// <returns>System.Type</returns>
+        public static Type FindType(this TypeNode typeNode)
+        {
+            return typeNode;
+        }
+
+        /// <summary>
+        /// Finds type by type full name
+        /// </summary>
+        /// <param name="typeNode">TypeNode</param>
+        /// <param name="type">System.Type</param>
+        /// <returns>True if type was found</returns>
+        [SuppressMessage("Analysis", "CA1031", Justification = "desired behavior")]
+        public static bool TryFindType(TypeNode typeNode, [NotNullWhen(true)] out Type? type)
+        {
+            try
+            {
+                type = FindType(typeNode);
+                return true;
+            }
+            catch (Exception)
+            {
+                type = null;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Is object an instance of specified type
         /// </summary>

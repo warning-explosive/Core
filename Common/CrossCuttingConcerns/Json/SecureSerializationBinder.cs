@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using CompositionRoot;
     using Converters;
     using Newtonsoft.Json;
@@ -32,12 +33,12 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
         public void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
         {
             assemblyName = null;
-            typeName = JsonConvert.SerializeObject(new TypeNode(serializedType), _settings);
+            typeName = JsonConvert.SerializeObject(TypeNode.FromType(serializedType), _settings);
         }
 
         public Type BindToType(string? assemblyName, string typeName)
         {
-            return TypeNode.Parse(typeName).BuildType(_typeProvider);
+            return TypeNode.FromString(typeName);
         }
     }
 }

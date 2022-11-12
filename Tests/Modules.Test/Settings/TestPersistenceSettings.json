@@ -49,7 +49,7 @@
       "Port": 27017
     },
     "Servers": {
-      "$type": "System.Private.CoreLib System.Collections.ObjectModel.ReadOnlyCollection`1 [MongoDB.Driver MongoDB.Driver.MongoServerAddress]",
+      "$type": "System.Private.CoreLib System.Collections.ObjectModel.ReadOnlyCollection`1\n\tMongoDB.Driver MongoDB.Driver.MongoServerAddress",
       "$values": [
         {
           "Host": "localhost",

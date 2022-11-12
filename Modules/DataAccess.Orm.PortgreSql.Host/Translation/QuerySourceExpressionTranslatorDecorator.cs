@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Translation
                 return true;
             }
 
-            var upgradeDatabaseHostStartupActionType = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions.UpgradeDatabaseHostStartupAction");
+            var upgradeDatabaseHostStartupActionType = TypeExtensions.FindType("SpaceEngineers.Core.GenericEndpoint.DataAccess.Host SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions.UpgradeDatabaseHostStartupAction");
             var upgradeDatabaseHostStartupAction = (IHostStartupAction)_dependencyContainer.Resolve(upgradeDatabaseHostStartupActionType);
 
             _migrationsWasApplied = _hostStartupActionsRegistry.Contains(upgradeDatabaseHostStartupAction);

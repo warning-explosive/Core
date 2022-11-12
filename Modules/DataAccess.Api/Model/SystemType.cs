@@ -9,18 +9,11 @@
     public record SystemType : IInlinedObject
     {
         /// <summary> .cctor </summary>
-        /// <param name="assembly">Assembly</param>
         /// <param name="type">Type</param>
-        public SystemType(string assembly, string type)
+        public SystemType(string type)
         {
-            Assembly = assembly;
             Type = type;
         }
-
-        /// <summary>
-        /// Assembly
-        /// </summary>
-        public string Assembly { get; init; }
 
         /// <summary>
         /// Type
@@ -47,8 +40,7 @@
         /// <returns>Type</returns>
         public Type ToType()
         {
-            // TODO: support generic types
-            return AssembliesExtensions.FindRequiredType(Assembly, Type);
+            return TypeExtensions.FindType(Type);
         }
 
         /// <summary>
@@ -58,7 +50,7 @@
         /// <returns>SystemType</returns>
         public static SystemType FromType(Type type)
         {
-            return new SystemType(type.Assembly.GetName().Name, type.FullName);
+            return new SystemType(TypeNode.FromType(type).ToString());
         }
     }
 }

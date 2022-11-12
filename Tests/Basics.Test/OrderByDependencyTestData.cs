@@ -21,15 +21,15 @@ namespace SpaceEngineers.Core.Basics.Test
         /*
          * weakly typed
          */
-        [After("SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData.WeakDependencyTest2")]
+        [After("SpaceEngineers.Core.Basics.Test SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData+WeakDependencyTest2")]
         internal class WeakDependencyTest1 { }
 
-        [After("SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData.WeakDependencyTest3")]
+        [After("SpaceEngineers.Core.Basics.Test SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData+WeakDependencyTest3")]
         internal class WeakDependencyTest2 { }
 
         internal class WeakDependencyTest3 { }
 
-        [Before("SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData.WeakDependencyTest3")]
+        [Before("SpaceEngineers.Core.Basics.Test SpaceEngineers.Core.Basics.Test.OrderByDependencyTestData+WeakDependencyTest3")]
         internal class WeakDependencyTest4 { }
 
         /*

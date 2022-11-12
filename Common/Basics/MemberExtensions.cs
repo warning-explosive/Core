@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Extensions for operations with class members
@@ -18,8 +17,8 @@ namespace SpaceEngineers.Core.Basics
         private static readonly Type[] IsExternalInitTypes =
             new[]
             {
-                AssembliesExtensions.FindRequiredType("System.Private.CoreLib", AssembliesExtensions.BuildName(nameof(System), nameof(System.Runtime), nameof(System.Runtime.CompilerServices), nameof(IsExternalInit))),
-                typeof(IsExternalInit)
+                TypeExtensions.FindType("System.Private.CoreLib System.Runtime.CompilerServices.IsExternalInit"),
+                TypeExtensions.FindType("SpaceEngineers.Core.Basics System.Runtime.CompilerServices.IsExternalInit")
             };
 
         /// <summary>
@@ -239,12 +238,10 @@ namespace SpaceEngineers.Core.Basics
                 return true;
             }
 
-            var nullableAttributeType = AssembliesExtensions.FindType(
-                memberInfo.ReflectedType.Assembly.GetName().Name,
-                NullableAttributeFullName);
+            var typeName = $"{memberInfo.ReflectedType.Assembly.GetName().Name} {NullableAttributeFullName}";
 
-            return nullableAttributeType != default
-                   && attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
+            return TypeExtensions.TryFindType(typeName, out var nullableAttributeType)
+                && attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
         }
     }
 }

@@ -30,11 +30,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         IReadOnlyCollection<Type> OurTypes { get; }
 
         /// <summary>
-        /// Type cache -> assembly name -> type full name -> type
-        /// </summary>
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TypeCache { get; }
-
-        /// <summary>
         /// Does type located in our assembly
         /// </summary>
         /// <param name="type">Type</param>

@@ -3,28 +3,37 @@ namespace SpaceEngineers.Core.Basics
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
     using Attributes;
 
-    /// <summary>
-    /// TypeInfo storage
-    /// </summary>
-    public sealed class TypeInfoStorage
+    internal sealed class TypeInfoStorage
     {
-        private static readonly ConcurrentDictionary<string, ITypeInfo> Cache = new ConcurrentDictionary<string, ITypeInfo>();
+        private static readonly ConcurrentDictionary<string, TypeInfo> Cache
+            = new ConcurrentDictionary<string, TypeInfo>();
 
-        private static readonly Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>> BeforeAttributeMap
-            = new Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>>(InitializeBeforeAttributeMap, LazyThreadSafetyMode.ExecutionAndPublication);
+        private static readonly Lazy<IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>>> TypesCache
+            = new Lazy<IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>>>(InitializeTypesCache, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        /// <summary>
-        /// Gets or builds type info from storage
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>ITypeInfo</returns>
-        public static ITypeInfo Get(Type type) => Cache.GetOrAdd(GetKey(type), _ => new TypeInfo(type));
+        private static readonly Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>> BeforeAfterAttributesMap
+            = new Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>>(InitializeBeforeAfterAttributesMap, LazyThreadSafetyMode.ExecutionAndPublication);
+
+        internal static bool TryGet(string assemblyName, string typeFullName, [NotNullWhen(true)] out Type? type)
+        {
+            if (TypesCache.Value.TryGetValue(assemblyName, out var types)
+                && types.TryGetValue(typeFullName, out type))
+            {
+                return true;
+            }
+
+            type = default;
+            return false;
+        }
+
+        internal static TypeInfo Get(Type type) => Cache.GetOrAdd(GetKey(type), static (_, t) => new TypeInfo(t), type);
 
         internal static IEnumerable<Type> ExtractDependencies(Type type)
         {
@@ -32,7 +41,7 @@ namespace SpaceEngineers.Core.Basics
                  .GetCustomAttribute<AfterAttribute>()
                 ?.Types ?? Enumerable.Empty<Type>();
 
-            var byBeforeAttribute = BeforeAttributeMap.Value.TryGetValue(type, out var value)
+            var byBeforeAttribute = BeforeAfterAttributesMap.Value.TryGetValue(type, out var value)
                 ? value
                 : Enumerable.Empty<Type>();
 
@@ -51,7 +60,18 @@ namespace SpaceEngineers.Core.Basics
                 : type.FullName.EnsureNotNull($"Type cache doesn't support types without {nameof(Type.FullName)}: {type}");
         }
 
-        private static IReadOnlyDictionary<Type, IReadOnlyCollection<Type>> InitializeBeforeAttributeMap()
+        private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> InitializeTypesCache()
+        {
+            return AssembliesExtensions
+               .AllAssembliesFromCurrentDomain()
+               .ToDictionary(
+                    assembly => assembly.GetName().Name,
+                    assembly => (IReadOnlyDictionary<string, Type>)assembly
+                       .GetTypes()
+                       .ToDictionary(type => type.FullName));
+        }
+
+        private static IReadOnlyDictionary<Type, IReadOnlyCollection<Type>> InitializeBeforeAfterAttributesMap()
         {
             return AssembliesExtensions
                 .AllAssembliesFromCurrentDomain()

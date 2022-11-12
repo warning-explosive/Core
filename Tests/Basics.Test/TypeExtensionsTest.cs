@@ -21,6 +21,27 @@ namespace SpaceEngineers.Core.Basics.Test
         {
         }
 
+        [Theory]
+        [InlineData(typeof(string))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.AsyncManualResetEvent))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<,>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<string, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<ICollection<string>, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<Dictionary<string, ICollection<string>>, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<Dictionary<string, string[]>, string>))]
+        internal void FindTypeByFullNameTest(Type type)
+        {
+            var typeNode = TypeNode.FromType(type);
+
+            Output.WriteLine(typeNode.ToString());
+
+            typeNode = TypeNode.FromString(typeNode.ToString());
+
+            var builtType = TypeNode.ToType(typeNode);
+
+            Assert.Equal(type, builtType);
+        }
+
         [Fact]
         internal void OrderByDependencyCycleDependencyTest()
         {

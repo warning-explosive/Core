@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.Basics
     public static class AssembliesExtensions
     {
         private const string Dot = ".";
+
         private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
         private static readonly string[] ExcludedAssemblies =
@@ -45,74 +46,6 @@ namespace SpaceEngineers.Core.Basics
         public static string BuildName(params string[] nameParts)
         {
             return string.Join(Dot, nameParts);
-        }
-
-        /// <summary>
-        /// Find required type in current AppDomain
-        /// </summary>
-        /// <param name="assemblyName">Assembly short name</param>
-        /// <param name="typeFullName">Type full name</param>
-        /// <returns>Found type</returns>
-        public static Type FindRequiredType(string assemblyName, string typeFullName)
-        {
-            return FindType(assemblyName, typeFullName)
-                .EnsureNotNull($"Type {typeFullName} should be found in current {nameof(AppDomain)}");
-        }
-
-        /// <summary>
-        /// Find required type in current AppDomain
-        /// </summary>
-        /// <param name="typeFullName">Type full name</param>
-        /// <returns>Found type</returns>
-        public static Type FindRequiredType(string typeFullName)
-        {
-            return FindType(typeFullName)
-                .EnsureNotNull($"Type {typeFullName} should be found in current {nameof(AppDomain)}");
-        }
-
-        /// <summary>
-        /// Find type in current AppDomain
-        /// </summary>
-        /// <param name="assemblyName">Assembly short name</param>
-        /// <param name="typeFullName">Type full name</param>
-        /// <returns>Found type</returns>
-        public static Type? FindType(string assemblyName, string typeFullName)
-        {
-            return FindAssembly(assemblyName)
-               ?.GetTypes()
-                .SingleOrDefault(type => type.FullName.Equals(typeFullName, StringComparison.Ordinal));
-        }
-
-        /// <summary>
-        /// Find type in current AppDomain
-        /// </summary>
-        /// <param name="typeFullName">Type full name</param>
-        /// <returns>Found type</returns>
-        public static Type? FindType(string typeFullName)
-        {
-            var parts = typeFullName.Split(".", StringSplitOptions.RemoveEmptyEntries);
-
-            for (var i = 1; i < parts.Length - 1; i++)
-            {
-                var assemblyName = string.Join(".", parts.SkipLast(i));
-
-                for (var j = 1; j <= i; j++)
-                {
-                    var directories = string.Join(".", parts.TakeLast(i).SkipLast(j));
-                    var nestedTypeName = string.Join("+", parts.TakeLast(j));
-                    var possibleParts = new[] { assemblyName, directories, nestedTypeName }.Where(part => !part.IsNullOrEmpty());
-                    var possibleTypeFullName = string.Join(".", possibleParts);
-
-                    var type = FindType(assemblyName, possibleTypeFullName);
-
-                    if (type != default)
-                    {
-                        return type;
-                    }
-                }
-            }
-
-            return default;
         }
 
         /// <summary>

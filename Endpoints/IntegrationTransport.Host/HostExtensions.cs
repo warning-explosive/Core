@@ -162,32 +162,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                            && !type.IsMessageContractAbstraction())
                .ToArray();
 
-            Type[] aggregates;
-            Type[] domainEvents;
+            var aggregates = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate", out var aggregateType)
+                    ? AssembliesExtensions
+                       .AllOurAssembliesFromCurrentDomain()
+                       .SelectMany(assembly => assembly.GetTypes())
+                       .Where(type => aggregateType.IsAssignableFrom(type))
+                       .ToArray()
+                    : Array.Empty<Type>();
 
-            if (AssembliesExtensions.FindAssembly("SpaceEngineers.Core.GenericDomain.Api") != null)
-            {
-                var aggregateType = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate");
-
-                aggregates = AssembliesExtensions
-                   .AllOurAssembliesFromCurrentDomain()
-                   .SelectMany(assembly => assembly.GetTypes())
-                   .Where(type => aggregateType.IsAssignableFrom(type))
-                   .ToArray();
-
-                var domainEventType = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent");
-
-                domainEvents = AssembliesExtensions
-                   .AllOurAssembliesFromCurrentDomain()
-                   .SelectMany(assembly => assembly.GetTypes())
-                   .Where(type => domainEventType.IsAssignableFrom(type))
-                   .ToArray();
-            }
-            else
-            {
-                aggregates = Array.Empty<Type>();
-                domainEvents = Array.Empty<Type>();
-            }
+            var domainEvents = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent", out var domainEventType)
+                    ? AssembliesExtensions
+                       .AllOurAssembliesFromCurrentDomain()
+                       .SelectMany(assembly => assembly.GetTypes())
+                       .Where(type => domainEventType.IsAssignableFrom(type))
+                       .ToArray()
+                    : Array.Empty<Type>();
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)

@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Threading;
 
     [DebuggerDisplay("{OriginalType}")]
-    internal class TypeInfo : ITypeInfo
+    internal class TypeInfo
     {
         private readonly Lazy<IReadOnlyCollection<Type>> _dependencies;
         private readonly Lazy<IReadOnlyCollection<Type>> _baseTypes;

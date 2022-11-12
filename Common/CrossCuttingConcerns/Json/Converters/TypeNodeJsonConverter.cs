@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Newtonsoft.Json;
 
     [Component(EnLifestyle.Singleton)]
@@ -28,8 +29,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
             var str = reader.ReadAsString();
 
             return str != null
-                       ? TypeNode.Parse(str)
-                       : null;
+                ? TypeNode.FromString(str)
+                : null;
         }
 
         public override bool CanConvert(Type objectType)

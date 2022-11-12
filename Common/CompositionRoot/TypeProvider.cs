@@ -34,14 +34,14 @@ namespace SpaceEngineers.Core.CompositionRoot
         private readonly HashSet<string> _ourTypesCache;
 
         public TypeProvider(
-            IReadOnlyCollection<Assembly> allAssemblies,
+            IReadOnlyCollection<Assembly> assemblies,
             IReadOnlyCollection<Assembly> excludedAssemblies,
             IReadOnlyCollection<string> excludedNamespaces,
             IReadOnlyCollection<Type> additionalOurTypes)
         {
             var rootAssemblies = RootAssemblies();
 
-            AllLoadedAssemblies = allAssemblies
+            AllLoadedAssemblies = assemblies
                .Union(rootAssemblies)
                .Union(additionalOurTypes.Select(type => type.Assembly))
                .Where(assembly => !assembly.IsDynamic)
@@ -52,16 +52,9 @@ namespace SpaceEngineers.Core.CompositionRoot
                .SelectMany(assembly => assembly.GetTypes())
                .ToList();
 
-            TypeCache = AllLoadedAssemblies
-               .ToDictionary(
-                    assembly => assembly.GetName().Name,
-                    assembly => (IReadOnlyDictionary<string, Type>)assembly
-                       .GetTypes()
-                       .ToDictionary(type => type.FullName));
-
             var isOurReference = AssembliesExtensions.IsOurReference(AllLoadedAssemblies, rootAssemblies);
 
-            var ourLoadedAssemblies = allAssemblies
+            var ourLoadedAssemblies = assemblies
                .Union(rootAssemblies)
                .Where(assembly => !assembly.IsDynamic)
                .Distinct(new AssemblyByNameEqualityComparer())
@@ -90,8 +83,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         public IReadOnlyCollection<Assembly> OurAssemblies { get; }
 
         public IReadOnlyCollection<Type> OurTypes { get; }
-
-        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> TypeCache { get; }
 
         public bool IsOurType(Type type)
         {

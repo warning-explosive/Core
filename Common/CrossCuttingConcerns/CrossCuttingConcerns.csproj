@@ -52,9 +52,6 @@
       <Compile Update="Json\SecureSerializationBinder.cs">
         <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
       </Compile>
-      <Compile Update="Json\TypeNode.cs">
-        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
-      </Compile>
       <Compile Update="Json\DefaultObjectTreeValueReader.cs">
         <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
       </Compile>

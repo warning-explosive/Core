@@ -41,11 +41,9 @@
                 .SelectMany(type => VerifyDatabaseEntity(type, typeof(BaseDatabaseEntity<>)))
                 .Each(exception => throw exception.Rethrow());
 
-            var sqlView = AssembliesExtensions.FindType("SpaceEngineers.Core.DataAccess.Orm.Sql.Views.ISqlView`1");
-
-            if (sqlView != null)
+            if (TypeExtensions.TryFindType("SpaceEngineers.Core.DataAccess.Orm.Sql SpaceEngineers.Core.DataAccess.Orm.Sql.Views.ISqlView`1", out var sqlView))
             {
-                var baseSqlView = AssembliesExtensions.FindRequiredType("SpaceEngineers.Core.DataAccess.Orm.Sql.Views.BaseSqlView`1");
+                var baseSqlView = TypeExtensions.FindType("SpaceEngineers.Core.DataAccess.Orm.Sql SpaceEngineers.Core.DataAccess.Orm.Sql.Views.BaseSqlView`1");
 
                 _typeProvider
                 .OurTypes

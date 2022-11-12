@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Basics.Attributes
         public AfterAttribute(string type, params string[] types)
         {
             Types = new List<string>(types) { type }
-               .Select(AssembliesExtensions.FindRequiredType)
+               .Select(static type => TypeExtensions.FindType(type))
                .ToArray();
         }
 

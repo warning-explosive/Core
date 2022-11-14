@@ -15,6 +15,7 @@ namespace SpaceEngineers.Core.Test.Api.Internals
         }
 
         public IDisposable BeginScope<TState>(TState state)
+            where TState : notnull
         {
             return Disposable.Create(state, _ => { });
         }

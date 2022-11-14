@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - '**.md'
 env:
-  DOT_NET_VERSION: 6.0.x
+  DOT_NET_VERSION: 7.0.x
   GIT_VERSION_VERSION: 5.*
   TEST_RESULTS_PATH: TEST_RESULTS
   TEST_COVERAGE_PATH: TEST_COVERAGE

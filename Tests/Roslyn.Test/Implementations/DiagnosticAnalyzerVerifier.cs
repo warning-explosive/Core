@@ -71,10 +71,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                                 $"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
 
-                if (actual.GetMessage() != expected.ActualMessage)
+                if (actual.GetMessage(CultureInfo.InvariantCulture) != expected.ActualMessage)
                 {
                     Assert.True(false,
-                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage()}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
+                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage(CultureInfo.InvariantCulture)}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
             }
         }

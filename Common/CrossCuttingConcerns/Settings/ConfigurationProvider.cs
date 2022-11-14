@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 
             if (section.Exists())
             {
-                settings = section.Get<TSettings>();
+                settings = section.Get<TSettings>() !;
                 return true;
             }
 

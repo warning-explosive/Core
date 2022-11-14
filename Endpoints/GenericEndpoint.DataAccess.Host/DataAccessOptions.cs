@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host
 
             _ = _endpointBuilder
                .WithEndpointPluginAssemblies(assembly)
-               .ModifyContainerOptions(options => options.WithManualRegistrations(new UpgradeDatabaseHostStartupActionManualRegistration()));
+               .ModifyContainerOptions(options => options.WithManualRegistrations(new DataAccessHostStartupActionsManualRegistration()));
 
             return this;
         }

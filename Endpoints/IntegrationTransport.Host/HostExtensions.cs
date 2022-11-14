@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 {
     using System;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Api.Enumerations;
@@ -45,24 +46,26 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         /// Waits until transport is not in running state
         /// </summary>
         /// <param name="host">IHost</param>
-        /// <param name="log">Logging action</param>
+        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public static async Task WaitUntilTransportIsNotRunning(this IHost host, Action<string> log)
+        public static async Task WaitUntilTransportIsNotRunning(this IHost host, CancellationToken token)
         {
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var subscription = MakeSubscription(tcs);
-
-            var integrationTransport = host
-                .GetTransportDependencyContainer()
-                .Resolve<IExecutableIntegrationTransport>();
-
-            using (Disposable.Create((integrationTransport, subscription), Subscribe, Unsubscribe))
+            using (var tcs = new TaskCancellationCompletionSource<object?>(token))
             {
-                log("Wait until transport is not started");
-                await tcs.Task.ConfigureAwait(false);
+                var subscription = MakeSubscription(tcs);
+
+                var integrationTransport = host
+                   .GetTransportDependencyContainer()
+                   .Resolve<IExecutableIntegrationTransport>();
+
+                using (Disposable.Create((integrationTransport, subscription), Subscribe, Unsubscribe))
+                {
+                    await tcs.Task.ConfigureAwait(false);
+                }
             }
 
-            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(TaskCompletionSource<object> tcs)
+            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(
+                TaskCompletionSource<object?> tcs)
             {
                 return (_, args) =>
                 {

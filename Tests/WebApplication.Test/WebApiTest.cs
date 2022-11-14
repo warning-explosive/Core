@@ -95,19 +95,19 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             yield return new object?[]
             {
-                nameof(TestController.ApplicationInfo),
+                $"http://127.0.0.1:5000/Test/{nameof(TestController.ApplicationInfo)}",
                 default(string?)
             };
 
             yield return new object?[]
             {
-                nameof(TestController.Username),
+                $"http://127.0.0.1:5000/Test/{nameof(TestController.Username)}",
                 $"Basic {(username, password).EncodeBasicAuth()}"
             };
 
             yield return new object?[]
             {
-                $"{nameof(TestController.FakePost)}/List",
+                $"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List",
                 $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"
             };
         }
@@ -118,12 +118,11 @@ namespace SpaceEngineers.Core.WebApplication.Test
             Lazy<IHost> host,
             CancellationTokenSource cts,
             AsyncCountdownEvent asyncCountdownEvent,
-            string actionName,
+            string url,
             string? authorizationToken)
         {
             try
             {
-                var url = $"http://127.0.0.1:5000/Test/{actionName}";
                 Output.WriteLine(url);
 
                 var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);

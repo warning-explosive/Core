@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using Basics.Primitives;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
     using CrossCuttingConcerns.Extensions;
@@ -15,7 +16,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
     internal class HostedService : IHostedService, IDisposable
     {
-        private static readonly SyncState SyncState = new SyncState();
+        private static readonly AsyncAutoResetEvent Sync = new AsyncAutoResetEvent(true);
 
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly IEnumerable<IDependencyContainer> _dependencyContainers;
@@ -23,7 +24,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private CancellationTokenSource? _cts;
         private Task? _backgroundWorkersTask;
-        private IDisposable? _runningHostedService;
 
         public HostedService(
             Guid identifier,
@@ -49,7 +49,9 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public async Task StartAsync(CancellationToken token)
         {
-            _runningHostedService = SyncState.StartExclusiveOperation(string.Join(".", nameof(HostedService), nameof(StartAsync)));
+            await Sync
+               .WaitAsync(token)
+               .ConfigureAwait(false);
 
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
@@ -110,6 +112,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public void Dispose()
         {
+            Logger.Information($"{nameof(HostedService)} is being disposed");
+
             try
             {
                 _cts?.Cancel();
@@ -120,7 +124,8 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
             finally
             {
-                _runningHostedService?.Dispose();
+                Logger.Information($"{nameof(HostedService)} is being disposed 2");
+                Sync.Set();
                 _cts?.Dispose();
             }
         }

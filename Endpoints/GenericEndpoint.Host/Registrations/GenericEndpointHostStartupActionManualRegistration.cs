@@ -11,6 +11,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
         {
             container.Register<GenericEndpointHostStartupAction, GenericEndpointHostStartupAction>(EnLifestyle.Singleton);
             container.Advanced.RegisterCollectionEntry<IHostStartupAction, GenericEndpointHostStartupAction>(EnLifestyle.Singleton);
+
+            container.Register<MessagingHostStartupAction, MessagingHostStartupAction>(EnLifestyle.Singleton);
+            container.Advanced.RegisterCollectionEntry<IHostStartupAction, MessagingHostStartupAction>(EnLifestyle.Singleton);
         }
     }
 }

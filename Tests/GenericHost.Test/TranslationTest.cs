@@ -31,7 +31,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Microsoft.Extensions.Hosting;
     using Migrations;
     using Mocks;
-    using Overrides;
     using Registrations;
     using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.DataAccess.Api.Persisting;
@@ -88,7 +87,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .ProjectFile()
                .Directory
                .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings");
+               .StepInto("Settings")
+               .StepInto(nameof(QueryTranslationTest));
 
             var timeout = TimeSpan.FromSeconds(60);
 
@@ -96,8 +96,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var host = new Lazy<IHost>(() =>
                 {
-                    var isolationLevel = IsolationLevel.ReadCommitted;
-                    var settingsScope = nameof(QueryTranslationTest);
                     var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
 
                     var databaseEntities = new[]
@@ -122,19 +120,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var manualRegistrations = new IManualRegistration[]
                     {
                         new QueryExpressionsCollectorManualRegistration(),
-                        new IsolationLevelManualRegistration(isolationLevel)
-                    };
-
-                    var overrides = new IComponentsOverride[]
-                    {
-                        new TestSettingsScopeProviderOverride(settingsScope)
+                        new IsolationLevelManualRegistration(IsolationLevel.ReadCommitted)
                     };
 
                     var host = hostBuilder
                        .UseIntegrationTransport(builder => builder
                            .WithInMemoryIntegrationTransport(hostBuilder)
-                           .ModifyContainerOptions(options => options
-                               .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                            .BuildOptions())
                        .UseEndpoint(TestIdentity.Endpoint10,
                             (_, builder) => builder
@@ -143,12 +134,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                .WithSqlEventSourcing()
                                .ModifyContainerOptions(options => options
                                    .WithAdditionalOurTypes(additionalOurTypes)
-                                   .WithManualRegistrations(manualRegistrations)
-                                   .WithOverrides(overrides))
+                                   .WithManualRegistrations(manualRegistrations))
                                .BuildOptions())
                        .BuildHost(settingsDirectory);
 
-                    var awaiter = host.WaitUntilTransportIsNotRunning(StaticOutput.WriteLine);
+                    var awaiter = host.WaitUntilTransportIsNotRunning(cts.Token);
 
                     host.StartAsync(cts.Token).Wait(cts.Token);
 

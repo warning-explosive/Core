@@ -61,17 +61,17 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Fact]
-        internal void SeveralStartsTest()
+        internal void NestedStartsTest()
         {
             var unitOfWork = new TestAsyncUnitOfWork(EnUnitOfWorkBehavior.Regular);
-            Assert.Throws<InvalidOperationException>(() => ExecuteInTransaction(unitOfWork, true, OuterProducer));
+            Assert.Throws<InvalidOperationException>(() => ExecuteInTransaction(unitOfWork, true, NestedProducer));
 
             Assert.True(unitOfWork.Started);
             Assert.False(unitOfWork.Committed);
             Assert.True(unitOfWork.RolledBack);
             Assert.True(unitOfWork.RolledBackByException);
 
-            Task OuterProducer(object context, CancellationToken token)
+            Task NestedProducer(object context, CancellationToken token)
             {
                 ExecuteInTransaction(unitOfWork, true, EmptyProducer);
                 return Task.CompletedTask;

@@ -76,9 +76,6 @@
     <Compile Update="ISafelyEquatable.cs">
       <DependentUpon>Equatable.cs</DependentUpon>
     </Compile>
-    <Compile Update="SyncState.cs">
-      <DependentUpon>SyncStateExtensions.cs</DependentUpon>
-    </Compile>
     <Compile Update="Primitives\RootNodeChangedEventArgs.cs">
       <DependentUpon>IHeap.cs</DependentUpon>
     </Compile>

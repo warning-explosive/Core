@@ -1,34 +1,37 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
     using Basics;
+    using Basics.Attributes;
     using CompositionRoot;
-    using Core.DataAccess.Orm.Extensions;
-    using CrossCuttingConcerns.Extensions;
     using Deduplication;
+    using GenericEndpoint.Host.StartupActions;
+    using GenericHost.Api.Abstractions;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.DataAccess.Api.Transaction;
+    using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using EndpointIdentity = Contract.EndpointIdentity;
     using IntegrationMessage = Messaging.IntegrationMessage;
 
-    [Component(EnLifestyle.Singleton)]
-    internal class InboxInvalidationEndpointInitializer : IEndpointInitializer,
-                                                          ICollectionResolvable<IEndpointInitializer>
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
+    [Before(typeof(GenericEndpointHostStartupAction))]
+    internal class InboxInvalidationHostStartupAction : IHostStartupAction,
+                                                        ICollectionResolvable<IHostStartupAction>,
+                                                        IResolvable<InboxInvalidationHostStartupAction>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IConfigurableIntegrationTransport _transport;
         private readonly ILogger _logger;
 
-        public InboxInvalidationEndpointInitializer(
+        public InboxInvalidationHostStartupAction(
             IDependencyContainer dependencyContainer,
             EndpointIdentity endpointIdentity,
             IConfigurableIntegrationTransport transport,
@@ -40,7 +43,7 @@
             _logger = logger;
         }
 
-        public Task Initialize(CancellationToken token)
+        public Task Run(CancellationToken token)
         {
             InitializeInboxInvalidation();
 

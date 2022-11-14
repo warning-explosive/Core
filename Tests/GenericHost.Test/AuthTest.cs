@@ -1,38 +1,11 @@
 namespace SpaceEngineers.Core.GenericHost.Test
 {
     using System;
-    using System.Collections.Generic;
-    using System.Data;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AuthEndpoint.Contract;
-    using AuthEndpoint.Contract.Commands;
-    using AuthEndpoint.Contract.Queries;
-    using AuthEndpoint.Contract.Replies;
-    using AuthEndpoint.Host;
     using Basics;
-    using CompositionRoot.Registration;
-    using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Sql.Settings;
-    using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.DataAccess.EventSourcing;
-    using GenericEndpoint.DataAccess.Host;
-    using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Builder;
-    using IntegrationTransport.Host;
-    using IntegrationTransport.RabbitMQ.Settings;
-    using IntegrationTransport.RpcRequest;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Hosting;
-    using Migrations;
-    using Mocks;
-    using Overrides;
-    using Registrations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Web.Auth.Extensions;
@@ -51,78 +24,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
         public AuthTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-        }
-
-        /// <summary>
-        /// AuthTest test cases
-        /// </summary>
-        /// <returns>AuthTestData</returns>
-        public static IEnumerable<object[]> AuthTestData()
-        {
-            var timeout = TimeSpan.FromSeconds(60);
-
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings")
-               .StepInto(nameof(AuthorizeUserTest));
-
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
-
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
-                       .BuildOptions()));
-
-            var integrationTransportProviders = new[]
-            {
-                useInMemoryIntegrationTransport,
-                useRabbitMqIntegrationTransport
-            };
-
-            var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
-            {
-                (builder, dataAccessOptions) => builder.WithPostgreSqlDataAccess(dataAccessOptions)
-            };
-
-            var eventSourcingProviders = new Func<IEndpointBuilder, IEndpointBuilder>[]
-            {
-                builder => builder.WithSqlEventSourcing()
-            };
-
-            var isolationLevels = new[]
-            {
-                IsolationLevel.Snapshot,
-                IsolationLevel.ReadCommitted
-            };
-
-            return integrationTransportProviders
-               .SelectMany(useTransport => dataAccessProviders
-                   .SelectMany(withDataAccess => eventSourcingProviders
-                       .SelectMany(withEventSourcing => isolationLevels
-                           .Select(isolationLevel => new object[]
-                           {
-                               settingsDirectory,
-                               useTransport,
-                               withDataAccess,
-                               withEventSourcing,
-                               isolationLevel,
-                               timeout
-                           }))));
         }
 
         [Fact]
@@ -166,134 +67,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             Assert.Equal(username, credentials.username);
             Assert.Equal(password, credentials.password);
-        }
-
-        [Theory(Timeout = 60_000)]
-        [MemberData(nameof(AuthTestData))]
-        internal async Task AuthorizeUserTest(
-            DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
-            Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
-            Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
-        {
-            Output.WriteLine(isolationLevel.ToString());
-
-            var settingsScope = nameof(AuthorizeUserTest);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var manualMigrations = new[]
-            {
-                typeof(RecreatePostgreSqlDatabaseMigration)
-            };
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(settingsScope, isolationLevel, Fixture.CreateHostBuilder(Output))
-               .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
-                   .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(manualMigrations)
-                       .WithManualRegistrations(manualRegistrations)
-                       .WithOverrides(overrides))
-                   .BuildOptions())
-               .BuildHost(settingsDirectory);
-
-            await RunHostTest.RunTestHost(
-                    Output,
-                    host,
-                    AuthorizeUserTestInternal(settingsScope, virtualHost, isolationLevel),
-                    timeout)
-               .ConfigureAwait(false);
-
-            static Func<ITestOutputHelper, IHost, CancellationToken, Task> AuthorizeUserTestInternal(
-                string settingsScope,
-                string virtualHost,
-                IsolationLevel isolationLevel)
-            {
-                return async (output, host, token) =>
-                {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpointIdentity.LogicalName);
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
-
-                    var sqlDatabaseSettings = await endpointDependencyContainer
-                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
-
-                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
-                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
-                    Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
-
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
-
-                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
-
-                    var username = "qwerty";
-                    var password = "12345678";
-
-                    var query = new AuthorizeUser(username, password);
-                    UserAuthorizationResult? authorizationResult;
-
-                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                    {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                        authorizationResult = await integrationContext
-                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
-                           .ConfigureAwait(false);
-                    }
-
-                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
-
-                    Assert.Equal(username, authorizationResult.Username);
-                    Assert.Empty(authorizationResult.Token);
-                    Assert.NotEmpty(authorizationResult.Details);
-
-                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                    {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                        var awaiter = Task.WhenAll(
-                            collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>>(),
-                            collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserCreated>());
-
-                        await integrationContext
-                           .Send(new CreateUser(username, password), token)
-                           .ConfigureAwait(false);
-
-                        await awaiter.ConfigureAwait(false);
-                    }
-
-                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-                    {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                        authorizationResult = await integrationContext
-                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
-                           .ConfigureAwait(false);
-                    }
-
-                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
-
-                    Assert.Equal(username, authorizationResult.Username);
-                    Assert.NotEmpty(authorizationResult.Token);
-                    Assert.Empty(authorizationResult.Details);
-                };
-            }
         }
     }
 }

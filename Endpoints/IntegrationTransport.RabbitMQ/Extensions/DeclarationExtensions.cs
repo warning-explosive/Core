@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using CrossCuttingConcerns.Json;
@@ -18,18 +17,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             ILogger logger,
             CancellationToken token)
         {
-            var virtualHosts = (await rabbitMqSettings
-                   .ReadVirtualHosts(jsonSerializer, logger, token)
-                   .ConfigureAwait(false))
-               .Select(virtualHost => virtualHost.Name)
-               .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            if (!virtualHosts.Contains(rabbitMqSettings.VirtualHost))
-            {
-                await rabbitMqSettings
-                   .CreateVirtualHost(logger, token)
-                   .ConfigureAwait(false);
-            }
+            await rabbitMqSettings
+               .CreateVirtualHost(jsonSerializer, logger, token)
+               .ConfigureAwait(false);
         }
 
         public static string GetRoutingKeyPart(this string str)

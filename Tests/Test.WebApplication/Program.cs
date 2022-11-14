@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
+    using Registrations;
     using Web.Api.Host;
 
     /// <summary>
@@ -56,6 +57,8 @@ namespace SpaceEngineers.Core.Test.WebApplication
                         builder => builder
                            .WithRabbitMqIntegrationTransport(hostBuilder)
                            .WithWebApi(hostBuilder)
+                           .ModifyContainerOptions(options => options
+                               .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration()))
                            .BuildOptions(),
                         "Gateway"))
                .UseAuthEndpoint(builder => builder

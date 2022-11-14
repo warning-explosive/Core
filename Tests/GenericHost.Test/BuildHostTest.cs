@@ -16,7 +16,6 @@
     using CompositionRoot;
     using CompositionRoot.Exceptions;
     using CompositionRoot.Extensions;
-    using CompositionRoot.Registration;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.PostgreSql;
@@ -44,7 +43,6 @@
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Overrides;
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.Test.Api;
@@ -69,16 +67,17 @@
         }
 
         /// <summary>
-        /// useContainer; useTransport;
+        /// Test cases for BuildHostTest
         /// </summary>
-        /// <returns>BuildHostTestData</returns>
+        /// <returns>Test cases</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
             var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
                .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings");
+               .StepInto("Settings")
+               .StepInto(nameof(BuildHostTest));
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
@@ -107,31 +106,28 @@
         }
 
         /// <summary>
-        /// BuildHostTest test cases
+        /// Test cases for BuildHostTest
         /// </summary>
-        /// <returns>RunHostWithDataAccessTestData</returns>
+        /// <returns>Test cases</returns>
         public static IEnumerable<object[]> BuildHostWithDataAccessTestData()
         {
             var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
                .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings");
+               .StepInto("Settings")
+               .StepInto(nameof(BuildHostTest));
 
-            var useInMemoryIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
-                (settingsScope, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                static hostBuilder => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IHostBuilder, IHostBuilder>(
-                (settingsScope, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                static hostBuilder => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
-                       .ModifyContainerOptions(options => options
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -236,14 +232,9 @@
                 typeof(ReplyEmptyMessageHandler)
             };
 
-            var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
-
-            var settingsScope = nameof(BuildTest);
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
+            var additionalOurTypes = messageTypes
+               .Concat(messageHandlerTypes)
+               .ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
@@ -251,7 +242,6 @@
                        .WithPostgreSqlDataAccess(options => options
                            .ExecuteMigrations())
                        .ModifyContainerOptions(options => options
-                           .WithOverrides(overrides)
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
@@ -270,6 +260,10 @@
                 var expectedHostStartupActions = new[]
                 {
                     typeof(UpgradeDatabaseHostStartupAction),
+                    typeof(EventSourcingHostStartupAction),
+                    typeof(InboxInvalidationHostStartupAction),
+                    typeof(MessagingHostStartupAction),
+                    typeof(MessagingHostStartupAction),
                     typeof(GenericEndpointHostStartupAction),
                     typeof(GenericEndpointHostStartupAction)
                 };
@@ -675,19 +669,13 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing)
         {
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(nameof(CompareEquivalentDatabaseDatabaseModelsTest))
-            };
-
-            var host = useTransport(nameof(CompareEquivalentDatabaseDatabaseModelsTest), Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
-                       .ModifyContainerOptions(options => options.WithOverrides(overrides))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
@@ -725,7 +713,7 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
             DirectoryInfo settingsDirectory,
-            Func<string, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing)
         {
@@ -738,17 +726,11 @@
                 typeof(User)
             };
 
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(nameof(ExtractDatabaseModelChangesDiffTest))
-            };
-
-            var host = useTransport(nameof(ExtractDatabaseModelChangesDiffTest), Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithOverrides(overrides))
+                           .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
@@ -786,7 +768,7 @@
             {
                 var assertions = new Action<int>[]
                 {
-                    index => AssertCreateDataBase(modelChanges, index, nameof(ExtractDatabaseModelChangesDiffTest)),
+                    index => AssertCreateDataBase(modelChanges, index, nameof(BuildHostTest)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),

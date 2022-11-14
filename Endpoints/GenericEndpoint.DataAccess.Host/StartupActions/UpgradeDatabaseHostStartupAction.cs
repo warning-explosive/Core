@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using Basics.Attributes;
-    using Basics.Primitives;
     using Contract;
     using GenericEndpoint.Host.StartupActions;
     using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
                                                       ICollectionResolvable<IHostStartupAction>,
                                                       IResolvable<UpgradeDatabaseHostStartupAction>
     {
-        private static readonly AsyncAutoResetEvent Sync = new AsyncAutoResetEvent(true);
+        private static readonly Exclusive Exclusive = new Exclusive();
 
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IMigrationsExecutor _migrationsExecutor;
@@ -42,19 +42,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
 
         public async Task Run(CancellationToken token)
         {
-            try
+            using (await Exclusive.Run(token).ConfigureAwait(false))
             {
-                await Sync
-                   .WaitAsync(token)
-                   .ConfigureAwait(false);
-
                 await _migrationsExecutor
                    .Migrate(_migrations.ToList(), token)
                    .ConfigureAwait(false);
-            }
-            finally
-            {
-                Sync.Set();
             }
 
             _logger.Information($"{_endpointIdentity} have been migrated");

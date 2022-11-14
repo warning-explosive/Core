@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
 {
     using System;
     using System.Linq;
@@ -6,20 +6,25 @@
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using Basics.Attributes;
     using CompositionRoot;
+    using EventSourcing;
+    using GenericEndpoint.Host.StartupActions;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.GenericDomain.Api.Abstractions;
+    using SpaceEngineers.Core.GenericHost.Api.Abstractions;
 
-    [Component(EnLifestyle.Singleton)]
-    internal class EventSourcingEndpointInitializer : IEndpointInitializer,
-                                                      ICollectionResolvable<IEndpointInitializer>
+    [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
+    [Before(typeof(GenericEndpointHostStartupAction))]
+    internal class EventSourcingHostStartupAction : IHostStartupAction,
+                                                    ICollectionResolvable<IHostStartupAction>,
+                                                    IResolvable<EventSourcingHostStartupAction>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ITypeProvider _typeProvider;
 
-        public EventSourcingEndpointInitializer(
+        public EventSourcingHostStartupAction(
             IDependencyContainer dependencyContainer,
             ITypeProvider typeProvider)
         {
@@ -27,7 +32,7 @@
             _typeProvider = typeProvider;
         }
 
-        public Task Initialize(CancellationToken token)
+        public Task Run(CancellationToken token)
         {
             var aggregates = _typeProvider
                .OurTypes
@@ -48,7 +53,7 @@
 
         private static void Subscribe(Type aggregate, EventHandler<DomainEventArgs> subscription)
         {
-            typeof(EventSourcingEndpointInitializer)
+            typeof(EventSourcingHostStartupAction)
                .CallMethod(nameof(Subscribe))
                .WithTypeArgument(aggregate)
                .WithArguments(subscription)
@@ -57,7 +62,7 @@
 
         private static void Unsubscribe(Type aggregate, EventHandler<DomainEventArgs> subscription)
         {
-            typeof(EventSourcingEndpointInitializer)
+            typeof(EventSourcingHostStartupAction)
                .CallMethod(nameof(Unsubscribe))
                .WithTypeArgument(aggregate)
                .WithArguments(subscription)
@@ -83,7 +88,7 @@
         {
             return (_, args) =>
             {
-                typeof(EventSourcingEndpointInitializer)
+                typeof(EventSourcingHostStartupAction)
                    .CallMethod(nameof(OnDomainEvent))
                    .WithTypeArguments(aggregate, args.DomainEvent.GetType())
                    .WithArguments(dependencyContainer, args, token)

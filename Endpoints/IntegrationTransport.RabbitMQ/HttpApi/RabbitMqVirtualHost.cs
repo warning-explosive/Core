@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.HttpApi
 {
-    internal class VirtualHost
+    internal class RabbitMqVirtualHost
     {
-        public VirtualHost(string name, string description)
+        public RabbitMqVirtualHost(string name, string description)
         {
             Name = name;
             Description = description;

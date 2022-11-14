@@ -899,14 +899,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var consumer = (AsyncEventingBasicConsumer)sender;
 
-                // TODO: handle redelivery - clear queues before tests
-                if (args.Redelivered)
-                {
-                    logger.Debug($"Message redelivery: {args.BasicProperties.Type} - {args.BasicProperties.MessageId}");
-                    args.Ack(consumer.Model);
-                    return;
-                }
-
                 EndpointIdentity endpointIdentity;
                 IntegrationMessage message;
 

@@ -6,12 +6,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using AuthEndpoint.Contract;
+    using AuthEndpoint.Contract.Commands;
+    using AuthEndpoint.Contract.Queries;
+    using AuthEndpoint.Contract.Replies;
+    using AuthEndpoint.Host;
     using Basics;
     using Basics.Primitives;
     using CompositionRoot;
-    using CompositionRoot.Registration;
     using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
@@ -21,6 +26,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Settings;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.DataAccess.EventSourcing;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.Host;
@@ -37,7 +43,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Microsoft.Extensions.Logging;
     using Migrations;
     using Mocks;
-    using Overrides;
     using Registrations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
@@ -59,37 +64,39 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         /// <summary>
-        /// DataAccessTestData
+        /// Test cases for DataAccessTest
         /// </summary>
-        /// <returns>Test data</returns>
+        /// <returns>Test cases</returns>
         public static IEnumerable<object[]> DataAccessTestData()
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings");
+            Func<string, DirectoryInfo> settingsDirectoryProducer =
+                testDirectory => SolutionExtensions
+                   .ProjectFile()
+                   .Directory
+                   .EnsureNotNull("Project directory wasn't found")
+                   .StepInto("Settings")
+                   .StepInto(testDirectory);
 
-            var useInMemoryIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
+            var useInMemoryIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder>(
+                static (settingsDirectory, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel)))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<string, IsolationLevel, IHostBuilder, IHostBuilder>(
-                (settingsScope, isolationLevel, hostBuilder) => hostBuilder
+            var useRabbitMqIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder>(
+                static (settingsDirectory, isolationLevel, hostBuilder) => hostBuilder
                    .UseIntegrationTransport(builder => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
+                           .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsScope + isolationLevel))
-                           .WithOverrides(new TestSettingsScopeProviderOverride(settingsScope)))
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel)))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -120,7 +127,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .SelectMany(withEventSourcing => isolationLevels
                            .Select(isolationLevel => new object[]
                            {
-                               settingsDirectory,
+                               settingsDirectoryProducer,
                                useTransport,
                                withDataAccess,
                                withEventSourcing,
@@ -132,14 +139,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
-            DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, DirectoryInfo> settingsDirectoryProducer,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            Output.WriteLine(isolationLevel.ToString());
+            var settingsDirectory = settingsDirectoryProducer(nameof(BackgroundOutboxDeliveryTest));
 
             var messageTypes = new[]
             {
@@ -162,41 +169,24 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var settingsScope = nameof(BackgroundOutboxDeliveryTest);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var endpointManualRegistrations = new IManualRegistration[]
-            {
-                new BackgroundOutboxDeliveryManualRegistration(),
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var endpointOverrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    settingsScope,
-                    isolationLevel,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(endpointManualRegistrations)
-                           .WithOverrides(endpointOverrides))
+                           .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel))
+                           .WithManualRegistrations(new BackgroundOutboxDeliveryManualRegistration()))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
             await RunHostTest.RunTestHost(Output,
                     host,
-                    BackgroundOutboxDeliveryTestInternal(settingsScope, virtualHost, isolationLevel),
+                    BackgroundOutboxDeliveryTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)
                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> BackgroundOutboxDeliveryTestInternal(
-                string settingsScope,
+                DirectoryInfo settingsDirectory,
                 string virtualHost,
                 IsolationLevel isolationLevel)
             {
@@ -210,7 +200,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .Get(token)
                        .ConfigureAwait(false);
 
-                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(settingsDirectory.Name, sqlDatabaseSettings.Database);
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
@@ -247,14 +237,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
-            DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, DirectoryInfo> settingsDirectoryProducer,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            Output.WriteLine(isolationLevel.ToString());
+            var settingsDirectory = settingsDirectoryProducer(nameof(OptimisticConcurrencyTest));
 
             var databaseEntities = new[]
             {
@@ -270,40 +260,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var settingsScope = nameof(OptimisticConcurrencyTest);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    settingsScope,
-                    isolationLevel,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
+                           .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
             await RunHostTest.RunTestHost(Output,
                     host,
-                    OptimisticConcurrencyTestInternal(settingsScope, virtualHost, isolationLevel),
+                    OptimisticConcurrencyTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)
                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> OptimisticConcurrencyTestInternal(
-                string settingsScope,
+                DirectoryInfo settingsDirectory,
                 string virtualHost,
                 IsolationLevel isolationLevel)
             {
@@ -317,7 +290,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .Get(token)
                        .ConfigureAwait(false);
 
-                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(settingsDirectory.Name, sqlDatabaseSettings.Database);
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(3u, sqlDatabaseSettings.ConnectionPoolSize);
 
@@ -534,14 +507,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
-            DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, DirectoryInfo> settingsDirectoryProducer,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            Output.WriteLine(isolationLevel.ToString());
+            var settingsDirectory = settingsDirectoryProducer(nameof(ReactiveTransactionalStoreTest));
 
             var databaseEntities = new[]
             {
@@ -557,41 +530,24 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var settingsScope = nameof(ReactiveTransactionalStoreTest);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    settingsScope,
-                    isolationLevel,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
+                           .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
             await RunHostTest.RunTestHost(
                     Output,
                     host,
-                    ReactiveTransactionalStoreTestInternal(settingsScope, virtualHost, isolationLevel),
+                    ReactiveTransactionalStoreTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)
                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> ReactiveTransactionalStoreTestInternal(
-                string settingsScope,
+                DirectoryInfo settingsDirectory,
                 string virtualHost,
                 IsolationLevel isolationLevel)
             {
@@ -605,7 +561,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .Get(token)
                        .ConfigureAwait(false);
 
-                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(settingsDirectory.Name, sqlDatabaseSettings.Database);
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
@@ -825,14 +781,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OnlyCommandsCanIntroduceChanges(
-            DirectoryInfo settingsDirectory,
-            Func<string, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<string, DirectoryInfo> settingsDirectoryProducer,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            Output.WriteLine(isolationLevel.ToString());
+            var settingsDirectory = settingsDirectoryProducer(nameof(OnlyCommandsCanIntroduceChanges));
 
             var messageTypes = new[]
             {
@@ -866,40 +822,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var settingsScope = nameof(OnlyCommandsCanIntroduceChanges);
-            var virtualHost = settingsScope + isolationLevel;
-
-            var manualRegistrations = new IManualRegistration[]
-            {
-                new IsolationLevelManualRegistration(isolationLevel)
-            };
-
-            var overrides = new IComponentsOverride[]
-            {
-                new TestSettingsScopeProviderOverride(settingsScope)
-            };
-
-            var host = useTransport(
-                    settingsScope,
-                    isolationLevel,
-                    Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithManualRegistrations(manualRegistrations)
-                           .WithOverrides(overrides))
+                           .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
             await RunHostTest.RunTestHost(Output,
                     host,
-                    OnlyCommandsCanIntroduceChangesInternal(settingsScope, virtualHost, isolationLevel),
+                    OnlyCommandsCanIntroduceChangesInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)
                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> OnlyCommandsCanIntroduceChangesInternal(
-                string settingsScope,
+                DirectoryInfo settingsDirectory,
                 string virtualHost,
                 IsolationLevel isolationLevel)
             {
@@ -914,7 +853,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .Get(token)
                        .ConfigureAwait(false);
 
-                    Assert.Equal(settingsScope, sqlDatabaseSettings.Database);
+                    Assert.Equal(settingsDirectory.Name, sqlDatabaseSettings.Database);
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
@@ -1007,6 +946,120 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
                         collector.ErrorMessages.Clear();
                     }
+                };
+            }
+        }
+
+        [Theory(Timeout = 60_000)]
+        [MemberData(nameof(DataAccessTestData))]
+        internal async Task AuthorizeUserTest(
+            Func<string, DirectoryInfo> settingsDirectoryProducer,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
+            Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
+            IsolationLevel isolationLevel,
+            TimeSpan timeout)
+        {
+            var settingsDirectory = settingsDirectoryProducer(nameof(AuthorizeUserTest));
+
+            var additionalOurTypes = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseMigration)
+            };
+
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+               .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                   .ModifyContainerOptions(options => options
+                       .WithAdditionalOurTypes(additionalOurTypes)
+                       .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
+                   .BuildOptions())
+               .BuildHost(settingsDirectory);
+
+            await RunHostTest.RunTestHost(
+                    Output,
+                    host,
+                    AuthorizeUserTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
+                    timeout)
+               .ConfigureAwait(false);
+
+            static Func<ITestOutputHelper, IHost, CancellationToken, Task> AuthorizeUserTestInternal(
+                DirectoryInfo settingsDirectory,
+                string virtualHost,
+                IsolationLevel isolationLevel)
+            {
+                return async (output, host, token) =>
+                {
+                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpointIdentity.LogicalName);
+                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                    var sqlDatabaseSettings = await endpointDependencyContainer
+                       .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(settingsDirectory.Name, sqlDatabaseSettings.Database);
+                    Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
+                    Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
+
+                    var rabbitMqSettings = await transportDependencyContainer
+                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                       .Get(token)
+                       .ConfigureAwait(false);
+
+                    Assert.Equal(virtualHost, rabbitMqSettings.VirtualHost);
+
+                    var username = "qwerty";
+                    var password = "12345678";
+
+                    var query = new AuthorizeUser(username, password);
+                    UserAuthorizationResult? authorizationResult;
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        authorizationResult = await integrationContext
+                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
+                           .ConfigureAwait(false);
+                    }
+
+                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+
+                    Assert.Equal(username, authorizationResult.Username);
+                    Assert.Empty(authorizationResult.Token);
+                    Assert.NotEmpty(authorizationResult.Details);
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<CreateUser>(),
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>>(),
+                            collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserCreated>());
+
+                        await integrationContext
+                           .Send(new CreateUser(username, password), token)
+                           .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+                    }
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        authorizationResult = await integrationContext
+                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
+                           .ConfigureAwait(false);
+                    }
+
+                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+
+                    Assert.Equal(username, authorizationResult.Username);
+                    Assert.NotEmpty(authorizationResult.Token);
+                    Assert.Empty(authorizationResult.Details);
                 };
             }
         }

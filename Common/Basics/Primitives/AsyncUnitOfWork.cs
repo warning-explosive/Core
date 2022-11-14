@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// <inheritdoc />
     public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
     {
-        private readonly SyncState _syncState = new SyncState();
+        private readonly Exclusive _exclusive = new Exclusive();
 
         /// <inheritdoc />
         public async Task ExecuteInTransaction(
@@ -17,13 +17,13 @@ namespace SpaceEngineers.Core.Basics.Primitives
             bool saveChanges,
             CancellationToken token)
         {
-            using (_syncState.StartExclusiveOperation(nameof(AsyncUnitOfWork<TContext>)))
+            using (await _exclusive.Run(token).ConfigureAwait(false))
             {
                 var (behavior, startError) = await ExecutionExtensions
-                    .TryAsync(context, StartTransactionUnsafe)
-                    .Catch<Exception>()
-                    .Invoke(StartExceptionResult, token)
-                    .ConfigureAwait(false);
+                   .TryAsync(context, StartTransactionUnsafe)
+                   .Catch<Exception>()
+                   .Invoke(StartExceptionResult, token)
+                   .ConfigureAwait(false);
 
                 if (startError != null)
                 {
@@ -40,17 +40,17 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 if (behavior is not EnUnitOfWorkBehavior.SkipProducer)
                 {
                     executionError = await ExecutionExtensions
-                        .TryAsync((context, producer), ExecuteProducerUnsafe)
-                        .Catch<Exception>()
-                        .Invoke(ExceptionResult, token)
-                        .ConfigureAwait(false);
+                       .TryAsync((context, producer), ExecuteProducerUnsafe)
+                       .Catch<Exception>()
+                       .Invoke(ExceptionResult, token)
+                       .ConfigureAwait(false);
                 }
 
                 var finishError = await ExecutionExtensions
-                    .TryAsync((context, saveChanges, executionError), FinishTransactionUnsafe)
-                    .Catch<Exception>()
-                    .Invoke(ExceptionResult, token)
-                    .ConfigureAwait(false);
+                   .TryAsync((context, saveChanges, executionError), FinishTransactionUnsafe)
+                   .Catch<Exception>()
+                   .Invoke(ExceptionResult, token)
+                   .ConfigureAwait(false);
 
                 var error = executionError ?? finishError;
 

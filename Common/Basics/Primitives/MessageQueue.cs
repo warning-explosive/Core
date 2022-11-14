@@ -14,16 +14,16 @@ namespace SpaceEngineers.Core.Basics.Primitives
     public class MessageQueue<TElement> : IQueue<TElement>,
                                           IAsyncQueue<TElement>
     {
+        private readonly Exclusive _exclusive = new Exclusive();
+
         private readonly AsyncAutoResetEvent _autoResetEvent;
         private readonly ConcurrentQueue<TElement> _queue;
-        private readonly SyncState _syncState;
 
         /// <summary> .cctor </summary>
         public MessageQueue()
         {
             _autoResetEvent = new AsyncAutoResetEvent(false);
             _queue = new ConcurrentQueue<TElement>();
-            _syncState = new SyncState();
         }
 
         #region IQueue
@@ -79,11 +79,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
         /// <inheritdoc />
         public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
-            var key = string.Join(".",
-                nameof(MessageQueue<HeapEntry<object, string>>),
-                nameof(MessageQueue<HeapEntry<object, string>>.Run));
-
-            using (_syncState.StartExclusiveOperation(key))
+            using (await _exclusive.Run(token).ConfigureAwait(false))
             {
                 while (!token.IsCancellationRequested)
                 {

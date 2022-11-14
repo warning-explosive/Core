@@ -6,3 +6,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
+
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

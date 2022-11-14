@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -34,14 +33,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         public GenericEndpoint(
             ILogger logger,
             EndpointIdentity endpointIdentity,
-            IDependencyContainer dependencyContainer,
-            IEnumerable<IEndpointInitializer> initializers)
+            IDependencyContainer dependencyContainer)
         {
             _logger = logger;
             _endpointIdentity = endpointIdentity;
 
             DependencyContainer = dependencyContainer;
-            Initializers = initializers;
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new ConcurrentDictionary<Guid, Task>();
@@ -49,22 +46,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         public IDependencyContainer DependencyContainer { get; }
 
-        public IEnumerable<IEndpointInitializer> Initializers { get; }
-
         private CancellationToken Token => _cts.Token;
 
-        public async Task StartAsync(CancellationToken token)
+        public Task StartAsync(CancellationToken token)
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-
-            foreach (var initializer in Initializers)
-            {
-                await initializer.Initialize(Token).ConfigureAwait(false);
-            }
 
             _logger.Information($"{_endpointIdentity} has been started");
 
             _ready.Set();
+
+            return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken token)

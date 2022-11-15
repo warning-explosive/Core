@@ -124,7 +124,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
             finally
             {
-                Logger.Information($"{nameof(HostedService)} is being disposed 2");
                 Sync.Set();
                 _cts?.Dispose();
             }

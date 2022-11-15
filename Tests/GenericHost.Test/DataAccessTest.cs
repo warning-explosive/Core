@@ -84,7 +84,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .UseIntegrationTransport(builder => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel)))
                        .BuildOptions()));

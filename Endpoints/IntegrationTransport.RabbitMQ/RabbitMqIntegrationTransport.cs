@@ -339,6 +339,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
+            _cts.Token.Register(() => _backgroundMessageProcessingTcs.TrySetCanceled());
+
             ConfigureErrorHandlers(_channels, _endpoints.Keys, BindErrorHandler);
 
             return RestartBackgroundMessageProcessing(_backgroundMessageProcessingTcs, Token);
@@ -351,13 +353,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         }
 
         private async Task RestartBackgroundMessageProcessing(
-            TaskCompletionSource<object?> backgroundMessageProcessingTcs,
+            TaskCompletionSource<object?> tcs,
             CancellationToken token)
         {
             try
             {
                 await _sync.WaitAsync(token).ConfigureAwait(false);
-                await RestartBackgroundMessageProcessingUnsafe(backgroundMessageProcessingTcs, token).ConfigureAwait(false);
+                await RestartBackgroundMessageProcessingUnsafe(tcs, token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -369,7 +371,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         }
 
         private async Task RestartBackgroundMessageProcessingUnsafe(
-            TaskCompletionSource<object?> backgroundMessageProcessingTcs,
+            TaskCompletionSource<object?> tcs,
             CancellationToken token)
         {
             Dispose();
@@ -431,7 +433,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             _ready.Set();
 
-            await backgroundMessageProcessingTcs.Task.ConfigureAwait(false);
+            await tcs.Task.ConfigureAwait(false);
         }
 
         #region configuration

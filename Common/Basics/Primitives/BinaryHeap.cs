@@ -314,9 +314,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 return;
             }
 
-            var tmp = _array[left];
-            _array[left] = _array[right];
-            _array[right] = tmp;
+            (_array[left], _array[right]) = (_array[right], _array[left]);
         }
 
         private static int Left(int index) => (2 * index) + 1;

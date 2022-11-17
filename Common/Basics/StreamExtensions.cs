@@ -12,84 +12,142 @@ namespace SpaceEngineers.Core.Basics
     public static class StreamExtensions
     {
         /// <summary>
-        /// Converts stream to byte array
+        /// Converts bytes to memory steam
+        /// </summary>
+        /// <param name="bytes">Bytes</param>
+        /// <returns>MemoryStream</returns>
+        public static MemoryStream AsMemoryStream(this ReadOnlySpan<byte> bytes)
+        {
+            var memoryStream = new MemoryStream(bytes.Length);
+
+            memoryStream.Write(bytes);
+            memoryStream.Position = 0;
+
+            return memoryStream;
+        }
+
+        /// <summary>
+        /// Converts MemoryStream to bytes
+        /// </summary>
+        /// <param name="memoryStream">MemoryStream</param>
+        /// <returns>Bytes</returns>
+        public static Memory<byte> AsBytes(this MemoryStream memoryStream)
+        {
+            return memoryStream.TryGetBuffer(out var arraySegment)
+                ? arraySegment
+                : throw new InvalidOperationException("Unable to extract buffer from the memoryStream");
+        }
+
+        /// <summary>
+        /// Converts stream to bytes
         /// </summary>
         /// <param name="stream">Stream</param>
-        /// <returns>Byte array</returns>
-        public static async Task<byte[]> ToByteArray(this Stream stream)
+        /// <returns>Bytes</returns>
+        public static Memory<byte> AsBytes(this Stream stream)
         {
             using (var memoryStream = new MemoryStream())
             {
-                await stream
-                   .CopyToAsync(memoryStream)
-                   .ConfigureAwait(false);
+                stream.CopyTo(memoryStream);
 
-                return memoryStream.ToArray();
+                return memoryStream.AsBytes();
             }
         }
 
         /// <summary>
-        /// Read all containing bytes asynchronously and convert to encoded string
+        /// Converts stream to bytes
         /// </summary>
         /// <param name="stream">Stream</param>
-        /// <param name="encoding">String encoding</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Encoded bytes</returns>
-        public static async Task<string> ReadAllAsync(this Stream stream, Encoding encoding, CancellationToken token)
+        /// <returns>Bytes</returns>
+        public static async Task<Memory<byte>> AsBytes(this Stream stream, CancellationToken token)
         {
-            return encoding.GetString(await stream.ReadAllAsync(token).ConfigureAwait(false));
+            using (var memoryStream = new MemoryStream())
+            {
+                await stream
+                    .CopyToAsync(memoryStream, token)
+                    .ConfigureAwait(false);
+
+                return memoryStream.AsBytes();
+            }
         }
 
         /// <summary>
-        /// Flush stream and write string asynchronously
+        /// Converts stream to encoded string
         /// </summary>
         /// <param name="stream">Stream</param>
-        /// <param name="serialized">String for writing</param>
-        /// <param name="encoding">String encoding</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Task-object</returns>
-        public static async Task OverWriteAllAsync(this Stream stream, string serialized, Encoding encoding, CancellationToken token)
+        /// <param name="encoding">Encoding</param>
+        /// <returns>String</returns>
+        public static string AsString(
+            this Stream stream,
+            Encoding encoding)
         {
-            await stream.OverWriteAllAsync(encoding.GetBytes(serialized), token).ConfigureAwait(false);
+            var bytes = stream.AsBytes();
+
+            return encoding.GetString(bytes.Span);
         }
 
         /// <summary>
-        /// Read all containing bytes into buffer asynchronously
+        /// Converts stream to encoded string
         /// </summary>
         /// <param name="stream">Stream</param>
+        /// <param name="encoding">Encoding</param>
         /// <param name="token">Cancellation token</param>
-        /// <returns>Filled buffer</returns>
-        public static async Task<byte[]> ReadAllAsync(this Stream stream, CancellationToken token)
+        /// <returns>String</returns>
+        public static async Task<string> AsString(
+            this Stream stream,
+            Encoding encoding,
+            CancellationToken token)
         {
-            var bytes = (int)stream.Length;
-            var buffer = new byte[bytes];
+            var bytes = await stream
+                .AsBytes(token)
+                .ConfigureAwait(false);
 
-            var offset = 0;
-            stream.Position = offset;
-            var memory = new Memory<byte>(buffer, offset, bytes);
-
-            await stream.ReadAsync(memory, token).ConfigureAwait(false);
-
-            return buffer;
+            return encoding.GetString(bytes.Span);
         }
 
         /// <summary>
-        /// Flush stream and write bytes asynchronously
+        /// Flushes stream and writes bytes
         /// </summary>
         /// <param name="stream">Stream</param>
-        /// <param name="bytes">Bytes for writing</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Task-object</returns>
-        public static async Task OverWriteAllAsync(this Stream stream, byte[] bytes, CancellationToken token)
+        /// <param name="bytes">Bytes</param>
+        public static void Overwrite(
+            this Stream stream,
+            ReadOnlySpan<byte> bytes)
         {
-            await stream.FlushAsync(token).ConfigureAwait(false);
+            stream.Flush();
 
-            var offset = 0;
-            stream.Position = offset;
-            var memory = new ReadOnlyMemory<byte>(bytes, offset, bytes.Length);
-
+            stream.Position = 0;
             stream.SetLength(bytes.Length);
-            await stream.WriteAsync(memory, token).ConfigureAwait(false);
+
+            stream.Write(bytes);
+
+            stream.Position = 0;
+        }
+
+        /// <summary>
+        /// Flushes stream and writes bytes
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <param name="bytes">Bytes</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        public static async Task Overwrite(
+            this Stream stream,
+            ReadOnlyMemory<byte> bytes,
+            CancellationToken token)
+        {
+            await stream
+                .FlushAsync(token)
+                .ConfigureAwait(false);
+
+            stream.Position = 0;
+            stream.SetLength(bytes.Length);
+
+            await stream
+                .WriteAsync(bytes, token)
+                .ConfigureAwait(false);
+
+            stream.Position = 0;
         }
     }
 }

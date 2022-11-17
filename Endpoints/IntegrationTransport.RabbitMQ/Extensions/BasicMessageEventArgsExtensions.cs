@@ -28,12 +28,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             return DecodeIntegrationMessage(args.BasicProperties, args.Body, jsonSerializer);
         }
 
-        public static byte[] EncodeIntegrationMessage(
+        public static Memory<byte> EncodeIntegrationMessage(
             this IntegrationMessage message,
             IJsonSerializer jsonSerializer)
         {
             var serializedMessage = jsonSerializer.SerializeObject(message);
-            var bytes = Encoding.UTF8.GetBytes(serializedMessage);
+            ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(serializedMessage);
             return bytes.Compress();
         }
 
@@ -55,7 +55,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             string exchange,
             string routingKey,
             IBasicProperties basicProperties,
-            byte[] body,
+            ReadOnlyMemory<byte> bodyBytes,
             ConcurrentDictionary<ulong, TaskCompletionSource<bool>> outstandingConfirms)
         {
             Task<bool> confirmedPublication;
@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
                    .GetOrAdd(channel.NextPublishSeqNo, _ => new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously))
                    .Task;
 
-                channel.BasicPublish(exchange, routingKey, true, basicProperties, body);
+                channel.BasicPublish(exchange, routingKey, true, basicProperties, bodyBytes);
             }
 
             return confirmedPublication;
@@ -119,7 +119,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
                 throw new NotSupportedException($"Unknown {nameof(basicProperties.ContentType)}.{basicProperties.ContentType}. Supported {nameof(basicProperties.ContentType)}: {MediaTypeNames.Application.Json}.");
             }
 
-            var bytes = body.ToArray().Decompress();
+            ReadOnlySpan<byte> bytes = body.Span.Decompress().Span;
             var serializedMessage = Encoding.UTF8.GetString(bytes);
             return jsonSerializer.DeserializeObject<IntegrationMessage>(serializedMessage);
         }

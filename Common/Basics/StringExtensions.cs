@@ -16,11 +16,19 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Source string started from capital letter</returns>
         public static string StartFromCapitalLetter(this string source)
         {
-            source = source.Trim();
+            if (source.IsNullOrEmpty())
+            {
+                return source;
+            }
 
-            return source.IsNullOrEmpty()
-                ? source
-                : char.ToUpper(source[0], CultureInfo.InvariantCulture) + source.Substring(1);
+            return string.Create(
+                source.Length,
+                source,
+                static (buffer, source) =>
+                {
+                    buffer[0] = char.ToUpper(source[0], CultureInfo.InvariantCulture);
+                    source.AsSpan(1).ToLowerInvariant(buffer.Slice(1));
+                });
         }
 
         /// <summary>

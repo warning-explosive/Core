@@ -238,7 +238,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     ? InputExchange
                     : (string)basicProperties.Headers[DeferredExchange];
 
-                var body = message.EncodeIntegrationMessage(jsonSerializer);
+                var bodyBytes = message.EncodeIntegrationMessage(jsonSerializer);
 
                 var left = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName!.GetRoutingKeyPart();
 
@@ -246,7 +246,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var routingKey = string.Join(".", left, right);
 
-                return channel.Publish(exchange, routingKey, basicProperties, body, outstandingConfirms);
+                return channel.Publish(exchange, routingKey, basicProperties, bodyBytes, outstandingConfirms);
             }
 
             static IBasicProperties CreateBasicProperties(

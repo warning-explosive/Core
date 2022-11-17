@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Basics
 {
+    using System;
     using System.IO;
     using System.IO.Compression;
 
@@ -9,39 +10,41 @@ namespace SpaceEngineers.Core.Basics
     public static class CompressionExtensions
     {
         /// <summary>
-        /// Compresses data represented as byte-array
+        /// Compresses data
         /// </summary>
-        /// <param name="bytes">Decompressed data represented as byte-array</param>
-        /// <returns>Compressed data represented as byte-array</returns>
-        public static byte[] Compress(this byte[] bytes)
+        /// <param name="bytes">Decompressed data</param>
+        /// <returns>Compressed data</returns>
+        public static Memory<byte> Compress(this ReadOnlySpan<byte> bytes)
         {
             using (var to = new MemoryStream())
-            using (var zipStream = new GZipStream(to, CompressionMode.Compress))
+            using (var zipStream = new GZipStream(to, CompressionMode.Compress, leaveOpen: false))
             {
-                zipStream.Write(bytes, 0, bytes.Length);
+                zipStream.Write(bytes);
 
-                zipStream.Close();
+                zipStream.Close(); // committing changes into underlying stream
 
-                return to.ToArray();
+                return to.AsBytes();
             }
         }
 
         /// <summary>
-        /// Decompresses data represented as byte-array
+        /// Decompresses data
         /// </summary>
-        /// <param name="bytes">Compressed data represented as byte-array</param>
-        /// <returns>Decompressed data represented as byte-array</returns>
-        public static byte[] Decompress(this byte[] bytes)
+        /// <param name="bytes">Compressed data</param>
+        /// <returns>Decompressed data</returns>
+        public static Memory<byte> Decompress(this ReadOnlySpan<byte> bytes)
         {
-            using (var to = new MemoryStream())
-            using (var from = new MemoryStream(bytes))
-            using (var zipStream = new GZipStream(from, CompressionMode.Decompress))
+            using (var from = bytes.AsMemoryStream())
+            using (var zipStream = new GZipStream(from, CompressionMode.Decompress, leaveOpen: false))
             {
-                zipStream.CopyTo(to);
-
-                zipStream.Close();
-
-                return to.ToArray();
+                try
+                {
+                    return zipStream.AsBytes();
+                }
+                finally
+                {
+                    zipStream.Close();
+                }
             }
         }
     }

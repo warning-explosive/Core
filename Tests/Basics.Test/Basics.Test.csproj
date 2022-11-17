@@ -83,5 +83,8 @@
     <Compile Update="HeapTest.cs">
       <DependentUpon>BasicsTestBase.cs</DependentUpon>
     </Compile>
+    <Compile Update="StringExtensionsTest.cs">
+      <DependentUpon>BasicsTestBase.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

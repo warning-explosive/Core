@@ -16,7 +16,7 @@
         }
 
         /// <inheritdoc />
-        public override int GetHashCode(T obj)
+        public override int GetHashCode(T? obj)
         {
             return obj == null ? 0 : obj.GetHashCode();
         }

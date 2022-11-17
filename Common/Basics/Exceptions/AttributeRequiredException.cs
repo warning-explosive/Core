@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.Basics.Exceptions
         /// <param name="attributeType">Type of required attribute</param>
         /// <param name="notMarkedType">Type that not marked by attribute</param>
         public AttributeRequiredException(Type attributeType, Type notMarkedType)
-            : base($"{attributeType.FullName}|{notMarkedType.FullName}")
+            : base($"Type {notMarkedType.FullName} is expected to be marked with {attributeType.FullName} attribute")
         {
         }
     }

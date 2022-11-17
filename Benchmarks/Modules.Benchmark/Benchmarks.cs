@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Benchmark
 {
+    using System;
     using Core.Benchmark.Api;
     using Sources;
     using Test.Api;
@@ -76,6 +77,26 @@ namespace SpaceEngineers.Core.Modules.Benchmark
                 Output.WriteLine);
 
             Assert.True(createBoundedAbove <= 1000m);
+        }
+
+        [Fact]
+        internal void StreamCopyVersusStreamReadBenchmark()
+        {
+            var summary = Benchmark.Run<StreamCopyVersusStreamReadBenchmarkSource>(Output.WriteLine);
+
+            var copyTo = summary.MillisecondMeasure(
+                nameof(StreamCopyVersusStreamReadBenchmarkSource.CopyTo),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(copyTo <= 10m);
+
+            var read = summary.MillisecondMeasure(
+                nameof(StreamCopyVersusStreamReadBenchmarkSource.Read),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(read <= 10m);
         }
     }
 }

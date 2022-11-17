@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
             using (var fileStream = File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var serialized = await fileStream
-                   .ReadAllAsync(Encoding, token)
+                   .AsString(Encoding, token)
                    .ConfigureAwait(false);
 
                 return _jsonSerializer.DeserializeObject<TSettings>(serialized);

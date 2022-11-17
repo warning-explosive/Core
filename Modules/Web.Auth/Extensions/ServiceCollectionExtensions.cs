@@ -38,6 +38,7 @@ namespace SpaceEngineers.Core.Web.Auth.Extensions
                             ? AuthenticationHeaderValue
                                 .Parse(header)
                                 .Scheme
+                                .Trim()
                                 .StartFromCapitalLetter()
                             : BasicDefaults.AuthenticationScheme;
                     };

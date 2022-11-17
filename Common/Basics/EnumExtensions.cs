@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Basics
         public static bool HasFlag<TEnum>(this TEnum? source, TEnum flag)
             where TEnum : Enum
         {
-            return flag?.HasFlag(flag) ?? false;
+            return flag.HasFlag(flag);
         }
     }
 }

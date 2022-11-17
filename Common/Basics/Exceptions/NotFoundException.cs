@@ -10,6 +10,8 @@ namespace SpaceEngineers.Core.Basics.Exceptions
         /// <summary> .ctor </summary>
         /// <param name="message">Exception message</param>
         public NotFoundException(string message)
-            : base(message) { }
+            : base(message)
+        {
+        }
     }
 }

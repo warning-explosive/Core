@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
             FileSystemSettingsDirectory = directory;
             FileSystemSettingsScope = settingsScopeProvider.Scope;
 
-            Encoding = new UTF8Encoding(true);
+            Encoding = Encoding.UTF8;
         }
 
         /// <summary>

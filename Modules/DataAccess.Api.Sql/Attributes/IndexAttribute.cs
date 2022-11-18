@@ -7,7 +7,7 @@
     /// <summary>
     /// IndexAttribute
     /// </summary>
-    // TODO: add sql dependent features like clustered indexes, filtered indexes, included fields and so on
+    // TODO: #202 - add sql dependent features like clustered indexes, filtered indexes, included fields and so on
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = true)]
     public sealed class IndexAttribute : Attribute
     {

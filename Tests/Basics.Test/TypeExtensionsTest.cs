@@ -360,10 +360,5 @@ namespace SpaceEngineers.Core.Basics.Test
                 set => _nullableReference = value;
             }
         }
-
-        private record TestRecord
-        {
-            public string StringValue { get; init; } = default!;
-        }
     }
 }

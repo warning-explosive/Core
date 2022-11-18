@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                 resultMessage = "Wrong password";
             }
 
-            // TODO: #165 - add support for sliding expiration
+            // TODO: #201 - add support for sliding expiration
             return new UserAuthorizationResult(message.Username, authorizationToken, resultMessage);
         }
     }

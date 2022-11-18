@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class Command : IIntegrationCommand
+    internal record Command : IIntegrationCommand
     {
         public Command(int id)
         {

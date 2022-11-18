@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using System.Globalization;
     using GenericEndpoint.Contract.Abstractions;
 
-    internal class Reply : IIntegrationReply
+    internal record Reply : IIntegrationReply
     {
         public Reply(int id)
         {

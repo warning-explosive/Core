@@ -22,6 +22,17 @@ namespace SpaceEngineers.Core.Basics.Test
         }
 
         [Theory]
+        [InlineData(typeof(object), false)]
+        [InlineData(typeof(string), false)]
+        [InlineData(typeof(int), false)]
+        [InlineData(typeof(KeyValuePair<string, object>), false)]
+        [InlineData(typeof(TestRecord), true)]
+        internal void IsRecordTest(Type type, bool result)
+        {
+            Assert.Equal(result, type.IsRecord());
+        }
+
+        [Theory]
         [InlineData(typeof(string))]
         [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.AsyncManualResetEvent))]
         [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<,>))]
@@ -348,6 +359,11 @@ namespace SpaceEngineers.Core.Basics.Test
                 get => _nullableReference;
                 set => _nullableReference = value;
             }
+        }
+
+        private record TestRecord
+        {
+            public string StringValue { get; init; } = default!;
         }
     }
 }

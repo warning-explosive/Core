@@ -179,6 +179,23 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Does type represent a record
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Result of check</returns>
+        public static bool IsRecord(this Type type)
+        {
+            if (type.GetMethod("<Clone>$") == null)
+            {
+                return false;
+            }
+
+            return type
+                .GetPropertyValue<PropertyInfo[]>("DeclaredProperties")
+                .SingleOrDefault(MemberExtensions.IsEqualityContract) != null;
+        }
+
+        /// <summary>
         /// True for non-generic or constructed generic types
         /// </summary>
         /// <param name="type">Type</param>

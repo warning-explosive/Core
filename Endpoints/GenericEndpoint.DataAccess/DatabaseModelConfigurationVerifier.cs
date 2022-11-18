@@ -5,7 +5,6 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Registration;
@@ -125,25 +124,14 @@
             Type type,
             [NotNullWhen(true)] out Exception? exception)
         {
-            var hasGeneratedEqualityContract = ((TypeInfo)type)
-                .DeclaredProperties
-               ?.Where(property => property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefault()
-               ?.GetMethod
-               ?.GetCustomAttribute(typeof(CompilerGeneratedAttribute)) != null;
-
-            var hasCopyMethod = type.GetMethod("<Clone>$") != null;
-
-            var isRecord = hasGeneratedEqualityContract && hasCopyMethod;
-
-            if (!isRecord)
+            if (type.IsRecord())
             {
-                exception = new InvalidOperationException($"Type {type} should be defined as record");
-                return true;
+                exception = default;
+                return false;
             }
 
-            exception = default;
-            return false;
+            exception = new InvalidOperationException($"Type {type} should be defined as record");
+            return true;
         }
 
         private static bool TypeDoesNotInheritFrom(

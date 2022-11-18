@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class Endpoint1HandlerInvoked : IIntegrationEvent
+    internal record Endpoint1HandlerInvoked : IIntegrationEvent
     {
         public Endpoint1HandlerInvoked(Type handlerType, EndpointIdentity endpointIdentity)
         {

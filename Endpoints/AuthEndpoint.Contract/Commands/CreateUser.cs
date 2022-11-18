@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Commands
     /// Create user command
     /// </summary>
     [OwnedBy(AuthEndpointIdentity.LogicalName)]
-    public class CreateUser : IIntegrationCommand
+    public record CreateUser : IIntegrationCommand
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>

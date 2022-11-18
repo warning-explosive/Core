@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Events
     /// User created event
     /// </summary>
     [OwnedBy(AuthEndpointIdentity.LogicalName)]
-    public class UserCreated : IIntegrationEvent
+    public record UserCreated : IIntegrationEvent
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Replies
     /// <summary>
     /// User authorization result
     /// </summary>
-    public class UserAuthorizationResult : IIntegrationReply
+    public record UserAuthorizationResult : IIntegrationReply
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>

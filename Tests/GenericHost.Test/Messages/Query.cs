@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class Query : IIntegrationQuery<Reply>
+    internal record Query : IIntegrationQuery<Reply>
     {
         public Query(int id)
         {

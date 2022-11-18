@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class RequestQueryCommand : IIntegrationCommand
+    internal record RequestQueryCommand : IIntegrationCommand
     {
         public RequestQueryCommand(int id)
         {

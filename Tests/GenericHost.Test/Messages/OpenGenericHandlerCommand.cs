@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    internal class OpenGenericHandlerCommand : IIntegrationCommand
+    internal record OpenGenericHandlerCommand : IIntegrationCommand
     {
     }
 }

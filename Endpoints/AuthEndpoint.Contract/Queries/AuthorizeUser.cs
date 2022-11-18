@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
     /// Authorize user query
     /// </summary>
     [OwnedBy(AuthEndpointIdentity.LogicalName)]
-    public class AuthorizeUser : IIntegrationQuery<UserAuthorizationResult>
+    public record AuthorizeUser : IIntegrationQuery<UserAuthorizationResult>
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>

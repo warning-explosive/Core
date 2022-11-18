@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint2)]
-    internal class PublishEventCommand : IIntegrationCommand
+    internal record PublishEventCommand : IIntegrationCommand
     {
         public PublishEventCommand(int id)
         {

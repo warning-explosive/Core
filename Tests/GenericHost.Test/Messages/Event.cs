@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint2)]
-    internal class Event : IIntegrationEvent
+    internal record Event : IIntegrationEvent
     {
         public Event(int id)
         {

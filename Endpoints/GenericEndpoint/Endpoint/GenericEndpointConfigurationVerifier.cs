@@ -53,6 +53,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
             VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyModifiers(_integrationTypeProvider.IntegrationMessageTypes());
 
             VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
             MessageTypesHaveMissingPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes());
@@ -139,6 +140,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
+        private static void VerifyModifiers(IReadOnlyCollection<Type> messageTypes)
+        {
+            foreach (var messageType in messageTypes)
+            {
+                if (messageType.IsRecord())
+                {
+                    continue;
+                }
+
+                throw new InvalidOperationException($"Type {messageType} should be defined as record");
+            }
+        }
+
         private void VerifyConstructors(IEnumerable<Type> messageTypes)
         {
             messageTypes
@@ -152,6 +166,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             messageTypes
                .Where(messageType => messageType.IsConcreteType())
                .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
+               .Where(property => !property.IsEqualityContract())
                .Where(property => !(property.HasInitializer() && property.SetIsAccessible()))
                .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
         }

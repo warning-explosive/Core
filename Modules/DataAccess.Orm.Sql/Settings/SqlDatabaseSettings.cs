@@ -16,11 +16,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         {
             Host = "localhost";
             Port = 5432;
-            Database = "SpaceEngineersDatabase";
+            Database = "AndromedaDatabase";
 
-            /* TODO: #130 - use secrets or credentials vault */
-            Username = "SpaceEngineer";
-            Password = "Voyager1";
+            Username = "postgres";
+            Password = "Password12!";
 
             IsolationLevel = IsolationLevel.Snapshot;
             ConnectionPoolSize = 100;

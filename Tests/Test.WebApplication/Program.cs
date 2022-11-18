@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
                            .ModifyContainerOptions(options => options
                                .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration()))
                            .BuildOptions(),
-                        "Gateway"))
+                        "TransportEndpointGateway"))
                .UseAuthEndpoint(builder => builder
                    .WithPostgreSqlDataAccess(options => options
                        .ExecuteMigrations())

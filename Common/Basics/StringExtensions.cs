@@ -42,6 +42,16 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// IsNullOrWhiteSpace
+        /// </summary>
+        /// <param name="source">Source string</param>
+        /// <returns>IsNullOrWhiteSpace attribute</returns>
+        public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? source)
+        {
+            return string.IsNullOrWhiteSpace(source);
+        }
+
+        /// <summary>
         /// Formats string with invariant culture
         /// </summary>
         /// <param name="format">Format string</param>

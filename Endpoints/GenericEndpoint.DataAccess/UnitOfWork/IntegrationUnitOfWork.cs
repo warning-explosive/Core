@@ -91,7 +91,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     throw exception.Rethrow();
                 }
 
-                await DeliverOutgoingMessages(_logger, _endpointIdentity, _outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
+                await DeliverOutgoingMessages(_logger, _outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
             }
             finally
             {
@@ -197,10 +197,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Insert(outboxMessages, EnInsertBehavior.Default, token);
         }
 
-        // TODO: add logger templates with endpoint identity
         private static Task DeliverOutgoingMessages(
             ILogger logger,
-            EndpointIdentity endpointIdentity,
             IOutboxDelivery outboxDelivery,
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
@@ -209,7 +207,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .TryAsync((outboxDelivery, messages), DeliverOutgoingMessagesUnsafe)
                .Catch<Exception>((exception, _) =>
                {
-                   logger.Error(exception, $"{endpointIdentity} -> Outbox delivery error");
+                   logger.Error(exception, "Outbox delivery error");
                    return Task.CompletedTask;
                })
                .Invoke(token);

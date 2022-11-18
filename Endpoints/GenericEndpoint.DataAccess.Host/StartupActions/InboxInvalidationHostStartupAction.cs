@@ -54,17 +54,16 @@
         {
             _transport.BindErrorHandler(
                 _endpointIdentity,
-                ErrorMessageHandler(_dependencyContainer, _endpointIdentity, _logger));
+                ErrorMessageHandler(_dependencyContainer, _logger));
         }
 
         private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(
             IDependencyContainer dependencyContainer,
-            EndpointIdentity endpointIdentity,
             ILogger logger)
         {
             return (message, _, token) => ExecutionExtensions
                .TryAsync((dependencyContainer, message), HandleErrorMessage)
-               .Catch<Exception>(OnCatch(logger, endpointIdentity))
+               .Catch<Exception>(OnCatch(logger))
                .Invoke(token);
         }
 
@@ -98,13 +97,11 @@
                .ConfigureAwait(false);
         }
 
-        private static Func<Exception, CancellationToken, Task> OnCatch(
-            ILogger logger,
-            EndpointIdentity endpointIdentity)
+        private static Func<Exception, CancellationToken, Task> OnCatch(ILogger logger)
         {
             return (exception, _) =>
             {
-                logger.Error(exception, $"{endpointIdentity} -> Inbox reject error");
+                logger.Error(exception, "Inbox reject error");
                 return Task.CompletedTask;
             };
         }

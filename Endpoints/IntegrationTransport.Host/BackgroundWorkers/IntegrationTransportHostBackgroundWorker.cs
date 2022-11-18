@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
 
         private static EventHandler<IntegrationTransportStatusChangedEventArgs> OnStatusChanged(ILogger logger)
         {
-            return (sender, args) => logger.Information($"{sender.GetType().Name}: {args.PreviousStatus} -> {args.CurrentStatus}");
+            return (sender, args) => logger.Information($"{sender.GetType().Name} changed status from {args.PreviousStatus} to {args.CurrentStatus}");
         }
     }
 }

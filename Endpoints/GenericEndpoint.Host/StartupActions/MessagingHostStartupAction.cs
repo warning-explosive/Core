@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
         public Task Run(CancellationToken token)
         {
             _transport.Bind(_endpointIdentity, MessageHandler(_dependencyContainer), _integrationTypeProvider);
-            _transport.BindErrorHandler(_endpointIdentity, ErrorMessageHandler(_logger, _endpointIdentity));
+            _transport.BindErrorHandler(_endpointIdentity, ErrorMessageHandler(_logger));
 
             return Task.CompletedTask;
         }
@@ -56,13 +56,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
                 .ExecuteMessageHandler(message);
         }
 
-        private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(
-            ILogger logger,
-            EndpointIdentity endpointIdentity)
+        private static Func<IntegrationMessage, Exception, CancellationToken, Task> ErrorMessageHandler(ILogger logger)
         {
             return (message, exception, _) =>
             {
-                logger.Error(exception, $"{endpointIdentity} -> Message handling error: {message.Payload.GetType().Name}");
+                logger.Error(exception, $"Message handling error: {message.Payload.GetType().FullName}");
                 return Task.CompletedTask;
             };
         }

@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.Test.Api.Internals
         public IDisposable BeginScope<TState>(TState state)
             where TState : notnull
         {
-            return Disposable.Create(state, _ => { });
+            return Disposable.Create(state, static _ => { });
         }
 
         public bool IsEnabled(LogLevel logLevel) => true;
@@ -29,11 +29,7 @@ namespace SpaceEngineers.Core.Test.Api.Internals
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            var message = exception != null
-                ? $"{state} | {exception}"
-                : state.ToString();
-
-            _output.WriteLine($"[{logLevel}] {eventId} -> {message}");
+            _output.WriteLine($"[{logLevel}] {formatter(state, exception)}");
         }
     }
 }

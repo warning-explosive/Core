@@ -61,7 +61,7 @@
 
                 await ExecutionExtensions
                    .TryAsync((_transport, _outboxDelivery), DeliverMessages)
-                   .Catch<Exception>(OnError(_endpointIdentity, _logger))
+                   .Catch<Exception>(OnError(_logger))
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -88,13 +88,11 @@
             }
         }
 
-        private static Func<Exception, CancellationToken, Task> OnError(
-            EndpointIdentity endpointIdentity,
-            ILogger logger)
+        private static Func<Exception, CancellationToken, Task> OnError(ILogger logger)
         {
             return (exception, _) =>
             {
-                logger.Error(exception, $"{endpointIdentity} -> Background outbox delivery error");
+                logger.Error(exception, "Background outbox delivery error");
                 return Task.CompletedTask;
             };
         }

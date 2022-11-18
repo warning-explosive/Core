@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
 {
     using System;
     using System.Linq;
-    using Extensions;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.Api.Exceptions;
 
@@ -37,7 +36,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
             : base(Array.Empty<IDomainEvent<User>>())
         {
             _username = username;
-            _salt = SecurityExtensions.GenerateSalt();
+            _salt = Password.GenerateSalt();
             _passwordHash = rawPassword.GeneratePasswordHash(_salt);
 
             PopulateEvent(new UserCreated(Id, username, _salt, _passwordHash));
@@ -51,8 +50,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
         public bool CheckPassword(Password password)
         {
             return password
-               .GeneratePasswordHash(_salt)
-               .Equals(_passwordHash, StringComparison.Ordinal);
+                .GeneratePasswordHash(_salt)
+                .Equals(_passwordHash, StringComparison.Ordinal);
         }
 
         /// <inheritdoc />

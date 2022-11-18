@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="memoryStream">MemoryStream</param>
         /// <returns>Bytes</returns>
-        public static Memory<byte> AsBytes(this MemoryStream memoryStream)
+        public static ReadOnlyMemory<byte> AsBytes(this MemoryStream memoryStream)
         {
             return memoryStream.TryGetBuffer(out var arraySegment)
                 ? arraySegment
@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="stream">Stream</param>
         /// <returns>Bytes</returns>
-        public static Memory<byte> AsBytes(this Stream stream)
+        public static ReadOnlyMemory<byte> AsBytes(this Stream stream)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="stream">Stream</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Bytes</returns>
-        public static async Task<Memory<byte>> AsBytes(this Stream stream, CancellationToken token)
+        public static async Task<ReadOnlyMemory<byte>> AsBytes(this Stream stream, CancellationToken token)
         {
             using (var memoryStream = new MemoryStream())
             {

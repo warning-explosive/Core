@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
             Value = value.Length switch
             {
                 < 5 => throw new DomainInvariantViolationException("Username length should be greater or equal than 5 symbols"),
-                > 256 => throw new DomainInvariantViolationException("Username length should be less or equal than 256 symbols"),
+                > 32 => throw new DomainInvariantViolationException("Username length should be less or equal than 32 symbols"),
                 _ => value
             };
 

@@ -48,9 +48,9 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             var username = "qwerty";
             var password = "12345678";
+            var salt = AuthEndpoint.Domain.Model.Password.GenerateSalt();
 
             var aggregateId = Guid.NewGuid();
-            var salt = AuthEndpoint.Domain.Extensions.SecurityExtensions.GenerateSalt();
 
             var userCreatedDomainEvent = new AuthEndpoint.Domain.Model.UserCreated(
                 aggregateId,

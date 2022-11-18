@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             return DecodeIntegrationMessage(args.BasicProperties, args.Body, jsonSerializer);
         }
 
-        public static Memory<byte> EncodeIntegrationMessage(
+        public static ReadOnlyMemory<byte> EncodeIntegrationMessage(
             this IntegrationMessage message,
             IJsonSerializer jsonSerializer)
         {

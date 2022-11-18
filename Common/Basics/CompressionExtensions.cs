@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="bytes">Decompressed data</param>
         /// <returns>Compressed data</returns>
-        public static Memory<byte> Compress(this ReadOnlySpan<byte> bytes)
+        public static ReadOnlyMemory<byte> Compress(this ReadOnlySpan<byte> bytes)
         {
             using (var to = new MemoryStream())
             using (var zipStream = new GZipStream(to, CompressionMode.Compress, leaveOpen: false))
@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="bytes">Compressed data</param>
         /// <returns>Decompressed data</returns>
-        public static Memory<byte> Decompress(this ReadOnlySpan<byte> bytes)
+        public static ReadOnlyMemory<byte> Decompress(this ReadOnlySpan<byte> bytes)
         {
             using (var from = bytes.AsMemoryStream())
             using (var zipStream = new GZipStream(from, CompressionMode.Decompress, leaveOpen: false))

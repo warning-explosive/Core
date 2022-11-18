@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         /// <summary> CopyTo </summary>
         /// <returns>Object</returns>
         [Benchmark(Description = nameof(CopyTo), Baseline = true)]
-        public Memory<byte> CopyTo()
+        public ReadOnlyMemory<byte> CopyTo()
         {
             using (var stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var memoryStream = new MemoryStream())
@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         /// <summary> CopyTo </summary>
         /// <returns>Object</returns>
         [Benchmark(Description = nameof(Read))]
-        public Memory<byte> Read()
+        public ReadOnlyMemory<byte> Read()
         {
             using (var stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {

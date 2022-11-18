@@ -26,9 +26,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Settings;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
-    using GenericEndpoint.DataAccess.EventSourcing;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.DataAccess.Settings;
+    using GenericEndpoint.EventSourcing;
+    using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Messaging;

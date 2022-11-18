@@ -44,6 +44,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Host\GenericEndpoint.DataAccess.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport.WebHost\IntegrationTransport.WebHost.csproj" />
       <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Api.Host\Web.Api.Host.csproj" />

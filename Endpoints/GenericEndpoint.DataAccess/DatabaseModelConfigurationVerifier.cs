@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.DatabaseModel
+﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess
 {
     using System;
     using System.Collections.Generic;
@@ -6,16 +6,16 @@
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Registration;
     using CompositionRoot.Verifiers;
-    using Core.DataAccess.Api.Model;
-    using Core.DataAccess.Api.Sql;
-    using Core.DataAccess.Api.Sql.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using SpaceEngineers.Core.DataAccess.Api.Sql;
+    using SpaceEngineers.Core.DataAccess.Api.Sql.Attributes;
 
     [Component(EnLifestyle.Singleton)]
     internal class DataAccessConfigurationVerifier : IConfigurationVerifier,

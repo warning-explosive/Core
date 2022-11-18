@@ -1,9 +1,9 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 {
+    using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Deduplication;
-    using GenericDomain.Api.Abstractions;
+    using SpaceEngineers.Core.GenericDomain.Api.Abstractions;
 
     [OwnedBy(nameof(EndpointIdentity))]
     internal class CaptureDomainEvent<TAggregate, TEvent> : IIntegrationCommand

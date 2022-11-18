@@ -131,7 +131,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                             (_, builder) => builder
                                .WithPostgreSqlDataAccess(options => options
                                    .ExecuteMigrations())
-                               .WithSqlEventSourcing()
                                .ModifyContainerOptions(options => options
                                    .WithAdditionalOurTypes(additionalOurTypes)
                                    .WithManualRegistrations(manualRegistrations))

@@ -29,7 +29,6 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
-        <ProjectReference Include="..\..\Modules\GenericDomain.EventSourcing.Sql\GenericDomain.EventSourcing.Sql.csproj" />
         <ProjectReference Include="..\GenericEndpoint.DataAccess\GenericEndpoint.DataAccess.csproj" />
         <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     </ItemGroup>

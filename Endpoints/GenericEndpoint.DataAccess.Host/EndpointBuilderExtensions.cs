@@ -21,10 +21,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host
             this IEndpointBuilder builder,
             Action<DataAccessOptions>? dataAccessOptions)
         {
-            var dataAccessAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(DataAccess)));
-
             var postgreSqlDataAccess = new[]
             {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(DataAccess))),
+
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql))),
@@ -37,33 +37,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host
             };
 
             builder
-               .WithEndpointPluginAssemblies(dataAccessAssembly)
                .WithEndpointPluginAssemblies(postgreSqlDataAccess)
                .ModifyContainerOptions(options => options
-                   .WithManualRegistrations(new GenericEndpointDataAccessHostBackgroundWorkerManualRegistration())
+                   .WithManualRegistrations(new DataAccessHostManualRegistration())
                    .WithOverrides(new DataAccessOverride()));
 
             dataAccessOptions?.Invoke(new DataAccessOptions(builder));
 
             return builder;
-        }
-
-        /// <summary>
-        /// With sql event sourcing
-        /// </summary>
-        /// <param name="builder">Endpoint builder</param>
-        /// <returns>IEndpointBuilder</returns>
-        public static IEndpointBuilder WithSqlEventSourcing(
-            this IEndpointBuilder builder)
-        {
-            var sqlEventSourcing = new[]
-            {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericDomain), nameof(Core.GenericDomain.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericDomain), nameof(Core.GenericDomain.EventSourcing))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.GenericDomain), nameof(Core.GenericDomain.EventSourcing), nameof(Core.GenericDomain.EventSourcing.Sql)))
-            };
-
-            return builder.WithEndpointPluginAssemblies(sqlEventSourcing);
         }
     }
 }

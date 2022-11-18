@@ -1,19 +1,18 @@
-﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
+﻿namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing.Host.StartupActions
 {
     using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
-    using EventSourcing;
+    using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Host.StartupActions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.GenericDomain.Api.Abstractions;
-    using SpaceEngineers.Core.GenericHost.Api.Abstractions;
+    using GenericHost.Api.Abstractions;
 
     [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
     [Before(typeof(GenericEndpointHostStartupAction))]

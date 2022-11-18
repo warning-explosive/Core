@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Basics;
     using CrossCuttingConcerns.Extensions;
     using GenericEndpoint.DataAccess.Host;
+    using GenericEndpoint.EventSourcing.Host;
     using GenericHost;
     using IntegrationTransport.WebHost;
     using Microsoft.Extensions.Configuration;

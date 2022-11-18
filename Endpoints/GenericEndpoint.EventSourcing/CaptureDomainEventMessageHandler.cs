@@ -1,13 +1,13 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 {
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
-    using GenericDomain.Api.Abstractions;
-    using GenericDomain.EventSourcing;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.GenericDomain.Api.Abstractions;
+    using SpaceEngineers.Core.GenericDomain.EventSourcing;
 
     [Component(EnLifestyle.Transient)]
     internal class CaptureDomainEventMessageHandler<TAggregate, TEvent> : IMessageHandler<CaptureDomainEvent<TAggregate, TEvent>>,

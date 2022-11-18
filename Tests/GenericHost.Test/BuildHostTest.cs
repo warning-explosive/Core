@@ -25,10 +25,12 @@
     using GenericDomain.EventSourcing.Sql;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.DataAccess.Deduplication;
-    using GenericEndpoint.DataAccess.EventSourcing;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.DataAccess.Host.BackgroundWorkers;
     using GenericEndpoint.DataAccess.Host.StartupActions;
+    using GenericEndpoint.EventSourcing;
+    using GenericEndpoint.EventSourcing.Host;
+    using GenericEndpoint.EventSourcing.Host.StartupActions;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.StartupActions;
@@ -241,6 +243,7 @@
                     (_, builder) => builder
                        .WithPostgreSqlDataAccess(options => options
                            .ExecuteMigrations())
+                       .WithSqlEventSourcing()
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
@@ -258,41 +261,49 @@
                 _ = host.Services.GetRequiredService<IHostedService>();
 
                 var expectedHostStartupActions = new[]
-                {
-                    typeof(UpgradeDatabaseHostStartupAction),
-                    typeof(EventSourcingHostStartupAction),
-                    typeof(InboxInvalidationHostStartupAction),
-                    typeof(MessagingHostStartupAction),
-                    typeof(MessagingHostStartupAction),
-                    typeof(GenericEndpointHostStartupAction),
-                    typeof(GenericEndpointHostStartupAction)
-                };
+                    {
+                        typeof(InboxInvalidationHostStartupAction),
+                        typeof(UpgradeDatabaseHostStartupAction),
+                        typeof(EventSourcingHostStartupAction),
+                        typeof(GenericEndpointHostStartupAction),
+                        typeof(GenericEndpointHostStartupAction),
+                        typeof(MessagingHostStartupAction),
+                        typeof(MessagingHostStartupAction)
+                    }
+                    .OrderByDependencies()
+                    .ThenBy(type => type.Name)
+                    .ToList();
 
                 var actualHostStartupActions = host
                    .Services
                    .GetServices<IDependencyContainer>()
                    .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostStartupAction>())
                    .Select(startup => startup.GetType())
-                   .OrderBy(type => type.FullName)
+                   .OrderByDependencies()
+                   .ThenBy(type => type.Name)
                    .ToList();
 
-                Assert.Equal(expectedHostStartupActions.OrderBy(type => type.FullName).ToList(), actualHostStartupActions);
+                Assert.Equal(expectedHostStartupActions, actualHostStartupActions);
 
                 var expectedHostBackgroundWorkers = new[]
-                {
-                    typeof(GenericEndpointDataAccessHostBackgroundWorker),
-                    typeof(IntegrationTransportHostBackgroundWorker)
-                };
+                    {
+                        typeof(GenericEndpointDataAccessHostBackgroundWorker),
+                        typeof(IntegrationTransportHostBackgroundWorker)
+                    }
+                    .OrderByDependencies()
+                    .ThenBy(type => type.Name)
+                    .ToList();
 
                 var actualHostBackgroundWorkers = host
                    .Services
                    .GetServices<IDependencyContainer>()
                    .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostBackgroundWorker>())
                    .Select(startup => startup.GetType())
-                   .OrderBy(type => type.FullName)
+                   .OrderByDependencies()
+                   .ThenBy(type => type.Name)
                    .ToList();
 
-                Assert.Equal(expectedHostBackgroundWorkers.OrderBy(type => type.FullName).ToList(), actualHostBackgroundWorkers);
+                Assert.Equal(expectedHostBackgroundWorkers, actualHostBackgroundWorkers);
             }
 
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
@@ -366,78 +377,88 @@
                     var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
 
                     var expectedIntegrationMessageTypes = new[]
-                    {
-                        typeof(CaptureDomainEvent<,>),
-                        typeof(BaseEvent),
-                        typeof(InheritedEvent),
-                        typeof(Command),
-                        typeof(OpenGenericHandlerCommand),
-                        typeof(Query),
-                        typeof(Reply)
-                    };
+                        {
+                            typeof(CaptureDomainEvent<,>),
+                            typeof(BaseEvent),
+                            typeof(InheritedEvent),
+                            typeof(Command),
+                            typeof(OpenGenericHandlerCommand),
+                            typeof(Query),
+                            typeof(Reply)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
                         .IntegrationMessageTypes()
                         .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(type => type.FullName).ToList(), actualIntegrationMessageTypes);
+                    Assert.Equal(expectedIntegrationMessageTypes, actualIntegrationMessageTypes);
 
                     var expectedCommands = new[]
-                    {
-                        typeof(CaptureDomainEvent<,>),
-                        typeof(Command),
-                        typeof(OpenGenericHandlerCommand)
-                    };
+                        {
+                            typeof(CaptureDomainEvent<,>),
+                            typeof(Command),
+                            typeof(OpenGenericHandlerCommand)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualCommands = integrationTypeProvider
                         .EndpointCommands()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedCommands.OrderBy(type => type.FullName).ToList(), actualCommands);
+                    Assert.Equal(expectedCommands, actualCommands);
 
                     var expectedQueries = new[]
-                    {
-                        typeof(Query)
-                    };
+                        {
+                            typeof(Query)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualQueries = integrationTypeProvider
                         .EndpointQueries()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedQueries.OrderBy(type => type.FullName).ToList(), actualQueries);
+                    Assert.Equal(expectedQueries, actualQueries);
 
                     var expectedReplies = new[]
-                    {
-                        typeof(Reply)
-                    };
+                        {
+                            typeof(Reply)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualReplies = integrationTypeProvider
                         .RepliesSubscriptions()
                         .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
+                    Assert.Equal(expectedReplies, actualReplies);
 
                     var expectedEvents = new[]
-                    {
-                        typeof(BaseEvent),
-                        typeof(InheritedEvent)
-                    };
+                        {
+                            typeof(BaseEvent),
+                            typeof(InheritedEvent)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualEvents = integrationTypeProvider
                         .EventsSubscriptions()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedEvents.OrderBy(type => type.FullName).ToList(), actualEvents);
+                    Assert.Equal(expectedEvents, actualEvents);
 
                     Assert.Equal(typeof(BaseEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
                     Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
@@ -549,39 +570,41 @@
                     Assert.Equal(expectedIntegrationTypeProviders, actualIntegrationTypeProviders);
 
                     var expectedIntegrationMessageTypes = new[]
-                    {
-                        typeof(CaptureDomainEvent<,>),
-                        typeof(AuthorizeUser),
-                        typeof(UserAuthorizationResult),
-                        typeof(CreateUser),
-                        typeof(UserCreated),
-                        typeof(BaseEvent),
-                        typeof(InheritedEvent),
-                        typeof(Event),
-                        typeof(TransportEvent),
-                        typeof(PublishEventCommand),
-                        typeof(PublishInheritedEventCommand),
-                        typeof(Command),
-                        typeof(OpenGenericHandlerCommand),
-                        typeof(Query),
-                        typeof(Reply),
-                        typeof(RequestQueryCommand),
-                        typeof(Endpoint1HandlerInvoked),
-                        typeof(Endpoint2HandlerInvoked)
-                    };
+                        {
+                            typeof(CaptureDomainEvent<,>),
+                            typeof(AuthorizeUser),
+                            typeof(UserAuthorizationResult),
+                            typeof(CreateUser),
+                            typeof(UserCreated),
+                            typeof(BaseEvent),
+                            typeof(InheritedEvent),
+                            typeof(Event),
+                            typeof(TransportEvent),
+                            typeof(PublishEventCommand),
+                            typeof(PublishInheritedEventCommand),
+                            typeof(Command),
+                            typeof(OpenGenericHandlerCommand),
+                            typeof(Query),
+                            typeof(Reply),
+                            typeof(RequestQueryCommand),
+                            typeof(Endpoint1HandlerInvoked),
+                            typeof(Endpoint2HandlerInvoked)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualIntegrationMessageTypes = integrationTypeProvider
                         .IntegrationMessageTypes()
                         .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedIntegrationMessageTypes.OrderBy(type => type.FullName).ToList(), actualIntegrationMessageTypes);
+                    Assert.Equal(expectedIntegrationMessageTypes, actualIntegrationMessageTypes);
 
                     var actualCommands = integrationTypeProvider
                         .EndpointCommands()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
                     Assert.Equal(Array.Empty<Type>(), actualCommands);
@@ -589,29 +612,31 @@
                     var actualQueries = integrationTypeProvider
                         .EndpointQueries()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
                     Assert.Equal(Array.Empty<Type>(), actualQueries);
 
                     var expectedReplies = new[]
-                    {
-                        typeof(UserAuthorizationResult),
-                        typeof(Reply)
-                    };
+                        {
+                            typeof(Reply),
+                            typeof(UserAuthorizationResult)
+                        }
+                        .OrderBy(type => type.Name)
+                        .ToList();
 
                     var actualReplies = integrationTypeProvider
                         .RepliesSubscriptions()
                         .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedReplies.OrderBy(type => type.FullName).ToList(), actualReplies);
+                    Assert.Equal(expectedReplies, actualReplies);
 
                     var actualEvents = integrationTypeProvider
                         .EventsSubscriptions()
                         .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
-                        .OrderBy(type => type.FullName)
+                        .OrderBy(type => type.Name)
                         .ToList();
 
                     Assert.Equal(Array.Empty<Type>(), actualEvents);
@@ -770,7 +795,7 @@
                 {
                     index => AssertCreateDataBase(modelChanges, index, nameof(BuildHostTest)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication)),
-                    index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing)),
+                    index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.EventSourcing)),
                     index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
                     index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
                     index =>
@@ -913,7 +938,7 @@
                     index => AssertCreateView(modelChanges, index, nameof(DatabaseSchema)),
                     index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                    index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.EventSourcing), nameof(DatabaseDomainEvent), $"{nameof(DatabaseDomainEvent.AggregateId)}_{nameof(DatabaseDomainEvent.Index)}"),
+                    index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), $"{nameof(DatabaseDomainEvent.AggregateId)}_{nameof(DatabaseDomainEvent.Index)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
                     index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),

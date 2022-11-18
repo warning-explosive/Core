@@ -1,17 +1,17 @@
-namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.EventSourcing
+namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Verifiers;
-    using GenericDomain.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Singleton)]
     internal class EventSourcingConfigurationVerifier : IConfigurationVerifier,

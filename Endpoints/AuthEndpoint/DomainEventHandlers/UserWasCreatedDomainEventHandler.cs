@@ -12,13 +12,13 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using GenericDomain.EventSourcing;
 
     [Component(EnLifestyle.Scoped)]
-    internal class UserCreatedDomainEventHandler : IDomainEventHandler<User, UserCreated>,
-                                                   IResolvable<IDomainEventHandler<User, UserCreated>>
+    internal class UserWasCreatedDomainEventHandler : IDomainEventHandler<User, UserWasCreated>,
+                                                      IResolvable<IDomainEventHandler<User, UserWasCreated>>
     {
         private readonly IDatabaseContext _databaseContext;
         private readonly IEventStore _eventStore;
 
-        public UserCreatedDomainEventHandler(
+        public UserWasCreatedDomainEventHandler(
             IDatabaseContext databaseContext,
             IEventStore eventStore)
         {
@@ -26,10 +26,10 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             _eventStore = eventStore;
         }
 
-        public async Task Handle(UserCreated domainEvent, DomainEventDetails details, CancellationToken token)
+        public async Task Handle(UserWasCreated domainEvent, DomainEventDetails details, CancellationToken token)
         {
             await _eventStore
-               .Append<User, UserCreated>(domainEvent, details, token)
+               .Append<User, UserWasCreated>(domainEvent, details, token)
                .ConfigureAwait(false);
 
             await _databaseContext

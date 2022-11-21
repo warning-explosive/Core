@@ -44,5 +44,6 @@
       <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Contract\AuthEndpoint.Contract.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport\IntegrationTransport.csproj" />
       <ProjectReference Include="..\JwtAuthentication\JwtAuthentication.csproj" />
+      <ProjectReference Include="..\Web.Api\Web.Api.csproj" />
     </ItemGroup>
 </Project>

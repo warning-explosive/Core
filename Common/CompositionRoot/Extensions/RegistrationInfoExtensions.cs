@@ -50,17 +50,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
             ITypeProvider typeProvider,
             IConstructorResolutionBehavior constructorResolutionBehavior)
         {
-            return AssembliesExtensions
-               .AllOurAssembliesFromCurrentDomain()
-               .SelectMany(assembly => assembly.GetTypes())
-               .Where(type => !serviceType.IsPartiallyClosed()
-                           && type.IsConcreteType()
-                           && (serviceType.IsGenericType
-                                  ? type.IsSubclassOfOpenGeneric(serviceType.GetGenericTypeDefinition())
-                                  : serviceType.IsAssignableFrom(type)))
-               .Where(type => !constructorResolutionBehavior.TryGetConstructor(type, out var cctor)
-                           || !cctor.IsDecorator(serviceType))
-               .Where(typeProvider.IsOurType);
+            return typeProvider
+                .OurTypes
+                .Where(type => !serviceType.IsPartiallyClosed()
+                               && type.IsConcreteType()
+                               && (serviceType.IsGenericType
+                                   ? type.IsSubclassOfOpenGeneric(serviceType.GetGenericTypeDefinition())
+                                   : serviceType.IsAssignableFrom(type)))
+                .Where(type => !constructorResolutionBehavior.TryGetConstructor(type, out var cctor)
+                               || !cctor.IsDecorator(serviceType));
         }
 
         private static IEnumerable<ServiceRegistrationInfo> GetComponents(

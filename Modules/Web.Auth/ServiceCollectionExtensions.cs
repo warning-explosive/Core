@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Web.Auth.Extensions
+namespace SpaceEngineers.Core.Web.Auth
 {
     using System.Net.Http.Headers;
     using Basics;
@@ -38,7 +38,6 @@ namespace SpaceEngineers.Core.Web.Auth.Extensions
                             ? AuthenticationHeaderValue
                                 .Parse(header)
                                 .Scheme
-                                .Trim()
                                 .StartFromCapitalLetter()
                             : BasicDefaults.AuthenticationScheme;
                     };
@@ -56,8 +55,11 @@ namespace SpaceEngineers.Core.Web.Auth.Extensions
             {
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
+                    .AddRequirements(new CustomAuthorizationRequirement())
                     .Build();
             });
+
+            serviceCollection.AddSingleton<IAuthorizationHandler, CustomAuthorizationHandler>();
         }
 
         private static AuthenticationBuilder AddBasic(this AuthenticationBuilder builder)

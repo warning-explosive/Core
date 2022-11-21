@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
 {
+    using System.Collections.Generic;
     using Replies;
     using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
     using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
@@ -7,16 +8,17 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
     /// <summary>
     /// Authorize user query
     /// </summary>
+    /*TODO: #204 -> add features support for mq inter-communications*/
     [OwnedBy(AuthEndpointIdentity.LogicalName)]
     public record AuthorizeUser : IIntegrationQuery<UserAuthorizationResult>
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
-        /// <param name="password">Password</param>
-        public AuthorizeUser(string username, string password)
+        /// <param name="requiredFeatures">Required features</param>
+        public AuthorizeUser(string username, IReadOnlyCollection<string> requiredFeatures)
         {
             Username = username;
-            Password = password;
+            RequiredFeatures = requiredFeatures;
         }
 
         /// <summary>
@@ -25,8 +27,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
         public string Username { get; init; }
 
         /// <summary>
-        /// Password
+        /// Required features
         /// </summary>
-        public string Password { get; init; }
+        public IReadOnlyCollection<string> RequiredFeatures { get; init; }
     }
 }

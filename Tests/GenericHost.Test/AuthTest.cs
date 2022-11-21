@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Microsoft.Extensions.Configuration;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
-    using Web.Auth.Extensions;
+    using Web.Auth;
     using Xunit;
     using Xunit.Abstractions;
 

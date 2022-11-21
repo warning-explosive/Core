@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Web.Auth.Extensions
+namespace SpaceEngineers.Core.Web.Auth
 {
     using System;
     using System.Text;

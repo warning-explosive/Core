@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.Web.Auth
     using AuthEndpoint.Contract.Queries;
     using AuthEndpoint.Contract.Replies;
     using Basics;
-    using Extensions;
     using GenericEndpoint.Api.Abstractions;
     using IntegrationTransport;
     using IntegrationTransport.RpcRequest;
@@ -62,26 +61,27 @@ namespace SpaceEngineers.Core.Web.Auth
 
             var (username, password) = authenticationHeader.Parameter.DecodeBasicAuth();
 
-            UserAuthorizationResult authorizationResult;
+            UserAuthenticationResult userAuthenticationResult;
 
             var dependencyContainer = _transportDependencyContainer.DependencyContainer;
 
             await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                authorizationResult = await dependencyContainer
+                userAuthenticationResult = await dependencyContainer
                    .Resolve<IIntegrationContext>()
-                   .RpcRequest<AuthorizeUser, UserAuthorizationResult>(new AuthorizeUser(username, password), CancellationToken.None)
+                   .RpcRequest<AuthenticateUser, UserAuthenticationResult>(new AuthenticateUser(username, password), CancellationToken.None)
                    .ConfigureAwait(false);
             }
 
-            if (authorizationResult.Token.IsNullOrEmpty())
+            if (userAuthenticationResult.Token.IsNullOrEmpty())
             {
-                return AuthenticateResult.Fail(authorizationResult.Details);
+                return AuthenticateResult.Fail("Wrong username or password");
             }
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, username)
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Authentication, userAuthenticationResult.Token)
             };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);

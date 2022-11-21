@@ -14,27 +14,36 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using DomainEventHandlers;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
+    using JwtAuthentication;
     using Microsoft.Extensions.Logging;
+    using Settings;
+    using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
 
     [Component(EnLifestyle.Transient)]
-    internal class AuthorizeUserMessageHandler : IMessageHandler<AuthorizeUser>,
-                                                 IResolvable<IMessageHandler<AuthorizeUser>>
+    internal class AuthenticateUserMessageHandler : IMessageHandler<AuthenticateUser>,
+                                                    IResolvable<IMessageHandler<AuthenticateUser>>
     {
         private readonly IIntegrationContext _context;
         private readonly IAggregateFactory<User, FindUserSpecification> _findUserAggregateFactory;
+        private readonly ITokenProvider _tokenProvider;
+        private readonly ISettingsProvider<AuthorizationSettings> _authorizationSettingsProvider;
         private readonly ILogger _logger;
 
-        public AuthorizeUserMessageHandler(
+        public AuthenticateUserMessageHandler(
             IIntegrationContext context,
             IAggregateFactory<User, FindUserSpecification> findUserAggregateFactory,
+            ITokenProvider tokenProvider,
+            ISettingsProvider<AuthorizationSettings> authorizationSettingsProvider,
             ILogger logger)
         {
             _context = context;
             _findUserAggregateFactory = findUserAggregateFactory;
+            _tokenProvider = tokenProvider;
+            _authorizationSettingsProvider = authorizationSettingsProvider;
             _logger = logger;
         }
 
-        public async Task Handle(AuthorizeUser message, CancellationToken token)
+        public async Task Handle(AuthenticateUser message, CancellationToken token)
         {
             var reply = await ExecutionExtensions
                .TryAsync(message, AuthorizeUser)
@@ -42,7 +51,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                .Invoke((exception, _) =>
                     {
                         _logger.Error(exception);
-                        return Task.FromResult(new UserAuthorizationResult(false));
+                        return Task.FromResult(new UserAuthenticationResult(message.Username, string.Empty));
                     },
                     token)
                .ConfigureAwait(false);
@@ -52,15 +61,31 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                 .ConfigureAwait(false);
         }
 
-        private async Task<UserAuthorizationResult> AuthorizeUser(
-            AuthorizeUser message,
+        private async Task<UserAuthenticationResult> AuthorizeUser(
+            AuthenticateUser message,
             CancellationToken token)
         {
             var user = await _findUserAggregateFactory
                .Build(new FindUserSpecification(message.Username), token)
                .ConfigureAwait(false);
 
-            return new UserAuthorizationResult(user.CheckAccess(message.RequiredFeatures));
+            string authenticationToken;
+
+            if (user.CheckPassword(new Password(message.Password)))
+            {
+                var settings = await _authorizationSettingsProvider
+                    .Get(token)
+                    .ConfigureAwait(false);
+
+                authenticationToken = _tokenProvider.GenerateToken(message.Username, settings.TokenExpirationTimeout);
+            }
+            else
+            {
+                authenticationToken = string.Empty;
+            }
+
+            // TODO: #201 - add support for sliding expiration
+            return new UserAuthenticationResult(message.Username, authenticationToken);
         }
     }
 }

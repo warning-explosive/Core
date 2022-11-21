@@ -572,10 +572,12 @@
                     var expectedIntegrationMessageTypes = new[]
                         {
                             typeof(CaptureDomainEvent<,>),
+                            typeof(AuthenticateUser),
                             typeof(AuthorizeUser),
+                            typeof(UserAuthenticationResult),
                             typeof(UserAuthorizationResult),
                             typeof(CreateUser),
-                            typeof(UserCreated),
+                            typeof(UserWasCreated),
                             typeof(BaseEvent),
                             typeof(InheritedEvent),
                             typeof(Event),
@@ -620,6 +622,7 @@
                     var expectedReplies = new[]
                         {
                             typeof(Reply),
+                            typeof(UserAuthenticationResult),
                             typeof(UserAuthorizationResult)
                         }
                         .OrderBy(type => type.Name)

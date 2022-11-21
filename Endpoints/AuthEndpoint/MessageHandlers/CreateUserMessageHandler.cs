@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using DomainEventHandlers;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
-    using UserCreated = Contract.Events.UserCreated;
+    using UserWasCreated = Contract.Events.UserWasCreated;
 
     [Component(EnLifestyle.Transient)]
     internal class CreateUserMessageHandler : IMessageHandler<CreateUser>,
@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                 .ConfigureAwait(false);
 
             await _context
-               .Publish(new UserCreated(message.Username), token)
+               .Publish(new UserWasCreated(message.Username), token)
                .ConfigureAwait(false);
         }
     }

@@ -19,7 +19,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Hosting;
     using Microsoft.OpenApi.Models;
     using Web.Auth;
-    using Web.Auth.Extensions;
 
     [SuppressMessage("Analysis", "CA1506", Justification ="web application composition root")]
     internal class WebApplicationStartup : BaseStartup

@@ -41,9 +41,6 @@
       <ProjectReference Include="..\..\Modules\GenericDomain.Api\GenericDomain.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Model\UserCreated.cs">
-        <DependentUpon>User.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\Username.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>

@@ -952,7 +952,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
-        internal async Task AuthorizeUserTest(
+        internal async Task AuthenticateUserTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
             Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
@@ -960,7 +960,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(AuthorizeUserTest));
+            var settingsDirectory = settingsDirectoryProducer(nameof(AuthenticateUserTest));
 
             var additionalOurTypes = new[]
             {
@@ -1012,23 +1012,22 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var username = "qwerty";
                     var password = "12345678";
 
-                    var query = new AuthorizeUser(username, password);
-                    UserAuthorizationResult? authorizationResult;
+                    var query = new AuthenticateUser(username, password);
+                    UserAuthenticationResult? userAuthenticationResult;
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                        authorizationResult = await integrationContext
-                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
+                        userAuthenticationResult = await integrationContext
+                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(query, CancellationToken.None)
                            .ConfigureAwait(false);
                     }
 
-                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+                    output.WriteLine(userAuthenticationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
 
-                    Assert.Equal(username, authorizationResult.Username);
-                    Assert.Empty(authorizationResult.Token);
-                    Assert.NotEmpty(authorizationResult.Details);
+                    Assert.Equal(username, userAuthenticationResult.Username);
+                    Assert.Empty(userAuthenticationResult.Token);
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
@@ -1036,8 +1035,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>>(),
-                            collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserCreated>());
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserWasCreated>>(),
+                            collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserWasCreated>());
 
                         await integrationContext
                            .Send(new CreateUser(username, password), token)
@@ -1050,16 +1049,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                        authorizationResult = await integrationContext
-                           .RpcRequest<AuthorizeUser, UserAuthorizationResult>(query, CancellationToken.None)
+                        userAuthenticationResult = await integrationContext
+                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(query, CancellationToken.None)
                            .ConfigureAwait(false);
                     }
 
-                    output.WriteLine(authorizationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+                    output.WriteLine(userAuthenticationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
 
-                    Assert.Equal(username, authorizationResult.Username);
-                    Assert.NotEmpty(authorizationResult.Token);
-                    Assert.Empty(authorizationResult.Details);
+                    Assert.Equal(username, userAuthenticationResult.Username);
+                    Assert.NotEmpty(userAuthenticationResult.Token);
                 };
             }
         }

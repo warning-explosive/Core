@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             var aggregateId = Guid.NewGuid();
 
-            var userCreatedDomainEvent = new AuthEndpoint.Domain.Model.UserCreated(
+            var userWasCreated = new AuthEndpoint.Domain.Model.UserWasCreated(
                 aggregateId,
                 new AuthEndpoint.Domain.Model.Username(username),
                 salt,
@@ -62,11 +62,11 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             await dependencyContainer
                .Resolve<IEventStore>()
-               .Append<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserCreated>(userCreatedDomainEvent, details, token)
+               .Append<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserWasCreated>(userWasCreated, details, token)
                .ConfigureAwait(false);
 
-            sb.AppendLine($"--{nameof(AuthEndpoint.Domain.Model.UserCreated)}");
-            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.Domain.Model.UserCreated)} domain event"));
+            sb.AppendLine($"--{nameof(AuthEndpoint.Domain.Model.UserWasCreated)}");
+            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.Domain.Model.UserWasCreated)} domain event"));
 
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 

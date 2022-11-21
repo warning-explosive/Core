@@ -4,16 +4,16 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
     using GenericDomain.Api.Abstractions;
 
     /// <summary>
-    /// UserCreated
+    /// UserWasCreated
     /// </summary>
-    public class UserCreated : IDomainEvent<User>
+    public class UserWasCreated : IDomainEvent<User>
     {
         /// <summary> .cctor </summary>
         /// <param name="aggregateId">AggregateId</param>
         /// <param name="username">Username</param>
         /// <param name="salt">Salt</param>
         /// <param name="passwordHash">Password hash</param>
-        public UserCreated(
+        public UserWasCreated(
             Guid aggregateId,
             Username username,
             string salt,

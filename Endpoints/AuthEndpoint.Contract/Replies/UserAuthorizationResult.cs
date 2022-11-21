@@ -8,32 +8,15 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Replies
     public record UserAuthorizationResult : IIntegrationReply
     {
         /// <summary> .cctor </summary>
-        /// <param name="username">Username</param>
-        /// <param name="details">Authorization details</param>
-        /// <param name="token">Authorization token</param>
-        public UserAuthorizationResult(
-            string username,
-            string token,
-            string details)
+        /// <param name="accessGranted">AccessGranted</param>
+        public UserAuthorizationResult(bool accessGranted)
         {
-            Username = username;
-            Token = token;
-            Details = details;
+            AccessGranted = accessGranted;
         }
 
         /// <summary>
-        /// Username
+        /// AccessGranted
         /// </summary>
-        public string Username { get; init; }
-
-        /// <summary>
-        /// Authorization token
-        /// </summary>
-        public string Token { get; init; }
-
-        /// <summary>
-        /// Authorization details
-        /// </summary>
-        public string Details { get; init; }
+        public bool AccessGranted { get; init; }
     }
 }

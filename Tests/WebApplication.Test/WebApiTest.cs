@@ -15,8 +15,11 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using RestSharp;
-    using Web.Auth.Extensions;
+    using Web.Api.Api;
+    using Web.Auth;
     using Xunit;
     using Xunit.Abstractions;
     using Program = Core.Test.WebApplication.Program;
@@ -93,22 +96,99 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             var tokenProvider = new JwtTokenProvider(authEndpointConfiguration.GetJwtAuthenticationConfiguration());
 
+            /*
+             * Authorization = authentication + permissions
+             *    1. Authenticate user; call IdentityProvider and receive identity token;
+             *    2. Call AuthorizationProvider and receive API/Service/UI-specific roles and permissions;
+             *
+             * AuthorizationProvider maps identity data (who) to authorization data (permission and roles - what principal can do)
+             * Mappings can be static (common rules, conditions and conventions) or dynamic (claims transformations)
+             * Each application (web-api endpoint, micro-service, UI application, etc.) should have their scoped roles, permissions and mapping rules.
+             * Application can register authorization client so as to ask for authorization data from authorization service.
+             * For dynamically defined policies we can use custom PolicyProvider for policy-based authorization (ASP.NET CORE) and inject policy name into AuthorizeAttribute.
+             */
+
             yield return new object?[]
             {
-                $"http://127.0.0.1:5000/Test/{nameof(TestController.ApplicationInfo)}",
-                default(string?)
+                new RestRequest($"http://127.0.0.1:5000/api/Auth/{nameof(AuthController.AuthenticateUser)}", Method.Get)
+                    .AddHeader("Authorization", $"Basic {(username, password).EncodeBasicAuth()}"),
+                new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    Assert.NotNull(response.Content);
+                    output.WriteLine(response.Content);
+
+                    var token = JsonConvert
+                        .DeserializeObject<JObject>(response.Content)
+                        ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
+                        ?.Value
+                        .ToString();
+                    Assert.NotNull(token);
+                    var tokenPartsCount = token
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                        .SelectMany(part => part.Split('.', StringSplitOptions.RemoveEmptyEntries))
+                        .Count();
+                    Assert.Equal(3, tokenPartsCount);
+                })
             };
 
             yield return new object?[]
             {
-                $"http://127.0.0.1:5000/Test/{nameof(TestController.Username)}",
-                $"Basic {(username, password).EncodeBasicAuth()}"
+                new RestRequest($"http://127.0.0.1:5000/api/Auth/{nameof(AuthController.AuthenticateUser)}", Method.Get)
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"),
+                new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    Assert.NotNull(response.Content);
+                    output.WriteLine(response.Content);
+
+                    var token = JsonConvert
+                        .DeserializeObject<JObject>(response.Content)
+                        ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
+                        ?.Value
+                        .ToString();
+                    Assert.NotNull(token);
+                    var tokenPartsCount = token
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                        .SelectMany(part => part.Split('.', StringSplitOptions.RemoveEmptyEntries))
+                        .Count();
+                    Assert.Equal(3, tokenPartsCount);
+                })
             };
 
             yield return new object?[]
             {
-                $"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List",
-                $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"
+                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.ApplicationInfo)}", Method.Get),
+                new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    Assert.NotNull(response.Content);
+                    output.WriteLine(response.Content);
+                })
+            };
+
+            yield return new object?[]
+            {
+                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.Username)}", Method.Get)
+                    .AddHeader("Authorization", $"Basic {(username, password).EncodeBasicAuth()}"),
+                new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    Assert.NotNull(response.Content);
+                    output.WriteLine(response.Content);
+                })
+            };
+
+            yield return new object?[]
+            {
+                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List", Method.Get)
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"),
+                new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    Assert.NotNull(response.Content);
+                    output.WriteLine(response.Content);
+                })
             };
         }
 
@@ -118,24 +198,18 @@ namespace SpaceEngineers.Core.WebApplication.Test
             Lazy<IHost> host,
             CancellationTokenSource cts,
             AsyncCountdownEvent asyncCountdownEvent,
-            string url,
-            string? authorizationToken)
+            RestRequest request,
+            Action<RestResponse, ITestOutputHelper> assert)
         {
             try
             {
-                Output.WriteLine(url);
+                Output.WriteLine(request.Resource);
 
                 var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);
 
                 using (var client = new RestClient())
                 {
-                    var request = new RestRequest(url, Method.Get);
                     request.AddHeader("Cache-Control", "no-cache");
-
-                    if (!authorizationToken.IsNullOrEmpty())
-                    {
-                        request.AddHeader("Authorization", authorizationToken);
-                    }
 
                     request.Timeout = 10_000;
 
@@ -152,10 +226,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
                     var response = await ((Task<RestResponse>)result).ConfigureAwait(false);
 
-                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                    Assert.NotNull(response.Content);
-
-                    Output.WriteLine(response.Content);
+                    assert(response, Output);
                 }
             }
             finally

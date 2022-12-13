@@ -30,7 +30,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Microsoft.Extensions.Logging;
     using Settings;
 
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
     internal class RabbitMqIntegrationTransport : IIntegrationTransport,

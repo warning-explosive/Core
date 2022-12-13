@@ -2,14 +2,12 @@ namespace SpaceEngineers.Core.Dynamic
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
 
     /// <summary>
     /// DynamicClass
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public sealed class DynamicClass : IEquatable<DynamicClass>,
                                        ISafelyEquatable<DynamicClass>,
                                        ICloneable<DynamicClass>

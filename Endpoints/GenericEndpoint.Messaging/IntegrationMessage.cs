@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
     using Contract;
@@ -15,7 +14,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     /// Integration message
     /// Class for technical purposes with headers support
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class IntegrationMessage : IEquatable<IntegrationMessage>,
                                       ISafelyEquatable<IntegrationMessage>,
                                       ISafelyComparable<IntegrationMessage>,

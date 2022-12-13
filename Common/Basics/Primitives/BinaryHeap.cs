@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// Binary-heap
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class BinaryHeap<TElement> : IHeap<TElement>
         where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
     {

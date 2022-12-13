@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System;
     using System.Collections.Generic;
     using System.Data;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using AutoRegistration.Api.Attributes;
@@ -136,7 +135,6 @@ namespace SpaceEngineers.Core.Modules.Test
             }
         }
 
-        [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
         private class TestDataRow : IEquatable<TestDataRow>,
                                     ISafelyEquatable<TestDataRow>
         {

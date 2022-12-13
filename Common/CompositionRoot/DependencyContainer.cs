@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using AutoRegistration.Api.Abstractions;
@@ -20,7 +19,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     /// Resolve dependencies by 'Dependency Injection' patterns
     /// Don't use it like ServiceLocator!
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     public class DependencyContainer : IDisposable,
                                        IDependencyContainer,

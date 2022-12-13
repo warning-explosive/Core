@@ -1,13 +1,11 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using Basics;
 
     /// <summary>
     /// Relation
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class Relation : IEquatable<Relation>,
                             ISafelyEquatable<Relation>
     {

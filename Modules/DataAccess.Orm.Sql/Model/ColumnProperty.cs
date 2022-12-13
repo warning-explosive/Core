@@ -1,14 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using Basics;
 
     /// <summary>
     /// Column property
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ColumnProperty : IEquatable<ColumnProperty>,
                                   ISafelyEquatable<ColumnProperty>
     {

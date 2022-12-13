@@ -8,7 +8,6 @@
     /// <summary>
     /// SchemaNode
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class SchemaNode : IEquatable<SchemaNode>,
                               ISafelyEquatable<SchemaNode>
     {

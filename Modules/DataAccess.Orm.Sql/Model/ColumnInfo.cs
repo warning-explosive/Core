@@ -16,7 +16,6 @@
     /// <summary>
     /// ColumnInfo
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ColumnInfo : IModelInfo,
                               IEquatable<ColumnInfo>,
                               ISafelyEquatable<ColumnInfo>

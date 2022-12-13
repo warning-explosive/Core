@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
@@ -9,7 +8,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// RowsFetchLimitExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class RowsFetchLimitExpression : IIntermediateExpression,
                                             IEquatable<RowsFetchLimitExpression>,
                                             ISafelyEquatable<RowsFetchLimitExpression>,

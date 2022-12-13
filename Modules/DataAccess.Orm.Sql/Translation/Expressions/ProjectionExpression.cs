@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using Api.Exceptions;
@@ -12,7 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ProjectionExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ProjectionExpression : IIntermediateExpression,
                                         IEquatable<ProjectionExpression>,
                                         ISafelyEquatable<ProjectionExpression>,

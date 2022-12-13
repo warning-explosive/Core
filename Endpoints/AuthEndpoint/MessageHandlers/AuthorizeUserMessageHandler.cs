@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -60,7 +61,19 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                .Build(new FindUserSpecification(message.Username), token)
                .ConfigureAwait(false);
 
-            return new UserAuthorizationResult(user.CheckAccess(message.RequiredFeatures));
+            var requiredFeatures = message
+                .RequiredFeatures
+                .Select(name => new Feature(name))
+                .ToList();
+
+            var accessGranted = user.Authorize(requiredFeatures);
+
+            if (!accessGranted)
+            {
+                _logger.Warning($"User {message.Username} has no access to activity {message.Activity} that requires permissions for features: {string.Join(", ", message.RequiredFeatures)}");
+            }
+
+            return new UserAuthorizationResult(accessGranted);
         }
     }
 }

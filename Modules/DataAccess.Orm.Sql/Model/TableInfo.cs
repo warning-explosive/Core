@@ -10,7 +10,6 @@
     /// <summary>
     /// TableInfo
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class TableInfo : ITableInfo,
                              IEquatable<TableInfo>,
                              ISafelyEquatable<TableInfo>

@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Basics;
@@ -10,7 +9,6 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     /// <summary>
     /// BaseEnumerationObject
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public abstract class BaseEnumerationObject : IEnumerationObject,
                                                   IEquatable<BaseEnumerationObject>,
                                                   ISafelyEquatable<BaseEnumerationObject>

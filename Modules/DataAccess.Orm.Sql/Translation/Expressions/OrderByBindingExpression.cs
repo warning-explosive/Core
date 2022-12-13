@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
@@ -10,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// OrderByBindingExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class OrderByBindingExpression : IIntermediateExpression,
                                             IEquatable<OrderByBindingExpression>,
                                             ISafelyEquatable<OrderByBindingExpression>,

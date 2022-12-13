@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
     /// <summary>
     /// UserWasCreated
     /// </summary>
-    public class UserWasCreated : IDomainEvent<User>
+    public record UserWasCreated : IDomainEvent<User>
     {
         /// <summary> .cctor </summary>
         /// <param name="aggregateId">AggregateId</param>

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using Basics;
     using CompositionRoot.Verifiers;
     using GenericEndpoint.Contract.Attributes;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Routing;
 
@@ -42,7 +43,6 @@ namespace SpaceEngineers.Core.Web.Auth
             VerifyControllers(controllers);
 
             _features = controllers
-                .Where(controller => !controller.HasAttribute<FeatureAttribute>())
                 .ToDictionary(
                     GetControllerName,
                     controller => controller
@@ -84,6 +84,12 @@ namespace SpaceEngineers.Core.Web.Auth
 
         private static IReadOnlyCollection<string> GetFeatures(Type controller, MethodInfo action)
         {
+            if (controller.GetAttribute<AllowAnonymousAttribute>() != null
+                || action.GetCustomAttribute<AllowAnonymousAttribute>() != null)
+            {
+                return Array.Empty<string>();
+            }
+
             var controllerFeatures = controller.GetAttribute<FeatureAttribute>()?.Features;
             var actionFeatures = action.GetCustomAttribute<FeatureAttribute>()?.Features;
 

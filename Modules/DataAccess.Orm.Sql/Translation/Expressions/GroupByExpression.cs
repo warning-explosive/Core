@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
@@ -10,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// GroupByExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class GroupByExpression : IIntermediateExpression,
                                      IEquatable<GroupByExpression>,
                                      ISafelyEquatable<GroupByExpression>,

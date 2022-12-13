@@ -1,13 +1,11 @@
 namespace SpaceEngineers.Core.Dynamic
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using Basics;
 
     /// <summary>
     /// DynamicProperty
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public sealed class DynamicProperty : IEquatable<DynamicProperty>,
                                           ISafelyEquatable<DynamicProperty>
     {

@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     /// <summary>
     /// MtmTableInfo
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class MtmTableInfo : TableInfo,
                                 IEquatable<MtmTableInfo>,
                                 ISafelyEquatable<MtmTableInfo>

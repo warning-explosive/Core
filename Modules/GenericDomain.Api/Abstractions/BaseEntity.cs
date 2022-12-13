@@ -1,13 +1,11 @@
 namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using Basics;
 
     /// <summary>
     /// BaseEntity
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public abstract class BaseEntity : IEntity
     {
         /// <summary> .cctor </summary>

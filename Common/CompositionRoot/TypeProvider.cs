@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.CompositionRoot
     using Basics;
     using Basics.EqualityComparers;
 
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [ManuallyRegisteredComponent("Is created manually and implicitly during DependencyContainer initialization")]
     internal class TypeProvider : ITypeProvider,
                                   IResolvable<ITypeProvider>

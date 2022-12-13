@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.Api.Exceptions;
@@ -9,11 +10,14 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
     /// <summary>
     /// User
     /// </summary>
+    [DebuggerDisplay("{_username}")]
     public class User : BaseAggregate<User>,
                         IAggregate<User>,
-                        IHasDomainEvent<User, UserWasCreated>
+                        IHasDomainEvent<User, UserWasCreated>,
+                        IHasDomainEvent<User, PermissionWasGranted>,
+                        IHasDomainEvent<User, PermissionWasRevoked>
     {
-        private readonly HashSet<string> _grantedPermissions = new HashSet<string>(StringComparer.Ordinal);
+        private readonly HashSet<Feature> _availableFeatures = new HashSet<Feature>();
 
         private Username _username = default!;
 
@@ -38,11 +42,43 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
         public User(Username username, Password rawPassword)
             : base(Array.Empty<IDomainEvent<User>>())
         {
-            _username = username;
-            _salt = Password.GenerateSalt();
-            _passwordHash = rawPassword.GeneratePasswordHash(_salt);
+            var salt = Password.GenerateSalt();
 
-            PopulateEvent(new UserWasCreated(Id, username, _salt, _passwordHash));
+            var domainEvent = new UserWasCreated(
+                Id,
+                username,
+                salt,
+                rawPassword.GeneratePasswordHash(salt));
+
+            Apply(domainEvent);
+
+            PopulateEvent(domainEvent);
+        }
+
+        /// <summary>
+        /// Grants specified permission
+        /// </summary>
+        /// <param name="feature">Feature</param>
+        public void GrantPermission(Feature feature)
+        {
+            var domainEvent = new PermissionWasGranted(feature);
+
+            Apply(domainEvent);
+
+            PopulateEvent(domainEvent);
+        }
+
+        /// <summary>
+        /// Revokes specified permission
+        /// </summary>
+        /// <param name="feature">Feature</param>
+        public void RevokePermission(Feature feature)
+        {
+            var domainEvent = new PermissionWasRevoked(feature);
+
+            Apply(domainEvent);
+
+            PopulateEvent(domainEvent);
         }
 
         /// <summary>
@@ -62,14 +98,13 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
         /// </summary>
         /// <param name="requiredFeatures">Required features</param>
         /// <returns>True if user has rights for required features</returns>
-        public bool CheckAccess(IReadOnlyCollection<string> requiredFeatures)
+        public bool Authorize(IReadOnlyCollection<Feature> requiredFeatures)
         {
             /*
-             * TODO: #204 - apply permissions model
-             *
-             * feature -> provided by code, represents cohesive and united pieces of functionality (web controllers, web methods, message handlers)
-             *            in other words what principal can perform in system
-             *    e.g. -> basket (for regular users in e-commerce app)
+             * feature -> provided by code
+             *            represents cohesive, grouped and united pieces of functionality (web controllers, web methods, message handlers)
+             *            in other words what principal can perform in system in terms of business actions
+             *    e.g. -> basket_management (for regular users in e-commerce app)
              *            historical_lookup (for privileged users in search app)
              *            admin_console (for support staff)
              *            new_amazing_feature_42 (for soft delivery of pieces of functionality)
@@ -78,20 +113,15 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
              *         don't have personal permissions, should be included in groups
              *
              * group -> logical union of users or other groups, enables to apply permissions for group of principles
-             *  e.g. -> regular_users (basket feature in e-commerce app)
+             *  e.g. -> regular_users (basket_management feature in e-commerce app)
              *          privileged_users (historical_lookup feature in search app)
              *          administrators (admin_console feature for support staff)
              *          alpha_testers / feature_42_first_wave / primary_region (new_amazing_feature_42 feature for soft delivery of pieces of functionality)
+             *
+             * permission -> represent granted access to the exact feature
+             *               in this model terms feature and permission in general have the same meaning
              */
-
-            _ = requiredFeatures.All(requiredFeature => _grantedPermissions.Contains(requiredFeature));
-
-            /*if (!requiredFeatures.Any())
-            {
-                throw new InvalidOperationException("Piece of functionality should be included at least in one feature");
-            }*/
-
-            return true;
+            return requiredFeatures.All(requiredFeature => _availableFeatures.Contains(requiredFeature));
         }
 
         /// <inheritdoc />
@@ -101,6 +131,18 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
             _username = domainEvent.Username;
             _salt = domainEvent.Salt;
             _passwordHash = domainEvent.PasswordHash;
+        }
+
+        /// <inheritdoc />
+        public void Apply(PermissionWasGranted domainEvent)
+        {
+            _ = _availableFeatures.Add(domainEvent.Feature);
+        }
+
+        /// <inheritdoc />
+        public void Apply(PermissionWasRevoked domainEvent)
+        {
+            _ = _availableFeatures.Remove(domainEvent.Feature);
         }
     }
 }

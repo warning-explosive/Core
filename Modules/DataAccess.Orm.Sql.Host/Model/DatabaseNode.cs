@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     /// <summary>
     /// DatabaseNode
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class DatabaseNode : IEquatable<DatabaseNode>,
                                 ISafelyEquatable<DatabaseNode>
     {

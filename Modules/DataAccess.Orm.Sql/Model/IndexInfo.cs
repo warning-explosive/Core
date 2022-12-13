@@ -9,7 +9,6 @@
     /// <summary>
     /// IndexInfo
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class IndexInfo : IModelInfo,
                              IEquatable<IndexInfo>,
                              ISafelyEquatable<IndexInfo>

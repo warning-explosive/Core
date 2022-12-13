@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Sql
     /// Base class for database entities
     /// </summary>
     /// <typeparam name="TKey">TKey type-argument</typeparam>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
     public abstract record BaseDatabaseEntity<TKey> : IDatabaseEntity<TKey>,
                                                       ISafelyEquatable<BaseDatabaseEntity<TKey>>

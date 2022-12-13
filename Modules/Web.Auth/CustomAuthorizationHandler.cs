@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.Web.Auth
                 userAuthorizationResult = await _transportDependencyContainer
                     .DependencyContainer
                     .Resolve<IIntegrationContext>()
-                    .RpcRequest<AuthorizeUser, UserAuthorizationResult>(new AuthorizeUser(username, requiredFeatures), CancellationToken.None)
+                    .RpcRequest<AuthorizeUser, UserAuthorizationResult>(new AuthorizeUser(username, $"[{verb}] {controller}/{action}", requiredFeatures), CancellationToken.None)
                     .ConfigureAwait(false);
             }
 

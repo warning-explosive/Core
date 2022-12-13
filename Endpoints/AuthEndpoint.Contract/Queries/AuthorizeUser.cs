@@ -14,10 +14,15 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
+        /// <param name="activity">Activity</param>
         /// <param name="requiredFeatures">Required features</param>
-        public AuthorizeUser(string username, IReadOnlyCollection<string> requiredFeatures)
+        public AuthorizeUser(
+            string username,
+            string activity,
+            IReadOnlyCollection<string> requiredFeatures)
         {
             Username = username;
+            Activity = activity;
             RequiredFeatures = requiredFeatures;
         }
 
@@ -25,6 +30,11 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
         /// Username
         /// </summary>
         public string Username { get; init; }
+
+        /// <summary>
+        /// Activity
+        /// </summary>
+        public string Activity { get; init; }
 
         /// <summary>
         /// Required features

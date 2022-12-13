@@ -47,5 +47,8 @@
       <Compile Update="Model\Password.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\Feature.cs">
+        <DependentUpon>User.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

@@ -9,7 +9,6 @@
     /// <summary>
     /// IndexNode
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class IndexNode : IEquatable<IndexNode>,
                              ISafelyEquatable<IndexNode>
     {

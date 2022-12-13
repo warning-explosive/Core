@@ -1,14 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Basics;
 
     /// <summary>
     /// ParameterExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class ParameterExpression : IIntermediateExpression,
                                        IEquatable<ParameterExpression>,
                                        ISafelyEquatable<ParameterExpression>

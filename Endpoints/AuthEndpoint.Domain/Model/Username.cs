@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
 {
+    using System.Diagnostics;
     using Basics;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.Api.Exceptions;
@@ -7,6 +8,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
     /// <summary>
     /// Username value object
     /// </summary>
+    [DebuggerDisplay("{Value}")]
     public class Username : IValueObject
     {
         /// <summary> .cctor </summary>

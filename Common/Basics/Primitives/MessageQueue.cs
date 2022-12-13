@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Basics.Primitives
     /// MessageQueue
     /// </summary>
     /// <typeparam name="TElement">TElement type-argument</typeparam>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class MessageQueue<TElement> : IQueue<TElement>,
                                           IAsyncQueue<TElement>
     {

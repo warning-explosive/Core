@@ -2,12 +2,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     [UnregisteredComponent]
     internal class ManualRegistrationsContainer : IRegistrationsContainer,
                                                   IAdvancedManualRegistrationsContainer,

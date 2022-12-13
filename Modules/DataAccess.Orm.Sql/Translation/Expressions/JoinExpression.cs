@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Api.Exceptions;
     using Basics;
@@ -9,7 +8,6 @@
     /// <summary>
     /// JoinExpression
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class JoinExpression : IIntermediateExpression,
                                   IEquatable<JoinExpression>,
                                   ISafelyEquatable<JoinExpression>,

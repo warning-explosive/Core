@@ -1,14 +1,12 @@
 namespace SpaceEngineers.Core.CompositionRoot.Registration
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using AutoRegistration.Api.Enumerations;
     using Basics;
 
     /// <summary>
     /// DelegateRegistrationInfo
     /// </summary>
-    [SuppressMessage("Analysis", "SA1124", Justification = "Readability")]
     public class DelegateRegistrationInfo : IRegistrationInfo,
                                             IEquatable<DelegateRegistrationInfo>,
                                             ISafelyEquatable<DelegateRegistrationInfo>

@@ -75,6 +75,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 
         private static IEnumerable<Exception> VerifyDomainEvent(Type domainEvent)
         {
+            if (TypeHasWrongModifier(domainEvent, out var modifierException))
+            {
+                yield return modifierException;
+            }
+
             if (IsNotImplementOpenGeneric(domainEvent, typeof(IDomainEvent<>), out var implementationException))
             {
                 yield return implementationException;
@@ -112,6 +117,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
             {
                 yield return initializerException;
             }
+        }
+
+        private static bool TypeHasWrongModifier(
+            Type type,
+            [NotNullWhen(true)] out Exception? exception)
+        {
+            if (type.IsRecord())
+            {
+                exception = default;
+                return false;
+            }
+
+            exception = new InvalidOperationException($"Type {type} should be defined as record");
+            return true;
         }
 
         private static bool IsNotImplementOpenGeneric(

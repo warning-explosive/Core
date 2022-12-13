@@ -26,17 +26,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly Contract.EndpointIdentity _endpointIdentity;
         private readonly ISettingsProvider<OutboxSettings> _settingsProvider;
         private readonly IJsonSerializer _jsonSerializer;
+        private readonly IOutboxDelivery _outboxDelivery;
 
         public OutboxBackgroundDelivery(
             IDependencyContainer dependencyContainer,
             Contract.EndpointIdentity endpointIdentity,
             ISettingsProvider<OutboxSettings> settingsProvider,
-            IJsonSerializer jsonSerializer)
+            IJsonSerializer jsonSerializer,
+            IOutboxDelivery outboxDelivery)
         {
             _dependencyContainer = dependencyContainer;
             _endpointIdentity = endpointIdentity;
             _settingsProvider = settingsProvider;
             _jsonSerializer = jsonSerializer;
+            _outboxDelivery = outboxDelivery;
         }
 
         public async Task DeliverMessages(CancellationToken token)
@@ -46,19 +49,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .ConfigureAwait(false);
 
             var messages = await _dependencyContainer
-               .InvokeWithinTransaction(true,
-                    (_endpointIdentity, settings, _jsonSerializer),
-                    ReadMessages,
-                    token)
+               .InvokeWithinTransaction(true, (_endpointIdentity, settings, _jsonSerializer), ReadMessages, token)
                .ConfigureAwait(false);
 
-            await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-            {
-                await _dependencyContainer
-                   .Resolve<IOutboxDelivery>()
-                   .DeliverMessages(messages, token)
-                   .ConfigureAwait(false);
-            }
+            await _outboxDelivery
+                .DeliverMessages(messages, token)
+                .ConfigureAwait(false);
 
             static async Task<IReadOnlyCollection<Messaging.IntegrationMessage>> ReadMessages(
                 IDatabaseTransaction transaction,

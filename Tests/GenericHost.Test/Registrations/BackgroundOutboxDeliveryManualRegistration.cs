@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Registrations
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            container.RegisterDecorator<IOutboxDelivery, BackgroundOutboxDelivery>(EnLifestyle.Scoped);
+            container.RegisterDecorator<IOutboxDelivery, BackgroundOutboxDelivery>(EnLifestyle.Singleton);
         }
     }
 }

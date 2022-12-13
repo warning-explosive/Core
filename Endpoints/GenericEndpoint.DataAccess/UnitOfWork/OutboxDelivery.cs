@@ -7,7 +7,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
+    using CompositionRoot;
     using Core.DataAccess.Api.Transaction;
+    using Core.DataAccess.Orm.Extensions;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
     using IntegrationTransport.Api.Abstractions;
@@ -18,14 +20,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     internal class OutboxDelivery : IOutboxDelivery,
                                     IResolvable<IOutboxDelivery>
     {
-        private readonly IDatabaseTransaction _transaction;
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IIntegrationTransport _transport;
 
         public OutboxDelivery(
-            IDatabaseTransaction transaction,
+            IDependencyContainer dependencyContainer,
             IIntegrationTransport transport)
         {
-            _transaction = transaction;
+            _dependencyContainer = dependencyContainer;
             _transport = transport;
         }
 
@@ -38,35 +40,42 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 return;
             }
 
-            await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
+            await _dependencyContainer
+                .InvokeWithinTransaction(true, messages, DeliverMessages, token)
+                .ConfigureAwait(false);
+        }
+
+        private async Task DeliverMessages(
+            IAdvancedDatabaseTransaction transaction,
+            IReadOnlyCollection<IntegrationMessage> messages,
+            CancellationToken token)
+        {
+            var sent = new List<Guid>(messages.Count);
+
+            foreach (var message in messages)
             {
-                var sent = new List<Guid>(messages.Count);
+                var wasSent = await _transport
+                    .Enqueue(message, token)
+                    .ConfigureAwait(false);
 
-                foreach (var message in messages)
+                if (wasSent)
                 {
-                    var wasSent = await _transport
-                       .Enqueue(message, token)
-                       .ConfigureAwait(false);
-
-                    if (wasSent)
-                    {
-                        sent.Add(message.ReadRequiredHeader<Id>().Value);
-                    }
+                    sent.Add(message.ReadRequiredHeader<Id>().Value);
                 }
-
-                if (!sent.Any())
-                {
-                    return;
-                }
-
-                await _transaction
-                   .Write<OutboxMessage>()
-                   .Update(outbox => outbox.Sent,
-                        _ => true,
-                        message => sent.Contains(message.PrimaryKey),
-                        token)
-                   .ConfigureAwait(false);
             }
+
+            if (!sent.Any())
+            {
+                return;
+            }
+
+            await transaction
+                .Write<OutboxMessage>()
+                .Update(outbox => outbox.Sent,
+                    _ => true,
+                    message => sent.Contains(message.PrimaryKey),
+                    token)
+                .ConfigureAwait(false);
         }
     }
 }

@@ -50,14 +50,7 @@
 
         public bool HasChanges => _changes.Any();
 
-        public IDbTransaction DbTransaction
-        {
-            get
-            {
-                _transaction ??= Open();
-                return _transaction;
-            }
-        }
+        public IDbTransaction DbTransaction => _transaction ?? throw new InvalidOperationException("Transaction should be opened before any interactions with it");
 
         public IDatabaseConnection DbConnection
         {
@@ -165,6 +158,8 @@
 
             try
             {
+                _transaction = Open();
+
                 foreach (var change in changes)
                 {
                     await change
@@ -172,7 +167,7 @@
                        .ConfigureAwait(false);
                 }
 
-                _transaction?.Commit();
+                _transaction.Commit();
             }
             finally
             {

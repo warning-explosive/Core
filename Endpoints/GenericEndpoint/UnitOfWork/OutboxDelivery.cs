@@ -9,14 +9,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class OutboxDelivery : IOutboxDelivery,
                                     IResolvable<IOutboxDelivery>
     {
         private readonly IIntegrationTransport _transport;
 
-        public OutboxDelivery(
-            IIntegrationTransport transport)
+        public OutboxDelivery(IIntegrationTransport transport)
         {
             _transport = transport;
         }

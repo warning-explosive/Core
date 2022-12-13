@@ -1,24 +1,26 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
-    /// IMessagePipeline abstraction
+    /// IMessageHandlerMiddleware abstraction
     /// </summary>
-    public interface IMessagePipeline
+    public interface IMessageHandlerMiddleware
     {
         /// <summary>
         /// Handle incoming message
         /// </summary>
-        /// <param name="producer">Message handler function</param>
         /// <param name="context">Integration context</param>
+        /// <param name="next">Next message handler middleware</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing handle task</returns>
-        Task Process(
-            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+        [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
+        Task Handle(
             IAdvancedIntegrationContext context,
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token);
     }
 }

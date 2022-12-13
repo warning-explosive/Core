@@ -359,16 +359,15 @@
 
                     var expectedPipeline = new[]
                     {
-                        typeof(ErrorHandlingPipeline),
-                        typeof(UnitOfWorkPipeline),
-                        typeof(QueryReplyValidationPipeline),
-                        typeof(HandledByEndpointPipeline),
-                        typeof(MessageHandlerPipeline)
+                        typeof(ErrorHandlingMiddleware),
+                        typeof(UnitOfWorkMiddleware),
+                        typeof(HandledByEndpointMiddleware),
+                        typeof(QueryReplyValidationMiddleware)
                     };
 
                     var actualPipeline = endpointDependencyContainer
-                        .Resolve<IMessagePipeline>()
-                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ResolveCollection<IMessageHandlerMiddleware>()
+                        .Select(middleware => middleware.GetType())
                         .ShowTypes("message pipeline", log)
                         .ToList();
 
@@ -540,16 +539,15 @@
 
                     var expectedPipeline = new[]
                     {
-                        typeof(ErrorHandlingPipeline),
-                        typeof(UnitOfWorkPipeline),
-                        typeof(QueryReplyValidationPipeline),
-                        typeof(HandledByEndpointPipeline),
-                        typeof(MessageHandlerPipeline)
+                        typeof(ErrorHandlingMiddleware),
+                        typeof(UnitOfWorkMiddleware),
+                        typeof(HandledByEndpointMiddleware),
+                        typeof(QueryReplyValidationMiddleware)
                     };
 
                     var actualPipeline = transportDependencyContainer
-                        .Resolve<IMessagePipeline>()
-                        .FlattenDecoratedObject(obj => obj.GetType())
+                        .ResolveCollection<IMessageHandlerMiddleware>()
+                        .Select(middleware => middleware.GetType())
                         .ShowTypes("message pipeline", log)
                         .ToList();
 

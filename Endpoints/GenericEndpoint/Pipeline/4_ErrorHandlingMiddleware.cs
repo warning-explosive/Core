@@ -4,48 +4,33 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Basics.Attributes;
     using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    [After(typeof(UnitOfWorkPipeline))]
-    internal class ErrorHandlingPipeline : IMessagePipelineStep, IMessagePipeline
+    internal class ErrorHandlingMiddleware : IMessageHandlerMiddleware,
+                                             ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly IEnumerable<IErrorHandler> _errorHandlers;
 
-        public ErrorHandlingPipeline(
-            IMessagePipeline decoratee,
-            IEnumerable<IErrorHandler> errorHandlers)
+        public ErrorHandlingMiddleware(IEnumerable<IErrorHandler> errorHandlers)
         {
-            Decoratee = decoratee;
-
             _errorHandlers = errorHandlers;
         }
 
-        public IMessagePipeline Decoratee { get; }
-
-        public async Task Process(
-            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+        public async Task Handle(
             IAdvancedIntegrationContext context,
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token)
         {
             await ExecutionExtensions
-               .TryAsync((producer, context), Process)
+               .TryAsync(context, next)
                .Catch<Exception>(OnError(context))
                .Invoke(token)
                .ConfigureAwait(false);
-        }
-
-        private Task Process(
-            (Func<IAdvancedIntegrationContext, CancellationToken, Task>, IAdvancedIntegrationContext) state,
-            CancellationToken token)
-        {
-            var (producer, context) = state;
-
-            return Decoratee.Process(producer, context, token);
         }
 
         private Func<Exception, CancellationToken, Task> OnError(

@@ -5,17 +5,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Primitives;
     using CompositionRoot;
-    using Contract;
     using Contract.Abstractions;
     using CrossCuttingConcerns.Extensions;
     using Messaging;
     using Microsoft.Extensions.Logging;
+    using Pipeline;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpoint : IExecutableEndpoint,
@@ -24,7 +25,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                                      IResolvable<IGenericEndpoint>
     {
         private readonly ILogger _logger;
-        private readonly EndpointIdentity _endpointIdentity;
+        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IMessageHandlerMiddlewareComposite _messageHandlerMiddleware;
+
         private readonly AsyncManualResetEvent _ready;
         private readonly ConcurrentDictionary<Guid, Task> _runningHandlers;
 
@@ -32,19 +35,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         public GenericEndpoint(
             ILogger logger,
-            EndpointIdentity endpointIdentity,
-            IDependencyContainer dependencyContainer)
+            IDependencyContainer dependencyContainer,
+            IMessageHandlerMiddlewareComposite messageHandlerMiddleware)
         {
             _logger = logger;
-            _endpointIdentity = endpointIdentity;
-
-            DependencyContainer = dependencyContainer;
+            _dependencyContainer = dependencyContainer;
+            _messageHandlerMiddleware = messageHandlerMiddleware;
 
             _ready = new AsyncManualResetEvent(false);
             _runningHandlers = new ConcurrentDictionary<Guid, Task>();
         }
-
-        public IDependencyContainer DependencyContainer { get; }
 
         private CancellationToken Token => _cts.Token;
 
@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         {
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            _logger.Information($"{_endpointIdentity} has been started");
+            _logger.Information("Endpoint has been started");
 
             _ready.Set();
 
@@ -88,15 +88,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             await _ready.WaitAsync(Token).ConfigureAwait(false);
 
             var executionId = Guid.NewGuid();
-            Task? runningHandler = default;
 
             try
             {
-                runningHandler = DependencyContainer
-                    .ResolveGeneric(typeof(IMessageHandlerExecutor<>), message.ReflectedType)
-                    .CallMethod(nameof(IMessageHandlerExecutor<IIntegrationMessage>.Invoke))
-                    .WithArguments(message, Token)
-                    .Invoke<Task>();
+                var runningHandler = RunMessageHandler(
+                    _dependencyContainer,
+                    _messageHandlerMiddleware,
+                    message,
+                    Token);
 
                 _runningHandlers.Add(executionId, runningHandler);
 
@@ -104,10 +103,33 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
             finally
             {
-                if (runningHandler != null)
+                _runningHandlers.Remove(executionId, out _);
+            }
+
+            static async Task RunMessageHandler(
+                IDependencyContainer dependencyContainer,
+                IMessageHandlerMiddlewareComposite messageHandlerMiddleware,
+                IntegrationMessage message,
+                CancellationToken token)
+            {
+                await using (dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                 {
-                    _runningHandlers.Remove(executionId, out _);
+                    var exclusiveContext = dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(message);
+
+                    var messageHandler = dependencyContainer.ResolveGeneric(typeof(IMessageHandler<>), message.ReflectedType);
+
+                    await messageHandlerMiddleware
+                        .Handle(exclusiveContext, Next(messageHandler), token)
+                        .ConfigureAwait(false);
                 }
+            }
+
+            static Func<IAdvancedIntegrationContext, CancellationToken, Task> Next(object messageHandler)
+            {
+                return (context, cancellationToken) => messageHandler
+                    .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
+                    .WithArguments(context.Message.Payload, cancellationToken)
+                    .Invoke<Task>();
             }
         }
     }

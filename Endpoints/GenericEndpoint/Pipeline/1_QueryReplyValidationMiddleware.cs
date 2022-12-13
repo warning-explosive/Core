@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
@@ -12,29 +13,25 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using UnitOfWork;
 
     [Component(EnLifestyle.Singleton)]
-    [Before(typeof(UnitOfWorkPipeline))]
-    internal class QueryReplyValidationPipeline : IMessagePipelineStep, IMessagePipeline
+    [After(typeof(HandledByEndpointMiddleware))]
+    internal class QueryReplyValidationMiddleware : IMessageHandlerMiddleware,
+                                                    ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly IDependencyContainer _dependencyContainer;
 
-        public QueryReplyValidationPipeline(
-            IMessagePipeline decoratee,
-            IDependencyContainer dependencyContainer)
+        public QueryReplyValidationMiddleware(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
-            Decoratee = decoratee;
         }
 
-        public IMessagePipeline Decoratee { get; }
-
-        public async Task Process(
-            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+        public async Task Handle(
             IAdvancedIntegrationContext context,
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token)
         {
-            await Decoratee
-               .Process(producer, context, token)
-               .ConfigureAwait(false);
+            await next
+                .Invoke(context, token)
+                .ConfigureAwait(false);
 
             if (context.Message.IsQuery())
             {

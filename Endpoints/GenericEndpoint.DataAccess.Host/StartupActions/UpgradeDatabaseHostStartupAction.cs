@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
     using System.Threading.Tasks;
     using Basics;
     using Basics.Attributes;
-    using Contract;
     using GenericEndpoint.Host.StartupActions;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
@@ -23,18 +22,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
     {
         private static readonly Exclusive Exclusive = new Exclusive();
 
-        private readonly EndpointIdentity _endpointIdentity;
         private readonly IMigrationsExecutor _migrationsExecutor;
         private readonly IEnumerable<IMigration> _migrations;
         private readonly ILogger _logger;
 
         public UpgradeDatabaseHostStartupAction(
-            EndpointIdentity endpointIdentity,
             IMigrationsExecutor migrationsExecutor,
             IEnumerable<IMigration> migrations,
             ILogger logger)
         {
-            _endpointIdentity = endpointIdentity;
             _logger = logger;
             _migrationsExecutor = migrationsExecutor;
             _migrations = migrations;
@@ -49,7 +45,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
                    .ConfigureAwait(false);
             }
 
-            _logger.Information($"{_endpointIdentity} have been migrated");
+            _logger.Information("have been migrated");
         }
     }
 }

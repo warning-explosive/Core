@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
@@ -10,31 +11,25 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Messaging.MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    [Before(typeof(UnitOfWorkPipeline))]
-    internal class HandledByEndpointPipeline : IMessagePipelineStep, IMessagePipeline
+    [After(typeof(UnitOfWorkMiddleware))]
+    internal class HandledByEndpointMiddleware : IMessageHandlerMiddleware,
+                                                 ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly EndpointIdentity _endpointIdentity;
 
-        public HandledByEndpointPipeline(
-            IMessagePipeline decoratee,
-            EndpointIdentity endpointIdentity)
+        public HandledByEndpointMiddleware(EndpointIdentity endpointIdentity)
         {
             _endpointIdentity = endpointIdentity;
-            Decoratee = decoratee;
         }
 
-        public IMessagePipeline Decoratee { get; }
-
-        public async Task Process(
-            Func<IAdvancedIntegrationContext, CancellationToken, Task> producer,
+        public async Task Handle(
             IAdvancedIntegrationContext context,
+            Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token)
         {
             try
             {
-                await Decoratee
-                   .Process(producer, context, token)
-                   .ConfigureAwait(false);
+                await next(context, token).ConfigureAwait(false);
             }
             finally
             {

@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -46,7 +48,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
         public async Task Handle(AuthenticateUser message, CancellationToken token)
         {
             var reply = await ExecutionExtensions
-               .TryAsync(message, AuthorizeUser)
+               .TryAsync(message, AuthenticateUser)
                .Catch<Exception>()
                .Invoke((exception, _) =>
                     {
@@ -61,7 +63,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                 .ConfigureAwait(false);
         }
 
-        private async Task<UserAuthenticationResult> AuthorizeUser(
+        private async Task<UserAuthenticationResult> AuthenticateUser(
             AuthenticateUser message,
             CancellationToken token)
         {
@@ -77,7 +79,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                     .Get(token)
                     .ConfigureAwait(false);
 
-                authenticationToken = _tokenProvider.GenerateToken(message.Username, settings.TokenExpirationTimeout);
+                authenticationToken = user.GenerateAuthorizationToken(AuthorizationTokenGenerator(_tokenProvider, settings));
             }
             else
             {
@@ -86,6 +88,16 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
 
             // TODO: #201 - add support for sliding expiration
             return new UserAuthenticationResult(message.Username, authenticationToken);
+
+            static Func<Username, IReadOnlyCollection<Feature>, string> AuthorizationTokenGenerator(
+                ITokenProvider tokenProvider,
+                AuthorizationSettings settings)
+            {
+                return (username, features) => tokenProvider.GenerateToken(
+                    username.Value,
+                    features.Select(feature => feature.Name).ToHashSet(StringComparer.OrdinalIgnoreCase),
+                    settings.TokenExpirationTimeout);
+            }
         }
     }
 }

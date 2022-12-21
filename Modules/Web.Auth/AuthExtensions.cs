@@ -1,13 +1,38 @@
 namespace SpaceEngineers.Core.Web.Auth
 {
     using System;
+    using System.Net.Http.Headers;
+    using System.Security.Claims;
     using System.Text;
+    using Basics;
+    using Microsoft.AspNetCore.Http;
 
     /// <summary>
     /// AuthExtensions
     /// </summary>
     public static class AuthExtensions
     {
+        /// <summary>
+        /// Gets authorization token
+        /// </summary>
+        /// <param name="context">HttpContext</param>
+        /// <returns>Authorization token</returns>
+        public static string GetAuthorizationToken(this HttpContext context)
+        {
+            var token = context.User.FindFirst(ClaimTypes.Authentication)?.Value;
+
+            if (!token.IsNullOrWhiteSpace())
+            {
+                return token;
+            }
+
+            var schema = AuthenticationHeaderValue
+                .Parse(context.Request.Headers.Authorization)
+                .Scheme;
+
+            return context.Request.Headers.Authorization.ToString()[schema.Length..].Trim();
+        }
+
         /// <summary>
         /// EncodeBasicAuth
         /// </summary>

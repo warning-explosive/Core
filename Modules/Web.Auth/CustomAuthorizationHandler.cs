@@ -1,12 +1,9 @@
 namespace SpaceEngineers.Core.Web.Auth
 {
-    using System.Threading;
+    using System.Linq;
     using System.Threading.Tasks;
-    using AuthEndpoint.Contract.Queries;
-    using AuthEndpoint.Contract.Replies;
-    using GenericEndpoint.Api.Abstractions;
     using IntegrationTransport;
-    using IntegrationTransport.RpcRequest;
+    using JwtAuthentication;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -20,7 +17,7 @@ namespace SpaceEngineers.Core.Web.Auth
             _transportDependencyContainer = transportDependencyContainer;
         }
 
-        protected override async Task HandleRequirementAsync(
+        protected override Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             CustomAuthorizationRequirement requirement)
         {
@@ -28,26 +25,31 @@ namespace SpaceEngineers.Core.Web.Auth
 
             if (httpContext == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var username = context.User.Identity?.Name;
 
             if (string.IsNullOrWhiteSpace(username))
             {
-                return;
+                return Task.CompletedTask;
             }
+
+            var grantedPermissions = _transportDependencyContainer
+                .DependencyContainer
+                .Resolve<ITokenProvider>()
+                .GetPermissions(httpContext.GetAuthorizationToken());
 
             if (!httpContext.Request.RouteValues.TryGetValue("controller", out var controllerName)
                 || controllerName is not string controller)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (!httpContext.Request.RouteValues.TryGetValue("action", out var actionName)
                 || actionName is not string action)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var verb = httpContext.Request.Method;
@@ -57,21 +59,14 @@ namespace SpaceEngineers.Core.Web.Auth
                 .Resolve<IWebApiFeaturesProvider>()
                 .GetFeatures(controller, action, verb);
 
-            UserAuthorizationResult userAuthorizationResult;
+            var accessGranted = requiredFeatures.All(requiredFeature => grantedPermissions.Contains(requiredFeature));
 
-            await using (_transportDependencyContainer.DependencyContainer.OpenScopeAsync().ConfigureAwait(false))
-            {
-                userAuthorizationResult = await _transportDependencyContainer
-                    .DependencyContainer
-                    .Resolve<IIntegrationContext>()
-                    .RpcRequest<AuthorizeUser, UserAuthorizationResult>(new AuthorizeUser(username, $"[{verb}] {controller}/{action}", requiredFeatures), CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
-
-            if (userAuthorizationResult.AccessGranted)
+            if (accessGranted)
             {
                 context.Succeed(requirement);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

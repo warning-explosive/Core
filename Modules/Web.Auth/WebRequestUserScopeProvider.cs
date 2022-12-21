@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Web.Auth
 {
     using System.Security.Claims;
-    using AuthEndpoint.Contract.Queries;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -27,12 +26,6 @@ namespace SpaceEngineers.Core.Web.Auth
 
             if (user is not null)
             {
-                return true;
-            }
-
-            if (initiatorMessage?.Payload is AuthorizeUser authorizeUser)
-            {
-                user = authorizeUser.Username;
                 return true;
             }
 

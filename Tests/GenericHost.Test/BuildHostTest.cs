@@ -571,9 +571,7 @@
                         {
                             typeof(CaptureDomainEvent<,>),
                             typeof(AuthenticateUser),
-                            typeof(AuthorizeUser),
                             typeof(UserAuthenticationResult),
-                            typeof(UserAuthorizationResult),
                             typeof(CreateUser),
                             typeof(UserWasCreated),
                             typeof(BaseEvent),
@@ -620,8 +618,7 @@
                     var expectedReplies = new[]
                         {
                             typeof(Reply),
-                            typeof(UserAuthenticationResult),
-                            typeof(UserAuthorizationResult)
+                            typeof(UserAuthenticationResult)
                         }
                         .OrderBy(type => type.Name)
                         .ToList();

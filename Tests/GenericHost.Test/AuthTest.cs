@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using AuthEndpoint.Contract;
     using Basics;
     using JwtAuthentication;
@@ -30,6 +31,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         internal void JwtTokenProviderTest()
         {
             var username = "qwerty";
+            var permissions = new[] { "amazing_feature_42" };
 
             var authEndpointConfigurationFilePath = SolutionExtensions
                .SolutionFile()
@@ -48,10 +50,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var tokenProvider = new JwtTokenProvider(authEndpointConfiguration.GetJwtAuthenticationConfiguration());
 
-            var token = tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(5));
+            var token = tokenProvider.GenerateToken(username, permissions, TimeSpan.FromMinutes(5));
             Output.WriteLine(token);
 
             Assert.Equal(username, tokenProvider.GetUsername(token));
+            Assert.True(permissions.SequenceEqual(tokenProvider.GetPermissions(token)));
         }
 
         [Fact]

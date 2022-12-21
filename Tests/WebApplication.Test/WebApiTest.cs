@@ -135,7 +135,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
             yield return new object?[]
             {
                 new RestRequest($"http://127.0.0.1:5000/api/Auth/{nameof(AuthController.AuthenticateUser)}", Method.Get)
-                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"),
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { "Authentication" }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -182,7 +182,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
             yield return new object?[]
             {
                 new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List", Method.Get)
-                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, TimeSpan.FromMinutes(1))}"),
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { "WebApiTest" }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);

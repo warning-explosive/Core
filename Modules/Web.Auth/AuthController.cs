@@ -1,12 +1,9 @@
 namespace SpaceEngineers.Core.Web.Auth
 {
     using System.Net;
-    using System.Net.Http.Headers;
     using System.Net.Mime;
-    using System.Security.Claims;
     using System.Threading.Tasks;
     using Api.Api;
-    using Basics;
     using GenericEndpoint.Contract.Attributes;
     using Microsoft.AspNetCore.Mvc;
 
@@ -25,27 +22,7 @@ namespace SpaceEngineers.Core.Web.Auth
         [HttpGet]
         public Task<ActionResult<ScalarResponse<string>>> AuthenticateUser()
         {
-            var token = HttpContext.User.FindFirst(ClaimTypes.Authentication)?.Value;
-
-            if (string.IsNullOrEmpty(token))
-            {
-                var schema = AuthenticationHeaderValue
-                    .Parse(HttpContext.Request.Headers.Authorization)
-                    .Scheme;
-
-                token = HttpContext.Request.Headers.Authorization.ToString()[schema.Length..].Trim();
-            }
-
-            var response = new ScalarResponse<string>();
-
-            if (!token.IsNullOrWhiteSpace())
-            {
-                response.WithItem(token);
-            }
-            else
-            {
-                response.WithError("Wrong username or password");
-            }
+            var response = new ScalarResponse<string>().WithItem(HttpContext.GetAuthorizationToken());
 
             var result = new JsonResult(response)
             {

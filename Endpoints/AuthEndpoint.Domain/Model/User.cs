@@ -94,11 +94,11 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
         }
 
         /// <summary>
-        /// Checks granted user permissions
+        /// Generates authorization token
         /// </summary>
-        /// <param name="requiredFeatures">Required features</param>
-        /// <returns>True if user has rights for required features</returns>
-        public bool Authorize(IReadOnlyCollection<Feature> requiredFeatures)
+        /// <param name="producer">Token producer</param>
+        /// <returns>Authorization token</returns>
+        public string GenerateAuthorizationToken(Func<Username, IReadOnlyCollection<Feature>, string> producer)
         {
             /*
              * feature -> provided by code
@@ -121,7 +121,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
              * permission -> represent granted access to the exact feature
              *               in this model terms feature and permission in general have the same meaning
              */
-            return requiredFeatures.All(requiredFeature => _availableFeatures.Contains(requiredFeature));
+            return producer.Invoke(_username, _availableFeatures);
         }
 
         /// <inheritdoc />

@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
     using Basics;
     using CrossCuttingConcerns.Json;
     using GenericEndpoint.Messaging;
-    using GenericEndpoint.Messaging.MessageHeaders;
     using global::RabbitMQ.Client;
     using global::RabbitMQ.Client.Events;
 

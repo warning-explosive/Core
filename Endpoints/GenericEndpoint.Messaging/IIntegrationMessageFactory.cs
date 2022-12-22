@@ -1,7 +1,9 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging
 {
-    using Contract;
+    using System;
+    using System.Collections.Generic;
     using Contract.Abstractions;
+    using MessageHeaders;
 
     /// <summary>
     /// IIntegrationMessageFactory abstraction
@@ -12,14 +14,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// Creates IntegrationMessage instance from user defined payload
         /// </summary>
         /// <param name="payload">User defined payload message</param>
-        /// <param name="endpointIdentity">Optional EndpointIdentity</param>
-        /// <param name="initiatorMessage">Optional initiator message</param>
-        /// <typeparam name="TMessage">TMessage type-argument</typeparam>
+        /// <param name="reflectedType">Reflected type</param>
+        /// <param name="headers">Integration message headers</param>
+        /// <param name="initiatorMessage">Initiator integration message</param>
         /// <returns>IntegrationMessage instance</returns>
-        IntegrationMessage CreateGeneralMessage<TMessage>(
-            TMessage payload,
-            EndpointIdentity endpointIdentity,
-            IntegrationMessage? initiatorMessage)
-            where TMessage : IIntegrationMessage;
+        IntegrationMessage CreateGeneralMessage(
+            IIntegrationMessage payload,
+            Type reflectedType,
+            IReadOnlyCollection<IIntegrationMessageHeader> headers,
+            IntegrationMessage? initiatorMessage);
     }
 }

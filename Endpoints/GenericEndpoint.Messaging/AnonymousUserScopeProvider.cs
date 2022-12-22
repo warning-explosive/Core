@@ -4,18 +4,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
+    using MessageHeaders;
 
     [Component(EnLifestyle.Singleton)]
-    [After(typeof(IntegrationMessageUserScopeProvider))]
-    internal class AnonymousUserScopeProvider : IUserScopeProvider,
-                                                ICollectionResolvable<IUserScopeProvider>
+    [After(typeof(UserScopeProvider))]
+    internal class AnonymousUserScopeProvider : IIntegrationMessageHeaderProvider,
+                                                ICollectionResolvable<IIntegrationMessageHeaderProvider>
     {
         private const string Anonymous = nameof(Anonymous);
 
-        public bool TryGetUser(IntegrationMessage? initiatorMessage, out string? user)
+        public void WriteHeaders(IntegrationMessage generalMessage, IntegrationMessage? initiatorMessage)
         {
-            user = Anonymous;
-            return true;
+            if (generalMessage.ReadHeader<User>() == null)
+            {
+                generalMessage.WriteHeader(new User(Anonymous));
+            }
         }
     }
 }

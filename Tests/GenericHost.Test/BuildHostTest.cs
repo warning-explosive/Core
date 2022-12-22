@@ -674,14 +674,17 @@
 
                 var expectedUserScopeProviders = new[]
                 {
-                    typeof(IntegrationMessageUserScopeProvider),
+                    typeof(ConversationIdProvider),
+                    typeof(MessageInitiatorProvider),
+                    typeof(MessageOriginProvider),
+                    typeof(UserScopeProvider),
                     typeof(AnonymousUserScopeProvider)
                 };
 
                 var actualUserScopeProviders = transportDependencyContainer
-                   .ResolveCollection<IUserScopeProvider>()
+                   .ResolveCollection<IIntegrationMessageHeaderProvider>()
                    .Select(obj => obj.GetType())
-                   .ShowTypes(nameof(IErrorHandler), log)
+                   .ShowTypes(nameof(IIntegrationMessageHeaderProvider), log)
                    .ToList();
 
                 Assert.Equal(expectedUserScopeProviders, actualUserScopeProviders);

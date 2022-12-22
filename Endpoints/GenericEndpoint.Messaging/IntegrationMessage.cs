@@ -18,8 +18,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       ISafelyEquatable<IntegrationMessage>,
                                       ISafelyComparable<IntegrationMessage>,
                                       IComparable<IntegrationMessage>,
-                                      IComparable,
-                                      ICloneable<IntegrationMessage>
+                                      IComparable
     {
         private readonly Dictionary<Type, IIntegrationMessageHeader> _headers;
 
@@ -196,18 +195,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             return FormatHeaders(headers);
         }
 
-        /// <inheritdoc />
-        public IntegrationMessage Clone()
-        {
-            return new IntegrationMessage(Payload.DeepCopy(), ReflectedType, _headers.DeepCopy());
-        }
-
-        /// <inheritdoc />
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
-
         /// <summary>
         /// Clones original message with specified contravariant type
         /// </summary>
@@ -221,7 +208,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                 throw new InvalidOperationException($"{reflectedType} isn't suitable as contravariant analogue for {ReflectedType}");
             }
 
-            return new IntegrationMessage(Payload.DeepCopy(), reflectedType, _headers.DeepCopy());
+            return new IntegrationMessage(Payload, reflectedType, _headers.ToDictionary(pair => pair.Key, pair => pair.Value));
         }
 
         /// <summary>
@@ -281,7 +268,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                 throw new InvalidOperationException($"Header {typeof(THeader).Name} already exists in the message");
             }
 
-            _headers.Add(typeof(THeader), header);
+            _headers.Add(header.GetType(), header);
         }
 
         /// <summary>
@@ -292,21 +279,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         public void OverwriteHeader<THeader>(THeader header)
             where THeader : IIntegrationMessageHeader
         {
-            _headers[typeof(THeader)] = header;
-        }
-
-        /// <summary>
-        /// Deletes existed header
-        /// </summary>
-        /// <param name="header">Header value</param>
-        /// <typeparam name="THeader">THeader type-argument</typeparam>
-        /// <returns>Returns true if the element is successfully found and removed</returns>
-        internal bool TryDeleteHeader<THeader>(out THeader header)
-            where THeader : IIntegrationMessageHeader
-        {
-            var result = _headers.Remove(typeof(THeader), out var untypedHeader);
-            header = (THeader)untypedHeader;
-            return result;
+            _headers[header.GetType()] = header;
         }
 
         private static string FormatHeaders<THeader>(IEnumerable<THeader> headers)

@@ -5,58 +5,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
-    using Contract;
     using Contract.Abstractions;
     using MessageHeaders;
 
-    [Component(EnLifestyle.Singleton)]
+    [Component(EnLifestyle.Scoped)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory,
                                                IResolvable<IIntegrationMessageFactory>
     {
-        private readonly IEnumerable<IUserScopeProvider> _userScopeProviders;
+        private readonly IEnumerable<IIntegrationMessageHeaderProvider> _providers;
 
-        public IntegrationMessageFactory(IEnumerable<IUserScopeProvider> userScopeProviders)
+        public IntegrationMessageFactory(IEnumerable<IIntegrationMessageHeaderProvider> providers)
         {
-            _userScopeProviders = userScopeProviders;
+            _providers = providers;
         }
 
-        public IntegrationMessage CreateGeneralMessage<TMessage>(
-            TMessage payload,
-            EndpointIdentity endpointIdentity,
+        public IntegrationMessage CreateGeneralMessage(
+            IIntegrationMessage payload,
+            Type reflectedType,
+            IReadOnlyCollection<IIntegrationMessageHeader> headers,
             IntegrationMessage? initiatorMessage)
-            where TMessage : IIntegrationMessage
         {
-            var generalMessage = new IntegrationMessage(payload, typeof(TMessage));
+            var generalMessage = new IntegrationMessage(payload, reflectedType);
 
-            generalMessage.WriteHeader(new SentFrom(endpointIdentity));
-
-            var user = default(string?);
-
-            foreach (var provider in _userScopeProviders)
+            foreach (var provider in _providers)
             {
-                if (provider.TryGetUser(initiatorMessage, out user))
-                {
-                    break;
-                }
+                provider.WriteHeaders(generalMessage, initiatorMessage);
             }
 
-            if (user == null || user.IsNullOrEmpty())
+            foreach (var header in headers)
             {
-                throw new InvalidOperationException("Unable to find user scope");
-            }
-
-            generalMessage.WriteHeader(new User(user));
-
-            if (initiatorMessage != null)
-            {
-                var conversationId = initiatorMessage.ReadRequiredHeader<ConversationId>().Value;
-                generalMessage.WriteHeader(new ConversationId(conversationId));
-                generalMessage.WriteHeader(new InitiatorMessageId(initiatorMessage.ReadRequiredHeader<Id>().Value));
-            }
-            else
-            {
-                generalMessage.WriteHeader(new ConversationId(Guid.NewGuid()));
+                generalMessage.OverwriteHeader(header);
             }
 
             return generalMessage;

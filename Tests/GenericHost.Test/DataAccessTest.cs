@@ -33,6 +33,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Messaging;
+    using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.Pipeline;
     using GenericEndpoint.Settings;
     using IntegrationTransport.Host;
@@ -893,15 +894,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query);
 
-                        try
-                        {
-                            _ = await integrationContext
-                               .RpcRequest<Query, Reply>(new Query(42), token)
-                               .ConfigureAwait(false);
-                        }
-                        catch (InvalidOperationException)
-                        {
-                        }
+                        await integrationContext
+                            .Request<Query, Reply>(new Query(42), token)
+                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
 
@@ -912,9 +907,37 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
+                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query);
+
+                        var rpcException = default(Exception?);
+
+                        try
+                        {
+                            _ = await integrationContext
+                               .RpcRequest<Query, Reply>(new Query(42), token)
+                               .ConfigureAwait(false);
+                        }
+                        catch (InvalidOperationException invalidOperationException)
+                        {
+                            rpcException = invalidOperationException;
+                        }
+
+                        await awaiter.ConfigureAwait(false);
+
+                        Assert.Single(collector.ErrorMessages);
+                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+                        Assert.Equal(collector.ErrorMessages.Single().exception.GetType(), rpcException.GetType());
+                        Assert.Equal(collector.ErrorMessages.Single().exception.Message, rpcException.Message);
+                        collector.ErrorMessages.Clear();
+                    }
+
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
                         var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
                         var query = new Query(42);
-                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, TestIdentity.Endpoint10, null);
+                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, typeof(Query), new[] { new SentFrom(TestIdentity.Endpoint10) }, null);
                         var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
 
                         var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply);

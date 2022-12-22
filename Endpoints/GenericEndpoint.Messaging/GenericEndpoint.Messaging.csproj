@@ -60,9 +60,6 @@
       <Compile Update="MessageHeaders\ActualDeliveryDate.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
-      <Compile Update="MessageHeaders\DeliveryTag.cs">
-        <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
-      </Compile>
       <Compile Update="MessageHeaders\ReplyTo.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
@@ -84,11 +81,20 @@
       <Compile Update="IntegrationMessageFactory.cs">
         <DependentUpon>IIntegrationMessageFactory.cs</DependentUpon>
       </Compile>
-      <Compile Update="IntegrationMessageUserScopeProvider.cs">
-        <DependentUpon>IUserScopeProvider.cs</DependentUpon>
+      <Compile Update="UserScopeProvider.cs">
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
       </Compile>
       <Compile Update="AnonymousUserScopeProvider.cs">
-        <DependentUpon>IUserScopeProvider.cs</DependentUpon>
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="MessageOriginProvider.cs">
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ConversationIdProvider.cs">
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="MessageInitiatorProvider.cs">
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -53,7 +53,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         public Task Send<TCommand>(TCommand command, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            return _messagesCollector.Collect(CreateGeneralMessage(command), token);
+            var message = CreateGeneralMessage(command, typeof(TCommand));
+
+            return _messagesCollector.Collect(message, token);
         }
 
         public Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
@@ -65,9 +67,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         public Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
             where TCommand : IIntegrationCommand
         {
-            var message = CreateGeneralMessage(command);
-
-            message.WriteHeader(new DeferredUntil(dateTime.ToUniversalTime()));
+            var message = CreateGeneralMessage(command, typeof(TCommand), new DeferredUntil(dateTime.ToUniversalTime()));
 
             return _messagesCollector.Collect(message, token);
         }
@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
             if (isOwnedByCurrentEndpoint)
             {
-                return _messagesCollector.Collect(CreateGeneralMessage(integrationEvent), token);
+                return _messagesCollector.Collect(CreateGeneralMessage(integrationEvent, typeof(TEvent)), token);
             }
 
             throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}");
@@ -89,21 +89,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            return _messagesCollector.Collect(CreateGeneralMessage(query), token);
+            return _messagesCollector.Collect(CreateGeneralMessage(query, typeof(TQuery)), token);
         }
 
-        public async Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
+        public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            var replyIntegrationMessage = CreateGeneralMessage(reply);
+            var message = CreateGeneralMessage(reply, typeof(TReply), new ReplyTo(Message.ReadRequiredHeader<SentFrom>().Value));
 
-            var sentFrom = Message.ReadRequiredHeader<SentFrom>().Value;
-
-            replyIntegrationMessage.WriteHeader(new ReplyTo(sentFrom));
-            replyIntegrationMessage.WriteHeader(new HandledBy(_endpointIdentity));
-
-            await _messagesCollector.Collect(replyIntegrationMessage, token).ConfigureAwait(false);
+            return _messagesCollector.Collect(message, token);
         }
 
         public (IntegrationMessage query, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TQuery, TReply>(
@@ -112,7 +107,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             where TQuery : IIntegrationQuery<TReply>
             where TReply : IIntegrationReply
         {
-            var message = CreateGeneralMessage(query);
+            var message = CreateGeneralMessage(query, typeof(TQuery));
 
             var requestId = message.ReadRequiredHeader<Id>().Value;
 
@@ -138,10 +133,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 
         public async Task Retry(DateTime dateTime, CancellationToken token)
         {
-            var copy = Message.Clone();
-
-            copy.OverwriteHeader(new RetryCounter((copy.ReadHeader<RetryCounter>()?.Value ?? 0) + 1));
-            copy.OverwriteHeader(new DeferredUntil(dateTime.ToUniversalTime()));
+            var copy = CreateGeneralMessage(
+                Message.Payload,
+                Message.ReflectedType,
+                new RetryCounter((Message.ReadHeader<RetryCounter>()?.Value ?? 0) + 1),
+                new DeferredUntil(dateTime.ToUniversalTime()));
 
             var wasSent = await SendMessage(copy, token).ConfigureAwait(false);
 
@@ -152,10 +148,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         }
 
         private IntegrationMessage CreateGeneralMessage<TMessage>(
-            TMessage message)
+            TMessage message,
+            Type reflectedType,
+            params IIntegrationMessageHeader[] headers)
             where TMessage : IIntegrationMessage
         {
-            return _factory.CreateGeneralMessage(message, _endpointIdentity, _message);
+            return _factory.CreateGeneralMessage(message, reflectedType, headers, _message);
         }
     }
 }

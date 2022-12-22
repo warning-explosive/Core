@@ -39,10 +39,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             {
                 var payload = new Command(42);
+                var reflectedType = typeof(Command);
                 var integrationMessageFactory = new IntegrationMessageFactory(new[] { new AnonymousUserScopeProvider() });
-                var integrationMessage = integrationMessageFactory.CreateGeneralMessage(payload, TestIdentity.Endpoint10, null);
-                var notEqualMessage = integrationMessageFactory.CreateGeneralMessage(payload, TestIdentity.Endpoint10, null);
-                var equalMessage = integrationMessageFactory.CreateGeneralMessage(payload, TestIdentity.Endpoint10, null);
+                var integrationMessage = integrationMessageFactory.CreateGeneralMessage(payload, reflectedType, Array.Empty<IIntegrationMessageHeader>(), null);
+                var notEqualMessage = integrationMessageFactory.CreateGeneralMessage(payload, reflectedType, Array.Empty<IIntegrationMessageHeader>(), null);
+                var equalMessage = integrationMessageFactory.CreateGeneralMessage(payload, reflectedType, Array.Empty<IIntegrationMessageHeader>(), null);
                 equalMessage.OverwriteHeader(integrationMessage.ReadRequiredHeader<Id>());
 
                 yield return new object[]

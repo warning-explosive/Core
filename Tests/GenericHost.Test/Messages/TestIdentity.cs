@@ -1,16 +1,20 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Messages
 {
+    using System;
     using GenericEndpoint.Contract;
 
     internal static class TestIdentity
     {
         public const string Endpoint1 = nameof(Endpoint1);
+
         public const string Endpoint2 = nameof(Endpoint2);
 
-        public const string Instance0 = nameof(Instance0);
-        public const string Instance1 = nameof(Instance1);
+        public static string Instance0 { get; } = Guid.NewGuid().ToString();
 
-        public static readonly EndpointIdentity Endpoint10 = new EndpointIdentity(Endpoint1, Instance0);
-        public static readonly EndpointIdentity Endpoint20 = new EndpointIdentity(Endpoint2, Instance0);
+        public static string Instance1 { get; } = Guid.NewGuid().ToString();
+
+        public static EndpointIdentity Endpoint10 { get; } = new EndpointIdentity(Endpoint1, Instance0);
+
+        public static EndpointIdentity Endpoint20 { get; } = new EndpointIdentity(Endpoint2, Instance0);
     }
 }

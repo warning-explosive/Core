@@ -17,16 +17,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         internal EndpointBuilder(EndpointIdentity endpointIdentity)
         {
-            EndpointIdentity = endpointIdentity;
             EndpointPluginAssemblies = Array.Empty<Assembly>();
             Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
+            EndpointIdentity = endpointIdentity;
         }
-
-        public EndpointIdentity EndpointIdentity { get; }
 
         public IReadOnlyCollection<Assembly> EndpointPluginAssemblies { get; protected set; }
 
         public IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; protected set; }
+
+        protected EndpointIdentity EndpointIdentity { get; }
 
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {

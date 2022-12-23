@@ -2,17 +2,17 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Registration;
     using CompositionRoot.Verifiers;
+    using Core.DataAccess.Orm.Extensions;
+    using Core.DataAccess.Orm.Sql.Model;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.DataAccess.Api.Sql;
     using SpaceEngineers.Core.DataAccess.Api.Sql.Attributes;
 
@@ -33,165 +33,128 @@
 
         public void Verify()
         {
-            _typeProvider
-                .OurTypes
-                .Where(type => typeof(IDatabaseEntity).IsAssignableFrom(type)
-                               && type.IsConcreteType())
-                .SelectMany(type => VerifyDatabaseEntity(type, typeof(BaseDatabaseEntity<>)))
-                .Each(exception => throw exception.Rethrow());
+            var exceptions = new List<Exception>();
 
-            if (TypeExtensions.TryFindType("SpaceEngineers.Core.DataAccess.Api.Sql SpaceEngineers.Core.DataAccess.Api.Sql.ISqlView`1", out var sqlView))
+            var databaseEntities = _typeProvider
+                .OurTypes
+                .Where(type => type.IsDatabaseEntity() && type.IsConcreteType());
+
+            VerifyDatabaseEntities(databaseEntities, typeof(BaseDatabaseEntity<>), exceptions);
+
+            var sqlViews = _typeProvider
+                .OurTypes
+                .Where(type => type.IsSqlView() && type.IsConcreteType());
+
+            VerifyDatabaseEntities(sqlViews, typeof(BaseSqlView<>), exceptions);
+
+            var inlinedObjects = _typeProvider
+                .OurTypes
+                .Where(type => type.IsInlinedObject() && type.IsConcreteType());
+
+            VerifyInlinedObjects(inlinedObjects, exceptions);
+
+            if (exceptions.Any())
             {
-                var baseSqlView = TypeExtensions.FindType("SpaceEngineers.Core.DataAccess.Api.Sql SpaceEngineers.Core.DataAccess.Api.Sql.BaseSqlView`1");
-
-                _typeProvider
-                .OurTypes
-                .Where(type => type.IsSubclassOfOpenGeneric(sqlView)
-                            && type.IsConcreteType())
-                .SelectMany(type => VerifyDatabaseEntity(type, baseSqlView))
-                .Each(exception => throw exception.Rethrow());
+                throw new AggregateException(exceptions);
             }
-
-            _typeProvider
-                .OurTypes
-                .Where(type => typeof(IInlinedObject).IsAssignableFrom(type)
-                               && type.IsConcreteType())
-                .SelectMany(VerifyInlinedObject)
-                .Each(exception => throw exception.Rethrow());
         }
 
-        private IEnumerable<Exception> VerifyDatabaseEntity(Type databaseEntity, Type baseOpenGenericType)
+        private void VerifyDatabaseEntities(
+            IEnumerable<Type> databaseEntities,
+            Type baseType,
+            ICollection<Exception> exceptions)
         {
-            if (TypeHasWrongConstructor(databaseEntity, out var constructorException))
+            foreach (var databaseEntity in databaseEntities)
             {
-                yield return constructorException;
+                VerifyModifiers(databaseEntity, exceptions);
+                VerifyConstructors(databaseEntity, exceptions);
+                VerifyInheritance(databaseEntity, baseType, exceptions);
+                VerifySchemaAttribute(databaseEntity, exceptions);
+                VerifyMissingPropertySetter(databaseEntity, exceptions);
             }
 
-            if (TypeHasWrongModifier(databaseEntity, out var modifierException))
+            static void VerifyInheritance(
+                Type type,
+                Type baseType,
+                ICollection<Exception> exceptions)
             {
-                yield return modifierException;
+                if (!type.IsSubclassOfOpenGeneric(baseType))
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should implement {typeof(BaseDatabaseEntity<>)}"));
+                }
             }
 
-            if (TypeDoesNotInheritFrom(databaseEntity, baseOpenGenericType, out var inheritanceException))
+            static void VerifyMissingPropertySetter(
+                Type type,
+                ICollection<Exception> exceptions)
             {
-                yield return inheritanceException;
+                var properties = type
+                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+                    .Where(property => !property.IsEqualityContract())
+                    .Where(property => !property.SetIsAccessible() || property.HasInitializer());
+
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public setter so as to be mutable and deserializable"));
+                }
             }
 
-            foreach (var setterException in DatabaseEntityHasMissingPropertySetter(databaseEntity))
+            static void VerifySchemaAttribute(
+                Type type,
+                ICollection<Exception> exceptions)
             {
-                yield return setterException;
-            }
-
-            if (TypeHasMissingSchemaAttribute(databaseEntity, out var missingSchemaAttributeException))
-            {
-                yield return missingSchemaAttributeException;
+                if (!type.HasAttribute<SchemaAttribute>())
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should be declared with {typeof(SchemaAttribute).FullName}"));
+                }
             }
         }
 
-        private IEnumerable<Exception> VerifyInlinedObject(Type inlinedObject)
+        private void VerifyInlinedObjects(
+            IEnumerable<Type> inlinedObjects,
+            ICollection<Exception> exceptions)
         {
-            if (TypeHasWrongConstructor(inlinedObject, out var constructorException))
+            foreach (var inlinedObject in inlinedObjects)
             {
-                yield return constructorException;
+                VerifyModifiers(inlinedObject, exceptions);
+                VerifyConstructors(inlinedObject, exceptions);
+                VerifyMissingPropertyInitializer(inlinedObject, exceptions);
             }
 
-            if (TypeHasWrongModifier(inlinedObject, out var modifierException))
+            static void VerifyMissingPropertyInitializer(
+                Type inlinedObject,
+                ICollection<Exception> exceptions)
             {
-                yield return modifierException;
-            }
+                var properties = inlinedObject
+                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+                    .Where(property => !property.IsEqualityContract())
+                    .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
 
-            foreach (var setterException in DatabaseInlinedObjectHasMissingPropertyInitializer(inlinedObject))
-            {
-                yield return setterException;
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
+                }
             }
         }
 
-        private bool TypeHasWrongConstructor(
+        private static void VerifyModifiers(
             Type type,
-            [NotNullWhen(true)] out Exception? exception)
+            ICollection<Exception> exceptions)
+        {
+            if (!type.IsRecord())
+            {
+                exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
+            }
+        }
+
+        private void VerifyConstructors(
+            Type type,
+            ICollection<Exception> exceptions)
         {
             if (!_constructorResolutionBehavior.TryGetConstructor(type, out _))
             {
-                exception = new InvalidOperationException($"Type {type} should have one public constructor");
-                return true;
+                exceptions.Add(new InvalidOperationException($"Type {type} should have one public constructor"));
             }
-
-            exception = default;
-            return false;
-        }
-
-        private static bool TypeHasWrongModifier(
-            Type type,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            if (type.IsRecord())
-            {
-                exception = default;
-                return false;
-            }
-
-            exception = new InvalidOperationException($"Type {type} should be defined as record");
-            return true;
-        }
-
-        private static bool TypeDoesNotInheritFrom(
-            Type type,
-            Type baseType,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            var inherits = (baseType.IsGenericType && type.IsSubclassOfOpenGeneric(baseType))
-                        || baseType.IsAssignableFrom(type);
-
-            if (!inherits)
-            {
-                exception = new InvalidOperationException($"Type {type} should implement {baseType}");
-                return true;
-            }
-
-            exception = default;
-            return false;
-        }
-
-        private static IEnumerable<Exception> DatabaseEntityHasMissingPropertySetter(Type type)
-        {
-            var properties = type
-               .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
-               .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-               .Where(property => !property.SetIsAccessible() || property.HasInitializer());
-
-            foreach (var property in properties)
-            {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public setter so as to be mutable and deserializable");
-            }
-        }
-
-        private static IEnumerable<Exception> DatabaseInlinedObjectHasMissingPropertyInitializer(Type type)
-        {
-            var properties = type
-               .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
-               .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
-               .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
-
-            foreach (var property in properties)
-            {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable");
-            }
-        }
-
-        private static bool TypeHasMissingSchemaAttribute(
-            Type type,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            var schemaAttribute = type.GetAttribute<SchemaAttribute>();
-
-            if (schemaAttribute == null)
-            {
-                exception = new InvalidOperationException($"Type {type} should be declared with {typeof(SchemaAttribute).FullName}");
-                return true;
-            }
-
-            exception = default;
-            return false;
         }
     }
 }

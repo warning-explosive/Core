@@ -71,11 +71,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.DataAccess"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.EventSourcing", "Endpoints\GenericEndpoint.EventSourcing\GenericEndpoint.EventSourcing.csproj", "{C5C6A955-EE7E-4476-BFE1-11A4274F202C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization", "Endpoints\GenericEndpoint.Authorization\GenericEndpoint.Authorization.csproj", "{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Host", "Endpoints\GenericEndpoint.Host\GenericEndpoint.Host.csproj", "{13D73582-68CF-43A1-B340-59BDB56AF69F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.DataAccess.Host", "Endpoints\GenericEndpoint.DataAccess.Host\GenericEndpoint.DataAccess.Host.csproj", "{1FCF0008-7443-460A-9467-0C1214875405}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.EventSourcing.Host", "Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj", "{E3535BD7-4428-4289-9227-59154227FC08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization.Host", "Endpoints\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj", "{C8EAFDC7-76E5-4022-9A23-795FD1C60027}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.TestExtensions", "Endpoints\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj", "{8B3D2F61-04BF-422F-B466-FD74590412A0}"
 EndProject
@@ -370,6 +374,14 @@ Global
 		{E3535BD7-4428-4289-9227-59154227FC08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3535BD7-4428-4289-9227-59154227FC08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3535BD7-4428-4289-9227-59154227FC08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -433,6 +445,8 @@ Global
 		{1FCF0008-7443-460A-9467-0C1214875405} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{C5C6A955-EE7E-4476-BFE1-11A4274F202C} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{E3535BD7-4428-4289-9227-59154227FC08} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
+		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
+		{C8EAFDC7-76E5-4022-9A23-795FD1C60027} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

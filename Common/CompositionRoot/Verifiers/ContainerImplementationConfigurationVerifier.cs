@@ -1,5 +1,9 @@
 namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -16,9 +20,24 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             _container = container;
         }
 
+        [SuppressMessage("Analysis", "CA1031", Justification = "desired behavior")]
         public void Verify()
         {
-            _container.Verify(VerificationOption.VerifyAndDiagnose);
+            var exceptions = new List<Exception>();
+
+            try
+            {
+                _container.Verify(VerificationOption.VerifyAndDiagnose);
+            }
+            catch (Exception exception)
+            {
+                exceptions.Add(exception);
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
     }
 }

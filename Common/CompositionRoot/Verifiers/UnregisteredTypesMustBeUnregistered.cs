@@ -25,12 +25,23 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         protected override void VerifyInternal(IReadOnlyCollection<Type> registeredComponents)
         {
-            _typeProvider
+            var exceptions = new List<Exception>();
+
+            var pairs = _typeProvider
                .OurTypes
                .Where(type => type.HasAttribute<UnregisteredComponentAttribute>())
                .SelectMany(implementation => GetAutoRegistrationServices(implementation).Select(service => (service, implementation)))
-               .Where(pair => registeredComponents.Contains(pair.implementation) || registeredComponents.Contains(pair.service))
-               .Each(pair => throw new InvalidOperationException($"{pair.implementation.FullName} shouldn't be registered but represented in the dependency container as {pair.service.FullName}"));
+               .Where(pair => registeredComponents.Contains(pair.implementation) || registeredComponents.Contains(pair.service));
+
+            foreach (var pair in pairs)
+            {
+                exceptions.Add(new InvalidOperationException($"{pair.implementation.FullName} shouldn't be registered but represented in the dependency container as {pair.service.FullName}"));
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
     }
 }

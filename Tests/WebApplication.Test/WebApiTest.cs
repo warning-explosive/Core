@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 {
     using System;
     using System.Collections.Generic;
+    using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -94,7 +95,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
                .AddJsonFile(authEndpointConfigurationFilePath)
                .Build();
 
-            var tokenProvider = new JwtTokenProvider(authEndpointConfiguration.GetJwtAuthenticationConfiguration());
+            var tokenProvider = new JwtTokenProvider(new JwtSecurityTokenHandler(), authEndpointConfiguration.GetJwtAuthenticationConfiguration());
 
             /*
              * Authorization = authentication + permissions

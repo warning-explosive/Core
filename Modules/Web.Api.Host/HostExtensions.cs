@@ -32,10 +32,10 @@ namespace SpaceEngineers.Core.Web.Api.Host
 
             return (ITransportEndpointBuilder)builder
                .WithEndpointPluginAssemblies(assemblies)
-               .ModifyContainerOptions(options => options
-                   .WithManualRegistrations(new HttpContextAccessorManualRegistration(frameworkDependenciesProvider))
-                   .WithManualRegistrations(new JwtAuthenticationConfigurationManualRegistration(
-                        JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
+               .ModifyContainerOptions(options => options.WithManualRegistrations(
+                       new HttpContextAccessorManualRegistration(frameworkDependenciesProvider),
+                       new JwtSecurityTokenHandlerManualRegistration(),
+                       new JwtAuthenticationConfigurationManualRegistration(JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
         }
     }
 }

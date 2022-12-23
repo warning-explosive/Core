@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using AuthEndpoint.Contract;
     using Basics;
@@ -48,7 +49,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .AddJsonFile(authEndpointConfigurationFilePath)
                .Build();
 
-            var tokenProvider = new JwtTokenProvider(authEndpointConfiguration.GetJwtAuthenticationConfiguration());
+            var tokenProvider = new JwtTokenProvider(new JwtSecurityTokenHandler(), authEndpointConfiguration.GetJwtAuthenticationConfiguration());
 
             var token = tokenProvider.GenerateToken(username, permissions, TimeSpan.FromMinutes(5));
             Output.WriteLine(token);

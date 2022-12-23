@@ -21,7 +21,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         public void Verify()
         {
-            _typeProvider
+            var exceptions = new List<Exception>();
+
+            var infos = _typeProvider
                 .OurTypes
                 .Select(type =>
                 {
@@ -36,8 +38,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                         decorator);
                 })
                 .Where(info => info.IsVerificationRequired())
-                .Where(info => !info.TypeHasCorrectlyDefinedInterfaces())
-                .Each(info => throw new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} interfaces configuration"));
+                .Where(info => !info.TypeHasCorrectlyDefinedInterfaces());
+
+            foreach (var info in infos)
+            {
+                exceptions.Add(new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} interfaces configuration"));
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
         private class ComponentInterfacesInfo

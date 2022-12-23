@@ -42,6 +42,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Common\CompositionRoot\CompositionRoot.csproj" />
       <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Contract\AuthEndpoint.Contract.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization\GenericEndpoint.Authorization.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport\IntegrationTransport.csproj" />
       <ProjectReference Include="..\JwtAuthentication\JwtAuthentication.csproj" />
       <ProjectReference Include="..\Web.Api\Web.Api.csproj" />

@@ -34,13 +34,15 @@ namespace SpaceEngineers.Core.Web.Auth
 
         public void Verify()
         {
+            var exceptions = new List<Exception>();
+
             var controllers = AssembliesExtensions
                 .AllAssembliesFromCurrentDomain()
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(type => typeof(ControllerBase).IsAssignableFrom(type) && type.IsConcreteType())
                 .ToList();
 
-            VerifyControllers(controllers);
+            VerifyControllers(controllers, exceptions);
 
             _features = controllers
                 .ToDictionary(
@@ -59,30 +61,41 @@ namespace SpaceEngineers.Core.Web.Auth
                             grp => grp
                                 .ToDictionary(
                                     pair => pair.verb,
-                                    pair => GetFeatures(controller, pair.action),
+                                    pair => GetFeatures(controller, pair.action, exceptions),
                                     StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyCollection<string>>,
                             StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyCollection<string>>>,
                     StringComparer.OrdinalIgnoreCase);
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
-        private static void VerifyControllers(IReadOnlyCollection<Type> controllers)
+        private static void VerifyControllers(
+            IEnumerable<Type> controllers,
+            ICollection<Exception> exceptions)
         {
-            controllers
-                .Where(controller => !controller.Name.EndsWith("Controller", StringComparison.Ordinal))
-                .Each(controller => throw new InvalidOperationException($"Controller {controller.FullName} should have type name with suffix 'Controller'"));
-
             var uniqueControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var controller in controllers)
             {
+                if (!controller.Name.EndsWith("Controller", StringComparison.Ordinal))
+                {
+                    exceptions.Add(new InvalidOperationException($"Web-api controller {controller.FullName} should have type name with suffix 'Controller'"));
+                }
+
                 if (!uniqueControllers.Add(GetControllerName(controller)))
                 {
-                    throw new InvalidOperationException($"Web-api controller {controller.FullName} should have unique name");
+                    exceptions.Add(new InvalidOperationException($"Web-api controller {controller.FullName} should have unique name"));
                 }
             }
         }
 
-        private static IReadOnlyCollection<string> GetFeatures(Type controller, MethodInfo action)
+        private static IReadOnlyCollection<string> GetFeatures(
+            Type controller,
+            MethodInfo action,
+            ICollection<Exception> exceptions)
         {
             if (controller.GetAttribute<AllowAnonymousAttribute>() != null
                 || action.GetCustomAttribute<AllowAnonymousAttribute>() != null)
@@ -96,7 +109,7 @@ namespace SpaceEngineers.Core.Web.Auth
             if ((actionFeatures == null || !actionFeatures.Any())
                 && (controllerFeatures == null || !controllerFeatures.Any()))
             {
-                throw new InvalidOperationException($"Web-api method {action.Name} or containing controller {controller.FullName} should be marked with {nameof(FeatureAttribute)}");
+                exceptions.Add(new InvalidOperationException($"Web-api method {action.Name} or containing controller {controller.FullName} should be marked with {nameof(FeatureAttribute)}"));
             }
 
             return (actionFeatures ?? Enumerable.Empty<string>())

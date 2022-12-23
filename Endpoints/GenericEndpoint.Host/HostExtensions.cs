@@ -154,11 +154,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             return new EndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
-                   .WithManualRegistrations(integrationTransportInjection)
-                   .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
-                   .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
-                   .WithManualRegistrations(new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider))
-                   .WithManualRegistrations(new GenericEndpointHostStartupActionManualRegistration())
+                   .WithManualRegistrations(
+                       integrationTransportInjection,
+                       new GenericEndpointIdentityManualRegistration(endpointIdentity),
+                       new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                       new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
+                       new GenericEndpointHostStartupActionManualRegistration())
                    .WithOverrides(new SettingsProviderOverride())
                    .WithManualVerification(true));
         }

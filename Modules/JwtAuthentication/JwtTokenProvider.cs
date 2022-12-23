@@ -17,10 +17,14 @@ namespace SpaceEngineers.Core.JwtAuthentication
     {
         private const string PermissionsClaim = "Permissions";
 
+        private readonly JwtSecurityTokenHandler _tokenHandler;
         private readonly JwtAuthenticationConfiguration _configuration;
 
-        public JwtTokenProvider(JwtAuthenticationConfiguration configuration)
+        public JwtTokenProvider(
+            JwtSecurityTokenHandler tokenHandler,
+            JwtAuthenticationConfiguration configuration)
         {
+            _tokenHandler = tokenHandler;
             _configuration = configuration;
         }
 
@@ -49,18 +53,14 @@ namespace SpaceEngineers.Core.JwtAuthentication
                 Audience = _configuration.Audience
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var securityToken = _tokenHandler.CreateToken(tokenDescriptor);
 
-            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(securityToken);
+            return _tokenHandler.WriteToken(securityToken);
         }
 
         public string GetUsername(string token)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var claims = tokenHandler.ValidateToken(token, _configuration.TokenValidationParameters, out _);
+            var claims = _tokenHandler.ValidateToken(token, _configuration.TokenValidationParameters, out _);
 
             return claims
                 .Identity
@@ -70,9 +70,7 @@ namespace SpaceEngineers.Core.JwtAuthentication
 
         public IReadOnlyCollection<string> GetPermissions(string token)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var claims = tokenHandler.ValidateToken(token, _configuration.TokenValidationParameters, out _);
+            var claims = _tokenHandler.ValidateToken(token, _configuration.TokenValidationParameters, out _);
 
             return claims
                 .Claims

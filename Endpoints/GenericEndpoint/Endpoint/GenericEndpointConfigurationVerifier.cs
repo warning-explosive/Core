@@ -44,41 +44,53 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         /// <inheritdoc />
         public void Verify()
         {
-            VerifyLogicalName(_endpointIdentity);
+            var exceptions = new List<Exception>();
 
-            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointCommands());
-            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EventsSubscriptions());
-            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointQueries());
-            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.RepliesSubscriptions());
+            VerifyEndpointLogicalName(_endpointIdentity, exceptions);
 
-            VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes());
-            VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes());
-            VerifyModifiers(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointCommands(), exceptions);
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EventsSubscriptions(), exceptions);
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointQueries(), exceptions);
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.RepliesSubscriptions(), exceptions);
 
-            VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes());
-            MessageTypesHaveMissingPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes());
+            VerifyModifiers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
+            VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
+            VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
+            VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
+            VerifyPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
 
-            VerifyMessageHandlersLifestyle();
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()), exceptions);
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()), exceptions);
 
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()));
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()));
+            VerifyMessageHandlersLifestyle(exceptions);
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
-        private static void VerifyLogicalName(EndpointIdentity endpointIdentity)
+        private static void VerifyEndpointLogicalName(
+            EndpointIdentity endpointIdentity,
+            ICollection<Exception> exceptions)
         {
             var pattern = new Regex("[^a-zA-Z\\d]", RegexOptions.Compiled);
 
             if (pattern.IsMatch(endpointIdentity.LogicalName))
             {
-                throw new InvalidOperationException($"Endpoint {endpointIdentity} should have only letters in logical name");
+                exceptions.Add(new InvalidOperationException($"Endpoint {endpointIdentity} logical name should contain only letters and digits"));
             }
         }
 
-        private static void VerifyMessageNames(EndpointIdentity endpointIdentity, IEnumerable<Type> messageTypes)
+        private static void VerifyMessageNames(
+            EndpointIdentity endpointIdentity,
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            messageTypes
-                .Where(type => HasWrongName(endpointIdentity, type))
-                .Each(type => throw new InvalidOperationException($"Message name {type.FullName} should be less or equal than 255 bytes"));
+            foreach (var messageType in messageTypes.Where(type => HasWrongName(endpointIdentity, type)))
+            {
+                exceptions.Add(new InvalidOperationException($"Message name {messageType.FullName} should be less or equal than 255 bytes"));
+            }
 
             static bool HasWrongName(EndpointIdentity endpointIdentity, Type type)
             {
@@ -89,24 +101,32 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        private static void VerifyMessageInterfaces(IEnumerable<Type> messageTypes)
+        private static void VerifyMessageInterfaces(
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            messageTypes
-                .Where(ImplementsSeveralSpecializedInterfaces)
-                .Each(type => throw new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, query, event or just message)"));
-
-            static bool ImplementsSeveralSpecializedInterfaces(Type type)
+            foreach (var messageType in messageTypes.Where(ImplementsSeveralSpecializedInterfaces().Not()))
             {
-                var sum = typeof(IIntegrationCommand).IsAssignableFrom(type).Bit()
-                          + typeof(IIntegrationEvent).IsAssignableFrom(type).Bit()
-                          + typeof(IIntegrationReply).IsAssignableFrom(type).Bit()
-                          + type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)).Bit();
+                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} must implement only one specialized interface (command, query, event or just message)"));
+            }
 
-                return sum > 1;
+            static Func<Type, bool> ImplementsSeveralSpecializedInterfaces()
+            {
+                return type =>
+                {
+                    var sum = type.IsCommand().Bit()
+                              + type.IsEvent().Bit()
+                              + type.IsQuery().Bit()
+                              + type.IsReply().Bit();
+
+                    return sum == 1;
+                };
             }
         }
 
-        private static void VerifyOwnedAttribute(IReadOnlyCollection<Type> messageTypes)
+        private static void VerifyOwnedAttribute(
+            IReadOnlyCollection<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
             foreach (var messageType in messageTypes)
             {
@@ -115,85 +135,88 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                     continue;
                 }
 
-                if (!typeof(IIntegrationReply).IsAssignableFrom(messageType))
+                if (messageType.IsReply()
+                    && !messageTypes.Any(type => messageType.IsReplyOnQuery(type)))
                 {
-                    _ = messageType.GetRequiredAttribute<OwnedByAttribute>();
+                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should have at least one corresponding {nameof(IIntegrationQuery<IIntegrationReply>)}"));
                 }
-                else
+
+                if (messageType.IsReply()
+                    && messageType.HasAttribute<OwnedByAttribute>())
                 {
-                    if (messageType.HasAttribute<OwnedByAttribute>())
-                    {
-                        throw new InvalidOperationException($"Reply should not have {nameof(OwnedByAttribute)}");
-                    }
+                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should not be marked by {nameof(OwnedByAttribute)}"));
+                }
 
-                    var integrationQuery = typeof(IIntegrationQuery<>).MakeGenericType(messageType);
-
-                    var queryTypes = messageTypes
-                       .Where(type => integrationQuery.IsAssignableFrom(type))
-                       .ToList();
-
-                    if (queryTypes.Count == 0)
-                    {
-                        throw new InvalidOperationException($"Reply should have at least one corresponding {nameof(IIntegrationQuery<IIntegrationReply>)}");
-                    }
+                if (!messageType.IsReply()
+                    && !messageType.HasAttribute<OwnedByAttribute>())
+                {
+                    exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} should be marked by {nameof(OwnedByAttribute)} in order to provide automatic service discovery"));
                 }
             }
         }
 
-        private static void VerifyModifiers(IReadOnlyCollection<Type> messageTypes)
+        private void VerifyConstructors(
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes)
+            foreach (var messageType in messageTypes.Where(type => HasWrongConstructors(type, _constructorResolutionBehavior)))
             {
-                if (messageType.IsRecord())
-                {
-                    continue;
-                }
+                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} should have one public constructor"));
+            }
 
-                throw new InvalidOperationException($"Type {messageType} should be defined as record");
+            static bool HasWrongConstructors(Type messageType, IConstructorResolutionBehavior constructorResolutionBehavior)
+            {
+                return messageType.IsConcreteType() && !constructorResolutionBehavior.TryGetConstructor(messageType, out _);
             }
         }
 
-        private void VerifyConstructors(IEnumerable<Type> messageTypes)
+        private static void VerifyModifiers(
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            messageTypes
-               .Where(messageType => messageType.IsConcreteType())
-               .Where(messageType => !_constructorResolutionBehavior.TryGetConstructor(messageType, out _))
-               .Each(messageType => throw new InvalidOperationException($"Message {messageType.FullName} should have one public constructor"));
+            foreach (var messageType in messageTypes.Where(messageType => !messageType.IsRecord()))
+            {
+                exceptions.Add(new InvalidOperationException($"Type {messageType} should be defined as record"));
+            }
         }
 
-        private static void MessageTypesHaveMissingPropertyInitializers(IEnumerable<Type> messageTypes)
+        private static void VerifyPropertyInitializers(
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            messageTypes
-               .Where(messageType => messageType.IsConcreteType())
-               .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
-               .Where(property => !property.IsEqualityContract())
-               .Where(property => !(property.HasInitializer() && property.SetIsAccessible()))
-               .Each(property => throw new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
+            var properties = messageTypes
+                .Where(messageType => messageType.IsConcreteType())
+                .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
+                .Where(property => !property.IsEqualityContract())
+                .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
+
+            foreach (var property in properties)
+            {
+                exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
+            }
         }
 
-        private void VerifyMessageHandlersLifestyle()
+        private void VerifyMessageHandlersLifestyle(ICollection<Exception> exceptions)
         {
             var lifestyleViolations = _registrations
                 .Resolvable()
                 .Where(info => info.Lifestyle != EnLifestyle.Transient)
                 .RegisteredComponents()
-                .Where(info => info.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)))
-                .ToList();
+                .Where(info => info.IsSubclassOfOpenGeneric(typeof(IMessageHandler<>)));
 
-            if (lifestyleViolations.Any())
+            foreach (var lifestyleViolation in lifestyleViolations)
             {
-                throw new InvalidOperationException($"Message handlers {lifestyleViolations.ToString(", ", type => type.FullName)} should have transient lifestyle");
+                exceptions.Add(new InvalidOperationException($"Message handler {lifestyleViolation.FullName} should have transient lifestyle"));
             }
         }
 
-        private void VerifyHandlerExistence(IEnumerable<Type> messageTypes)
+        private void VerifyHandlerExistence(
+            IEnumerable<Type> messageTypes,
+            ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes)
+            foreach (var messageType in messageTypes.Where(messageType => !messageType.HasMessageHandler(_registrations)))
             {
-                if (!messageType.HasMessageHandler(_registrations))
-                {
-                    throw new InvalidOperationException($"Message '{messageType.FullName}' should have at least one message handler");
-                }
+                exceptions.Add(new InvalidOperationException($"Message '{messageType.FullName}' should have at least one message handler"));
             }
         }
     }

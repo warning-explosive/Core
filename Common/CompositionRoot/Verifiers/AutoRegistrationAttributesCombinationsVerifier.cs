@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -20,7 +21,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         public void Verify()
         {
-            _typeProvider
+            var exceptions = new List<Exception>();
+
+            var infos = _typeProvider
                 .OurTypes
                 .Select(type =>
                 {
@@ -32,8 +35,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                     return new ComponentAttributesInfo(type, component, manuallyRegistered, unregistered, componentOverride);
                 })
                 .Where(it => it.IsVerificationRequired())
-                .Where(TypeHasCorrectlyDefinedAttributes().Not())
-                .Each(info => throw new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} attributes configuration"));
+                .Where(TypeHasCorrectlyDefinedAttributes().Not());
+
+            foreach (var info in infos)
+            {
+                exceptions.Add(new InvalidOperationException($"Type {info.Type} has invalid {nameof(AutoRegistration)}.{nameof(AutoRegistration.Api)} attributes configuration"));
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
         private static Func<ComponentAttributesInfo, bool> TypeHasCorrectlyDefinedAttributes()

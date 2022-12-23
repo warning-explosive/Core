@@ -28,7 +28,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
 
         protected override void VerifyInternal(IReadOnlyCollection<Type> registeredComponents)
         {
-            _typeProvider
+            var exceptions = new List<Exception>();
+
+            var infos = _typeProvider
                .OurTypes
                .Select(type =>
                {
@@ -39,8 +41,17 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                .Where(info => info.attribute != null)
                .SelectMany(info => GetAutoRegistrationServices(info.implementation)
                    .Select(service => (service, info.implementation, info.attribute)))
-               .Where(info => !Registered(registeredComponents, info))
-               .Each(info => throw new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));
+               .Where(info => !Registered(registeredComponents, info));
+
+            foreach (var info in infos)
+            {
+                exceptions.Add(new InvalidOperationException($"{info.implementation.FullName} should be manually registered in the dependency container as {info.service.FullName}. Justification: {info.attribute.Justification}"));
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
         private bool Registered(

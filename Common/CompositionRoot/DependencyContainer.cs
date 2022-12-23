@@ -290,10 +290,10 @@ namespace SpaceEngineers.Core.CompositionRoot
                 autoRegistrations,
                 manualRegistrations);
 
-            _options = _options
-                .WithManualRegistrations(new TypeProviderManualRegistration(typeProvider, servicesProvider))
-                .WithManualRegistrations(new DependencyContainerManualRegistration(this, _options))
-                .WithManualRegistrations(new RegistrationsContainerManualRegistration(registrations, overrides));
+            _options = _options.WithManualRegistrations(
+                    new TypeProviderManualRegistration(typeProvider, servicesProvider),
+                    new DependencyContainerManualRegistration(this, _options),
+                    new RegistrationsContainerManualRegistration(registrations, overrides));
 
             _options.ManualRegistrations.Each(registration => registration.Register(manualRegistrations));
             _options.Overrides.Each(overrideInfo => overrideInfo.RegisterOverrides(overrides));

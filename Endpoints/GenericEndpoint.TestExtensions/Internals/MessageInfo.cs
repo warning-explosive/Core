@@ -1,7 +1,8 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
-    using Basics;
+    using System;
     using Contract.Abstractions;
+    using Contract.Extensions;
 
     internal class MessageInfo
     {
@@ -18,22 +19,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         public static MessageInfo Prepare<T>()
             where T : IIntegrationMessage
         {
-            if (typeof(IIntegrationCommand).IsAssignableFrom(typeof(T)))
+            if (typeof(T).IsCommand())
             {
                 return new MessageInfo("send", "commands");
             }
 
-            if (typeof(T).IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>)))
+            if (typeof(T).IsQuery())
             {
                 return new MessageInfo("request", "queries");
             }
 
-            if (typeof(IIntegrationEvent).IsAssignableFrom(typeof(T)))
+            if (typeof(T).IsReply())
+            {
+                return new MessageInfo("produce", "replies");
+            }
+
+            if (typeof(T).IsEvent())
             {
                 return new MessageInfo("publish", "events");
             }
 
-            return new MessageInfo("produce", "messages");
+            throw new InvalidOperationException($"Unsupported message type {typeof(T)}");
         }
     }
 }

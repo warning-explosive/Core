@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Extensions
 {
-    using Basics;
-    using Contract.Abstractions;
+    using Contract.Extensions;
 
     /// <summary>
     /// IntegrationMessage extensions
@@ -9,55 +8,54 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Extensions
     public static class IntegrationMessageExtensions
     {
         /// <summary>
-        /// Is the IntegrationMessage a command
+        /// Does IntegrationMessage represent an IIntegrationCommand
         /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <returns>IntegrationMessage is a command or not</returns>
+        /// <param name="message">IntegrationMessage</param>
+        /// <returns>IntegrationMessage type is an IIntegrationCommand or not</returns>
         public static bool IsCommand(this IntegrationMessage message)
         {
-            return typeof(IIntegrationCommand).IsAssignableFrom(message.ReflectedType);
+            return message.ReflectedType.IsCommand();
         }
 
         /// <summary>
-        /// Is the IntegrationMessage an event
+        /// Does IntegrationMessage represent an IIntegrationEvent
         /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <returns>IntegrationMessage is an event or not</returns>
+        /// <param name="message">IntegrationMessage</param>
+        /// <returns>IntegrationMessage type is an IIntegrationEvent or not</returns>
         public static bool IsEvent(this IntegrationMessage message)
         {
-            return typeof(IIntegrationEvent).IsAssignableFrom(message.ReflectedType);
+            return message.ReflectedType.IsEvent();
         }
 
         /// <summary>
-        /// Is the IntegrationMessage a reply
+        /// Does IntegrationMessage represent an IIntegrationQuery
         /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <returns>IntegrationMessage is a reply or not</returns>
-        public static bool IsReply(this IntegrationMessage message)
-        {
-            return typeof(IIntegrationReply).IsAssignableFrom(message.ReflectedType);
-        }
-
-        /// <summary>
-        /// Is the IntegrationMessage a reply
-        /// </summary>
-        /// <param name="reply">Integration reply</param>
-        /// <param name="query">Integration query</param>
-        /// <returns>IntegrationMessage is a reply or not</returns>
-        public static bool IsReplyOnQuery(this IntegrationMessage reply, IntegrationMessage query)
-        {
-            return typeof(IIntegrationReply).IsAssignableFrom(reply.ReflectedType)
-                && typeof(IIntegrationQuery<>).MakeGenericType(reply.ReflectedType).IsAssignableFrom(query.ReflectedType);
-        }
-
-        /// <summary>
-        /// Is the IntegrationMessage a query
-        /// </summary>
-        /// <param name="message">Integration message</param>
-        /// <returns>IntegrationMessage is a query or not</returns>
+        /// <param name="message">IntegrationMessage</param>
+        /// <returns>IntegrationMessage type is an IIntegrationQuery or not</returns>
         public static bool IsQuery(this IntegrationMessage message)
         {
-            return message.ReflectedType.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>));
+            return message.ReflectedType.IsQuery();
+        }
+
+        /// <summary>
+        /// Does IntegrationMessage represent an IIntegrationReply
+        /// </summary>
+        /// <param name="message">IntegrationMessage</param>
+        /// <returns>IntegrationMessage type is an IIntegrationReply or not</returns>
+        public static bool IsReply(this IntegrationMessage message)
+        {
+            return message.ReflectedType.IsReply();
+        }
+
+        /// <summary>
+        /// Does IntegrationMessage represent an IIntegrationReply on IIntegrationQuery
+        /// </summary>
+        /// <param name="reply">Reply message</param>
+        /// <param name="query">Query message</param>
+        /// <returns>IntegrationMessage is an IIntegrationReply on IIntegrationQuery or not</returns>
+        public static bool IsReplyOnQuery(this IntegrationMessage reply, IntegrationMessage query)
+        {
+            return reply.ReflectedType.IsReplyOnQuery(query.ReflectedType);
         }
     }
 }

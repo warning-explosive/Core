@@ -36,8 +36,9 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
                 new EndpointIdentity(AuthEndpointIdentity.LogicalName, Guid.NewGuid().ToString()),
                 (_, endpointBuilder) => optionsFactory(endpointBuilder
                     .WithEndpointPluginAssemblies(assemblies)
-                    .ModifyContainerOptions(options => options.WithManualRegistrations(new JwtAuthenticationConfigurationManualRegistration(
-                        JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())))));
+                    .ModifyContainerOptions(options => options.WithManualRegistrations(
+                            new JwtSecurityTokenHandlerManualRegistration(),
+                            new JwtAuthenticationConfigurationManualRegistration(JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())))));
         }
     }
 }

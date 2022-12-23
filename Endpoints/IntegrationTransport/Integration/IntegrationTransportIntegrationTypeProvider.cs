@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
             IReadOnlyCollection<Type> InitRepliesSubscriptions()
             {
                 return IntegrationMessageTypes()
-                   .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type)
+                   .Where(type => type.IsReply()
                                && !type.IsMessageContractAbstraction())
                    .ToList();
             }

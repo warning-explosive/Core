@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Basics;
@@ -26,208 +25,175 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 
         public void Verify()
         {
-            _typeProvider
+            var exceptions = new List<Exception>();
+
+            var aggregates = _typeProvider
+                .OurTypes
+                .Where(type => typeof(IAggregate).IsAssignableFrom(type) && type.IsConcreteType());
+
+            VerifyAggregates(aggregates, exceptions);
+
+            var domainEvents = _typeProvider
                .OurTypes
-               .Where(type => typeof(IAggregate).IsAssignableFrom(type)
-                           && type.IsConcreteType())
-               .SelectMany(VerifyAggregate)
-               .Each(exception => throw exception.Rethrow());
+               .Where(type => typeof(IDomainEvent).IsAssignableFrom(type) && type.IsConcreteType());
 
-            _typeProvider
+            VerifyDomainEvents(domainEvents, exceptions);
+
+            var domainEntities = _typeProvider
                .OurTypes
-               .Where(type => typeof(IDomainEvent).IsAssignableFrom(type)
-                           && type.IsConcreteType())
-               .SelectMany(VerifyDomainEvent)
-               .Each(exception => throw exception.Rethrow());
+               .Where(type => typeof(IEntity).IsAssignableFrom(type) && type.IsConcreteType());
 
-            _typeProvider
+            VerifyDomainEntities(domainEntities, exceptions);
+
+            var valueObjects = _typeProvider
                .OurTypes
-               .Where(type => typeof(IEntity).IsAssignableFrom(type)
-                           && type.IsConcreteType())
-               .SelectMany(VerifyDomainEntity)
-               .Each(exception => throw exception.Rethrow());
+               .Where(type => typeof(IValueObject).IsAssignableFrom(type) && type.IsConcreteType());
 
-            _typeProvider
-               .OurTypes
-               .Where(type => typeof(IValueObject).IsAssignableFrom(type)
-                           && type.IsConcreteType())
-               .SelectMany(VerifyValueObject)
-               .Each(exception => throw exception.Rethrow());
+            VerifyValueObjects(valueObjects, exceptions);
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
         }
 
-        private static IEnumerable<Exception> VerifyAggregate(Type type)
+        private static void VerifyAggregates(
+            IEnumerable<Type> aggregates,
+            ICollection<Exception> exceptions)
         {
-            if (IsNotImplementOpenGeneric(type, typeof(IAggregate<>), out var implementationException))
+            foreach (var aggregate in aggregates)
             {
-                yield return implementationException;
+                if (!aggregate.IsSubclassOfOpenGeneric(typeof(IAggregate<>)))
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {aggregate.FullName} should implement {typeof(IAggregate<>).FullName}"));
+                }
+
+                VerifyConstructors(aggregate, exceptions);
+                VerifyPublicMutableProperties(aggregate, exceptions);
             }
 
-            if (AggregateHasMissingDefaultCctor(type, out var missingConstructorException))
+            static void VerifyConstructors(
+                Type aggregate,
+                ICollection<Exception> exceptions)
             {
-                yield return missingConstructorException;
+                var parameterType = typeof(Array)
+                    .CallMethod(nameof(Array.Empty))
+                    .WithTypeArgument(typeof(IDomainEvent<>).MakeGenericType(aggregate))
+                    .Invoke()
+                    .GetType();
+
+                var cctor = aggregate
+                    .GetConstructors()
+                    .SingleOrDefault(info => info.IsPublic
+                                             && info.GetParameters().Length == 1
+                                             && info.GetParameters().Single().ParameterType == parameterType);
+
+                if (cctor == null)
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {aggregate.FullName} should have one public constructor with required parameter {parameterType.FullName}"));
+                }
             }
 
-            foreach (var mutablePropertyException in AggregateHasPublicMutableProperties(type))
+            static void VerifyPublicMutableProperties(
+                Type aggregate,
+                ICollection<Exception> exceptions)
             {
-                yield return mutablePropertyException;
+                var properties = aggregate
+                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty)
+                    .Where(property => property.SetMethod != null && property.SetIsAccessible());
+
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have no setter or have private one so as to grant aggregate immutability and behavior based design"));
+                }
             }
         }
 
-        private static IEnumerable<Exception> VerifyDomainEvent(Type domainEvent)
+        private static void VerifyDomainEvents(
+            IEnumerable<Type> domainEvents,
+            ICollection<Exception> exceptions)
         {
-            if (TypeHasWrongModifier(domainEvent, out var modifierException))
+            foreach (var domainEvent in domainEvents)
             {
-                yield return modifierException;
+                if (!domainEvent.IsSubclassOfOpenGeneric(typeof(IDomainEvent<>)))
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {domainEvent.FullName} should implement {typeof(IDomainEvent<>).FullName}"));
+                }
+
+                VerifyWrongModifiers(domainEvent, exceptions);
+                VerifyMissingPropertyInitializers(domainEvent, exceptions);
+                VerifyMultipleAggregates(domainEvent, exceptions);
+                VerifyAggregateInterfaces(domainEvent, exceptions);
             }
 
-            if (IsNotImplementOpenGeneric(domainEvent, typeof(IDomainEvent<>), out var implementationException))
+            static void VerifyWrongModifiers(
+                Type type,
+                ICollection<Exception> exceptions)
             {
-                yield return implementationException;
+                if (!type.IsRecord())
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
+                }
             }
 
-            if (DomainEventHasMultipleAggregates(domainEvent, out var multipleAggregatesException))
+            static void VerifyMultipleAggregates(
+                Type domainEvent,
+                ICollection<Exception> exceptions)
             {
-                yield return multipleAggregatesException;
+                if (domainEvent.ExtractGenericArgumentsAt(typeof(IDomainEvent<>)).Count() > 1)
+                {
+                    exceptions.Add(new InvalidOperationException($"Domain event {domainEvent.FullName} shouldn't have multiple implementations of {typeof(IDomainEvent<>).FullName} abstraction"));
+                }
             }
 
-            var aggregate = domainEvent.ExtractGenericArgumentAt(typeof(IDomainEvent<>));
-
-            if (AggregateHasNoDomainEvent(aggregate, domainEvent, out var aggregateHasNoDomainEventException))
+            static void VerifyAggregateInterfaces(
+                Type domainEvent,
+                ICollection<Exception> exceptions)
             {
-                yield return aggregateHasNoDomainEventException;
-            }
+                var aggregate = domainEvent.ExtractGenericArgumentAt(typeof(IDomainEvent<>));
 
-            foreach (var initializerException in DomainObjectHasMissingPropertyInitializers(domainEvent))
-            {
-                yield return initializerException;
+                var hasDomainEvent = typeof(IHasDomainEvent<,>).MakeGenericType(aggregate, domainEvent);
+
+                if (!hasDomainEvent.IsAssignableFrom(aggregate))
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {aggregate} should implement {hasDomainEvent}"));
+                }
             }
         }
 
-        private static IEnumerable<Exception> VerifyDomainEntity(Type domainEntity)
+        private static void VerifyDomainEntities(
+            IEnumerable<Type> domainEntities,
+            ICollection<Exception> exceptions)
         {
-            foreach (var initializerException in DomainObjectHasMissingPropertyInitializers(domainEntity))
+            foreach (var domainEntity in domainEntities)
             {
-                yield return initializerException;
+                VerifyMissingPropertyInitializers(domainEntity, exceptions);
             }
         }
 
-        private static IEnumerable<Exception> VerifyValueObject(Type valueObject)
+        private static void VerifyValueObjects(
+            IEnumerable<Type> valueObjects,
+            ICollection<Exception> exceptions)
         {
-            foreach (var initializerException in DomainObjectHasMissingPropertyInitializers(valueObject))
+            foreach (var valueObject in valueObjects)
             {
-                yield return initializerException;
+                VerifyMissingPropertyInitializers(valueObject, exceptions);
             }
         }
 
-        private static bool TypeHasWrongModifier(
+        private static void VerifyMissingPropertyInitializers(
             Type type,
-            [NotNullWhen(true)] out Exception? exception)
+            ICollection<Exception> exceptions)
         {
-            if (type.IsRecord())
-            {
-                exception = default;
-                return false;
-            }
-
-            exception = new InvalidOperationException($"Type {type} should be defined as record");
-            return true;
-        }
-
-        private static bool IsNotImplementOpenGeneric(
-            Type type,
-            Type openGeneric,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            if (!type.IsSubclassOfOpenGeneric(openGeneric))
-            {
-                exception = new InvalidOperationException($"Type {type} should implement {openGeneric}");
-                return true;
-            }
-
-            exception = null;
-            return false;
-        }
-
-        private static bool AggregateHasMissingDefaultCctor(
-            Type aggregate,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            var parameterType = typeof(Array)
-               .CallMethod(nameof(Array.Empty))
-               .WithTypeArgument(typeof(IDomainEvent<>).MakeGenericType(aggregate))
-               .Invoke()
-               .GetType();
-
-            var cctor = aggregate
-               .GetConstructors()
-               .SingleOrDefault(info => info.IsPublic
-                                        && info.GetParameters().Length == 1
-                                        && info.GetParameters().Single().ParameterType == parameterType);
-
-            if (cctor == null)
-            {
-                exception = new InvalidOperationException($"Type {aggregate.FullName} should have one public constructor with required parameter {parameterType.FullName}");
-                return true;
-            }
-
-            exception = null;
-            return false;
-        }
-
-        private static IEnumerable<Exception> AggregateHasPublicMutableProperties(Type aggregate)
-        {
-            var properties = aggregate
-               .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty)
-               .Where(property => property.SetMethod != null && property.SetIsAccessible());
-
-            foreach (var property in properties)
-            {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have no setter or have private one so as to grant aggregate immutability and behavior based design");
-            }
-        }
-
-        private static bool DomainEventHasMultipleAggregates(
-            Type domainEvent,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            if (domainEvent.ExtractGenericArgumentsAt(typeof(IDomainEvent<>)).Count() > 1)
-            {
-                exception = new InvalidOperationException($"Domain event {domainEvent.FullName} shouldn't have multiple implementations of {typeof(IDomainEvent<>).FullName} abstraction");
-                return true;
-            }
-
-            exception = null;
-            return false;
-        }
-
-        private static IEnumerable<Exception> DomainObjectHasMissingPropertyInitializers(Type domainEvent)
-        {
-            var properties = domainEvent
+            var properties = type
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
-               .Where(property => !property.Name.Equals("EqualityContract", StringComparison.OrdinalIgnoreCase))
+               .Where(property => !property.IsEqualityContract())
                .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
 
             foreach (var property in properties)
             {
-                yield return new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable");
+                exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
             }
-        }
-
-        private static bool AggregateHasNoDomainEvent(
-            Type aggregate,
-            Type domainEvent,
-            [NotNullWhen(true)] out Exception? exception)
-        {
-            var hasDomainEvent = typeof(IHasDomainEvent<,>).MakeGenericType(aggregate, domainEvent);
-
-            if (!hasDomainEvent.IsAssignableFrom(aggregate))
-            {
-                exception = new InvalidOperationException($"Type {aggregate} should implement {hasDomainEvent}");
-                return true;
-            }
-
-            exception = null;
-            return false;
         }
     }
 }

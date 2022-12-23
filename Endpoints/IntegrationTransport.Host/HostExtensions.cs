@@ -187,11 +187,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                    .WithAdditionalOurTypes(integrationMessageTypes)
                    .WithAdditionalOurTypes(aggregates)
                    .WithAdditionalOurTypes(domainEvents)
-                   .WithManualRegistrations(new GenericEndpointIdentityManualRegistration(endpointIdentity))
-                   .WithManualRegistrations(new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider))
-                   .WithManualRegistrations(new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider))
-                   .WithManualRegistrations(new GenericEndpointHostStartupActionManualRegistration())
-                   .WithManualRegistrations(new IntegrationTransportHostBackgroundWorkerManualRegistration())
+                   .WithManualRegistrations(
+                       new GenericEndpointIdentityManualRegistration(endpointIdentity),
+                       new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                       new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
+                       new GenericEndpointHostStartupActionManualRegistration(),
+                       new IntegrationTransportHostBackgroundWorkerManualRegistration())
                    .WithOverrides(new SettingsProviderOverride())
                    .WithOverrides(new IntegrationTransportOverride())
                    .WithManualVerification(true));

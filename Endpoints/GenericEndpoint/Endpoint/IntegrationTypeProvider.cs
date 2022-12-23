@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CompositionRoot;
     using CompositionRoot.Registration;
     using Contract;
@@ -62,7 +61,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             IReadOnlyCollection<Type> InitEndpointCommands()
             {
                 return IntegrationMessageTypes()
-                    .Where(type => typeof(IIntegrationCommand).IsAssignableFrom(type)
+                    .Where(type => type.IsCommand()
                                    && !type.IsMessageContractAbstraction()
                                    && type.IsOwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
@@ -78,7 +77,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             IReadOnlyCollection<Type> InitEndpointQueries()
             {
                 return IntegrationMessageTypes()
-                    .Where(type => type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
+                    .Where(type => type.IsQuery()
                                    && !type.IsMessageContractAbstraction()
                                    && type.IsOwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))
@@ -94,7 +93,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             IReadOnlyCollection<Type> InitRepliesSubscriptions()
             {
                 return IntegrationMessageTypes()
-                    .Where(type => typeof(IIntegrationReply).IsAssignableFrom(type)
+                    .Where(type => type.IsReply()
                                    && !type.IsMessageContractAbstraction()
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
@@ -109,7 +108,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             IReadOnlyCollection<Type> InitEventsSubscriptions()
             {
                 return IntegrationMessageTypes()
-                    .Where(type => typeof(IIntegrationEvent).IsAssignableFrom(type)
+                    .Where(type => type.IsEvent()
                                    && type.HasMessageHandler(_registrations))
                     .ToList();
             }

@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using IntegrationTransport.Host;
 
     [OwnedBy(TransportEndpointIdentity.LogicalName)]
+    [Feature(nameof(Test))]
     internal record TransportEvent : IIntegrationEvent
     {
         public TransportEvent(int id)

@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class ReadRepository<TEntity> : IReadRepository<TEntity>,
                                              IResolvable<IReadRepository<TEntity>>
         where TEntity : IUniqueIdentified

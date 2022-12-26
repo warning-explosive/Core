@@ -10,9 +10,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.Registrations
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Register<QueryExpressionsCollector, QueryExpressionsCollector>(EnLifestyle.Scoped);
-            container.RegisterDecorator<IQueryProvider, QueryProviderDecorator>(EnLifestyle.Scoped);
-            container.RegisterDecorator<IAsyncQueryProvider, AsyncQueryProviderDecorator>(EnLifestyle.Scoped);
+            container.Register<QueryExpressionsCollector, QueryExpressionsCollector>(EnLifestyle.Singleton);
+            container.RegisterDecorator<IQueryProvider, QueryProviderDecorator>(EnLifestyle.Singleton);
+            container.RegisterDecorator<IAsyncQueryProvider, AsyncQueryProviderDecorator>(EnLifestyle.Singleton);
         }
     }
 }

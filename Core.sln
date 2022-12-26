@@ -139,6 +139,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.Api", "Benchmarks
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modules.Benchmark", "Benchmarks\Modules.Benchmark\Modules.Benchmark.csproj", "{6C377719-AD3D-40F7-B8BB-D7F4040B7233}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericHost.Benchmark", "Benchmarks\GenericHost.Benchmark\GenericHost.Benchmark.csproj", "{E6CD349F-A556-4F90-8382-77A4AA0EEA80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -382,6 +384,9 @@ Global
 		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8EAFDC7-76E5-4022-9A23-795FD1C60027}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -447,6 +452,7 @@ Global
 		{E3535BD7-4428-4289-9227-59154227FC08} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{C8EAFDC7-76E5-4022-9A23-795FD1C60027} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
+		{E6CD349F-A556-4F90-8382-77A4AA0EEA80} = {CAB2EF9F-1D44-4B12-AA3D-BE2E508E0351}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

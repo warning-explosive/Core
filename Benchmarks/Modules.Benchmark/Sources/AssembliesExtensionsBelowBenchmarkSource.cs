@@ -30,8 +30,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
             _belowAssembly = GetType().Assembly;
         }
 
-        /// <summary> DeepCopyBySerialization </summary>
-        /// <returns>Copy</returns>
+        /// <summary> AssembliesExtensions.Below </summary>
+        /// <returns>Below assemblies</returns>
         [Benchmark(Description = nameof(Below), Baseline = true)]
         public Assembly[] Below() => AllAssemblies.Below(BelowAssembly);
     }

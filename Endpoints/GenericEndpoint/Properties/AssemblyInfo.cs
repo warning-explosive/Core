@@ -9,3 +9,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]
+[assembly: InternalsVisibleTo("GenericHost.Benchmark")]

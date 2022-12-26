@@ -122,13 +122,16 @@ namespace SpaceEngineers.Core.Benchmark.Api
             Measure measure,
             Action<string> output)
         {
-            return summary.TimeMeasures(measure, output, timeUnit)[measureRecordName];
+            var timeMeasure = summary.TimeMeasures(measure, timeUnit)[measureRecordName];
+
+            output($"{measureRecordName} -> {measure} -> {timeMeasure} {timeUnit.Name}");
+
+            return timeMeasure;
         }
 
         private static IDictionary<string, decimal> TimeMeasures(
             this Summary summary,
             Measure measure,
-            Action<string> output,
             TimeUnit timeUnit)
         {
             var measureColumnName = measure.ToString();
@@ -151,21 +154,19 @@ namespace SpaceEngineers.Core.Benchmark.Api
             return summary
                   .BenchmarksCases
                   .ToDictionary(benchmarksCase => methodColumn.GetValue(summary, benchmarksCase),
-                      ParseTime(summary, methodColumn, measureColumn, measureColumnName, timeUnit, style, output));
+                      ParseTime(summary, methodColumn, measureColumn, measureColumnName, timeUnit, style));
 
-            static Func<BenchmarkCase, decimal> ParseTime(Summary summary,
+            static Func<BenchmarkCase, decimal> ParseTime(
+                Summary summary,
                 IColumn methodColumn,
                 IColumn measureColumn,
                 string measureColumnName,
                 TimeUnit timeUnit,
-                SummaryStyle style,
-                Action<string> output)
+                SummaryStyle style)
             {
                 return benchmarkCase =>
                 {
                     var measure = measureColumn.GetValue(summary, benchmarkCase, style);
-
-                    output($"{methodColumn.GetValue(summary, benchmarkCase)} -> {measureColumnName} -> {measure} {timeUnit.Name}");
 
                     return decimal.Parse(measure, CultureInfo.InvariantCulture);
                 };

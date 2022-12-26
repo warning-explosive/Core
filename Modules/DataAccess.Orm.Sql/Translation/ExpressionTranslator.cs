@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Expressions;
     using Model;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class ExpressionTranslator : IExpressionTranslator,
                                           IResolvable<IExpressionTranslator>
     {

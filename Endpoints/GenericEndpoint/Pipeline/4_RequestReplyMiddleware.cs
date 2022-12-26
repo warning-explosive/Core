@@ -17,14 +17,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     /// </summary>
     [Component(EnLifestyle.Singleton)]
     [After(typeof(HandledByEndpointMiddleware))]
-    public class RequestReplyValidationMiddleware : IMessageHandlerMiddleware,
-                                                    ICollectionResolvable<IMessageHandlerMiddleware>
+    public class RequestReplyMiddleware : IMessageHandlerMiddleware,
+                                          ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly IDependencyContainer _dependencyContainer;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
-        public RequestReplyValidationMiddleware(IDependencyContainer dependencyContainer)
+        public RequestReplyMiddleware(IDependencyContainer dependencyContainer)
         {
             _dependencyContainer = dependencyContainer;
         }

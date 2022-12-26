@@ -126,9 +126,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             static Func<IAdvancedIntegrationContext, CancellationToken, Task> Next(object messageHandler)
             {
-                return (context, cancellationToken) => messageHandler
+                return (context, token) => messageHandler
                     .CallMethod(nameof(IMessageHandler<IIntegrationMessage>.Handle))
-                    .WithArguments(context.Message.Payload, cancellationToken)
+                    .WithArguments(context.Message.Payload, token)
                     .Invoke<Task>();
             }
         }

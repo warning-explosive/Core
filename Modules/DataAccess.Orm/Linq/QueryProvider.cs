@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using Basics;
     using CompositionRoot;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class QueryProvider : IAsyncQueryProvider,
                                    IResolvable<IAsyncQueryProvider>,
                                    IResolvable<IQueryProvider>

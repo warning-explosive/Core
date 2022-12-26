@@ -39,15 +39,6 @@
     <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Pipeline\3_UnitOfWorkMiddleware.cs">
-      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Pipeline\1_RequestReplyValidationMiddleware">
-      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Pipeline\4_ErrorHandlingMiddleware.cs">
-      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
-    </Compile>
     <Compile Update="UnitOfWork\IntegrationUnitOfWork.cs">
       <DependentUpon>IIntegrationUnitOfWork.cs</DependentUpon>
     </Compile>
@@ -65,9 +56,6 @@
     </Compile>
     <Compile Update="UnitOfWork\OutboxDelivery.cs">
       <DependentUpon>IOutboxDelivery.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Pipeline\2_HandledByEndpointMiddleware.cs">
-      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
     <Compile Update="Pipeline\RetryErrorHandler.cs">
       <DependentUpon>IErrorHandler.cs</DependentUpon>
@@ -89,6 +77,18 @@
     </Compile>
     <Compile Update="Pipeline\MessageHandlerMiddlewareComposite.cs">
       <DependentUpon>IMessageHandlerMiddlewareComposite.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\1_ErrorHandlingMiddleware.cs">
+      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\2_UnitOfWorkMiddleware.cs">
+      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\3_HandledByEndpointMiddleware.cs">
+      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\4_RequestReplyMiddleware.cs">
+      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

@@ -7,3 +7,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.Test.WebApplication")]
+[assembly: InternalsVisibleTo("GenericHost.Benchmark")]

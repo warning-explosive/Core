@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Expressions;
     using Linq;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class QueryTranslator : IQueryTranslator,
                                      IResolvable<IQueryTranslator>
     {

@@ -856,8 +856,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             return async (_, token) =>
             {
+                var collector = dependencyContainer.Resolve<QueryExpressionsCollector>();
+                collector.Expressions.Clear();
+
                 var expression = (queryProducer(dependencyContainer) as IQueryable)?.Expression
-                              ?? dependencyContainer.Resolve<QueryExpressionsCollector>().Expressions.Single();
+                                 ?? collector.Expressions.Single();
 
                 var query = dependencyContainer
                    .Resolve<IQueryProvider>()

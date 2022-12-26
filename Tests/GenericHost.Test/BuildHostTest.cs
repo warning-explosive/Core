@@ -363,7 +363,7 @@
                         typeof(AuthorizationMiddleware),
                         typeof(UnitOfWorkMiddleware),
                         typeof(HandledByEndpointMiddleware),
-                        typeof(RequestReplyValidationMiddleware)
+                        typeof(RequestReplyMiddleware)
                     };
 
                     var actualPipeline = endpointDependencyContainer
@@ -543,7 +543,7 @@
                         typeof(ErrorHandlingMiddleware),
                         typeof(UnitOfWorkMiddleware),
                         typeof(HandledByEndpointMiddleware),
-                        typeof(RequestReplyValidationMiddleware)
+                        typeof(RequestReplyMiddleware)
                     };
 
                     var actualPipeline = transportDependencyContainer

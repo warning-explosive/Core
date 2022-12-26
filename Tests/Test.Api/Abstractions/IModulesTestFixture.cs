@@ -16,6 +16,12 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
         /// <summary>
         /// Creates and configures IHostBuilder
         /// </summary>
+        /// <returns>IHostBuilder</returns>
+        IHostBuilder CreateHostBuilder();
+
+        /// <summary>
+        /// Creates and configures IHostBuilder
+        /// </summary>
         /// <param name="testOutputHelper">ITestOutputHelper</param>
         /// <returns>IHostBuilder</returns>
         IHostBuilder CreateHostBuilder(ITestOutputHelper testOutputHelper);

@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.Modules.Benchmark
 {
-    using System;
     using Core.Benchmark.Api;
     using Sources;
     using Test.Api;
@@ -22,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
         {
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void DeepCopyBenchmark()
         {
             var summary = Benchmark.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
@@ -43,10 +42,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            Assert.True(multiplier >= 3m);
+            Assert.True(multiplier >= 2m);
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void AssembliesExtensionsBelowBenchmark()
         {
             var summary = Benchmark.Run<AssembliesExtensionsBelowBenchmarkSource>(Output.WriteLine);
@@ -59,7 +58,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             Assert.True(measure <= 25m);
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void CompositionRootStartupBenchmark()
         {
             var summary = Benchmark.Run<CompositionRootStartupBenchmarkSource>(Output.WriteLine);
@@ -79,7 +78,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             Assert.True(createBoundedAbove <= 1000m);
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void StreamCopyVersusStreamReadBenchmark()
         {
             var summary = Benchmark.Run<StreamCopyVersusStreamReadBenchmarkSource>(Output.WriteLine);

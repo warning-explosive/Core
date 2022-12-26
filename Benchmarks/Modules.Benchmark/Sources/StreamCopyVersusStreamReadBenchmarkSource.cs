@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         }
 
         /// <summary> CopyTo </summary>
-        /// <returns>Object</returns>
+        /// <returns>Copy</returns>
         [Benchmark(Description = nameof(CopyTo), Baseline = true)]
         public ReadOnlyMemory<byte> CopyTo()
         {
@@ -44,8 +44,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
             }
         }
 
-        /// <summary> CopyTo </summary>
-        /// <returns>Object</returns>
+        /// <summary> Read </summary>
+        /// <returns>Copy</returns>
         [Benchmark(Description = nameof(Read))]
         public ReadOnlyMemory<byte> Read()
         {

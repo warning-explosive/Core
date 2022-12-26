@@ -10,18 +10,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Contract;
     using Messaging.MessageHeaders;
 
+    /// <summary>
+    /// HandledByEndpointMiddleware
+    /// </summary>
     [Component(EnLifestyle.Singleton)]
     [After(typeof(UnitOfWorkMiddleware))]
-    internal class HandledByEndpointMiddleware : IMessageHandlerMiddleware,
-                                                 ICollectionResolvable<IMessageHandlerMiddleware>
+    public class HandledByEndpointMiddleware : IMessageHandlerMiddleware,
+                                               ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly EndpointIdentity _endpointIdentity;
 
+        /// <summary> .cctor </summary>
+        /// <param name="endpointIdentity">EndpointIdentity</param>
         public HandledByEndpointMiddleware(EndpointIdentity endpointIdentity)
         {
             _endpointIdentity = endpointIdentity;
         }
 
+        /// <inheritdoc />
         public async Task Handle(
             IAdvancedIntegrationContext context,
             Func<IAdvancedIntegrationContext, CancellationToken, Task> next,

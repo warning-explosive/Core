@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
     /// Specifies logical (not physical) owner for contract messages
     /// Command owner - endpoint which can handle that command
     /// Event owner - endpoint which publishes event
-    /// Query owner - endpoint which can handle that query
+    /// Request owner - endpoint which can handle that request
     /// Reply has no owner
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]

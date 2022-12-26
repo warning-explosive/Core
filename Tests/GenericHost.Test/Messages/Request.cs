@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     using GenericEndpoint.Contract.Attributes;
 
     [OwnedBy(TestIdentity.Endpoint1)]
-    [Feature(nameof(Test))]
-    internal record RequestQueryCommand : IIntegrationCommand
+    [Feature(TestFeatures.Test)]
+    internal record Request : IIntegrationRequest<Reply>
     {
-        public RequestQueryCommand(int id)
+        public Request(int id)
         {
             Id = id;
         }

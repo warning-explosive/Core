@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
-    using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
-    using SpaceEngineers.Core.GenericEndpoint.Pipeline;
+    using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Pipeline;
 
     /// <summary>
     /// RpcRequestExtensions
@@ -16,21 +16,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
         /// Request data from target endpoint in blocking manner
         /// </summary>
         /// <param name="integrationContext">Integration context</param>
-        /// <param name="query">Integration query</param>
+        /// <param name="request">Integration request</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing request operation</returns>
-        public static async Task<TReply> RpcRequest<TQuery, TReply>(
+        public static async Task<TReply> RpcRequest<TRequest, TReply>(
             this IIntegrationContext integrationContext,
-            TQuery query,
+            TRequest request,
             CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
             var advancedIntegrationContext = (IAdvancedIntegrationContext)integrationContext;
 
-            var (message, replyTask) = advancedIntegrationContext.EnrollRpcRequest<TQuery, TReply>(query, token);
+            var (message, replyTask) = advancedIntegrationContext.EnrollRpcRequest<TRequest, TReply>(request, token);
 
             if (message == null)
             {

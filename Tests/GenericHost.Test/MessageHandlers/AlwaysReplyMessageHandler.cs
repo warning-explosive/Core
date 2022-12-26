@@ -9,17 +9,17 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
-    internal class QueryAlwaysReplyMessageHandler : IMessageHandler<Query>,
-                                                    IResolvable<IMessageHandler<Query>>
+    internal class AlwaysReplyMessageHandler : IMessageHandler<Request>,
+                                               IResolvable<IMessageHandler<Request>>
     {
         private readonly IIntegrationContext _context;
 
-        public QueryAlwaysReplyMessageHandler(IIntegrationContext context)
+        public AlwaysReplyMessageHandler(IIntegrationContext context)
         {
             _context = context;
         }
 
-        public Task Handle(Query message, CancellationToken token)
+        public Task Handle(Request message, CancellationToken token)
         {
             return _context.Reply(message, new Reply(message.Id), token);
         }

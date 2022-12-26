@@ -13,8 +13,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         {
             if (initiatorMessage != null && generalMessage.ReadHeader<User>() == null)
             {
-                var user = initiatorMessage.ReadRequiredHeader<User>().Value;
-                generalMessage.WriteHeader(new User(user));
+                var user = initiatorMessage.ReadHeader<User>()?.Value;
+
+                if (user != null)
+                {
+                    generalMessage.WriteHeader(new User(user));
+                }
             }
         }
     }

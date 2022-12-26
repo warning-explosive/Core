@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
         {
             return (message, exception, _) =>
             {
-                logger.Error(exception, $"Message handling error: {message.Payload.GetType().FullName}");
+                logger.Error(exception, $"Message handling error: {message.ReflectedType.FullName}");
                 return Task.CompletedTask;
             };
         }

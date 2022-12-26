@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Host.Registrations
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host.Registrations
 {
     using CompositionRoot.Registration;
     using JwtAuthentication;

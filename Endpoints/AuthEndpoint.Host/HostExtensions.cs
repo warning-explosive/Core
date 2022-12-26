@@ -3,11 +3,10 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
     using System;
     using Basics;
     using Contract;
+    using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
-    using JwtAuthentication;
     using Microsoft.Extensions.Hosting;
-    using Registrations;
     using SpaceEngineers.Core.GenericEndpoint.Contract;
 
     /// <summary>
@@ -33,12 +32,10 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
             };
 
             return hostBuilder.UseEndpoint(
-                new EndpointIdentity(AuthEndpointIdentity.LogicalName, Guid.NewGuid().ToString()),
+                new EndpointIdentity(Identity.LogicalName, Guid.NewGuid().ToString()),
                 (_, endpointBuilder) => optionsFactory(endpointBuilder
                     .WithEndpointPluginAssemblies(assemblies)
-                    .ModifyContainerOptions(options => options.WithManualRegistrations(
-                            new JwtSecurityTokenHandlerManualRegistration(),
-                            new JwtAuthenticationConfigurationManualRegistration(JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())))));
+                    .WithAuthorization()));
         }
     }
 }

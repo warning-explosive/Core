@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
         {
             BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointCommands(), _topology);
             BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EventsSubscriptions(), _topology);
-            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointQueries(), _topology);
+            BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.EndpointRequests(), _topology);
             BindTopology(endpointIdentity, messageHandler, integrationTypeProvider.RepliesSubscriptions(), _topology);
 
             static void BindTopology(

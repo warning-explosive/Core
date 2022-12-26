@@ -81,16 +81,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         }
 
         /// <inheritdoc />
-        public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        public Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            return Collect(query);
+            return Collect(request);
         }
 
         /// <inheritdoc />
-        public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
             return Collect(reply);

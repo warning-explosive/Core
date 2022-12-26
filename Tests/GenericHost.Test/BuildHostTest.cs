@@ -8,10 +8,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
-    using AuthEndpoint.Contract.Commands;
-    using AuthEndpoint.Contract.Events;
-    using AuthEndpoint.Contract.Queries;
-    using AuthEndpoint.Contract.Replies;
+    using AuthEndpoint.Contract;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
@@ -23,6 +20,8 @@
     using DataAccess.Orm.Sql.Model;
     using DatabaseEntities.Relations;
     using GenericDomain.EventSourcing.Sql;
+    using GenericEndpoint.Authorization;
+    using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.DataAccess.Deduplication;
     using GenericEndpoint.DataAccess.Host;
@@ -220,7 +219,7 @@
                 typeof(InheritedEvent),
                 typeof(Command),
                 typeof(OpenGenericHandlerCommand),
-                typeof(Query),
+                typeof(Request),
                 typeof(Reply)
             };
 
@@ -230,7 +229,7 @@
                 typeof(InheritedEventEmptyMessageHandler),
                 typeof(CommandEmptyMessageHandler),
                 typeof(OpenGenericCommandEmptyMessageHandler<>),
-                typeof(QueryAlwaysReplyMessageHandler),
+                typeof(AlwaysReplyMessageHandler),
                 typeof(ReplyEmptyMessageHandler)
             };
 
@@ -244,6 +243,7 @@
                        .WithPostgreSqlDataAccess(options => options
                            .ExecuteMigrations())
                        .WithSqlEventSourcing()
+                       .WithAuthorization()
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
@@ -360,9 +360,10 @@
                     var expectedPipeline = new[]
                     {
                         typeof(ErrorHandlingMiddleware),
+                        typeof(AuthorizationMiddleware),
                         typeof(UnitOfWorkMiddleware),
                         typeof(HandledByEndpointMiddleware),
-                        typeof(QueryReplyValidationMiddleware)
+                        typeof(RequestReplyValidationMiddleware)
                     };
 
                     var actualPipeline = endpointDependencyContainer
@@ -382,7 +383,7 @@
                             typeof(InheritedEvent),
                             typeof(Command),
                             typeof(OpenGenericHandlerCommand),
-                            typeof(Query),
+                            typeof(Request),
                             typeof(Reply)
                         }
                         .OrderBy(type => type.Name)
@@ -413,20 +414,20 @@
 
                     Assert.Equal(expectedCommands, actualCommands);
 
-                    var expectedQueries = new[]
+                    var expectedRequests = new[]
                         {
-                            typeof(Query)
+                            typeof(Request)
                         }
                         .OrderBy(type => type.Name)
                         .ToList();
 
-                    var actualQueries = integrationTypeProvider
-                        .EndpointQueries()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
+                    var actualRequests = integrationTypeProvider
+                        .EndpointRequests()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointRequests), log)
                         .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(expectedQueries, actualQueries);
+                    Assert.Equal(expectedRequests, actualRequests);
 
                     var expectedReplies = new[]
                         {
@@ -463,7 +464,7 @@
                     Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
                     Assert.Equal(typeof(CommandEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
                     Assert.Equal(typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
-                    Assert.Equal(typeof(QueryAlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Query>>().GetType());
+                    Assert.Equal(typeof(AlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Request>>().GetType());
                     Assert.Equal(typeof(ReplyEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
 
                     var expectedErrorHandlers = new[]
@@ -542,7 +543,7 @@
                         typeof(ErrorHandlingMiddleware),
                         typeof(UnitOfWorkMiddleware),
                         typeof(HandledByEndpointMiddleware),
-                        typeof(QueryReplyValidationMiddleware)
+                        typeof(RequestReplyValidationMiddleware)
                     };
 
                     var actualPipeline = transportDependencyContainer
@@ -582,9 +583,9 @@
                             typeof(PublishInheritedEventCommand),
                             typeof(Command),
                             typeof(OpenGenericHandlerCommand),
-                            typeof(Query),
+                            typeof(Request),
                             typeof(Reply),
-                            typeof(RequestQueryCommand),
+                            typeof(MakeRequestCommand),
                             typeof(Endpoint1HandlerInvoked),
                             typeof(Endpoint2HandlerInvoked)
                         }
@@ -607,13 +608,13 @@
 
                     Assert.Equal(Array.Empty<Type>(), actualCommands);
 
-                    var actualQueries = integrationTypeProvider
-                        .EndpointQueries()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointQueries), log)
+                    var actualRequests = integrationTypeProvider
+                        .EndpointRequests()
+                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointRequests), log)
                         .OrderBy(type => type.Name)
                         .ToList();
 
-                    Assert.Equal(Array.Empty<Type>(), actualQueries);
+                    Assert.Equal(Array.Empty<Type>(), actualRequests);
 
                     var expectedReplies = new[]
                         {

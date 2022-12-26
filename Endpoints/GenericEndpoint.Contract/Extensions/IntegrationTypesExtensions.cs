@@ -32,36 +32,36 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Extensions
         }
 
         /// <summary>
-        /// Does type represent an IIntegrationQuery
+        /// Does type represent an IIntegrationRequest
         /// </summary>
         /// <param name="type">Message type</param>
-        /// <returns>Message type is an IIntegrationQuery or not</returns>
-        public static bool IsQuery(this Type type)
+        /// <returns>Message type is an IIntegrationRequest or not</returns>
+        public static bool IsRequest(this Type type)
         {
-            return type.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>));
+            return type.IsSubclassOfOpenGeneric(typeof(IIntegrationRequest<>));
         }
 
         /// <summary>
-        /// Does type represent an IIntegrationQuery
+        /// Does type represent an IIntegrationReply
         /// </summary>
         /// <param name="type">Message type</param>
-        /// <returns>Message type is an IIntegrationQuery or not</returns>
+        /// <returns>Message type is an IIntegrationReply or not</returns>
         public static bool IsReply(this Type type)
         {
             return typeof(IIntegrationReply).IsAssignableFrom(type);
         }
 
         /// <summary>
-        /// Does type represent an IIntegrationReply on IIntegrationQuery
+        /// Does type represent an IIntegrationReply on IIntegrationRequest
         /// </summary>
         /// <param name="reply">Reply message type</param>
-        /// <param name="query">Query message type</param>
-        /// <returns>Message type is an IIntegrationReply on IIntegrationQuery or not</returns>
-        public static bool IsReplyOnQuery(this Type reply, Type query)
+        /// <param name="request">Request message type</param>
+        /// <returns>Message type is an IIntegrationReply on IIntegrationRequest or not</returns>
+        public static bool IsReplyOnRequest(this Type reply, Type request)
         {
             return typeof(IIntegrationReply).IsAssignableFrom(reply)
-                && query.IsSubclassOfOpenGeneric(typeof(IIntegrationQuery<>))
-                && typeof(IIntegrationQuery<>).MakeGenericType(reply).IsAssignableFrom(query);
+                && request.IsSubclassOfOpenGeneric(typeof(IIntegrationRequest<>))
+                && typeof(IIntegrationRequest<>).MakeGenericType(reply).IsAssignableFrom(request);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Extensions
                    || type == typeof(IIntegrationCommand)
                    || type == typeof(IIntegrationEvent)
                    || type == typeof(IIntegrationReply)
-                   || typeof(IIntegrationQuery<>) == type.GenericTypeDefinitionOrSelf();
+                   || typeof(IIntegrationRequest<>) == type.GenericTypeDefinitionOrSelf();
         }
 
         /// <summary>

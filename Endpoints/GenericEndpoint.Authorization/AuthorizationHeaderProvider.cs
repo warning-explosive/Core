@@ -13,8 +13,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
         {
             if (initiatorMessage != null && generalMessage.ReadHeader<Authorization>() == null)
             {
-                var token = initiatorMessage.ReadRequiredHeader<Authorization>().Value;
-                generalMessage.WriteHeader(new Authorization(token));
+                var authorizationToken = initiatorMessage.ReadHeader<Authorization>()?.Value;
+
+                if (authorizationToken != null)
+                {
+                    generalMessage.WriteHeader(new Authorization(authorizationToken));
+                }
             }
         }
     }

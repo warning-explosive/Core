@@ -143,31 +143,31 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         }
 
         /// <summary>
-        /// Validates that message handler requests query that corresponds to specified predicate
+        /// Validates that message handler perform requests that corresponds to specified predicate
         /// </summary>
         /// <param name="predicate">Predicate</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>MessageHandlerTestBuilder</returns>
-        public MessageHandlerTestBuilder<TMessage> Requests<TQuery, TReply>(Expression<Func<TQuery, bool>> predicate)
-            where TQuery : IIntegrationQuery<TReply>
+        public MessageHandlerTestBuilder<TMessage> Requests<TRequest, TReply>(Expression<Func<TRequest, bool>> predicate)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            _testCases.Add(new MessageHandlerProducesMessageTestCase<TQuery>(predicate));
+            _testCases.Add(new MessageHandlerProducesMessageTestCase<TRequest>(predicate));
             return this;
         }
 
         /// <summary>
-        /// Validates that message handler doesn't request any queries with specified type
+        /// Validates that message handler doesn't produce any requests with specified type
         /// </summary>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>MessageHandlerTestBuilder</returns>
-        public MessageHandlerTestBuilder<TMessage> DoesNotRequest<TQuery, TReply>()
-            where TQuery : IIntegrationQuery<TReply>
+        public MessageHandlerTestBuilder<TMessage> DoesNotRequest<TRequest, TReply>()
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TQuery>());
+            _testCases.Add(new MessageHandlerDoesNotProduceMessageTestCase<TRequest>());
             return this;
         }
 
@@ -185,7 +185,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         }
 
         /// <summary>
-        /// Validates that message handler doesn't reply on incoming query with specified reply message type
+        /// Validates that message handler doesn't reply on incoming request with specified reply message type
         /// </summary>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>MessageHandlerTestBuilder</returns>

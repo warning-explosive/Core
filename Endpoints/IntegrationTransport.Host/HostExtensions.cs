@@ -112,7 +112,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
 
             var endpointIdentity = new EndpointIdentity(
-                logicalName.IsNullOrWhiteSpace() ? TransportEndpointIdentity.LogicalName : logicalName,
+                logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName,
                 Guid.NewGuid().ToString());
 
             hostBuilder.ApplyOptions(endpointIdentity);

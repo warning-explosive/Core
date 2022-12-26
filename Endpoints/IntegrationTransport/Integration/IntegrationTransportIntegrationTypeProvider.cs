@@ -3,12 +3,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using CompositionRoot;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Messaging;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
     [ComponentOverride]
     internal class IntegrationTransportIntegrationTypeProvider : IIntegrationTypeProvider,
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
             return Array.Empty<Type>();
         }
 
-        public IReadOnlyCollection<Type> EndpointQueries()
+        public IReadOnlyCollection<Type> EndpointRequests()
         {
             return Array.Empty<Type>();
         }

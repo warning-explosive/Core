@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointCommands(), exceptions);
             VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EventsSubscriptions(), exceptions);
-            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointQueries(), exceptions);
+            VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointRequests(), exceptions);
             VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.RepliesSubscriptions(), exceptions);
 
             VerifyModifiers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             VerifyPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
 
             VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()), exceptions);
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointQueries().Where(type => type.IsConcreteType()), exceptions);
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointRequests().Where(type => type.IsConcreteType()), exceptions);
 
             VerifyMessageHandlersLifestyle(exceptions);
 
@@ -107,7 +107,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         {
             foreach (var messageType in messageTypes.Where(ImplementsSeveralSpecializedInterfaces().Not()))
             {
-                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} must implement only one specialized interface (command, query, event or just message)"));
+                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} must implement only one specialized interface (command, request, event or just message)"));
             }
 
             static Func<Type, bool> ImplementsSeveralSpecializedInterfaces()
@@ -116,7 +116,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 {
                     var sum = type.IsCommand().Bit()
                               + type.IsEvent().Bit()
-                              + type.IsQuery().Bit()
+                              + type.IsRequest().Bit()
                               + type.IsReply().Bit();
 
                     return sum == 1;
@@ -136,9 +136,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                 }
 
                 if (messageType.IsReply()
-                    && !messageTypes.Any(type => messageType.IsReplyOnQuery(type)))
+                    && !messageTypes.Any(type => messageType.IsReplyOnRequest(type)))
                 {
-                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should have at least one corresponding {nameof(IIntegrationQuery<IIntegrationReply>)}"));
+                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should have at least one corresponding {nameof(IIntegrationRequest<IIntegrationReply>)}"));
                 }
 
                 if (messageType.IsReply()

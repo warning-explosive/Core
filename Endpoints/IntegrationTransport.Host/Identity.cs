@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     /// <summary>
     /// TransportEndpointIdentity
     /// </summary>
-    public static class TransportEndpointIdentity
+    public static class Identity
     {
         /// <summary>
         /// TransportEndpoint logical name

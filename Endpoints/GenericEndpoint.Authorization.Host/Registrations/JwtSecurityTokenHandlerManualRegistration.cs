@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Host.Registrations
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host.Registrations
 {
     using System.IdentityModel.Tokens.Jwt;
-    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Registration;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     internal class JwtSecurityTokenHandlerManualRegistration : IManualRegistration
     {

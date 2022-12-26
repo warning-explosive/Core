@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .StepInto("Tests")
                .StepInto("Test.WebApplication")
                .StepInto("Settings")
-               .StepInto(AuthEndpointIdentity.LogicalName)
+               .StepInto(Identity.LogicalName)
                .GetFile("appsettings", ".json")
                .FullName;
 

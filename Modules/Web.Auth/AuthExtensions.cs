@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using System.Security.Claims;
     using System.Text;
     using Basics;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Http;
 
     /// <summary>
@@ -17,7 +18,7 @@ namespace SpaceEngineers.Core.Web.Auth
         /// </summary>
         /// <param name="context">HttpContext</param>
         /// <returns>Authorization token</returns>
-        public static string GetAuthorizationToken(this HttpContext context)
+        public static string? GetAuthorizationToken(this HttpContext context)
         {
             var token = context.User.FindFirst(ClaimTypes.Authentication)?.Value;
 
@@ -30,7 +31,9 @@ namespace SpaceEngineers.Core.Web.Auth
                 .Parse(context.Request.Headers.Authorization)
                 .Scheme;
 
-            return context.Request.Headers.Authorization.ToString()[schema.Length..].Trim();
+            return schema.Equals(JwtBearerDefaults.AuthenticationScheme, StringComparison.OrdinalIgnoreCase)
+                ? context.Request.Headers.Authorization.ToString()[schema.Length..].Trim()
+                : default;
         }
 
         /// <summary>

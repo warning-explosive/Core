@@ -9,21 +9,21 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
     using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
-    internal class QueryOddReplyMessageHandler : IMessageHandler<Query>,
-                                                 IResolvable<IMessageHandler<Query>>
+    internal class MakeRequestCommandHandler : IMessageHandler<MakeRequestCommand>,
+                                               IResolvable<IMessageHandler<MakeRequestCommand>>
     {
         private readonly IIntegrationContext _context;
 
-        public QueryOddReplyMessageHandler(IIntegrationContext context)
+        public MakeRequestCommandHandler(IIntegrationContext context)
         {
             _context = context;
         }
 
-        public Task Handle(Query message, CancellationToken token)
+        public Task Handle(MakeRequestCommand message, CancellationToken token)
         {
-            return message.Id % 2 == 0
-                ? Task.CompletedTask
-                : _context.Reply(message, new Reply(message.Id), token);
+            var request = new Request(message.Id);
+
+            return _context.Request<Request, Reply>(request, token);
         }
     }
 }

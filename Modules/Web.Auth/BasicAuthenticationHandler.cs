@@ -6,8 +6,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using System.Text.Encodings.Web;
     using System.Threading;
     using System.Threading.Tasks;
-    using AuthEndpoint.Contract.Queries;
-    using AuthEndpoint.Contract.Replies;
+    using AuthEndpoint.Contract;
     using Basics;
     using GenericEndpoint.Api.Abstractions;
     using IntegrationTransport;

@@ -22,11 +22,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         IReadOnlyCollection<Type> EndpointCommands();
 
         /// <summary>
-        /// Receive endpoint integration queries
-        /// Queries that could be handled by endpoint (owned by this endpoint and have IMessageHandler implementation)
+        /// Receive endpoint integration requests
+        /// Requests that could be handled by endpoint (owned by this endpoint and have IMessageHandler implementation)
         /// </summary>
-        /// <returns>Endpoint integration queries</returns>
-        IReadOnlyCollection<Type> EndpointQueries();
+        /// <returns>Endpoint integration requests</returns>
+        IReadOnlyCollection<Type> EndpointRequests();
 
         /// <summary>
         /// Receive endpoint subscriptions to integration replies

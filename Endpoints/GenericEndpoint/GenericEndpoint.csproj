@@ -28,7 +28,7 @@
     <Library />
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0-preview1.22518.1">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -42,7 +42,7 @@
     <Compile Update="Pipeline\3_UnitOfWorkMiddleware.cs">
       <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
-    <Compile Update="Pipeline\1_QueryReplyValidationMiddleware.cs">
+    <Compile Update="Pipeline\1_RequestReplyValidationMiddleware">
       <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
     <Compile Update="Pipeline\4_ErrorHandlingMiddleware.cs">

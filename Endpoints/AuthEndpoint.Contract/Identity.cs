@@ -1,12 +1,12 @@
 namespace SpaceEngineers.Core.AuthEndpoint.Contract
 {
     /// <summary>
-    /// AuthEndpointIdentity
+    /// Identity
     /// </summary>
-    public static class AuthEndpointIdentity
+    public static class Identity
     {
         /// <summary>
-        /// AuthorizationEndpoint logical name
+        /// AuthEndpoint logical name
         /// </summary>
         public const string LogicalName = nameof(AuthEndpoint);
     }

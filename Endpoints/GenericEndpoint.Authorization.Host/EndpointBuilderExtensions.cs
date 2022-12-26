@@ -2,6 +2,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
 {
     using Basics;
     using GenericEndpoint.Host.Builder;
+    using JwtAuthentication;
+    using Registrations;
 
     /// <summary>
     /// EndpointBuilderExtensions
@@ -21,7 +23,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(Authorization)))
             };
 
-            return builder.WithEndpointPluginAssemblies(authorization);
+            return builder
+                .WithEndpointPluginAssemblies(authorization)
+                .ModifyContainerOptions(options => options.WithManualRegistrations(
+                    new JwtSecurityTokenHandlerManualRegistration(),
+                    new JwtAuthenticationConfigurationManualRegistration(HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
         }
     }
 }

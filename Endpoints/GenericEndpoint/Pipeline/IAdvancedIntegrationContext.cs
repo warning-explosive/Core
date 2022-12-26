@@ -55,15 +55,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         /// <summary>
         /// Enroll rpc-request
         /// </summary>
-        /// <param name="query">Integration query</param>
+        /// <param name="request">Integration request</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
-        /// <returns>Enrollment result - query</returns>
-        (IntegrationMessage query, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TQuery, TReply>(
-            TQuery query,
+        /// <returns>Enrollment result - request</returns>
+        (IntegrationMessage request, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TRequest, TReply>(
+            TRequest request,
             CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply;
     }
 }

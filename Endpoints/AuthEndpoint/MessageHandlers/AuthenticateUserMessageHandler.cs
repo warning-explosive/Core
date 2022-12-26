@@ -9,8 +9,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Contract.Queries;
-    using Contract.Replies;
+    using Contract;
     using CrossCuttingConcerns.Extensions;
     using Domain.Model;
     using DomainEventHandlers;

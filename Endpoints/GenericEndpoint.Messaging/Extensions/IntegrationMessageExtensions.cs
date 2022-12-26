@@ -28,13 +28,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Extensions
         }
 
         /// <summary>
-        /// Does IntegrationMessage represent an IIntegrationQuery
+        /// Does IntegrationMessage represent an IIntegrationRequest
         /// </summary>
         /// <param name="message">IntegrationMessage</param>
-        /// <returns>IntegrationMessage type is an IIntegrationQuery or not</returns>
-        public static bool IsQuery(this IntegrationMessage message)
+        /// <returns>IntegrationMessage type is an IIntegrationRequest or not</returns>
+        public static bool IsRequest(this IntegrationMessage message)
         {
-            return message.ReflectedType.IsQuery();
+            return message.ReflectedType.IsRequest();
         }
 
         /// <summary>
@@ -48,14 +48,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Extensions
         }
 
         /// <summary>
-        /// Does IntegrationMessage represent an IIntegrationReply on IIntegrationQuery
+        /// Does IntegrationMessage represent an IIntegrationReply on IIntegrationRequest
         /// </summary>
         /// <param name="reply">Reply message</param>
-        /// <param name="query">Query message</param>
-        /// <returns>IntegrationMessage is an IIntegrationReply on IIntegrationQuery or not</returns>
-        public static bool IsReplyOnQuery(this IntegrationMessage reply, IntegrationMessage query)
+        /// <param name="request">Request message</param>
+        /// <returns>IntegrationMessage is an IIntegrationReply on IIntegrationRequest or not</returns>
+        public static bool IsReplyOnRequest(this IntegrationMessage reply, IntegrationMessage request)
         {
-            return reply.ReflectedType.IsReplyOnQuery(query.ReflectedType);
+            return reply.ReflectedType.IsReplyOnRequest(request.ReflectedType);
         }
     }
 }

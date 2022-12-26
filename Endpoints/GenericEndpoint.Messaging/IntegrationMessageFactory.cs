@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using Contract.Abstractions;
     using MessageHeaders;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class IntegrationMessageFactory : IIntegrationMessageFactory,
                                                IResolvable<IIntegrationMessageFactory>
     {

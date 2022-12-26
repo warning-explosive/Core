@@ -11,7 +11,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using CrossCuttingConcerns.Json;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Attributes;
-    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using RestSharp;
     using Web.Api.Api;
@@ -22,7 +21,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     /// </summary>
     [Route("[controller]/[action]")]
     [ApiController]
-    [Feature("WebApiTest")]
+    [Feature(Features.WebApiTest)]
     public class TestController : ControllerBase
     {
         private readonly EndpointIdentity _endpointIdentity;
@@ -48,7 +47,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
         /// </summary>
         /// <returns>Application info</returns>
         [HttpGet]
-        [AllowAnonymous]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [SuppressMessage("Analysis", "CA1031", Justification = "desired behavior")]
         public async Task<ActionResult<ScalarResponse<string>>> ApplicationInfo()
         {

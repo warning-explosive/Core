@@ -58,8 +58,9 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             var domainEvents = new IDomainEvent<AuthEndpoint.Domain.Model.User>[]
             {
                 new AuthEndpoint.Domain.Model.UserWasCreated(aggregateId, new AuthEndpoint.Domain.Model.Username(username), salt, passwordHash),
-                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature("Authentication")),
-                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature("WebApiTest"))
+                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(GenericEndpoint.EventSourcing.Features.EventSourcing)),
+                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(AuthEndpoint.Contract.Features.Authentication)),
+                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(Features.WebApiTest))
             };
 
             var eventStore = dependencyContainer.Resolve<IEventStore>();

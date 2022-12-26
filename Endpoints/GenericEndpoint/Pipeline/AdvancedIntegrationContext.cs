@@ -85,15 +85,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}");
         }
 
-        public Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        public Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            return _messagesCollector.Collect(CreateGeneralMessage(query, typeof(TQuery)), token);
+            return _messagesCollector.Collect(CreateGeneralMessage(request, typeof(TRequest)), token);
         }
 
-        public Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
             var message = CreateGeneralMessage(reply, typeof(TReply), new ReplyTo(Message.ReadRequiredHeader<SentFrom>().Value));
@@ -101,13 +101,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return _messagesCollector.Collect(message, token);
         }
 
-        public (IntegrationMessage query, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TQuery, TReply>(
-            TQuery query,
+        public (IntegrationMessage request, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TRequest, TReply>(
+            TRequest request,
             CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            var message = CreateGeneralMessage(query, typeof(TQuery));
+            var message = CreateGeneralMessage(request, typeof(TRequest));
 
             var requestId = message.ReadRequiredHeader<Id>().Value;
 

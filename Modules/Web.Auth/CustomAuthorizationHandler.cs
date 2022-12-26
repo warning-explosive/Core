@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Web.Auth
 {
     using System.Linq;
     using System.Threading.Tasks;
+    using Basics;
     using IntegrationTransport;
     using JwtAuthentication;
     using Microsoft.AspNetCore.Authorization;
@@ -30,7 +31,14 @@ namespace SpaceEngineers.Core.Web.Auth
 
             var username = context.User.Identity?.Name;
 
-            if (string.IsNullOrWhiteSpace(username))
+            if (username.IsNullOrWhiteSpace())
+            {
+                return Task.CompletedTask;
+            }
+
+            var authorizationToken = httpContext.GetAuthorizationToken();
+
+            if (authorizationToken.IsNullOrWhiteSpace())
             {
                 return Task.CompletedTask;
             }
@@ -38,7 +46,7 @@ namespace SpaceEngineers.Core.Web.Auth
             var grantedPermissions = _transportDependencyContainer
                 .DependencyContainer
                 .Resolve<ITokenProvider>()
-                .GetPermissions(httpContext.GetAuthorizationToken());
+                .GetPermissions(authorizationToken);
 
             if (!httpContext.Request.RouteValues.TryGetValue("controller", out var controllerName)
                 || controllerName is not string controller)

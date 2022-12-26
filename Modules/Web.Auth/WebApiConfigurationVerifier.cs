@@ -10,9 +10,9 @@ namespace SpaceEngineers.Core.Web.Auth
     using Basics;
     using CompositionRoot.Verifiers;
     using GenericEndpoint.Contract.Attributes;
-    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Routing;
+    using AllowAnonymousAttribute = Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute;
 
     [Component(EnLifestyle.Singleton)]
     internal class WebApiConfigurationVerifier : IConfigurationVerifier,

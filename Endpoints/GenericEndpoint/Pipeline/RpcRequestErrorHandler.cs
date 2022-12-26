@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             Exception exception,
             CancellationToken token)
         {
-            if (context.Message.IsQuery())
+            if (context.Message.IsRequest())
             {
                 var requestId = context.Message.ReadRequiredHeader<Id>().Value;
 

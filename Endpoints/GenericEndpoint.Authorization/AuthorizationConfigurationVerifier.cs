@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
         public void Verify()
         {
             var exceptions = new List<Exception>();
-            
+
             VerifyFeatureAttribute(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
 
             if (exceptions.Any())
@@ -46,14 +46,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
                     continue;
                 }
 
-                if (messageType.IsReply()
-                    && messageType.HasAttribute<FeatureAttribute>())
-                {
-                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should not be marked by {nameof(FeatureAttribute)}"));
-                }
-            
-                if (!messageType.IsReply()
-                    && !messageType.HasAttribute<FeatureAttribute>())
+                if (!messageType.HasAttribute<FeatureAttribute>())
                 {
                     exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} should be marked by {nameof(FeatureAttribute)} in order to provide authorization capabilities"));
                 }

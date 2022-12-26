@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         private IReadOnlyCollection<Type>? _integrationMessageTypes;
         private IReadOnlyCollection<Type>? _endpointCommands;
-        private IReadOnlyCollection<Type>? _endpointQueries;
+        private IReadOnlyCollection<Type>? _endpointRequests;
         private IReadOnlyCollection<Type>? _repliesSubscriptions;
         private IReadOnlyCollection<Type>? _eventsSubscriptions;
 
@@ -69,15 +69,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             }
         }
 
-        public IReadOnlyCollection<Type> EndpointQueries()
+        public IReadOnlyCollection<Type> EndpointRequests()
         {
-            _endpointQueries ??= InitEndpointQueries();
-            return _endpointQueries;
+            _endpointRequests ??= InitEndpointRequests();
+            return _endpointRequests;
 
-            IReadOnlyCollection<Type> InitEndpointQueries()
+            IReadOnlyCollection<Type> InitEndpointRequests()
             {
                 return IntegrationMessageTypes()
-                    .Where(type => type.IsQuery()
+                    .Where(type => type.IsRequest()
                                    && !type.IsMessageContractAbstraction()
                                    && type.IsOwnedByEndpoint(_endpointIdentity)
                                    && type.HasMessageHandler(_registrations))

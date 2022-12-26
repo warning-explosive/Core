@@ -12,13 +12,13 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
     using Messages;
 
     [Component(EnLifestyle.Transient)]
-    internal class QueryIntroduceDatabaseChanges : IMessageHandler<Query>,
-                                                   IResolvable<IMessageHandler<Query>>
+    internal class RequestIntroduceDatabaseChanges : IMessageHandler<Request>,
+                                                     IResolvable<IMessageHandler<Request>>
     {
         private readonly IIntegrationContext _context;
         private readonly IDatabaseContext _databaseContext;
 
-        public QueryIntroduceDatabaseChanges(
+        public RequestIntroduceDatabaseChanges(
             IIntegrationContext context,
             IDatabaseContext databaseContext)
         {
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
             _databaseContext = databaseContext;
         }
 
-        public async Task Handle(Query message, CancellationToken token)
+        public async Task Handle(Request message, CancellationToken token)
         {
             await _databaseContext
                .Write<DatabaseEntity>()

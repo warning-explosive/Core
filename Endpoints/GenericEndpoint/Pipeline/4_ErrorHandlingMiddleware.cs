@@ -10,17 +10,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Basics;
     using Messaging.MessageHeaders;
 
+    /// <summary>
+    /// ErrorHandlingMiddleware
+    /// </summary>
     [Component(EnLifestyle.Singleton)]
-    internal class ErrorHandlingMiddleware : IMessageHandlerMiddleware,
-                                             ICollectionResolvable<IMessageHandlerMiddleware>
+    public class ErrorHandlingMiddleware : IMessageHandlerMiddleware,
+                                           ICollectionResolvable<IMessageHandlerMiddleware>
     {
         private readonly IEnumerable<IErrorHandler> _errorHandlers;
 
+        /// <summary> .cctor </summary>
+        /// <param name="errorHandlers">Error handlers</param>
         public ErrorHandlingMiddleware(IEnumerable<IErrorHandler> errorHandlers)
         {
             _errorHandlers = errorHandlers;
         }
 
+        /// <inheritdoc />
         public async Task Handle(
             IAdvancedIntegrationContext context,
             Func<IAdvancedIntegrationContext, CancellationToken, Task> next,

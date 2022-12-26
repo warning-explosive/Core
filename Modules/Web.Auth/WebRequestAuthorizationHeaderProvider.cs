@@ -3,12 +3,13 @@ namespace SpaceEngineers.Core.Web.Auth
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Basics.Attributes;
     using GenericEndpoint.Authorization;
     using GenericEndpoint.Messaging;
     using Microsoft.AspNetCore.Http;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     [Before("SpaceEngineers.Core.GenericEndpoint.Authorization SpaceEngineers.Core.GenericEndpoint.Authorization.AuthorizationHeaderProvider")]
     internal class WebRequestAuthorizationHeaderProvider : IIntegrationMessageHeaderProvider,
                                                            ICollectionResolvable<IIntegrationMessageHeaderProvider>
@@ -22,11 +23,11 @@ namespace SpaceEngineers.Core.Web.Auth
 
         public void WriteHeaders(IntegrationMessage generalMessage, IntegrationMessage? initiatorMessage)
         {
-            var token = _httpContextAccessor.HttpContext?.GetAuthorizationToken();
+            var authorizationToken = _httpContextAccessor.HttpContext?.GetAuthorizationToken();
 
-            if (token != null && generalMessage.ReadHeader<Authorization>() == null)
+            if (!authorizationToken.IsNullOrWhiteSpace() && generalMessage.ReadHeader<Authorization>() == null)
             {
-                generalMessage.WriteHeader(new Authorization(token));
+                generalMessage.WriteHeader(new Authorization(authorizationToken));
             }
         }
     }

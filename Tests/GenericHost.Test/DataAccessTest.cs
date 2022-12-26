@@ -10,9 +10,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Threading;
     using System.Threading.Tasks;
     using AuthEndpoint.Contract;
-    using AuthEndpoint.Contract.Commands;
-    using AuthEndpoint.Contract.Queries;
-    using AuthEndpoint.Contract.Replies;
     using AuthEndpoint.Host;
     using Basics;
     using Basics.Primitives;
@@ -26,6 +23,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Settings;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
+    using GenericEndpoint.Authorization;
+    using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.DataAccess.Settings;
     using GenericEndpoint.EventSourcing;
@@ -39,6 +38,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using IntegrationTransport.Host;
     using IntegrationTransport.RabbitMQ.Settings;
     using IntegrationTransport.RpcRequest;
+    using JwtAuthentication;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.Hosting;
@@ -81,23 +81,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .StepInto("Settings")
                    .StepInto(testDirectory);
 
-            var useInMemoryIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder>(
-                static (settingsDirectory, isolationLevel, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+            var useInMemoryIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
+                static (settingsDirectory, isolationLevel, hostBuilder, options) => hostBuilder
+                   .UseIntegrationTransport(builder => options(builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel)))
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder>(
-                static (settingsDirectory, isolationLevel, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+            var useRabbitMqIntegrationTransport = new Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
+                static (settingsDirectory, isolationLevel, hostBuilder, options) => hostBuilder
+                   .UseIntegrationTransport(builder => options(builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel)))
+                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -141,7 +141,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
@@ -151,13 +151,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var messageTypes = new[]
             {
-                typeof(Query),
+                typeof(Request),
                 typeof(Reply)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(QueryAlwaysReplyMessageHandler)
+                typeof(AlwaysReplyMessageHandler)
             };
 
             var manualMigrations = new[]
@@ -170,7 +170,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -226,7 +226,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
                         reply = await integrationContext
-                           .RpcRequest<Query, Reply>(new Query(42), token)
+                           .RpcRequest<Request, Reply>(new Request(42), token)
                            .ConfigureAwait(false);
                     }
 
@@ -239,7 +239,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
@@ -261,7 +261,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -509,7 +509,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
@@ -531,7 +531,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -783,7 +783,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OnlyCommandsCanIntroduceChanges(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
@@ -794,7 +794,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var messageTypes = new[]
             {
                 typeof(Command),
-                typeof(Query),
+                typeof(Request),
                 typeof(Reply),
                 typeof(TransportEvent)
             };
@@ -802,7 +802,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var messageHandlerTypes = new Type[]
             {
                 typeof(CommandIntroduceDatabaseChanges),
-                typeof(QueryIntroduceDatabaseChanges),
+                typeof(RequestIntroduceDatabaseChanges),
                 typeof(ReplyIntroduceDatabaseChanges),
                 typeof(TransportEventIntroduceDatabaseChanges)
             };
@@ -823,7 +823,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -892,10 +892,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query);
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Request);
 
                         await integrationContext
-                            .Request<Query, Reply>(new Query(42), token)
+                            .Request<Request, Reply>(new Request(42), token)
                             .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
@@ -909,14 +909,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Query);
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Request);
 
                         var rpcException = default(Exception?);
 
                         try
                         {
                             _ = await integrationContext
-                               .RpcRequest<Query, Reply>(new Query(42), token)
+                               .RpcRequest<Request, Reply>(new Request(42), token)
                                .ConfigureAwait(false);
                         }
                         catch (InvalidOperationException invalidOperationException)
@@ -936,14 +936,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
-                        var query = new Query(42);
-                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(query, typeof(Query), new[] { new SentFrom(TestIdentity.Endpoint10) }, null);
+                        var request = new Request(42);
+                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(request, typeof(Request), new[] { new SentFrom(TestIdentity.Endpoint10) }, null);
                         var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
 
                         var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply);
 
                         await integrationContext
-                           .Reply(query, new Reply(query.Id), token)
+                           .Reply(request, new Reply(request.Id), token)
                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
@@ -977,7 +977,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task AuthenticateUserTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IsolationLevel, IHostBuilder, IHostBuilder> useTransport,
+            Func<DirectoryInfo, IsolationLevel, IHostBuilder, Func<IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             IsolationLevel isolationLevel,
@@ -990,7 +990,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(RecreatePostgreSqlDatabaseMigration)
             };
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), builder => builder.WithAuthorization())
                .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(additionalOurTypes)
@@ -1013,7 +1013,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 return async (output, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpointIdentity.LogicalName);
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpoint.Contract.Identity.LogicalName);
                     var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var sqlDatabaseSettings = await endpointDependencyContainer
@@ -1035,15 +1035,27 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var username = "qwerty";
                     var password = "12345678";
 
-                    var query = new AuthenticateUser(username, password);
+                    var authorizationToken = transportDependencyContainer
+                        .Resolve<ITokenProvider>()
+                        .GenerateToken(username, new[] { AuthEndpoint.Contract.Features.Authentication, GenericEndpoint.EventSourcing.Features.EventSourcing }, TimeSpan.FromSeconds(60));
+
+                    var initiatorMessage = transportDependencyContainer
+                        .Resolve<IIntegrationMessageFactory>()
+                        .CreateGeneralMessage(
+                            new Command(42),
+                            typeof(Command),
+                            new[] { new Authorization(authorizationToken) },
+                            null);
+
+                    var request = new AuthenticateUser(username, password);
                     UserAuthenticationResult? userAuthenticationResult;
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
 
                         userAuthenticationResult = await integrationContext
-                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(query, CancellationToken.None)
+                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
                            .ConfigureAwait(false);
                     }
 
@@ -1054,12 +1066,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
                             collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserWasCreated>>(),
-                            collector.WaitUntilMessageIsNotReceived<AuthEndpoint.Contract.Events.UserWasCreated>());
+                            collector.WaitUntilMessageIsNotReceived<UserWasCreated>());
 
                         await integrationContext
                            .Send(new CreateUser(username, password), token)
@@ -1070,10 +1082,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(initiatorMessage);
 
                         userAuthenticationResult = await integrationContext
-                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(query, CancellationToken.None)
+                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
                            .ConfigureAwait(false);
                     }
 

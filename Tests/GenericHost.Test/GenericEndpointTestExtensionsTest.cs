@@ -64,8 +64,8 @@
             {
                 var context = new TestIntegrationContext();
 
-                new QueryOddReplyMessageHandler(context)
-                    .OnMessage(new Query(42))
+                new OddRequestReplyMessageHandler(context)
+                    .OnMessage(new Request(42))
                     .ProducesNothing()
                     .DoesNotThrow()
                     .Invoke(context);
@@ -74,12 +74,12 @@
             {
                 var context = new TestIntegrationContext();
 
-                new QueryOddReplyMessageHandler(context)
-                    .OnMessage(new Query(43))
+                new OddRequestReplyMessageHandler(context)
+                    .OnMessage(new Request(43))
                     .DoesNotSend<IIntegrationCommand>()
                     .DoesNotDelay<IIntegrationCommand>()
                     .DoesNotPublish<IIntegrationEvent>()
-                    .DoesNotRequest<Query, Reply>()
+                    .DoesNotRequest<Request, Reply>()
                     .Replies<Reply>(reply => reply.Id == 43)
                     .DoesNotThrow()
                     .Invoke(context);
@@ -95,7 +95,7 @@
                         command.Id == 42 &&
                         (int)Math.Round((dateTime.ToUniversalTime() - DateTime.UtcNow).TotalDays, MidpointRounding.AwayFromZero) == 42)
                     .DoesNotPublish<IIntegrationEvent>()
-                    .DoesNotRequest<Query, Reply>()
+                    .DoesNotRequest<Request, Reply>()
                     .DoesNotReply<Reply>()
                     .DoesNotThrow()
                     .Invoke(context);

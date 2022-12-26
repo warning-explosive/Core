@@ -24,9 +24,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
                 return new MessageInfo("send", "commands");
             }
 
-            if (typeof(T).IsQuery())
+            if (typeof(T).IsRequest())
             {
-                return new MessageInfo("request", "queries");
+                return new MessageInfo("perform", "requests");
             }
 
             if (typeof(T).IsReply())

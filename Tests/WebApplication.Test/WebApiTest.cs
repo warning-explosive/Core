@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
                .StepInto("Tests")
                .StepInto("Test.WebApplication")
                .StepInto("Settings")
-               .StepInto(AuthEndpointIdentity.LogicalName)
+               .StepInto(Identity.LogicalName)
                .GetFile("appsettings", ".json")
                .FullName;
 
@@ -121,8 +121,8 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
                     var token = JsonConvert
                         .DeserializeObject<JObject>(response.Content)
-                        ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
-                        ?.Value
+                       ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
+                       ?.Value
                         .ToString();
                     Assert.NotNull(token);
                     var tokenPartsCount = token
@@ -136,7 +136,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
             yield return new object?[]
             {
                 new RestRequest($"http://127.0.0.1:5000/api/Auth/{nameof(AuthController.AuthenticateUser)}", Method.Get)
-                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { "Authentication" }, TimeSpan.FromMinutes(1))}"),
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { SpaceEngineers.Core.AuthEndpoint.Contract.Features.Authentication }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -145,8 +145,8 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
                     var token = JsonConvert
                         .DeserializeObject<JObject>(response.Content)
-                        ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
-                        ?.Value
+                       ?.Property(nameof(ScalarResponse<string>.Item), StringComparison.OrdinalIgnoreCase)
+                       ?.Value
                         .ToString();
                     Assert.NotNull(token);
                     var tokenPartsCount = token
@@ -183,7 +183,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
             yield return new object?[]
             {
                 new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List", Method.Get)
-                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { "WebApiTest" }, TimeSpan.FromMinutes(1))}"),
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { SpaceEngineers.Core.Test.WebApplication.Features.WebApiTest }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);

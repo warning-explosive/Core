@@ -217,11 +217,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <returns>Target endpoint logical name</returns>
         public string GetTargetEndpoint()
         {
-            var type = Payload.GetType();
-
             var targetEndpoint = this.IsEvent()
                 ? "*"
-                : ReadHeader<ReplyTo>()?.Value.LogicalName ?? type.GetAttribute<OwnedByAttribute>().EndpointName;
+                : ReadHeader<ReplyTo>()?.Value.LogicalName ?? ReflectedType.GetAttribute<OwnedByAttribute>().EndpointName;
 
             return targetEndpoint.Equals(nameof(EndpointIdentity), StringComparison.OrdinalIgnoreCase)
                 ? ReadRequiredHeader<SentFrom>().Value.LogicalName

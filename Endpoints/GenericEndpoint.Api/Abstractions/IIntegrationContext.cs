@@ -56,27 +56,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
         /// <summary>
         /// Request data from target endpoint
         /// </summary>
-        /// <param name="query">Integration query</param>
+        /// <param name="request">Integration request</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing request operation</returns>
-        Task Request<TQuery, TReply>(TQuery query, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply;
 
         /// <summary>
         /// Reply to initiator endpoint
         /// Should be called within endpoint scope (in message handler)
         /// </summary>
-        /// <param name="query">Integration query</param>
+        /// <param name="request">Integration request</param>
         /// <param name="reply">Integration reply</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TQuery">TQuery type-argument</typeparam>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing reply operation</returns>
-        Task Reply<TQuery, TReply>(TQuery query, TReply reply, CancellationToken token)
-            where TQuery : IIntegrationQuery<TReply>
+        Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply;
     }
 }

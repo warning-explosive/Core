@@ -1,10 +1,13 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Contract.Replies
+namespace SpaceEngineers.Core.AuthEndpoint.Contract
 {
-    using GenericEndpoint.Contract.Abstractions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
+    using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
 
     /// <summary>
     /// User authentication result
     /// </summary>
+    [Feature(Features.Authentication)]
+    [AllowAnonymous]
     public record UserAuthenticationResult : IIntegrationReply
     {
         /// <summary> .cctor </summary>

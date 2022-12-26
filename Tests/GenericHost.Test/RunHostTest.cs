@@ -104,15 +104,15 @@
 
             var messageTypes = new[]
             {
-                typeof(RequestQueryCommand),
-                typeof(Query),
+                typeof(MakeRequestCommand),
+                typeof(Request),
                 typeof(Reply)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(RequestQueryCommandHandler),
-                typeof(QueryAlwaysReplyMessageHandler),
+                typeof(MakeRequestCommandHandler),
+                typeof(AlwaysReplyMessageHandler),
                 typeof(ReplyEmptyMessageHandler)
             };
 
@@ -143,7 +143,7 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var command = new RequestQueryCommand(42);
+                    var command = new MakeRequestCommand(42);
 
                     var awaiter = Task.WhenAll(
                         collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
@@ -166,8 +166,8 @@
 
                     var messages = collector.Messages.ToArray();
                     Assert.Equal(3, messages.Length);
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(RequestQueryCommand)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Query)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(MakeRequestCommand)));
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Request)));
                     Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
                 };
             }
@@ -184,13 +184,13 @@
 
             var messageTypes = new[]
             {
-                typeof(Query),
+                typeof(Request),
                 typeof(Reply)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(QueryAlwaysReplyMessageHandler)
+                typeof(AlwaysReplyMessageHandler)
             };
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
@@ -219,7 +219,7 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var query = new Query(42);
+                    var request = new Request(42);
 
                     Reply reply;
 
@@ -228,11 +228,11 @@
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
 
                         reply = await integrationContext
-                           .RpcRequest<Query, Reply>(query, token)
+                           .RpcRequest<Request, Reply>(request, token)
                            .ConfigureAwait(false);
                     }
 
-                    Assert.Equal(query.Id, reply.Id);
+                    Assert.Equal(request.Id, reply.Id);
 
                     var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
                     Assert.Empty(collector.ErrorMessages);
@@ -240,9 +240,9 @@
                     var messages = collector.Messages.ToArray();
                     Assert.Equal(2, messages.Length);
 
-                    var integrationQuery = messages.Where(message => message.ReflectedType == typeof(Query) && message.ReadRequiredHeader<SentFrom>().Value.LogicalName.Equals(TransportEndpointIdentity.LogicalName, StringComparison.OrdinalIgnoreCase)).ToArray();
-                    Assert.Single(integrationQuery);
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationQuery.Single().ReadRequiredHeader<Id>().Value)));
+                    var integrationRequest = messages.Where(message => message.ReflectedType == typeof(Request) && message.ReadRequiredHeader<SentFrom>().Value.LogicalName.Equals(Identity.LogicalName, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    Assert.Single(integrationRequest);
+                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationRequest.Single().ReadRequiredHeader<Id>().Value)));
                 };
             }
         }

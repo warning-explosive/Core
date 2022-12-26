@@ -1,19 +1,19 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Contract.Queries
+namespace SpaceEngineers.Core.AuthEndpoint.Contract
 {
-    using Replies;
     using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
     using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
 
     /// <summary>
-    /// Authenticate user query
+    /// Create user command
     /// </summary>
-    [OwnedBy(AuthEndpointIdentity.LogicalName)]
-    public record AuthenticateUser : IIntegrationQuery<UserAuthenticationResult>
+    [OwnedBy(Identity.LogicalName)]
+    [Feature(Features.Authentication)]
+    public record CreateUser : IIntegrationCommand
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
-        public AuthenticateUser(string username, string password)
+        public CreateUser(string username, string password)
         {
             Username = username;
             Password = password;

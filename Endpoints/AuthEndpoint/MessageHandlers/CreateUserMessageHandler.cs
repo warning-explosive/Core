@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Contract.Commands;
+    using Contract;
     using Domain.Model;
     using DomainEventHandlers;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;
-    using UserWasCreated = Contract.Events.UserWasCreated;
+    using UserWasCreated = Contract.UserWasCreated;
 
     [Component(EnLifestyle.Transient)]
     internal class CreateUserMessageHandler : IMessageHandler<CreateUser>,

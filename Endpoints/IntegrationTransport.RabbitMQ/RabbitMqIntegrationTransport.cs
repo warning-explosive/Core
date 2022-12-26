@@ -613,12 +613,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 {
                     BuildLeftInputPath(channel, provider.EndpointCommands());
                     BuildLeftInputPath(channel, provider.EventsSubscriptions());
-                    BuildLeftInputPath(channel, provider.EndpointQueries());
+                    BuildLeftInputPath(channel, provider.EndpointRequests());
                     BuildLeftInputPath(channel, provider.RepliesSubscriptions());
 
                     BuildRightInputPath(channel, endpointIdentity, provider.EndpointCommands());
                     BuildRightInputPathForEvents(channel, endpointIdentity, provider.EventsSubscriptions());
-                    BuildRightInputPath(channel, endpointIdentity, provider.EndpointQueries());
+                    BuildRightInputPath(channel, endpointIdentity, provider.EndpointRequests());
                     BuildRightInputPath(channel, endpointIdentity, provider.RepliesSubscriptions());
                 }
 

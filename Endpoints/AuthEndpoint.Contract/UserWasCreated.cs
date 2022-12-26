@@ -1,31 +1,25 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Contract.Commands
+namespace SpaceEngineers.Core.AuthEndpoint.Contract
 {
     using SpaceEngineers.Core.GenericEndpoint.Contract.Abstractions;
     using SpaceEngineers.Core.GenericEndpoint.Contract.Attributes;
 
     /// <summary>
-    /// Create user command
+    /// User was created event
     /// </summary>
-    [OwnedBy(AuthEndpointIdentity.LogicalName)]
-    public record CreateUser : IIntegrationCommand
+    [OwnedBy(Identity.LogicalName)]
+    [Feature(Features.Authentication)]
+    public record UserWasCreated : IIntegrationEvent
     {
         /// <summary> .cctor </summary>
         /// <param name="username">Username</param>
-        /// <param name="password">Password</param>
-        public CreateUser(string username, string password)
+        public UserWasCreated(string username)
         {
             Username = username;
-            Password = password;
         }
 
         /// <summary>
         /// Username
         /// </summary>
         public string Username { get; init; }
-
-        /// <summary>
-        /// Password
-        /// </summary>
-        public string Password { get; init; }
     }
 }

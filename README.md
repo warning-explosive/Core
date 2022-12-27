@@ -6,7 +6,7 @@
 [develop-codecov-badge]: https://codecov.io/gh/warning-explosive/Core/branch/develop/graph/badge.svg?token=ABWNWVENC0
 
 ### Framework for the core domain development
-This repository suggests solution for the core domain development with all the necessary infrastructure implementations on the top of the .NET Core platform.
+This repository suggests solution for development of distributed systems with focus on the core domain development on the top of the .NET Core platform.
 
 ### Main features
 
@@ -17,9 +17,10 @@ This repository suggests solution for the core domain development with all the n
     
 * #### Encourages best practices and patterns
     * **Code first** - code is the single source of truth and should be written in the way that allows to understand it clearly without any additional technical documentation;
-    * **Composition and deployment freedom** - microservices, monolith, modular monolith, single database or per-service database, choose any composition type what you want at any stage of your development combining different approaches;
-    * **Dependency injection** - intelligent composition of your source code in run-time based on assembly scanning and declarative API for managing code components and providing isolation even in single process deployment;
+    * **Security** - defense in depth with several decision points and declarative API;
     * **Async out of the box** - for scalability and, as a result, better throughput;
+    * **Dependency injection** - intelligent composition of your source code in run-time based on assembly scanning and declarative API for managing code components and providing isolation even in single process deployment;
+    * **Composition and deployment freedom** - microservices, monolith, modular monolith, single database or per-service database, choose any composition type what you want at any stage of your development combining different approaches;
     * **Messaging** - async messaging with message handler as unit of work and immutable message as input is the model for service communication for predictability and scalability;
     * **Event sourcing** - domain events are basic blocks of state changes through the system persisted in append only event store;
     * **CQRS** - read\write model separation for solving different problems with more appropriate tools;
@@ -27,7 +28,6 @@ This repository suggests solution for the core domain development with all the n
     * **Observability** - logging, tracing and metrics collection with cross technology standard;
 
 * #### Based on the latest, most popular and sustainable technologies
-    Implementing infrastructure for all available technologies isn't reasonable and feasible so basic implementations based on the next technologies:
     * Dependency container - [SimpleInjector](https://github.com/simpleinjector/SimpleInjector)
     * Message broker - [RabbitMQ](https://github.com/rabbitmq/rabbitmq-dotnet-client)
     * Persistence - [PostgreSql](https://github.com/npgsql/npgsql)

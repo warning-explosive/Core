@@ -6,7 +6,7 @@
 [develop-codecov-badge]: https://codecov.io/gh/warning-explosive/Core/branch/develop/graph/badge.svg?token=ABWNWVENC0
 
 ### Framework for the core domain development
-This repository suggests solution for development of distributed systems with focus on the core domain development on the top of the .NET Core platform.
+This repository suggests solution for development of distributed systems with focus on the core domain development on the top of the .NET Core platform. [Wiki](https://github.com/warning-explosive/Core/wiki/Table-of-contents)
 
 ### Main features
 

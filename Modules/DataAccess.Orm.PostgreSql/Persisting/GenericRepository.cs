@@ -28,7 +28,7 @@
     using Transaction;
 
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class GenericRepository<TEntity> : IRepository<TEntity>,
                                                 IResolvable<IRepository<TEntity>>
         where TEntity : IDatabaseEntity
@@ -42,7 +42,7 @@
         private readonly IRepository _repository;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
-        private readonly IAdvancedDatabaseTransaction _transaction;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
         private readonly IExpressionTranslator _expressionTranslator;
         private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
@@ -52,7 +52,7 @@
             IRepository repository,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
-            IAdvancedDatabaseTransaction transaction,
+            ISqlExpressionTranslatorComposite sqlExpressionTranslator,
             IExpressionTranslator expressionTranslator,
             IDatabaseImplementation databaseImplementation,
             ILogger logger)
@@ -61,30 +61,33 @@
             _repository = repository;
             _settingsProvider = settingsProvider;
             _modelProvider = modelProvider;
-            _transaction = transaction;
+            _sqlExpressionTranslator = sqlExpressionTranslator;
             _expressionTranslator = expressionTranslator;
             _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
         public Task<long> Insert(
+            IAdvancedDatabaseTransaction transaction,
             IReadOnlyCollection<TEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
         {
             return _repository.Insert(
+                transaction,
                 entities.Cast<IDatabaseEntity>().ToArray(),
                 insertBehavior,
                 token);
         }
 
         public Task<long> Update<TValue>(
+            IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
-            return Update(new[] { new UpdateInfo<TEntity>(Lift(accessor), Lift(valueProducer)) }, predicate, token);
+            return Update(transaction, new[] { new UpdateInfo<TEntity>(Lift(accessor), Lift(valueProducer)) }, predicate, token);
 
             static Expression<Func<TEntity, object?>> Lift(Expression<Func<TEntity, TValue>> expression)
             {
@@ -93,6 +96,7 @@
         }
 
         public async Task<long> Update(
+            IAdvancedDatabaseTransaction transaction,
             IReadOnlyCollection<UpdateInfo<TEntity>> infos,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
@@ -126,22 +130,22 @@
 
                 var columnExpression = @$"""{column.Name}""";
 
-                var valueIntermediateExpression = _expressionTranslator.Translate(info.ValueProducer);
+                var valueSqlExpression = _expressionTranslator.Translate(info.ValueProducer);
 
                 var valueExpression = InlineQueryParameters(
                     _dependencyContainer,
-                    valueIntermediateExpression.Translate(_dependencyContainer, 0),
-                    valueIntermediateExpression.ExtractQueryParameters());
+                    _sqlExpressionTranslator.Translate(valueSqlExpression, 0),
+                    valueSqlExpression.ExtractQueryParameters());
 
                 setExpressions.Add(SetExpressionFormat.Format(columnExpression, valueExpression));
             }
 
-            var predicateIntermediateExpression = _expressionTranslator.Translate(predicate);
+            var predicateSqlExpression = _expressionTranslator.Translate(predicate);
 
             var predicateExpression = InlineQueryParameters(
                 _dependencyContainer,
-                predicateIntermediateExpression.Translate(_dependencyContainer, 0),
-                predicateIntermediateExpression.ExtractQueryParameters());
+                _sqlExpressionTranslator.Translate(predicateSqlExpression, 0),
+                predicateSqlExpression.ExtractQueryParameters());
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
@@ -149,7 +153,7 @@
                 string.Join(", ", setExpressions),
                 predicateExpression);
 
-            var versions = (await _transaction
+            var versions = (await transaction
                    .Read<TEntity>()
                    .All()
                    .Where(predicate)
@@ -161,12 +165,12 @@
                     grp => grp.Key,
                     grp => grp.Count());
 
-            var updateVersion = await _transaction
+            var updateVersion = await transaction
                .GetXid(settings, _logger, token)
                .ConfigureAwait(false);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.Execute)
+               .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
@@ -180,13 +184,14 @@
                     predicate,
                     updateVersion);
 
-                _transaction.CollectChange(change);
+                transaction.CollectChange(change);
             }
 
             return affectedRowsCount;
         }
 
         public async Task<long> Delete(
+            IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
         {
@@ -198,19 +203,19 @@
             var type = typeof(TEntity);
             var table = _modelProvider.Tables[type];
 
-            var predicateIntermediateExpression = _expressionTranslator.Translate(predicate);
+            var predicateSqlExpression = _expressionTranslator.Translate(predicate);
 
             var predicateExpression = InlineQueryParameters(
                 _dependencyContainer,
-                predicateIntermediateExpression.Translate(_dependencyContainer, 0),
-                predicateIntermediateExpression.ExtractQueryParameters());
+                _sqlExpressionTranslator.Translate(predicateSqlExpression, 0),
+                predicateSqlExpression.ExtractQueryParameters());
 
             var commandText = DeleteValueQueryFormat.Format(
                 table.Schema,
                 table.Name,
                 predicateExpression);
 
-            var versions = (await _transaction
+            var versions = (await transaction
                    .Read<TEntity>()
                    .All()
                    .Where(predicate)
@@ -223,7 +228,7 @@
                     grp => grp.Count());
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.Execute)
+               .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
@@ -235,7 +240,7 @@
                     count,
                     predicate);
 
-                _transaction.CollectChange(change);
+                transaction.CollectChange(change);
             }
 
             return affectedRowsCount;

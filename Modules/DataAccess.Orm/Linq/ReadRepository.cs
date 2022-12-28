@@ -18,7 +18,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         where TEntity : IUniqueIdentified
     {
         private static readonly MethodInfo LinqAll = LinqMethods.All(typeof(TEntity));
-        private static readonly MethodInfo LinqWhere = LinqMethods.QueryableWhere();
 
         private readonly IAsyncQueryProvider _queryProvider;
 
@@ -68,7 +67,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             var expression = Expression.Call(
                 null,
-                LinqWhere.MakeGenericMethod(typeof(TEntity)),
+                LinqMethods.QueryableWhere().MakeGenericMethod(typeof(TEntity)),
                 QueryAll(this),
                 Predicate(key));
 

@@ -130,8 +130,7 @@
                 name);
 
             await transaction
-               .Write<AppliedMigration>()
-               .Insert(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
+               .Insert<AppliedMigration>(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
                .ConfigureAwait(false);
         }
 

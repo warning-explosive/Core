@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// QuerySourceExpression
     /// </summary>
-    public class QuerySourceExpression : IIntermediateExpression,
+    public class QuerySourceExpression : ISqlExpression,
                                          IEquatable<QuerySourceExpression>,
                                          ISafelyEquatable<QuerySourceExpression>
     {

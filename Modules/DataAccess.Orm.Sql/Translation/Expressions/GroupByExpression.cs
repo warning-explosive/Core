@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// GroupByExpression
     /// </summary>
-    public class GroupByExpression : IIntermediateExpression,
+    public class GroupByExpression : ISqlExpression,
                                      IEquatable<GroupByExpression>,
                                      ISafelyEquatable<GroupByExpression>,
                                      IApplicable<ProjectionExpression>,
@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="valuesExpressionProducer">Values expression producer</param>
         public GroupByExpression(
             Type type,
-            Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer)
+            Func<IReadOnlyDictionary<string, object?>, ISqlExpression> valuesExpressionProducer)
         {
             Type = type;
             ValuesExpressionProducer = valuesExpressionProducer;
@@ -33,12 +33,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Keys expression
         /// </summary>
-        public IIntermediateExpression KeysExpression { get; private set; } = null!;
+        public ISqlExpression KeysExpression { get; private set; } = null!;
 
         /// <summary>
         /// Values expression producer
         /// </summary>
-        public Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer { get; }
+        public Func<IReadOnlyDictionary<string, object?>, ISqlExpression> ValuesExpressionProducer { get; }
 
         #region IEquatable
 
@@ -117,7 +117,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplyInternal(expression);
         }
 
-        private void ApplyInternal(IIntermediateExpression expression)
+        private void ApplyInternal(ISqlExpression expression)
         {
             if (KeysExpression != null)
             {

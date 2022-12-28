@@ -8,7 +8,7 @@
     /// <summary>
     /// JoinExpression
     /// </summary>
-    public class JoinExpression : IIntermediateExpression,
+    public class JoinExpression : ISqlExpression,
                                   IEquatable<JoinExpression>,
                                   ISafelyEquatable<JoinExpression>,
                                   IApplicable<JoinExpression>,
@@ -20,9 +20,9 @@
         /// <param name="rightSource">Right source expression</param>
         /// <param name="on">On expression</param>
         public JoinExpression(
-            IIntermediateExpression leftSource,
-            IIntermediateExpression rightSource,
-            IIntermediateExpression on)
+            ISqlExpression leftSource,
+            ISqlExpression rightSource,
+            ISqlExpression on)
         {
             LeftSource = leftSource;
             RightSource = rightSource;
@@ -40,17 +40,17 @@
         /// <summary>
         /// Left source expression
         /// </summary>
-        public IIntermediateExpression LeftSource { get; private set; }
+        public ISqlExpression LeftSource { get; private set; }
 
         /// <summary>
         /// Right source expression
         /// </summary>
-        public IIntermediateExpression RightSource { get; private set; }
+        public ISqlExpression RightSource { get; private set; }
 
         /// <summary>
         /// On expression
         /// </summary>
-        public IIntermediateExpression On { get; private set; }
+        public ISqlExpression On { get; private set; }
 
         #region IEquatable
 
@@ -136,7 +136,7 @@
             ApplySource(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (LeftSource == null)
             {

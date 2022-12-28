@@ -80,9 +80,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                 domainEvent.GetType(),
                 _jsonSerializer.SerializeObject(domainEvent));
 
-            return _databaseContext
-               .Write<DatabaseDomainEvent>()
-               .Insert(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
+            return _databaseContext.Insert<DatabaseDomainEvent>(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
         }
     }
 }

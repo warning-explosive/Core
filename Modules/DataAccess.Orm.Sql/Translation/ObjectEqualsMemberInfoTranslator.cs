@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     internal class ObjectEqualsMemberInfoTranslator : IMemberInfoTranslator,
                                                       ICollectionResolvable<IMemberInfoTranslator>
     {
-        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression)
+        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression)
         {
             if (context.Member.DeclaringType == typeof(object)
                 && context.Member.Name.Equals(nameof(object.Equals), StringComparison.OrdinalIgnoreCase))

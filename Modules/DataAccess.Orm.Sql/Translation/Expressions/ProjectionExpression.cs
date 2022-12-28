@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ProjectionExpression
     /// </summary>
-    public class ProjectionExpression : IIntermediateExpression,
+    public class ProjectionExpression : ISqlExpression,
                                         IEquatable<ProjectionExpression>,
                                         ISafelyEquatable<ProjectionExpression>,
                                         IApplicable<FilterExpression>,
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                         IApplicable<ConditionalExpression>,
                                         IApplicable<MethodCallExpression>
     {
-        private readonly List<IIntermediateExpression> _bindings;
+        private readonly List<ISqlExpression> _bindings;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -33,8 +33,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="bindings">Bindings expressions</param>
         public ProjectionExpression(
             Type type,
-            IIntermediateExpression source,
-            IEnumerable<IIntermediateExpression> bindings)
+            ISqlExpression source,
+            IEnumerable<ISqlExpression> bindings)
         {
             Type = type;
             Source = source;
@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal ProjectionExpression(Type type)
-            : this(type, null!, Array.Empty<IIntermediateExpression>())
+            : this(type, null!, Array.Empty<ISqlExpression>())
         {
         }
 
@@ -72,12 +72,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         /// <summary>
         /// Bindings expressions
         /// </summary>
-        public IReadOnlyCollection<IIntermediateExpression> Bindings => _bindings;
+        public IReadOnlyCollection<ISqlExpression> Bindings => _bindings;
 
         #region IEquatable
 
@@ -203,7 +203,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplyBinding(IIntermediateExpression expression)
+        private void ApplyBinding(ISqlExpression expression)
         {
             if (Source is JoinExpression join)
             {
@@ -218,7 +218,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             _bindings.Add(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {

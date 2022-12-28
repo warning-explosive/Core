@@ -1,24 +1,31 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class SimpleBindingExpressionTranslator : IExpressionTranslator<SimpleBindingExpression>,
-                                                       IResolvable<IExpressionTranslator<SimpleBindingExpression>>
+    internal class SimpleBindingExpressionTranslator : ISqlExpressionTranslator<SimpleBindingExpression>,
+                                                       IResolvable<ISqlExpressionTranslator<SimpleBindingExpression>>,
+                                                       ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public SimpleBindingExpressionTranslator(IDependencyContainer dependencyContainer)
+        public SimpleBindingExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is SimpleBindingExpression simpleBindingExpression
+                ? Translate(simpleBindingExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(SimpleBindingExpression expression, int depth)
@@ -30,7 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                .Last()
                .Source;
 
-            sb.Append(source.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(source, depth));
             sb.Append('.');
             sb.Append('"');
             sb.Append(expression.Name);

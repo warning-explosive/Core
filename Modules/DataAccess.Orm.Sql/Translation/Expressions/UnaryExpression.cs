@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// UnaryExpression
     /// </summary>
-    public class UnaryExpression : IIntermediateExpression,
+    public class UnaryExpression : ISqlExpression,
                                    IEquatable<UnaryExpression>,
                                    ISafelyEquatable<UnaryExpression>,
                                    IApplicable<SimpleBindingExpression>,
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public UnaryExpression(
             Type type,
             UnaryOperator @operator,
-            IIntermediateExpression source)
+            ISqlExpression source)
         {
             Type = type;
             Operator = @operator;
@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         #region IEquatable
 
@@ -166,7 +166,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(context, expression);
         }
 
-        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
+        private void ApplySource(TranslationContext context, ISqlExpression expression)
         {
             if (Source == null)
             {

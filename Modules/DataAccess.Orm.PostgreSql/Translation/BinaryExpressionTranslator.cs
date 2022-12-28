@@ -1,21 +1,23 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
     using BinaryExpression = Sql.Translation.Expressions.BinaryExpression;
     using ConstantExpression = Sql.Translation.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>,
-                                                IResolvable<IExpressionTranslator<BinaryExpression>>
+    internal class BinaryExpressionTranslator : ISqlExpressionTranslator<BinaryExpression>,
+                                                IResolvable<ISqlExpressionTranslator<BinaryExpression>>,
+                                                ICollectionResolvable<ISqlExpressionTranslator>
     {
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+
         private static readonly IReadOnlyDictionary<BinaryOperator, string> FunctionalOperators
             = new Dictionary<BinaryOperator, string>
             {
@@ -50,11 +52,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.NotEqual] = "IS NOT"
             };
 
-        private readonly IDependencyContainer _dependencyContainer;
-
-        public BinaryExpressionTranslator(IDependencyContainer dependencyContainer)
+        public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is BinaryExpression binaryExpression
+                ? Translate(binaryExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(BinaryExpression expression, int depth)
@@ -65,9 +72,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             {
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
-                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
                 sb.Append(", ");
-                sb.Append(expression.Right.Translate(_dependencyContainer, depth));
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth));
                 sb.Append(')');
             }
             else
@@ -77,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                     ? AltOperators
                     : Operators;
 
-                sb.Append(expression.Left.Translate(_dependencyContainer, depth));
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
                 sb.Append(" ");
                 sb.Append(map[expression.Operator]);
 
@@ -91,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                     sb.Append(" ");
                 }
 
-                sb.Append(expression.Right.Translate(_dependencyContainer, depth + 1));
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth + 1));
 
                 if (expression.Operator == BinaryOperator.Contains)
                 {
@@ -102,7 +109,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             return sb.ToString();
         }
 
-        private static bool IsNullConstant(IIntermediateExpression expression)
+        private static bool IsNullConstant(ISqlExpression expression)
         {
             return expression is ConstantExpression { Value: null };
         }

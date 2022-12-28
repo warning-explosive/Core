@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="valuesExpressionProducer">Values expression producer</param>
         public GroupedQuery(string keysQuery,
             IReadOnlyDictionary<string, object?> keysQueryParameters,
-            Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer)
+            Func<IReadOnlyDictionary<string, object?>, ISqlExpression> valuesExpressionProducer)
         {
             KeysQuery = keysQuery;
             KeysQueryParameters = keysQueryParameters;
@@ -36,6 +36,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary>
         /// Values expression producer
         /// </summary>
-        public Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer { get; }
+        public Func<IReadOnlyDictionary<string, object?>, ISqlExpression> ValuesExpressionProducer { get; }
     }
 }

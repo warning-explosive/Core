@@ -17,7 +17,7 @@
         {
             if (!columnInfo.Type.IsTypeSupported())
             {
-                throw new NotSupportedException($"Not supported column type: {columnInfo.Type}");
+                throw new NotSupportedException($"Unsupported column type: {columnInfo.Type}");
             }
 
             if (TryGetPrimitiveDataType(columnInfo.Type, out var dataType))
@@ -25,7 +25,7 @@
                 return dataType;
             }
 
-            throw new NotSupportedException($"Not supported column type: {columnInfo.Type}");
+            throw new NotSupportedException($"Unsupported column type: {columnInfo.Type}");
 
             static bool TryGetPrimitiveDataType(Type type, [NotNullWhen(true)] out string? dataType)
             {

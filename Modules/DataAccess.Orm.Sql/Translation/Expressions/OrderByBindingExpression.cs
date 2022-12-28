@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// OrderByBindingExpression
     /// </summary>
-    public class OrderByBindingExpression : IIntermediateExpression,
+    public class OrderByBindingExpression : ISqlExpression,
                                             IEquatable<OrderByBindingExpression>,
                                             ISafelyEquatable<OrderByBindingExpression>,
                                             IApplicable<SimpleBindingExpression>,
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="binding">Binding</param>
         /// <param name="orderingDirection">Ordering direction</param>
         public OrderByBindingExpression(
-            IIntermediateExpression binding,
+            ISqlExpression binding,
             EnOrderingDirection orderingDirection)
         {
             Binding = binding;
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Binding
         /// </summary>
-        public IIntermediateExpression Binding { get; private set; }
+        public ISqlExpression Binding { get; private set; }
 
         /// <summary>
         /// Ordering direction
@@ -165,7 +165,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplyBinding(expression);
         }
 
-        private void ApplyBinding(IIntermediateExpression expression)
+        private void ApplyBinding(ISqlExpression expression)
         {
             if (Binding != null)
             {

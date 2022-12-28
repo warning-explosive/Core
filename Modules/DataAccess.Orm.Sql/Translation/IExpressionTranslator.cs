@@ -9,26 +9,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     public interface IExpressionTranslator
     {
         /// <summary>
-        /// Translates linq expression to intermediate expression
+        /// Translates linq expression to sql expression
         /// </summary>
         /// <param name="expression">Linq expression</param>
-        /// <returns>Intermediate expression</returns>
-        IIntermediateExpression Translate(Expression expression);
-    }
-
-    /// <summary>
-    /// IExpressionTranslator
-    /// </summary>
-    /// <typeparam name="TExpression">TExpression type-argument</typeparam>
-    public interface IExpressionTranslator<TExpression>
-        where TExpression : IIntermediateExpression
-    {
-        /// <summary>
-        /// Translates intermediate expression into DB query
-        /// </summary>
-        /// <param name="expression">Intermediate expression</param>
-        /// <param name="depth">Depth</param>
-        /// <returns>Translated expression</returns>
-        string Translate(TExpression expression, int depth);
+        /// <returns>Sql expression</returns>
+        ISqlExpression Translate(Expression expression);
     }
 }

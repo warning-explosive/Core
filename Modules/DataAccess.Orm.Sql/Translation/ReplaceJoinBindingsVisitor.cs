@@ -7,9 +7,9 @@
     using Expressions;
     using Extensions;
 
-    internal class ReplaceJoinBindingsVisitor : IntermediateExpressionVisitorBase
+    internal class ReplaceJoinBindingsVisitor : SqlExpressionVisitorBase
     {
-        private readonly IReadOnlyDictionary<Type, IIntermediateExpression> _replacements;
+        private readonly IReadOnlyDictionary<Type, ISqlExpression> _replacements;
         private readonly bool _applyNaming;
 
         public ReplaceJoinBindingsVisitor(JoinExpression joinExpression, bool applyNaming)
@@ -22,13 +22,13 @@
                     grp => grp
                         .OrderBy(parameter => parameter.Key)
                         .Select(parameter => parameter.Value)
-                        .Cast<IIntermediateExpression>()
+                        .Cast<ISqlExpression>()
                         .First());
 
             _applyNaming = applyNaming;
         }
 
-        protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected override ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             var stack = new Stack<SimpleBindingExpression>();
 
@@ -69,7 +69,7 @@
             return base.VisitSimpleBinding(simpleBindingExpression);
         }
 
-        protected override IIntermediateExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
+        protected override ISqlExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
         {
             return new NamedBindingExpression(
                 namedBindingExpression.Name,

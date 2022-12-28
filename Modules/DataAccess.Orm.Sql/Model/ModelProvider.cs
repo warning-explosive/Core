@@ -6,12 +6,12 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Model;
+    using Api.Sql;
     using Api.Sql.Attributes;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Dynamic;
     using Dynamic.Abstractions;
     using Extensions;
@@ -21,9 +21,9 @@
     internal class ModelProvider : IModelProvider,
                                    IResolvable<IModelProvider>
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDynamicClassProvider _dynamicClassProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
+        private readonly ISqlViewQueryProviderComposite _sqlViewQueryProvider;
 
         private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
         private readonly Dictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
@@ -37,13 +37,13 @@
         private IReadOnlyDictionary<Type, MtmTableInfo>? _mtmTables;
 
         public ModelProvider(
-            IDependencyContainer dependencyContainer,
             IDynamicClassProvider dynamicClassProvider,
-            IDatabaseTypeProvider databaseTypeProvider)
+            IDatabaseTypeProvider databaseTypeProvider,
+            ISqlViewQueryProviderComposite sqlViewQueryProvider)
         {
-            _dependencyContainer = dependencyContainer;
             _dynamicClassProvider = dynamicClassProvider;
             _databaseTypeProvider = databaseTypeProvider;
+            _sqlViewQueryProvider = sqlViewQueryProvider;
 
             _sync = new object();
             _tablesBuilt = false;
@@ -191,7 +191,7 @@
             IEnumerable<ITableInfo> GetTableInfo(Type entity)
             {
                 ITableInfo info = entity.IsSqlView()
-                    ? new ViewInfo(entity, entity.SqlViewQuery(_dependencyContainer), this)
+                    ? new ViewInfo(entity, _sqlViewQueryProvider.GetQuery(entity), this)
                     : new TableInfo(entity, this);
 
                 yield return info;

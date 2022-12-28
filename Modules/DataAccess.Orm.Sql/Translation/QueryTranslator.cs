@@ -4,35 +4,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
-    using CompositionRoot;
-    using Expressions;
     using Linq;
 
     [Component(EnLifestyle.Singleton)]
     internal class QueryTranslator : IQueryTranslator,
                                      IResolvable<IQueryTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IExpressionTranslator _translator;
+        private readonly ISqlQueryTranslator _sqlTranslator;
 
         public QueryTranslator(
-            IDependencyContainer dependencyContainer,
-            IExpressionTranslator translator)
+            IExpressionTranslator translator,
+            ISqlQueryTranslator sqlTranslator)
         {
-            _dependencyContainer = dependencyContainer;
             _translator = translator;
+            _sqlTranslator = sqlTranslator;
         }
 
         public IQuery Translate(Expression expression)
         {
-            var intermediateExpression = _translator.Translate(expression);
-
-            return _dependencyContainer
-                .ResolveGeneric(typeof(IIntermediateQueryTranslator<>), intermediateExpression.GetType())
-                .CallMethod(nameof(IIntermediateQueryTranslator<IIntermediateExpression>.Translate))
-                .WithArguments(intermediateExpression)
-                .Invoke<IQuery>();
+            return _sqlTranslator.Translate(_translator.Translate(expression));
         }
     }
 }

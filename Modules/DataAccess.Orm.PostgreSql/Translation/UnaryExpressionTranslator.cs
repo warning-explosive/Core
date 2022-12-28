@@ -1,30 +1,37 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class UnaryExpressionTranslator : IExpressionTranslator<UnaryExpression>,
-                                               IResolvable<IExpressionTranslator<UnaryExpression>>
+    internal class UnaryExpressionTranslator : ISqlExpressionTranslator<UnaryExpression>,
+                                               IResolvable<ISqlExpressionTranslator<UnaryExpression>>,
+                                               ICollectionResolvable<ISqlExpressionTranslator>
     {
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+
         private static readonly IReadOnlyDictionary<UnaryOperator, string> Operators
             = new Dictionary<UnaryOperator, string>
             {
                 [UnaryOperator.Not] = "NOT"
             };
 
-        private readonly IDependencyContainer _dependencyContainer;
-
-        public UnaryExpressionTranslator(IDependencyContainer dependencyContainer)
+        public UnaryExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is UnaryExpression unaryExpression
+                ? Translate(unaryExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(UnaryExpression expression, int depth)
@@ -33,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.Append(Operators[expression.Operator]);
             sb.Append(" ");
-            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
 
             return sb.ToString();
         }

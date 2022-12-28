@@ -14,6 +14,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="context">MemberTranslationContext</param>
         /// <param name="expression">Expression</param>
         /// <returns>Recognition result</returns>
-        bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression);
+        bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression);
     }
 }

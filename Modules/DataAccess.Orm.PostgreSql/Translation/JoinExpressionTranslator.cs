@@ -5,35 +5,41 @@
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JoinExpressionTranslator : IExpressionTranslator<JoinExpression>,
-                                              IResolvable<IExpressionTranslator<JoinExpression>>
+    internal class JoinExpressionTranslator : ISqlExpressionTranslator<JoinExpression>,
+                                              IResolvable<ISqlExpressionTranslator<JoinExpression>>,
+                                              ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public JoinExpressionTranslator(IDependencyContainer dependencyContainer)
+        public JoinExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is JoinExpression joinExpression
+                ? Translate(joinExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(JoinExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(expression.LeftSource.Translate(_dependencyContainer, depth));
+            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.LeftSource, depth));
             sb.Append(new string('\t', Math.Max(depth - 1, 0)));
             sb.AppendLine("JOIN");
             sb.Append(new string('\t', depth));
-            sb.AppendLine(expression.RightSource.Translate(_dependencyContainer, depth));
+            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.RightSource, depth));
             sb.Append(new string('\t', Math.Max(depth - 1, 0)));
             sb.AppendLine("ON");
             sb.Append(new string('\t', depth));
-            sb.Append(expression.On.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.On, depth));
 
             return sb.ToString();
         }

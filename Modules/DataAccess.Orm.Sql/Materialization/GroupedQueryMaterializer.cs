@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Linq;
     using Translation;
     using Translation.Extensions;
@@ -18,16 +17,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>,
                                                             IResolvable<IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
         private readonly IQueryMaterializer<FlatQuery, TKey> _keysQueryMaterializer;
         private readonly IQueryMaterializer<FlatQuery, TValue> _valuesQueryMaterializer;
 
         public GroupedQueryMaterializer(
-            IDependencyContainer dependencyContainer,
+            ISqlExpressionTranslatorComposite sqlExpressionTranslator,
             IQueryMaterializer<FlatQuery, TKey> keysQueryMaterializer,
             IQueryMaterializer<FlatQuery, TValue> valuesQueryMaterializer)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslator;
             _keysQueryMaterializer = keysQueryMaterializer;
             _valuesQueryMaterializer = valuesQueryMaterializer;
         }
@@ -70,7 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var valuesExpression = query.ValuesExpressionProducer(keyValues);
 
-            var valuesQuery = valuesExpression.Translate(_dependencyContainer, 0);
+            var valuesQuery = _sqlExpressionTranslator.Translate(valuesExpression, 0);
             var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
 
             await foreach (var item in _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token))

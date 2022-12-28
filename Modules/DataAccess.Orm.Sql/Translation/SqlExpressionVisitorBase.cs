@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Expressions;
 
     /// <summary>
-    /// IntermediateExpressionVisitorBase
+    /// SqlExpressionVisitorBase
     /// </summary>
-    public class IntermediateExpressionVisitorBase : IIntermediateExpressionVisitor
+    public class SqlExpressionVisitorBase : ISqlExpressionVisitor
     {
         /// <inheritdoc />
-        public IIntermediateExpression Visit(IIntermediateExpression expression)
+        public ISqlExpression Visit(ISqlExpression expression)
         {
             return expression switch
             {
@@ -43,7 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="binaryExpression">BinaryExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitBinary(BinaryExpression binaryExpression)
+        protected virtual ISqlExpression VisitBinary(BinaryExpression binaryExpression)
         {
             return new BinaryExpression(
                 binaryExpression.Type,
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="unaryExpression">UnaryExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitUnary(UnaryExpression unaryExpression)
+        protected virtual ISqlExpression VisitUnary(UnaryExpression unaryExpression)
         {
             return new UnaryExpression(
                 unaryExpression.Type,
@@ -70,7 +70,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="conditionalExpression">ConditionalExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitConditional(ConditionalExpression conditionalExpression)
+        protected virtual ISqlExpression VisitConditional(ConditionalExpression conditionalExpression)
         {
             return new ConditionalExpression(
                 conditionalExpression.Type,
@@ -84,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="constantExpression">ConstantExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitConstant(ConstantExpression constantExpression)
+        protected virtual ISqlExpression VisitConstant(ConstantExpression constantExpression)
         {
             return constantExpression;
         }
@@ -94,7 +94,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="namedBindingExpression">NamedBindingExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
+        protected virtual ISqlExpression VisitNamedBinding(NamedBindingExpression namedBindingExpression)
         {
             return new NamedBindingExpression(
                 namedBindingExpression.Name,
@@ -106,7 +106,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="simpleBindingExpression">SimpleBindingExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected virtual ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             return new SimpleBindingExpression(
                 simpleBindingExpression.Member,
@@ -119,7 +119,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="filterExpression">FilterExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitFilter(FilterExpression filterExpression)
+        protected virtual ISqlExpression VisitFilter(FilterExpression filterExpression)
         {
             return new FilterExpression(
                 filterExpression.Type,
@@ -132,7 +132,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="namedSourceExpression">NamedSourceExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
+        protected virtual ISqlExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
         {
             return new NamedSourceExpression(
                 namedSourceExpression.Type,
@@ -145,7 +145,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="projectionExpression">ProjectionExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitProjection(ProjectionExpression projectionExpression)
+        protected virtual ISqlExpression VisitProjection(ProjectionExpression projectionExpression)
         {
             return new ProjectionExpression(
                 projectionExpression.Type,
@@ -158,7 +158,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="methodCallExpression">MethodCallExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitMethodCall(MethodCallExpression methodCallExpression)
+        protected virtual ISqlExpression VisitMethodCall(MethodCallExpression methodCallExpression)
         {
             return new MethodCallExpression(
                 methodCallExpression.Type,
@@ -172,7 +172,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="newExpression">NewExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitNew(NewExpression newExpression)
+        protected virtual ISqlExpression VisitNew(NewExpression newExpression)
         {
             return newExpression;
         }
@@ -182,7 +182,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="orderByExpression">OrderByExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitOrderBy(OrderByExpression orderByExpression)
+        protected virtual ISqlExpression VisitOrderBy(OrderByExpression orderByExpression)
         {
             return new OrderByExpression(
                 orderByExpression.Type,
@@ -195,7 +195,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="orderByBindingExpression">OrderByBindingExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitOrderByBinding(OrderByBindingExpression orderByBindingExpression)
+        protected virtual ISqlExpression VisitOrderByBinding(OrderByBindingExpression orderByBindingExpression)
         {
             return new OrderByBindingExpression(
                 Visit(orderByBindingExpression.Binding),
@@ -207,7 +207,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="parameterExpression">ParameterExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
+        protected virtual ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
             return parameterExpression;
         }
@@ -217,7 +217,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="queryParameterExpression">QueryParameterExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitQueryParameter(QueryParameterExpression queryParameterExpression)
+        protected virtual ISqlExpression VisitQueryParameter(QueryParameterExpression queryParameterExpression)
         {
             return queryParameterExpression;
         }
@@ -227,7 +227,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="querySourceExpression">QuerySourceExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitQuerySource(QuerySourceExpression querySourceExpression)
+        protected virtual ISqlExpression VisitQuerySource(QuerySourceExpression querySourceExpression)
         {
             return querySourceExpression;
         }
@@ -237,7 +237,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="joinExpression">JoinExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitJoinExpression(JoinExpression joinExpression)
+        protected virtual ISqlExpression VisitJoinExpression(JoinExpression joinExpression)
         {
             return new JoinExpression(
                 Visit(joinExpression.LeftSource),
@@ -250,7 +250,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="groupByExpression">GroupByExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitGroupByExpression(GroupByExpression groupByExpression)
+        protected virtual ISqlExpression VisitGroupByExpression(GroupByExpression groupByExpression)
         {
             return groupByExpression;
         }
@@ -260,7 +260,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="rowsFetchLimitExpression">RowsFetchLimitExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitRowsFetchLimitExpression(RowsFetchLimitExpression rowsFetchLimitExpression)
+        protected virtual ISqlExpression VisitRowsFetchLimitExpression(RowsFetchLimitExpression rowsFetchLimitExpression)
         {
             return new RowsFetchLimitExpression(
                 rowsFetchLimitExpression.Type,
@@ -273,7 +273,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         /// <param name="specialExpression">SpecialExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual IIntermediateExpression VisitSpecialExpression(SpecialExpression specialExpression)
+        protected virtual ISqlExpression VisitSpecialExpression(SpecialExpression specialExpression)
         {
             return specialExpression;
         }

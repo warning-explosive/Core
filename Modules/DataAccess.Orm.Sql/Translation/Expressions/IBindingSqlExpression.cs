@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     /// <summary>
-    /// IBindingIntermediateExpression
+    /// IBindingSqlExpression
     /// </summary>
-    public interface IBindingIntermediateExpression : IIntermediateExpression
+    public interface IBindingSqlExpression : ISqlExpression
     {
         /// <summary>
         /// Name
@@ -13,6 +13,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; }
+        public ISqlExpression Source { get; }
     }
 }

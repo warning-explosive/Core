@@ -1,23 +1,30 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ConditionalExpressionTranslator : IExpressionTranslator<ConditionalExpression>,
-                                                     IResolvable<IExpressionTranslator<ConditionalExpression>>
+    internal class ConditionalExpressionTranslator : ISqlExpressionTranslator<ConditionalExpression>,
+                                                     IResolvable<ISqlExpressionTranslator<ConditionalExpression>>,
+                                                     ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public ConditionalExpressionTranslator(IDependencyContainer dependencyContainer)
+        public ConditionalExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is ConditionalExpression conditionalExpression
+                ? Translate(conditionalExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(ConditionalExpression expression, int depth)
@@ -25,11 +32,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             var sb = new StringBuilder();
 
             sb.Append("CASE WHEN ");
-            sb.Append(expression.When.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.When, depth));
             sb.Append(" THEN ");
-            sb.Append(expression.Then.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Then, depth));
             sb.Append(" ELSE ");
-            sb.Append(expression.Else.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Else, depth));
             sb.Append(" END");
 
             return sb.ToString();

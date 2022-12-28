@@ -15,7 +15,7 @@
     internal class ContainsMemberInfoTranslator : IMemberInfoTranslator,
                                                   ICollectionResolvable<IMemberInfoTranslator>
     {
-        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression)
+        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression)
         {
             if (IsEnumerableContains(context)
              || IsICollectionContains(context))

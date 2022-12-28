@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using Expressions;
 
-    internal class ExtractParametersVisitor : IntermediateExpressionVisitorBase
+    internal class ExtractParametersVisitor : SqlExpressionVisitorBase
     {
         private const int BindingParameterOffset = 1_000_000;
 
@@ -17,13 +17,13 @@
 
         public Dictionary<int, ParameterExpression> Parameters { get; }
 
-        protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
+        protected override ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
             Parameters.Add(_currentIndex++, parameterExpression);
             return parameterExpression;
         }
 
-        protected override IIntermediateExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
+        protected override ISqlExpression VisitNamedSource(NamedSourceExpression namedSourceExpression)
         {
             var parameter = Visit(namedSourceExpression.Parameter);
             var source = Visit(namedSourceExpression.Source);
@@ -34,7 +34,7 @@
                 parameter);
         }
 
-        protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected override ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             if (simpleBindingExpression.Source is ParameterExpression parameterExpression)
             {

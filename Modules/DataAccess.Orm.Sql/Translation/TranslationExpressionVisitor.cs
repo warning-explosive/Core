@@ -29,25 +29,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly IExpressionTranslator _translator;
         private readonly IEnumerable<IMemberInfoTranslator> _memberInfoTranslators;
 
-        private static readonly MethodInfo Select = LinqMethods.QueryableSelect();
-        private static readonly MethodInfo Where = LinqMethods.QueryableWhere();
-        private static readonly MethodInfo GroupBy2 = LinqMethods.QueryableGroupBy2();
-        private static readonly MethodInfo GroupBy3 = LinqMethods.QueryableGroupBy3();
-        private static readonly MethodInfo Single = LinqMethods.QueryableSingle();
-        private static readonly MethodInfo SingleOrDefault = LinqMethods.QueryableSingleOrDefault();
-        private static readonly MethodInfo First = LinqMethods.QueryableFirst();
-        private static readonly MethodInfo FirstOrDefault = LinqMethods.QueryableFirstOrDefault();
-        private static readonly MethodInfo Any = LinqMethods.QueryableAny();
-        private static readonly MethodInfo All = LinqMethods.QueryableAll();
-        private static readonly MethodInfo Count = LinqMethods.QueryableCount();
-        private static readonly MethodInfo Contains = LinqMethods.QueryableContains();
-        private static readonly MethodInfo Distinct = LinqMethods.QueryableDistinct();
-        private static readonly MethodInfo OrderBy = LinqMethods.QueryableOrderBy();
-        private static readonly MethodInfo OrderByDescending = LinqMethods.QueryableOrderByDescending();
-        private static readonly MethodInfo ThenBy = LinqMethods.QueryableThenBy();
-        private static readonly MethodInfo ThenByDescending = LinqMethods.QueryableThenByDescending();
-        private static readonly MethodInfo SelectMany = LinqMethods.QueryableSelectMany();
-
         public TranslationExpressionVisitor(
             IModelProvider modelProvider,
             ExpressionTranslator translator,
@@ -70,11 +51,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
-            var isQueryRoot = itemType.IsClass
-                && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                && method == LinqMethods.All(itemType);
-
-            if (isQueryRoot)
+            if (method.IsQueryRoot())
             {
                 Context.WithinConditionalScope(
                     parent => parent is not JoinExpression,
@@ -99,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Select)
+            if (method == LinqMethods.QueryableSelect())
             {
                 Context.WithinConditionalScope(
                     parent => parent is ProjectionExpression || parent is JoinExpression,
@@ -125,7 +102,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Where)
+            if (method == LinqMethods.QueryableWhere())
             {
                 Context.WithinConditionalScope(
                     parent => parent is ProjectionExpression || parent is JoinExpression,
@@ -151,10 +128,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == OrderBy
-                || method == OrderByDescending
-                || method == ThenBy
-                || method == ThenByDescending)
+            if (method == LinqMethods.QueryableOrderBy()
+                || method == LinqMethods.QueryableOrderByDescending()
+                || method == LinqMethods.QueryableThenBy()
+                || method == LinqMethods.QueryableThenByDescending())
             {
                 Context.WithinConditionalScope(
                     parent => parent is ProjectionExpression || parent is JoinExpression,
@@ -174,12 +151,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             {
                                 var methodDefinition = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
 
-                                if (methodDefinition == OrderBy
-                                    || methodDefinition == OrderByDescending
-                                    || methodDefinition == ThenBy
-                                    || methodDefinition == ThenByDescending)
+                                if (methodDefinition == LinqMethods.QueryableOrderBy()
+                                    || methodDefinition == LinqMethods.QueryableOrderByDescending()
+                                    || methodDefinition == LinqMethods.QueryableThenBy()
+                                    || methodDefinition == LinqMethods.QueryableThenByDescending())
                                 {
-                                    var direction = methodDefinition == OrderBy || methodDefinition == ThenBy
+                                    var direction = methodDefinition == LinqMethods.QueryableOrderBy() || methodDefinition == LinqMethods.QueryableThenBy()
                                         ? EnOrderingDirection.Asc
                                         : EnOrderingDirection.Desc;
 
@@ -208,22 +185,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == GroupBy2)
+            if (method == LinqMethods.QueryableGroupBy2())
             {
                 GroupBy(node, itemType, false);
 
                 return node;
             }
 
-            if (method == GroupBy3)
+            if (method == LinqMethods.QueryableGroupBy3())
             {
                 GroupBy(node, itemType, true);
 
                 return node;
             }
 
-            if (method == Single
-                || method == SingleOrDefault)
+            if (method == LinqMethods.QueryableSingle()
+                || method == LinqMethods.QueryableSingleOrDefault())
             {
                 Context.WithinScope(
                     new RowsFetchLimitExpression(itemType, 2),
@@ -232,8 +209,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == First
-                || method == FirstOrDefault)
+            if (method == LinqMethods.QueryableFirst()
+                || method == LinqMethods.QueryableFirstOrDefault())
             {
                 Context.WithinScope(
                     new RowsFetchLimitExpression(itemType, 1),
@@ -242,7 +219,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Any)
+            if (method == LinqMethods.QueryableAny())
             {
                 Context.WithinScope(
                     new ProjectionExpression(itemType),
@@ -251,7 +228,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         // count(*) > 0 as "Any"
                         var countAllMethodCall = new Expressions.MethodCallExpression(
                             typeof(int),
-                            nameof(Count),
+                            nameof(Queryable.Count),
                             null,
                             new[] { new SpecialExpression(itemType, "*") });
 
@@ -269,7 +246,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == All)
+            if (method == LinqMethods.QueryableAll())
             {
                 Context.WithinScope(
                     new ProjectionExpression(itemType),
@@ -287,7 +264,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                     () =>
                                     {
                                         Context.WithinScope(
-                                            new Expressions.MethodCallExpression(typeof(int), nameof(Count), null, Array.Empty<IIntermediateExpression>()),
+                                            new Expressions.MethodCallExpression(typeof(int), nameof(Queryable.Count), null, Array.Empty<ISqlExpression>()),
                                             () =>
                                             {
                                                 Context.WithinScope(
@@ -302,7 +279,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                                         var countAllMethodCall = new Expressions.MethodCallExpression(
                                             typeof(int),
-                                            nameof(Count),
+                                            nameof(Queryable.Count),
                                             null,
                                             new[] { new SpecialExpression(itemType, "*") });
 
@@ -314,7 +291,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Count)
+            if (method == LinqMethods.QueryableCount())
             {
                 Context.WithinScope(
                     new ProjectionExpression(itemType),
@@ -323,7 +300,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         // count(*) as "Count"
                         var countAllMethodCall = new Expressions.MethodCallExpression(
                             typeof(int),
-                            nameof(Count),
+                            nameof(Queryable.Count),
                             null,
                             new[] { new SpecialExpression(itemType, "*") });
 
@@ -335,7 +312,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Contains)
+            if (method == LinqMethods.QueryableContains())
             {
                 Context.WithinScope(
                     new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Contains),
@@ -351,7 +328,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == Distinct)
+            if (method == LinqMethods.QueryableDistinct())
             {
                 Visit(node.Arguments[0]);
                 var expression = Context.Expression ?? throw new InvalidOperationException("Unable to find distinct expression root");
@@ -361,9 +338,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (method == SelectMany)
+            if (method == LinqMethods.QueryableSelectMany())
             {
-                throw new NotSupportedException(nameof(SelectMany));
+                throw new NotSupportedException(nameof(Queryable.SelectMany));
             }
 
             if (TryGetMemberInfoExpression(node.Method, out var recognized))
@@ -469,7 +446,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return node;
         }
 
-        private void SelectAll(IIntermediateExpression expression)
+        private void SelectAll(ISqlExpression expression)
         {
             if (expression is not ProjectionExpression projection)
             {
@@ -494,7 +471,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Context.Apply(column.BuildExpression(parameter));
             }
 
-            static Expressions.ParameterExpression ExtractParameter(IIntermediateExpression source, Type parameterType)
+            static Expressions.ParameterExpression ExtractParameter(ISqlExpression source, Type parameterType)
             {
                 var parameterExpression = source
                     .ExtractParameters()
@@ -513,7 +490,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private bool TryGetMemberInfoExpression(
             MemberInfo memberInfo,
-            [NotNullWhen(true)] out IIntermediateExpression? expression)
+            [NotNullWhen(true)] out ISqlExpression? expression)
         {
             var context = new MemberTranslationContext(Context, memberInfo);
 
@@ -529,7 +506,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             return expression != null;
 
-            string Amb(IEnumerable<IIntermediateExpression?> infos)
+            string Amb(IEnumerable<ISqlExpression?> infos)
             {
                 return $"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member";
             }
@@ -648,7 +625,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Expression selector)
             {
                 return Expression.Call(null,
-                    Select.MakeGenericMethod(sourceType, targetType),
+                    LinqMethods.QueryableSelect().MakeGenericMethod(sourceType, targetType),
                     sourceExpression,
                     context.ExtractLambdaExpression(node, selector));
             }
@@ -661,7 +638,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Expression selector)
             {
                 return Expression.Call(null,
-                    Where.MakeGenericMethod(sourceType),
+                    LinqMethods.QueryableWhere().MakeGenericMethod(sourceType),
                     sourceExpression,
                     context.ExtractLambdaExpression(node, selector));
             }
@@ -681,7 +658,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 return Expression.Lambda(body, (ParameterExpression)parameterExpression.AsExpressionTree());
 
-                static IEnumerable<IIntermediateExpression> GetBindings(
+                static IEnumerable<ISqlExpression> GetBindings(
                     ProjectionExpression projection,
                     Expressions.ParameterExpression parameterExpression)
                 {
@@ -692,7 +669,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     return bindings;
                 }
 
-                static Func<IIntermediateExpression, Expressions.BinaryExpression> BindingFilter(
+                static Func<ISqlExpression, Expressions.BinaryExpression> BindingFilter(
                     TranslationContext context,
                     ProjectionExpression keyExpression,
                     IReadOnlyDictionary<string, object?> keyValues)
@@ -700,7 +677,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     return expression =>
                     {
                         var value = keyExpression.IsProjectionToClass
-                                    && expression is IBindingIntermediateExpression binding
+                                    && expression is IBindingSqlExpression binding
                             ? keyValues[binding.Name]
                             : keyValues.Single().Value;
 
@@ -713,7 +690,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 }
             }
 
-            static Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> ValuesExpressionProducer(
+            static Func<IReadOnlyDictionary<string, object?>, ISqlExpression> ValuesExpressionProducer(
                 IExpressionTranslator translator,
                 TranslationContext context,
                 MethodCallExpression node,

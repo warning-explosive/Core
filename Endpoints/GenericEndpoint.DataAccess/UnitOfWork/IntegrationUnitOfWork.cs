@@ -161,19 +161,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     true);
 
                 await databaseContext
-                   .Write<InboxMessage>()
-                   .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
+                   .Insert<InboxMessage>(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
             }
             else
             {
                 await databaseContext
-                   .Write<InboxMessage>()
-                   .Update(message => message.Handled,
-                        _ => true,
-                        message => message.PrimaryKey == inbox.PrimaryKey,
-                        token)
-                   .ConfigureAwait(false);
+                    .Update<InboxMessage, bool>(message => message.Handled, _ => true, message => message.PrimaryKey == inbox.PrimaryKey, token)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -192,9 +187,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            return databaseContext
-               .Write<OutboxMessage>()
-               .Insert(outboxMessages, EnInsertBehavior.Default, token);
+            return databaseContext.Insert<OutboxMessage>(outboxMessages, EnInsertBehavior.Default, token);
         }
 
         private static Task DeliverOutgoingMessages(

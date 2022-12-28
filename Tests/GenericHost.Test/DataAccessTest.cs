@@ -413,8 +413,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         var entity = DatabaseEntity.Generate(primaryKey);
 
                         _ = await transaction
-                           .Write<DatabaseEntity>()
-                           .Insert(new[] { entity }, EnInsertBehavior.Default, token)
+                           .Insert<DatabaseEntity>(new[] { entity }, EnInsertBehavior.Default, token)
                            .ConfigureAwait(false);
 
                         version = entity.Version;
@@ -458,11 +457,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Write<DatabaseEntity>()
-                           .Update(entity => entity.IntField,
-                                entity => entity.IntField + 1,
-                                entity => entity.PrimaryKey == primaryKey,
-                                token)
+                           .Update<DatabaseEntity, int>(entity => entity.IntField, entity => entity.IntField + 1, entity => entity.PrimaryKey == primaryKey, token)
                            .ConfigureAwait(false);
 
                         await sync
@@ -489,8 +484,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Write<DatabaseEntity>()
-                           .Delete(entity => entity.PrimaryKey == primaryKey, token)
+                           .Delete<DatabaseEntity>(entity => entity.PrimaryKey == primaryKey, token)
                            .ConfigureAwait(false);
 
                         await sync
@@ -737,8 +731,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var entity = DatabaseEntity.Generate(primaryKey);
 
                 _ = await transaction
-                   .Write<DatabaseEntity>()
-                   .Insert(new[] { entity }, EnInsertBehavior.Default, token)
+                   .Insert<DatabaseEntity>(new[] { entity }, EnInsertBehavior.Default, token)
                    .ConfigureAwait(false);
             }
 
@@ -759,11 +752,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Write<DatabaseEntity>()
-                   .Update(entity => entity.IntField,
-                        entity => entity.IntField + 1,
-                        entity => entity.PrimaryKey == primaryKey,
-                        token)
+                   .Update<DatabaseEntity, int>(entity => entity.IntField, entity => entity.IntField + 1, entity => entity.PrimaryKey == primaryKey, token)
                    .ConfigureAwait(false);
             }
 
@@ -773,8 +762,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Write<DatabaseEntity>()
-                   .Delete(entity => entity.PrimaryKey == primaryKey, token)
+                   .Delete<DatabaseEntity>(entity => entity.PrimaryKey == primaryKey, token)
                    .ConfigureAwait(false);
             }
         }

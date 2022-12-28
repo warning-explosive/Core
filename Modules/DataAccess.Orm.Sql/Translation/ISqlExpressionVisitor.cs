@@ -3,15 +3,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Expressions;
 
     /// <summary>
-    /// IIntermediateExpressionVisitor
+    /// ISqlExpression
     /// </summary>
-    public interface IIntermediateExpressionVisitor
+    public interface ISqlExpressionVisitor
     {
         /// <summary>
         /// Visit expression
         /// </summary>
         /// <param name="expression">Source expression</param>
         /// <returns>Modified expression</returns>
-        IIntermediateExpression Visit(IIntermediateExpression expression);
+        ISqlExpression Visit(ISqlExpression expression);
     }
 }

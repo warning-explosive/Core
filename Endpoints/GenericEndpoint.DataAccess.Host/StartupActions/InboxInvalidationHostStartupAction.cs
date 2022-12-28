@@ -89,11 +89,7 @@
                .Value;
 
             await transaction
-               .Write<InboxMessage>()
-               .Update(message => message.IsError,
-                    _ => true,
-                    message => message.PrimaryKey == id,
-                    token)
+               .Update<InboxMessage, bool>(message => message.IsError, _ => true, message => message.PrimaryKey == id, token)
                .ConfigureAwait(false);
         }
 

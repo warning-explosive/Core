@@ -1,9 +1,9 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using System;
     using System.Linq;
     using System.Linq.Expressions;
-    using Api.Model;
-    using Basics;
+    using System.Reflection;
     using Linq;
 
     internal class CollapseConstantsExpressionVisitor : ExpressionVisitor
@@ -17,21 +17,27 @@
                 return visitedNode;
             }
 
-            if (visitedNode is MethodCallExpression { Object: ConstantExpression or null } methodCallExpression
-                && methodCallExpression.Arguments.All(argument => argument is ConstantExpression))
+            if (visitedNode is MethodCallExpression { Object: ConstantExpression or null } methodCallExpression)
             {
-                var method = node.Method.GenericMethodDefinitionOrSelf();
-
-                var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
-
-                var isQueryRoot = itemType.IsClass
-                    && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                    && method == LinqMethods.All(itemType);
-
-                if (!isQueryRoot)
+                if (methodCallExpression.Method.IsQueryRoot())
                 {
-                    return visitedNode.CollapseConstantExpression();
+                    return visitedNode;
                 }
+
+                var parameters = methodCallExpression
+                    .Arguments
+                    .OfType<ConstantExpression>()
+                    .Select(argument => argument.Value)
+                    .ToArray();
+
+                if (parameters.Length != methodCallExpression.Arguments.Count)
+                {
+                    return visitedNode;
+                }
+
+                var target = (methodCallExpression.Object as ConstantExpression)?.Value;
+
+                return Expression.Constant(methodCallExpression.Method.Invoke(target, parameters));
             }
 
             return visitedNode;
@@ -46,22 +52,24 @@
                 return visitedNode;
             }
 
-            if (visitedNode is MemberExpression { Expression: ConstantExpression })
+            if (visitedNode is MemberExpression { Expression: ConstantExpression or null } memberExpression)
             {
-                return node.CollapseConstantExpression();
-            }
+                var target = (memberExpression.Expression as ConstantExpression)?.Value;
 
-            if (visitedNode is MemberExpression { Expression: null })
-            {
-                return node.CollapseConstantExpression();
-            }
-
-            if (node.Expression is ConstantExpression)
-            {
-                return node.CollapseConstantExpression();
+                return CollapseMemberInfo(memberExpression.Member, target);
             }
 
             return visitedNode;
+        }
+
+        private static ConstantExpression CollapseMemberInfo(MemberInfo member, object? target)
+        {
+            return Expression.Constant(member switch
+            {
+                PropertyInfo propertyInfo => propertyInfo.GetValue(target),
+                FieldInfo fieldInfo => fieldInfo.GetValue(target),
+                _ => throw new NotSupportedException(member.GetType().FullName)
+            });
         }
     }
 }

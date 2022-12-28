@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// BinaryExpression
     /// </summary>
-    public class BinaryExpression : IIntermediateExpression,
+    public class BinaryExpression : ISqlExpression,
                                     IEquatable<BinaryExpression>,
                                     ISafelyEquatable<BinaryExpression>,
                                     IApplicable<SimpleBindingExpression>,
@@ -30,8 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public BinaryExpression(
             Type type,
             BinaryOperator @operator,
-            IIntermediateExpression left,
-            IIntermediateExpression right)
+            ISqlExpression left,
+            ISqlExpression right)
         {
             Type = type;
             Operator = @operator;
@@ -55,12 +55,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Left expression
         /// </summary>
-        public IIntermediateExpression Left { get; private set; }
+        public ISqlExpression Left { get; private set; }
 
         /// <summary>
         /// Right expression
         /// </summary>
-        public IIntermediateExpression Right { get; private set; }
+        public ISqlExpression Right { get; private set; }
 
         #region IEquatable
 
@@ -189,7 +189,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(context, expression);
         }
 
-        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
+        private void ApplySource(TranslationContext context, ISqlExpression expression)
         {
             if (expression is QueryParameterExpression
                 && Operator == BinaryOperator.Contains

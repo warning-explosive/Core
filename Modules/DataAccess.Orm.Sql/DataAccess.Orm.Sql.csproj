@@ -55,13 +55,13 @@
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ReplaceParameterVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractQueryParametersVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\CompactExpressionVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\StringEmptyMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
@@ -69,17 +69,11 @@
       <Compile Update="Translation\StringLengthMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\IntermediateExpressionVisitorBase.cs">
-        <DependentUpon>IIntermediateExpressionVisitor.cs</DependentUpon>
+      <Compile Update="Translation\SqlExpressionVisitorBase.cs">
+        <DependentUpon>ISqlExpressionVisitor.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExpressionTranslator.cs">
         <DependentUpon>IExpressionTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\GroupedQueryTranslator.cs">
-        <DependentUpon>IIntermediateQueryTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\FlatQueryTranslator.cs">
-        <DependentUpon>IIntermediateQueryTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractLambdaExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
@@ -87,7 +81,7 @@
       <Compile Update="Translation\TranslationExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\IIntermediateQueryTranslator.cs">
+      <Compile Update="Translation\ISqlQueryTranslator.cs">
         <DependentUpon>QueryTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\CollapseConstantsExpressionVisitor.cs">
@@ -109,49 +103,49 @@
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\FilterExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ProjectionExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NamedBindingExpression.cs">
-        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IBindingSqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\SimpleBindingExpression.cs">
-        <DependentUpon>IBindingIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>IBindingSqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\GroupByExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NewExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ConditionalExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ConstantExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\MethodCallExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ParameterExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\QueryParameterExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\QuerySourceExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\IBindingIntermediateExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+      <Compile Update="Translation\Expressions\IBindingSqlExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\BinaryExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\FallbackQueryParameterTranslator.cs">
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
@@ -184,16 +178,16 @@
         <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\JoinExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ReplaceJoinBindingsVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractParametersVisitor.cs">
-        <DependentUpon>IntermediateExpressionVisitorBase.cs</DependentUpon>
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractMembersChainExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
@@ -202,10 +196,10 @@
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\SpecialExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ObjectEqualsMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
@@ -217,7 +211,7 @@
         <DependentUpon>TableInfo.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\UnaryExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\UnaryOperator.cs">
         <DependentUpon>UnaryExpression.cs</DependentUpon>
@@ -229,10 +223,16 @@
         <DependentUpon>UnaryExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\OrderByExpression.cs">
-        <DependentUpon>IIntermediateExpression.cs</DependentUpon>
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\OrderByBindingExpression.cs">
         <DependentUpon>OrderByExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlExpressionTranslatorComposite.cs">
+        <DependentUpon>ISqlExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlQueryTranslator.cs">
+        <DependentUpon>ISqlQueryTranslator.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

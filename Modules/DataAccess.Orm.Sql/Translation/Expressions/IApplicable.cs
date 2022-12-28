@@ -1,13 +1,11 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
-    using Expressions;
-
     /// <summary>
     /// IApplicable
     /// </summary>
     /// <typeparam name="TExpression">TExpression type-argument</typeparam>
     public interface IApplicable<TExpression>
-        where TExpression : class, IIntermediateExpression
+        where TExpression : class, ISqlExpression
     {
         /// <summary>
         /// Applies expression to outer expression

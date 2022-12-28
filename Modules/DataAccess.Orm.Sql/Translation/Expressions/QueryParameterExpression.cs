@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// QueryParameterExpression
     /// </summary>
-    public class QueryParameterExpression : IIntermediateExpression,
+    public class QueryParameterExpression : ISqlExpression,
                                             IEquatable<QueryParameterExpression>,
                                             ISafelyEquatable<QueryParameterExpression>
     {
@@ -103,8 +103,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="type">Type</param>
         /// <param name="value">Value</param>
         /// <param name="force">Force query parameter</param>
-        /// <returns>IIntermediateExpression</returns>
-        public static IIntermediateExpression Create(
+        /// <returns>ISqlExpression</returns>
+        public static ISqlExpression Create(
             TranslationContext context,
             Type type,
             object? value,

@@ -16,6 +16,46 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
+        private static MethodInfo? _queryableSingle;
+        private static MethodInfo? _queryableSingle2;
+        private static MethodInfo? _queryableSingleOrDefault;
+        private static MethodInfo? _queryableSingleOrDefault2;
+        private static MethodInfo? _queryableFirst;
+        private static MethodInfo? _queryableFirst2;
+        private static MethodInfo? _queryableFirstOrDefault;
+        private static MethodInfo? _queryableFirstOrDefault2;
+        private static MethodInfo? _queryableSelect;
+        private static MethodInfo? _queryableWhere;
+        private static MethodInfo? _queryableAny;
+        private static MethodInfo? _queryableAny2;
+        private static MethodInfo? _queryableAll;
+        private static MethodInfo? _queryableCount;
+        private static MethodInfo? _queryableCount2;
+        private static MethodInfo? _queryableGroupBy2;
+        private static MethodInfo? _queryableGroupBy3;
+        private static MethodInfo? _queryableContains;
+        private static MethodInfo? _queryableDistinct;
+        private static MethodInfo? _queryableOrderBy;
+        private static MethodInfo? _queryableOrderByDescending;
+        private static MethodInfo? _queryableThenBy;
+        private static MethodInfo? _queryableThenByDescending;
+        private static MethodInfo? _queryableSelectMany;
+
+        /// <summary>
+        /// Does method represent query root (IReadRepository.All())
+        /// </summary>
+        /// <param name="method">MethodInfo</param>
+        /// <returns>IsQueryRoot</returns>
+        public static bool IsQueryRoot(this MethodInfo method)
+        {
+            if (!method.Name.Equals(nameof(IReadRepository<IDatabaseEntity<Guid>>.All), StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return method.ReflectedType!.GenericTypeDefinitionOrSelf() == typeof(IReadRepository<>);
+        }
+
         /// <summary>
         /// IReadRepository.All
         /// </summary>
@@ -36,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Single MethodInfo</returns>
         public static MethodInfo QueryableSingle()
         {
-            return new MethodFinder(typeof(Queryable),
+            return _queryableSingle ??= new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Single),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
@@ -53,7 +93,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Single MethodInfo</returns>
         public static MethodInfo QueryableSingle2()
         {
-            return new MethodFinder(typeof(Queryable),
+            return _queryableSingle2 ??= new MethodFinder(typeof(Queryable),
                     nameof(System.Linq.Queryable.Single),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
@@ -70,8 +110,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.SingleOrDefault MethodInfo</returns>
         public static MethodInfo QueryableSingleOrDefault()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.SingleOrDefault),
+            return _queryableSingleOrDefault ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.SingleOrDefault),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -87,8 +127,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.SingleOrDefault MethodInfo</returns>
         public static MethodInfo QueryableSingleOrDefault2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.SingleOrDefault),
+            return _queryableSingleOrDefault2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.SingleOrDefault),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -104,8 +144,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.First MethodInfo</returns>
         public static MethodInfo QueryableFirst()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.First),
+            return _queryableFirst ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.First),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -121,8 +161,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.First MethodInfo</returns>
         public static MethodInfo QueryableFirst2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.First),
+            return _queryableFirst2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.First),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -138,8 +178,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.FirstOrDefault MethodInfo</returns>
         public static MethodInfo QueryableFirstOrDefault()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.FirstOrDefault),
+            return _queryableFirstOrDefault ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.FirstOrDefault),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -155,8 +195,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.FirstOrDefault MethodInfo</returns>
         public static MethodInfo QueryableFirstOrDefault2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.FirstOrDefault),
+            return _queryableFirstOrDefault2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.FirstOrDefault),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -172,8 +212,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Select MethodInfo</returns>
         public static MethodInfo QueryableSelect()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Select),
+            return _queryableSelect ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Select),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -189,8 +229,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Where MethodInfo</returns>
         public static MethodInfo QueryableWhere()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Where),
+            return _queryableWhere ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Where),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -206,8 +246,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Any MethodInfo</returns>
         public static MethodInfo QueryableAny()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Any),
+            return _queryableAny ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Any),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -223,8 +263,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Any MethodInfo</returns>
         public static MethodInfo QueryableAny2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Any),
+            return _queryableAny2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Any),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -240,8 +280,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.All MethodInfo</returns>
         public static MethodInfo QueryableAll()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.All),
+            return _queryableAll ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.All),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -257,8 +297,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Count MethodInfo</returns>
         public static MethodInfo QueryableCount()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Count),
+            return _queryableCount ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Count),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -274,8 +314,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Count MethodInfo</returns>
         public static MethodInfo QueryableCount2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Count),
+            return _queryableCount2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Count),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(string) },
@@ -291,8 +331,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.GroupBy MethodInfo</returns>
         public static MethodInfo QueryableGroupBy2()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.GroupBy),
+            return _queryableGroupBy2 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.GroupBy),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -308,8 +348,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.GroupBy MethodInfo</returns>
         public static MethodInfo QueryableGroupBy3()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.GroupBy),
+            return _queryableGroupBy3 ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.GroupBy),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object), typeof(object) },
@@ -325,8 +365,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Contains MethodInfo</returns>
         public static MethodInfo QueryableContains()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Contains),
+            return _queryableContains ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Contains),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -342,8 +382,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.Distinct MethodInfo</returns>
         public static MethodInfo QueryableDistinct()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.Distinct),
+            return _queryableDistinct ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Distinct),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
@@ -359,8 +399,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.OrderBy MethodInfo</returns>
         public static MethodInfo QueryableOrderBy()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.OrderBy),
+            return _queryableOrderBy ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.OrderBy),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -376,8 +416,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.OrderByDescending MethodInfo</returns>
         public static MethodInfo QueryableOrderByDescending()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.OrderByDescending),
+            return _queryableOrderByDescending ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.OrderByDescending),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -393,8 +433,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.ThenBy MethodInfo</returns>
         public static MethodInfo QueryableThenBy()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.ThenBy),
+            return _queryableThenBy ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.ThenBy),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -410,8 +450,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.ThenByDescending MethodInfo</returns>
         public static MethodInfo QueryableThenByDescending()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.ThenByDescending),
+            return _queryableThenByDescending ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.ThenByDescending),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },
@@ -427,8 +467,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Queryable.SelectMany MethodInfo</returns>
         public static MethodInfo QueryableSelectMany()
         {
-            return new MethodFinder(typeof(Queryable),
-                    nameof(System.Linq.Queryable.SelectMany),
+            return _queryableSelectMany ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.SelectMany),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object), typeof(object) },

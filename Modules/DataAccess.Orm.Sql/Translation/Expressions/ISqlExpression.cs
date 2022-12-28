@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Linq.Expressions;
 
     /// <summary>
-    /// IIntermediateExpression
+    /// ISqlExpression
     /// </summary>
-    public interface IIntermediateExpression
+    public interface ISqlExpression
     {
         /// <summary>
         /// Type
@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         Type Type { get; }
 
         /// <summary>
-        /// Converts IIntermediateExpression back to expression tree
+        /// Converts ISqlExpression back to System.Expression
         /// </summary>
         /// <returns>Expression tree</returns>
         Expression AsExpressionTree();

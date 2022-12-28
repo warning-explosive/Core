@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// FilterExpression
     /// </summary>
-    public class FilterExpression : IIntermediateExpression,
+    public class FilterExpression : ISqlExpression,
                                     IEquatable<FilterExpression>,
                                     ISafelyEquatable<FilterExpression>,
                                     IApplicable<ProjectionExpression>,
@@ -28,8 +28,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="predicate">Predicate expression</param>
         public FilterExpression(
             Type type,
-            IIntermediateExpression source,
-            IIntermediateExpression predicate)
+            ISqlExpression source,
+            ISqlExpression predicate)
         {
             Type = type;
             Source = source;
@@ -47,12 +47,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         /// <summary>
         /// Predicate expression
         /// </summary>
-        public IIntermediateExpression Predicate { get; private set; }
+        public ISqlExpression Predicate { get; private set; }
 
         #region IEquatable
 
@@ -168,7 +168,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {
@@ -178,7 +178,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Source = expression;
         }
 
-        private void ApplyBinding(IIntermediateExpression expression)
+        private void ApplyBinding(ISqlExpression expression)
         {
             if (Source is JoinExpression join)
             {

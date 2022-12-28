@@ -24,9 +24,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
         public Task Handle(TransportEvent message, CancellationToken token)
         {
-            return _databaseContext
-               .Write<DatabaseEntity>()
-               .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token);
+            return _databaseContext.Insert<DatabaseEntity>(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token);
         }
     }
 }

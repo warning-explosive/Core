@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using Transaction;
 
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class Repository : IRepository,
                                 IResolvable<IRepository>
     {
@@ -38,7 +38,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private const string ExcludedPseudoColumnFormat = @"excluded.{0}";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseImplementation _databaseImplementation;
@@ -46,14 +45,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 
         public Repository(
             IDependencyContainer dependencyContainer,
-            IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
-            _transaction = transaction;
             _modelProvider = modelProvider;
             _settingsProvider = settingsProvider;
             _databaseImplementation = databaseImplementation;
@@ -61,6 +58,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         }
 
         public async Task<long> Insert(
+            IAdvancedDatabaseTransaction transaction,
             IDatabaseEntity[] entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
@@ -79,7 +77,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .DistinctBy(GetKey)
                .ToDictionary(GetKey);
 
-            var version = await _transaction
+            var version = await transaction
                .GetXid(settings, _logger, token)
                .ConfigureAwait(false);
 
@@ -96,14 +94,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .ToString(";" + Environment.NewLine);
 
             var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.Execute)
+               .TryAsync((commandText, settings, _logger), transaction.Execute)
                .Catch<Exception>()
                .Invoke(_databaseImplementation.Handle<long>(commandText), token)
                .ConfigureAwait(false);
 
             var change = new CreateEntityChange(entities, insertBehavior);
 
-            _transaction.CollectChange(change);
+            transaction.CollectChange(change);
 
             return affectedRowsCount;
 

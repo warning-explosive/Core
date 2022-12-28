@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ConstantExpression
     /// </summary>
-    public class ConstantExpression : IIntermediateExpression,
+    public class ConstantExpression : ISqlExpression,
                                       IEquatable<ConstantExpression>,
                                       ISafelyEquatable<ConstantExpression>
     {

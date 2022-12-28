@@ -300,11 +300,11 @@
         }
 
         /// <summary>
-        /// Builds intermediate expression tree
+        /// Builds sql expression tree
         /// </summary>
         /// <param name="parameter">Parameter expression</param>
         /// <returns>Expression tree</returns>
-        public IBindingIntermediateExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
+        public IBindingSqlExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
         {
             if (parameter.Type != Table.Type)
             {
@@ -314,10 +314,10 @@
             var chain = _chain
                 .Select(property => property.Reflected)
                 .Aggregate(
-                    (IIntermediateExpression)parameter,
+                    (ISqlExpression)parameter,
                     (acc, next) => new SimpleBindingExpression(next, next.PropertyType, acc));
 
-            return (IBindingIntermediateExpression)chain;
+            return (IBindingSqlExpression)chain;
         }
 
         /// <summary>

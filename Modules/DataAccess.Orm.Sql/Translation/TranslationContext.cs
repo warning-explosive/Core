@@ -25,14 +25,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private int _lambdaParameterIndex;
         private int _lambdaParametersCount;
 
-        private IIntermediateExpression? _expression;
+        private ISqlExpression? _expression;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
             _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>();
 
-            Stack = new Stack<IIntermediateExpression>();
+            Stack = new Stack<ISqlExpression>();
 
             _queryParameterIndex = -1;
             _lambdaParameterIndex = -1;
@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _lambdaParametersCount = context._lambdaParametersCount;
         }
 
-        internal IIntermediateExpression? Expression
+        internal ISqlExpression? Expression
         {
             get => _expression;
 
@@ -63,16 +63,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal IIntermediateExpression? Parent => Stack.TryPeek(out var parent) ? parent : default;
+        internal ISqlExpression? Parent => Stack.TryPeek(out var parent) ? parent : default;
 
-        private Stack<IIntermediateExpression> Stack { get; init; }
+        private Stack<ISqlExpression> Stack { get; init; }
 
         /// <inheritdoc />
         public TranslationContext Clone()
         {
             var copy = new TranslationContext
             {
-                Stack = new Stack<IIntermediateExpression>(Stack),
+                Stack = new Stack<ISqlExpression>(Stack),
 
                 _queryParameterIndex = _queryParameterIndex,
                 _lambdaParameterIndex = _lambdaParameterIndex,
@@ -113,19 +113,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         internal void WithinScope<T>(T expression, Action? action = null)
-            where T : class, IIntermediateExpression
+            where T : class, ISqlExpression
         {
             using (Disposable.Create(Stack, Push, Pop))
             {
                 action?.Invoke();
             }
 
-            void Push(Stack<IIntermediateExpression> stack)
+            void Push(Stack<ISqlExpression> stack)
             {
                 stack.Push(expression);
             }
 
-            void Pop(Stack<IIntermediateExpression> stack)
+            void Pop(Stack<ISqlExpression> stack)
             {
                 var expr = (T)stack.Pop();
 
@@ -140,8 +140,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void WithoutScopeDuplication<T>(Func<T> intermediateExpressionProducer, Action? action = null)
-            where T : class, IIntermediateExpression
+        internal void WithoutScopeDuplication<T>(Func<T> sqlExpressionProducer, Action? action = null)
+            where T : class, ISqlExpression
         {
             if (Stack.TryPeek(out var outer)
                 && outer is T)
@@ -150,13 +150,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
             else
             {
-                WithinScope(intermediateExpressionProducer(), action);
+                WithinScope(sqlExpressionProducer(), action);
             }
         }
 
         [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
         internal void WithinConditionalScope(
-            Func<IIntermediateExpression?, bool> condition,
+            Func<ISqlExpression?, bool> condition,
             Action<Action?> conditionalAction,
             Action? action = null)
         {
@@ -170,7 +170,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void Apply(IIntermediateExpression expression)
+        internal void Apply(ISqlExpression expression)
         {
             if (Stack.TryPeek(out var outer))
             {
@@ -182,14 +182,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void Apply(IIntermediateExpression outer, IIntermediateExpression inner)
+        internal void Apply(ISqlExpression outer, ISqlExpression inner)
         {
             var service = typeof(IApplicable<>).MakeGenericType(inner.GetType());
 
             if (outer.IsInstanceOfType(service))
             {
                 outer
-                    .CallMethod(nameof(IApplicable<IIntermediateExpression>.Apply))
+                    .CallMethod(nameof(IApplicable<ISqlExpression>.Apply))
                     .WithArgument(this)
                     .WithArgument(inner)
                     .Invoke();
@@ -216,9 +216,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ?? ExtractParameterExpression(_parameters, type)
                 ?? NextParameterExpression(type);
 
-            static ParameterExpression? ExtractNamedSourceParameterExpression(Stack<IIntermediateExpression> stack, Type type)
+            static ParameterExpression? ExtractNamedSourceParameterExpression(Stack<ISqlExpression> stack, Type type)
             {
-                var intermediateExpression = stack
+                var sqlExpression = stack
                    .FirstOrDefault(expression => expression
                         is NamedSourceExpression
                         or FilterExpression
@@ -226,12 +226,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         or JoinExpression
                         or OrderByExpression);
 
-                var namedSourceExpression = ExtractNamedSourceExpression(intermediateExpression, type);
+                var namedSourceExpression = ExtractNamedSourceExpression(sqlExpression, type);
 
                 return namedSourceExpression?.Parameter as ParameterExpression;
 
                 static NamedSourceExpression? ExtractNamedSourceExpression(
-                    IIntermediateExpression? expression,
+                    ISqlExpression? expression,
                     Type type)
                 {
                     switch (expression)
@@ -293,11 +293,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
-        internal ProjectionExpression? GetProjectionExpression(IIntermediateExpression intermediateExpression)
+        internal ProjectionExpression? GetProjectionExpression(ISqlExpression sqlExpression)
         {
-            return ExtractProjectionExpression(intermediateExpression);
+            return ExtractProjectionExpression(sqlExpression);
 
-            static ProjectionExpression? ExtractProjectionExpression(IIntermediateExpression? expression)
+            static ProjectionExpression? ExtractProjectionExpression(ISqlExpression? expression)
             {
                 switch (expression)
                 {

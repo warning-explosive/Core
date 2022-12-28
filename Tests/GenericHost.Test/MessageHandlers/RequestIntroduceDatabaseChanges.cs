@@ -29,8 +29,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
         public async Task Handle(Request message, CancellationToken token)
         {
             await _databaseContext
-               .Write<DatabaseEntity>()
-               .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token)
+               .Insert<DatabaseEntity>(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 
             await _context

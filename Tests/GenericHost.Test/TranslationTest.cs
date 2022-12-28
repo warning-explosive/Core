@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 {
                     var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
 
-                    var databaseEntities = new[]
+                    var entities = new[]
                     {
                         typeof(DatabaseEntity),
                         typeof(Blog),
@@ -113,7 +113,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         typeof(CreateOrGetExistedPostgreSqlDatabaseMigration)
                     };
 
-                    var additionalOurTypes = databaseEntities
+                    var additionalOurTypes = entities
                        .Concat(manualMigrations)
                        .ToArray();
 
@@ -787,7 +787,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             string section,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
-            IDatabaseEntity[] databaseEntities)
+            IDatabaseEntity[] entities)
         {
             try
             {
@@ -809,7 +809,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var assert = endpointDependencyContainer
                    .InvokeWithinTransaction(
                         false,
-                        Run(endpointDependencyContainer, queryProducer, checkQuery, databaseEntities, Output.WriteLine),
+                        Run(endpointDependencyContainer, queryProducer, checkQuery, entities, Output.WriteLine),
                         cts.Token);
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
@@ -847,14 +847,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
         }
 
-        private static Func<IDatabaseTransaction, CancellationToken, Task> Run(
+        private static Func<IAdvancedDatabaseTransaction, CancellationToken, Task> Run(
             IDependencyContainer dependencyContainer,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
-            IDatabaseEntity[] databaseEntities,
+            IDatabaseEntity[] entities,
             Action<string> log)
         {
-            return async (_, token) =>
+            return async (transaction, token) =>
             {
                 var collector = dependencyContainer.Resolve<QueryExpressionsCollector>();
                 collector.Expressions.Clear();
@@ -872,8 +872,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 checkQuery(translatedQuery, log);
 
-                await Insert(dependencyContainer, databaseEntities, token)
-                   .ConfigureAwait(false);
+                await transaction
+                    .Insert(entities, EnInsertBehavior.Default, token)
+                    .ConfigureAwait(false);
 
                 var queryResult = query
                    .GetEnumerator()
@@ -900,7 +901,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log(keyValues.Select(pair => pair.ToString()).ToString(Environment.NewLine));
 
                         var valuesExpression = groupedQuery.ValuesExpressionProducer.Invoke(keyValues);
-                        var valuesQuery = valuesExpression.Translate(dependencyContainer, 0);
+                        var valuesQuery = dependencyContainer.Resolve<ISqlExpressionTranslatorComposite>().Translate(valuesExpression, 0);
                         var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
 
                         log("Actual values query parameters:");
@@ -927,16 +928,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     }
                 }
             };
-        }
-
-        private static Task Insert(
-            IDependencyContainer dependencyContainer,
-            IDatabaseEntity[] entities,
-            CancellationToken token)
-        {
-            return dependencyContainer
-               .Resolve<IRepository>()
-               .Insert(entities, EnInsertBehavior.Default, token);
         }
 
         private static void CheckFlatQuery(

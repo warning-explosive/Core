@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// RowsFetchLimitExpression
     /// </summary>
-    public class RowsFetchLimitExpression : IIntermediateExpression,
+    public class RowsFetchLimitExpression : ISqlExpression,
                                             IEquatable<RowsFetchLimitExpression>,
                                             ISafelyEquatable<RowsFetchLimitExpression>,
                                             IApplicable<ProjectionExpression>,
@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public RowsFetchLimitExpression(
             Type type,
             uint rowsFetchLimit,
-            IIntermediateExpression source)
+            ISqlExpression source)
         {
             Type = type;
             RowsFetchLimit = rowsFetchLimit;
@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         #region IEquatable
 
@@ -134,7 +134,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {

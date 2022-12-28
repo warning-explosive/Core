@@ -1,35 +1,41 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class MethodCallExpressionTranslator : IExpressionTranslator<MethodCallExpression>,
-                                                    IResolvable<IExpressionTranslator<MethodCallExpression>>
+    internal class MethodCallExpressionTranslator : ISqlExpressionTranslator<MethodCallExpression>,
+                                                    IResolvable<ISqlExpressionTranslator<MethodCallExpression>>,
+                                                    ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public MethodCallExpressionTranslator(IDependencyContainer dependencyContainer)
+        public MethodCallExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
         }
 
-        /// <inheritdoc />
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is MethodCallExpression methodCallExpression
+                ? Translate(methodCallExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
         public string Translate(MethodCallExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
             if (expression.Source != null)
             {
-                sb.Append(expression.Source.Translate(_dependencyContainer, depth));
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
                 sb.Append('.');
             }
 
@@ -39,7 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             var arguments = expression
                 .Arguments
-                .Select(argument => argument.Translate(_dependencyContainer, depth));
+                .Select(argument => _sqlExpressionTranslator.Translate(argument, depth));
 
             sb.Append(arguments.ToString(", "));
 

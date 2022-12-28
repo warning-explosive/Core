@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// OrderByExpression
     /// </summary>
-    public class OrderByExpression : IIntermediateExpression,
+    public class OrderByExpression : ISqlExpression,
                                      IEquatable<OrderByExpression>,
                                      ISafelyEquatable<OrderByExpression>,
                                      IApplicable<OrderByExpression>,
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                      IApplicable<JoinExpression>,
                                      IApplicable<OrderByBindingExpression>
     {
-        private readonly List<IIntermediateExpression> _bindings;
+        private readonly List<ISqlExpression> _bindings;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -30,8 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="bindings">Order by expression bindings</param>
         public OrderByExpression(
             Type type,
-            IIntermediateExpression source,
-            IReadOnlyCollection<IIntermediateExpression> bindings)
+            ISqlExpression source,
+            IReadOnlyCollection<ISqlExpression> bindings)
         {
             Type = type;
             Source = source;
@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal OrderByExpression(Type type)
-            : this(type, null!, Array.Empty<IIntermediateExpression>())
+            : this(type, null!, Array.Empty<ISqlExpression>())
         {
         }
 
@@ -49,12 +49,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         /// <summary>
         /// Order by expression bindings
         /// </summary>
-        public IReadOnlyCollection<IIntermediateExpression> Bindings => _bindings;
+        public IReadOnlyCollection<ISqlExpression> Bindings => _bindings;
 
         #region IEquatable
 
@@ -158,7 +158,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplyBinding(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {
@@ -168,7 +168,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Source = expression;
         }
 
-        private void ApplyBinding(IIntermediateExpression expression)
+        private void ApplyBinding(ISqlExpression expression)
         {
             if (Source is JoinExpression join)
             {

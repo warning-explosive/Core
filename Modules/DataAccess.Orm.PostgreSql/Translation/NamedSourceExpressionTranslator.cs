@@ -1,23 +1,30 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class NamedSourceExpressionTranslator : IExpressionTranslator<NamedSourceExpression>,
-                                                     IResolvable<IExpressionTranslator<NamedSourceExpression>>
+    internal class NamedSourceExpressionTranslator : ISqlExpressionTranslator<NamedSourceExpression>,
+                                                     IResolvable<ISqlExpressionTranslator<NamedSourceExpression>>,
+                                                     ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public NamedSourceExpressionTranslator(IDependencyContainer dependencyContainer)
+        public NamedSourceExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is NamedSourceExpression namedSourceExpression
+                ? Translate(namedSourceExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(NamedSourceExpression expression, int depth)
@@ -31,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 sb.Append('(');
             }
 
-            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
 
             if (parenthesis)
             {
@@ -39,7 +46,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             }
 
             sb.Append(' ');
-            sb.Append(expression.Parameter.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Parameter, depth));
 
             return sb.ToString();
         }

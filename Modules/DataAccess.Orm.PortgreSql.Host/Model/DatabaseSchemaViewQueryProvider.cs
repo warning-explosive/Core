@@ -10,7 +10,8 @@
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseSchemaViewQueryProvider : ISqlViewQueryProvider<DatabaseSchema, Guid>,
-                                                     IResolvable<ISqlViewQueryProvider<DatabaseSchema, Guid>>
+                                                     IResolvable<ISqlViewQueryProvider<DatabaseSchema, Guid>>,
+                                                     ICollectionResolvable<ISqlViewQueryProvider>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select

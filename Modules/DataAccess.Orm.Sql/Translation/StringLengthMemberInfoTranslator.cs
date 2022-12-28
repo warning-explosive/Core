@@ -13,12 +13,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                                       ICollectionResolvable<IMemberInfoTranslator>
     {
         [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
-        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out IIntermediateExpression? expression)
+        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression)
         {
             if (context.Member.DeclaringType == typeof(string)
                 && context.Member.Name.Equals(nameof(string.Length), StringComparison.OrdinalIgnoreCase))
             {
-                expression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), null, Enumerable.Empty<IIntermediateExpression>());
+                expression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), null, Enumerable.Empty<ISqlExpression>());
                 return true;
             }
 

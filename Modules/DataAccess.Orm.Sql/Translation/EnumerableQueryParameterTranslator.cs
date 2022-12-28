@@ -25,13 +25,13 @@
 
         public string Translate(IEnumerable<T> value)
         {
-            var sqlExpression = value
+            var expression = value
                 .Select(item => item.QueryParameterSqlExpression(_dependencyContainer))
                 .ToString(", ");
 
             var sb = new StringBuilder();
 
-            sb.Append(sqlExpression);
+            sb.Append(expression);
 
             return sb.ToString();
         }

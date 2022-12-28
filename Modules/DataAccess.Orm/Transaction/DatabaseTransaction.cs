@@ -5,6 +5,7 @@
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
@@ -27,6 +28,7 @@
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IRepository _repository;
 
         private readonly List<ITransactionalChange> _changes;
 
@@ -39,10 +41,12 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
+            IRepository repository,
             ITransactionalStore transactionalStore)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
+            _repository = repository;
 
             Store = transactionalStore;
             _changes = new List<ITransactionalChange>();
@@ -105,15 +109,56 @@
             return _dependencyContainer.Resolve<IReadRepository<TEntity>>();
         }
 
-        public IRepository<TEntity> Write<TEntity>()
-            where TEntity : IDatabaseEntity
+        public Task<long> Insert(
+            IDatabaseEntity[] entities,
+            EnInsertBehavior insertBehavior,
+            CancellationToken token)
         {
-            return _dependencyContainer.Resolve<IRepository<TEntity>>();
+            return _repository.Insert(this, entities, insertBehavior, token);
         }
 
-        public IRepository Write()
+        public Task<long> Insert<TEntity>(
+            IReadOnlyCollection<TEntity> entities,
+            EnInsertBehavior insertBehavior,
+            CancellationToken token)
+            where TEntity : IDatabaseEntity
         {
-            return _dependencyContainer.Resolve<IRepository>();
+            return _dependencyContainer
+                .Resolve<IRepository<TEntity>>()
+                .Insert(this, entities, insertBehavior, token);
+        }
+
+        public Task<long> Update<TEntity, TValue>(
+            Expression<Func<TEntity, TValue>> accessor,
+            Expression<Func<TEntity, TValue>> valueProducer,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken token)
+            where TEntity : IDatabaseEntity
+        {
+            return _dependencyContainer
+                .Resolve<IRepository<TEntity>>()
+                .Update(this, accessor, valueProducer, predicate, token);
+        }
+
+        public Task<long> Update<TEntity>(
+            IReadOnlyCollection<UpdateInfo<TEntity>> infos,
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken token)
+            where TEntity : IDatabaseEntity
+        {
+            return _dependencyContainer
+                .Resolve<IRepository<TEntity>>()
+                .Update(this, infos, predicate, token);
+        }
+
+        public Task<long> Delete<TEntity>(
+            Expression<Func<TEntity, bool>> predicate,
+            CancellationToken token)
+            where TEntity : IDatabaseEntity
+        {
+            return _dependencyContainer
+                .Resolve<IRepository<TEntity>>()
+                .Delete(this, predicate, token);
         }
 
         public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)

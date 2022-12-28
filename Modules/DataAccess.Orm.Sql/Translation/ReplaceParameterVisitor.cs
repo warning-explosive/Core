@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using Expressions;
 
-    internal class ReplaceParameterVisitor : IntermediateExpressionVisitorBase
+    internal class ReplaceParameterVisitor : SqlExpressionVisitorBase
     {
         private readonly ParameterExpression _parameterExpression;
 
@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _parameterExpression = parameterExpression;
         }
 
-        protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
+        protected override ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
             return _parameterExpression;
         }

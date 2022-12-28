@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
         }
 
-        private async Task<string> ExecuteManualMigration(
+        private static async Task<string> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             IDependencyContainer dependencyContainer,
             CancellationToken token)
@@ -83,7 +83,6 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 
             await transaction
-               .Write()
                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 

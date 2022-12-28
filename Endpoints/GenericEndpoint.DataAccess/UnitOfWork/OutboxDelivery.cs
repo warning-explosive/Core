@@ -70,11 +70,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
 
             await transaction
-                .Write<OutboxMessage>()
-                .Update(outbox => outbox.Sent,
-                    _ => true,
-                    message => sent.Contains(message.PrimaryKey),
-                    token)
+                .Update<OutboxMessage, bool>(outbox => outbox.Sent, _ => true, message => sent.Contains(message.PrimaryKey), token)
                 .ConfigureAwait(false);
         }
     }

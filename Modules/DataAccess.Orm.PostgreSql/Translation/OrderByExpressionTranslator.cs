@@ -1,38 +1,45 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class OrderByExpressionTranslator : IExpressionTranslator<OrderByExpression>,
-                                                 IResolvable<IExpressionTranslator<OrderByExpression>>
+    internal class OrderByExpressionTranslator : ISqlExpressionTranslator<OrderByExpression>,
+                                                 IResolvable<ISqlExpressionTranslator<OrderByExpression>>,
+                                                 ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public OrderByExpressionTranslator(IDependencyContainer dependencyContainer)
+        public OrderByExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is OrderByExpression orderByExpression
+                ? Translate(orderByExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(OrderByExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(expression.Source.Translate(_dependencyContainer, depth));
+            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.Source, depth));
             sb.AppendLine("ORDER BY");
             sb.Append(new string('\t', depth + 1));
 
             expression
                .Bindings
-               .Select(binding => binding.Translate(_dependencyContainer, depth))
+               .Select(binding => _sqlExpressionTranslator.Translate(binding, depth))
                .Each((binding, i) =>
                {
                    if (i != 0)

@@ -7,16 +7,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics.Primitives;
     using Expressions;
 
-    internal class CompactExpressionVisitor : IntermediateExpressionVisitorBase
+    internal class CompactExpressionVisitor : SqlExpressionVisitorBase
     {
-        private readonly IReadOnlyDictionary<string, IIntermediateExpression> _replacements;
+        private readonly IReadOnlyDictionary<string, ISqlExpression> _replacements;
         private readonly Stack<string> _scope;
 
         public CompactExpressionVisitor(ProjectionExpression projection)
         {
             _replacements = projection
                 .Bindings
-                .OfType<IBindingIntermediateExpression>()
+                .OfType<IBindingSqlExpression>()
                 .ToDictionary(
                     binding => binding.Name,
                     NamedBindingExpression.Unwrap,
@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _scope = new Stack<string>();
         }
 
-        protected override IIntermediateExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected override ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
         {
             using (Disposable.Create(_scope, Push, Pop))
             {
@@ -47,7 +47,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        protected override IIntermediateExpression VisitParameter(ParameterExpression parameterExpression)
+        protected override ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
             return _replacements.Count == 1
                    && _replacements.Single().Value is { } binding

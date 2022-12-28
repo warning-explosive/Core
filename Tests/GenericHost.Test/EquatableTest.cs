@@ -129,7 +129,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object)),
                     new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(object)));
 
-                Func<IReadOnlyDictionary<string, object?>, IIntermediateExpression> valuesExpressionProducer = map =>
+                Func<IReadOnlyDictionary<string, object?>, ISqlExpression> valuesExpressionProducer = map =>
                     new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.GroupByExpression(typeof(object), valuesExpressionProducer);
@@ -169,9 +169,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
 
-                var expression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<IIntermediateExpression>());
-                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<IIntermediateExpression>());
-                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToUpperInvariant), parameter, Enumerable.Empty<IIntermediateExpression>());
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<ISqlExpression>());
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<ISqlExpression>());
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToUpperInvariant), parameter, Enumerable.Empty<ISqlExpression>());
 
                 yield return new object[]
                 {
@@ -291,9 +291,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
 
-                var expression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(object), source, Enumerable.Empty<IIntermediateExpression>());
-                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(object), source, Enumerable.Empty<IIntermediateExpression>());
-                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(string), source, Enumerable.Empty<IIntermediateExpression>());
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(object), source, Enumerable.Empty<ISqlExpression>());
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(object), source, Enumerable.Empty<ISqlExpression>());
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.ProjectionExpression(typeof(string), source, Enumerable.Empty<ISqlExpression>());
 
                 yield return new object[]
                 {

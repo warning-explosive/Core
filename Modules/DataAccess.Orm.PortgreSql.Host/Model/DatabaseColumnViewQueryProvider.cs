@@ -10,7 +10,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Model
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseColumnViewQueryProvider : ISqlViewQueryProvider<DatabaseColumn, Guid>,
-                                                     IResolvable<ISqlViewQueryProvider<DatabaseColumn, Guid>>
+                                                     IResolvable<ISqlViewQueryProvider<DatabaseColumn, Guid>>,
+                                                     ICollectionResolvable<ISqlViewQueryProvider>
     {
         [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
         private static readonly string Query = $@"select

@@ -30,9 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             IAdvancedDatabaseTransaction databaseTransaction,
             CancellationToken token)
         {
-            return databaseTransaction
-               .Write()
-               .Insert(_entities, _insertBehavior, token);
+            return databaseTransaction.Insert(_entities, _insertBehavior, token);
         }
 
         /// <inheritdoc />

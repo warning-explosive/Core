@@ -2,45 +2,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Basics;
-    using CompositionRoot;
     using Expressions;
     using ParameterExpression = Expressions.ParameterExpression;
 
     /// <summary>
-    /// IntermediateExpressionExtensions
+    /// ExpressionExtensions
     /// </summary>
-    public static class IntermediateExpressionExtensions
+    public static class SqlExpressionExtensions
     {
-        /// <summary>
-        /// Translates IIntermediateExpression to sql command
-        /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
-        /// <param name="dependencyContainer">IDependencyContainer</param>
-        /// <param name="depth">Format depth</param>
-        /// <returns>Sql command</returns>
-        public static string Translate(
-            this IIntermediateExpression expression,
-            IDependencyContainer dependencyContainer,
-            int depth)
-        {
-            return dependencyContainer
-                .ResolveGeneric(typeof(IExpressionTranslator<>), expression.GetType())
-                .CallMethod(nameof(IExpressionTranslator<IIntermediateExpression>.Translate))
-                .WithArguments(expression, depth)
-                .Invoke<string>();
-        }
-
         /// <summary>
         /// Extracts ParameterExpressions
         /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="expression">ISqlExpression</param>
         /// <returns>ParameterExpressions</returns>
         public static IReadOnlyDictionary<int, ParameterExpression> ExtractParameters(
-            this IIntermediateExpression expression)
+            this ISqlExpression expression)
         {
             var extractor = new ExtractParametersVisitor();
             _ = extractor.Visit(expression);
@@ -48,13 +26,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
         }
 
         /// <summary>
-        /// Compacts IIntermediateExpression
+        /// Compacts ISqlExpression
         /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="expression">ISqlExpression</param>
         /// <param name="projection">ProjectionExpression</param>
-        /// <returns>Compacted IIntermediateExpression</returns>
-        public static IIntermediateExpression CompactExpression(
-            this IIntermediateExpression expression,
+        /// <returns>Compacted ISqlExpression</returns>
+        public static ISqlExpression CompactExpression(
+            this ISqlExpression expression,
             ProjectionExpression projection)
         {
             return new CompactExpressionVisitor(projection).Visit(expression);
@@ -63,12 +41,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
         /// <summary>
         /// Replaces join bindings
         /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="expression">ISqlExpression</param>
         /// <param name="joinExpression">JoinExpression</param>
         /// <param name="applyNaming">Apply naming</param>
-        /// <returns>IIntermediateExpression with replaced join bindings</returns>
-        public static IIntermediateExpression ReplaceJoinBindings(
-            this IIntermediateExpression expression,
+        /// <returns>ISqlExpression with replaced join bindings</returns>
+        public static ISqlExpression ReplaceJoinBindings(
+            this ISqlExpression expression,
             JoinExpression joinExpression,
             bool applyNaming)
         {
@@ -78,11 +56,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
         /// <summary>
         /// Replaces ParameterExpression
         /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="expression">ISqlExpression</param>
         /// <param name="parameterExpression">ParameterExpression</param>
-        /// <returns>IIntermediateExpression with replaced ParameterExpression</returns>
-        public static IIntermediateExpression ReplaceParameter(
-            this IIntermediateExpression expression,
+        /// <returns>ISqlExpression with replaced ParameterExpression</returns>
+        public static ISqlExpression ReplaceParameter(
+            this ISqlExpression expression,
             ParameterExpression parameterExpression)
         {
             return new ReplaceParameterVisitor(parameterExpression).Visit(expression);
@@ -98,28 +76,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
         {
             var visitor = new ExtractMembersChainExpressionVisitor();
             _ = visitor.Visit(accessor);
-
             return visitor.Chain;
         }
 
         /// <summary>
         /// Extracts query parameters
         /// </summary>
-        /// <param name="expression">IIntermediateExpression</param>
+        /// <param name="expression">ISqlExpression</param>
         /// <returns>Query parameters</returns>
         public static IReadOnlyDictionary<string, object?> ExtractQueryParameters(
-            this IIntermediateExpression expression)
-        {
-            return expression
-               .ExtractQueryParameterExpressions()
-               .ToDictionary(
-                    parameter => parameter.Name,
-                    parameter => parameter.Value,
-                    StringComparer.OrdinalIgnoreCase);
-        }
-
-        private static IReadOnlyCollection<QueryParameterExpression> ExtractQueryParameterExpressions(
-            this IIntermediateExpression expression)
+            this ISqlExpression expression)
         {
             var extractor = new ExtractQueryParametersVisitor();
             _ = extractor.Visit(expression);

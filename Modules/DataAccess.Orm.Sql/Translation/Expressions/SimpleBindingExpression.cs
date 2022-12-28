@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// SimpleBindingExpression
     /// </summary>
-    public class SimpleBindingExpression : IBindingIntermediateExpression,
+    public class SimpleBindingExpression : IBindingSqlExpression,
                                            IEquatable<SimpleBindingExpression>,
                                            ISafelyEquatable<SimpleBindingExpression>,
                                            IApplicable<SimpleBindingExpression>,
@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public SimpleBindingExpression(
             MemberInfo member,
             Type type,
-            IIntermediateExpression source)
+            ISqlExpression source)
         {
             Member = member;
             Type = type;
@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         #region IEquatable
 
@@ -126,16 +126,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Gets flat collection of underneath expressions
         /// </summary>
         /// <returns>Flat collection</returns>
-        public IEnumerable<IIntermediateExpression> FlattenCompletely()
+        public IEnumerable<ISqlExpression> FlattenCompletely()
         {
-            IIntermediateExpression? current = this;
+            ISqlExpression? current = this;
 
             while (current != null)
             {
                 yield return current;
 
-                current = current is IBindingIntermediateExpression bindingIntermediateExpression
-                    ? bindingIntermediateExpression.Source
+                current = current is IBindingSqlExpression bindingSqlExpression
+                    ? bindingSqlExpression.Source
                     : null;
             }
         }
@@ -175,7 +175,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {

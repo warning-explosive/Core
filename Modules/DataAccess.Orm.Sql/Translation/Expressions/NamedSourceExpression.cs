@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// NamedSourceExpression
     /// </summary>
-    public class NamedSourceExpression : IIntermediateExpression,
+    public class NamedSourceExpression : ISqlExpression,
                                          IEquatable<NamedSourceExpression>,
                                          ISafelyEquatable<NamedSourceExpression>,
                                          IApplicable<FilterExpression>,
@@ -29,8 +29,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="parameter">Parameter</param>
         public NamedSourceExpression(
             Type type,
-            IIntermediateExpression source,
-            IIntermediateExpression parameter)
+            ISqlExpression source,
+            ISqlExpression parameter)
         {
             Type = type;
             Source = source;
@@ -48,12 +48,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         /// <summary>
         /// Parameter expression
         /// </summary>
-        public IIntermediateExpression Parameter { get; }
+        public ISqlExpression Parameter { get; }
 
         #region IEquatable
 
@@ -181,7 +181,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ForwardExpression(context, expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {
@@ -191,7 +191,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Source = expression;
         }
 
-        private void ForwardExpression(TranslationContext context, IIntermediateExpression expression)
+        private void ForwardExpression(TranslationContext context, ISqlExpression expression)
         {
             context.Apply(Source is FilterExpression filterExpression ? filterExpression.Source : Source, expression);
         }

@@ -1,25 +1,32 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ProjectionExpressionTranslator : IExpressionTranslator<ProjectionExpression>,
-                                                    IResolvable<IExpressionTranslator<ProjectionExpression>>
+    internal class ProjectionExpressionTranslator : ISqlExpressionTranslator<ProjectionExpression>,
+                                                    IResolvable<ISqlExpressionTranslator<ProjectionExpression>>,
+                                                    ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public ProjectionExpressionTranslator(IDependencyContainer dependencyContainer)
+        public ProjectionExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is ProjectionExpression projectionExpression
+                ? Translate(projectionExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(ProjectionExpression expression, int depth)
@@ -34,7 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
                 expression
                     .Bindings
-                    .Select(binding => binding.Translate(_dependencyContainer, depth))
+                    .Select(binding => _sqlExpressionTranslator.Translate(binding, depth))
                     .Each((binding, i) =>
                     {
                         sb.Append(new string('\t', depth + 1));
@@ -50,7 +57,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append(expression.Source.Translate(_dependencyContainer, depth + 1));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth + 1));
 
             return sb.ToString();
         }

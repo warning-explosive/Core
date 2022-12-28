@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
 
         private readonly ExpressionVisitor[] _expressionVisitors;
-        private readonly IIntermediateExpressionVisitor[] _intermediateExpressionVisitors;
+        private readonly ISqlExpressionVisitor[] _sqlExpressionVisitors;
 
         public ExpressionTranslator(
             IModelProvider modelProvider,
@@ -35,10 +35,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 new UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor()
             };
 
-            _intermediateExpressionVisitors = Array.Empty<IIntermediateExpressionVisitor>();
+            _sqlExpressionVisitors = Array.Empty<ISqlExpressionVisitor>();
         }
 
-        public IIntermediateExpression Translate(Expression expression)
+        public ISqlExpression Translate(Expression expression)
         {
             expression = ExecutionExtensions
                 .Try(expression, PreAggregate)
@@ -52,13 +52,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
 
-            var intermediateExpression = visitor
+            var sqlExpression = visitor
                 .Context
                 .Expression
                 .EnsureNotNull(() => new TranslationException(expression));
 
             return ExecutionExtensions
-                .Try(intermediateExpression, PostAggregate)
+                .Try(sqlExpression, PostAggregate)
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
         }
@@ -68,9 +68,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return _expressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
         }
 
-        private IIntermediateExpression PostAggregate(IIntermediateExpression expression)
+        private ISqlExpression PostAggregate(ISqlExpression expression)
         {
-            return _intermediateExpressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
+            return _sqlExpressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
         }
     }
 }

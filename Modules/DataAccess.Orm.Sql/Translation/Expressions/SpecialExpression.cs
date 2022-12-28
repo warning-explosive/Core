@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// SpecialExpression
     /// </summary>
-    public class SpecialExpression : IIntermediateExpression,
+    public class SpecialExpression : ISqlExpression,
                                      IEquatable<SpecialExpression>,
                                      ISafelyEquatable<SpecialExpression>
     {

@@ -10,13 +10,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// MethodCallExpression
     /// </summary>
-    public class MethodCallExpression : IIntermediateExpression,
+    public class MethodCallExpression : ISqlExpression,
                                         IEquatable<MethodCallExpression>,
                                         ISafelyEquatable<MethodCallExpression>,
                                         IApplicable<SimpleBindingExpression>,
                                         IApplicable<ConditionalExpression>
     {
-        private readonly List<IIntermediateExpression> _arguments;
+        private readonly List<ISqlExpression> _arguments;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -26,8 +26,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public MethodCallExpression(
             Type type,
             string name,
-            IIntermediateExpression? source,
-            IEnumerable<IIntermediateExpression> arguments)
+            ISqlExpression? source,
+            IEnumerable<ISqlExpression> arguments)
         {
             Type = type;
             Name = name;
@@ -46,12 +46,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public IIntermediateExpression? Source { get; }
+        public ISqlExpression? Source { get; }
 
         /// <summary>
         /// Expression
         /// </summary>
-        public IReadOnlyCollection<IIntermediateExpression> Arguments => _arguments;
+        public IReadOnlyCollection<ISqlExpression> Arguments => _arguments;
 
         #region IEquatable
 
@@ -130,7 +130,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplyInternal(expression);
         }
 
-        private void ApplyInternal(IIntermediateExpression expression)
+        private void ApplyInternal(ISqlExpression expression)
         {
             _arguments.Add(expression);
         }

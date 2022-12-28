@@ -57,7 +57,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             CancellationToken token)
         {
             var actualAffectedRowsCount = await databaseTransaction
-               .Write<TEntity>()
                .Update(UpdateInfos, Predicate, token)
                .ConfigureAwait(false);
 

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// NamedBindingExpression
     /// </summary>
-    public class NamedBindingExpression : IBindingIntermediateExpression,
+    public class NamedBindingExpression : IBindingSqlExpression,
                                           IEquatable<NamedBindingExpression>,
                                           ISafelyEquatable<NamedBindingExpression>,
                                           IApplicable<SimpleBindingExpression>,
@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary> .cctor </summary>
         /// <param name="name">Binding name</param>
         /// <param name="source">Source expression</param>
-        public NamedBindingExpression(string name, IIntermediateExpression source)
+        public NamedBindingExpression(string name, ISqlExpression source)
         {
             Name = name;
             Source = source;
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public string Name { get; }
 
         /// <inheritdoc />
-        public IIntermediateExpression Source { get; private set; }
+        public ISqlExpression Source { get; private set; }
 
         #region IEquatable
 
@@ -105,7 +105,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         /// <param name="expression">Expression</param>
         /// <returns>Unwrapped expression</returns>
-        public static IIntermediateExpression Unwrap(IIntermediateExpression expression)
+        public static ISqlExpression Unwrap(ISqlExpression expression)
         {
             return expression is NamedBindingExpression namedBinding
                 ? Unwrap(namedBinding.Source)
@@ -138,7 +138,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplySource(IIntermediateExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source != null)
             {

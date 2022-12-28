@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ParameterExpression
     /// </summary>
-    public class ParameterExpression : IIntermediateExpression,
+    public class ParameterExpression : ISqlExpression,
                                        IEquatable<ParameterExpression>,
                                        ISafelyEquatable<ParameterExpression>
     {

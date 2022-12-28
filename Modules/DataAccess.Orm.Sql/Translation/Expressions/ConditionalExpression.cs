@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ConditionalExpression
     /// </summary>
-    public class ConditionalExpression : IIntermediateExpression,
+    public class ConditionalExpression : ISqlExpression,
                                          IEquatable<ConditionalExpression>,
                                          ISafelyEquatable<ConditionalExpression>,
                                          IApplicable<SimpleBindingExpression>,
@@ -27,9 +27,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="else">Else expression</param>
         public ConditionalExpression(
             Type type,
-            IIntermediateExpression when,
-            IIntermediateExpression then,
-            IIntermediateExpression @else)
+            ISqlExpression when,
+            ISqlExpression then,
+            ISqlExpression @else)
         {
             Type = type;
             When = when;
@@ -48,17 +48,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// When condition
         /// </summary>
-        public IIntermediateExpression When { get; private set; }
+        public ISqlExpression When { get; private set; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public IIntermediateExpression Then { get; private set; }
+        public ISqlExpression Then { get; private set; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public IIntermediateExpression Else { get; private set; }
+        public ISqlExpression Else { get; private set; }
 
         #region IEquatable
 
@@ -178,7 +178,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(context, expression);
         }
 
-        private void ApplySource(TranslationContext context, IIntermediateExpression expression)
+        private void ApplySource(TranslationContext context, ISqlExpression expression)
         {
             if (When == null)
             {

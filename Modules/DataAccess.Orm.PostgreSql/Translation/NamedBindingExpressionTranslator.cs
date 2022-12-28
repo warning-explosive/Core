@@ -1,23 +1,30 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Sql.Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class NamedBindingExpressionTranslator : IExpressionTranslator<NamedBindingExpression>,
-                                                      IResolvable<IExpressionTranslator<NamedBindingExpression>>
+    internal class NamedBindingExpressionTranslator : ISqlExpressionTranslator<NamedBindingExpression>,
+                                                      IResolvable<ISqlExpressionTranslator<NamedBindingExpression>>,
+                                                      ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
 
-        public NamedBindingExpressionTranslator(IDependencyContainer dependencyContainer)
+        public NamedBindingExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+        }
+
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is NamedBindingExpression namedBindingExpression
+                ? Translate(namedBindingExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
         public string Translate(NamedBindingExpression expression, int depth)
@@ -31,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 sb.Append('(');
             }
 
-            sb.Append(expression.Source.Translate(_dependencyContainer, depth));
+            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
 
             if (parentheses)
             {

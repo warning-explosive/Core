@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.Model;
     using Api.Reading;
     using Basics;
 
@@ -16,6 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
+        private static MethodInfo? _all;
         private static MethodInfo? _queryableSingle;
         private static MethodInfo? _queryableSingle2;
         private static MethodInfo? _queryableSingleOrDefault;
@@ -48,26 +48,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>IsQueryRoot</returns>
         public static bool IsQueryRoot(this MethodInfo method)
         {
-            if (!method.Name.Equals(nameof(IReadRepository<IDatabaseEntity<Guid>>.All), StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            return method.ReflectedType!.GenericTypeDefinitionOrSelf() == typeof(IReadRepository<>);
+            return method.Name.Equals(nameof(IReadRepository.All), StringComparison.Ordinal)
+                   && method.ReflectedType == typeof(IReadRepository);
         }
 
         /// <summary>
         /// IReadRepository.All
         /// </summary>
-        /// <param name="itemType">Item type</param>
         /// <returns>IReadRepository.All MethodInfo</returns>
-        public static MethodInfo All(Type itemType)
+        public static MethodInfo All()
         {
-            return new MethodFinder(typeof(IReadRepository<>).MakeGenericType(itemType),
-                    nameof(IReadRepository<IDatabaseEntity<Guid>>.All),
+            return _all ??= new MethodFinder(typeof(IReadRepository),
+                    nameof(IReadRepository.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
                 .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository<>.All()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository.All()"));
         }
 
         /// <summary>

@@ -38,6 +38,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
+        private readonly IModelChangeCommandBuilderComposite _commandBuilder;
         private readonly IMigrationsExecutor _migrationsExecutor;
         private readonly ILogger _logger;
 
@@ -47,6 +48,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
             IModelChangesExtractor modelChangesExtractor,
+            IModelChangeCommandBuilderComposite commandBuilder,
             IMigrationsExecutor migrationsExecutor,
             ILogger logger)
         {
@@ -55,6 +57,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
             _modelChangesExtractor = modelChangesExtractor;
+            _commandBuilder = commandBuilder;
             _migrationsExecutor = migrationsExecutor;
             _logger = logger;
         }
@@ -100,7 +103,7 @@ grant all privileges on database ""{0}"" to ""{1}""";
 
             var migrations = new[]
             {
-                new InitialMigration(_dependencyContainer, _databaseImplementation, _ormSettingsProvider, _modelChangesExtractor, _logger)
+                new InitialMigration(_dependencyContainer, _databaseImplementation, _ormSettingsProvider, _modelChangesExtractor, _commandBuilder, _logger)
             };
 
             await _migrationsExecutor

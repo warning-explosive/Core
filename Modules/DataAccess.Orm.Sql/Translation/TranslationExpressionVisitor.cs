@@ -436,7 +436,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            if (node.Type.IsSubclassOfOpenGeneric(typeof(IReadRepository<>)))
+            if (typeof(IReadRepository).IsAssignableFrom(node.Type))
             {
                 return base.VisitConstant(node);
             }

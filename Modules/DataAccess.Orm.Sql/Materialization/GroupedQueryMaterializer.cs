@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -13,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Translation;
     using Translation.Extensions;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class GroupedQueryMaterializer<TKey, TValue> : IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>,
                                                             IResolvable<IQueryMaterializer<GroupedQuery, IGrouping<TKey, TValue>>>
     {
@@ -31,39 +32,55 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             _valuesQueryMaterializer = valuesQueryMaterializer;
         }
 
-        public async Task<IGrouping<TKey, TValue>> MaterializeScalar(GroupedQuery query, CancellationToken token)
+        public async Task<IGrouping<TKey, TValue>> MaterializeScalar(
+            IAdvancedDatabaseTransaction transaction,
+            GroupedQuery query,
+            CancellationToken token)
         {
-            var key = await MaterializeScalarKey(query, token).ConfigureAwait(false);
-            var values = MaterializeValues(key, query, token).AsEnumerable(token);
+            var key = await MaterializeScalarKey(transaction, query, token).ConfigureAwait(false);
+            var values = MaterializeValues(transaction, key, query, token).AsEnumerable(token);
 
             return new Grouping<TKey, TValue>(key, values);
         }
 
-        public async IAsyncEnumerable<IGrouping<TKey, TValue>> Materialize(GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
+        public async IAsyncEnumerable<IGrouping<TKey, TValue>> Materialize(
+            IAdvancedDatabaseTransaction transaction,
+            GroupedQuery query,
+            [EnumeratorCancellation] CancellationToken token)
         {
-            await foreach (var key in MaterializeKeys(query, token))
+            await foreach (var key in MaterializeKeys(transaction, query, token))
             {
-                var values = MaterializeValues(key, query, token).AsEnumerable(token);
+                var values = MaterializeValues(transaction, key, query, token).AsEnumerable(token);
 
                 yield return new Grouping<TKey, TValue>(key, values);
             }
         }
 
-        private Task<TKey> MaterializeScalarKey(GroupedQuery query, CancellationToken token)
+        private Task<TKey> MaterializeScalarKey(
+            IAdvancedDatabaseTransaction transaction,
+            GroupedQuery query,
+            CancellationToken token)
         {
             var keysQuery = new FlatQuery(query.KeysQuery, query.KeysQueryParameters);
 
-            return _keysQueryMaterializer.MaterializeScalar(keysQuery, token);
+            return _keysQueryMaterializer.MaterializeScalar(transaction, keysQuery, token);
         }
 
-        private IAsyncEnumerable<TKey> MaterializeKeys(GroupedQuery query, CancellationToken token)
+        private IAsyncEnumerable<TKey> MaterializeKeys(
+            IAdvancedDatabaseTransaction transaction,
+            GroupedQuery query,
+            CancellationToken token)
         {
             var keysQuery = new FlatQuery(query.KeysQuery, query.KeysQueryParameters);
 
-            return _keysQueryMaterializer.Materialize(keysQuery, token);
+            return _keysQueryMaterializer.Materialize(transaction, keysQuery, token);
         }
 
-        private async IAsyncEnumerable<TValue> MaterializeValues(TKey key, GroupedQuery query, [EnumeratorCancellation] CancellationToken token)
+        private async IAsyncEnumerable<TValue> MaterializeValues(
+            IAdvancedDatabaseTransaction transaction,
+            TKey key,
+            GroupedQuery query,
+            [EnumeratorCancellation] CancellationToken token)
         {
             var keyValues = key.AsQueryParametersValues();
 
@@ -71,8 +88,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var valuesQuery = _sqlExpressionTranslator.Translate(valuesExpression, 0);
             var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
+            var valuesFlatQuery = new FlatQuery(valuesQuery, valuesQueryParameters);
 
-            await foreach (var item in _valuesQueryMaterializer.Materialize(new FlatQuery(valuesQuery, valuesQueryParameters), token))
+            await foreach (var item in _valuesQueryMaterializer.Materialize(transaction, valuesFlatQuery, token))
             {
                 yield return item;
             }

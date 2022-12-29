@@ -97,15 +97,13 @@
             CancellationToken token)
         {
             var isSecondaryMigration = await transaction
-               .Read<DatabaseColumnConstraint>()
-               .All()
+               .All<DatabaseColumnConstraint>()
                .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
                .ConfigureAwait(false);
 
             return isSecondaryMigration
                 ? await transaction
-                   .Read<AppliedMigration>()
-                   .All()
+                   .All<AppliedMigration>()
                    .Select(migration => migration.Name)
                    .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                    .ConfigureAwait(false)
@@ -130,7 +128,7 @@
                 name);
 
             await transaction
-               .Insert<AppliedMigration>(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
+               .Insert(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
                .ConfigureAwait(false);
         }
 
@@ -142,8 +140,7 @@
             var pattern = name + "%";
 
             var indexes = (await transaction
-                   .Read<AppliedMigration>()
-                   .All()
+                   .All<AppliedMigration>()
                    .Where(migration => migration.Name.Like(pattern))
                    .Select(migration => migration.Name)
                    .ToArrayAsync(token)

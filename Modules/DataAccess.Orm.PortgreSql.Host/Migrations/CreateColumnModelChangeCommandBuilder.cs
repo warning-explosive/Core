@@ -14,8 +14,9 @@
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateColumnModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateColumn>,
+                                                           IResolvable<CreateColumnModelChangeCommandBuilder>,
                                                            IResolvable<IModelChangeCommandBuilder<CreateColumn>>,
-                                                           IResolvable<CreateColumnModelChangeCommandBuilder>
+                                                           ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 
@@ -28,6 +29,13 @@
         {
             _modelProvider = modelProvider;
             _columnDataTypeProvider = columnDataTypeProvider;
+        }
+
+        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        {
+            return change is CreateColumn createColumn
+                ? BuildCommand(createColumn, token)
+                : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
         public Task<string> BuildCommand(CreateColumn change, CancellationToken token)

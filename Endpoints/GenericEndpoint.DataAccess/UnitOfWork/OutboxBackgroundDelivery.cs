@@ -65,8 +65,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
                 return (await transaction
-                       .Read<OutboxMessage>()
-                       .All()
+                       .All<OutboxMessage>()
                        .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
                                      && !outbox.Sent
                                      && outbox.Timestamp <= cutOff)

@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
@@ -11,14 +12,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     /// </summary>
     public class CreateEntityChange : ITransactionalChange
     {
-        private readonly IDatabaseEntity[] _entities;
+        private readonly IReadOnlyCollection<IDatabaseEntity> _entities;
         private readonly EnInsertBehavior _insertBehavior;
 
         /// <summary> .cctor </summary>
         /// <param name="entities">Entities</param>
         /// <param name="insertBehavior">Insert behavior</param>
         public CreateEntityChange(
-            IDatabaseEntity[] entities,
+            IReadOnlyCollection<IDatabaseEntity> entities,
             EnInsertBehavior insertBehavior)
         {
             _entities = entities;

@@ -28,6 +28,7 @@
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IReadRepository _readRepository;
         private readonly IRepository _repository;
 
         private readonly List<ITransactionalChange> _changes;
@@ -41,11 +42,13 @@
         public DatabaseTransaction(
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
+            IReadRepository readRepository,
             IRepository repository,
             ITransactionalStore transactionalStore)
         {
             _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
+            _readRepository = readRepository;
             _repository = repository;
 
             Store = transactionalStore;
@@ -103,29 +106,34 @@
 
         public string? LastCommand { get; private set; }
 
-        public IReadRepository<TEntity> Read<TEntity>()
+        #region IDatabaseContext
+
+        public IQueryable<TEntity> All<TEntity>()
             where TEntity : IUniqueIdentified
         {
-            return _dependencyContainer.Resolve<IReadRepository<TEntity>>();
+            return _readRepository.All<TEntity>();
+        }
+
+        public Task<TEntity> Single<TEntity, TKey>(TKey key, CancellationToken token)
+            where TEntity : IUniqueIdentified
+            where TKey : notnull
+        {
+            return _readRepository.Single<TEntity, TKey>(key, token);
+        }
+
+        public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
+            where TEntity : IUniqueIdentified
+            where TKey : notnull
+        {
+            return _readRepository.SingleOrDefault<TEntity, TKey>(key, token);
         }
 
         public Task<long> Insert(
-            IDatabaseEntity[] entities,
+            IReadOnlyCollection<IDatabaseEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token)
         {
             return _repository.Insert(this, entities, insertBehavior, token);
-        }
-
-        public Task<long> Insert<TEntity>(
-            IReadOnlyCollection<TEntity> entities,
-            EnInsertBehavior insertBehavior,
-            CancellationToken token)
-            where TEntity : IDatabaseEntity
-        {
-            return _dependencyContainer
-                .Resolve<IRepository<TEntity>>()
-                .Insert(this, entities, insertBehavior, token);
         }
 
         public Task<long> Update<TEntity, TValue>(
@@ -135,9 +143,7 @@
             CancellationToken token)
             where TEntity : IDatabaseEntity
         {
-            return _dependencyContainer
-                .Resolve<IRepository<TEntity>>()
-                .Update(this, accessor, valueProducer, predicate, token);
+            return _repository.Update(this, accessor, valueProducer, predicate, token);
         }
 
         public Task<long> Update<TEntity>(
@@ -146,9 +152,7 @@
             CancellationToken token)
             where TEntity : IDatabaseEntity
         {
-            return _dependencyContainer
-                .Resolve<IRepository<TEntity>>()
-                .Update(this, infos, predicate, token);
+            return _repository.Update(this, infos, predicate, token);
         }
 
         public Task<long> Delete<TEntity>(
@@ -156,10 +160,10 @@
             CancellationToken token)
             where TEntity : IDatabaseEntity
         {
-            return _dependencyContainer
-                .Resolve<IRepository<TEntity>>()
-                .Delete(this, predicate, token);
+            return _repository.Delete(this, predicate, token);
         }
+
+        #endregion
 
         public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)
         {

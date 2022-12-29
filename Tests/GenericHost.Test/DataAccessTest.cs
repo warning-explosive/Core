@@ -413,7 +413,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         var entity = DatabaseEntity.Generate(primaryKey);
 
                         _ = await transaction
-                           .Insert<DatabaseEntity>(new[] { entity }, EnInsertBehavior.Default, token)
+                           .Insert(new[] { entity }, EnInsertBehavior.Default, token)
                            .ConfigureAwait(false);
 
                         version = entity.Version;
@@ -437,8 +437,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         return await transaction
-                           .Read<DatabaseEntity>()
-                           .SingleOrDefaultAsync(primaryKey, token)
+                           .SingleOrDefault<DatabaseEntity, Guid>(primaryKey, token)
                            .ConfigureAwait(false);
                     }
                 }
@@ -731,7 +730,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var entity = DatabaseEntity.Generate(primaryKey);
 
                 _ = await transaction
-                   .Insert<DatabaseEntity>(new[] { entity }, EnInsertBehavior.Default, token)
+                   .Insert(new[] { entity }, EnInsertBehavior.Default, token)
                    .ConfigureAwait(false);
             }
 
@@ -741,8 +740,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 return await transaction
-                   .Read<DatabaseEntity>()
-                   .SingleOrDefaultAsync(primaryKey, token)
+                   .SingleOrDefault<DatabaseEntity, Guid>(primaryKey, token)
                    .ConfigureAwait(false);
             }
 

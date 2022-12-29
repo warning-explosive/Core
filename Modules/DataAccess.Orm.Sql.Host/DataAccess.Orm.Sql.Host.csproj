@@ -117,6 +117,9 @@
       <Compile Update="Model\ModelComparator.cs">
         <DependentUpon>IModelComparator.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\ModelChangeCommandBuilderComposite.cs">
+        <DependentUpon>IModelChangeCommandBuilder.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">

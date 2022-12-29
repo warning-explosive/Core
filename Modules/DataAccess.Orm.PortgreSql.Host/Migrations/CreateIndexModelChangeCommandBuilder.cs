@@ -13,7 +13,8 @@
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateIndexModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateIndex>,
-                                                          IResolvable<IModelChangeCommandBuilder<CreateIndex>>
+                                                          IResolvable<IModelChangeCommandBuilder<CreateIndex>>,
+                                                          ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private const string CommandFormat = @"create {4}index ""{2}"" on ""{0}"".""{1}"" ({3})";
 
@@ -22,6 +23,13 @@
         public CreateIndexModelChangeCommandBuilder(IModelProvider modelProvider)
         {
             _modelProvider = modelProvider;
+        }
+
+        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        {
+            return change is CreateIndex createIndex
+                ? BuildCommand(createIndex, token)
+                : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
         public Task<string> BuildCommand(CreateIndex change, CancellationToken token)

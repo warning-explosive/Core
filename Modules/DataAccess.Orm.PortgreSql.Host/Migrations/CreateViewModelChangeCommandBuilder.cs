@@ -14,7 +14,8 @@
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateViewModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateView>,
-                                                         IResolvable<IModelChangeCommandBuilder<CreateView>>
+                                                         IResolvable<IModelChangeCommandBuilder<CreateView>>,
+                                                         ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private const string CommandFormat = $@"create materialized view ""{{0}}"".""{{1}}"" as {{2}};
 
@@ -29,6 +30,13 @@ insert into ""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(SqlView)}
         {
             _dependencyContainer = dependencyContainer;
             _modelProvider = modelProvider;
+        }
+
+        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        {
+            return change is CreateView createView
+                ? BuildCommand(createView, token)
+                : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
         public Task<string> BuildCommand(CreateView change, CancellationToken token)

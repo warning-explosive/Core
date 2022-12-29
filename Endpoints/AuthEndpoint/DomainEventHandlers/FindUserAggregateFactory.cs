@@ -32,8 +32,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
         public async Task<User> Build(FindUserSpecification spec, CancellationToken token)
         {
             var userDatabaseEntity = await _databaseContext
-               .Read<DatabaseModel.User>()
-               .All()
+               .All<DatabaseModel.User>()
                .Where(user => user.Username == spec.Username)
                .SingleOrDefaultAsync(token)
                .ConfigureAwait(false);

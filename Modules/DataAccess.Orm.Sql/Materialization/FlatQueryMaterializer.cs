@@ -27,13 +27,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Translation;
     using Translation.Extensions;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class FlatQueryMaterializer<T> : IQueryMaterializer<FlatQuery, T>,
                                               IResolvable<IQueryMaterializer<FlatQuery, T>>
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
         private readonly IDatabaseImplementation _databaseImplementation;
@@ -42,7 +41,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         public FlatQueryMaterializer(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
-            IAdvancedDatabaseTransaction transaction,
             IModelProvider modelProvider,
             IObjectBuilder objectBuilder,
             IDatabaseImplementation databaseImplementation,
@@ -50,30 +48,38 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
-            _transaction = transaction;
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
             _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
 
-        public Task<T> MaterializeScalar(FlatQuery query, CancellationToken token)
+        public Task<T> MaterializeScalar(
+            IAdvancedDatabaseTransaction transaction,
+            FlatQuery query,
+            CancellationToken token)
         {
-            var scalar = MaterializeInternal(query, token)
+            var scalar = Materialize(transaction, query, token)
                 .AsEnumerable(token)
                 .SingleOrDefault();
 
             return Task.FromResult(scalar);
         }
 
-        public IAsyncEnumerable<T> Materialize(FlatQuery query, CancellationToken token)
+        public IAsyncEnumerable<T> Materialize(
+            IAdvancedDatabaseTransaction transaction,
+            FlatQuery query,
+            CancellationToken token)
         {
-            return MaterializeInternal(query, token);
+            return MaterializeInternal(transaction, query, token);
         }
 
-        private async IAsyncEnumerable<T> MaterializeInternal(FlatQuery query, [EnumeratorCancellation] CancellationToken token)
+        private async IAsyncEnumerable<T> MaterializeInternal(
+            IAdvancedDatabaseTransaction transaction,
+            FlatQuery query,
+            [EnumeratorCancellation] CancellationToken token)
         {
-            var dynamicResult = await GetDynamicResult(query, token).ConfigureAwait(false);
+            var dynamicResult = await GetDynamicResult(transaction, query, token).ConfigureAwait(false);
 
             foreach (var dynamicValues in dynamicResult)
             {
@@ -81,13 +87,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
                 var values = (dynamicValues as IDictionary<string, object?>) !;
 
-                var built = await MaterializeInternal(values, token).ConfigureAwait(false);
+                var built = await MaterializeInternal(transaction, values, token).ConfigureAwait(false);
 
                 yield return built;
             }
         }
 
-        private async Task<IEnumerable<dynamic>?> GetDynamicResult(FlatQuery query, CancellationToken token)
+        private async Task<IEnumerable<dynamic>?> GetDynamicResult(
+            IAdvancedDatabaseTransaction transaction,
+            FlatQuery query,
+            CancellationToken token)
         {
             var settings = await _settingsProvider
                 .Get(token)
@@ -96,7 +105,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             var commandText = InlineQueryParameters(_dependencyContainer, query);
 
             return await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), _transaction.Query)
+               .TryAsync((commandText, settings, _logger), transaction.Query)
                .Catch<Exception>()
                .Invoke(_databaseImplementation.Handle<IEnumerable<dynamic>>(commandText), token)
                .ConfigureAwait(false);
@@ -122,6 +131,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         }
 
         private async Task<T> MaterializeInternal(
+            IAdvancedDatabaseTransaction transaction,
             IDictionary<string, object?> values,
             CancellationToken token)
         {
@@ -139,7 +149,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             }
             else
             {
-                if (TryGetValue(type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
+                if (TryGetValue(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
                 {
                     Fill(type, stored, values);
                     built = (T)stored;
@@ -147,13 +157,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 else
                 {
                     built = (T)Build(type, values) !;
-                    Store((IUniqueIdentified)built);
+                    Store(transaction, (IUniqueIdentified)built);
                 }
             }
 
-            await MaterializeRelations(built, relationValues, token).ConfigureAwait(false);
+            await MaterializeRelations(transaction, built, relationValues, token).ConfigureAwait(false);
 
-            await MaterializeMultipleRelations(built, multipleRelationValues, token).ConfigureAwait(false);
+            await MaterializeMultipleRelations(transaction, built, multipleRelationValues, token).ConfigureAwait(false);
 
             return built;
         }
@@ -234,12 +244,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             return values;
         }
 
-        private bool TryGetValue(Type entity, object key, [NotNullWhen(true)] out object? stored)
+        private bool TryGetValue(
+            IAdvancedDatabaseTransaction transaction,
+            Type entity,
+            object key,
+            [NotNullWhen(true)] out object? stored)
         {
             stored = GetType()
                .CallMethod(nameof(TryGetValue))
                .WithTypeArguments(entity)
-               .WithArguments(_transaction.Store, key)
+               .WithArguments(transaction.Store, key)
                .Invoke();
 
             return stored != default;
@@ -255,9 +269,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 : default;
         }
 
-        private void Store(IUniqueIdentified built)
+        private static void Store(
+            IAdvancedDatabaseTransaction transaction,
+            IUniqueIdentified built)
         {
-            _transaction.Store.Store(built);
+            transaction.Store.Store(built);
         }
 
         private IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
@@ -280,7 +296,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                     });
         }
 
-        private async Task MaterializeRelations(
+        private static async Task MaterializeRelations(
+            IAdvancedDatabaseTransaction transaction,
             T built,
             IReadOnlyDictionary<ColumnInfo, object?> relationValues,
             CancellationToken token)
@@ -289,46 +306,47 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             {
                 if (primaryKey != null)
                 {
-                    var relation = await MaterializeRelation(column.Relation.Target, primaryKey, token).ConfigureAwait(false);
+                    var relation = await MaterializeRelation(transaction, column.Relation.Target, primaryKey, token).ConfigureAwait(false);
                     column.Relation.Property.Declared.SetValue(built, relation);
                 }
             }
         }
 
-        private Task<object?> MaterializeRelation(
+        private static Task<object?> MaterializeRelation(
+            IAdvancedDatabaseTransaction transaction,
             Type type,
             object primaryKey,
             CancellationToken token)
         {
             var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
-            var task = this
+            var task = typeof(FlatQueryMaterializer<T>)
                 .CallMethod(nameof(MaterializeRelation))
                 .WithTypeArguments(type, keyType)
-                .WithArguments(primaryKey, token)
+                .WithArguments(transaction, primaryKey, token)
                 .Invoke<Task>();
 
-            return GetType()
+            return typeof(FlatQueryMaterializer<T>)
                 .CallMethod(nameof(AsEntity))
                 .WithTypeArguments(type, keyType)
                 .WithArgument(task)
                 .Invoke<Task<object?>>();
         }
 
-        private Task<TEntity?> MaterializeRelation<TEntity, TKey>(
+        private static Task<TEntity?> MaterializeRelation<TEntity, TKey>(
+            IAdvancedDatabaseTransaction transaction,
             TKey primaryKey,
             CancellationToken token)
             where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
-            if (_transaction.Store.TryGetValue<TEntity>(primaryKey, out var entity))
+            if (transaction.Store.TryGetValue<TEntity>(primaryKey, out var entity))
             {
                 return Task.FromResult<TEntity?>(entity);
             }
 
-            return _transaction
-                .Read<TEntity>()
-                .All()
+            return transaction
+                .All<TEntity>()
                 .Where(databaseEntity => Equals(databaseEntity.PrimaryKey, primaryKey))
                 .SingleOrDefaultAsync(token);
         }
@@ -361,7 +379,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                     });
         }
 
-        private Task MaterializeMultipleRelations(
+        private static Task MaterializeMultipleRelations(
+            IAdvancedDatabaseTransaction transaction,
             T built,
             IReadOnlyDictionary<ColumnInfo, object?> relationValues,
             CancellationToken token)
@@ -379,14 +398,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             var type = typeof(T);
             var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
-            return this
+            return typeof(FlatQueryMaterializer<T>)
                 .CallMethod(nameof(MaterializeMultipleRelations))
                 .WithTypeArguments(type, keyType)
-                .WithArguments(built!, relationValues, token)
+                .WithArguments(transaction, built!, relationValues, token)
                 .Invoke<Task>();
         }
 
-        private async Task MaterializeMultipleRelations<TEntity, TKey>(
+        private static async Task MaterializeMultipleRelations<TEntity, TKey>(
+            IAdvancedDatabaseTransaction transaction,
             TEntity built,
             IReadOnlyDictionary<ColumnInfo, object?> relationValues,
             CancellationToken token)
@@ -408,16 +428,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 var ownerType = column.Table.Type;
                 var collectionItemType = column.Relation.Target;
 
-                await this
+                await typeof(FlatQueryMaterializer<T>)
                     .CallMethod(nameof(MaterializeMultipleRelation))
                     .WithTypeArguments(mtmType, ownerType, collectionItemType, leftKeyType, rightKeyType)
-                    .WithArguments(built.PrimaryKey, collection, token)
+                    .WithArguments(transaction, built.PrimaryKey, collection, token)
                     .Invoke<Task>()
                     .ConfigureAwait(false);
             }
         }
 
-        private async Task MaterializeMultipleRelation<TMtm, TLeft, TRight, TLeftKey, TRightKey>(
+        private static async Task MaterializeMultipleRelation<TMtm, TLeft, TRight, TLeftKey, TRightKey>(
+            IAdvancedDatabaseTransaction transaction,
             TLeftKey ownerPrimaryKey,
             ICollection<TRight> collection,
             CancellationToken token)
@@ -438,15 +459,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
              * )
              */
 
-            var subQuery = _transaction
-                .Read<TMtm>()
-                .All()
+            var subQuery = transaction
+                .All<TMtm>()
                 .Where(mtm => Equals(mtm.Left, ownerPrimaryKey))
                 .Select(mtm => mtm.Right);
 
-            var items = await _transaction
-                .Read<TRight>()
-                .All()
+            var items = await transaction
+                .All<TRight>()
                 .Where(databaseEntity => subQuery.Contains(databaseEntity.PrimaryKey))
                 .ToListAsync(token)
                 .ConfigureAwait(false);

@@ -50,8 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         private async Task<DatabaseNode> BuildModel(IDatabaseTransaction transaction, CancellationToken token)
         {
             var constraints = transaction
-                .Read<DatabaseColumnConstraint>()
-                .All()
+                .All<DatabaseColumnConstraint>()
                 .AsEnumerable()
                 .GroupBy(constraint => constraint.Schema)
                 .ToDictionary(grp => grp.Key,
@@ -65,8 +64,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                     StringComparer.OrdinalIgnoreCase);
 
             var schemas = await (await transaction
-                    .Read<DatabaseSchema>()
-                    .All()
+                    .All<DatabaseSchema>()
                     .Select(schema => schema.Name)
                     .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                     .ConfigureAwait(false))
@@ -96,8 +94,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseColumn>()
-                    .All()
+                    .All<DatabaseColumn>()
                     .Where(column => column.Schema == schema)
                     .GroupBy(column => column.Table)
                     .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
@@ -166,8 +163,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseView>()
-                    .All()
+                    .All<DatabaseView>()
                     .Where(view => view.Schema == schema)
                     .ToListAsync(token)
                     .ConfigureAwait(false))
@@ -186,8 +182,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await transaction
-                    .Read<DatabaseIndex>()
-                    .All()
+                    .All<DatabaseIndex>()
                     .Where(index => index.Schema == schema)
                     .ToListAsync(token)
                     .ConfigureAwait(false))

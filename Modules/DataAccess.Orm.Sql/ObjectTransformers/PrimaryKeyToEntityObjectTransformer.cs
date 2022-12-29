@@ -24,8 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
         public TEntity Transform(TKey value)
         {
             return _databaseContext
-                .Read<TEntity>()
-                .SingleAsync(value, CancellationToken.None)
+                .Single<TEntity, TKey>(value, CancellationToken.None)
                 .Result;
         }
     }

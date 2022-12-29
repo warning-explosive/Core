@@ -51,8 +51,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
             where TAggregate : class, IAggregate<TAggregate>
         {
             var databaseDomainEvents = await _databaseContext
-               .Read<DatabaseDomainEvent>()
-               .All()
+               .All<DatabaseDomainEvent>()
                .Where(domainEvent => domainEvent.AggregateId == aggregateId
                                   && domainEvent.Timestamp <= timestamp)
                .OrderBy(domainEvent => domainEvent.Index)
@@ -80,7 +79,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                 domainEvent.GetType(),
                 _jsonSerializer.SerializeObject(domainEvent));
 
-            return _databaseContext.Insert<DatabaseDomainEvent>(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
+            return _databaseContext.Insert(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
         }
     }
 }

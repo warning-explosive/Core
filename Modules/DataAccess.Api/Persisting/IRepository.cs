@@ -23,29 +23,7 @@
         /// <returns>Affected rows count</returns>
         Task<long> Insert(
             IAdvancedDatabaseTransaction transaction,
-            IDatabaseEntity[] entities,
-            EnInsertBehavior insertBehavior,
-            CancellationToken token);
-    }
-
-    /// <summary>
-    /// IRepository
-    /// </summary>
-    /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-    public interface IRepository<TEntity>
-        where TEntity : IDatabaseEntity
-    {
-        /// <summary>
-        /// Inserts entity in the database
-        /// </summary>
-        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="entities">Entities</param>
-        /// <param name="insertBehavior">EnInsertBehavior</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Affected rows count</returns>
-        Task<long> Insert(
-            IAdvancedDatabaseTransaction transaction,
-            IReadOnlyCollection<TEntity> entities,
+            IReadOnlyCollection<IDatabaseEntity> entities,
             EnInsertBehavior insertBehavior,
             CancellationToken token);
 
@@ -57,14 +35,16 @@
         /// <param name="valueProducer">Value producer</param>
         /// <param name="predicate">Predicate</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
         /// <typeparam name="TValue">TValue type-argument</typeparam>
         /// <returns>Affected rows count</returns>
-        Task<long> Update<TValue>(
+        Task<long> Update<TEntity, TValue>(
             IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, TValue>> accessor,
             Expression<Func<TEntity, TValue>> valueProducer,
             Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token);
+            CancellationToken token)
+            where TEntity : IDatabaseEntity;
 
         /// <summary>
         /// Updates entity in the database
@@ -73,12 +53,14 @@
         /// <param name="infos">Update infos</param>
         /// <param name="predicate">Predicate</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
         /// <returns>Affected rows count</returns>
-        Task<long> Update(
+        Task<long> Update<TEntity>(
             IAdvancedDatabaseTransaction transaction,
             IReadOnlyCollection<UpdateInfo<TEntity>> infos,
             Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token);
+            CancellationToken token)
+            where TEntity : IDatabaseEntity;
 
         /// <summary>
         /// Deletes entity from the database
@@ -86,10 +68,12 @@
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="predicate">Predicate</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
         /// <returns>Affected rows count</returns>
-        Task<long> Delete(
+        Task<long> Delete<TEntity>(
             IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token);
+            CancellationToken token)
+            where TEntity : IDatabaseEntity;
     }
 }

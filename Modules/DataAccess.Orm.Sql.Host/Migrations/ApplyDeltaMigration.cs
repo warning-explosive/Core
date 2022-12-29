@@ -36,6 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
+        private readonly IModelChangeCommandBuilderComposite _commandBuilder;
         private readonly ILogger _logger;
 
         public ApplyDeltaMigration(
@@ -44,6 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseTypeProvider databaseTypeProvider,
             IModelChangesExtractor modelChangesExtractor,
+            IModelChangeCommandBuilderComposite commandBuilder,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
@@ -51,6 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             _settingsProvider = settingsProvider;
             _databaseTypeProvider = databaseTypeProvider;
             _modelChangesExtractor = modelChangesExtractor;
+            _commandBuilder = commandBuilder;
             _logger = logger;
         }
 
@@ -97,11 +100,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             {
                 var modelChange = modelChanges[i];
 
-                var command = await _dependencyContainer
-                    .ResolveGeneric(typeof(IModelChangeCommandBuilder<>), modelChange.GetType())
-                    .CallMethod(nameof(IModelChangeCommandBuilder<IModelChange>.BuildCommand))
-                    .WithArguments(modelChange, token)
-                    .Invoke<Task<string>>()
+                var command = await _commandBuilder
+                    .BuildCommand(modelChange, token)
                     .ConfigureAwait(false);
 
                 command = CommandFormat

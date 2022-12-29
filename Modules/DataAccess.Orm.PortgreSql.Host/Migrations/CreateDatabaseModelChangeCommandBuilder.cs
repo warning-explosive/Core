@@ -12,13 +12,21 @@
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateDatabase>,
-                                                             IResolvable<IModelChangeCommandBuilder<CreateDatabase>>
+                                                             IResolvable<IModelChangeCommandBuilder<CreateDatabase>>,
+                                                             ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
         public CreateDatabaseModelChangeCommandBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
             _settingsProvider = settingsProvider;
+        }
+
+        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        {
+            return change is CreateDatabase createDatabase
+                ? BuildCommand(createDatabase, token)
+                : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
         public async Task<string> BuildCommand(CreateDatabase change, CancellationToken token)

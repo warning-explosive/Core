@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 Name);
 
             await transaction
-                .Insert<AppliedMigration>(new[] { appliedMigration }, EnInsertBehavior.Default, token)
+                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
 
             return CommandText;

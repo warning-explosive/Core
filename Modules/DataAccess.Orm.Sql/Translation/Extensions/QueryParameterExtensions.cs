@@ -18,12 +18,8 @@
         public static IReadOnlyDictionary<string, object?> AsQueryParametersValues(this object? obj)
         {
             return obj?.GetType().IsPrimitive() == true
-                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
-                {
-                    [TranslationContext.QueryParameterFormat.Format(0)] = obj
-                }
-                : obj?.ToPropertyDictionary()
-                  ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase) { [TranslationContext.QueryParameterFormat.Format(0)] = obj }
+                : obj?.ToPropertyDictionary() ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

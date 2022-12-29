@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
                .ConfigureAwait(false);
 
             await _databaseContext
-               .Insert<DatabaseModel.User>(new[] { new DatabaseModel.User(domainEvent.AggregateId, domainEvent.Username.ToString()) }, EnInsertBehavior.Default, token)
+               .Insert(new[] { new DatabaseModel.User(domainEvent.AggregateId, domainEvent.Username.ToString()) }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
         }
     }

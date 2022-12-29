@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -94,27 +95,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         public async Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token)
         {
+            var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+
             var query = _translator.Translate(expression);
 
-            return await MaterializeScalar<T>(query, token).ConfigureAwait(false);
+            return await MaterializeScalar<T>(transaction, query, token).ConfigureAwait(false);
         }
 
         public async IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, [EnumeratorCancellation] CancellationToken token)
         {
+            var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+
             var query = _translator.Translate(expression);
 
-            await foreach (var item in Materialize<T>(query, token))
+            await foreach (var item in Materialize<T>(transaction, query, token))
             {
                 yield return item;
             }
         }
 
-        private Task<T> MaterializeScalar<T>(IQuery query, CancellationToken token)
+        private Task<T> MaterializeScalar<T>(
+            IDatabaseTransaction transaction,
+            IQuery query,
+            CancellationToken token)
         {
             return _dependencyContainer
                 .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
                 .CallMethod(nameof(IQueryMaterializer<IQuery, T>.MaterializeScalar))
-                .WithArguments(query, token)
+                .WithArguments(transaction, query, token)
                 .Invoke<Task<T>>();
         }
 
@@ -123,12 +131,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return task.Result;
         }
 
-        private IAsyncEnumerable<T> Materialize<T>(IQuery query, CancellationToken token)
+        private IAsyncEnumerable<T> Materialize<T>(
+            IDatabaseTransaction transaction,
+            IQuery query,
+            CancellationToken token)
         {
             return _dependencyContainer
                 .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
                 .CallMethod(nameof(IQueryMaterializer<IQuery, T>.Materialize))
-                .WithArguments(query, token)
+                .WithArguments(transaction, query, token)
                 .Invoke<IAsyncEnumerable<T>>();
         }
 

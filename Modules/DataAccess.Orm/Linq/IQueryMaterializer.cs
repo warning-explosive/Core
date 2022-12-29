@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Transaction;
 
     /// <summary>
     /// IQueryMaterializer
@@ -15,17 +16,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <summary>
         /// Materializes query
         /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="query">Query</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing materialization operation</returns>
-        Task<TItem> MaterializeScalar(TQuery query, CancellationToken token);
+        Task<TItem> MaterializeScalar(
+            IAdvancedDatabaseTransaction transaction,
+            TQuery query,
+            CancellationToken token);
 
         /// <summary>
         /// Materializes query
         /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="query">Query</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing materialization operation</returns>
-        IAsyncEnumerable<TItem> Materialize(TQuery query, CancellationToken token);
+        IAsyncEnumerable<TItem> Materialize(
+            IAdvancedDatabaseTransaction transaction,
+            TQuery query,
+            CancellationToken token);
     }
 }

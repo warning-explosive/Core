@@ -21,12 +21,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             IDatabaseImplementation databaseImplementation,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelChangesExtractor modelChangesExtractor,
+            IModelChangeCommandBuilderComposite commandBuilder,
             ILogger logger)
             : base(dependencyContainer,
                 databaseImplementation,
                 settingsProvider,
                 new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
                 modelChangesExtractor,
+                commandBuilder,
                 logger)
         {
         }

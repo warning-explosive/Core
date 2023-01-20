@@ -36,6 +36,7 @@
 
         internal static IntegrationMessageHeader Build(IIntegrationMessageHeader messageHeader, IJsonSerializer serializer)
         {
+            // TODO: #143 - slow SerializeObject
             var header = new JsonObject(serializer.SerializeObject(messageHeader), messageHeader.GetType());
             return new IntegrationMessageHeader(Guid.NewGuid(), header);
         }

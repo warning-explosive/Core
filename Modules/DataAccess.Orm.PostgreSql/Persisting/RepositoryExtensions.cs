@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                                     entity.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)),
                                     dependency.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
                                .WithArguments(entity.PrimaryKey, dependency.PrimaryKey)
-                               .Invoke<IUniqueIdentified>()));
+                               .Invoke<IUniqueIdentified>())); // TODO: #143 - slow invoke
                 };
             }
         }

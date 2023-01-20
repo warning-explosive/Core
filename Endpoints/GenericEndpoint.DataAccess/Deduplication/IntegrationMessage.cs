@@ -55,6 +55,7 @@
 
         internal static IntegrationMessage Build(Messaging.IntegrationMessage message, IJsonSerializer serializer)
         {
+            // TODO: #143 - slow SerializeObject
             var payload = new JsonObject(serializer.SerializeObject(message.Payload), message.Payload.GetType());
 
             var headers = message

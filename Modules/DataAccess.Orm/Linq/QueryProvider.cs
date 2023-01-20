@@ -119,6 +119,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             IQuery query,
             CancellationToken token)
         {
+            // TODO: #143 - ResolveGeneric
             return _dependencyContainer
                 .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
                 .CallMethod(nameof(IQueryMaterializer<IQuery, T>.MaterializeScalar))
@@ -136,6 +137,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             IQuery query,
             CancellationToken token)
         {
+            // TODO: #143 - ResolveGeneric
             return _dependencyContainer
                 .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
                 .CallMethod(nameof(IQueryMaterializer<IQuery, T>.Materialize))

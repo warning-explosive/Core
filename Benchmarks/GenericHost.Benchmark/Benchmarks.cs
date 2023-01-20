@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Benchmark
 {
+    using System.Threading.Tasks;
     using Core.Benchmark.Api;
     using Sources;
     using Test.Api;
@@ -69,6 +70,32 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
             Assert.True(unitOfWorkMiddleware < 1m);
             Assert.True(handledByEndpointMiddleware < 1m);
             Assert.True(requestReplyMiddleware < 1m);
+        }
+
+        [Fact(Timeout = 300_000)]
+        internal async Task MessageHandlerMiddlewareBenchmarkTest()
+        {
+            var source = new MessageHandlerMiddlewareBenchmarkSource();
+
+            try
+            {
+                source.GlobalSetup();
+
+                for (var i = 0; i < 100; i++)
+                {
+                    await source.RunErrorHandlingMiddleware().ConfigureAwait(false);
+                    await source.RunAuthorizationMiddleware().ConfigureAwait(false);
+                    await source.RunUnitOfWorkMiddleware().ConfigureAwait(false);
+                    await source.RunHandledByEndpointMiddleware().ConfigureAwait(false);
+                    await source.RunRequestReplyMiddleware().ConfigureAwait(false);
+
+                    source.IterationCleanup();
+                }
+            }
+            finally
+            {
+                source.GlobalCleanup();
+            }
         }
     }
 }

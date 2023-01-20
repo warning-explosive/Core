@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.JwtAuthentication
 {
     using System;
     using Basics;
-    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Settings;
     using Microsoft.Extensions.Configuration;
     using Newtonsoft.Json;

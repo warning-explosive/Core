@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Extensions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
 {
     using System;
     using Microsoft.Extensions.Logging;

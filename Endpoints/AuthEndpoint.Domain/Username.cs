@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
+namespace SpaceEngineers.Core.AuthEndpoint.Domain
 {
     using System.Diagnostics;
     using Basics;

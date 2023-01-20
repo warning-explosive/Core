@@ -10,8 +10,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using CompositionRoot.Registration;
     using Contract;
     using Contract.Abstractions;
-    using Contract.Extensions;
-    using Extensions;
     using Messaging;
 
     [Component(EnLifestyle.Singleton)]

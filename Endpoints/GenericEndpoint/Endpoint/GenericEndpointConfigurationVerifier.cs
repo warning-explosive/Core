@@ -13,12 +13,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Extensions;
     using Messaging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.GenericEndpoint.Contract.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class GenericEndpointConfigurationVerifier : IConfigurationVerifier,

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.Extensions
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
 {
     using System;
     using Microsoft.Extensions.Configuration;

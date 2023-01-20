@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Transaction;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using Dapper;
     using Microsoft.Extensions.Logging;
     using Orm.Settings;

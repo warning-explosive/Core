@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Extensions
+namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 {
     using System;
     using System.Linq;

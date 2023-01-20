@@ -810,7 +810,7 @@
                     },
                     index =>
                     {
-                        AssertCreateTable(modelChanges, index, nameof(SpaceEngineers.Core.GenericDomain.EventSourcing), typeof(DatabaseDomainEvent));
+                        AssertCreateTable(modelChanges, index, nameof(GenericDomain.EventSourcing), typeof(DatabaseDomainEvent));
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
                         AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");

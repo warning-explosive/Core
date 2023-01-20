@@ -59,10 +59,13 @@
       </Content>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Sources\Command.cs">
+      <Compile Update="Sources\Request.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>
       <Compile Update="Sources\RecreatePostgreSqlDatabaseMigration.cs">
+        <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Reply.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>
     </ItemGroup>

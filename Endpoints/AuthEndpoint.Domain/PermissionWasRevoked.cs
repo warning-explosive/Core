@@ -1,15 +1,15 @@
-namespace SpaceEngineers.Core.AuthEndpoint.Domain.Model
+namespace SpaceEngineers.Core.AuthEndpoint.Domain
 {
     using GenericDomain.Api.Abstractions;
 
     /// <summary>
-    /// PermissionWasGranted
+    /// PermissionWasRevoked
     /// </summary>
-    public record PermissionWasGranted : IDomainEvent<User>
+    public record PermissionWasRevoked : IDomainEvent<User>
     {
         /// <summary> .cctor </summary>
         /// <param name="feature">Feature</param>
-        public PermissionWasGranted(Feature feature)
+        public PermissionWasRevoked(Feature feature)
         {
             Feature = feature;
         }

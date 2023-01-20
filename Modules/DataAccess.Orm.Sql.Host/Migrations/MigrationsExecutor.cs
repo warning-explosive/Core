@@ -14,7 +14,7 @@
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
     using Connection;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Extensions;

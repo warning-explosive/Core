@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Contract;
-    using Domain.Model;
+    using Domain;
     using DomainEventHandlers;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;

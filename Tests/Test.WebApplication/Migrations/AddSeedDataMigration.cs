@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using AuthEndpoint.Domain;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -52,15 +53,15 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             var aggregateId = Guid.NewGuid();
 
-            var salt = AuthEndpoint.Domain.Model.Password.GenerateSalt();
-            var passwordHash = new AuthEndpoint.Domain.Model.Password(password).GeneratePasswordHash(salt);
+            var salt = Password.GenerateSalt();
+            var passwordHash = new Password(password).GeneratePasswordHash(salt);
 
-            var domainEvents = new IDomainEvent<AuthEndpoint.Domain.Model.User>[]
+            var domainEvents = new IDomainEvent<User>[]
             {
-                new AuthEndpoint.Domain.Model.UserWasCreated(aggregateId, new AuthEndpoint.Domain.Model.Username(username), salt, passwordHash),
-                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(GenericEndpoint.EventSourcing.Features.EventSourcing)),
-                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(AuthEndpoint.Contract.Features.Authentication)),
-                new AuthEndpoint.Domain.Model.PermissionWasGranted(new AuthEndpoint.Domain.Model.Feature(Features.WebApiTest))
+                new UserWasCreated(aggregateId, new Username(username), salt, passwordHash),
+                new PermissionWasGranted(new Feature(GenericEndpoint.EventSourcing.Features.EventSourcing)),
+                new PermissionWasGranted(new Feature(AuthEndpoint.Contract.Features.Authentication)),
+                new PermissionWasGranted(new Feature(Features.WebApiTest))
             };
 
             var eventStore = dependencyContainer.Resolve<IEventStore>();
@@ -71,14 +72,14 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
                 await eventStore
                     .CallMethod(nameof(eventStore.Append))
-                    .WithTypeArguments(typeof(AuthEndpoint.Domain.Model.User), domainEvents[index].GetType())
+                    .WithTypeArguments(typeof(User), domainEvents[index].GetType())
                     .WithArguments(domainEvents[index], details, token)
                     .Invoke<Task>()
                     .ConfigureAwait(false);
             }
 
-            sb.AppendLine($"--{nameof(AuthEndpoint.Domain.Model.UserWasCreated)}");
-            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.Domain.Model.UserWasCreated)} domain event"));
+            sb.AppendLine($"--{nameof(UserWasCreated)}");
+            sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(UserWasCreated)} domain event"));
 
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 

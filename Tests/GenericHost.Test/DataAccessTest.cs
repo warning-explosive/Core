@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Basics;
     using Basics.Primitives;
     using CompositionRoot;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
@@ -1056,7 +1056,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.Model.User, AuthEndpoint.Domain.Model.UserWasCreated>>(),
+                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.User, AuthEndpoint.Domain.UserWasCreated>>(),
                             collector.WaitUntilMessageIsNotReceived<UserWasCreated>());
 
                         await integrationContext

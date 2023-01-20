@@ -6,13 +6,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
     using Basics.Attributes;
     using CompositionRoot;
     using Contract;
+    using CrossCuttingConcerns.Logging;
     using Endpoint;
     using GenericHost.Api.Abstractions;
     using Messaging;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
 
     [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]

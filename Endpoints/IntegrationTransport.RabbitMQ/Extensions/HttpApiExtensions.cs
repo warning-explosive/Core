@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
     using System.Net.Mime;
     using System.Threading;
     using System.Threading.Tasks;
-    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Logging;
     using HttpApi;
     using Microsoft.Extensions.Logging;
     using RestSharp;

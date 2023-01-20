@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
     using CompositionRoot;
-    using Messaging.Extensions;
+    using Messaging;
     using UnitOfWork;
 
     /// <summary>

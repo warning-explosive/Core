@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Contract;
-    using CrossCuttingConcerns.Extensions;
-    using Domain.Model;
+    using CrossCuttingConcerns.Logging;
+    using Domain;
     using DomainEventHandlers;
     using GenericDomain.Api.Abstractions;
     using GenericEndpoint.Api.Abstractions;

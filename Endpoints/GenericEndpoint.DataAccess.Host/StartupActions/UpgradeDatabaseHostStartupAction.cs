@@ -6,11 +6,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
     using System.Threading.Tasks;
     using Basics;
     using Basics.Attributes;
+    using CrossCuttingConcerns.Logging;
     using GenericEndpoint.Host.StartupActions;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions;
     using SpaceEngineers.Core.GenericHost.Api.Abstractions;
 

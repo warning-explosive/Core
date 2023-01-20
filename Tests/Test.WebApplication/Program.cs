@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Settings;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.EventSourcing.Host;
     using GenericHost;

@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Basics.Primitives;
     using CompositionRoot;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using Messaging;
     using Microsoft.Extensions.Logging;
     using Pipeline;

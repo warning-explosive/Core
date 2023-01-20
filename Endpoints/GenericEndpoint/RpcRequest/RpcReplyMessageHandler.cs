@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Contract.Abstractions;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
     using Pipeline;

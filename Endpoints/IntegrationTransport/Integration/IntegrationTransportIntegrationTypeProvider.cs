@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Integration
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using CompositionRoot;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Messaging;
 
     [ComponentOverride]

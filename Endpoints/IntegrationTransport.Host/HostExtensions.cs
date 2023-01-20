@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using CompositionRoot;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.Overrides;
@@ -154,7 +153,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
-                    nameof(Core.CrossCuttingConcerns)));
+                    nameof(CrossCuttingConcerns)));
 
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 

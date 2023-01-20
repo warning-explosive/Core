@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Domain.Model;
+    using Domain;
     using GenericDomain.Api.Abstractions;
 
     [Component(EnLifestyle.Scoped)]

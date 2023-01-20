@@ -4,11 +4,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using GenericEndpoint.Contract.Attributes;
 
     /// <summary>
-    /// Command
+    /// Reply
     /// </summary>
-    [OwnedBy(nameof(MessageHandlerMiddlewareBenchmarkSource))]
     [Feature(nameof(MessageHandlerMiddlewareBenchmarkSource))]
-    public record Command : IIntegrationCommand
+    public record Reply : IIntegrationReply
     {
     }
 }

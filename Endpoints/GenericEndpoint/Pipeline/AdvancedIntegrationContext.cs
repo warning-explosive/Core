@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using Basics;
     using Contract;
     using Contract.Abstractions;
-    using Contract.Extensions;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Messaging.MessageHeaders;

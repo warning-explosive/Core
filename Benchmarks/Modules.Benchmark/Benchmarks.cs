@@ -38,8 +38,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark
 
             var multiplier = bySerialization / byReflection;
 
-            Output.WriteLine($"{nameof(bySerialization)}: {bySerialization}");
-            Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
             Assert.True(multiplier >= 2m);

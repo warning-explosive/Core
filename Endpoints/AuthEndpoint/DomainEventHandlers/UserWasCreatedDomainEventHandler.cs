@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using AutoRegistration.Api.Enumerations;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
-    using Domain.Model;
+    using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
 

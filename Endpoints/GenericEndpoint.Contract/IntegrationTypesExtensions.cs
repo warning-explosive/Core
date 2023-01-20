@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Contract.Extensions
+namespace SpaceEngineers.Core.GenericEndpoint.Contract
 {
     using System;
     using Abstractions;
     using Attributes;
     using Basics;
-    using Contract;
 
     /// <summary>
     /// IntegrationTypesExtensions

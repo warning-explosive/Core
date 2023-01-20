@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
 {
     using System;
+    using Contract;
     using Contract.Abstractions;
-    using Contract.Extensions;
 
     internal class MessageInfo
     {

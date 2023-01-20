@@ -36,7 +36,8 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     {
         private CancellationTokenSource? _cts;
         private IHost? _host;
-        private IntegrationMessage? _message;
+        private IntegrationMessage? _request;
+        private Func<IAdvancedIntegrationContext, CancellationToken, Task>? _messageHandler;
         private IDependencyContainer? _dependencyContainer;
         private IMessageHandlerMiddlewareComposite? _messageHandlerMiddleware;
         private IMessageHandlerMiddleware? _errorHandlingMiddleware;
@@ -96,13 +97,15 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     },
                     TimeSpan.FromSeconds(300));
 
-            _message = transportDependencyContainer
+            _request = transportDependencyContainer
                 .Resolve<IIntegrationMessageFactory>()
                 .CreateGeneralMessage(
-                    new Command(),
-                    typeof(Command),
+                    new Request(),
+                    typeof(Request),
                     new[] { new Authorization(authorizationToken) },
                     null);
+
+            _messageHandler = static (context, token) => context.Reply((Request)context.Message.Payload, new Reply(), token);
 
             _dependencyContainer = _host.GetEndpointDependencyContainer(nameof(MessageHandlerMiddlewareBenchmarkSource));
             _messageHandlerMiddleware = _dependencyContainer.Resolve<IMessageHandlerMiddlewareComposite>();
@@ -122,7 +125,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         [IterationCleanup]
         public void IterationCleanup()
         {
-            var headers = (Dictionary<Type, IIntegrationMessageHeader>)_message.Headers;
+            var headers = (Dictionary<Type, IIntegrationMessageHeader>)_request.Headers;
 
             _ = headers.Remove(typeof(ActualDeliveryDate));
             _ = headers.Remove(typeof(DeliveryTag));
@@ -148,10 +151,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _messageHandlerMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }
@@ -163,10 +166,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _errorHandlingMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }
@@ -178,10 +181,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _authorizationMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }
@@ -193,10 +196,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _unitOfWorkMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }
@@ -208,10 +211,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _handledByEndpointMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }
@@ -223,10 +226,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
             {
-                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_message!);
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _requestReplyMiddleware
-                    .Handle(exclusiveContext, static (context, token) => Task.CompletedTask, _cts.Token)
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }
         }

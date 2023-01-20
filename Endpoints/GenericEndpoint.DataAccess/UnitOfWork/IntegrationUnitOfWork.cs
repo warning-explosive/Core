@@ -14,11 +14,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Persisting;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
-    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Logging;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
-    using Messaging.Extensions;
+    using Messaging;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
     using Pipeline;

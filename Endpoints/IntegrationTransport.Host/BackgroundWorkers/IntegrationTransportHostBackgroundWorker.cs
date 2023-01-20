@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using GenericHost.Api.Abstractions;
     using Microsoft.Extensions.Logging;
 

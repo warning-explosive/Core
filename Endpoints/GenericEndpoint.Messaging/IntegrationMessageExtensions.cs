@@ -1,6 +1,6 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Messaging.Extensions
+namespace SpaceEngineers.Core.GenericEndpoint.Messaging
 {
-    using Contract.Extensions;
+    using Contract;
 
     /// <summary>
     /// IntegrationMessage extensions

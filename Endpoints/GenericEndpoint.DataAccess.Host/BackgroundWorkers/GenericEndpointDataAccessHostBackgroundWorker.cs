@@ -5,12 +5,11 @@
     using System.Threading.Tasks;
     using Basics;
     using Basics.Primitives;
-    using Contract;
+    using CrossCuttingConcerns.Logging;
     using Microsoft.Extensions.Logging;
     using Settings;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
     using SpaceEngineers.Core.GenericHost.Api.Abstractions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
@@ -22,20 +21,17 @@
                                                                    ICollectionResolvable<IHostBackgroundWorker>,
                                                                    IResolvable<GenericEndpointDataAccessHostBackgroundWorker>
     {
-        private readonly EndpointIdentity _endpointIdentity;
         private readonly IExecutableIntegrationTransport _transport;
         private readonly ISettingsProvider<OutboxSettings> _outboxSettingProvider;
         private readonly IOutboxBackgroundDelivery _outboxDelivery;
         private readonly ILogger _logger;
 
         public GenericEndpointDataAccessHostBackgroundWorker(
-            EndpointIdentity endpointIdentity,
             IExecutableIntegrationTransport transport,
             ISettingsProvider<OutboxSettings> outboxSettingProvider,
             IOutboxBackgroundDelivery outboxDelivery,
             ILogger logger)
         {
-            _endpointIdentity = endpointIdentity;
             _transport = transport;
             _outboxSettingProvider = outboxSettingProvider;
             _outboxDelivery = outboxDelivery;

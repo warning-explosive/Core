@@ -19,7 +19,7 @@
     {
         private const string CommandFormat = $@"create materialized view ""{{0}}"".""{{1}}"" as {{2}};
 
-insert into ""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(SqlView)}""(""{nameof(SqlView.PrimaryKey)}"", ""{nameof(SqlView.Version)}"", ""{nameof(SqlView.Schema)}"", ""{nameof(SqlView.View)}"", ""{nameof(SqlView.Query)}"") values ({{3}})";
+insert into ""{nameof(Sql.Host.Migrations)}"".""{nameof(SqlView)}""(""{nameof(SqlView.PrimaryKey)}"", ""{nameof(SqlView.Version)}"", ""{nameof(SqlView.Schema)}"", ""{nameof(SqlView.View)}"", ""{nameof(SqlView.Query)}"") values ({{3}})";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IModelProvider _modelProvider;

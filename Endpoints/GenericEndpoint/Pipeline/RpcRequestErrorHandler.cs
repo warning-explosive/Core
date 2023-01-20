@@ -7,8 +7,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
-    using CrossCuttingConcerns.Extensions;
-    using Messaging.Extensions;
+    using CrossCuttingConcerns.Logging;
+    using Messaging;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
     using RpcRequest;

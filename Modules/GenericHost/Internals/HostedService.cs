@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using Basics.Primitives;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
-    using CrossCuttingConcerns.Extensions;
+    using CrossCuttingConcerns.Logging;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 

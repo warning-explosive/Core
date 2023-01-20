@@ -112,8 +112,8 @@ namespace SpaceEngineers.Core.Test.WebApplication
 
                 var assemblyName = AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
-                    nameof(SpaceEngineers.Core),
-                    nameof(SpaceEngineers.Core.Test),
+                    nameof(Core),
+                    nameof(Test),
                     nameof(SpaceEngineers.Core.Test.WebApplication));
 
                 var xmlFileName = $"{assemblyName}.xml";

@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot.Verifiers;
+    using Contract;
     using Contract.Attributes;
-    using Contract.Extensions;
     using Messaging;
 
     [Component(EnLifestyle.Singleton)]

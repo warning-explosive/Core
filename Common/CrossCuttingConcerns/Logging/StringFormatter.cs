@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.CrossCuttingConcerns.StringFormatter
+namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
 {
     using System;
     using AutoRegistration.Api.Abstractions;

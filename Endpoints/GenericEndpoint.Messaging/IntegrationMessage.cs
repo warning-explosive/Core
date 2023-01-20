@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using Contract;
     using Contract.Abstractions;
     using Contract.Attributes;
-    using Extensions;
     using MessageHeaders;
 
     /// <summary>

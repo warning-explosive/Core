@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using Basics.Exceptions;
     using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
-    using Domain.Model;
+    using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
 

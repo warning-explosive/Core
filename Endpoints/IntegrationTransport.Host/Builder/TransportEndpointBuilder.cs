@@ -25,8 +25,8 @@
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
-                    nameof(Core.IntegrationTransport),
-                    nameof(Core.IntegrationTransport.InMemory)));
+                    nameof(IntegrationTransport),
+                    nameof(InMemory)));
 
             var endpointInstanceSelectionBehavior = new EndpointInstanceSelectionBehavior();
             var inMemoryIntegrationTransport = new InMemoryIntegrationTransport(EndpointIdentity, endpointInstanceSelectionBehavior);
@@ -53,8 +53,8 @@
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
                     nameof(Core),
-                    nameof(Core.IntegrationTransport),
-                    nameof(Core.IntegrationTransport.RabbitMQ)));
+                    nameof(IntegrationTransport),
+                    nameof(RabbitMQ)));
 
             var rabbitMqIntegrationTransportManualRegistration = new RabbitMqIntegrationTransportManualRegistration();
             var rpcRequestRegistryManualRegistration = new RpcRequestRegistryManualRegistration();

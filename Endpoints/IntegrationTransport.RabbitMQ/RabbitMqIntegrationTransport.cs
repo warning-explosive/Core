@@ -15,13 +15,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Primitives;
-    using CrossCuttingConcerns.Extensions;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Logging;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Contract.Extensions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using global::RabbitMQ.Client;

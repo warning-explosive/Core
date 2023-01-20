@@ -41,13 +41,13 @@
       <ProjectReference Include="..\..\Modules\GenericDomain.Api\GenericDomain.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Model\Username.cs">
+      <Compile Update="PermissionWasGranted.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\Password.cs">
+      <Compile Update="PermissionWasRevoked.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\Feature.cs">
+      <Compile Update="UserWasCreated.cs">
         <DependentUpon>User.cs</DependentUpon>
       </Compile>
     </ItemGroup>

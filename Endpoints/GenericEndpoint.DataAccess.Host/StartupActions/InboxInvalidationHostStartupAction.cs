@@ -6,6 +6,7 @@
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
+    using CrossCuttingConcerns.Logging;
     using Deduplication;
     using GenericEndpoint.Host.StartupActions;
     using GenericHost.Api.Abstractions;
@@ -13,7 +14,6 @@
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.CrossCuttingConcerns.Extensions;
     using SpaceEngineers.Core.DataAccess.Api.Transaction;
     using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;

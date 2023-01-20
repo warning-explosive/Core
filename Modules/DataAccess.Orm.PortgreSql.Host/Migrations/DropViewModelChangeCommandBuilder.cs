@@ -16,7 +16,7 @@
     {
         private const string CommandFormat = $@"drop materialized view ""{{0}}"".""{{1}}"";
 
-delete from ""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(SqlView)}"" a where a.""{nameof(SqlView.Schema)}"" = '{{0}}' and a.""{nameof(SqlView.View)}"" = '{{1}}'";
+delete from ""{nameof(Sql.Host.Migrations)}"".""{nameof(SqlView)}"" a where a.""{nameof(SqlView.Schema)}"" = '{{0}}' and a.""{nameof(SqlView.View)}"" = '{{1}}'";
 
         public Task<string> BuildCommand(IModelChange change, CancellationToken token)
         {

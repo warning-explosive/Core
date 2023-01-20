@@ -29,6 +29,7 @@
         private Lazy<Relation?>? _relation;
         private Lazy<bool>? _isMultipleRelation;
         private Lazy<bool>? _isInlinedObject;
+        private MethodInfo? _mtmCctor;
 
         /// <summary> .cctor </summary>
         /// <param name="table">Table</param>
@@ -369,6 +370,58 @@
                     .SkipLast(1)
                     .Aggregate((object?)entity, AggregateValue) !)
                 .AsEnumerable<IUniqueIdentified>();
+        }
+
+        /// <summary>
+        /// Creates multiple relation entity (mtm)
+        /// </summary>
+        /// <param name="left">Left (owner)</param>
+        /// <param name="right">Right (dependency)</param>
+        /// <returns>IUniqueIdentified</returns>
+        public IUniqueIdentified CreateMtm(
+            IUniqueIdentified left,
+            IUniqueIdentified right)
+        {
+            if (!IsMultipleRelation)
+            {
+                throw new InvalidOperationException($"Column {Name} should represent a multiple relation in order to create mtm entry");
+            }
+
+            _mtmCctor ??= GetMtmCctor(MultipleRelationTable!);
+
+            return (IUniqueIdentified)_mtmCctor.Invoke(null, new[] { left.PrimaryKey, right.PrimaryKey });
+
+            static MethodInfo GetMtmCctor(Type mtmTable)
+            {
+                var leftKey = mtmTable.ExtractGenericArgumentAt(typeof(BaseMtmDatabaseEntity<,>), 0);
+                var rightKey = mtmTable.ExtractGenericArgumentAt(typeof(BaseMtmDatabaseEntity<,>), 1);
+
+                return new MethodFinder(
+                        typeof(ColumnInfo),
+                        nameof(CreateMtmInstance),
+                        BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+                    {
+                        TypeArguments = new[] { mtmTable, leftKey, rightKey },
+                        ArgumentTypes = new[] { leftKey, rightKey }
+                    }
+                    .FindMethod()
+                    .EnsureNotNull($"Could not find {nameof(CreateMtmInstance)} method")
+                    .MakeGenericMethod(mtmTable, leftKey, rightKey);
+            }
+        }
+
+        private static TMtm CreateMtmInstance<TMtm, TLeftKey, TRightKey>(
+            TLeftKey leftKey,
+            TRightKey rightKey)
+            where TMtm : BaseMtmDatabaseEntity<TLeftKey, TRightKey>, new()
+            where TLeftKey : notnull
+            where TRightKey : notnull
+        {
+            return new TMtm
+            {
+                Left = leftKey,
+                Right = rightKey
+            };
         }
 
         private static object? AggregateValue(object? value, PropertyInfo property)

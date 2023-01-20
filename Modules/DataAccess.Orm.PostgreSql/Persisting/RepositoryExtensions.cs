@@ -88,30 +88,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                        .Where(column => column.IsMultipleRelation)
                        .SelectMany(column => column
                            .GetMultipleRelationValue(entity)
-                           .Select(dependency => typeof(RepositoryExtensions)
-                               .CallMethod(nameof(CreateMtmInstance))
-                               .WithTypeArguments(
-                                    column.MultipleRelationTable!,
-                                    entity.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)),
-                                    dependency.GetType().ExtractGenericArgumentAt(typeof(IUniqueIdentified<>)))
-                               .WithArguments(entity.PrimaryKey, dependency.PrimaryKey)
-                               .Invoke<IUniqueIdentified>())); // TODO: #143 - slow invoke
+                           .Select(dependency => column.CreateMtm(entity, dependency)));
                 };
             }
-        }
-
-        private static TMtm CreateMtmInstance<TMtm, TLeftKey, TRightKey>(
-            TLeftKey leftKey,
-            TRightKey rightKey)
-            where TMtm : BaseMtmDatabaseEntity<TLeftKey, TRightKey>, new()
-            where TLeftKey : notnull
-            where TRightKey : notnull
-        {
-            return new TMtm
-            {
-                Left = leftKey,
-                Right = rightKey
-            };
         }
     }
 }

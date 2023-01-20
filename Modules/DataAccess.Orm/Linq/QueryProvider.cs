@@ -21,11 +21,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IQueryTranslator _translator;
+        private readonly IQueryMaterializerComposite _materializer;
 
-        public QueryProvider(IDependencyContainer dependencyContainer, IQueryTranslator translator)
+        public QueryProvider(
+            IDependencyContainer dependencyContainer,
+            IQueryTranslator translator,
+            IQueryMaterializerComposite materializer)
         {
             _dependencyContainer = dependencyContainer;
             _translator = translator;
+            _materializer = materializer;
         }
 
         IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -99,7 +104,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             var query = _translator.Translate(expression);
 
-            return await MaterializeScalar<T>(transaction, query, token).ConfigureAwait(false);
+            var item = await _materializer
+                .MaterializeScalar(transaction, query, typeof(T), token)
+                .ConfigureAwait(false);
+
+            return (T)item!;
         }
 
         public async IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, [EnumeratorCancellation] CancellationToken token)
@@ -108,23 +117,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             var query = _translator.Translate(expression);
 
-            await foreach (var item in Materialize<T>(transaction, query, token))
-            {
-                yield return item;
-            }
-        }
+            var source = _materializer
+                .Materialize(transaction, query, typeof(T), token)
+                .WithCancellation(token)
+                .ConfigureAwait(false);
 
-        private Task<T> MaterializeScalar<T>(
-            IDatabaseTransaction transaction,
-            IQuery query,
-            CancellationToken token)
-        {
-            // TODO: #143 - ResolveGeneric
-            return _dependencyContainer
-                .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
-                .CallMethod(nameof(IQueryMaterializer<IQuery, T>.MaterializeScalar))
-                .WithArguments(transaction, query, token)
-                .Invoke<Task<T>>();
+            await foreach (var item in source)
+            {
+                yield return (T)item!;
+            }
         }
 
         private static T AsScalar<T>(Task<T> task)
@@ -132,22 +133,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             return task.Result;
         }
 
-        private IAsyncEnumerable<T> Materialize<T>(
-            IDatabaseTransaction transaction,
-            IQuery query,
-            CancellationToken token)
-        {
-            // TODO: #143 - ResolveGeneric
-            return _dependencyContainer
-                .ResolveGeneric(typeof(IQueryMaterializer<,>), query.GetType(), typeof(T))
-                .CallMethod(nameof(IQueryMaterializer<IQuery, T>.Materialize))
-                .WithArguments(transaction, query, token)
-                .Invoke<IAsyncEnumerable<T>>();
-        }
-
         private static IEnumerable<T> AsEnumerable<T>(IAsyncEnumerable<T> asyncEnumerable, CancellationToken token)
         {
-            return asyncEnumerable.AsEnumerable(token);
+            return asyncEnumerable.AsEnumerable(token).Result;
         }
     }
 }

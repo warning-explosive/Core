@@ -30,6 +30,10 @@
         private Lazy<bool>? _isMultipleRelation;
         private Lazy<bool>? _isInlinedObject;
         private MethodInfo? _mtmCctor;
+        private Func<Expression, Expression>? _expressionExtractor;
+        private Func<ISqlExpression, ISqlExpression>? _sqlExpressionExtractor;
+        private Func<object?, object?>? _valueExtractor;
+        private Func<object?, object?>? _relationValueExtractor;
 
         /// <summary> .cctor </summary>
         /// <param name="table">Table</param>
@@ -293,11 +297,14 @@
                 throw new InvalidOperationException($"Expression should be constructed over {Table.Type.FullName} type instead of {source.Type.FullName}");
             }
 
-            return _chain
-                .Select(property => property.Reflected)
-                .Aggregate(
-                    (Expression)Expression.Parameter(Table.Type),
-                    Expression.MakeMemberAccess);
+            _expressionExtractor ??= GetValueExtractor<Expression>(_chain, MakeMemberAccess);
+
+            return _expressionExtractor.Invoke(Expression.Parameter(Table.Type));
+
+            static Expression MakeMemberAccess(PropertyInfo property, Expression expression)
+            {
+                return Expression.MakeMemberAccess(expression, property);
+            }
         }
 
         /// <summary>
@@ -312,13 +319,14 @@
                 throw new InvalidOperationException($"Parameter expression should be constructed over {Table.Type.FullName} type instead of {parameter.Type.FullName}");
             }
 
-            var chain = _chain
-                .Select(property => property.Reflected)
-                .Aggregate(
-                    (ISqlExpression)parameter,
-                    (acc, next) => new SimpleBindingExpression(next, next.PropertyType, acc));
+            _sqlExpressionExtractor ??= GetValueExtractor<ISqlExpression>(_chain, AggregateBindings);
 
-            return (IBindingSqlExpression)chain;
+            return (IBindingSqlExpression)_sqlExpressionExtractor.Invoke(parameter);
+
+            static ISqlExpression AggregateBindings(PropertyInfo property, ISqlExpression source)
+            {
+                return new SimpleBindingExpression(property, property.PropertyType, source);
+            }
         }
 
         /// <summary>
@@ -328,11 +336,14 @@
         /// <returns>Column value</returns>
         public object? GetValue(IUniqueIdentified entity)
         {
-            return IsMultipleRelation
-                ? null
-                : _chain
-                    .Select(property => property.Reflected)
-                    .Aggregate((object?)entity, AggregateValue);
+            if (IsMultipleRelation)
+            {
+                return null;
+            }
+
+            _valueExtractor ??= GetValueExtractor<object?>(_chain, AggregateValue);
+
+            return _valueExtractor.Invoke(entity);
         }
 
         /// <summary>
@@ -342,15 +353,14 @@
         /// <returns>Relation value</returns>
         public IUniqueIdentified? GetRelationValue(IUniqueIdentified entity)
         {
-            if (!IsRelation)
+            if (IsRelation)
             {
-                return null;
+                _relationValueExtractor ??= GetValueExtractor<object?>(_chain.SkipLast(1), AggregateValue);
+
+                return _relationValueExtractor.Invoke(entity) as IUniqueIdentified;
             }
 
-            return _chain
-                .Select(property => property.Reflected)
-                .SkipLast(1)
-                .Aggregate((object?)entity, AggregateValue) as IUniqueIdentified;
+            return null;
         }
 
         /// <summary>
@@ -360,16 +370,14 @@
         /// <returns>Multiple relation value</returns>
         public IEnumerable<IUniqueIdentified> GetMultipleRelationValue(IUniqueIdentified entity)
         {
-            if (!IsMultipleRelation)
+            if (IsMultipleRelation)
             {
-                return Enumerable.Empty<IUniqueIdentified>();
+                _relationValueExtractor ??= GetValueExtractor<object?>(_chain.SkipLast(1), AggregateValue);
+
+                return ((IEnumerable)_relationValueExtractor.Invoke(entity) !).AsEnumerable<IUniqueIdentified>();
             }
 
-            return ((IEnumerable)_chain
-                    .Select(property => property.Reflected)
-                    .SkipLast(1)
-                    .Aggregate((object?)entity, AggregateValue) !)
-                .AsEnumerable<IUniqueIdentified>();
+            return Enumerable.Empty<IUniqueIdentified>();
         }
 
         /// <summary>
@@ -410,6 +418,16 @@
             }
         }
 
+        private static Func<T, T> GetValueExtractor<T>(
+            IEnumerable<ColumnProperty> chain,
+            Func<PropertyInfo, T, T> aggregate)
+        {
+            return chain
+                .Select(static property => property.Reflected)
+                .Select(property => new Func<T, T>(value => aggregate(property, value)))
+                .Aggregate(static (acc, next) => value => next(acc(value)));
+        }
+
         private static TMtm CreateMtmInstance<TMtm, TLeftKey, TRightKey>(
             TLeftKey leftKey,
             TRightKey rightKey)
@@ -424,7 +442,7 @@
             };
         }
 
-        private static object? AggregateValue(object? value, PropertyInfo property)
+        private static object? AggregateValue(PropertyInfo property, object? value)
         {
             if (value == null)
             {

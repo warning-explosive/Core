@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using Analyzers.Api;
@@ -97,7 +98,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                           .SourceFiles(analyzer, "Expected")
                                           .ToDictionary(s => s.Name);
 
-                await foreach (var analyzedDocument in diagnostics)
+                await foreach (var analyzedDocument in diagnostics
+                                   .WithCancellation(CancellationToken.None)
+                                   .ConfigureAwait(false))
                 {
                     foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
                     {

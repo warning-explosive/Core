@@ -72,5 +72,8 @@
       <Compile Update="Transaction\DeleteEntityChange.cs">
         <DependentUpon>TransactionalStore.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\QueryMaterializerComposite.cs">
+        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

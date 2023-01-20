@@ -66,7 +66,11 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 await workspace.OpenSolutionAsync(SolutionExtensions.SolutionFile().FullName)
                                .ConfigureAwait(false);
 
-                await foreach (var analyzedDocument in workspace.CurrentSolution.CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces))
+                await foreach (var analyzedDocument in workspace
+                                   .CurrentSolution
+                                   .CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces)
+                                   .WithCancellation(CancellationToken.None)
+                                   .ConfigureAwait(false))
                 {
                     foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
                     {

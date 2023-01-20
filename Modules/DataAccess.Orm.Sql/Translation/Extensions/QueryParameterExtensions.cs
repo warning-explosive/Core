@@ -30,7 +30,6 @@
         /// <returns>QueryParameterSqlExpression</returns>
         public static string QueryParameterSqlExpression(this object? value, IDependencyContainer dependencyContainer)
         {
-            // TODO: #143 - ResolveGeneric
             return dependencyContainer
                 .ResolveGeneric(typeof(IQueryParameterTranslator<>), value?.GetType() ?? typeof(object))
                 .CallMethod(nameof(IQueryParameterTranslator<object>.Translate))

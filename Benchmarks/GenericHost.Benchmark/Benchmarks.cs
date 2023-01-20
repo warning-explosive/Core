@@ -81,7 +81,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
             {
                 source.GlobalSetup();
 
-                for (var i = 0; i < 100; i++)
+                for (var i = 0; i < 1000; i++)
                 {
                     await source.RunErrorHandlingMiddleware().ConfigureAwait(false);
                     await source.RunAuthorizationMiddleware().ConfigureAwait(false);

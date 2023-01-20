@@ -4,6 +4,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Basics;
     using Basics.Exceptions;
     using Microsoft.CodeAnalysis;
@@ -54,7 +56,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
                 var project = solution.GetProject(projectId)
                                       .EnsureNotNull($"Project with {projectId} must exist in solution");
 
-                await foreach (var diagnostic in CompileProject(project, analyzers))
+                await foreach (var diagnostic in CompileProject(project, analyzers)
+                                   .WithCancellation(CancellationToken.None)
+                                   .ConfigureAwait(false))
                 {
                     if (IsNotIgnoredProject(project)
                         && IsNotIgnoredSource(diagnostic)

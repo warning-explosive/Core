@@ -64,7 +64,15 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             var host = new Lazy<IHost>(() =>
                 {
-                    var host = Program.BuildHost(Array.Empty<string>());
+                    var settingsDirectory = SolutionExtensions
+                        .SolutionFile()
+                        .Directory
+                        .EnsureNotNull("Solution directory wasn't found")
+                        .StepInto("Tests")
+                        .StepInto("Test.WebApplication")
+                        .StepInto("Settings");
+
+                    var host = Program.BuildHost(settingsDirectory, Array.Empty<string>());
 
                     host.StartAsync(cts.Token).Wait(cts.Token);
 
@@ -159,7 +167,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             yield return new object?[]
             {
-                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.ApplicationInfo)}", Method.Get),
+                new RestRequest($"http://127.0.0.1:5000/api/Test/{nameof(TestController.ApplicationInfo)}", Method.Get),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -170,7 +178,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             yield return new object?[]
             {
-                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.Username)}", Method.Get)
+                new RestRequest($"http://127.0.0.1:5000/api/Test/{nameof(TestController.Username)}", Method.Get)
                     .AddHeader("Authorization", $"Basic {(username, password).EncodeBasicAuth()}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
@@ -182,7 +190,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             yield return new object?[]
             {
-                new RestRequest($"http://127.0.0.1:5000/Test/{nameof(TestController.FakePost)}/List", Method.Get)
+                new RestRequest($"http://127.0.0.1:5000/api/Test/{nameof(TestController.FakePost)}/List", Method.Get)
                     .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { SpaceEngineers.Core.Test.WebApplication.Features.WebApiTest }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {

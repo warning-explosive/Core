@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.GenericHost
         {
             hostBuilder.CheckMultipleCalls(nameof(BuildHost));
 
-            settingsDirectory.SetupFileSystemSettingsDirectory();
+            settingsDirectory.SetupSettingsDirectory();
 
             var commonSettingsFile = settingsDirectory.GetFile("appsettings", ".json");
 

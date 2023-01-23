@@ -9,14 +9,14 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
     public static class SettingsExtensions
     {
         /// <summary>
-        /// Setup FileSystemSettingsDirectory
+        /// Setup settings directory
         /// </summary>
         /// <param name="settingsDirectory">Settings directory info</param>
-        public static void SetupFileSystemSettingsDirectory(this DirectoryInfo settingsDirectory)
+        public static void SetupSettingsDirectory(this DirectoryInfo settingsDirectory)
         {
             Environment.SetEnvironmentVariable(
                 nameof(FileSystemSettings),
-                $@"{{ ""{nameof(FileSystemSettings.FileSystemSettingsDirectory)}"": ""{EscapeSpecialCharacters(settingsDirectory.FullName)}"" }}",
+                $@"{{ ""{nameof(FileSystemSettings.SettingsDirectory)}"": ""{EscapeSpecialCharacters(settingsDirectory.FullName)}"" }}",
                 EnvironmentVariableTarget.Process);
 
             static string EscapeSpecialCharacters(string source)

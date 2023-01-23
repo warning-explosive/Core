@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
                 .StepInto(nameof(Benchmarks))
                 .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Benchmark)))
                 .StepInto("Settings")
-                .SetupFileSystemSettingsDirectory();
+                .SetupSettingsDirectory();
 
             _assemblies = new[]
             {

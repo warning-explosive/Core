@@ -10,12 +10,12 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
         /// <summary> .cctor </summary>
         public FileSystemSettings()
         {
-            FileSystemSettingsDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            SettingsDirectory = AppDomain.CurrentDomain.BaseDirectory;
         }
 
         /// <summary>
         /// File system settings directory
         /// </summary>
-        public string FileSystemSettingsDirectory { get; set; }
+        public string SettingsDirectory { get; set; }
     }
 }

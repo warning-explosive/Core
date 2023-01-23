@@ -73,8 +73,8 @@ namespace SpaceEngineers.Core.Modules.Test
                 new Action(() => { }),
                 new Action<FileSystemSettings>(settings =>
                 {
-                    Assert.NotNull(settings.FileSystemSettingsDirectory);
-                    Assert.Equal(Path.Combine(SolutionExtensions.ProjectFile().Directory.FullName, "Settings"), settings.FileSystemSettingsDirectory);
+                    Assert.NotNull(settings.SettingsDirectory);
+                    Assert.Equal(Path.Combine(SolutionExtensions.ProjectFile().Directory.FullName, "Settings"), settings.SettingsDirectory);
                 })
             };
             yield return new object[]
@@ -234,7 +234,7 @@ namespace SpaceEngineers.Core.Modules.Test
                .Directory
                .EnsureNotNull("Project directory not found")
                .StepInto("Settings")
-               .SetupFileSystemSettingsDirectory();
+               .SetupSettingsDirectory();
 
             Output.WriteLine(settingsType.Name);
 
@@ -243,7 +243,7 @@ namespace SpaceEngineers.Core.Modules.Test
                .Get(CancellationToken.None)
                .ConfigureAwait(false);
 
-            Output.WriteLine(fileSystemSettings.FileSystemSettingsDirectory);
+            Output.WriteLine(fileSystemSettings.SettingsDirectory);
 
             await this
                .CallMethod(nameof(GenericReadSettingsTest))

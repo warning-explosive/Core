@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     /// <summary>
     /// Test controller
     /// </summary>
-    [Route("[controller]/[action]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     [Feature(Features.WebApiTest)]
     public class TestController : ControllerBase

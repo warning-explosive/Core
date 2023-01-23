@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Settings
             var directory = fileSystemSettingsProvider
                .Get(CancellationToken.None)
                .Result
-               .FileSystemSettingsDirectory;
+               .SettingsDirectory;
 
             if (!Directory.Exists(directory))
             {

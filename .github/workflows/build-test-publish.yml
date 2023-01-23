@@ -88,7 +88,7 @@ jobs:
     - name: Pack solution
       run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} -o:packages -v:minimal
     - name: Add NuGet source
-      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github
+      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ github.token }} --store-password-in-clear-text
     - name: Publish nuget packages
       run: dotnet nuget push packages/*.nupkg --source github --api-key ${{ github.token }} --skip-duplicate
     - name: Upload nuget artifacts

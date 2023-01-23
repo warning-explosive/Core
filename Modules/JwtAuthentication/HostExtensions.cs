@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.JwtAuthentication
 
             var authEndpointConfigurationFilePath = JsonConvert
                .DeserializeObject<FileSystemSettings>(fileSystemSettings, settings)
-               .FileSystemSettingsDirectory
+               .SettingsDirectory
                .AsDirectoryInfo()
                .StepInto("AuthEndpoint")
                .GetFile("appsettings", ".json")

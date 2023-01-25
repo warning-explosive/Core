@@ -11,6 +11,6 @@ RUN dotnet build Tests/Test.WebApplication/Test.WebApplication.csproj -c Debug -
 FROM mcr.microsoft.com/dotnet/aspnet:${DOT_NET_VERSION}
 WORKDIR /app
 COPY --from=builder /build/out /app
-COPY --from=builder /build/Tests/Test.WebApplication/Settings /app/Settings
+COPY --from=builder /build/Tests/Test.WebApplication/ComposeSettings /app/Settings
 COPY --from=builder /build/Tests/Test.WebApplication/Test.WebApplication.csproj /app/Test.WebApplication.csproj
 ENTRYPOINT ["dotnet", "SpaceEngineers.Core.Test.WebApplication.dll"]

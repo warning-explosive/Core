@@ -1,0 +1,20 @@
+﻿###########
+# Folders #
+###########
+.hg/
+.vs/
+.idea/
+.git/
+.github/
+[Bb]in/
+[Oo]bj/
+[Pp]ackages/
+[Tt]estResults/
+*.Caches/
+
+##############
+# Extensions #
+##############
+
+*.user
+*.orig

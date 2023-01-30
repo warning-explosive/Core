@@ -1,15 +1,16 @@
 ﻿###########
 # Folders #
 ###########
+.git/
+.github/
 .hg/
 .vs/
 .idea/
-.git/
-.github/
 [Bb]in/
 [Oo]bj/
 [Pp]ackages/
-[Tt]estResults/
+TEST_RESULTS/
+TEST_COVERAGE/
 *.Caches/
 
 ##############

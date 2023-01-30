@@ -111,6 +111,7 @@ jobs:
         push: true
         file: ./Dockerfile.webtest
         context: .
+        platforms: linux/amd64,linux/arm64
         tags: |
           ghcr.io/${{ github.repository_owner }}/core-web-test:latest
           ghcr.io/${{ github.repository_owner }}/core-web-test:${{ env.GitVersion_FullSemVer }}

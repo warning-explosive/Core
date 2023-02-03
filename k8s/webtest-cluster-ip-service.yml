@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: core-web-test
+spec:
+  type: ClusterIP
+  selector:
+    app: core-web-test
+  ports:
+  - port: 5000
+    targetPort: 80

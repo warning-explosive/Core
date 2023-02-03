@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-web-test
+spec:
+  selector:
+    matchLabels:
+      app: core-web-test
+  template:
+    metadata:
+      labels:
+        app: core-web-test
+    spec:
+      containers:
+      - name: core-web-test
+        image: ghcr.io/warning-explosive/core-web-test
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80

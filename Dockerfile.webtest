@@ -4,7 +4,6 @@ FROM mcr.microsoft.com/dotnet/sdk:${DOT_NET_VERSION} AS builder
 ENV NUGET_XMLDOC_MODE=none
 WORKDIR /build
 COPY . .
-# RUN dotnet nuget add source https://nuget.pkg.github.com/$GITHUB_USER/index.json --name github --username $GITHUB_USER --password $GITHUB_PACKAGES_REGISTRY_TOKEN --store-password-in-clear-text
 RUN dotnet restore Tests/Test.WebApplication/Test.WebApplication.csproj --no-cache -v:minimal
 RUN dotnet build Tests/Test.WebApplication/Test.WebApplication.csproj -c Debug -o out --no-cache --no-restore -v:minimal
 

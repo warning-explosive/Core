@@ -3,11 +3,16 @@ ARG SDK_ARCH=arm64v8
 ARG DOT_NET_VERSION=7.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOT_NET_VERSION}-alpine-${SDK_ARCH} AS builder
+# TARGETARCH = arm64 | x64 | amd64
+ARG TARGETARCH
+RUN arch=$TARGETARCH \
+    && if [ "$TARGETARCH" = "amd64" ]; then arch="x64"; fi \
+    && echo $arch > /tmp/arch
 ENV NUGET_XMLDOC_MODE=none
 WORKDIR /build
 COPY . .
-RUN dotnet restore Tests/Test.WebApplication/Test.WebApplication.csproj --no-cache -v:minimal
-RUN dotnet build Tests/Test.WebApplication/Test.WebApplication.csproj -c Debug -o out --no-cache --no-restore -v:minimal
+RUN dotnet restore Tests/Test.WebApplication/Test.WebApplication.csproj -r linux-$(cat /tmp/arch) --no-cache -v:minimal
+RUN dotnet build Tests/Test.WebApplication/Test.WebApplication.csproj -c Debug -o out -r linux-$(cat /tmp/arch) --no-self-contained --no-cache --no-restore -v:minimal
 
 FROM mcr.microsoft.com/dotnet/aspnet:${DOT_NET_VERSION}-alpine
 WORKDIR /app
@@ -16,4 +21,4 @@ COPY --from=builder /build/Tests/Test.WebApplication/ComposeSettings /app/Settin
 COPY --from=builder /build/Tests/Test.WebApplication/Test.WebApplication.csproj /app/Test.WebApplication.csproj
 ENTRYPOINT ["dotnet", "SpaceEngineers.Core.Test.WebApplication.dll"]
 
-# docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile.webtest .       
+# docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile.webtest .

@@ -9,7 +9,7 @@ WORKDIR /build
 # separate restore layer
 COPY ["./*.csproj", "./*/*.csproj", "./*/*/*.csproj", "./*.sln", "./*.sh", "./*.config", "./"]
 RUN chmod +x restore_project_structure.sh
-RUN ./restore_project_structure.sh
+RUN /bin/sh -c "./restore_project_structure.sh"
 RUN dotnet restore Tests/Test.WebApplication/Test.WebApplication.csproj --packages ./packages --no-cache -v:minimal
 
 # separate build layer

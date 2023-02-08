@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 for file in $(find . -name '*.csproj' -exec basename {} \;)
 do
     dest=$(egrep -o ", \"(.*${file})" Core.sln | cut -d \" -f 2)

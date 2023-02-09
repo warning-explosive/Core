@@ -14,7 +14,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Connection;
     using CrossCuttingConcerns.ObjectBuilder;
     using CrossCuttingConcerns.Settings;
@@ -25,7 +24,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using Orm.Settings;
     using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using Translation;
-    using Translation.Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class FlatQueryMaterializer : IQueryMaterializer,
@@ -33,7 +31,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                                            IResolvable<IQueryMaterializer<FlatQuery>>,
                                            ICollectionResolvable<IQueryMaterializer>
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
@@ -41,14 +38,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         private readonly ILogger _logger;
 
         public FlatQueryMaterializer(
-            IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
             IObjectBuilder objectBuilder,
             IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
-            _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
@@ -126,7 +121,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 .Get(token)
                 .ConfigureAwait(false);
 
-            var commandText = InlineQueryParameters(_dependencyContainer, query);
+            var commandText = InlineQueryParameters(query);
 
             return await ExecutionExtensions
                .TryAsync((commandText, settings, _logger), transaction.Query)
@@ -135,19 +130,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                .ConfigureAwait(false);
 
             static string InlineQueryParameters(
-                IDependencyContainer dependencyContainer,
                 FlatQuery query)
             {
-                var sqlQuery = query.Query;
+                // TODO #209 - use ADO.NET and NpgsqlParameter
+                var sqlQuery = new string(query.CommandText);
 
-                foreach (var (name, value) in query.QueryParameters)
+                foreach (var (name, value) in query.CommandParameters)
                 {
-                    if (!query.Query.Contains($"@{name}", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    sqlQuery = sqlQuery.Replace($"@{name}", value.QueryParameterSqlExpression(dependencyContainer), StringComparison.OrdinalIgnoreCase);
+                    sqlQuery = sqlQuery.Replace($"@{name}", value, StringComparison.OrdinalIgnoreCase);
                 }
 
                 return sqlQuery;

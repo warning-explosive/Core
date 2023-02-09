@@ -56,8 +56,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), false);
+                var context = new TranslationContext();
+
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal, trueConstant, falseConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal, trueConstant, falseConstant);
@@ -73,8 +75,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), false);
+                var context = new TranslationContext();
+
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.ConditionalExpression(typeof(bool), trueConstant, trueConstant, falseConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ConditionalExpression(typeof(bool), trueConstant, trueConstant, falseConstant);
@@ -90,13 +94,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var expression = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), false);
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => true);
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => true);
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(string), _ => true);
 
                 yield return new object[]
                 {
-                    typeof(DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression),
+                    typeof(DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression),
                     expression,
                     equalExpression,
                     notEqualExpression
@@ -104,10 +108,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
+                var context = new TranslationContext();
+
                 var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
 
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), false);
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.FilterExpression(typeof(object), source, trueConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.FilterExpression(typeof(object), source, trueConstant);
@@ -124,34 +130,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             {
                 var context = new TranslationContext();
-                var source = new DataAccess.Orm.Sql.Translation.Expressions.NamedSourceExpression(
-                    typeof(object),
-                    new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object)),
-                    new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(object)));
 
-                Func<IReadOnlyDictionary<string, object?>, ISqlExpression> valuesExpressionProducer = map =>
-                    new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-
-                var expression = new DataAccess.Orm.Sql.Translation.Expressions.GroupByExpression(typeof(object), valuesExpressionProducer);
-                expression.Apply(context, source);
-                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.GroupByExpression(typeof(object), valuesExpressionProducer);
-                equalExpression.Apply(context, source);
-                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.GroupByExpression(typeof(string), valuesExpressionProducer);
-                notEqualExpression.Apply(context, source);
-
-                yield return new object[]
-                {
-                    typeof(DataAccess.Orm.Sql.Translation.Expressions.GroupByExpression),
-                    expression,
-                    equalExpression,
-                    notEqualExpression
-                };
-            }
-
-            {
                 var left = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
                 var right = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(string));
-                var on = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
+                var on = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.JoinExpression(left, right, on);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.JoinExpression(left, right, on);
@@ -167,7 +149,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var context = new TranslationContext();
+
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(string));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<ISqlExpression>());
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.MethodCallExpression(typeof(string), nameof(string.ToLowerInvariant), parameter, Enumerable.Empty<ISqlExpression>());
@@ -183,7 +167,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var context = new TranslationContext();
+
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(string));
                 var member = typeof(string).GetProperty(nameof(string.Length)) !;
                 var simpleBindingExpression = new DataAccess.Orm.Sql.Translation.Expressions.SimpleBindingExpression(member, typeof(int), parameter);
 
@@ -201,11 +187,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
+                var context = new TranslationContext();
+
                 var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(object));
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(object));
 
                 var strSource = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(string));
-                var strParameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var strParameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(string));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.NamedSourceExpression(typeof(object), source, parameter);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.NamedSourceExpression(typeof(object), source, parameter);
@@ -235,9 +223,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
+                var context = new TranslationContext();
+
                 var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
 
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(string));
                 var property = typeof(string).GetProperty(nameof(string.Length)) !;
                 var bindingExpression = new DataAccess.Orm.Sql.Translation.Expressions.SimpleBindingExpression(property, typeof(string), parameter);
                 var orderByBindingExpressionAsc = new DataAccess.Orm.Sql.Translation.Expressions.OrderByBindingExpression(bindingExpression, EnOrderingDirection.Asc);
@@ -257,7 +247,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(string));
+                var context = new TranslationContext();
+
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(string));
                 var property = typeof(string).GetProperty(nameof(string.Length)) !;
                 var bindingExpression = new DataAccess.Orm.Sql.Translation.Expressions.SimpleBindingExpression(property, typeof(string), parameter);
 
@@ -305,20 +297,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var expression = DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression.Create(new TranslationContext(), typeof(string), nameof(String));
-                var equalExpression = DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression.Create(new TranslationContext(), typeof(string), nameof(String));
-                var notEqualExpression = DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression.Create(new TranslationContext(), typeof(string), typeof(string).FullName!);
-
-                yield return new object[]
-                {
-                    typeof(DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression),
-                    expression,
-                    equalExpression,
-                    notEqualExpression
-                };
-            }
-
-            {
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
                 var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(string));
@@ -349,7 +327,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(new TranslationContext(), typeof(EndpointIdentity));
+                var context = new TranslationContext();
+
+                var parameter = new DataAccess.Orm.Sql.Translation.Expressions.ParameterExpression(context, typeof(EndpointIdentity));
                 var logicalNameMember = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.LogicalName)) !;
                 var instanceNameMember = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.InstanceName)) !;
 
@@ -381,8 +361,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.ConstantExpression(typeof(bool), false);
+                var context = new TranslationContext();
+
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.UnaryExpression(typeof(bool), UnaryOperator.Not, trueConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.UnaryExpression(typeof(bool), UnaryOperator.Not, trueConstant);

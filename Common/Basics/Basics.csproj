@@ -64,12 +64,6 @@
     <Compile Update="Primitives\IAsyncQueue.cs">
       <DependentUpon>IQueue.cs</DependentUpon>
     </Compile>
-    <Compile Update="Primitives\ICompositeDisposable.cs">
-      <DependentUpon>Disposable.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Primitives\AsyncDisposable.cs">
-      <DependentUpon>Disposable.cs</DependentUpon>
-    </Compile>
     <Compile Update="ISafelyComparable.cs">
       <DependentUpon>Comparable.cs</DependentUpon>
     </Compile>
@@ -99,6 +93,21 @@
     </Compile>
     <Compile Update="TypeNode.cs">
       <DependentUpon>TypeExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\CompositeDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\EmptyDisposable.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\DisposableAction.cs">
+      <DependentUpon>Disposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\EmptyAsyncDisposable.cs">
+      <DependentUpon>AsyncDisposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Primitives\AsyncDisposableAction.cs">
+      <DependentUpon>AsyncDisposable.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

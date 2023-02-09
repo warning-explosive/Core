@@ -1,24 +1,25 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Expressions;
-    using Reading;
+    using Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class LikeMemberInfoTranslator : IMemberInfoTranslator,
                                               ICollectionResolvable<IMemberInfoTranslator>
     {
-        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression)
+        public bool TryRecognize(
+            TranslationContext context,
+            MemberInfo member,
+            [NotNullWhen(true)] out ISqlExpression? expression)
         {
-            if (context.Member.DeclaringType == typeof(SqlExpressionsExtensions)
-                && context.Member.Name.Equals(nameof(SqlExpressionsExtensions.Like), StringComparison.OrdinalIgnoreCase))
+            if (member == SqlLinqMethods.Like())
             {
                 expression = new BinaryExpression(typeof(bool), BinaryOperator.Like);
-
                 return true;
             }
 

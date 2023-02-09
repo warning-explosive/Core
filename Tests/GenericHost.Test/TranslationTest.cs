@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Test
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
@@ -20,7 +19,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
-    using DataAccess.Orm.Sql.Translation.Extensions;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
     using GenericEndpoint.DataAccess.Host;
@@ -44,6 +42,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     /// TranslationTest
     /// </summary>
     [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
+    [SuppressMessage("Analysis", "SA1131", Justification = "test case")]
     public class TranslationTest : TestBase
     {
         private static ITestOutputHelper? _staticOutput;
@@ -152,7 +151,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
         internal static IEnumerable<object[]> QueryTranslationTestCases()
         {
-            var emptyQueryParameters = new Dictionary<string, object?>();
+            var emptyQueryParameters = new Dictionary<string, string>();
 
             var schema = nameof(GenericHost) + nameof(Test);
             var testDatabaseEntity = DatabaseEntity.Generate();
@@ -191,7 +190,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 43 },
+                        new Dictionary<string, string> { ["param_0"] = "43" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -202,7 +201,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 43 },
+                        new Dictionary<string, string> { ["param_0"] = "43" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -213,7 +212,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        new Dictionary<string, string> { ["param_0"] = "42" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -224,7 +223,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        new Dictionary<string, string> { ["param_0"] = "42" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -235,7 +234,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 41 },
+                        new Dictionary<string, string> { ["param_0"] = "41" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -246,7 +245,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
+                        new Dictionary<string, string> { ["param_0"] = "42" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -256,8 +255,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => it.NullableStringField).Where(it => it != null)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
-                        emptyQueryParameters,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL" },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - reverse binary filter",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => it.NullableStringField).Where(it => null != it)),
+                new Action<IQuery, Action<string>>(
+                    (query, log) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -286,11 +296,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - change anonymous projection parameter name",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => new { it.NullableStringField, it.StringField }).Where(it => it.NullableStringField != null)),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => new { Nsf = it.NullableStringField, Sf = it.StringField }).Where(it => it.Nsf != null)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL",
-                        emptyQueryParameters,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Nsf"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"" AS ""Sf""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -301,7 +311,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
+                        new Dictionary<string, string> { ["param_0"] = "''" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -333,8 +343,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.Theme)}"" = @param_0) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
-                        new Dictionary<string, object?> { ["param_0"] = "MilkyWay" },
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_1 IS @param_0 THEN b.""{nameof(Blog.Theme)}"" IS @param_2 ELSE b.""{nameof(Blog.Theme)}"" = @param_3 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "'MilkyWay'", ["param_2"] = "NULL", ["param_3"] = "'MilkyWay'" },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -345,72 +355,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
-                        emptyQueryParameters,
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - anonymous class key test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().GroupBy(it => new { it.StringField, it.BooleanField })),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        emptyQueryParameters,
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - projection source test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField }).GroupBy(it => new { it.StringField, it.BooleanField })),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`2 - single field key test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().GroupBy(it => it.StringField)),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        emptyQueryParameters,
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - anonymous class key test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        emptyQueryParameters,
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - projection source test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField >= 42).Select(it => new { it.StringField, it.BooleanField, it.IntField }).GroupBy(it => new { it.StringField, it.BooleanField }, it => new { it.IntField })),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0) b) c",
-                        new Dictionary<string, object?> { ["param_0"] = 42 },
-                        log)),
-                new IDatabaseEntity[] { testDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - groupBy`3 - single field key test",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().GroupBy(it => it.StringField, it => it.IntField)),
-                new Action<IQuery, Action<string>>(
-                    (query, log) => CheckGroupedQuery(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -465,8 +409,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" = @param_0 AND b.""{nameof(User.Nickname)}"" = @param_1",
-                        new Dictionary<string, object?> { ["param_0"] = "MilkyWay", ["param_1"] = "SpaceEngineer" },
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_1 IS @param_0 THEN c.""{nameof(Blog.Theme)}"" IS @param_2 ELSE c.""{nameof(Blog.Theme)}"" = @param_3 END AND CASE WHEN @param_5 IS @param_4 THEN b.""{nameof(User.Nickname)}"" IS @param_6 ELSE b.""{nameof(User.Nickname)}"" = @param_7 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "'MilkyWay'", ["param_2"] = "NULL", ["param_3"] = "'MilkyWay'", ["param_4"] = "NULL", ["param_5"] = "'SpaceEngineer'", ["param_6"] = "NULL", ["param_7"] = "'SpaceEngineer'" },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -477,7 +421,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
-                        new Dictionary<string, object?> { ["param_0"] = DateTime.MinValue },
+                        new Dictionary<string, string> { ["param_0"] = $"'{DateTime.MinValue.ToUniversalTime():O}'" },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -531,8 +475,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField <= 42).Select(it => it.IntField)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_0 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_1) d",
-                        new Dictionary<string, object?> { ["param_0"] = 0, ["param_1"] = 42 },
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}CASE WHEN @param_1 IS @param_0 THEN b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE b.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_4 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_5) d",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "0", ["param_5"] = "42" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -553,8 +497,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().All(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN 1 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        emptyQueryParameters,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN @param_0 ELSE @param_1 END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        new Dictionary<string, string> { ["param_0"] = "1", ["param_1"] = "NULL" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -564,8 +508,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Any(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > 0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
-                        emptyQueryParameters,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        new Dictionary<string, string> { ["param_0"] = "0" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -598,7 +542,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
+                        new Dictionary<string, string> { ["param_0"] = $"'{testDatabaseEntity.PrimaryKey}'" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -609,13 +553,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new Dictionary<string, object?> { ["param_0"] = testDatabaseEntity.PrimaryKey },
+                        new Dictionary<string, string> { ["param_0"] = $"'{testDatabaseEntity.PrimaryKey}'" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - Scalar result - single",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Single(it => it.BooleanField)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
@@ -641,12 +585,27 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - sub-query with parameters",
+                new Func<IDependencyContainer, object?>(container =>
+                {
+                    var subQuery = container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField == true).Select(it => it.PrimaryKey);
+                    return container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.NullableStringField != null && subQuery.Contains(it.PrimaryKey));
+                }),
+                new Action<IQuery, Action<string>>(
+                    (query, log) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END AND a.""{nameof(DatabaseEntity.PrimaryKey)}"" IN (SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"" = @param_4) b)",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "True" },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection with renaming",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END THEN @param_4 ELSE @param_5 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "True", ["param_5"] = "False" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -656,8 +615,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END THEN @param_4 ELSE @param_5 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "True", ["param_5"] = "False" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -667,8 +626,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN @param_0 ELSE @param_1 END",
-                        new Dictionary<string, object?> { ["param_0"] = true, ["param_1"] = false },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END THEN @param_4 ELSE @param_5 END",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "True", ["param_5"] = "False" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -678,8 +637,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_0 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new Dictionary<string, object?> { ["param_0"] = string.Empty },
+                        $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_1 IS @param_0 THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT @param_2 ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_3 END THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_4 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        new Dictionary<string, string> { ["param_0"] = "NULL", ["param_1"] = "NULL", ["param_2"] = "NULL", ["param_3"] = "NULL", ["param_4"] = "''" },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -718,7 +677,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view tanslation",
+                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation after migration",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseColumn>().Select(it => new { it.Schema, it.Table, it.Column }).First()),
                 new Action<IQuery, Action<string>>(
                     (query, log) => CheckFlatQuery(query,
@@ -727,6 +686,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
+            /*TODO: #209 - test sql view translation before migration*/
+            /*yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation before migration",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseColumn>().Select(it => new { it.Schema, it.Table, it.Column }).First()),
+                new Action<IQuery, Action<string>>(
+                    (query, log) => CheckFlatQuery(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}({Environment.NewLine}{'\t'}{'\t'}select{Environment.NewLine}{'\t'}{'\t'}gen_random_uuid() as ""{nameof(DatabaseColumn.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_schema as ""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_name as ""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}{'\t'}column_name as ""{nameof(DatabaseColumn.Column)}"",{Environment.NewLine}{'\t'}{'\t'}ordinal_position as ""{nameof(DatabaseColumn.Position)}"",{Environment.NewLine}{'\t'}{'\t'}data_type as ""{nameof(DatabaseColumn.DataType)}"",{Environment.NewLine}{'\t'}{'\t'}case is_nullable when 'NO' then false when 'YES' then true end as ""{nameof(DatabaseColumn.Nullable)}"",{Environment.NewLine}{'\t'}{'\t'}column_default as ""{nameof(DatabaseColumn.DefaultValue)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_scale as ""{nameof(DatabaseColumn.Scale)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_precision as ""{nameof(DatabaseColumn.Precision)}"",{Environment.NewLine}{'\t'}{'\t'}character_maximum_length as ""{nameof(DatabaseColumn.Length)}""{Environment.NewLine}{'\t'}{'\t'}from information_schema.columns c{Environment.NewLine}{'\t'}{'\t'}join information_schema.tables t{Environment.NewLine}{'\t'}{'\t'}on t.table_schema = c.table_schema and t.table_name = c.table_name  {Environment.NewLine}{'\t'}{'\t'}where t.table_type != 'VIEW' and c.table_schema not in ('information_schema', 'public') and c.table_schema not like 'pg_%'{Environment.NewLine}{'\t'}{'\t'}order by c.table_name, ordinal_position{Environment.NewLine}{'\t'}) a{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                Array.Empty<IDatabaseEntity>()
+            };*/
         }
 
         [Fact]
@@ -784,11 +755,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);
 
-                var assert = endpointDependencyContainer
-                   .InvokeWithinTransaction(
-                        false,
-                        Run(endpointDependencyContainer, queryProducer, checkQuery, entities, Output.WriteLine),
-                        cts.Token);
+                var assert = Run(endpointDependencyContainer, queryProducer, checkQuery, entities, Output.WriteLine, cts.Token);
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
 
@@ -825,14 +792,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
         }
 
-        private static Func<IAdvancedDatabaseTransaction, CancellationToken, Task> Run(
+        private static Task Run(
             IDependencyContainer dependencyContainer,
             Func<IDependencyContainer, object?> queryProducer,
             Action<IQuery, Action<string>> checkQuery,
             IDatabaseEntity[] entities,
-            Action<string> log)
+            Action<string> log,
+            CancellationToken token)
         {
-            return async (transaction, token) =>
+            return dependencyContainer.InvokeWithinTransaction(false, RunWithinTransaction, token);
+
+            async Task RunWithinTransaction(IAdvancedDatabaseTransaction transaction, CancellationToken token)
             {
                 var collector = dependencyContainer.Resolve<QueryExpressionsCollector>();
                 collector.Expressions.Clear();
@@ -841,12 +811,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                  ?? collector.Expressions.Single();
 
                 var query = dependencyContainer
-                   .Resolve<IQueryProvider>()
-                   .CreateQuery(expression);
+                    .Resolve<IQueryProvider>()
+                    .CreateQuery(expression);
 
                 var translatedQuery = dependencyContainer
-                   .Resolve<IQueryTranslator>()
-                   .Translate(expression);
+                    .Resolve<IQueryTranslator>()
+                    .Translate(expression);
 
                 checkQuery(translatedQuery, log);
 
@@ -855,63 +825,26 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     .ConfigureAwait(false);
 
                 var queryResult = query
-                   .GetEnumerator()
-                   .AsEnumerable<object>()
-                   .ToList();
+                    .GetEnumerator()
+                    .AsEnumerable<object>()
+                    .ToList();
 
                 Assert.Single(queryResult);
+
                 var item = queryResult.Single();
+
                 var dump = item.GetType().IsPrimitive()
                     ? item.ToString() !
                     : item.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty);
+
                 log(dump);
-
-                foreach (var @object in queryResult)
-                {
-                    if (@object.GetType().IsSubclassOfOpenGeneric(typeof(IGrouping<,>))
-                        && translatedQuery is GroupedQuery groupedQuery)
-                    {
-                        var keyValues = @object
-                            .GetPropertyValue(nameof(IGrouping<object, object>.Key))
-                            .AsQueryParametersValues();
-
-                        log("Actual key values:");
-                        log(keyValues.Select(pair => pair.ToString()).ToString(Environment.NewLine));
-
-                        var valuesExpression = groupedQuery.ValuesExpressionProducer.Invoke(keyValues);
-                        var valuesQuery = dependencyContainer.Resolve<ISqlExpressionTranslatorComposite>().Translate(valuesExpression, 0);
-                        var valuesQueryParameters = valuesExpression.ExtractQueryParameters();
-
-                        log("Actual values query parameters:");
-                        log(valuesQueryParameters.Select(pair => pair.ToString()).ToString(Environment.NewLine));
-
-                        log("Actual values query:");
-                        log(valuesQuery);
-
-                        log("Actual values:");
-                        var enumerator = ((IEnumerable)@object).GetEnumerator();
-
-                        while (enumerator.MoveNext())
-                        {
-                            log(enumerator.Current.ToString() !);
-                        }
-                    }
-                    else if (translatedQuery is FlatQuery)
-                    {
-                        log("Flat query has no additional verifications");
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(translatedQuery.ToString());
-                    }
-                }
-            };
+            }
         }
 
         private static void CheckFlatQuery(
             IQuery query,
             string expectedQuery,
-            IReadOnlyDictionary<string, object?> expectedQueryParameters,
+            IReadOnlyDictionary<string, string> expectedQueryParameters,
             Action<string> log)
         {
             var flatQuery = (FlatQuery)query;
@@ -920,40 +853,35 @@ namespace SpaceEngineers.Core.GenericHost.Test
             log(expectedQuery);
 
             log("Actual query:");
-            log(flatQuery.Query);
+            log(flatQuery.CommandText);
 
-            Assert.Equal(expectedQuery, flatQuery.Query, StringComparer.Ordinal);
-            CheckParameters(flatQuery.QueryParameters, expectedQueryParameters);
+            log("Expected parameters:");
+            log(FormatParameters(expectedQueryParameters));
+
+            log("Actual parameters:");
+            log(FormatParameters(flatQuery.CommandParameters));
+
+            Assert.Equal(expectedQuery, flatQuery.CommandText, StringComparer.Ordinal);
+            CheckParameters(flatQuery.CommandParameters, expectedQueryParameters);
         }
 
-        private static void CheckGroupedQuery(
-            IQuery query,
-            string expectedKeysQuery,
-            IReadOnlyDictionary<string, object?> expectedKeysQueryParameters,
-            Action<string> log)
+        private static string FormatParameters(IReadOnlyDictionary<string, string> queryParameters)
         {
-            var groupedQuery = (GroupedQuery)query;
-
-            log("Expected keys query:");
-            log(expectedKeysQuery);
-
-            log("Actual keys query:");
-            log(groupedQuery.KeysQuery);
-
-            Assert.Equal(expectedKeysQuery, groupedQuery.KeysQuery, StringComparer.Ordinal);
-            CheckParameters(groupedQuery.KeysQueryParameters, expectedKeysQueryParameters);
+            return queryParameters.Any()
+                ? string.Join(" ", queryParameters.Select(param => $"{param.Key}={param.Value}"))
+                : "empty parameters";
         }
 
         private static void CheckParameters(
-            IReadOnlyDictionary<string, object?> actualQueryParameters,
-            IReadOnlyDictionary<string, object?> expectedQueryParameters)
+            IReadOnlyDictionary<string, string> actualQueryParameters,
+            IReadOnlyDictionary<string, string> expectedQueryParameters)
         {
             var parameters = actualQueryParameters
                 .FullOuterJoin(expectedQueryParameters,
                     actual => actual.Key,
                     expected => expected.Key,
                     (actual, expected) => (actual, expected),
-                    StringComparer.OrdinalIgnoreCase)
+                    StringComparer.Ordinal)
                 .ToList();
 
             foreach (var (actual, expected) in parameters)

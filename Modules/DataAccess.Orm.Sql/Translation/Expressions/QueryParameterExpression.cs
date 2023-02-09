@@ -12,14 +12,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                             ISafelyEquatable<QueryParameterExpression>
     {
         /// <summary> .cctor </summary>
+        /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
-        /// <param name="name">Name</param>
-        /// <param name="value">Value</param>
-        private QueryParameterExpression(Type type, string name, object? value)
+        /// <param name="extractor">Extractor</param>
+        public QueryParameterExpression(TranslationContext context, Type type, Func<Expression, object?>? extractor = null)
         {
+            var name = context.NextQueryParameterName();
+
             Type = type;
             Name = name;
-            Value = value;
+
+            context.CaptureCommandParameterExtractor(name, extractor);
         }
 
         /// <inheritdoc />
@@ -29,11 +32,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Query parameter name
         /// </summary>
         public string Name { get; }
-
-        /// <summary>
-        /// Value
-        /// </summary>
-        public object? Value { get; }
 
         #region IEquatable
 
@@ -64,8 +62,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             return HashCode.Combine(
                 Type,
-                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                Value);
+                Name.GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />
@@ -84,40 +81,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public bool SafeEquals(QueryParameterExpression other)
         {
             return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Value?.Equals(other.Value) == true;
+                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
-
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            return Expression.Constant(Value, Type);
-        }
-
-        /// <summary>
-        /// Factory method
-        /// </summary>
-        /// <param name="context">Translation context</param>
-        /// <param name="type">Type</param>
-        /// <param name="value">Value</param>
-        /// <param name="force">Force query parameter</param>
-        /// <returns>ISqlExpression</returns>
-        public static ISqlExpression Create(
-            TranslationContext context,
-            Type type,
-            object? value,
-            bool force = false)
-        {
-            // see BinaryExpressionTranslator.IsNullConstant -> SQL uses "IS" and "IS NOT" operators with NULL-value
-            var isNullConstant = value == null
-                                 && value == type.DefaultValue()
-                                 && !force;
-
-            return isNullConstant
-                ? new ConstantExpression(type, value)
-                : new QueryParameterExpression(type, context.NextQueryParameterName(), value);
-        }
     }
 }

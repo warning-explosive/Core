@@ -9,22 +9,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     public sealed class FlatQuery : IQuery
     {
         /// <summary> .cctor </summary>
-        /// <param name="query">Query</param>
-        /// <param name="queryParameters">Query parameters object</param>
-        public FlatQuery(string query, IReadOnlyDictionary<string, object?> queryParameters)
+        /// <param name="commandText">Command text</param>
+        /// <param name="commandParameters">Command parameters</param>
+        public FlatQuery(string commandText, IReadOnlyDictionary<string, string> commandParameters)
         {
-            Query = query;
-            QueryParameters = queryParameters;
+            CommandText = commandText;
+            CommandParameters = commandParameters;
         }
 
         /// <summary>
-        /// Query
+        /// Command text
         /// </summary>
-        public string Query { get; }
+        public string CommandText { get; }
 
         /// <summary>
-        /// Query parameters object
+        /// Command parameters
         /// </summary>
-        public IReadOnlyDictionary<string, object?> QueryParameters { get; }
+        public IReadOnlyDictionary<string, string> CommandParameters { get; }
     }
 }

@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using Sql.Translation;
     using Sql.Translation.Expressions;
     using BinaryExpression = Sql.Translation.Expressions.BinaryExpression;
-    using ConstantExpression = Sql.Translation.Expressions.ConstantExpression;
 
     [Component(EnLifestyle.Singleton)]
     internal class BinaryExpressionTranslator : ISqlExpressionTranslator<BinaryExpression>,
@@ -29,6 +28,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             {
                 [BinaryOperator.Equal] = "=",
                 [BinaryOperator.NotEqual] = "!=",
+                [BinaryOperator.Is] = "IS",
+                [BinaryOperator.IsNot] = "IS NOT",
                 [BinaryOperator.GreaterThanOrEqual] = ">=",
                 [BinaryOperator.GreaterThan] = ">",
                 [BinaryOperator.LessThan] = "<",
@@ -43,13 +44,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.Divide] = "/",
                 [BinaryOperator.Multiply] = "*",
                 [BinaryOperator.Modulo] = "%"
-            };
-
-        private static readonly IReadOnlyDictionary<BinaryOperator, string> AltOperators
-            = new Dictionary<BinaryOperator, string>
-            {
-                [BinaryOperator.Equal] = "IS",
-                [BinaryOperator.NotEqual] = "IS NOT"
             };
 
         public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
@@ -79,14 +73,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             }
             else
             {
-                var map = (IsNullConstant(expression.Left) || IsNullConstant(expression.Right))
-                          && AltOperators.ContainsKey(expression.Operator)
-                    ? AltOperators
-                    : Operators;
-
                 sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
                 sb.Append(" ");
-                sb.Append(map[expression.Operator]);
+                sb.Append(Operators[expression.Operator]);
 
                 if (expression.Operator == BinaryOperator.Contains)
                 {
@@ -107,11 +96,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             }
 
             return sb.ToString();
-        }
-
-        private static bool IsNullConstant(ISqlExpression expression)
-        {
-            return expression is ConstantExpression { Value: null };
         }
     }
 }

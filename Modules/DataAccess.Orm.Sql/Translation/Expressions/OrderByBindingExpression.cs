@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Linq.Expressions;
-    using Api.Exceptions;
     using Basics;
     using Basics.Enumerations;
 
@@ -16,7 +14,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                             IApplicable<NamedBindingExpression>,
                                             IApplicable<BinaryExpression>,
                                             IApplicable<ConditionalExpression>,
-                                            IApplicable<ConstantExpression>,
                                             IApplicable<MethodCallExpression>,
                                             IApplicable<QueryParameterExpression>,
                                             IApplicable<SpecialExpression>,
@@ -103,12 +100,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         #endregion
 
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            throw new TranslationException(nameof(OrderByBindingExpression) + "." + nameof(AsExpressionTree));
-        }
-
         #region IApplicable
 
         /// <inheritdoc />
@@ -131,12 +122,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplyBinding(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConstantExpression expression)
         {
             ApplyBinding(expression);
         }

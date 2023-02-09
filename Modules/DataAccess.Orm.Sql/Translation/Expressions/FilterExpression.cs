@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Linq.Expressions;
-    using Api.Exceptions;
     using Basics;
     using Extensions;
 
@@ -105,12 +103,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         #endregion
-
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            throw new TranslationException(nameof(FilterExpression) + "." + nameof(AsExpressionTree));
-        }
 
         #region IApplicable
 

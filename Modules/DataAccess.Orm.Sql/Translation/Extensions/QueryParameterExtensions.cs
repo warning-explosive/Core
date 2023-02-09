@@ -15,7 +15,8 @@
         /// </summary>
         /// <param name="obj">Object</param>
         /// <returns>Query parameters values</returns>
-        public static IReadOnlyDictionary<string, object?> AsQueryParametersValues(this object? obj)
+        public static IReadOnlyDictionary<string, object?> AsQueryParametersValues(
+            this object? obj)
         {
             return obj?.GetType().IsPrimitive() == true
                 ? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase) { [TranslationContext.QueryParameterFormat.Format(0)] = obj }
@@ -28,7 +29,9 @@
         /// <param name="value">Value</param>
         /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <returns>QueryParameterSqlExpression</returns>
-        public static string QueryParameterSqlExpression(this object? value, IDependencyContainer dependencyContainer)
+        public static string QueryParameterSqlExpression(
+            this object? value,
+            IDependencyContainer dependencyContainer)
         {
             return dependencyContainer
                 .ResolveGeneric(typeof(IQueryParameterTranslator<>), value?.GetType() ?? typeof(object))

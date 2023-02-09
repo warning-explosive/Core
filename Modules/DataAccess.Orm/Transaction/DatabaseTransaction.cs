@@ -16,7 +16,6 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
-    using CompositionRoot;
     using Connection;
 
     [Component(EnLifestyle.Scoped)]
@@ -26,7 +25,6 @@
                                          IResolvable<IDatabaseTransaction>,
                                          IResolvable<IDatabaseContext>
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IReadRepository _readRepository;
         private readonly IRepository _repository;
@@ -40,13 +38,11 @@
         private IDbTransaction? _transaction;
 
         public DatabaseTransaction(
-            IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider,
             IReadRepository readRepository,
             IRepository repository,
             ITransactionalStore transactionalStore)
         {
-            _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
             _readRepository = readRepository;
             _repository = repository;

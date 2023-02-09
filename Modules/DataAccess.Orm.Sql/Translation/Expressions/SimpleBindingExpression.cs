@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Reflection;
     using Basics;
 
@@ -115,12 +114,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         #endregion
-
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            return Expression.MakeMemberAccess(Source.AsExpressionTree(), Member);
-        }
 
         /// <summary>
         /// Gets flat collection of underneath expressions

@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Linq.Expressions;
     using Basics;
 
     /// <summary>
@@ -16,7 +15,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                    IApplicable<UnaryExpression>,
                                    IApplicable<ParameterExpression>,
                                    IApplicable<QueryParameterExpression>,
-                                   IApplicable<ConstantExpression>,
                                    IApplicable<SpecialExpression>,
                                    IApplicable<MethodCallExpression>
     {
@@ -104,12 +102,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         #endregion
 
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            return Expression.MakeUnary(Operator.AsExpressionType(), Source.AsExpressionTree(), Type);
-        }
-
         #region IApplicable
 
         /// <inheritdoc />
@@ -144,12 +136,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            ApplySource(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConstantExpression expression)
         {
             ApplySource(context, expression);
         }

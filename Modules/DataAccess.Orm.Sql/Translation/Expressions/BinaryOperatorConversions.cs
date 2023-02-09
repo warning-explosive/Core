@@ -9,29 +9,6 @@
     public static class BinaryOperatorConversions
     {
         /// <summary>
-        /// As ExpressionType
-        /// </summary>
-        /// <param name="operator">BinaryOperator</param>
-        /// <returns>ExpressionType</returns>
-        public static ExpressionType AsExpressionType(this BinaryOperator @operator)
-        {
-            return @operator switch
-            {
-                BinaryOperator.Equal => ExpressionType.Equal,
-                BinaryOperator.NotEqual => ExpressionType.NotEqual,
-                BinaryOperator.GreaterThanOrEqual => ExpressionType.GreaterThanOrEqual,
-                BinaryOperator.GreaterThan => ExpressionType.GreaterThan,
-                BinaryOperator.LessThan => ExpressionType.LessThan,
-                BinaryOperator.LessThanOrEqual => ExpressionType.LessThanOrEqual,
-                BinaryOperator.AndAlso => ExpressionType.AndAlso,
-                BinaryOperator.OrElse => ExpressionType.OrElse,
-                BinaryOperator.ExclusiveOr => ExpressionType.ExclusiveOr,
-                BinaryOperator.Coalesce => ExpressionType.Coalesce,
-                _ => throw new NotSupportedException($"Not supported conversion from {nameof(BinaryOperator)}.{@operator} to {nameof(ExpressionType)}")
-            };
-        }
-
-        /// <summary>
         /// As BinaryOperator
         /// </summary>
         /// <param name="type">ExpressionType</param>

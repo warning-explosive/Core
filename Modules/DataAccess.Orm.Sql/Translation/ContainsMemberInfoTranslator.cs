@@ -15,10 +15,13 @@
     internal class ContainsMemberInfoTranslator : IMemberInfoTranslator,
                                                   ICollectionResolvable<IMemberInfoTranslator>
     {
-        public bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression)
+        public bool TryRecognize(
+            TranslationContext context,
+            MemberInfo member,
+            [NotNullWhen(true)] out ISqlExpression? expression)
         {
-            if (IsEnumerableContains(context)
-             || IsICollectionContains(context))
+            if (IsEnumerableContains(context, member)
+             || IsICollectionContains(context, member))
             {
                 expression = new BinaryExpression(typeof(bool), BinaryOperator.Contains);
                 return true;
@@ -27,19 +30,19 @@
             expression = null;
             return false;
 
-            static bool IsEnumerableContains(MemberTranslationContext context)
+            static bool IsEnumerableContains(TranslationContext context, MemberInfo member)
             {
-                return context.Member.DeclaringType == typeof(Enumerable)
-                    && context.Member.Name.Equals(nameof(Enumerable.Contains), StringComparison.OrdinalIgnoreCase)
-                    && context.Member is MethodInfo method
+                return member.DeclaringType == typeof(Enumerable)
+                    && member.Name.Equals(nameof(Enumerable.Contains), StringComparison.OrdinalIgnoreCase)
+                    && member is MethodInfo method
                     && method.GetParameters().Length == 2;
             }
 
-            static bool IsICollectionContains(MemberTranslationContext context)
+            static bool IsICollectionContains(TranslationContext context, MemberInfo member)
             {
-                return typeof(ICollection).IsAssignableFrom(context.Member.DeclaringType)
-                    && context.Member.Name.Equals(nameof(ICollection<object>.Contains), StringComparison.OrdinalIgnoreCase)
-                    && context.Member is MethodInfo method
+                return typeof(ICollection).IsAssignableFrom(member.DeclaringType)
+                    && member.Name.Equals(nameof(ICollection<object>.Contains), StringComparison.OrdinalIgnoreCase)
+                    && member is MethodInfo method
                     && method.GetParameters().Length == 1;
             }
         }

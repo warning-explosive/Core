@@ -116,9 +116,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Is type can be interpreted as primitive</returns>
         public static bool IsPrimitive(this Type type)
         {
-            return type.IsNullable()
-                ? IsPrimitiveType(type.ExtractGenericArgumentAt(typeof(Nullable<>)))
-                : IsPrimitiveType(type);
+            return IsPrimitiveType(type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)));
 
             static bool IsPrimitiveType(Type t)
             {
@@ -149,9 +147,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Result of check</returns>
         public static bool IsNumeric(this Type type)
         {
-            return type.IsNullable()
-                ? IsNumericType(type.ExtractGenericArgumentAt(typeof(Nullable<>)))
-                : IsNumericType(type);
+            return IsNumericType(type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)));
 
             static bool IsNumericType(Type t)
             {
@@ -176,6 +172,16 @@ namespace SpaceEngineers.Core.Basics
         {
             return type.IsGenericType
                    && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        /// <summary>
+        /// Does type represents reference type
+        /// </summary>
+        /// <param name="type">Type for check</param>
+        /// <returns>Result of check</returns>
+        public static bool IsReference(this Type type)
+        {
+            return !type.IsValueType;
         }
 
         /// <summary>

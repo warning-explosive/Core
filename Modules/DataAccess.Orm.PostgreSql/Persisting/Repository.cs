@@ -18,6 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Extensions;
+    using Linq;
     using Microsoft.Extensions.Logging;
     using Orm.Connection;
     using Settings;
@@ -48,8 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
-        private readonly IExpressionTranslator _expressionTranslator;
+        private readonly IQueryTranslator _translator;
         private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ILogger _logger;
 
@@ -57,16 +57,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             IDependencyContainer dependencyContainer,
             ISettingsProvider<OrmSettings> settingsProvider,
             IModelProvider modelProvider,
-            ISqlExpressionTranslatorComposite sqlExpressionTranslator,
-            IExpressionTranslator expressionTranslator,
+            IQueryTranslator translator,
             IDatabaseImplementation databaseImplementation,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
             _settingsProvider = settingsProvider;
             _modelProvider = modelProvider;
-            _sqlExpressionTranslator = sqlExpressionTranslator;
-            _expressionTranslator = expressionTranslator;
+            _translator = translator;
             _databaseImplementation = databaseImplementation;
             _logger = logger;
         }
@@ -271,22 +269,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
 
                 var columnExpression = @$"""{column.Name}""";
 
-                var valueSqlExpression = _expressionTranslator.Translate(info.ValueProducer);
+                var valueQuery = (FlatQuery)_translator.Translate(info.ValueProducer);
 
-                var valueExpression = InlineQueryParameters(
-                    _dependencyContainer,
-                    _sqlExpressionTranslator.Translate(valueSqlExpression, 0),
-                    valueSqlExpression.ExtractQueryParameters());
+                var valueExpression = InlineQueryParameters(valueQuery.CommandText, valueQuery.CommandParameters);
 
                 setExpressions.Add(SetExpressionFormat.Format(columnExpression, valueExpression));
             }
 
-            var predicateSqlExpression = _expressionTranslator.Translate(predicate);
+            var predicateSqlQuery = (FlatQuery)_translator.Translate(predicate);
 
-            var predicateExpression = InlineQueryParameters(
-                _dependencyContainer,
-                _sqlExpressionTranslator.Translate(predicateSqlExpression, 0),
-                predicateSqlExpression.ExtractQueryParameters());
+            var predicateExpression = InlineQueryParameters(predicateSqlQuery.CommandText, predicateSqlQuery.CommandParameters);
 
             var commandText = UpdateValueQueryFormat.Format(
                 table.Schema,
@@ -294,6 +286,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 string.Join(", ", setExpressions),
                 predicateExpression);
 
+            // TODO: #209 - recode query
             var versions = (await transaction
                    .All<TEntity>()
                    .Where(predicate)
@@ -344,18 +337,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             var type = typeof(TEntity);
             var table = _modelProvider.Tables[type];
 
-            var predicateSqlExpression = _expressionTranslator.Translate(predicate);
+            var predicateSqlQuery = (FlatQuery)_translator.Translate(predicate);
 
-            var predicateExpression = InlineQueryParameters(
-                _dependencyContainer,
-                _sqlExpressionTranslator.Translate(predicateSqlExpression, 0),
-                predicateSqlExpression.ExtractQueryParameters());
+            var predicateExpression = InlineQueryParameters(predicateSqlQuery.CommandText, predicateSqlQuery.CommandParameters);
 
             var commandText = DeleteValueQueryFormat.Format(
                 table.Schema,
                 table.Name,
                 predicateExpression);
 
+            // TODO: #209 - recode query
             var versions = (await transaction
                    .All<TEntity>()
                    .Where(predicate)
@@ -387,10 +378,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
         }
 
         private static string InlineQueryParameters(
-            IDependencyContainer dependencyContainer,
             string query,
-            IReadOnlyDictionary<string, object?> queryParameters)
+            IReadOnlyDictionary<string, string> queryParameters)
         {
+            // TODO use ADO.NET and NpgsqlParameter
             foreach (var (name, value) in queryParameters)
             {
                 if (!query.Contains($"@{name}", StringComparison.OrdinalIgnoreCase))
@@ -398,7 +389,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                     continue;
                 }
 
-                query = query.Replace($"@{name}", value.QueryParameterSqlExpression(dependencyContainer), StringComparison.OrdinalIgnoreCase);
+                query = query.Replace($"@{name}", value, StringComparison.OrdinalIgnoreCase);
             }
 
             return query;

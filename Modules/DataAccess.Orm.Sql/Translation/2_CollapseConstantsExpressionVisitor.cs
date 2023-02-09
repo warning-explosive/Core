@@ -4,9 +4,17 @@
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using Basics.Attributes;
     using Linq;
 
-    internal class CollapseConstantsExpressionVisitor : ExpressionVisitor
+    [Component(EnLifestyle.Singleton)]
+    [After(typeof(UnwrapScalarQueryableMethodsExpressionVisitor))]
+    internal class CollapseConstantsExpressionVisitor : ExpressionVisitor,
+                                                        ILinqExpressionPreprocessor,
+                                                        ICollectionResolvable<ILinqExpressionPreprocessor>
     {
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

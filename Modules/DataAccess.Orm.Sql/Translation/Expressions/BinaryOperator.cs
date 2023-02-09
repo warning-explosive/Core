@@ -16,6 +16,16 @@
         NotEqual,
 
         /// <summary>
+        /// IS
+        /// </summary>
+        Is,
+
+        /// <summary>
+        /// IS NOT
+        /// </summary>
+        IsNot,
+
+        /// <summary>
         /// GreaterThanOrEqual
         /// </summary>
         GreaterThanOrEqual,

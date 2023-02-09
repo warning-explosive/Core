@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Diagnostics.CodeAnalysis;
+    using System.Reflection;
     using Expressions;
 
     /// <summary>
@@ -11,9 +12,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary>
         /// Recognize sql function
         /// </summary>
-        /// <param name="context">MemberTranslationContext</param>
+        /// <param name="context">TranslationContext</param>
+        /// <param name="member">MemberInfo</param>
         /// <param name="expression">Expression</param>
         /// <returns>Recognition result</returns>
-        bool TryRecognize(MemberTranslationContext context, [NotNullWhen(true)] out ISqlExpression? expression);
+        bool TryRecognize(
+            TranslationContext context,
+            MemberInfo member,
+            [NotNullWhen(true)] out ISqlExpression? expression);
     }
 }

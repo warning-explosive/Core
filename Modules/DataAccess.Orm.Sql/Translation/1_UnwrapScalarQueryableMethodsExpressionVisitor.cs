@@ -3,10 +3,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Reflection;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Linq;
 
-    internal class UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor : ExpressionVisitor
+    [Component(EnLifestyle.Singleton)]
+    internal class UnwrapScalarQueryableMethodsExpressionVisitor : ExpressionVisitor,
+                                                                   ILinqExpressionPreprocessor,
+                                                                   ICollectionResolvable<ILinqExpressionPreprocessor>
     {
         private static readonly IReadOnlyDictionary<MethodInfo, MethodInfo> Map =
             new Dictionary<MethodInfo, MethodInfo>

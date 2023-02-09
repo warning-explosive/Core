@@ -49,9 +49,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 
         private async Task<DatabaseNode> BuildModel(IDatabaseTransaction transaction, CancellationToken token)
         {
-            var constraints = transaction
-                .All<DatabaseColumnConstraint>()
-                .AsEnumerable()
+            var constraints = (await transaction
+                    .All<DatabaseColumnConstraint>()
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
                 .GroupBy(constraint => constraint.Schema)
                 .ToDictionary(grp => grp.Key,
                     grp => grp
@@ -96,9 +97,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             return (await transaction
                     .All<DatabaseColumn>()
                     .Where(column => column.Schema == schema)
-                    .GroupBy(column => column.Table)
-                    .ToDictionaryAsync(grp => grp.Key, grp => grp.ToList(), token)
+                    .ToListAsync(token)
                     .ConfigureAwait(false))
+                .GroupBy(column => column.Table)
+                .ToDictionary(grp => grp.Key, grp => grp.ToList())
                 .Select(grp => BuildTableNode(schema, grp.Key, grp.Value, constraints))
                 .ToList();
         }

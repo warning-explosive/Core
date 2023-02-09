@@ -17,7 +17,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 BinaryExpression binaryExpression => VisitBinary(binaryExpression),
                 UnaryExpression unaryExpression => VisitUnary(unaryExpression),
                 ConditionalExpression conditionalExpression => VisitConditional(conditionalExpression),
-                ConstantExpression constantExpression => VisitConstant(constantExpression),
                 NamedBindingExpression namedBindingExpression => VisitNamedBinding(namedBindingExpression),
                 SimpleBindingExpression simpleBindingExpression => VisitSimpleBinding(simpleBindingExpression),
                 FilterExpression filterExpression => VisitFilter(filterExpression),
@@ -31,7 +30,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 QueryParameterExpression queryParameterExpression => VisitQueryParameter(queryParameterExpression),
                 QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
                 JoinExpression joinExpression => VisitJoinExpression(joinExpression),
-                GroupByExpression groupByExpression => VisitGroupByExpression(groupByExpression),
                 RowsFetchLimitExpression rowsFetchLimitExpression => VisitRowsFetchLimitExpression(rowsFetchLimitExpression),
                 SpecialExpression specialExpression => VisitSpecialExpression(specialExpression),
                 _ => throw new NotSupportedException(expression.GetType().FullName)
@@ -77,16 +75,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Visit(conditionalExpression.When),
                 Visit(conditionalExpression.Then),
                 Visit(conditionalExpression.Else));
-        }
-
-        /// <summary>
-        /// Visit ConstantExpression
-        /// </summary>
-        /// <param name="constantExpression">ConstantExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual ISqlExpression VisitConstant(ConstantExpression constantExpression)
-        {
-            return constantExpression;
         }
 
         /// <summary>
@@ -243,16 +231,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Visit(joinExpression.LeftSource),
                 Visit(joinExpression.RightSource),
                 Visit(joinExpression.On));
-        }
-
-        /// <summary>
-        /// Visit GroupByExpression
-        /// </summary>
-        /// <param name="groupByExpression">GroupByExpression</param>
-        /// <returns>Visited result</returns>
-        protected virtual ISqlExpression VisitGroupByExpression(GroupByExpression groupByExpression)
-        {
-            return groupByExpression;
         }
 
         /// <summary>

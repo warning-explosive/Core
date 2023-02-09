@@ -2,75 +2,61 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Linq.Expressions;
     using Api.Exceptions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Expressions;
+    using CompositionRoot;
+    using Linq;
     using Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ExpressionTranslator : IExpressionTranslator,
-                                          IResolvable<IExpressionTranslator>
+    internal class ExpressionTranslator : IQueryTranslator,
+                                          IResolvable<IQueryTranslator>
     {
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IModelProvider _modelProvider;
+        private readonly ILinqExpressionPreprocessorComposite _preprocessor;
+        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
 
-        private readonly ExpressionVisitor[] _expressionVisitors;
-        private readonly ISqlExpressionVisitor[] _sqlExpressionVisitors;
-
         public ExpressionTranslator(
+            IDependencyContainer dependencyContainer,
             IModelProvider modelProvider,
+            ILinqExpressionPreprocessorComposite preprocessor,
+            ISqlExpressionTranslatorComposite sqlExpressionTranslator,
             IEnumerable<IMemberInfoTranslator> sqlFunctionProviders)
         {
+            _dependencyContainer = dependencyContainer;
             _modelProvider = modelProvider;
+            _preprocessor = preprocessor;
+            _sqlExpressionTranslator = sqlExpressionTranslator;
             _sqlFunctionProviders = sqlFunctionProviders;
-
-            _expressionVisitors = new ExpressionVisitor[]
-            {
-                new CollapseConstantsExpressionVisitor(),
-                new UnwrapScalarQueryableMethodsWithPredicateExpressionVisitor()
-            };
-
-            _sqlExpressionVisitors = Array.Empty<ISqlExpressionVisitor>();
         }
 
-        public ISqlExpression Translate(Expression expression)
+        public IQuery Translate(Expression expression)
         {
-            expression = ExecutionExtensions
-                .Try(expression, PreAggregate)
+            var translatedSqlQuery = ExecutionExtensions
+                .Try(expression, TranslateUnsafe)
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
 
-            var visitor = new TranslationExpressionVisitor(_modelProvider, this, _sqlFunctionProviders);
-
-            ExecutionExtensions
-                .Try(expression, visitor.Visit)
-                .Catch<Exception>()
-                .Invoke(ex => throw new TranslationException(expression, ex));
-
-            var sqlExpression = visitor
-                .Context
-                .Expression
-                .EnsureNotNull(() => new TranslationException(expression));
-
-            return ExecutionExtensions
-                .Try(sqlExpression, PostAggregate)
-                .Catch<Exception>()
-                .Invoke(ex => throw new TranslationException(expression, ex));
+            return new FlatQuery(
+                translatedSqlQuery.CommandText,
+                translatedSqlQuery.CommandParametersExtractor(expression));
         }
 
-        private Expression PreAggregate(Expression expression)
+        private TranslatedSqlQuery TranslateUnsafe(Expression expression)
         {
-            return _expressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
-        }
+            var visitor = new TranslationExpressionVisitor(new TranslationContext(), _dependencyContainer, _modelProvider, _preprocessor, _sqlFunctionProviders);
 
-        private ISqlExpression PostAggregate(ISqlExpression expression)
-        {
-            return _sqlExpressionVisitors.Aggregate(expression, (acc, next) => next.Visit(acc));
+            var sqlQuery = visitor.Translate(_preprocessor.Visit(expression));
+
+            var commandText = _sqlExpressionTranslator.Translate(sqlQuery.SqlExpression, 0);
+
+            return new TranslatedSqlQuery(sqlQuery.SqlExpression, commandText, sqlQuery.CommandParametersExtractor);
         }
     }
 }

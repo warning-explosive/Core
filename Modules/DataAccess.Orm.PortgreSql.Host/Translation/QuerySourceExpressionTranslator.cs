@@ -59,10 +59,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Translation
         {
             var sb = new StringBuilder();
 
+            // TODO: #209 - add cache with MigrationsWasApplied()
             if (!MigrationsWasApplied() && expression.Type.IsSqlView())
             {
-                sb.Append('(');
-                sb.Append(_sqlViewQueryProvider.GetQuery(expression.Type));
+                sb.AppendLine("(");
+
+                var sqlViewQueryRows = _sqlViewQueryProvider
+                    .GetQuery(expression.Type)
+                    .Split(new[] { "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var row in sqlViewQueryRows)
+                {
+                    sb.Append(new string('\t', depth + 1));
+                    sb.AppendLine(row);
+                }
+
+                sb.Append('\t');
                 sb.Append(')');
             }
             else

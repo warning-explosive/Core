@@ -78,18 +78,5 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
             _ = visitor.Visit(accessor);
             return visitor.Chain;
         }
-
-        /// <summary>
-        /// Extracts query parameters
-        /// </summary>
-        /// <param name="expression">ISqlExpression</param>
-        /// <returns>Query parameters</returns>
-        public static IReadOnlyDictionary<string, object?> ExtractQueryParameters(
-            this ISqlExpression expression)
-        {
-            var extractor = new ExtractQueryParametersVisitor();
-            _ = extractor.Visit(expression);
-            return extractor.QueryParameters;
-        }
     }
 }

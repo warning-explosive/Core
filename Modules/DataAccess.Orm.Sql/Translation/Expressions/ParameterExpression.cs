@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Linq.Expressions;
     using Basics;
 
     /// <summary>
@@ -82,11 +81,5 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         #endregion
-
-        /// <inheritdoc />
-        public Expression AsExpressionTree()
-        {
-            return Expression.Parameter(Type, Name);
-        }
     }
 }

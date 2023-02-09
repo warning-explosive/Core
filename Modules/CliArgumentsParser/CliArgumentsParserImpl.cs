@@ -164,9 +164,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             // enum,
             // Nullable<enum>
             // enum flags
-            var enumType = type.IsNullable()
-                               ? type.GetGenericArguments()[0]
-                               : type;
+            var enumType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (enumType.IsEnum)
             {

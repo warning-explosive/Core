@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Extensions
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Concurrent;

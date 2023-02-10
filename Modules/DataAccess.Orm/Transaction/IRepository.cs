@@ -1,12 +1,12 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Persisting
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Model;
-    using Transaction;
+    using Api.Model;
+    using Api.Persisting;
 
     /// <summary>
     /// IRepository

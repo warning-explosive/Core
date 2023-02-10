@@ -60,23 +60,17 @@
       <Compile Update="Model\IDatabaseEntity.cs">
         <DependentUpon>IUniqueIdentified.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\JsonObject.cs">
+      <Compile Update="Model\SystemType.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\SystemType.cs">
+      <Compile Update="Model\JsonObject.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\IDatabaseTransaction.cs">
         <DependentUpon>IDatabaseContext.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
-        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
-      </Compile>
       <Compile Update="Exceptions\DatabaseConcurrentUpdateException.cs">
         <DependentUpon>DatabaseException.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Transaction\ITransactionalChange.cs">
-        <DependentUpon>ITransactionalStore.cs</DependentUpon>
       </Compile>
       <Compile Update="Exceptions\DatabaseCommandExecutionException.cs">
         <DependentUpon>DatabaseException.cs</DependentUpon>

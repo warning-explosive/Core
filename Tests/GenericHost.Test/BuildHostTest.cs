@@ -15,7 +15,6 @@
     using CompositionRoot.Extensions;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.PostgreSql;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
     using DatabaseEntities.Relations;
@@ -789,9 +788,9 @@
 
             modelChanges.Each((change, i) => Output.WriteLine($"[{i}] {change}"));
 
-            var databaseImplementation = endpointContainer.Resolve<IDatabaseImplementation>();
+            var databaseConnectionProvider = endpointContainer.Resolve<IDatabaseConnectionProvider>();
 
-            if (databaseImplementation.GetType() == typeof(PostgreSqlDatabaseImplementation))
+            if (databaseConnectionProvider.GetType() == typeof(DataAccess.Orm.PostgreSql.Connection.DatabaseConnectionProvider))
             {
                 var assertions = new Action<int>[]
                 {
@@ -1026,7 +1025,7 @@
             }
             else
             {
-                throw new NotSupportedException(databaseImplementation.GetType().FullName);
+                throw new NotSupportedException(databaseConnectionProvider.GetType().FullName);
             }
 
             static void AssertCreateDataBase(IModelChange[] modelChanges, int index, string database)

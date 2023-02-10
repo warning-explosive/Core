@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using System.Threading.Tasks;
     using Api.Model;
     using Api.Persisting;
-    using Api.Transaction;
 
     /// <summary>
     /// CreateEntityChange
@@ -28,10 +27,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         /// <inheritdoc />
         public Task Apply(
-            IAdvancedDatabaseTransaction databaseTransaction,
+            IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            return databaseTransaction.Insert(_entities, _insertBehavior, token);
+            return transaction.Insert(_entities, _insertBehavior, token);
         }
 
         /// <inheritdoc />

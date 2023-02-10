@@ -3,65 +3,53 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Transaction;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
     using Connection;
-    using CrossCuttingConcerns.Settings;
     using Extensions;
-    using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Extensions;
     using Orm.Host.Abstractions;
-    using Orm.Settings;
+    using Orm.Linq;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.DataAccess.Api.Model;
     using Transaction;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(InitialMigration))]
     internal class ApplyDeltaMigration : IMigration,
                                          ICollectionResolvable<IMigration>
     {
-        private const string CommandFormat = @"--[{0}]{1}";
-
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseImplementation _databaseImplementation;
-        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
         private readonly IModelChangeCommandBuilderComposite _commandBuilder;
-        private readonly ILogger _logger;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public ApplyDeltaMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseImplementation databaseImplementation,
-            ISettingsProvider<OrmSettings> settingsProvider,
             IDatabaseTypeProvider databaseTypeProvider,
             IModelChangesExtractor modelChangesExtractor,
             IModelChangeCommandBuilderComposite commandBuilder,
-            ILogger logger)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseImplementation = databaseImplementation;
-            _settingsProvider = settingsProvider;
             _databaseTypeProvider = databaseTypeProvider;
             _modelChangesExtractor = modelChangesExtractor;
             _commandBuilder = commandBuilder;
-            _logger = logger;
+            _connectionProvider = connectionProvider;
         }
 
         public virtual string Name { get; } = nameof(ApplyDeltaMigration);
 
         public virtual bool ApplyEveryTime { get; } = true;
 
-        public async Task<string> Migrate(CancellationToken token)
+        public async Task<ICommand> Migrate(CancellationToken token)
         {
             var databaseEntities = _databaseTypeProvider
                .DatabaseEntities()
@@ -74,70 +62,69 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             return await Migrate(modelChanges, token).ConfigureAwait(false);
         }
 
-        private async Task<string> Migrate(
+        private async Task<ICommand> Migrate(
             IReadOnlyCollection<IModelChange> modelChanges,
             CancellationToken token)
         {
             if (!modelChanges.Any())
             {
-                return "--nothing was changed";
+                return new SqlCommand("--nothing was changed", Array.Empty<SqlCommandParameter>());
             }
 
-            var commandText = await BuildCommands(modelChanges.ToArray(), token).ConfigureAwait(false);
+            var command = BuildCommands(modelChanges.ToArray());
 
             await _dependencyContainer
-               .InvokeWithinTransaction(true, commandText, Migrate, token)
+               .InvokeWithinTransaction(true, command, Migrate, token)
                .ConfigureAwait(false);
 
-            return commandText;
+            return command;
         }
 
-        private async Task<string> BuildCommands(IModelChange[] modelChanges, CancellationToken token)
+        private ICommand BuildCommands(IModelChange[] modelChanges)
         {
-            var sb = new StringBuilder();
+            return modelChanges
+                .SelectMany(modelChange => _commandBuilder.BuildCommands(modelChange))
+                .Select(command =>
+                {
+                    if (command is not SqlCommand sqlCommand)
+                    {
+                        throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+                    }
 
-            for (var i = 0; i < modelChanges.Length; i++)
-            {
-                var modelChange = modelChanges[i];
-
-                var command = await _commandBuilder
-                    .BuildCommand(modelChange, token)
-                    .ConfigureAwait(false);
-
-                command = CommandFormat
-                    .Format(i, Environment.NewLine + command)
-                    .TrimEnd(';');
-
-                sb.Append(command);
-                sb.AppendLine(";");
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
+                    return sqlCommand;
+                })
+                .Aggregate((acc, next) => acc.Merge(next, ";" + Environment.NewLine + Environment.NewLine));
         }
 
         private async Task Migrate(
             IAdvancedDatabaseTransaction transaction,
-            string commandText,
+            ICommand command,
             CancellationToken token)
         {
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
+            if (command is not SqlCommand sqlCommand)
+            {
+                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+            }
 
             _ = await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), transaction.Execute)
+               .TryAsync((transaction, command), Execute(_connectionProvider))
                .Catch<Exception>()
-               .Invoke(_databaseImplementation.Handle<long>(commandText), token)
+               .Invoke(_connectionProvider.Handle<long>(sqlCommand.CommandText), token)
                .ConfigureAwait(false);
 
-            var change = new ModelChange(
-                commandText,
-                settings,
-                _logger,
-                static (transaction, commandText, ormSettings, logger, token) => transaction.Execute(commandText, ormSettings, logger, token));
+            var change = new ModelChange(command, _connectionProvider.Execute);
 
             transaction.CollectChange(change);
+        }
+
+        private static Func<(IAdvancedDatabaseTransaction, ICommand), CancellationToken, Task<long>> Execute(
+            IDatabaseConnectionProvider connectionProvider)
+        {
+            return (state, token) =>
+            {
+                var (transaction, query) = state;
+                return connectionProvider.Execute(transaction, query, token);
+            };
         }
     }
 }

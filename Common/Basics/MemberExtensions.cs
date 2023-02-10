@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using Exceptions;
 
     /// <summary>
     /// Extensions for operations with class members
@@ -21,6 +22,108 @@ namespace SpaceEngineers.Core.Basics
                 TypeExtensions.FindType("System.Private.CoreLib System.Runtime.CompilerServices.IsExternalInit"),
                 TypeExtensions.FindType("SpaceEngineers.Core.Basics System.Runtime.CompilerServices.IsExternalInit")
             };
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="memberInfo">MemberInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        public static TAttribute GetRequiredAttribute<TAttribute>(this MemberInfo memberInfo)
+            where TAttribute : Attribute
+        {
+            return memberInfo
+                .GetCustomAttributes<TAttribute>()
+                .InformativeSingleOrDefault(Amb)
+                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), memberInfo));
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="memberInfo">MemberInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        public static TAttribute? GetAttribute<TAttribute>(this MemberInfo memberInfo)
+            where TAttribute : Attribute
+        {
+            return memberInfo
+                .GetCustomAttributes<TAttribute>()
+                .InformativeSingleOrDefault(Amb);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="memberInfo">MemberInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute<TAttribute>(this MemberInfo memberInfo)
+            where TAttribute : Attribute
+        {
+            return memberInfo.GetCustomAttributes<TAttribute>().Any();
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="methodInfo">MethodInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        public static TAttribute GetRequiredAttribute<TAttribute>(this MethodInfo methodInfo)
+            where TAttribute : Attribute
+        {
+            return methodInfo
+                .GetCustomAttributes<TAttribute>()
+                .InformativeSingleOrDefault(Amb)
+                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), methodInfo));
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Get specified attribute from type
+        /// </summary>
+        /// <param name="methodInfo">MethodInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute</returns>
+        public static TAttribute? GetAttribute<TAttribute>(this MethodInfo methodInfo)
+            where TAttribute : Attribute
+        {
+            return methodInfo
+                .GetCustomAttributes<TAttribute>()
+                .InformativeSingleOrDefault(Amb);
+
+            string Amb(IEnumerable<TAttribute> arg)
+            {
+                return $"Type has more than one {typeof(TAttribute)}";
+            }
+        }
+
+        /// <summary>
+        /// Does the specified type has an attribute
+        /// </summary>
+        /// <param name="methodInfo">MethodInfo</param>
+        /// <typeparam name="TAttribute">TAttribute type-argument</typeparam>
+        /// <returns>Attribute existence</returns>
+        public static bool HasAttribute<TAttribute>(this MethodInfo methodInfo)
+            where TAttribute : Attribute
+        {
+            return methodInfo.GetCustomAttributes<TAttribute>().Any();
+        }
 
         /// <summary>
         /// Extract GenericMethodDefinition or return argument method

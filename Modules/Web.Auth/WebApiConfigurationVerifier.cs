@@ -49,7 +49,7 @@ namespace SpaceEngineers.Core.Web.Auth
                     GetControllerName,
                     controller => controller
                         .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                        .Where(method => method.GetCustomAttributes<HttpMethodAttribute>().Any())
+                        .Where(method => method.HasAttribute<HttpMethodAttribute>())
                         .SelectMany(action => action
                             .GetCustomAttributes<HttpMethodAttribute>()
                             .SelectMany(attribute => attribute
@@ -97,14 +97,14 @@ namespace SpaceEngineers.Core.Web.Auth
             MethodInfo action,
             ICollection<Exception> exceptions)
         {
-            if (controller.GetAttribute<AllowAnonymousAttribute>() != null
-                || action.GetCustomAttribute<AllowAnonymousAttribute>() != null)
+            if (controller.HasAttribute<AllowAnonymousAttribute>()
+                || action.HasAttribute<AllowAnonymousAttribute>())
             {
                 return Array.Empty<string>();
             }
 
             var controllerFeatures = controller.GetAttribute<FeatureAttribute>()?.Features;
-            var actionFeatures = action.GetCustomAttribute<FeatureAttribute>()?.Features;
+            var actionFeatures = action.GetAttribute<FeatureAttribute>()?.Features;
 
             if ((actionFeatures == null || !actionFeatures.Any())
                 && (controllerFeatures == null || !controllerFeatures.Any()))

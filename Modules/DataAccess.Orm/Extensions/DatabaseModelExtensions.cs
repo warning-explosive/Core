@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using Api.Model;
     using Basics;
 
@@ -23,22 +24,49 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         /// <summary>
         /// Is model type supported
         /// </summary>
-        /// <param name="type">Type</param>
+        /// <param name="property">PropertyInfo</param>
         /// <returns>Model type supported or not</returns>
-        public static bool IsTypeSupported(this Type type)
+        public static bool IsSupportedColumn(this PropertyInfo property)
         {
-            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
-
-            return type.IsMultipleRelation(out var itemType)
+            var isItemTypeSupported = property.PropertyType.IsMultipleRelation(out var itemType)
                 ? IsItemTypeSupported(itemType)
-                : IsItemTypeSupported(type);
+                : IsItemTypeSupported(property.PropertyType);
+
+            return isItemTypeSupported || property.IsJsonColumn();
 
             static bool IsItemTypeSupported(Type type)
             {
-                return type.IsPrimitive()
-                    || type.IsDatabaseEntity()
-                    || type.IsInlinedObject();
+                type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
+
+                return type.IsEnum
+                       || type == typeof(short)
+                       || type == typeof(int)
+                       || type == typeof(long)
+                       || type == typeof(float)
+                       || type == typeof(double)
+                       || type == typeof(decimal)
+                       || type == typeof(Guid)
+                       || type == typeof(bool)
+                       || type == typeof(string)
+                       || type == typeof(byte[])
+                       || type == typeof(DateTime)
+                       || type == typeof(TimeSpan)
+                       || type == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly")
+                       || type == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly")
+                       || type.IsDatabaseEntity()
+                       || type.IsInlinedObject();
             }
+        }
+
+        /// <summary>
+        /// IsJsonColumn
+        /// </summary>
+        /// <param name="property">Property</param>
+        /// <returns>Does property represent an JsonColumn</returns>
+        public static bool IsJsonColumn(this PropertyInfo property)
+        {
+            return TypeExtensions.TryFindType("SpaceEngineers.Core.DataAccess.Api.Sql.Attributes SpaceEngineers.Core.DataAccess.Api.Sql.Attributes.JsonColumnAttribute", out var type)
+                   && property.GetCustomAttributes(type).Any();
         }
 
         /// <summary>

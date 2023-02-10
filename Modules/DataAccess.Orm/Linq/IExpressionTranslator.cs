@@ -3,15 +3,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq.Expressions;
 
     /// <summary>
-    /// IQueryTranslator
+    /// IExpressionTranslator
     /// </summary>
-    public interface IQueryTranslator
+    public interface IExpressionTranslator
     {
         /// <summary>
-        /// Translates linq expression to DB query
+        /// Translates linq expression into DB command
         /// </summary>
         /// <param name="expression">Linq expression</param>
-        /// <returns>Query</returns>
-        IQuery Translate(Expression expression);
+        /// <returns>ICommand</returns>
+        ICommand Translate(Expression expression);
     }
 }

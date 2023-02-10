@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Persisting;
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
+    using Core.DataAccess.Orm.Transaction;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
@@ -159,6 +160,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     false,
                     true);
 
+                // TODO: EnInsertBehavior.DoUpdate ???
                 await databaseContext
                    .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
@@ -186,7 +188,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            return databaseContext.Insert(outboxMessages, EnInsertBehavior.Default, token);
+            // TODO: EnInsertBehavior.DoNothing ???
+            return databaseContext.Insert(outboxMessages, EnInsertBehavior.DoNothing, token);
         }
 
         private static Task DeliverOutgoingMessages(

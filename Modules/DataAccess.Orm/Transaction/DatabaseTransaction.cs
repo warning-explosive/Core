@@ -61,7 +61,7 @@
             {
                 for (var i = 0; i < 3; i++)
                 {
-                    switch (_connection?.UnderlyingDbConnection.State)
+                    switch (_connection?.DbConnection.State)
                     {
                         case ConnectionState.Connecting:
                             try
@@ -96,11 +96,9 @@
             }
         }
 
-        public bool Connected => _connection?.UnderlyingDbConnection != null;
+        public bool Connected => _connection?.DbConnection != null;
 
         public ITransactionalStore Store { get; }
-
-        public string? LastCommand { get; private set; }
 
         #region IDatabaseContext
 
@@ -235,11 +233,6 @@
             Store.Apply(change);
         }
 
-        public void CollectCommand(string commandText)
-        {
-            LastCommand = commandText;
-        }
-
         private IDbTransaction Open()
         {
             if (_transaction != null)
@@ -248,7 +241,7 @@
             }
 
             return DbConnection
-               .UnderlyingDbConnection
+               .DbConnection
                .BeginTransaction(_connectionProvider.IsolationLevel);
         }
     }

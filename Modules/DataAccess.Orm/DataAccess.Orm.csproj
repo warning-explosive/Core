@@ -51,29 +51,38 @@
       <Compile Update="Linq\IAsyncQueryProvider.cs">
         <DependentUpon>Queryable.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\IQueryMaterializer.cs">
+      <Compile Update="Linq\IExpressionMaterializer.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\IQueryTranslator.cs">
+      <Compile Update="Linq\IExpressionTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\Queryable.cs">
         <DependentUpon>IAsyncQueryable.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\UpdateEntityChange.cs">
-        <DependentUpon>TransactionalStore.cs</DependentUpon>
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\CreateEntityChange.cs">
-        <DependentUpon>TransactionalStore.cs</DependentUpon>
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\ModelChange.cs">
-        <DependentUpon>TransactionalStore.cs</DependentUpon>
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\DeleteEntityChange.cs">
-        <DependentUpon>TransactionalStore.cs</DependentUpon>
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\QueryMaterializerComposite.cs">
-        <DependentUpon>IQueryMaterializer.cs</DependentUpon>
+      <Compile Update="Linq\CommandMaterializerComposite.cs">
+        <DependentUpon>IExpressionMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\TransactionalStore.cs">
+        <DependentUpon>ITransactionalStore.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Connection\DatabaseConnection.cs">
+        <DependentUpon>IDatabaseConnection.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\DatabaseTransaction.cs">
+        <DependentUpon>IAdvancedDatabaseTransaction.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

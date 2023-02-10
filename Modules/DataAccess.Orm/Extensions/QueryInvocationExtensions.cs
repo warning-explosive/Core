@@ -3,8 +3,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Transaction;
     using CompositionRoot;
+    using Transaction;
 
     /// <summary>
     /// Query invocation extensions

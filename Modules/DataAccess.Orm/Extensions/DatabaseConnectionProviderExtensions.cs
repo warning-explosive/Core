@@ -7,23 +7,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
     using Connection;
 
     /// <summary>
-    /// DatabaseProviderExtensions
+    /// DatabaseConnectionProviderExtensions
     /// </summary>
-    public static class DatabaseProviderExtensions
+    public static class DatabaseConnectionProviderExtensions
     {
         /// <summary>
         /// Handle
         /// </summary>
-        /// <param name="databaseImplementation">IDatabaseImplementation</param>
+        /// <param name="databaseConnectionProvider">IDatabaseConnectionProvider</param>
         /// <param name="commandText">Command text</param>
         /// <typeparam name="TResult">TResult type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Func<Exception, CancellationToken, Task<TResult>> Handle<TResult>(
-            this IDatabaseImplementation databaseImplementation, string commandText)
+            this IDatabaseConnectionProvider databaseConnectionProvider, string commandText)
         {
             return (exception, _) =>
             {
-                databaseImplementation.Handle(new DatabaseCommandExecutionException(commandText, exception));
+                databaseConnectionProvider.Handle(new DatabaseCommandExecutionException(commandText, exception));
                 return Task.FromResult<TResult>(default!);
             };
         }

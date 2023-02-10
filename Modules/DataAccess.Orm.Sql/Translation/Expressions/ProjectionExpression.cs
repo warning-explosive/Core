@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Collections.Generic;
     using System.Linq;
     using Basics;
-    using Extensions;
 
     /// <summary>
     /// ProjectionExpression
@@ -37,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type = type;
             Source = source;
             IsProjectionToClass = type.IsClass
-                                  && !type.IsPrimitive()
+                                  && !type.IsPrimitive() // TODO: IsPrimitive
                                   && !type.IsCollection();
             IsAnonymousProjection = type.IsAnonymous();
 

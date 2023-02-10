@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using Extensions;
+    using Linq;
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(CollapseConstantsExpressionVisitor))]

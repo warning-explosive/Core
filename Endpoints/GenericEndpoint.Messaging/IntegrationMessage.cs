@@ -218,7 +218,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         {
             var targetEndpoint = this.IsEvent()
                 ? "*"
-                : ReadHeader<ReplyTo>()?.Value.LogicalName ?? ReflectedType.GetAttribute<OwnedByAttribute>().EndpointName;
+                : ReadHeader<ReplyTo>()?.Value.LogicalName ?? ReflectedType.GetRequiredAttribute<OwnedByAttribute>().EndpointName;
 
             return targetEndpoint.Equals(nameof(EndpointIdentity), StringComparison.OrdinalIgnoreCase)
                 ? ReadRequiredHeader<SentFrom>().Value.LogicalName

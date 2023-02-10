@@ -1,9 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Migrations
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
@@ -12,13 +10,11 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.Settings;
-    using DataAccess.Orm.Sql.Extensions;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Host.Migrations;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
-    using DataAccess.Orm.Transaction;
-    using Microsoft.Extensions.Logging;
+    using DataAccess.Orm.Sql.Translation;
     using Npgsql;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -29,8 +25,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
     internal class CreateOrGetExistedPostgreSqlDatabaseMigration : IMigration,
                                                                    ICollectionResolvable<IMigration>
     {
-        private const string CommandText = @"
-create extension if not exists dblink;
+        private const string CommandText = @"create extension if not exists dblink;
 
 create or replace function CreateOrGetExistedDatabase() returns boolean as
 $BODY$
@@ -54,35 +49,29 @@ $BODY$
 $BODY$
 language plpgsql;
 
-select CreateOrGetExistedDatabase();";
+select CreateOrGetExistedDatabase()";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
-        private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
         private readonly IModelChangeCommandBuilderComposite _commandBuilder;
         private readonly IMigrationsExecutor _migrationsExecutor;
-        private readonly ILogger _logger;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public CreateOrGetExistedPostgreSqlDatabaseMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
-            ISettingsProvider<OrmSettings> ormSettingsProvider,
             IModelChangesExtractor modelChangesExtractor,
             IModelChangeCommandBuilderComposite commandBuilder,
             IMigrationsExecutor migrationsExecutor,
-            ILogger logger)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseImplementation = databaseImplementation;
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
-            _ormSettingsProvider = ormSettingsProvider;
             _modelChangesExtractor = modelChangesExtractor;
             _commandBuilder = commandBuilder;
             _migrationsExecutor = migrationsExecutor;
-            _logger = logger;
+            _connectionProvider = connectionProvider;
         }
 
         public string Name { get; } = nameof(CreateOrGetExistedPostgreSqlDatabaseMigration);
@@ -90,20 +79,15 @@ select CreateOrGetExistedDatabase();";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<string> Migrate(CancellationToken token)
+        public async Task<ICommand> Migrate(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
                .ConfigureAwait(false);
 
-            var ormSettings = await _ormSettingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
-            var commandText = CommandText.Format(
-                sqlDatabaseSettings.Database,
-                sqlDatabaseSettings.Username,
-                sqlDatabaseSettings.Password);
+            var command = new SqlCommand(
+                CommandText.Format(sqlDatabaseSettings.Database, sqlDatabaseSettings.Username, sqlDatabaseSettings.Password),
+                Array.Empty<SqlCommandParameter>());
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -122,13 +106,9 @@ select CreateOrGetExistedDatabase();";
             {
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
-                var dynamicValues = await connection
-                   .Query(commandText, ormSettings, _logger, token)
+                databaseWasCreated = await _connectionProvider
+                   .ExecuteScalar<bool>(connection, command, token)
                    .ConfigureAwait(false);
-
-                databaseWasCreated = (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value is bool value
-                    ? value
-                    : throw new InvalidOperationException($"Unable to identify {sqlDatabaseSettings.Database} database state");
             }
 
             NpgsqlConnection.ClearAllPools();
@@ -137,7 +117,7 @@ select CreateOrGetExistedDatabase();";
             {
                 var migrations = new[]
                 {
-                    new InitialMigration(_dependencyContainer, _databaseImplementation, _ormSettingsProvider, _modelChangesExtractor, _commandBuilder, _logger)
+                    new InitialMigration(_dependencyContainer, _modelChangesExtractor, _commandBuilder, _connectionProvider)
                 };
 
                 await _migrationsExecutor
@@ -145,7 +125,7 @@ select CreateOrGetExistedDatabase();";
                    .ConfigureAwait(false);
             }
 
-            return commandText;
+            return command;
         }
     }
 }

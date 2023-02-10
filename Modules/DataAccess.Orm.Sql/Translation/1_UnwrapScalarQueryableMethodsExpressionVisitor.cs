@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Linq;
+    using Orm.Linq;
 
     [Component(EnLifestyle.Singleton)]
     internal class UnwrapScalarQueryableMethodsExpressionVisitor : ExpressionVisitor,

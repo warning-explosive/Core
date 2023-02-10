@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Transaction
+namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System;
     using System.Data;
@@ -11,6 +11,6 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// <summary>
         /// Gets underlying db connection
         /// </summary>
-        IDbConnection UnderlyingDbConnection { get; }
+        IDbConnection DbConnection { get; }
     }
 }

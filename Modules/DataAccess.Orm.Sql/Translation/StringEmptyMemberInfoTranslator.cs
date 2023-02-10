@@ -20,7 +20,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (member.DeclaringType == typeof(string)
                 && member.Name.Equals(nameof(string.Empty), StringComparison.OrdinalIgnoreCase))
             {
-                expression = new QueryParameterExpression(context, typeof(string), static _ => string.Empty);
+                expression = new QueryParameterExpression(
+                    context,
+                    typeof(string),
+                    static _ => System.Linq.Expressions.Expression.Constant(string.Empty, typeof(string)));
                 return true;
             }
 

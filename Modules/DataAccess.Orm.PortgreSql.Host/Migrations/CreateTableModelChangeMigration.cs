@@ -1,15 +1,16 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Linq;
     using Sql.Host.Model;
     using Sql.Model;
+    using Sql.Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateTableDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateTable>,
@@ -34,14 +35,14 @@
             _createColumnCommandBuilder = createColumnCommandBuilder;
         }
 
-        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(IModelChange change)
         {
             return change is CreateTable createTable
-                ? BuildCommand(createTable, token)
+                ? BuildCommands(createTable)
                 : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
-        public Task<string> BuildCommand(CreateTable change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(CreateTable change)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
@@ -59,7 +60,7 @@
 
             var commandText = CommandFormat.Format(change.Schema, change.Table, columns);
 
-            return Task.FromResult(commandText);
+            yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
         }
 
         private string CreateColumn(ColumnInfo column)

@@ -15,7 +15,7 @@
     using Dynamic;
     using Dynamic.Abstractions;
     using Extensions;
-    using Orm.Extensions;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelProvider : IModelProvider,
@@ -249,7 +249,7 @@
 
         private IEnumerable<ColumnInfo> GetColumns(ITableInfo table, ColumnProperty property)
         {
-            if (!property.PropertyType.IsTypeSupported())
+            if (!property.Declared.IsSupportedColumn())
             {
                 throw new NotSupportedException($"Not supported column type: {property.Name} - {property.PropertyType}");
             }

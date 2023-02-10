@@ -5,7 +5,6 @@
     using System.Linq;
     using Basics;
     using Expressions;
-    using Extensions;
 
     internal class ReplaceJoinBindingsVisitor : SqlExpressionVisitorBase
     {

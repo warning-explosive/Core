@@ -1,10 +1,10 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Transaction
+namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
-    using Model;
+    using Api.Model;
 
     /// <summary>
     /// Transactional store

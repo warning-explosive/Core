@@ -21,6 +21,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Api.Transaction;
     using DataAccess.Orm.PostgreSql.Extensions;
     using DataAccess.Orm.Sql.Settings;
+    using DataAccess.Orm.Transaction;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Authorization;

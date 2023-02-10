@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     /// <summary>
-    /// IQuery
+    /// ICommand
     /// </summary>
-    public interface IQuery
+    public interface ICommand
     {
     }
 }

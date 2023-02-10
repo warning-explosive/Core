@@ -58,8 +58,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 var context = new TranslationContext();
 
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(false));
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(false));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal, trueConstant, falseConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal, trueConstant, falseConstant);
@@ -77,8 +77,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 var context = new TranslationContext();
 
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(false));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.ConditionalExpression(typeof(bool), trueConstant, trueConstant, falseConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.ConditionalExpression(typeof(bool), trueConstant, trueConstant, falseConstant);
@@ -94,9 +94,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
 
             {
-                var expression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => true);
-                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => true);
-                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(string), _ => true);
+                var expression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
+                var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
+                var notEqualExpression = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(new TranslationContext(), typeof(string), _ => System.Linq.Expressions.Expression.Constant(true));
 
                 yield return new object[]
                 {
@@ -112,8 +112,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var source = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
 
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(false));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.FilterExpression(typeof(object), source, trueConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.FilterExpression(typeof(object), source, trueConstant);
@@ -133,7 +133,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var left = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(object));
                 var right = new DataAccess.Orm.Sql.Translation.Expressions.QuerySourceExpression(typeof(string));
-                var on = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
+                var on = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.JoinExpression(left, right, on);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.JoinExpression(left, right, on);
@@ -363,8 +363,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 var context = new TranslationContext();
 
-                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => true);
-                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => false);
+                var trueConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(true));
+                var falseConstant = new DataAccess.Orm.Sql.Translation.Expressions.QueryParameterExpression(context, typeof(bool), _ => System.Linq.Expressions.Expression.Constant(false));
 
                 var expression = new DataAccess.Orm.Sql.Translation.Expressions.UnaryExpression(typeof(bool), UnaryOperator.Not, trueConstant);
                 var equalExpression = new DataAccess.Orm.Sql.Translation.Expressions.UnaryExpression(typeof(bool), UnaryOperator.Not, trueConstant);

@@ -3,43 +3,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Transaction;
-    using Microsoft.Extensions.Logging;
-    using Settings;
+    using Linq;
 
     /// <summary>
     /// ModelChange
     /// </summary>
     public class ModelChange : ITransactionalChange
     {
-        private readonly string _commandText;
-        private readonly OrmSettings _settings;
-        private readonly ILogger _logger;
-        private readonly Func<IAdvancedDatabaseTransaction, string, OrmSettings, ILogger, CancellationToken, Task> _applyModelChange;
+        private readonly ICommand _command;
+        private readonly Func<IAdvancedDatabaseTransaction, ICommand, CancellationToken, Task> _applyModelChange;
 
         /// <summary> .cctor </summary>
-        /// <param name="commandText">Command text</param>
-        /// <param name="settings">OrmSettings</param>
-        /// <param name="logger">ILogger</param>
+        /// <param name="command">Command</param>
         /// <param name="applyModelChange">ApplyModelChange delegate</param>
         public ModelChange(
-            string commandText,
-            OrmSettings settings,
-            ILogger logger,
-            Func<IAdvancedDatabaseTransaction, string, OrmSettings, ILogger, CancellationToken, Task> applyModelChange)
+            ICommand command,
+            Func<IAdvancedDatabaseTransaction, ICommand, CancellationToken, Task> applyModelChange)
         {
-            _commandText = commandText;
-            _settings = settings;
-            _logger = logger;
+            _command = command;
             _applyModelChange = applyModelChange;
         }
 
         /// <inheritdoc />
         public Task Apply(
-            IAdvancedDatabaseTransaction databaseTransaction,
+            IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            return _applyModelChange(databaseTransaction, _commandText, _settings, _logger, token);
+            return _applyModelChange(transaction, _command, token);
         }
 
         /// <inheritdoc />

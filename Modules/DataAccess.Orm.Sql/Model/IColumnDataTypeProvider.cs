@@ -8,8 +8,8 @@
         /// <summary>
         /// Gets column data type
         /// </summary>
-        /// <param name="columnInfo">ColumnInfo</param>
+        /// <param name="column">ColumnInfo</param>
         /// <returns>Column data type</returns>
-        string GetColumnDataType(ColumnInfo columnInfo);
+        string GetColumnDataType(ColumnInfo column);
     }
 }

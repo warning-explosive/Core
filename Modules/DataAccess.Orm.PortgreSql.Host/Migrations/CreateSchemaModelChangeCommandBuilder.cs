@@ -1,13 +1,14 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 {
     using System;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Collections.Generic;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Linq;
     using Sql.Host.Model;
+    using Sql.Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateSchemaModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateSchema>,
@@ -16,18 +17,16 @@
     {
         private const string CommandFormat = @"create schema ""{0}""";
 
-        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(IModelChange change)
         {
             return change is CreateSchema createSchema
-                ? BuildCommand(createSchema, token)
+                ? BuildCommands(createSchema)
                 : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
-        public Task<string> BuildCommand(CreateSchema change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(CreateSchema change)
         {
-            var commandText = CommandFormat.Format(change.Schema);
-
-            return Task.FromResult(commandText);
+            yield return new SqlCommand(CommandFormat.Format(change.Schema), Array.Empty<SqlCommandParameter>());
         }
     }
 }

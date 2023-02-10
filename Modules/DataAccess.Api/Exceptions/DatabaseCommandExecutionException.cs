@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Exceptions
         /// <param name="commandText">Command text</param>
         /// <param name="innerException">Inner exception</param>
         public DatabaseCommandExecutionException(string commandText, Exception innerException)
-            : base($"Concurrent update exception: {commandText}", innerException)
+            : base($"Command execution error: {commandText}", innerException)
         {
             CommandText = commandText;
         }

@@ -7,12 +7,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
+    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class QueryProvider : IAsyncQueryProvider,
@@ -20,13 +20,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                                    IResolvable<IQueryProvider>
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IQueryTranslator _translator;
-        private readonly IQueryMaterializerComposite _materializer;
+        private readonly IExpressionTranslator _translator;
+        private readonly ICommandMaterializerComposite _materializer;
 
         public QueryProvider(
             IDependencyContainer dependencyContainer,
-            IQueryTranslator translator,
-            IQueryMaterializerComposite materializer)
+            IExpressionTranslator translator,
+            ICommandMaterializerComposite materializer)
         {
             _dependencyContainer = dependencyContainer;
             _translator = translator;

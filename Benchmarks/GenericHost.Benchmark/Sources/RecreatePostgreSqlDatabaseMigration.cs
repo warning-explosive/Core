@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
@@ -12,13 +13,11 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
     using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.Settings;
-    using DataAccess.Orm.Sql.Extensions;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Host.Migrations;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
-    using DataAccess.Orm.Transaction;
-    using Microsoft.Extensions.Logging;
+    using DataAccess.Orm.Sql.Translation;
     using Npgsql;
 
     [Component(EnLifestyle.Singleton)]
@@ -26,40 +25,33 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     internal class RecreatePostgreSqlDatabaseMigration : IMigration,
                                                          ICollectionResolvable<IMigration>
     {
-        private const string CommandText = @"
-create extension if not exists dblink;
+        private const string CommandText = @"create extension if not exists dblink;
 
 drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
 grant all privileges on database ""{0}"" to ""{1}""";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseImplementation _databaseImplementation;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
-        private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IModelChangesExtractor _modelChangesExtractor;
         private readonly IModelChangeCommandBuilderComposite _commandBuilder;
         private readonly IMigrationsExecutor _migrationsExecutor;
-        private readonly ILogger _logger;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public RecreatePostgreSqlDatabaseMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseImplementation databaseImplementation,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
-            ISettingsProvider<OrmSettings> ormSettingsProvider,
             IModelChangesExtractor modelChangesExtractor,
             IModelChangeCommandBuilderComposite commandBuilder,
             IMigrationsExecutor migrationsExecutor,
-            ILogger logger)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _databaseImplementation = databaseImplementation;
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
-            _ormSettingsProvider = ormSettingsProvider;
             _modelChangesExtractor = modelChangesExtractor;
             _commandBuilder = commandBuilder;
             _migrationsExecutor = migrationsExecutor;
-            _logger = logger;
+            _connectionProvider = connectionProvider;
         }
 
         public string Name { get; } = nameof(RecreatePostgreSqlDatabaseMigration);
@@ -67,17 +59,15 @@ grant all privileges on database ""{0}"" to ""{1}""";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<string> Migrate(CancellationToken token)
+        public async Task<ICommand> Migrate(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
                .ConfigureAwait(false);
 
-            var ormSettings = await _ormSettingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
-            var commandText = CommandText.Format(sqlDatabaseSettings.Database, sqlDatabaseSettings.Username);
+            var command = new SqlCommand(
+                CommandText.Format(sqlDatabaseSettings.Database, sqlDatabaseSettings.Username),
+                Array.Empty<SqlCommandParameter>());
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -94,8 +84,8 @@ grant all privileges on database ""{0}"" to ""{1}""";
             {
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
-                _ = await connection
-                   .Execute(commandText, ormSettings, _logger, token)
+                _ = await _connectionProvider
+                   .Execute(connection, command, token)
                    .ConfigureAwait(false);
             }
 
@@ -103,14 +93,14 @@ grant all privileges on database ""{0}"" to ""{1}""";
 
             var migrations = new[]
             {
-                new InitialMigration(_dependencyContainer, _databaseImplementation, _ormSettingsProvider, _modelChangesExtractor, _commandBuilder, _logger)
+                new InitialMigration(_dependencyContainer, _modelChangesExtractor, _commandBuilder, _connectionProvider)
             };
 
             await _migrationsExecutor
                .Migrate(migrations, token)
                .ConfigureAwait(false);
 
-            return commandText;
+            return command;
         }
     }
 }

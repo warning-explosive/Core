@@ -1,7 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Collections.Generic;
+    using Orm.Linq;
 
     /// <summary>
     /// IModelChangeCommandBuilderComposite
@@ -16,12 +16,11 @@
     public interface IModelChangeCommandBuilder
     {
         /// <summary>
-        /// Migrates
+        /// Builds model change commands
         /// </summary>
         /// <param name="change">Database model change</param>
-        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<string> BuildCommand(IModelChange change, CancellationToken token);
+        IEnumerable<ICommand> BuildCommands(IModelChange change);
     }
 
     /// <summary>
@@ -32,11 +31,10 @@
         where TChange : IModelChange
     {
         /// <summary>
-        /// Migrates
+        /// Builds model change commands
         /// </summary>
         /// <param name="change">Database model change</param>
-        /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<string> BuildCommand(TChange change, CancellationToken token);
+        IEnumerable<ICommand> BuildCommands(TChange change);
     }
 }

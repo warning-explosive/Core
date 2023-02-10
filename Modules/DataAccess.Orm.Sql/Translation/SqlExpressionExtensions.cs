@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
@@ -51,19 +51,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
             bool applyNaming)
         {
             return new ReplaceJoinBindingsVisitor(joinExpression, applyNaming).Visit(expression);
-        }
-
-        /// <summary>
-        /// Replaces ParameterExpression
-        /// </summary>
-        /// <param name="expression">ISqlExpression</param>
-        /// <param name="parameterExpression">ParameterExpression</param>
-        /// <returns>ISqlExpression with replaced ParameterExpression</returns>
-        public static ISqlExpression ReplaceParameter(
-            this ISqlExpression expression,
-            ParameterExpression parameterExpression)
-        {
-            return new ReplaceParameterVisitor(parameterExpression).Visit(expression);
         }
 
         /// <summary>

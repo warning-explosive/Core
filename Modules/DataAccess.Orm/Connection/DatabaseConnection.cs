@@ -1,7 +1,6 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
+namespace SpaceEngineers.Core.DataAccess.Orm.Connection
 {
     using System.Data;
-    using Api.Transaction;
 
     /// <summary>
     /// DatabaseConnection
@@ -12,16 +11,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         /// <param name="connection">IDbConnection</param>
         public DatabaseConnection(IDbConnection connection)
         {
-            UnderlyingDbConnection = connection;
+            DbConnection = connection;
         }
 
         /// <inheritdoc />
-        public IDbConnection UnderlyingDbConnection { get; }
+        public IDbConnection DbConnection { get; }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            UnderlyingDbConnection.Dispose();
+            DbConnection.Dispose();
         }
     }
 }

@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
     using Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
-    using Benchmark = SpaceEngineers.Core.Benchmark.Api.Benchmark;
 
     /// <summary>
     /// Benchmarks

@@ -6,30 +6,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
-    using Api.Transaction;
     using Basics;
-    using Microsoft.Extensions.Logging;
-    using Settings;
-    using Sql.Extensions;
+    using Orm.Connection;
     using Sql.Model;
+    using Sql.Translation;
+    using Transaction;
 
     internal static class RepositoryExtensions
     {
         private const string TransactionIdCommandText = "select txid_current()";
 
-        internal static async Task<long> GetXid(
-            this IAdvancedDatabaseTransaction transaction,
-            OrmSettings settings,
-            ILogger logger,
+        internal static Task<long> GetXid(
+            this IDatabaseConnectionProvider connectionProvider,
+            IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            var dynamicValues = await transaction
-               .Query(TransactionIdCommandText, settings, logger, token)
-               .ConfigureAwait(false);
-
-            return (dynamicValues.SingleOrDefault() as IDictionary<string, object?>)?.SingleOrDefault().Value is long xid
-                ? xid
-                : throw new InvalidOperationException("Unable to get txid_current()");
+            return connectionProvider.ExecuteScalar<long>(
+                transaction,
+                new SqlCommand(TransactionIdCommandText, Array.Empty<SqlCommandParameter>()),
+                token);
         }
 
         internal static IEnumerable<IUniqueIdentified> Flatten(

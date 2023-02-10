@@ -3,14 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Linq;
     using Sql.Host.Model;
     using Sql.Model;
+    using Sql.Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateColumnModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateColumn>,
@@ -31,14 +31,14 @@
             _columnDataTypeProvider = columnDataTypeProvider;
         }
 
-        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(IModelChange change)
         {
             return change is CreateColumn createColumn
-                ? BuildCommand(createColumn, token)
+                ? BuildCommands(createColumn)
                 : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
-        public Task<string> BuildCommand(CreateColumn change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(CreateColumn change)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
@@ -49,7 +49,7 @@
 
             if (column.IsMultipleRelation)
             {
-                return Task.FromResult(string.Empty);
+                yield break;
             }
 
             var (columnName, dataType, constraints) = CreateColumn(column);
@@ -61,7 +61,7 @@
                 dataType,
                 constraints.Any() ? " " + constraints.ToString(" ") : string.Empty);
 
-            return Task.FromResult(commandText);
+            yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
         }
 
         internal (string Column, string DataType, IReadOnlyCollection<string> Constraints) CreateColumn(ColumnInfo column)

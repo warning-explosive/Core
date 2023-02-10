@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Reading
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
 {
     using System;
 

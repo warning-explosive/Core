@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Api.Transaction
+namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System.Threading;
     using System.Threading.Tasks;
@@ -11,11 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Api.Transaction
         /// <summary>
         /// Applies transactional change to physical storage
         /// </summary>
-        /// <param name="databaseTransaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Apply(
-            IAdvancedDatabaseTransaction databaseTransaction,
+            IAdvancedDatabaseTransaction transaction,
             CancellationToken token);
 
         /// <summary>

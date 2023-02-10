@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Linq;
 
     /// <summary>
     /// IMigration
@@ -23,6 +24,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<string> Migrate(CancellationToken token);
+        Task<ICommand> Migrate(CancellationToken token);
     }
 }

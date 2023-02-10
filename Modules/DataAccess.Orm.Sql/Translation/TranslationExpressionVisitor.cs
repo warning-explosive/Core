@@ -11,14 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Basics.Enumerations;
     using Basics.Primitives;
-    using CompositionRoot;
     using Expressions;
-    using Extensions;
-    using Linq;
     using Model;
+    using Orm.Linq;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
-    using ConstantExpression = System.Linq.Expressions.ConstantExpression;
     using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
     using NewExpression = System.Linq.Expressions.NewExpression;
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
@@ -27,31 +24,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     internal class TranslationExpressionVisitor : ExpressionVisitor
     {
         private readonly TranslationContext _context;
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IModelProvider _modelProvider;
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
         private readonly IEnumerable<IMemberInfoTranslator> _memberInfoTranslators;
 
         public TranslationExpressionVisitor(
             TranslationContext translationContext,
-            IDependencyContainer dependencyContainer,
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
             IEnumerable<IMemberInfoTranslator> memberInfoTranslators)
         {
             _context = translationContext;
-            _dependencyContainer = dependencyContainer;
             _modelProvider = modelProvider;
             _preprocessor = preprocessor;
             _memberInfoTranslators = memberInfoTranslators;
         }
 
-        public SqlQuery Translate(Expression expression)
+        public SqlExpression Translate(Expression expression)
         {
             Visit(expression);
-            return new SqlQuery(
+            return new SqlExpression(
                 _context.Expression.EnsureNotNull("Sql expression wasn't built"),
-                _context.BuildCommandParametersExtractor(_dependencyContainer, _preprocessor));
+                _context.BuildCommandParametersExtractor(_preprocessor));
         }
 
         public sealed override Expression Visit(Expression node)
@@ -241,7 +235,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             typeof(bool),
                             BinaryOperator.GreaterThan,
                             countAllMethodCall,
-                            new QueryParameterExpression(_context, typeof(int), static _ => 0));
+                            new QueryParameterExpression(_context, typeof(int), static _ => Expression.Constant(0, typeof(int))));
 
                         _context.Apply(new NamedBindingExpression(method.Name, binaryExpression));
 
@@ -277,8 +271,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                                     () =>
                                                     {
                                                         Visit(node.Arguments[1]);
-                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static _ => 1));
-                                                        _context.Apply(new QueryParameterExpression(_context, typeof(object), static _ => null));
+                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static _ => Expression.Constant(1, typeof(int))));
+                                                        _context.Apply(new SpecialExpression(typeof(int?), "NULL"));
                                                     });
                                             });
 
@@ -330,12 +324,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         {
                             using (Disposable.Create(constantExpression, _context.PushPath, _context.PopPath))
                             {
-                                _context.Apply(TranslateSubQuery(subQuery.Expression).SqlExpression);
+                                _context.Apply(TranslateSubQuery(subQuery.Expression).Expression);
                             }
                         }
                         else
                         {
-                            _context.Apply(TranslateSubQuery(node.Arguments[0]).SqlExpression);
+                            _context.Apply(TranslateSubQuery(node.Arguments[0]).Expression);
                         }
                     });
 
@@ -529,7 +523,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             IReadOnlyCollection<Expression> bindings,
             Type itemType)
         {
-            // TODO: #209 - compare with itemType
             var type = source.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
             var relations = bindings
@@ -608,10 +601,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        private SqlQuery TranslateSubQuery(Expression expression)
+        private SqlExpression TranslateSubQuery(Expression expression)
         {
             var context = _context.Clone();
-            var visitor = new TranslationExpressionVisitor(context, _dependencyContainer, _modelProvider, _preprocessor, _memberInfoTranslators);
+            var visitor = new TranslationExpressionVisitor(context, _modelProvider, _preprocessor, _memberInfoTranslators);
             return visitor.Translate(expression);
         }
     }

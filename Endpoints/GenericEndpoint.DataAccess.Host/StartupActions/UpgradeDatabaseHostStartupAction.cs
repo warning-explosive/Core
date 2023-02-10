@@ -45,7 +45,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions
                    .ConfigureAwait(false);
             }
 
-            _logger.Information("have been migrated");
+            _logger.Information("Endpoint has been migrated");
         }
     }
 }

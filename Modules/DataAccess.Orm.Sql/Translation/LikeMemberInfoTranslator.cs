@@ -6,7 +6,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Expressions;
-    using Extensions;
+    using Linq;
 
     [Component(EnLifestyle.Singleton)]
     internal class LikeMemberInfoTranslator : IMemberInfoTranslator,

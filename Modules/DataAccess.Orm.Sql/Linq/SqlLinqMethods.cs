@@ -1,8 +1,8 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Extensions
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 {
     using System.Reflection;
     using Basics;
-    using Reading;
+    using Execution;
 
     /// <summary>
     /// SqlLinqMethods

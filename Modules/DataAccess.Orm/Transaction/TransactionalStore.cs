@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using System.Linq;
     using System.Linq.Expressions;
     using Api.Model;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

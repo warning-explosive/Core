@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     using Api.Exceptions;
     using Api.Model;
     using Api.Persisting;
-    using Api.Transaction;
     using Basics;
 
     /// <summary>
@@ -53,10 +52,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 
         /// <inheritdoc />
         public async Task Apply(
-            IAdvancedDatabaseTransaction databaseTransaction,
+            IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            var actualAffectedRowsCount = await databaseTransaction
+            var actualAffectedRowsCount = await transaction
                .Update(UpdateInfos, Predicate, token)
                .ConfigureAwait(false);
 

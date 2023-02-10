@@ -1,4 +1,4 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Model
+namespace SpaceEngineers.Core.DataAccess.Api.Model
 {
     using System.Diagnostics.CodeAnalysis;
 
@@ -6,6 +6,7 @@
     /// Json object
     /// </summary>
 
+    // TODO: #209 - remove
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
     public record JsonObject : IInlinedObject
     {

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
 {
     using System;
     using System.Collections.Generic;
@@ -7,79 +7,75 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using Api.Reading;
-    using Api.Transaction;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Connection;
     using CrossCuttingConcerns.ObjectBuilder;
-    using CrossCuttingConcerns.Settings;
     using Extensions;
-    using Linq;
-    using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Settings;
-    using SpaceEngineers.Core.DataAccess.Orm.Extensions;
+    using Orm.Linq;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Transaction;
     using Translation;
 
     [Component(EnLifestyle.Singleton)]
-    internal class FlatQueryMaterializer : IQueryMaterializer,
-                                           IQueryMaterializer<FlatQuery>,
-                                           IResolvable<IQueryMaterializer<FlatQuery>>,
-                                           ICollectionResolvable<IQueryMaterializer>
+    internal class SqlCommandMaterializer : ICommandMaterializer,
+                                            ICommandMaterializer<SqlCommand>,
+                                            IResolvable<ICommandMaterializer<SqlCommand>>,
+                                            ICollectionResolvable<ICommandMaterializer>
     {
-        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IModelProvider _modelProvider;
         private readonly IObjectBuilder _objectBuilder;
-        private readonly IDatabaseImplementation _databaseImplementation;
-        private readonly ILogger _logger;
 
-        public FlatQueryMaterializer(
-            ISettingsProvider<OrmSettings> settingsProvider,
+        public SqlCommandMaterializer(
+            IDatabaseConnectionProvider connectionProvider,
             IModelProvider modelProvider,
-            IObjectBuilder objectBuilder,
-            IDatabaseImplementation databaseImplementation,
-            ILogger logger)
+            IObjectBuilder objectBuilder)
         {
-            _settingsProvider = settingsProvider;
+            _connectionProvider = connectionProvider;
             _modelProvider = modelProvider;
             _objectBuilder = objectBuilder;
-            _databaseImplementation = databaseImplementation;
-            _logger = logger;
         }
 
         public Task<object?> MaterializeScalar(
             IAdvancedDatabaseTransaction transaction,
-            IQuery query,
+            ICommand command,
             Type type,
             CancellationToken token)
         {
-            return query is FlatQuery flatQuery
-                ? MaterializeScalar(transaction, flatQuery, type, token)
-                : throw new NotSupportedException($"Unsupported query type {query.GetType()}");
+            if (command is not SqlCommand sqlCommand)
+            {
+                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+            }
+
+            return MaterializeScalar(transaction, sqlCommand, type, token);
         }
 
         public IAsyncEnumerable<object?> Materialize(
             IAdvancedDatabaseTransaction transaction,
-            IQuery query,
+            ICommand command,
             Type type,
             CancellationToken token)
         {
-            return query is FlatQuery flatQuery
-                ? Materialize(transaction, flatQuery, type, token)
-                : throw new NotSupportedException($"Unsupported query type {query.GetType()}");
+            if (command is not SqlCommand sqlCommand)
+            {
+                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+            }
+
+            return Materialize(transaction, sqlCommand, type, token);
         }
 
         public async Task<object?> MaterializeScalar(
             IAdvancedDatabaseTransaction transaction,
-            FlatQuery query,
+            SqlCommand command,
             Type type,
             CancellationToken token)
         {
-            return (await Materialize(transaction, query, type, token)
+            return (await Materialize(transaction, command, type, token)
                     .AsEnumerable(token)
                     .ConfigureAwait(false))
                 .SingleOrDefault();
@@ -87,60 +83,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
         public IAsyncEnumerable<object?> Materialize(
             IAdvancedDatabaseTransaction transaction,
-            FlatQuery query,
+            SqlCommand command,
             Type type,
             CancellationToken token)
         {
-            return MaterializeInternal(transaction, query, type, token);
+            return MaterializeInternal(transaction, command, type, token);
         }
 
         private async IAsyncEnumerable<object?> MaterializeInternal(
             IAdvancedDatabaseTransaction transaction,
-            FlatQuery query,
+            SqlCommand command,
             Type type,
             [EnumeratorCancellation] CancellationToken token)
         {
-            var dynamicResult = await GetDynamicResult(transaction, query, token).ConfigureAwait(false);
-
-            foreach (var dynamicValues in dynamicResult)
-            {
-                token.ThrowIfCancellationRequested();
-
-                var values = (dynamicValues as IDictionary<string, object?>) !;
-
-                yield return await MaterializeInternal(transaction, type, values, token).ConfigureAwait(false);
-            }
-        }
-
-        private async Task<IEnumerable<dynamic>?> GetDynamicResult(
-            IAdvancedDatabaseTransaction transaction,
-            FlatQuery query,
-            CancellationToken token)
-        {
-            var settings = await _settingsProvider
-                .Get(token)
+            var asyncSource = _connectionProvider
+                .Query(transaction, command, token)
+                .WithCancellation(token)
                 .ConfigureAwait(false);
 
-            var commandText = InlineQueryParameters(query);
-
-            return await ExecutionExtensions
-               .TryAsync((commandText, settings, _logger), transaction.Query)
-               .Catch<Exception>()
-               .Invoke(_databaseImplementation.Handle<IEnumerable<dynamic>>(commandText), token)
-               .ConfigureAwait(false);
-
-            static string InlineQueryParameters(
-                FlatQuery query)
+            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
+            await foreach (var values in asyncSource)
             {
-                // TODO #209 - use ADO.NET and NpgsqlParameter
-                var sqlQuery = new string(query.CommandText);
-
-                foreach (var (name, value) in query.CommandParameters)
-                {
-                    sqlQuery = sqlQuery.Replace($"@{name}", value, StringComparison.OrdinalIgnoreCase);
-                }
-
-                return sqlQuery;
+                yield return await MaterializeInternal(transaction, type, values, token).ConfigureAwait(false);
             }
         }
 
@@ -231,6 +195,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
             }
             else if (!type.IsPrimitive())
             {
+                // TODO: IsPrimitive
                 values = values
                    .GroupBy(pair =>
                         {
@@ -291,7 +256,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
         private IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
             Type type,
-            IDictionary <string, object?> values)
+            IDictionary<string, object?> values)
         {
             return _modelProvider
                 .Columns(type)
@@ -333,13 +298,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
         {
             var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
-            var task = typeof(FlatQueryMaterializer)
+            var task = typeof(SqlCommandMaterializer)
                 .CallMethod(nameof(MaterializeRelation))
                 .WithTypeArguments(type, keyType)
                 .WithArguments(transaction, primaryKey, token)
                 .Invoke<Task>();
 
-            return typeof(FlatQueryMaterializer)
+            return typeof(SqlCommandMaterializer)
                 .CallMethod(nameof(AsEntity))
                 .WithTypeArguments(type, keyType)
                 .WithArgument(task)
@@ -411,7 +376,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
 
             var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
-            return typeof(FlatQueryMaterializer)
+            return typeof(SqlCommandMaterializer)
                 .CallMethod(nameof(MaterializeMultipleRelations))
                 .WithTypeArguments(type, keyType)
                 .WithArguments(transaction, built!, relationValues, token)
@@ -441,7 +406,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
                 var ownerType = column.Table.Type;
                 var collectionItemType = column.Relation.Target;
 
-                await typeof(FlatQueryMaterializer)
+                await typeof(SqlCommandMaterializer)
                     .CallMethod(nameof(MaterializeMultipleRelation))
                     .WithTypeArguments(mtmType, ownerType, collectionItemType, leftKeyType, rightKeyType)
                     .WithArguments(transaction, built.PrimaryKey, collection, token)
@@ -472,6 +437,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Materialization
              * )
              */
 
+            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
             var subQuery = transaction
                 .All<TMtm>()
                 .Where(mtm => Equals(mtm.Left, ownerPrimaryKey))

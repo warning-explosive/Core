@@ -34,7 +34,6 @@
         <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.0.123" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -50,9 +49,6 @@
       </Compile>
       <Compile Update="Translation\TranslationContext.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\ReplaceParameterVisitor.cs">
-        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\CompactExpressionVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
@@ -77,12 +73,6 @@
       </Compile>
       <Compile Update="Translation\LikeMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\EnumerableQueryParameterTranslator.cs">
-        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\StringQueryParameterTranslator.cs">
-        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -123,9 +113,6 @@
       <Compile Update="Translation\Expressions\BinaryExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\FallbackQueryParameterTranslator.cs">
-        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\ModelProvider.cs">
         <DependentUpon>IModelProvider.cs</DependentUpon>
       </Compile>
@@ -146,12 +133,6 @@
       </Compile>
       <Compile Update="Model\ITableInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\DateTimeQueryParameterTranslator.cs">
-        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\GuidQueryParameterTranslator.cs">
-        <DependentUpon>IQueryParameterTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\JoinExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -219,10 +200,7 @@
       <Compile Update="Translation\4_SubQueryExpressionVisitor.cs">
         <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\FlatQuery.cs">
-        <DependentUpon>SqlQuery.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\TranslatedSqlQuery.cs">
+      <Compile Update="Translation\TranslatedSqlExpression.cs">
         <DependentUpon>SqlQuery.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\IsNullMemberInfoTranslator.cs">
@@ -230,6 +208,12 @@
       </Compile>
       <Compile Update="Translation\IsNotNullMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlQueryParameter.cs">
+        <DependentUpon>SqlQuery.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlCommandParameter.cs">
+        <DependentUpon>SqlCommand.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

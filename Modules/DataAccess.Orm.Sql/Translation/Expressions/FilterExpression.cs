@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using Basics;
-    using Extensions;
 
     /// <summary>
     /// FilterExpression

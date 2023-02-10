@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System.Collections.Generic;
     using System.Linq;
     using Basics;
-    using Extensions;
 
     /// <summary>
     /// OrderByExpression

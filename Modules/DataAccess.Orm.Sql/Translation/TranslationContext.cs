@@ -6,18 +6,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq;
     using Basics;
     using Basics.Primitives;
-    using CompositionRoot;
     using Expressions;
-    using Extensions;
 
     /// <summary>
     /// TranslationContext
     /// </summary>
     public class TranslationContext : ICloneable<TranslationContext>
     {
-        internal const string QueryParameterFormat = "param_{0}";
+        /// <summary>
+        /// QueryParameterFormat
+        /// </summary>
+        public const string QueryParameterFormat = "param_{0}";
 
-        private Dictionary<string, Func<System.Linq.Expressions.Expression, object?>> _extractors;
+        private Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>> _extractors;
         private Stack<System.Linq.Expressions.Expression> _path;
 
         private int _queryParameterIndex;
@@ -33,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
-            _extractors = new Dictionary<string, Func<System.Linq.Expressions.Expression, object?>>();
+            _extractors = new Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>>();
             _path = new Stack<System.Linq.Expressions.Expression>();
 
             _queryParameterIndex = -1;
@@ -43,22 +44,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             _lambdaParameterIndex = -1;
             _lambdaParametersCount = 0;
-        }
-
-        /// <summary> .cctor </summary>
-        /// <param name="context">TranslationContext</param>
-        protected TranslationContext(TranslationContext context)
-        {
-            _extractors = context._extractors;
-            _path = context._path;
-
-            _queryParameterIndex = context._queryParameterIndex;
-
-            _parameters = context._parameters;
-            _stack = context._stack;
-
-            _lambdaParameterIndex = context._lambdaParameterIndex;
-            _lambdaParametersCount = context._lambdaParametersCount;
         }
 
         internal ISqlExpression? Expression
@@ -73,6 +58,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         internal ISqlExpression? Parent => _stack.TryPeek(out var parent) ? parent : default;
+
+        internal System.Linq.Expressions.Expression? Node => _path.TryPeek(out var node) ? node : default;
 
         /// <inheritdoc />
         public TranslationContext Clone()
@@ -306,23 +293,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal Func<System.Linq.Expressions.Expression, IReadOnlyDictionary<string, string>> BuildCommandParametersExtractor(
-            IDependencyContainer dependencyContainer,
+        internal Func<object, IReadOnlyCollection<SqlCommandParameter>> BuildCommandParametersExtractor(
             ILinqExpressionPreprocessorComposite preProcessor)
         {
             return expression =>
             {
-                expression = preProcessor.Visit(expression);
+                var visitedExpression = preProcessor.Visit((System.Linq.Expressions.Expression)expression);
 
-                return _extractors.ToDictionary(
-                    param => param.Key,
-                    param => param.Value.Invoke(expression).QueryParameterSqlExpression(dependencyContainer));
+                return _extractors
+                    .Select(pair =>
+                    {
+                        var constantExpression = pair.Value.Invoke(visitedExpression);
+                        return new SqlCommandParameter(pair.Key, constantExpression.Value, constantExpression.Type);
+                    })
+                    .ToList();
             };
         }
 
         internal void CaptureCommandParameterExtractor(
             string name,
-            Func<System.Linq.Expressions.Expression, object?>? extractor = null)
+            Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>? extractor = null)
         {
             if (extractor == null)
             {
@@ -341,7 +331,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     }
                 }
 
-                _extractors[name] = expression => ((System.Linq.Expressions.ConstantExpression)expressionExtractor(expression)).Value;
+                _extractors[name] = expression => (System.Linq.Expressions.ConstantExpression)expressionExtractor(expression);
             }
             else
             {

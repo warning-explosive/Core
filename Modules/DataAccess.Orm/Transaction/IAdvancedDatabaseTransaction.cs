@@ -1,6 +1,8 @@
-﻿namespace SpaceEngineers.Core.DataAccess.Api.Transaction
+﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System.Data;
+    using Api.Transaction;
+    using Connection;
 
     /// <summary>
     /// IAdvancedDatabaseTransaction
@@ -28,11 +30,6 @@
         ITransactionalStore Store { get; }
 
         /// <summary>
-        /// Last successfully executed command
-        /// </summary>
-        string? LastCommand { get; }
-
-        /// <summary>
         /// Returns true if connection to the database was requested earlier
         /// </summary>
         bool Connected { get; }
@@ -42,11 +39,5 @@
         /// </summary>
         /// <param name="change">ITransactionalChange</param>
         void CollectChange(ITransactionalChange change);
-
-        /// <summary>
-        /// Collects command text
-        /// </summary>
-        /// <param name="commandText">Command text</param>
-        void CollectCommand(string commandText);
     }
 }

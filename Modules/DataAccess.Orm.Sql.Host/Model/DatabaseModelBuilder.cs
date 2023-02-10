@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using Basics;
     using CompositionRoot;
     using Connection;
-    using Orm.Extensions;
+    using Extensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelBuilder : IDatabaseModelBuilder,

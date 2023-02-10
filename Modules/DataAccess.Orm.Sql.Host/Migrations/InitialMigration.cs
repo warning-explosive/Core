@@ -8,28 +8,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
     using Connection;
-    using CrossCuttingConcerns.Settings;
-    using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Settings;
 
     [Component(EnLifestyle.Singleton)]
     internal class InitialMigration : ApplyDeltaMigration
     {
         public InitialMigration(
             IDependencyContainer dependencyContainer,
-            IDatabaseImplementation databaseImplementation,
-            ISettingsProvider<OrmSettings> settingsProvider,
             IModelChangesExtractor modelChangesExtractor,
             IModelChangeCommandBuilderComposite commandBuilder,
-            ILogger logger)
+            IDatabaseConnectionProvider connectionProvider)
             : base(dependencyContainer,
-                databaseImplementation,
-                settingsProvider,
                 new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
                 modelChangesExtractor,
                 commandBuilder,
-                logger)
+                connectionProvider)
         {
         }
 

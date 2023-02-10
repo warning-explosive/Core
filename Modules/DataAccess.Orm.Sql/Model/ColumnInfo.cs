@@ -10,7 +10,7 @@
     using System.Threading;
     using Api.Model;
     using Basics;
-    using Orm.Extensions;
+    using Extensions;
     using Translation.Expressions;
 
     /// <summary>
@@ -76,6 +76,23 @@
                     return _chain
                         .Select(property => property.Name)
                         .ToString("_");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Property
+        /// </summary>
+        public ColumnProperty Property
+        {
+            get
+            {
+                _property ??= InitProperty();
+                return _property;
+
+                ColumnProperty InitProperty()
+                {
+                    return _chain.Last();
                 }
             }
         }
@@ -209,20 +226,6 @@
                     {
                         yield return "not null";
                     }
-                }
-            }
-        }
-
-        private ColumnProperty Property
-        {
-            get
-            {
-                _property ??= InitProperty();
-                return _property;
-
-                ColumnProperty InitProperty()
-                {
-                    return _chain.Last();
                 }
             }
         }

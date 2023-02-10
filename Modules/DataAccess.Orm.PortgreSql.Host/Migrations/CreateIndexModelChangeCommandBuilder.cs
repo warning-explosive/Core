@@ -1,15 +1,16 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Linq;
     using Sql.Host.Model;
     using Sql.Model;
+    using Sql.Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateIndexModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateIndex>,
@@ -25,14 +26,14 @@
             _modelProvider = modelProvider;
         }
 
-        public Task<string> BuildCommand(IModelChange change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(IModelChange change)
         {
             return change is CreateIndex createIndex
-                ? BuildCommand(createIndex, token)
+                ? BuildCommands(createIndex)
                 : throw new NotSupportedException($"Unsupported model change type {change.GetType()}");
         }
 
-        public Task<string> BuildCommand(CreateIndex change, CancellationToken token)
+        public IEnumerable<ICommand> BuildCommands(CreateIndex change)
         {
             if (!_modelProvider.TablesMap.TryGetValue(change.Schema, out var schema)
                 || !schema.TryGetValue(change.Table, out var info)
@@ -52,7 +53,7 @@
 
             var commandText = CommandFormat.Format(change.Schema, change.Table, change.Index, columns, modifiers);
 
-            return Task.FromResult(commandText);
+            yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
         }
     }
 }

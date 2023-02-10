@@ -15,12 +15,15 @@
     using CompositionRoot;
     using Connection;
     using CrossCuttingConcerns.Logging;
+    using Execution;
+    using Extensions;
     using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Extensions;
     using Orm.Host.Abstractions;
-    using Reading;
+    using Orm.Linq;
     using Sql.Model;
+    using Transaction;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class MigrationsExecutor : IMigrationsExecutor,
@@ -80,15 +83,15 @@
                     continue;
                 }
 
-                var commandText = await migration
+                var command = await migration
                    .Migrate(token)
                    .ConfigureAwait(false);
 
                 await _dependencyContainer
-                   .InvokeWithinTransaction(true, (migration, commandText), PersistAppliedMigration, token)
+                   .InvokeWithinTransaction(true, (migration, command), PersistAppliedMigration, token)
                    .ConfigureAwait(false);
 
-                _logger.Information($"{migration.Name} was applied: {commandText}");
+                _logger.Information($"{migration.Name} was applied");
             }
         }
 
@@ -112,10 +115,15 @@
 
         private static async Task PersistAppliedMigration(
             IAdvancedDatabaseTransaction transaction,
-            (IMigration migration, string commandText) state,
+            (IMigration migration, ICommand command) state,
             CancellationToken token)
         {
-            var (migration, commandText) = state;
+            var (migration, command) = state;
+
+            if (command is not SqlCommand sqlCommand)
+            {
+                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+            }
 
             var name = migration.ApplyEveryTime
                 ? $"{migration.Name} {(await GetMigrationIndex(transaction, migration.Name, token).ConfigureAwait(false)).ToString(CultureInfo.InvariantCulture)}"
@@ -124,7 +132,7 @@
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
                 DateTime.Now,
-                commandText,
+                sqlCommand.CommandText, // TODO: persist with inlined parameters
                 name);
 
             await transaction

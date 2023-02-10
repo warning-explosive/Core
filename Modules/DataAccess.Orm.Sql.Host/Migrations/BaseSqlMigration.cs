@@ -4,18 +4,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
-    using Api.Transaction;
     using Basics;
     using CompositionRoot;
     using Connection;
-    using CrossCuttingConcerns.Settings;
     using Extensions;
-    using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Extensions;
     using Orm.Host.Abstractions;
-    using Orm.Settings;
+    using Orm.Linq;
     using Transaction;
+    using Translation;
 
     /// <summary>
     /// Base SQL migration
@@ -23,25 +20,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     public abstract class BaseSqlMigration : IMigration
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly ISettingsProvider<OrmSettings> _settingsProvider;
-        private readonly IDatabaseImplementation _databaseImplementation;
-        private readonly ILogger _logger;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         /// <summary> .cctor </summary>
         /// <param name="dependencyContainer">IDependencyContainer</param>
-        /// <param name="settingsProvider">Orm setting provider</param>
-        /// <param name="databaseImplementation">IDatabaseProvider</param>
-        /// <param name="logger">ILogger</param>
+        /// <param name="connectionProvider">IDatabaseConnectionProvider</param>
         protected BaseSqlMigration(
             IDependencyContainer dependencyContainer,
-            ISettingsProvider<OrmSettings> settingsProvider,
-            IDatabaseImplementation databaseImplementation,
-            ILogger logger)
+            IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
-            _settingsProvider = settingsProvider;
-            _databaseImplementation = databaseImplementation;
-            _logger = logger;
+            _connectionProvider = connectionProvider;
         }
 
         /// <summary>
@@ -64,44 +53,48 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task<string> Migrate(CancellationToken token)
+        public Task<ICommand> Migrate(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }
 
-        private async Task<string> ExecuteManualMigration(
+        private async Task<ICommand> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
+            var command = new SqlCommand(CommandText, Array.Empty<SqlCommandParameter>());
 
             _ = await ExecutionExtensions
-               .TryAsync((CommandText, settings, _logger), transaction.Execute)
+               .TryAsync((transaction, command), Execute(_connectionProvider))
                .Catch<Exception>()
-               .Invoke(_databaseImplementation.Handle<long>(CommandText), token)
+               .Invoke(_connectionProvider.Handle<long>(command.CommandText), token)
                .ConfigureAwait(false);
 
-            var change = new ModelChange(
-                CommandText,
-                settings,
-                _logger,
-                static (transaction, commandText, ormSettings, logger, token) => transaction.Execute(commandText, ormSettings, logger, token));
+            var change = new ModelChange(command, _connectionProvider.Execute);
 
             transaction.CollectChange(change);
 
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
                 DateTime.Now,
-                CommandText,
+                command.CommandText,
                 Name);
 
             await transaction
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
 
-            return CommandText;
+            return command;
+        }
+
+        private static Func<(IAdvancedDatabaseTransaction, ICommand), CancellationToken, Task<long>> Execute(
+            IDatabaseConnectionProvider connectionProvider)
+        {
+            return (state, token) =>
+            {
+                var (transaction, query) = state;
+                return connectionProvider.Execute(transaction, query, token);
+            };
         }
     }
 }

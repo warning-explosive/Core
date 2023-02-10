@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Expressions;
-    using Extensions;
+    using Linq;
 
     [Component(EnLifestyle.Singleton)]
     internal class IsNullMemberInfoTranslator : IMemberInfoTranslator,
@@ -19,7 +19,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             if (member == SqlLinqMethods.IsNull())
             {
-                expression = new BinaryExpression(typeof(bool), BinaryOperator.Is, default!, new QueryParameterExpression(context, typeof(object), static _ => null));
+                var type = ((System.Linq.Expressions.IArgumentProvider)context.Node!).GetArgument(0).Type;
+
+                expression = new BinaryExpression(
+                    typeof(bool),
+                    BinaryOperator.Is,
+                    default!,
+                    new SpecialExpression(type, "NULL"));
+
                 return true;
             }
 

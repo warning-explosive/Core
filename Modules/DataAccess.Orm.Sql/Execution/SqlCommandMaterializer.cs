@@ -101,7 +101,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
                 .WithCancellation(token)
                 .ConfigureAwait(false);
 
-            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
             await foreach (var values in asyncSource)
             {
                 yield return await MaterializeInternal(transaction, type, values, token).ConfigureAwait(false);
@@ -195,7 +194,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             }
             else if (!type.IsPrimitive())
             {
-                // TODO: IsPrimitive
+                // TODO: #209 - IsPrimitive
                 values = values
                    .GroupBy(pair =>
                         {
@@ -437,7 +436,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
              * )
              */
 
-            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
             var subQuery = transaction
                 .All<TMtm>()
                 .Where(mtm => Equals(mtm.Left, ownerPrimaryKey))

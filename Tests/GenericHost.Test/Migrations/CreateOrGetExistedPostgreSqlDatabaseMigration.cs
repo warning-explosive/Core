@@ -49,7 +49,7 @@ $BODY$
 $BODY$
 language plpgsql;
 
-select CreateOrGetExistedDatabase()";
+select CreateOrGetExistedDatabase();";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;

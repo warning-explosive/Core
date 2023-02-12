@@ -26,14 +26,16 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             _eventStore = eventStore;
         }
 
-        public async Task Handle(UserWasCreated domainEvent, DomainEventDetails details, CancellationToken token)
+        public async Task Handle(DomainEventArgs<UserWasCreated> args, CancellationToken token)
         {
             await _eventStore
-               .Append<User, UserWasCreated>(domainEvent, details, token)
+               .Append(args, token)
                .ConfigureAwait(false);
 
+            var user = new DatabaseModel.User(args.DomainEvent.AggregateId, args.DomainEvent.Username.ToString());
+
             await _databaseContext
-               .Insert(new[] { new DatabaseModel.User(domainEvent.AggregateId, domainEvent.Username.ToString()) }, EnInsertBehavior.Default, token)
+               .Insert(new[] { user }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
         }
     }

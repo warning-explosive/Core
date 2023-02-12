@@ -64,22 +64,35 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                .ToArray();
         }
 
-        public Task Append<TAggregate, TEvent>(
-            TEvent domainEvent,
-            DomainEventDetails details,
+        public Task Append(
+            DomainEventArgs args,
             CancellationToken token)
-            where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent<TAggregate>
         {
-            var databaseDomainEvent = new DatabaseDomainEvent(
-                Guid.NewGuid(),
-                details.AggregateId,
-                details.Index,
-                details.Timestamp,
-                domainEvent.GetType(),
-                _jsonSerializer.SerializeObject(domainEvent));
+            return _databaseContext.Insert(
+                new[] { BuildDatabaseDomainEvent(args) },
+                EnInsertBehavior.Default,
+                token);
+        }
 
-            return _databaseContext.Insert(new[] { databaseDomainEvent }, EnInsertBehavior.Default, token);
+        public Task Append(
+            IEnumerable<DomainEventArgs> args,
+            CancellationToken token)
+        {
+            return _databaseContext.Insert(
+                args.Select(BuildDatabaseDomainEvent).ToArray(),
+                EnInsertBehavior.Default,
+                token);
+        }
+
+        private DatabaseDomainEvent BuildDatabaseDomainEvent(DomainEventArgs args)
+        {
+            return new DatabaseDomainEvent(
+                Guid.NewGuid(),
+                args.AggregateId,
+                args.Index,
+                args.Timestamp,
+                args.DomainEvent.GetType(),
+                _jsonSerializer.SerializeObject(args.DomainEvent));
         }
     }
 }

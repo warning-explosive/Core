@@ -156,7 +156,7 @@
                 var row = dataTable.Rows[i];
 
                 var element = ExecutionExtensions
-                    .Try((row, i, propertyToColumn, tableMetadata), ReadRow(_dataTableReader))
+                    .Try(ReadRow(_dataTableReader), (row, i, propertyToColumn, tableMetadata))
                     .Catch<Exception>()
                     .Invoke(RowError(i));
 

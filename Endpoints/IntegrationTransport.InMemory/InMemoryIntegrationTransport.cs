@@ -167,8 +167,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
 
         private Task MessageProcessingCallback(IntegrationMessage message, CancellationToken token)
         {
-            return ExecutionExtensions
-                .TryAsync(message, DispatchToEndpoint)
+            return DispatchToEndpoint(message, token)
+                .TryAsync()
                 .Catch<Exception>((exception, t) => EnqueueError(_endpointIdentity, message, exception, t))
                 .Invoke(token);
         }

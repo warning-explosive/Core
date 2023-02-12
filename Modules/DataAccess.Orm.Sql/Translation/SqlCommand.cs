@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Text;
     using System.Text.RegularExpressions;
     using Basics;
     using Orm.Linq;
@@ -16,7 +17,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary> .cctor </summary>
         /// <param name="commandText">Command text</param>
         /// <param name="commandParameters">Command parameters</param>
-        // TODO: check creations
         public SqlCommand(string commandText, IReadOnlyCollection<SqlCommandParameter> commandParameters)
         {
             CommandText = commandText;
@@ -33,18 +33,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         public IReadOnlyCollection<SqlCommandParameter> CommandParameters { get; }
 
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(CommandText);
+
+            if (CommandParameters.Any())
+            {
+                sb.Append("--Parameters:");
+                sb.Append("[");
+                sb.Append(CommandParameters.ToString(", "));
+                sb.Append("]");
+            }
+
+            return sb.ToString();
+        }
+
         /// <summary>
         /// Merges two commands in a single one
         /// </summary>
         /// <param name="command">SqlCommand</param>
         /// <param name="separator">Separator</param>
         /// <returns>Merged SqlCommand</returns>
-        // TODO: optimize as much as possible
+        // TODO: #209 - optimize as much as possible
         public SqlCommand Merge(SqlCommand command, string separator)
         {
             var nextIndex = CommandParameters.Any()
                 ? CommandParameters
-                    .Select(param => int.Parse(param.Name.Substring(TranslationContext.QueryParameterFormat.Format(string.Empty).Length).Trim(), CultureInfo.InvariantCulture))
+                    .Select(param => int.Parse(param.Name.Substring(TranslationContext.CommandParameterFormat.Format(string.Empty).Length).Trim(), CultureInfo.InvariantCulture))
                     .Max() + 1
                 : 0;
 
@@ -53,7 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             foreach (var param in command.CommandParameters)
             {
-                var nextCommandParameterName = TranslationContext.QueryParameterFormat.Format(nextIndex.ToString(CultureInfo.InvariantCulture));
+                var nextCommandParameterName = TranslationContext.CommandParameterFormat.Format(nextIndex.ToString(CultureInfo.InvariantCulture));
 
                 var pattern = new Regex($"(@{param.Name})(?:\\b)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

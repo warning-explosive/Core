@@ -64,7 +64,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             where T : class, new()
         {
             arguments = ExecutionExtensions
-               .Try(args, a => (T?)Parse<T>(a))
+               .Try(a => (T?)Parse<T>(a), args)
                .Catch<ArgumentException>()
                .Invoke(_ => default);
 

@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 {
     using System;
-    using System.Text;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AuthEndpoint.Domain;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Basics.Attributes;
     using CompositionRoot;
     using DataAccess.Api.Model;
@@ -48,8 +47,6 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             IDependencyContainer dependencyContainer,
             CancellationToken token)
         {
-            var sb = new StringBuilder();
-
             var username = "qwerty";
             var password = "12345678";
 
@@ -66,36 +63,23 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                 new PermissionWasGranted(new Feature(Features.WebApiTest))
             };
 
-            var eventStore = dependencyContainer.Resolve<IEventStore>();
+            var args = domainEvents
+                .Select((domainEvent, index) => new DomainEventArgs(aggregateId, domainEvent, index, DateTime.UtcNow))
+                .ToArray();
 
-            for (var index = 0; index < domainEvents.Length; index++)
-            {
-                var details = new DomainEventDetails(aggregateId, index, DateTime.UtcNow);
+            await dependencyContainer
+                .Resolve<IEventStore>()
+                .Append(args, token)
+                .ConfigureAwait(false);
 
-                await eventStore
-                    .CallMethod(nameof(eventStore.Append))
-                    .WithTypeArguments(typeof(User), domainEvents[index].GetType())
-                    .WithArguments(domainEvents[index], details, token)
-                    .Invoke<Task>()
-                    .ConfigureAwait(false);
-            }
-
-            sb.AppendLine($"--{nameof(UserWasCreated)}");
-
-            // TODO:
-            // sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(UserWasCreated)} domain event"));
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 
             await transaction
                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 
-            sb.AppendLine($"--{nameof(AuthEndpoint.DatabaseModel.User)}");
-
-            // TODO
-            // sb.AppendLine(transaction.LastCommand ?? throw new InvalidOperationException($"Unable to find persis command for {nameof(AuthEndpoint.DatabaseModel.User)} database entity"));
-            // TODO:
-            return new SqlCommand(sb.ToString(), Array.Empty<SqlCommandParameter>());
+            // TODO: #209 - sb.ToString()
+            return new SqlCommand(string.Empty, Array.Empty<SqlCommandParameter>());
         }
     }
 }

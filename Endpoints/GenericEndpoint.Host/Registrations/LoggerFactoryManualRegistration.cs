@@ -22,6 +22,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
 
         public void Register(IManualRegistrationsContainer container)
         {
+            container.Advanced.RegisterDelegate<ILoggerFactory>(
+                () => _frameworkDependenciesProvider.GetRequiredService<ILoggerFactory>(),
+                EnLifestyle.Singleton);
+
             container.Advanced.RegisterDelegate<ILogger>(
                 () =>
                 {

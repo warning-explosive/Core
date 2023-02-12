@@ -3,12 +3,12 @@
     using System;
     using System.Diagnostics.CodeAnalysis;
     using Basics;
+    using Extensions;
     using NpgsqlTypes;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Api.Sql.Attributes;
-    using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
 
     [Component(EnLifestyle.Singleton)]

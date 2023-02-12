@@ -245,7 +245,7 @@ namespace SpaceEngineers.Core.Basics
         private static Assembly? LoadByName(AssemblyName assemblyName)
         {
             return ExecutionExtensions
-                .Try<AssemblyName, Assembly?>(assemblyName, AppDomain.CurrentDomain.Load)
+                .Try<AssemblyName, Assembly?>(AppDomain.CurrentDomain.Load, assemblyName)
                 .Catch<FileNotFoundException>()
                 .Invoke(_ => default);
         }

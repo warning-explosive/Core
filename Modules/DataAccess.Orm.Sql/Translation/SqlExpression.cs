@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class SqlExpression
     {
-        // TODO: check creations
         public SqlExpression(
             ISqlExpression expression,
             Func<object, IReadOnlyCollection<SqlCommandParameter>> commandParametersExtractor)

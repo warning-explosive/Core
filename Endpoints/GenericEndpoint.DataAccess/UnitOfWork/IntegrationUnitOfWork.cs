@@ -160,7 +160,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     false,
                     true);
 
-                // TODO: EnInsertBehavior.DoUpdate ???
+                // TODO: #209 - EnInsertBehavior.DoUpdate ???
                 await databaseContext
                    .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
                    .ConfigureAwait(false);
@@ -188,7 +188,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            // TODO: EnInsertBehavior.DoNothing ???
+            // TODO: #209 - EnInsertBehavior.DoNothing ???
             return databaseContext.Insert(outboxMessages, EnInsertBehavior.DoNothing, token);
         }
 
@@ -198,22 +198,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            return ExecutionExtensions
-               .TryAsync((outboxDelivery, messages), DeliverOutgoingMessagesUnsafe)
-               .Catch<Exception>((exception, _) =>
-               {
-                   logger.Error(exception, "Outbox delivery error");
-                   return Task.CompletedTask;
-               })
-               .Invoke(token);
+            return outboxDelivery
+                .DeliverMessages(messages, token)
+                .TryAsync()
+                .Catch<Exception>(OnCatch(logger))
+                .Invoke(token);
+        }
 
-            static Task DeliverOutgoingMessagesUnsafe(
-                (IOutboxDelivery, IReadOnlyCollection<IntegrationMessage>) state,
-                CancellationToken token)
+        private static Func<Exception, CancellationToken, Task> OnCatch(ILogger logger)
+        {
+            return (exception, _) =>
             {
-                var (outboxDelivery, messages) = state;
-                return outboxDelivery.DeliverMessages(messages, token);
-            }
+                logger.Error(exception, "Outbox delivery error");
+                return Task.CompletedTask;
+            };
         }
     }
 }

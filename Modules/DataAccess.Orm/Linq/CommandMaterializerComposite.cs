@@ -30,7 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             return _map.TryGetValue(command.GetType(), out var materializer)
                 ? materializer.MaterializeScalar(transaction, command, type, token)
-                : throw new NotSupportedException($"Unsupported query type {command.GetType()}");
+                : throw new NotSupportedException($"Unsupported command type {command.GetType()}");
         }
 
         public IAsyncEnumerable<object?> Materialize(
@@ -41,7 +41,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             return _map.TryGetValue(command.GetType(), out var materializer)
                 ? materializer.Materialize(transaction, command, type, token)
-                : throw new NotSupportedException($"Unsupported query type {command.GetType()}");
+                : throw new NotSupportedException($"Unsupported command type {command.GetType()}");
         }
     }
 }

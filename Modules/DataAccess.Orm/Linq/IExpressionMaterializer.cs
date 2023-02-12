@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     public interface ICommandMaterializer
     {
         /// <summary>
-        /// Materializes query
+        /// Materializes command
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             CancellationToken token);
 
         /// <summary>
-        /// Materializes query
+        /// Materializes command
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
@@ -55,30 +55,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         where TCommand : ICommand
     {
         /// <summary>
-        /// Materializes query
+        /// Materializes command
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="query">Query</param>
+        /// <param name="command">Command</param>
         /// <param name="type">Type</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing materialization operation</returns>
         Task<object?> MaterializeScalar(
             IAdvancedDatabaseTransaction transaction,
-            TCommand query,
+            TCommand command,
             Type type,
             CancellationToken token);
 
         /// <summary>
-        /// Materializes query
+        /// Materializes command
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="query">Query</param>
+        /// <param name="command">Command</param>
         /// <param name="type">Type</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing materialization operation</returns>
         IAsyncEnumerable<object?> Materialize(
             IAdvancedDatabaseTransaction transaction,
-            TCommand query,
+            TCommand command,
             Type type,
             CancellationToken token);
     }

@@ -20,9 +20,9 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing
             _eventStore = eventStore;
         }
 
-        public Task Handle(TEvent domainEvent, DomainEventDetails details, CancellationToken token)
+        public Task Handle(DomainEventArgs<TEvent> args, CancellationToken token)
         {
-            return _eventStore.Append<TAggregate, TEvent>(domainEvent, details, token);
+            return _eventStore.Append(args, token);
         }
     }
 }

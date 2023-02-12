@@ -57,23 +57,32 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
             var startupActions = _dependencyContainers
                .SelectMany(dependencyContainer => ExecutionExtensions
-                   .Try(dependencyContainer, container => container.ResolveCollection<IHostStartupAction>())
+                   .Try(container => container.ResolveCollection<IHostStartupAction>(), dependencyContainer)
                    .Catch<ComponentResolutionException>()
                    .Invoke(_ => Enumerable.Empty<IHostStartupAction>()));
 
             foreach (var action in startupActions)
             {
-                await Run(action.Run, Token).ConfigureAwait(false);
+                await action
+                    .Run(Token)
+                    .TryAsync()
+                    .Catch<Exception>(OnUnhandledException(Logger))
+                    .Invoke(Token)
+                    .ConfigureAwait(false);
 
                 _hostStartupActionsRegistry.Enroll(action);
             }
 
             _backgroundWorkersTask = _dependencyContainers
                .SelectMany(dependencyContainer => ExecutionExtensions
-                   .Try(dependencyContainer, container => container.ResolveCollection<IHostBackgroundWorker>())
+                   .Try(container => container.ResolveCollection<IHostBackgroundWorker>(), dependencyContainer)
                    .Catch<ComponentResolutionException>()
                    .Invoke(_ => Enumerable.Empty<IHostBackgroundWorker>()))
-               .Select(worker => Run(worker.Run, Token))
+               .Select(worker => worker
+                   .Run(Token)
+                   .TryAsync()
+                   .Catch<Exception>(OnUnhandledException(Logger))
+                   .Invoke(Token))
                .WhenAll();
         }
 
@@ -127,14 +136,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
                 Sync.Set();
                 _cts?.Dispose();
             }
-        }
-
-        private Task Run(Func<CancellationToken, Task> action, CancellationToken token)
-        {
-            return ExecutionExtensions
-                .TryAsync(action)
-                .Catch<Exception>(OnUnhandledException(Logger))
-                .Invoke(token);
         }
 
         private Func<Exception, CancellationToken, Task> OnUnhandledException(ILogger logger)

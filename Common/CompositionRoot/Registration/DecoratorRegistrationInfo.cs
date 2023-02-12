@@ -33,13 +33,29 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public EnLifestyle Lifestyle { get; }
 
-        /// <inheritdoc />
-        public override string ToString()
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left DecoratorRegistrationInfo</param>
+        /// <param name="right">Right DecoratorRegistrationInfo</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(DecoratorRegistrationInfo? left, DecoratorRegistrationInfo? right)
         {
-            return string.Join(" | ", Service, Implementation, Lifestyle);
+            return Equatable.Equals(left, right);
         }
 
-        #region IEquatable
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left DecoratorRegistrationInfo</param>
+        /// <param name="right">Right DecoratorRegistrationInfo</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(DecoratorRegistrationInfo? left, DecoratorRegistrationInfo? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
 
         /// <inheritdoc />
         public bool SafeEquals(DecoratorRegistrationInfo other)
@@ -68,5 +84,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return string.Join(" | ", Service, Implementation, Lifestyle);
+        }
     }
 }

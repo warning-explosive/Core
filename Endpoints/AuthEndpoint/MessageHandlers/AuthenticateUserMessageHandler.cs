@@ -46,13 +46,13 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
 
         public async Task Handle(AuthenticateUser message, CancellationToken token)
         {
-            var reply = await ExecutionExtensions
-               .TryAsync(message, AuthenticateUser)
+            var reply = await AuthenticateUser(message, token)
+               .TryAsync()
                .Catch<Exception>()
-               .Invoke((exception, _) =>
+               .Invoke(exception =>
                     {
                         _logger.Error(exception);
-                        return Task.FromResult(new UserAuthenticationResult(message.Username, string.Empty));
+                        return new UserAuthenticationResult(message.Username, string.Empty);
                     },
                     token)
                .ConfigureAwait(false);

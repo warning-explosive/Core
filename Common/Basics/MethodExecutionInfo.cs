@@ -186,7 +186,7 @@ namespace SpaceEngineers.Core.Basics
                 : methodInfo;
 
             return ExecutionExtensions
-                .Try((constructedMethod, _target, _args.ToArray()), InvokeMethod)
+                .Try(InvokeMethod, (constructedMethod, _target, _args.ToArray()))
                 .Catch<Exception>()
                 .Invoke(ex => throw ex.Rethrow());
 

@@ -40,12 +40,6 @@
     <Compile Update="MethodFinder.cs">
       <DependentUpon>MethodExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="AsyncOperationExecutionInfo.cs">
-      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
-    </Compile>
-    <Compile Update="GenericAsyncOperationExecutionInfo.cs">
-      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
-    </Compile>
     <Compile Update="Primitives\BinaryHeap.cs">
       <DependentUpon>IHeap.cs</DependentUpon>
     </Compile>
@@ -82,9 +76,6 @@
     <Compile Update="FunctionExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
-    <Compile Update="StatelessGenericAsyncOperationExecutionInfo.cs">
-      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
-    </Compile>
     <Compile Update="StatelessAsyncOperationExecutionInfo.cs">
       <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
@@ -108,6 +99,9 @@
     </Compile>
     <Compile Update="Primitives\AsyncDisposableAction.cs">
       <DependentUpon>AsyncDisposable.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AsyncOperationExecutionInfo.cs">
+      <DependentUpon>ExecutionExtensions.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

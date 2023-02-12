@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
+    using System.Text;
+    using Basics;
 
     /// <summary>
     /// SqlCommandParameter
@@ -11,7 +13,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="name">Name</param>
         /// <param name="value">Value</param>
         /// <param name="type">Type</param>
-        // TODO: check creations
         public SqlCommandParameter(string name, object? value, Type type)
         {
             Name = name;
@@ -48,6 +49,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             name = Name;
             value = Value;
             type = Type;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(Name);
+            sb.Append(Value ?? "NULL");
+
+            var type = Type == Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>))
+                ? Type.Name
+                : Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
+
+            sb.Append($"({type})");
+
+            return sb.ToString();
         }
     }
 }

@@ -32,8 +32,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token)
         {
-            await ExecutionExtensions
-               .TryAsync(context, next)
+            await next(context, token)
+               .TryAsync()
                .Catch<Exception>(OnError(context))
                .Invoke(token)
                .ConfigureAwait(false);
@@ -42,18 +42,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         private Func<Exception, CancellationToken, Task> OnError(
             IAdvancedIntegrationContext context)
         {
-            return (exception, token) => ExecutionExtensions
-               .TryAsync((context, exception, _errorHandlers), InvokeErrorHandlers)
+            return (exception, token) => InvokeErrorHandlers(context, exception, _errorHandlers, token)
+               .TryAsync()
                .Catch<Exception>(OnErrorHandlingError(context))
                .Invoke(token);
         }
 
         private static async Task InvokeErrorHandlers(
-            (IAdvancedIntegrationContext, Exception, IEnumerable<IErrorHandler>) state,
+            IAdvancedIntegrationContext context,
+            Exception exception,
+            IEnumerable<IErrorHandler> errorHandlers,
             CancellationToken token)
         {
-            var (context, exception, errorHandlers) = state;
-
             foreach (var handler in errorHandlers)
             {
                 await handler

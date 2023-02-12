@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
         private static bool TryGetAlias(string comment, [NotNullWhen(true)] out string? content)
         {
             content = ExecutionExtensions
-               .Try(comment, GetAlias)
+               .Try(GetAlias, comment)
                .Catch<System.Xml.XmlException>()
                .Invoke(_ => default);
 

@@ -1,15 +1,15 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using Basics;
-    using Orm.Connection;
-    using Sql.Model;
-    using Sql.Translation;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using SpaceEngineers.Core.DataAccess.Orm.Connection;
+    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
+    using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation;
     using Transaction;
 
     internal static class RepositoryExtensions

@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Migrations
 
 drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
-grant all privileges on database ""{0}"" to ""{1}""";
+grant all privileges on database ""{0}"" to ""{1}"";";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
@@ -90,6 +90,28 @@ grant all privileges on database ""{0}"" to ""{1}""";
             }
 
             NpgsqlConnection.ClearAllPools();
+
+            // TODO: #209
+            await Task.Delay(3000, token).ConfigureAwait(false);
+
+            /*while (true)
+            {
+                var doesDatabaseExist = await _dependencyContainer
+                    .Resolve<IDatabaseConnectionProvider>()
+                    .DoesDatabaseExist(token)
+                    .ConfigureAwait(false);
+
+                if (!doesDatabaseExist)
+                {
+                    await Task
+                        .Delay(TimeSpan.FromMilliseconds(100), token)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    break;
+                }
+            }*/
 
             var migrations = new[]
             {

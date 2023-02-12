@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
+namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
     using System.Collections.Generic;
@@ -8,18 +8,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Model;
     using Api.Persisting;
     using Api.Reading;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics;
-    using DataAccess.Orm.Extensions;
     using Linq;
-    using Orm.Connection;
-    using Sql.Model;
-    using Sql.Translation;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using SpaceEngineers.Core.DataAccess.Orm.Connection;
+    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
+    using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation;
     using Transaction;
 
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
@@ -29,16 +28,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
     {
         private const string ColumnFormat = @"""{0}""";
 
-        private const string InsertQueryFormat = @"insert into ""{0}"".""{1}""({2}) values {3}{4}";
+        private const string InsertCommandFormat = @"insert into ""{0}"".""{1}""({2}) values {3}{4}";
         private const string ValuesFormat = @"({0})";
         private const string AssignExpressionFormat = @"{0} = {1}";
         private const string ExcludedPseudoColumnFormat = @"excluded.{0}";
         private const string OnConflictDoNothing = @" on conflict do nothing";
         private const string OnConflictDoUpdate = @" on conflict ({0}) do update set {1}";
 
-        private const string UpdateQueryFormat = @"update ""{0}"".""{1}"" a set {2}";
+        private const string UpdateCommandFormat = @"update ""{0}"".""{1}"" a set {2}";
 
-        private const string DeleteQueryFormat = @"delete from ""{0}"".""{1}"" a where {2}";
+        private const string DeleteCommandFormat = @"delete from ""{0}"".""{1}"" a where {2}";
 
         private readonly IModelProvider _modelProvider;
         private readonly IExpressionTranslator _translator;
@@ -85,20 +84,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .Stack(entity => entity.GetType())
                .SelectMany(grp => InsertEntity(grp.Key, grp.Value, _modelProvider, insertBehavior));
 
-            long affectedRowsCount = 0;
+            var affectedRowsCount = await _connectionProvider
+                .Execute(transaction, commands, token)
+                .ConfigureAwait(false);
 
-            foreach (var command in commands)
-            {
-                affectedRowsCount += await ExecutionExtensions
-                    .TryAsync((transaction, command), Execute(_connectionProvider))
-                    .Catch<Exception>()
-                    .Invoke(_connectionProvider.Handle<long>(command.CommandText), token)
-                    .ConfigureAwait(false);
+            var change = new CreateEntityChange(entities, insertBehavior);
 
-                var change = new CreateEntityChange(entities, insertBehavior);
-
-                transaction.CollectChange(change);
-            }
+            transaction.CollectChange(change);
 
             return affectedRowsCount;
 
@@ -125,7 +117,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 }
             }
 
-            // TODO: think about batch
             static IEnumerable<SqlCommand> InsertEntity(
                 Type type,
                 IEnumerable<IUniqueIdentified> entities,
@@ -134,7 +125,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             {
                 var table = modelProvider.Tables[type];
 
-                // TODO: add cache
+                // TODO: #209 - add cache
                 var insertExpression = BuildInsertCommand(table, insertBehavior);
 
                 foreach (var entity in entities)
@@ -160,12 +151,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                     .ToString(", ");
 
                 var valuesText = ValuesFormat.Format(columns
-                    .Select((_, index) => $"@{TranslationContext.QueryParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture))}")
+                    .Select((_, index) => $"@{TranslationContext.CommandParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture))}")
                     .ToString(", "));
 
                 var insertBehaviorText = ApplyInsertBehavior(table, insertBehavior, columns);
 
-                var commandText = InsertQueryFormat.Format(
+                var commandText = InsertCommandFormat.Format(
                     table.Schema,
                     table.Name,
                     columnsText,
@@ -181,7 +172,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 {
                     return entity => columns
                         .Select((column, index) => new SqlCommandParameter(
-                            TranslationContext.QueryParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture)),
+                            TranslationContext.CommandParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture)),
                             column.GetValue((IUniqueIdentified)entity),
                             column.Type))
                         .ToArray();
@@ -302,7 +293,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                 var setAndPredicate = setCommand.Merge(sqlCommand, " where ");
 
                 updateCommand = new SqlCommand(
-                    UpdateQueryFormat.Format(table.Schema, table.Name, setAndPredicate.CommandText),
+                    UpdateCommandFormat.Format(table.Schema, table.Name, setAndPredicate.CommandText),
                     setAndPredicate.CommandParameters);
             }
 
@@ -321,11 +312,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                .GetXid(transaction, token)
                .ConfigureAwait(false);
 
-            var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((transaction, updateCommand), Execute(_connectionProvider))
-               .Catch<Exception>()
-               .Invoke(_connectionProvider.Handle<long>(updateCommand.CommandText), token)
-               .ConfigureAwait(false);
+            var affectedRowsCount = await _connectionProvider
+                .Execute(transaction, updateCommand, token)
+                .ConfigureAwait(false);
 
             foreach (var (version, count) in versions)
             {
@@ -360,7 +349,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             }
 
             var deleteCommand = new SqlCommand(
-                DeleteQueryFormat.Format(table.Schema, table.Name, sqlCommand.CommandText),
+                DeleteCommandFormat.Format(table.Schema, table.Name, sqlCommand.CommandText),
                 sqlCommand.CommandParameters);
 
             var versions = (await transaction
@@ -374,11 +363,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
                     grp => grp.Key,
                     grp => grp.Count());
 
-            var affectedRowsCount = await ExecutionExtensions
-               .TryAsync((transaction, deleteCommand), Execute(_connectionProvider))
-               .Catch<Exception>()
-               .Invoke(_connectionProvider.Handle<long>(deleteCommand.CommandText), token)
-               .ConfigureAwait(false);
+            var affectedRowsCount = await _connectionProvider
+                .Execute(transaction, deleteCommand, token)
+                .ConfigureAwait(false);
 
             foreach (var (version, count) in versions)
             {
@@ -391,16 +378,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Persisting
             }
 
             return affectedRowsCount;
-        }
-
-        private static Func<(IAdvancedDatabaseTransaction, ICommand), CancellationToken, Task<long>> Execute(
-            IDatabaseConnectionProvider connectionProvider)
-        {
-            return (state, token) =>
-            {
-                var (transaction, query) = state;
-                return connectionProvider.Execute(transaction, query, token);
-            };
         }
 
         private static object GetKey(IUniqueIdentified entity)

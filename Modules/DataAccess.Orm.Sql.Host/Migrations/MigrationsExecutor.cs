@@ -132,7 +132,7 @@
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
                 DateTime.Now,
-                sqlCommand.CommandText, // TODO: persist with inlined parameters
+                sqlCommand.ToString(),
                 name);
 
             await transaction

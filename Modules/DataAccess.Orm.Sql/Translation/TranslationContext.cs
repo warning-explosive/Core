@@ -14,14 +14,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     public class TranslationContext : ICloneable<TranslationContext>
     {
         /// <summary>
-        /// QueryParameterFormat
+        /// CommandParameterFormat
         /// </summary>
-        public const string QueryParameterFormat = "param_{0}";
+        public const string CommandParameterFormat = "param_{0}";
 
         private Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>> _extractors;
         private Stack<System.Linq.Expressions.Expression> _path;
 
-        private int _queryParameterIndex;
+        private int _commandParameterIndex;
 
         private Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression> _parameters;
         private Stack<ISqlExpression> _stack;
@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _extractors = new Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>>();
             _path = new Stack<System.Linq.Expressions.Expression>();
 
-            _queryParameterIndex = -1;
+            _commandParameterIndex = -1;
 
             _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>();
             _stack = new Stack<ISqlExpression>();
@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 _extractors = _extractors,
                 _path = _path,
 
-                _queryParameterIndex = _queryParameterIndex,
+                _commandParameterIndex = _commandParameterIndex,
 
                 _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>(),
                 _stack = new Stack<ISqlExpression>(),
@@ -86,12 +86,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         /// <summary>
-        /// Gets next query parameter name
+        /// Gets next command parameter name
         /// </summary>
-        /// <returns>Query parameter name</returns>
-        public string NextQueryParameterName()
+        /// <returns>Command parameter name</returns>
+        public string NextCommandParameterName()
         {
-            return QueryParameterFormat.Format(++_queryParameterIndex);
+            return CommandParameterFormat.Format(++_commandParameterIndex);
         }
 
         /// <summary>

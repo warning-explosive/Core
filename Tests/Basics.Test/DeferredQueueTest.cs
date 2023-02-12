@@ -207,9 +207,16 @@ namespace SpaceEngineers.Core.Basics.Test
                 set => _actual = value;
             }
 
-            public override string ToString()
+            #region IEquatable
+
+            public static bool operator ==(Entry? left, Entry? right)
             {
-                return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
+                return Equatable.Equals(left, right);
+            }
+
+            public static bool operator !=(Entry? left, Entry? right)
+            {
+                return !Equatable.Equals(left, right);
             }
 
             public override int GetHashCode()
@@ -232,6 +239,10 @@ namespace SpaceEngineers.Core.Basics.Test
                 return Index == other.Index;
             }
 
+            #endregion
+
+            #region IComparable
+
             public int SafeCompareTo(Entry other)
             {
                 return Index.CompareTo(other.Index);
@@ -245,6 +256,13 @@ namespace SpaceEngineers.Core.Basics.Test
             public int CompareTo(object? obj)
             {
                 return Comparable.CompareTo(this, obj);
+            }
+
+            #endregion
+
+            public override string ToString()
+            {
+                return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
             }
         }
     }

@@ -19,8 +19,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
         {
             using (await _exclusive.Run(token).ConfigureAwait(false))
             {
-                var (behavior, startError) = await ExecutionExtensions
-                   .TryAsync(context, StartTransactionUnsafe)
+                var (behavior, startError) = await StartTransactionUnsafe(context, token)
+                   .TryAsync()
                    .Catch<Exception>()
                    .Invoke(StartExceptionResult, token)
                    .ConfigureAwait(false);
@@ -39,15 +39,15 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
                 if (behavior is not EnUnitOfWorkBehavior.SkipProducer)
                 {
-                    executionError = await ExecutionExtensions
-                       .TryAsync((context, producer), ExecuteProducerUnsafe)
+                    executionError = await ExecuteProducerUnsafe(context, producer, token)
+                       .TryAsync()
                        .Catch<Exception>()
                        .Invoke(ExceptionResult, token)
                        .ConfigureAwait(false);
                 }
 
-                var finishError = await ExecutionExtensions
-                   .TryAsync((context, saveChanges, executionError), FinishTransactionUnsafe)
+                var finishError = await FinishTransactionUnsafe(context, saveChanges, executionError, token)
+                   .TryAsync()
                    .Catch<Exception>()
                    .Invoke(ExceptionResult, token)
                    .ConfigureAwait(false);
@@ -101,19 +101,15 @@ namespace SpaceEngineers.Core.Basics.Primitives
             return (behavior, null);
         }
 
-        private static async Task<Exception?> ExecuteProducerUnsafe((TContext, Func<TContext, CancellationToken, Task>) state, CancellationToken token)
+        private static async Task<Exception?> ExecuteProducerUnsafe(TContext context, Func<TContext, CancellationToken, Task> producer, CancellationToken token)
         {
-            var (context, producer) = state;
-
             await producer.Invoke(context, token).ConfigureAwait(false);
 
             return null;
         }
 
-        private async Task<Exception?> FinishTransactionUnsafe((TContext, bool, Exception?) state, CancellationToken token)
+        private async Task<Exception?> FinishTransactionUnsafe(TContext context, bool saveChanges, Exception? exception, CancellationToken token)
         {
-            var (context, saveChanges, exception) = state;
-
             var finishOperation = saveChanges && exception == null
                 ? Commit(context, token)
                 : Rollback(context, exception, token);
@@ -123,14 +119,14 @@ namespace SpaceEngineers.Core.Basics.Primitives
             return null;
         }
 
-        private static Task<(EnUnitOfWorkBehavior, Exception?)> StartExceptionResult(Exception exception, CancellationToken token)
+        private static (EnUnitOfWorkBehavior, Exception?) StartExceptionResult(Exception exception)
         {
-            return Task.FromResult((EnUnitOfWorkBehavior.DoNotRun, (Exception?)exception));
+            return (EnUnitOfWorkBehavior.DoNotRun, (Exception?)exception);
         }
 
-        private static Task<Exception?> ExceptionResult(Exception exception, CancellationToken token)
+        private static Exception? ExceptionResult(Exception exception)
         {
-            return Task.FromResult<Exception?>(exception);
+            return exception;
         }
     }
 }

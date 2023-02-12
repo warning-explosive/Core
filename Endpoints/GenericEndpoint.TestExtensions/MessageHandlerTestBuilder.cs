@@ -34,8 +34,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions
         /// <param name="context">TestIntegrationContext</param>
         public void Invoke(ITestIntegrationContext context)
         {
-            var exception = ExecutionExtensions
-                .Try((_message, CancellationToken.None), Handle(_messageHandler))
+            var exception = Handle(_messageHandler)
+                .Try((_message, CancellationToken.None))
                 .Catch<Exception>()
                 .Invoke(ex => ex);
 

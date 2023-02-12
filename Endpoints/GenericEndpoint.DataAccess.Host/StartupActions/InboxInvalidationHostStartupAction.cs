@@ -61,18 +61,17 @@
             IDependencyContainer dependencyContainer,
             ILogger logger)
         {
-            return (message, _, token) => ExecutionExtensions
-               .TryAsync((dependencyContainer, message), HandleErrorMessage)
+            return (message, _, token) => HandleErrorMessage(dependencyContainer, message, token)
+               .TryAsync()
                .Catch<Exception>(OnCatch(logger))
                .Invoke(token);
         }
 
         private static Task HandleErrorMessage(
-            (IDependencyContainer, IntegrationMessage) state,
+            IDependencyContainer dependencyContainer,
+            IntegrationMessage message,
             CancellationToken token)
         {
-            var (dependencyContainer, message) = state;
-
             return dependencyContainer.InvokeWithinTransaction(true,
                 message,
                 HandleErrorMessage,

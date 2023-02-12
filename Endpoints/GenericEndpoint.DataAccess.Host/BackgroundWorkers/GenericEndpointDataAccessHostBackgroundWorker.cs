@@ -55,8 +55,8 @@
                     return;
                 }
 
-                await ExecutionExtensions
-                   .TryAsync((_transport, _outboxDelivery), DeliverMessages)
+                await DeliverMessages(_transport, _outboxDelivery, token)
+                   .TryAsync()
                    .Catch<Exception>(OnError(_logger))
                    .Invoke(token)
                    .ConfigureAwait(false);
@@ -64,11 +64,10 @@
         }
 
         private static async Task DeliverMessages(
-            (IExecutableIntegrationTransport, IOutboxBackgroundDelivery) state,
+            IExecutableIntegrationTransport transport,
+            IOutboxBackgroundDelivery outboxBackgroundDelivery,
             CancellationToken token)
         {
-            var (transport, outboxBackgroundDelivery) = state;
-
             var transportIsRunning = WaitUntilTransportIsRunning(transport, token);
             var outboxDelivery = outboxBackgroundDelivery.DeliverMessages(token);
 

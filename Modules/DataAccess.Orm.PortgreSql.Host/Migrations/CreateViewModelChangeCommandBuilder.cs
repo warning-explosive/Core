@@ -53,11 +53,11 @@
                 InsertViewCommandFormat.Format(change.Schema, change.View, view.Query),
                 new[]
                 {
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(0.ToString(CultureInfo.InvariantCulture)), sqlView.PrimaryKey, typeof(Guid)),
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(1.ToString(CultureInfo.InvariantCulture)), sqlView.Version, typeof(long)),
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(2.ToString(CultureInfo.InvariantCulture)), sqlView.Schema, typeof(string)),
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(3.ToString(CultureInfo.InvariantCulture)), sqlView.View, typeof(string)),
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(4.ToString(CultureInfo.InvariantCulture)), sqlView.Query, typeof(string)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(0.ToString(CultureInfo.InvariantCulture)), sqlView.PrimaryKey, typeof(Guid)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(1.ToString(CultureInfo.InvariantCulture)), sqlView.Version, typeof(long)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(2.ToString(CultureInfo.InvariantCulture)), sqlView.Schema, typeof(string)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(3.ToString(CultureInfo.InvariantCulture)), sqlView.View, typeof(string)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(4.ToString(CultureInfo.InvariantCulture)), sqlView.Query, typeof(string)),
                 });
         }
     }

@@ -47,11 +47,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         {
             _events.Add(domainEvent);
 
-            var details = new DomainEventDetails(Id, _index + 1, DateTime.UtcNow);
-
-            var args = new DomainEventArgs(details, domainEvent);
-
-            OnDomainEvent?.Invoke(this, args);
+            OnDomainEvent?.Invoke(this, new DomainEventArgs(Id, domainEvent, _index + 1, DateTime.UtcNow));
 
             _index++;
         }

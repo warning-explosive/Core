@@ -32,10 +32,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// </summary>
         public string InstanceName { get; }
 
-        /// <inheritdoc />
-        public override string ToString()
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left EndpointIdentity</param>
+        /// <param name="right">Right EndpointIdentity</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(EndpointIdentity? left, EndpointIdentity? right)
         {
-            return $"{LogicalName} - {InstanceName}";
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left EndpointIdentity</param>
+        /// <param name="right">Right EndpointIdentity</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(EndpointIdentity? left, EndpointIdentity? right)
+        {
+            return !Equatable.Equals(left, right);
         }
 
         /// <inheritdoc />
@@ -61,6 +79,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         public override int GetHashCode()
         {
             return HashCode.Combine(LogicalName, InstanceName);
+        }
+
+        #endregion
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"{LogicalName} - {InstanceName}";
         }
     }
 }

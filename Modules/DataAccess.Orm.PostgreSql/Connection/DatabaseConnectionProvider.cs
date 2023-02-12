@@ -8,14 +8,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Exceptions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
-    using CrossCuttingConcerns.Logging;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Linq;
@@ -30,47 +28,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider,
-                                                IResolvable<IDatabaseConnectionProvider>
+                                                IResolvable<IDatabaseConnectionProvider>,
+                                                IDisposable
     {
+        private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
+
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
-        private readonly ILogger _logger;
+        private readonly NpgsqlDataSource _dataSourceBuilder;
 
         public DatabaseConnectionProvider(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
-            ILogger logger)
+            ILoggerFactory loggerFactory)
         {
             _dependencyContainer = dependencyContainer;
             _sqlSettingsProvider = sqlSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
-            _logger = logger;
-        }
 
-        public string Host => _sqlSettingsProvider.Get(CancellationToken.None).Result.Host;
-
-        public string Database => _sqlSettingsProvider.Get(CancellationToken.None).Result.Database;
-
-        public IsolationLevel IsolationLevel => _sqlSettingsProvider.Get(CancellationToken.None).Result.IsolationLevel;
-
-        public Task<bool> DoesDatabaseExist(CancellationToken token)
-        {
-            return ExecutionExtensions
-                .TryAsync(DoesDatabaseExistUnsafe)
-                .Catch<PostgresException>()
-                .Invoke(static (exception, _) => Task.FromResult(!exception.DatabaseDoesNotExist()), token);
-        }
-
-        [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<IDatabaseConnection> OpenConnection(CancellationToken token)
-        {
-            ValidateNestedCall(_dependencyContainer);
-
-            var settings = await _sqlSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
+            var settings = _sqlSettingsProvider.Get(CancellationToken.None).Result;
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -87,40 +65,44 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 IncludeErrorDetail = true
             };
 
-            var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
+            _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString)
+                .EnableParameterLogging()
+                .UseLoggerFactory(loggerFactory)
+                /*TODO: #209 - .MapEnum<>(name, new Translator);*/
+                .Build();
+        }
+
+        public string Host => _sqlSettingsProvider.Get(CancellationToken.None).Result.Host;
+
+        public string Database => _sqlSettingsProvider.Get(CancellationToken.None).Result.Database;
+
+        public IsolationLevel IsolationLevel => _sqlSettingsProvider.Get(CancellationToken.None).Result.IsolationLevel;
+
+        public void Dispose()
+        {
+            _dataSourceBuilder.Dispose();
+        }
+
+        public Task<bool> DoesDatabaseExist(CancellationToken token)
+        {
+            return DoesDatabaseExistUnsafe(token)
+                .TryAsync()
+                .Catch<PostgresException>()
+                .Invoke(static exception => !exception.DatabaseDoesNotExist(), token);
+        }
+
+        [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
+        public async Task<IDatabaseConnection> OpenConnection(CancellationToken token)
+        {
+            ValidateNestedCall(_dependencyContainer);
+
+            var npgSqlConnection = await _dataSourceBuilder
+                .OpenConnectionAsync(token)
+                .ConfigureAwait(false);
 
             var connection = new DatabaseConnection(npgSqlConnection);
 
-            await npgSqlConnection
-               .OpenAsync(token)
-               .ConfigureAwait(false);
-
             return connection;
-        }
-
-        public void Handle(DatabaseCommandExecutionException exception)
-        {
-            DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())
-                ? new DatabaseConcurrentUpdateException(exception.CommandText, exception)
-                : exception;
-
-            throw databaseException;
-        }
-
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IAdvancedDatabaseTransaction transaction,
-            ICommand command,
-            CancellationToken token)
-        {
-            return Query(transaction.DbConnection.DbConnection, transaction.DbTransaction, command, token);
-        }
-
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IDatabaseConnection connection,
-            ICommand command,
-            CancellationToken token)
-        {
-            return Query(connection.DbConnection, default, command, token);
         }
 
         public Task<long> Execute(
@@ -132,11 +114,59 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         }
 
         public Task<long> Execute(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return Execute(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
+        }
+
+        public Task<long> Execute(
             IDatabaseConnection connection,
             ICommand command,
             CancellationToken token)
         {
             return Execute(connection.DbConnection, default, command, token);
+        }
+
+        public Task<long> Execute(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return Execute(connection.DbConnection, default, commands, token);
+        }
+
+        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IAdvancedDatabaseTransaction transaction,
+            ICommand command,
+            CancellationToken token)
+        {
+            return Query(transaction.DbConnection.DbConnection, transaction.DbTransaction, command, token);
+        }
+
+        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return Query(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
+        }
+
+        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDatabaseConnection connection,
+            ICommand command,
+            CancellationToken token)
+        {
+            return Query(connection.DbConnection, default, command, token);
+        }
+
+        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return Query(connection.DbConnection, default, commands, token);
         }
 
         public Task<T> ExecuteScalar<T>(
@@ -148,6 +178,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         }
 
         public Task<T> ExecuteScalar<T>(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return ExecuteScalar<T>(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
+        }
+
+        public Task<T> ExecuteScalar<T>(
             IDatabaseConnection connection,
             ICommand command,
             CancellationToken token)
@@ -155,34 +193,38 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return ExecuteScalar<T>(connection.DbConnection, default, command, token);
         }
 
-        private async IAsyncEnumerable<IDictionary<string, object?>> Query(
+        public Task<T> ExecuteScalar<T>(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            return ExecuteScalar<T>(connection.DbConnection, default, commands, token);
+        }
+
+        private async Task<long> Execute(
             IDbConnection connection,
             IDbTransaction? transaction,
-            ICommand command,
-            [EnumeratorCancellation] CancellationToken token)
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
         {
             var settings = await _ormSettingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
-            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings, _logger))
+            long result = 0;
+
+            foreach (var command in commands)
             {
-                using (var reader = await npgsqlCommand.ExecuteReaderAsync(token).ConfigureAwait(false))
+                using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
                 {
-                    while (await reader.ReadAsync(token).ConfigureAwait(false))
-                    {
-                        var row = new Dictionary<string, object?>(reader.FieldCount);
-
-                        for (var i = 0; i < reader.FieldCount; i++)
-                        {
-                            row[reader.GetName(i)] = reader.GetValue(i);
-                        }
-
-                        yield return row;
-                    }
+                    result += await npgsqlCommand
+                        .ExecuteNonQueryAsync(token)
+                        .Handled(command)
+                        .ConfigureAwait(false);
                 }
             }
+
+            return result;
         }
 
         private async Task<long> Execute(
@@ -195,13 +237,92 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings, _logger))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
                 return await npgsqlCommand
                     .ExecuteNonQueryAsync(token)
+                    .Handled(command)
                     .ConfigureAwait(false);
             }
+        }
+
+        private async IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDbConnection connection,
+            IDbTransaction? transaction,
+            IEnumerable<ICommand> commands,
+            [EnumeratorCancellation] CancellationToken token)
+        {
+            _ = await Execute(connection, transaction, commands.SkipLast(1), token).ConfigureAwait(false);
+
+            var asyncSource = Query(connection, transaction, commands.Last(), token)
+                .WithCancellation(token)
+                .ConfigureAwait(false);
+
+            await foreach (var row in asyncSource)
+            {
+                yield return row;
+            }
+        }
+
+        private async IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDbConnection connection,
+            IDbTransaction? transaction,
+            ICommand command,
+            [EnumeratorCancellation] CancellationToken token)
+        {
+            var settings = await _ormSettingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
+
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            {
+                var reader = await npgsqlCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
+                    .Handled(command)
+                    .ConfigureAwait(false);
+
+                /*
+                 * TODO: #209 - Npgsql doesn't support MARS (Multiple Active Result Sets)
+                 * https://github.com/npgsql/npgsql/issues/462#issuecomment-756787766
+                 * https://github.com/npgsql/npgsql/issues/3990
+                 */
+                var buffer = new List<IDictionary<string, object?>>();
+
+                await using (reader)
+                {
+                    while (await reader.ReadAsync(token).Handled(command).ConfigureAwait(false))
+                    {
+                        var row = new Dictionary<string, object?>(reader.FieldCount);
+
+                        for (var i = 0; i < reader.FieldCount; i++)
+                        {
+                            row[reader.GetName(i)] = reader.GetValue(i);
+                        }
+
+                        buffer.Add(row);
+                    }
+
+                    while (await reader.NextResultAsync(token).Handled(command).ConfigureAwait(false))
+                    {
+                        /* ignore subsequent result sets */
+                    }
+                }
+
+                foreach (var row in buffer)
+                {
+                    yield return row;
+                }
+            }
+        }
+
+        private async Task<T> ExecuteScalar<T>(
+            IDbConnection connection,
+            IDbTransaction? transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token)
+        {
+            _ = await Execute(connection, transaction, commands.SkipLast(1), token).ConfigureAwait(false);
+
+            return await ExecuteScalar<T>(connection, transaction, commands.Last(), token).ConfigureAwait(false);
         }
 
         private async Task<T> ExecuteScalar<T>(
@@ -214,11 +335,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            // TODO: Npgsql doesn't support MARS (Multiple Active Result Sets)
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings, _logger))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
                 var scalar = await npgsqlCommand
                     .ExecuteScalarAsync(token)
+                    .Handled(command)
                     .ConfigureAwait(false);
 
                 return (T)scalar !;
@@ -231,40 +352,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             IDbConnection connection,
             IDbTransaction? transaction,
             ICommand command,
-            OrmSettings settings,
-            ILogger logger)
+            OrmSettings settings)
         {
             if (command is not SqlCommand sqlCommand)
             {
                 throw new NotSupportedException($"Unsupported command type {command.GetType()}");
             }
 
+            /*
+             * TODO: #209 - Batch support
+             * https://github.com/dotnet/runtime/issues/28633
+             */
             var npgsqlCommand = new NpgsqlCommand();
 
             npgsqlCommand.Connection = (NpgsqlConnection)connection;
-            npgsqlCommand.Transaction = transaction != null ? (NpgsqlTransaction)transaction : default;
+            npgsqlCommand.Transaction = (NpgsqlTransaction?)transaction;
             npgsqlCommand.CommandText = sqlCommand.CommandText;
-            npgsqlCommand.CommandTimeout = (int)settings.QuerySecondsTimeout;
+            npgsqlCommand.CommandTimeout = (int)settings.CommandSecondsTimeout;
             npgsqlCommand.CommandType = CommandType.Text;
 
-            foreach (var (name, value, type) in sqlCommand.CommandParameters)
+            foreach (var parameter in sqlCommand.CommandParameters)
             {
+                var (name, value, type) = parameter;
+
                 if (!TryCast(name, value, out var npgsqlParameter)
                     && !TryInfer(name, value, type, out npgsqlParameter))
                 {
-                    var typeValue = type == type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>))
-                        ? type.Name
-                        : type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
-
-                    throw new NotSupportedException($"Not supported sql command parameter: {name} {value ?? "NULL"}({typeValue})");
+                    throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
                 }
 
                 npgsqlCommand.Parameters.Add(npgsqlParameter);
-            }
-
-            if (settings.DumpQueries)
-            {
-                logger.Debug(npgsqlCommand.CommandText);
             }
 
             return npgsqlCommand;
@@ -274,7 +391,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 object? value,
                 [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
             {
-                // TODO: handle missing types
+                // TODO: #209 - handle missing types
                 npgsqlParameter = value switch
                 {
                     short @short => new NpgsqlParameter<short>(name, NpgsqlDbType.Smallint) { TypedValue = @short },
@@ -303,7 +420,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             {
                 var nullType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
-                // TODO: handle missing types
+                // TODO: #209 - handle missing types
                 if (nullType == typeof(short))
                 {
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Smallint) { Value = value ?? DBNull.Value };
@@ -398,7 +515,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private static void ValidateNestedCall(IDependencyContainer dependencyContainer)
         {
             var transaction = ExecutionExtensions
-               .Try(dependencyContainer, container => (IAdvancedDatabaseTransaction?)container.Resolve<IAdvancedDatabaseTransaction>())
+               .Try(container => (IAdvancedDatabaseTransaction?)container.Resolve<IAdvancedDatabaseTransaction>(), dependencyContainer)
                .Catch<ComponentResolutionException>()
                .Invoke(_ => default);
 
@@ -408,12 +525,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
+        private Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
         {
-            using (await OpenConnection(token).ConfigureAwait(false))
-            {
-                return true;
-            }
+            var command = new SqlCommand(
+                DatabaseExistsCommandText,
+                new List<SqlCommandParameter> { new SqlCommandParameter("param_0", Database, typeof(string)) });
+
+            return _dependencyContainer.InvokeWithinTransaction(false, command, ExecuteScalar<bool>, token);
         }
     }
 }

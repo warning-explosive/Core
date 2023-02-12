@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading.Tasks;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Basics.Attributes;
     using CompositionRoot;
     using Connection;
@@ -101,30 +100,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             ICommand command,
             CancellationToken token)
         {
-            if (command is not SqlCommand sqlCommand)
-            {
-                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
-            }
-
-            _ = await ExecutionExtensions
-               .TryAsync((transaction, command), Execute(_connectionProvider))
-               .Catch<Exception>()
-               .Invoke(_connectionProvider.Handle<long>(sqlCommand.CommandText), token)
-               .ConfigureAwait(false);
+            _ = await _connectionProvider
+                .Execute(transaction, command, token)
+                .ConfigureAwait(false);
 
             var change = new ModelChange(command, _connectionProvider.Execute);
 
             transaction.CollectChange(change);
-        }
-
-        private static Func<(IAdvancedDatabaseTransaction, ICommand), CancellationToken, Task<long>> Execute(
-            IDatabaseConnectionProvider connectionProvider)
-        {
-            return (state, token) =>
-            {
-                var (transaction, query) = state;
-                return connectionProvider.Execute(transaction, query, token);
-            };
         }
     }
 }

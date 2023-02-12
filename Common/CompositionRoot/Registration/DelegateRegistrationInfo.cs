@@ -38,23 +38,29 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public EnLifestyle Lifestyle { get; }
 
-        /// <summary>
-        /// Instance producer
-        /// </summary>
-        /// <returns>Built component</returns>
-        public object InstanceProducer()
-        {
-            _instance ??= _instanceProducer();
-            return _instance;
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return string.Join(" | ", Service, Lifestyle);
-        }
-
         #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left DelegateRegistrationInfo</param>
+        /// <param name="right">Right DelegateRegistrationInfo</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(DelegateRegistrationInfo? left, DelegateRegistrationInfo? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left DelegateRegistrationInfo</param>
+        /// <param name="right">Right DelegateRegistrationInfo</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(DelegateRegistrationInfo? left, DelegateRegistrationInfo? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
 
         /// <inheritdoc />
         public bool SafeEquals(DelegateRegistrationInfo other)
@@ -83,5 +89,21 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return string.Join(" | ", Service, Lifestyle);
+        }
+
+        /// <summary>
+        /// Instance producer
+        /// </summary>
+        /// <returns>Built component</returns>
+        public object InstanceProducer()
+        {
+            _instance ??= _instanceProducer();
+            return _instance;
+        }
     }
 }

@@ -36,8 +36,8 @@
                 DeleteViewCommandFormat,
                 new[]
                 {
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(0.ToString(CultureInfo.InvariantCulture)), change.Schema, typeof(string)),
-                    new SqlCommandParameter(TranslationContext.QueryParameterFormat.Format(1.ToString(CultureInfo.InvariantCulture)), change.View, typeof(string))
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(0.ToString(CultureInfo.InvariantCulture)), change.Schema, typeof(string)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(1.ToString(CultureInfo.InvariantCulture)), change.View, typeof(string))
                 });
         }
     }

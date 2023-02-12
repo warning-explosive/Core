@@ -102,10 +102,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
-            var query = _translator.Translate(expression);
+            var command = _translator.Translate(expression);
 
             var item = await _materializer
-                .MaterializeScalar(transaction, query, typeof(T), token)
+                .MaterializeScalar(transaction, command, typeof(T), token)
                 .ConfigureAwait(false);
 
             return (T)item!;
@@ -115,10 +115,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         {
             var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
-            var query = _translator.Translate(expression);
+            var command = _translator.Translate(expression);
 
             var source = _materializer
-                .Materialize(transaction, query, typeof(T), token)
+                .Materialize(transaction, command, typeof(T), token)
                 .WithCancellation(token)
                 .ConfigureAwait(false);
 

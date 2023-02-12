@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
                 .Distinct()
                 .ToList();
 
-            VerifyConstructors(initializableComponents, exceptions);
+            VerifyConstructors(_typeProvider, initializableComponents, exceptions);
 
             if (exceptions.Any())
             {
@@ -49,11 +49,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
         }
 
         private void VerifyConstructors(
+            ITypeProvider typeProvider,
             IReadOnlyCollection<Type> initializableComponents,
             ICollection<Exception> exceptions)
         {
             var types = _registrations
                 .RegisteredComponents()
+                .Where(typeProvider.IsOurType)
                 .Where(HasWrongConstructor(initializableComponents, _options.ConstructorResolutionBehavior));
 
             foreach (var type in types)

@@ -34,15 +34,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         public ICommand Translate(Expression expression)
         {
-            // TODO: add cache
-            var translatedSqlQuery = ExecutionExtensions
-                .Try(expression, TranslateUnsafe)
+            // TODO: #209 - add cache
+            var translatedSqlExpression = ExecutionExtensions
+                .Try(TranslateUnsafe, expression)
                 .Catch<Exception>()
                 .Invoke(ex => throw new TranslationException(expression, ex));
 
             return new SqlCommand(
-                translatedSqlQuery.CommandText,
-                translatedSqlQuery.CommandParametersExtractor(expression));
+                translatedSqlExpression.CommandText,
+                translatedSqlExpression.CommandParametersExtractor(expression));
         }
 
         private TranslatedSqlExpression TranslateUnsafe(Expression expression)

@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Exceptions
     /// </summary>
     public sealed class TranslationException : Exception
     {
-        private const string UnableToTranslateFormat = "Unable to translate query: {0}";
+        private const string UnableToTranslateFormat = "Unable to translate command: {0}";
 
         /// <summary> .cctor </summary>
         /// <param name="message">Message</param>

@@ -16,10 +16,9 @@
         /// <summary>
         /// Handles domain event
         /// </summary>
-        /// <param name="domainEvent">Domain event</param>
-        /// <param name="details">DomainEventDetails</param>
+        /// <param name="args">DomainEventArgs</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task Handle(TEvent domainEvent, DomainEventDetails details, CancellationToken token);
+        Task Handle(DomainEventArgs<TEvent> args, CancellationToken token);
     }
 }

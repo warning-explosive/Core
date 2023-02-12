@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
 drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
-grant all privileges on database ""{0}"" to ""{1}""";
+grant all privileges on database ""{0}"" to ""{1}"";";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;

@@ -105,7 +105,7 @@ namespace SpaceEngineers.Core.CompositionRoot.CompositionInfo
             }
 
             var lifestyle = ExecutionExtensions
-                .Try<Lifestyle, EnLifestyle?>(dependency.Lifestyle, l => l.MapLifestyle())
+                .Try<Lifestyle, EnLifestyle?>(static lifestyle => lifestyle.MapLifestyle(), dependency.Lifestyle)
                 .Catch<NotSupportedException>()
                 .Invoke(_ => default(EnLifestyle?));
 

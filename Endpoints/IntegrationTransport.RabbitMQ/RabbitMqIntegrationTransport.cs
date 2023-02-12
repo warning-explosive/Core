@@ -849,23 +849,19 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 ready.WaitAsync(token()).Wait(token());
 
-                ExecutionExtensions
-                   .TryAsync(((IModel)sender, args, onMessageReceived, jsonSerializer, logger), EnqueueReturnedErrorMessage)
-                   .Catch<Exception>((exception, _) =>
-                   {
-                       logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)} - {args.BasicProperties.MessageId}");
-                       return Task.CompletedTask;
-                   })
-                   .Invoke(token())
-                   .Wait();
+                new Action(() => EnqueueReturnedErrorMessage((IModel)sender, args, onMessageReceived, jsonSerializer, logger))
+                   .Try()
+                   .Catch<Exception>(exception => logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)} - {args.BasicProperties.MessageId}"))
+                   .Invoke();
             };
 
-            static Task EnqueueReturnedErrorMessage(
-                (IModel, BasicReturnEventArgs, Action<Func<IntegrationMessage>, Exception?>, IJsonSerializer, ILogger) state,
-                CancellationToken token)
+            static void EnqueueReturnedErrorMessage(
+                IModel recoveryAwareModel,
+                BasicReturnEventArgs args,
+                Action<Func<IntegrationMessage>, Exception?> onMessageReceived,
+                IJsonSerializer jsonSerializer,
+                ILogger logger)
             {
-                var (recoveryAwareModel, args, onMessageReceived, jsonSerializer, logger) = state;
-
                 var exception = new InvalidOperationException($"{args.ReplyCode}: {args.ReplyText} - {args.BasicProperties.Type}: {args.BasicProperties.MessageId}");
 
                 logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)} - {args.BasicProperties.MessageId}");
@@ -873,8 +869,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                 onMessageReceived(() => args.DecodeIntegrationMessage(jsonSerializer), exception);
 
                 recoveryAwareModel.Publish(DeadLetterExchange, args.RoutingKey, args.BasicProperties, args.Body.ToArray());
-
-                return Task.CompletedTask;
             }
         }
 
@@ -915,19 +909,21 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     return;
                 }
 
-                await ExecutionExtensions
-                   .TryAsync((consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived), InvokeMessageHandler)
+                await InvokeMessageHandler(consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived)
+                   .TryAsync()
                    .Catch<Exception>((exception, t) => EnqueueError(endpointIdentity, message, exception, t))
                    .Invoke(token())
                    .ConfigureAwait(false);
             };
 
             static async Task InvokeMessageHandler(
-                (AsyncEventingBasicConsumer, BasicDeliverEventArgs, EndpointIdentity, IntegrationMessage, IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>, Action<Func<IntegrationMessage>, Exception?>) state,
-                CancellationToken token)
+                AsyncEventingBasicConsumer consumer,
+                BasicDeliverEventArgs args,
+                EndpointIdentity endpointIdentity,
+                IntegrationMessage message,
+                IReadOnlyDictionary<EndpointIdentity, Func<IntegrationMessage, Task>> messageHandlers,
+                Action<Func<IntegrationMessage>, Exception?> onMessageReceived)
             {
-                var (consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived) = state;
-
                 onMessageReceived(() => message, default);
 
                 try

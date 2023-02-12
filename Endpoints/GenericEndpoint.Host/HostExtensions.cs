@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {
                 return container => ExecutionExtensions
-                    .Try(container, state => IsEndpointContainerUnsafe(state, endpointIdentity))
+                    .Try(state => IsEndpointContainerUnsafe(state, endpointIdentity), container)
                     .Catch<Exception>()
                     .Invoke(_ => false);
             }
@@ -72,7 +72,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             static Func<IDependencyContainer, bool> IsEndpointContainer(string logicalName)
             {
                 return container => ExecutionExtensions
-                    .Try(container, state => IsEndpointContainerUnsafe(state, logicalName))
+                    .Try(state => IsEndpointContainerUnsafe(state, logicalName), container)
                     .Catch<Exception>()
                     .Invoke(_ => false);
             }

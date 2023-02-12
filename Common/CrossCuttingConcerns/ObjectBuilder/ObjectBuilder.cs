@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 
         public object? Build(Type type, IDictionary<string, object?>? values = null)
         {
-            // TODO: IsPrimitive()
+            // TODO: #209 - IsPrimitive()
             if (values?.Count == 1 && type.IsPrimitive())
             {
                 return ConvertTo(values.Single().Value, type);
@@ -111,20 +111,19 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             }
 
             return ExecutionExtensions
-                .Try((value, targetType), Convert)
+                .Try(Convert, (value, targetType))
                 .Catch<Exception>()
                 .Invoke(convertEx =>
                 {
                     return ExecutionExtensions
-                        .Try((value, targetType), Cast)
+                        .Try(Cast, (value, targetType))
                         .Catch<Exception>()
                         .Invoke(castEx =>
                         {
                             return ExecutionExtensions
-                                .Try((value, targetType), Transform)
+                                .Try(Transform, (value, targetType))
                                 .Catch<Exception>()
-                                .Invoke(transformEx
-                                    => throw new AggregateException($"Unable to convert value {value} from {value.GetType().FullName} to {targetType.FullName}", convertEx, castEx, transformEx));
+                                .Invoke(transformEx => throw new AggregateException($"Unable to convert value {value} from {value.GetType().FullName} to {targetType.FullName}", convertEx, castEx, transformEx));
                         });
                 });
         }

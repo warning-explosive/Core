@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
-    using Basics;
     using CompositionRoot;
     using Connection;
     using Extensions;
@@ -64,11 +63,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         {
             var command = new SqlCommand(CommandText, Array.Empty<SqlCommandParameter>());
 
-            _ = await ExecutionExtensions
-               .TryAsync((transaction, command), Execute(_connectionProvider))
-               .Catch<Exception>()
-               .Invoke(_connectionProvider.Handle<long>(command.CommandText), token)
-               .ConfigureAwait(false);
+            _ = await _connectionProvider
+                .Execute(transaction, command, token)
+                .ConfigureAwait(false);
 
             var change = new ModelChange(command, _connectionProvider.Execute);
 
@@ -85,16 +82,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 .ConfigureAwait(false);
 
             return command;
-        }
-
-        private static Func<(IAdvancedDatabaseTransaction, ICommand), CancellationToken, Task<long>> Execute(
-            IDatabaseConnectionProvider connectionProvider)
-        {
-            return (state, token) =>
-            {
-                var (transaction, query) = state;
-                return connectionProvider.Execute(transaction, query, token);
-            };
         }
     }
 }

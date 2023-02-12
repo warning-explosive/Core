@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type type,
             Func<Expression, ConstantExpression>? extractor = null)
         {
-            var name = context.NextQueryParameterName();
+            var name = context.NextCommandParameterName();
 
             Type = type;
             Name = name;

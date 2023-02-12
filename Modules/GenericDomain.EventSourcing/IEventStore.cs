@@ -44,17 +44,21 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing
         /// <summary>
         /// Appends event to aggregate's event store
         /// </summary>
-        /// <param name="domainEvent">Domain event</param>
-        /// <param name="details">DomainEventDetails</param>
+        /// <param name="args">DomainEventArgs</param>
         /// <param name="token">Cancellation token</param>
-        /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
-        /// <typeparam name="TEvent">TEvent type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        Task Append<TAggregate, TEvent>(
-            TEvent domainEvent,
-            DomainEventDetails details,
-            CancellationToken token)
-            where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent<TAggregate>;
+        Task Append(
+            DomainEventArgs args,
+            CancellationToken token);
+
+        /// <summary>
+        /// Appends domain events to aggregate's event store
+        /// </summary>
+        /// <param name="args">DomainEventArgs</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task Append(
+            IEnumerable<DomainEventArgs> args,
+            CancellationToken token);
     }
 }

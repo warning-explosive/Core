@@ -33,6 +33,28 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain
 
         #region IEquatable
 
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left Feature</param>
+        /// <param name="right">Right Feature</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(Feature? left, Feature? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left Feature</param>
+        /// <param name="right">Right Feature</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(Feature? left, Feature? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
+
         /// <inheritdoc />
         public bool SafeEquals(Feature other)
         {
@@ -58,5 +80,11 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

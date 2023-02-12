@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Exceptions;
     using Linq;
     using Transaction;
 
@@ -43,37 +42,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         Task<IDatabaseConnection> OpenConnection(CancellationToken token);
 
         /// <summary>
-        /// Handles ORM exception and throws provider dependent exceptions
-        /// </summary>
-        /// <param name="exception">DatabaseCommandExecutionException</param>
-        void Handle(DatabaseCommandExecutionException exception);
-
-        /// <summary>
-        /// Executes database query
-        /// </summary>
-        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="command">Command</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Rows</returns>
-        IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IAdvancedDatabaseTransaction transaction,
-            ICommand command,
-            CancellationToken token);
-
-        /// <summary>
-        /// Executes database query
-        /// </summary>
-        /// <param name="connection">IDatabaseConnection</param>
-        /// <param name="command">Command</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Rows</returns>
-        IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IDatabaseConnection connection,
-            ICommand command,
-            CancellationToken token);
-
-        /// <summary>
-        /// Executes database query
+        /// Executes database command
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
@@ -85,7 +54,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
             CancellationToken token);
 
         /// <summary>
-        /// Executes database query
+        /// Executes database command
+        /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Number of affected rows</returns>
+        Task<long> Execute(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
         /// </summary>
         /// <param name="connection">IDatabaseConnection</param>
         /// <param name="command">Command</param>
@@ -94,6 +75,66 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         Task<long> Execute(
             IDatabaseConnection connection,
             ICommand command,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
+        /// </summary>
+        /// <param name="connection">IDatabaseConnection</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Number of affected rows</returns>
+        Task<long> Execute(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
+        /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="command">Command</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Rows</returns>
+        IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IAdvancedDatabaseTransaction transaction,
+            ICommand command,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
+        /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Rows</returns>
+        IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
+        /// </summary>
+        /// <param name="connection">IDatabaseConnection</param>
+        /// <param name="command">Command</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Rows</returns>
+        IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDatabaseConnection connection,
+            ICommand command,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes database command
+        /// </summary>
+        /// <param name="connection">IDatabaseConnection</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Rows</returns>
+        IAsyncEnumerable<IDictionary<string, object?>> Query(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
             CancellationToken token);
 
         /// <summary>
@@ -112,6 +153,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         /// <summary>
         /// Executes scalar
         /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Number of affected rows</returns>
+        Task<T> ExecuteScalar<T>(
+            IAdvancedDatabaseTransaction transaction,
+            IEnumerable<ICommand> commands,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes scalar
+        /// </summary>
         /// <param name="connection">IDatabaseConnection</param>
         /// <param name="command">Command</param>
         /// <param name="token">Cancellation token</param>
@@ -120,6 +174,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         Task<T> ExecuteScalar<T>(
             IDatabaseConnection connection,
             ICommand command,
+            CancellationToken token);
+
+        /// <summary>
+        /// Executes scalar
+        /// </summary>
+        /// <param name="connection">IDatabaseConnection</param>
+        /// <param name="commands">Commands</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Number of affected rows</returns>
+        Task<T> ExecuteScalar<T>(
+            IDatabaseConnection connection,
+            IEnumerable<ICommand> commands,
             CancellationToken token);
     }
 }

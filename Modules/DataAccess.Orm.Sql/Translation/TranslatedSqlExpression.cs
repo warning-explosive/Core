@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class TranslatedSqlExpression : SqlExpression
     {
-        // TODO: check creations & cache it
         public TranslatedSqlExpression(
             ISqlExpression expression,
             string commandText,

@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Transaction;
-    using DataAccess.Orm.PostgreSql.Extensions;
+    using DataAccess.Orm.PostgreSql.Connection;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Transaction;
     using DatabaseEntities;

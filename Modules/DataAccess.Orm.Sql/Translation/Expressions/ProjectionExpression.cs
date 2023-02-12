@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type = type;
             Source = source;
             IsProjectionToClass = type.IsClass
-                                  && !type.IsPrimitive() // TODO: IsPrimitive
+                                  && !type.IsPrimitive() // TODO: #209 - IsPrimitive
                                   && !type.IsCollection();
             IsAnonymousProjection = type.IsAnonymous();
 

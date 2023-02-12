@@ -140,7 +140,7 @@ namespace SpaceEngineers.Core.Basics.Test
             Func<object, CancellationToken, Task> producer)
         {
             ExecutionExtensions
-                .Try((unitOfWork, saveChanges, producer), ExecuteInTransaction)
+                .Try(ExecuteInTransaction, (unitOfWork, saveChanges, producer))
                 .Catch<AggregateException>(ex => throw ex.RealException())
                 .Invoke();
         }

@@ -273,7 +273,7 @@ namespace SpaceEngineers.Core.CompositionRoot
         private void Configure(ITypeProvider typeProvider)
         {
             ExecutionExtensions
-                .Try(typeProvider, tp => Register(CollectRegistrations(tp)))
+                .Try(tp => Register(CollectRegistrations(tp)), typeProvider)
                 .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
                 .Invoke();
         }

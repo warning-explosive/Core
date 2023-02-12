@@ -43,6 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public SqlExpression Translate(Expression expression)
         {
             Visit(expression);
+
             return new SqlExpression(
                 _context.Expression.EnsureNotNull("Sql expression wasn't built"),
                 _context.BuildCommandParametersExtractor(_preprocessor));
@@ -52,7 +53,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             using (Disposable.Create(node, _context.PushPath, _context.PopPath))
             {
-                return base.Visit(node);
+                return base.Visit(node) !;
             }
         }
 

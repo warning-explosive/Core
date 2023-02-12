@@ -64,13 +64,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
         private static TestFixture StaticFixture => _staticFixture.EnsureNotNull(nameof(_staticFixture));
 
         /// <summary>
-        /// QueryTranslationTestData
+        /// CommandTranslationTestData
         /// </summary>
         /// <returns>Test data</returns>
-        public static IEnumerable<object[]> QueryTranslationTestData()
+        public static IEnumerable<object[]> CommandTranslationTestData()
         {
-            var hosts = QueryTranslationTestHosts().ToArray();
-            var testCases = QueryTranslationTestCases().ToArray();
+            var hosts = CommandTranslationTestHosts().ToArray();
+            var testCases = CommandTranslationTestCases().ToArray();
             var countdownEvent = new AsyncCountdownEvent(testCases.Length);
 
             return hosts
@@ -81,14 +81,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .ToArray()));
         }
 
-        internal static IEnumerable<object[]> QueryTranslationTestHosts()
+        internal static IEnumerable<object[]> CommandTranslationTestHosts()
         {
             var settingsDirectory = SolutionExtensions
                .ProjectFile()
                .Directory
                .EnsureNotNull("Project directory wasn't found")
                .StepInto("Settings")
-               .StepInto(nameof(QueryTranslationTest));
+               .StepInto(nameof(CommandTranslationTest));
 
             var timeout = TimeSpan.FromSeconds(60);
 
@@ -150,7 +150,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[] { host, cts };
         }
 
-        internal static IEnumerable<object[]> QueryTranslationTestCases()
+        internal static IEnumerable<object[]> CommandTranslationTestCases()
         {
             var emptyQueryParameters = new List<SqlCommandParameter>();
 
@@ -729,8 +729,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
         }
 
         [Theory(Timeout = 60_000)]
-        [MemberData(nameof(QueryTranslationTestData))]
-        internal async Task QueryTranslationTest(
+        [MemberData(nameof(CommandTranslationTestData))]
+        internal async Task CommandTranslationTest(
             Lazy<IHost> host,
             CancellationTokenSource cts,
             AsyncCountdownEvent asyncCountdownEvent,
@@ -750,7 +750,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .Get(cts.Token)
                    .ConfigureAwait(false);
 
-                Assert.Equal(nameof(QueryTranslationTest), sqlDatabaseSettings.Database);
+                Assert.Equal(nameof(CommandTranslationTest), sqlDatabaseSettings.Database);
                 Assert.Equal(IsolationLevel.ReadCommitted, sqlDatabaseSettings.IsolationLevel);
                 Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
@@ -759,8 +759,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     .Get(cts.Token)
                     .ConfigureAwait(false);
 
-                Assert.False(ormSettings.DumpQueries);
-                Assert.Equal(10u, ormSettings.QuerySecondsTimeout);
+                Assert.Equal(10u, ormSettings.CommandSecondsTimeout);
 
                 var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);
 
@@ -823,11 +822,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     .Resolve<IQueryProvider>()
                     .CreateQuery(expression);
 
-                var translatedQuery = dependencyContainer
+                var command = dependencyContainer
                     .Resolve<IExpressionTranslator>()
                     .Translate(expression);
 
-                checkQuery(translatedQuery, log);
+                checkQuery(command, log);
 
                 await transaction
                     .Insert(entities, EnInsertBehavior.Default, token)
@@ -877,19 +876,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
         private static string FormatParameters(IReadOnlyCollection<SqlCommandParameter> queryParameters)
         {
             return queryParameters.Any()
-                ? string.Join(" ", queryParameters.Select(FormatParameter))
+                ? queryParameters.ToString(" ")
                 : "empty parameters";
-
-            static string FormatParameter(SqlCommandParameter param)
-            {
-                var name = param.Name;
-                var value = param.Value ?? "NULL";
-                var type = param.Type == param.Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>))
-                    ? param.Type.Name
-                    : param.Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
-
-                return $"{name}={value}({type})";
-            }
         }
 
         private static void CheckParameters(

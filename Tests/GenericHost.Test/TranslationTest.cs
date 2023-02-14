@@ -59,8 +59,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
             _staticFixture = fixture;
         }
 
-        private static ITestOutputHelper StaticOutput => _staticOutput.EnsureNotNull(nameof(_staticOutput));
-
         private static TestFixture StaticFixture => _staticFixture.EnsureNotNull(nameof(_staticFixture));
 
         /// <summary>
@@ -96,7 +94,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var host = new Lazy<IHost>(() =>
                 {
-                    var hostBuilder = StaticFixture.CreateHostBuilder(StaticOutput);
+                    var hostBuilder = StaticFixture.CreateHostBuilder();
 
                     var entities = new[]
                     {

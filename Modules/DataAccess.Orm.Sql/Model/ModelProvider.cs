@@ -180,7 +180,7 @@
         private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> InitTablesMap(
             IReadOnlyDictionary<Type, ITableInfo> tables)
         {
-            if (tables is null)
+            if (tables == null)
             {
                 throw new InvalidOperationException("Model should be initialized");
             }
@@ -284,7 +284,7 @@
             {
                 relationProperty = mtm.Column(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right));
             }
-            else if (_tables is not null)
+            else if (_tables != null)
             {
                 throw new InvalidOperationException($"Unable to find multiple relation {property.Name} from {property.ReflectedType.Name} to {itemType.Name}");
             }

@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
     using CompositionRoot;
     using CompositionRoot.Registration;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -18,20 +17,6 @@ namespace SpaceEngineers.Core.Test.Api.Abstractions
         /// </summary>
         /// <returns>IHostBuilder</returns>
         IHostBuilder CreateHostBuilder();
-
-        /// <summary>
-        /// Creates and configures IHostBuilder
-        /// </summary>
-        /// <param name="testOutputHelper">ITestOutputHelper</param>
-        /// <returns>IHostBuilder</returns>
-        IHostBuilder CreateHostBuilder(ITestOutputHelper testOutputHelper);
-
-        /// <summary>
-        /// Creates ILogger
-        /// </summary>
-        /// <param name="testOutputHelper">ITestOutputHelper</param>
-        /// <returns>ILogger</returns>
-        ILogger CreateLogger(ITestOutputHelper testOutputHelper);
 
         /// <summary>
         /// Generates IManualRegistration object with specified delegate

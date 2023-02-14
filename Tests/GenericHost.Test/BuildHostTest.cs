@@ -187,7 +187,7 @@
             Func<IHostBuilder, IHostBuilder> useTransport,
             Func<IDependencyContainer, object> resolve)
         {
-            var host = useTransport(Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder.BuildOptions())
@@ -196,7 +196,7 @@
                     (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            var gatewayHost = useTransport(Fixture.CreateHostBuilder(Output)).BuildHost(settingsDirectory);
+            var gatewayHost = useTransport(Fixture.CreateHostBuilder()).BuildHost(settingsDirectory);
 
             var component = resolve(host.GetTransportDependencyContainer());
             var gatewayComponent = resolve(gatewayHost.GetTransportDependencyContainer());
@@ -236,7 +236,7 @@
                .Concat(messageHandlerTypes)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .WithPostgreSqlDataAccess(options => options
@@ -699,7 +699,7 @@
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing)
         {
-            var host = useTransport(Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .BuildOptions())
@@ -752,7 +752,7 @@
                 typeof(User)
             };
 
-            var host = useTransport(Fixture.CreateHostBuilder(Output))
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options

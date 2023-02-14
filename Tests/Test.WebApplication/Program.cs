@@ -53,8 +53,9 @@ namespace SpaceEngineers.Core.Test.WebApplication
                .CreateDefaultBuilder(args)
                .ConfigureLogging(context =>
                {
-                   context.AddConsole();
-                   context.SetMinimumLevel(LogLevel.Trace);
+                   context
+                       .AddConsole()
+                       .SetMinimumLevel(LogLevel.Trace);
                })
                .UseIntegrationTransport(hostBuilder =>
                     context => new WebApplicationStartup(hostBuilder,

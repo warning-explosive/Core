@@ -8,6 +8,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
     /// </summary>
     public static class LoggingExtensions
     {
+        private static readonly Func<string?, Exception?, string> _messageFormatter = MessageFormatter;
+
         /// <summary>
         /// Log critical information that leads to application failure
         /// </summary>
@@ -15,7 +17,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="exception">Exception</param>
         public static void Critical(this ILogger logger, Exception exception)
         {
-            logger.LogCritical(exception, null);
+            logger.Log(LogLevel.Critical, 0, null, exception, _messageFormatter);
         }
 
         /// <summary>
@@ -24,10 +26,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="logger">ILogger</param>
         /// <param name="exception">Exception</param>
         /// <param name="message">Message</param>
-        /// <param name="args">Message args</param>
-        public static void Critical(this ILogger logger, Exception exception, string message, params object[] args)
+        public static void Critical(this ILogger logger, Exception exception, string message)
         {
-            logger.LogCritical(exception, message, args);
+            logger.Log(LogLevel.Critical, 0, message, exception, _messageFormatter);
         }
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="exception">Exception</param>
         public static void Error(this ILogger logger, Exception exception)
         {
-            logger.LogError(exception, null);
+            logger.Log(LogLevel.Error, 0, null, exception, _messageFormatter);
         }
 
         /// <summary>
@@ -46,10 +47,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="logger">ILogger</param>
         /// <param name="exception">Exception</param>
         /// <param name="message">Message</param>
-        /// <param name="args">Message args</param>
-        public static void Error(this ILogger logger, Exception exception, string message, params object[] args)
+        public static void Error(this ILogger logger, Exception exception, string message)
         {
-            logger.LogError(exception, message, args);
+            logger.Log(LogLevel.Error, 0, message, exception, _messageFormatter);
         }
 
         /// <summary>
@@ -57,10 +57,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// </summary>
         /// <param name="logger">ILogger</param>
         /// <param name="message">Message template</param>
-        /// <param name="args">Message arguments</param>
-        public static void Warning(this ILogger logger, string message, params object[] args)
+        public static void Warning(this ILogger logger, string message)
         {
-            logger.LogWarning(message, args);
+            logger.Log(LogLevel.Warning, 0, message, null, _messageFormatter);
         }
 
         /// <summary>
@@ -68,10 +67,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// </summary>
         /// <param name="logger">ILogger</param>
         /// <param name="message">Message template</param>
-        /// <param name="args">Message arguments</param>
-        public static void Information(this ILogger logger, string message, params object[] args)
+        public static void Information(this ILogger logger, string message)
         {
-            logger.LogInformation(message, args);
+            logger.Log(LogLevel.Information, 0, message, null, _messageFormatter);
         }
 
         /// <summary>
@@ -79,10 +77,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// </summary>
         /// <param name="logger">ILogger</param>
         /// <param name="message">Message template</param>
-        /// <param name="args">Message arguments</param>
-        public static void Debug(this ILogger logger, string message, params object[] args)
+        public static void Debug(this ILogger logger, string message)
         {
-            logger.LogDebug(message, args);
+            logger.Log(LogLevel.Debug, 0, message, null, _messageFormatter);
         }
 
         /// <summary>
@@ -90,10 +87,26 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// </summary>
         /// <param name="logger">ILogger</param>
         /// <param name="message">Message template</param>
-        /// <param name="args">Message arguments</param>
-        public static void Trace(this ILogger logger, string message, params object[] args)
+        public static void Trace(this ILogger logger, string message)
         {
-            logger.LogTrace(message, args);
+            logger.Log(LogLevel.Trace, 0, message, null, _messageFormatter);
+        }
+
+        private static string MessageFormatter(string? message, Exception? exception)
+        {
+            if (message != null)
+            {
+                return exception != null
+                    ? $"{message}{Environment.NewLine}{exception}"
+                    : message;
+            }
+
+            if (exception != null)
+            {
+                return exception.ToString();
+            }
+
+            return string.Empty;
         }
     }
 }

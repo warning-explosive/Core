@@ -17,13 +17,7 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     /// </summary>
     public sealed class TestFixture : IModulesTestFixture
     {
-        private static readonly ConcurrentDictionary<int, IDependencyContainer> Cache
-            = new ConcurrentDictionary<int, IDependencyContainer>();
-
-        /// <summary> .cctor </summary>
-        public TestFixture()
-        {
-        }
+        private static readonly ConcurrentDictionary<int, IDependencyContainer> Cache = new ConcurrentDictionary<int, IDependencyContainer>();
 
         /// <inheritdoc />
         public IHostBuilder CreateHostBuilder()
@@ -32,27 +26,10 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
                .CreateDefaultBuilder()
                .ConfigureLogging(context =>
                {
-                   context.AddConsole();
-                   context.SetMinimumLevel(LogLevel.Trace);
+                   context
+                       .AddConsole()
+                       .SetMinimumLevel(LogLevel.Trace);
                });
-        }
-
-        /// <inheritdoc />
-        public IHostBuilder CreateHostBuilder(ITestOutputHelper testOutputHelper)
-        {
-            return Host
-               .CreateDefaultBuilder()
-               .ConfigureLogging(context =>
-               {
-                   context.AddProvider(new XUnitLoggerProvider(testOutputHelper));
-                   context.SetMinimumLevel(LogLevel.Trace);
-               });
-        }
-
-        /// <inheritdoc />
-        public ILogger CreateLogger(ITestOutputHelper testOutputHelper)
-        {
-            return new XUnitConsoleLogger(testOutputHelper);
         }
 
         /// <inheritdoc />

@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             sb.Append("=");
 
-            var value = Value is null
+            var value = Value == null
                 ? "NULL"
                 : Value.IsInstanceOfType(typeof(IEnumerable))
                     ? $"[{((IEnumerable)Value).AsEnumerable<object>().ToString(", ")}]"

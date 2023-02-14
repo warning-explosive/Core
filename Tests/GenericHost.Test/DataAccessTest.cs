@@ -148,7 +148,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(BackgroundOutboxDeliveryTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -171,7 +171,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -246,7 +246,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(OptimisticConcurrencyTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var databaseEntities = new[]
             {
@@ -262,7 +262,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -509,7 +509,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(ReactiveTransactionalStoreTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var databaseEntities = new[]
             {
@@ -525,7 +525,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -534,8 +534,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                        .BuildOptions())
                .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(
-                    Output,
+            await RunHostTest.RunTestHost(Output,
                     host,
                     ReactiveTransactionalStoreTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)
@@ -776,7 +775,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(OnlyCommandsCanIntroduceChanges));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -810,7 +809,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(manualMigrations)
                .ToArray();
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), static builder => builder)
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                        .ModifyContainerOptions(options => options
@@ -970,14 +969,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
             IsolationLevel isolationLevel,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(AuthenticateUserTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var additionalOurTypes = new[]
             {
                 typeof(RecreatePostgreSqlDatabaseMigration)
             };
 
-            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(Output), builder => builder.WithAuthorization())
+            var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), builder => builder.WithAuthorization())
                .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                    .ModifyContainerOptions(options => options
                        .WithAdditionalOurTypes(additionalOurTypes)
@@ -985,8 +984,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .BuildOptions())
                .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(
-                    Output,
+            await RunHostTest.RunTestHost(Output,
                     host,
                     AuthorizeUserTestInternal(settingsDirectory, settingsDirectory.Name + isolationLevel, isolationLevel),
                     timeout)

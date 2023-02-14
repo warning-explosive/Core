@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
 {
     using CompositionRoot.Registration;
     using Contract;
-    using Logging;
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.GenericHost.Api.Abstractions;
@@ -23,18 +22,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
         public void Register(IManualRegistrationsContainer container)
         {
             container.Advanced.RegisterDelegate<ILoggerFactory>(
-                () => _frameworkDependenciesProvider.GetRequiredService<ILoggerFactory>(),
+                () => _frameworkDependenciesProvider
+                    .GetRequiredService<ILoggerFactory>(),
                 EnLifestyle.Singleton);
 
             container.Advanced.RegisterDelegate<ILogger>(
-                () =>
-                {
-                    var logger = _frameworkDependenciesProvider
-                        .GetRequiredService<ILoggerFactory>()
-                        .CreateLogger(_endpointIdentity.ToString());
-
-                    return new LoggerDecorator(logger, _endpointIdentity);
-                },
+                () => _frameworkDependenciesProvider
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger(_endpointIdentity.ToString()),
                 EnLifestyle.Singleton);
         }
     }

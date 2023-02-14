@@ -112,9 +112,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .OpenConnectionAsync(token)
                 .ConfigureAwait(false);
 
-            var connection = new DatabaseConnection(npgSqlConnection);
-
-            return connection;
+            return new DatabaseConnection(npgSqlConnection);
         }
 
         public Task<long> Execute(

@@ -100,7 +100,7 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(RequestReplyTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -118,7 +118,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -180,7 +180,7 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(RpcRequestTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -195,7 +195,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -254,7 +254,7 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(ContravariantMessageHandlerTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -272,7 +272,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -333,7 +333,7 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(ThrowingMessageHandlerTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var messageTypes = new[]
             {
@@ -347,7 +347,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -438,7 +438,7 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(EventSubscriptionBetweenEndpointsTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var endpoint1MessageTypes = new[]
             {
@@ -465,7 +465,7 @@
             var endpoint1AdditionalOurTypes = endpoint1MessageTypes.Concat(endpoint1MessageHandlerTypes).ToArray();
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -521,9 +521,9 @@
             Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
-            var settingsDirectory = settingsDirectoryProducer(nameof(StartStopTest));
+            var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder(Output))
+            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10, (_, builder) => builder.BuildOptions())
                .BuildHost(settingsDirectory);
 

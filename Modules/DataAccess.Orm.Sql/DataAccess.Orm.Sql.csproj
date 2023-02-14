@@ -125,9 +125,6 @@
       <Compile Update="Model\ViewInfo.cs">
         <DependentUpon>ITableInfo.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\SchemaInfo.cs">
-        <DependentUpon>IModelInfo.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\IndexInfo.cs">
         <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
@@ -214,6 +211,9 @@
       </Compile>
       <Compile Update="Translation\SqlCommandParameter.cs">
         <DependentUpon>SqlCommand.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnumTypeInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

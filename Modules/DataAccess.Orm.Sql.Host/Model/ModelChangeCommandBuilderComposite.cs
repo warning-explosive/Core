@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         {
             return _map.TryGetValue(change.GetType(), out var builder)
                 ? builder.BuildCommands(change)
-                : throw new NotSupportedException($"Unsupported sql expression type {change.GetType()}");
+                : throw new NotSupportedException($"Detected model change: {change}. You should migrate database manually.");
         }
     }
 }

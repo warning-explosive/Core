@@ -120,6 +120,21 @@
       <Compile Update="Model\ModelChangeCommandBuilderComposite.cs">
         <DependentUpon>IModelChangeCommandBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\DatabaseEnumType.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnumTypeNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\AlterEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">

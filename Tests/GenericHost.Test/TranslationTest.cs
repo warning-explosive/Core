@@ -152,7 +152,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
         internal static IEnumerable<object[]> CommandTranslationTestCases()
         {
-            var emptyQueryParameters = new List<SqlCommandParameter>();
+            var emptyQueryParameters = Array.Empty<SqlCommandParameter>();
 
             var schema = nameof(GenericHost) + nameof(Test);
             var testDatabaseEntity = DatabaseEntity.Generate();
@@ -168,7 +168,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>()),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -190,8 +190,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField != 43)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 43, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" != @param_0",
+                        new[] { new SqlCommandParameter("param_0", 43, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -201,8 +201,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField < 43)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 43, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" < @param_0",
+                        new[] { new SqlCommandParameter("param_0", 43, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -212,8 +212,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField <= 42)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 42, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" <= @param_0",
+                        new[] { new SqlCommandParameter("param_0", 42, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -223,8 +223,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField == 42)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 42, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" = @param_0",
+                        new[] { new SqlCommandParameter("param_0", 42, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -234,8 +234,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField > 41)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 41, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" > @param_0",
+                        new[] { new SqlCommandParameter("param_0", 41, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -245,8 +245,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.IntField >= 42)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 42, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" >= @param_0",
+                        new[] { new SqlCommandParameter("param_0", 42, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -257,7 +257,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -268,7 +268,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -289,8 +289,63 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property comparison",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.Enum > EnEnum.Two)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"" > @param_0",
+                        new[] { new SqlCommandParameter("param_0", EnEnum.Two, typeof(EnEnum)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (equals operator)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.Enum == EnEnum.Three)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"" = @param_0",
+                        new[] { new SqlCommandParameter("param_0", EnEnum.Three, typeof(EnEnum)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (object.Equals)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.Enum.Equals(EnEnum.Three))),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"" = @param_0",
+                        new[] { new SqlCommandParameter("param_0", EnEnum.Three, typeof(EnEnum)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (array.Contains)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => new[] { EnEnum.Three }.Contains(it.Enum))),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"" = ANY(@param_0)",
+                        new[] { new SqlCommandParameter("param_0", new[] { EnEnum.Three }, typeof(EnEnum[])) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (list.Contains)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => new List<EnEnum> { EnEnum.Three }.Contains(it.Enum))),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"" = ANY(@param_0)",
+                        new[] { new SqlCommandParameter("param_0", new List<EnEnum> { EnEnum.Three }, typeof(List<EnEnum>)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -301,7 +356,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Nsf"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"" AS ""Sf""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -312,7 +367,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", string.Empty, typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", string.Empty, typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -322,7 +377,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => new { it.StringField }).Distinct()),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -333,7 +388,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => it.StringField).Distinct()),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -345,7 +400,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(Blog.Theme)}"" IS NULL ELSE b.""{nameof(Blog.Theme)}"" = @param_1 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -411,7 +466,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN c.""{nameof(Blog.Theme)}"" IS NULL ELSE c.""{nameof(Blog.Theme)}"" = @param_1 END AND CASE WHEN @param_2 IS NULL THEN b.""{nameof(User.Nickname)}"" IS NULL ELSE b.""{nameof(User.Nickname)}"" = @param_3 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)), new SqlCommandParameter("param_2", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_3", "SpaceEngineer", typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)), new SqlCommandParameter("param_2", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_3", "SpaceEngineer", typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -422,7 +477,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
+                        new[] { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
             };
@@ -454,7 +509,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -465,7 +520,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -477,7 +532,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE b.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_2 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_3) d",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", 0, typeof(int)), new SqlCommandParameter("param_3", 42, typeof(int)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", 0, typeof(int)), new SqlCommandParameter("param_3", 42, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -499,7 +554,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN @param_0 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 1, typeof(int)) },
+                        new[] { new SqlCommandParameter("param_0", 1, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -509,8 +564,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Any(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", 0, typeof(int)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        new[] { new SqlCommandParameter("param_0", 0, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -520,7 +575,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Count(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -531,7 +586,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().First(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -542,8 +597,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().Single<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
+                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -553,8 +608,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().SingleOrDefault<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
+                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -564,7 +619,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Single(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -579,7 +634,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" IN (SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a)",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = ANY(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a)",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
@@ -594,8 +649,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END AND a.""{nameof(DatabaseEntity.PrimaryKey)}"" IN (SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"" = @param_2) b)",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END AND a.""{nameof(DatabaseEntity.PrimaryKey)}"" = ANY(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"" = @param_2) b)",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -606,7 +661,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -617,7 +672,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -627,8 +682,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -639,7 +694,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_2 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new List<SqlCommandParameter> { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", string.Empty, typeof(string)) },
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", string.Empty, typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -649,7 +704,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => !it.BooleanField || it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }

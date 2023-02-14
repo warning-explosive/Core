@@ -18,6 +18,8 @@
         {
             model
                 .Schemas.Select(schemaNode => schemaNode.Schema)
+                .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Types.Select(typeNode => typeNode.Type)))
+                .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Types.SelectMany(typeNode => typeNode.Values)))
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Indexes.Select(indexNode => indexNode.Index)))
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Views.Select(viewNode => viewNode.View)))
                 .Concat(model.Schemas.SelectMany(schemaNode => schemaNode.Tables.Select(tableNode => tableNode.Table)))

@@ -57,10 +57,15 @@
                                     .SelectMany(schema => changes
                                         .OfType<CreateSchema>()
                                         .Where(change => change.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase))));
+                        case CreateEnumType:
+                            return changes
+                                .OfType<CreateSchema>();
                         case CreateTable createTable:
                             return changes
                                 .OfType<CreateSchema>()
                                 .Cast<IModelChange>()
+                                .Concat(changes
+                                    .OfType<CreateEnumType>())
                                 .Concat(changes
                                     .OfType<DropTable>())
                                 .Concat(GetTableDependencies(_modelProvider, createTable)
@@ -98,6 +103,8 @@
                         case DropView:
                         case DropColumn:
                         case AlterColumn:
+                        case DropEnumType:
+                        case AlterEnumType:
                             return Enumerable.Empty<IModelChange>();
                         default:
                             throw new NotSupportedException($"Not supported model change: {modelChange}");

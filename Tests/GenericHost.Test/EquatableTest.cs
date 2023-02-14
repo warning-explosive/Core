@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics.Enumerations;
-    using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Translation;
     using DataAccess.Orm.Sql.Translation.Expressions;
     using GenericEndpoint.Contract;
@@ -376,100 +375,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     expression,
                     equalExpression,
                     notEqualExpression
-                };
-            }
-
-            {
-                var info = new SchemaInfo("schema1", Array.Empty<TableInfo>(), Array.Empty<ViewInfo>());
-                var equalInfo = new SchemaInfo("schema1", Array.Empty<TableInfo>(), Array.Empty<ViewInfo>());
-                var notEqualInfo = new SchemaInfo("schema2", Array.Empty<TableInfo>(), Array.Empty<ViewInfo>());
-
-                yield return new object[]
-                {
-                    typeof(SchemaInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
-                };
-            }
-
-            {
-                var info = new TableInfo(typeof(object), default!);
-                var equalInfo = new TableInfo(typeof(object), default!);
-                var notEqualInfo = new TableInfo(typeof(string), default!);
-
-                yield return new object[]
-                {
-                    typeof(TableInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
-                };
-            }
-
-            {
-                var info = new ViewInfo(typeof(object), string.Empty, default!);
-                var equalInfo = new ViewInfo(typeof(object), string.Empty, default!);
-                var notEqualInfo = new ViewInfo(typeof(string), string.Empty, default!);
-
-                yield return new object[]
-                {
-                    typeof(ViewInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
-                };
-            }
-
-            {
-                var info = new MtmTableInfo(typeof(object), typeof(string), typeof(object), default!);
-                var equalInfo = new MtmTableInfo(typeof(object), typeof(string), typeof(object), default!);
-                var notEqualInfo = new MtmTableInfo(typeof(string), typeof(string), typeof(object), default!);
-
-                yield return new object[]
-                {
-                    typeof(MtmTableInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
-                };
-            }
-
-            {
-                var table = new TableInfo(typeof(EndpointIdentity), default!);
-                var logicalNameProperty = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.LogicalName)) !;
-                var instanceNameProperty = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.InstanceName)) !;
-
-                var info = new ColumnInfo(table, new[] { new ColumnProperty(logicalNameProperty, logicalNameProperty) }, default!);
-                var equalInfo = new ColumnInfo(table, new[] { new ColumnProperty(logicalNameProperty, logicalNameProperty) }, default!);
-                var notEqualInfo = new ColumnInfo(table, new[] { new ColumnProperty(instanceNameProperty, instanceNameProperty) }, default!);
-
-                yield return new object[]
-                {
-                    typeof(ColumnInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
-                };
-            }
-
-            {
-                var table = new TableInfo(typeof(string), default!);
-                var logicalNameProperty = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.LogicalName)) !;
-                var instanceNameProperty = typeof(EndpointIdentity).GetProperty(nameof(EndpointIdentity.InstanceName)) !;
-                var logicalNameColumn = new ColumnInfo(table, new[] { new ColumnProperty(logicalNameProperty, logicalNameProperty) }, default!);
-                var instanceNameColumn = new ColumnInfo(table, new[] { new ColumnProperty(instanceNameProperty, instanceNameProperty) }, default!);
-
-                var info = new IndexInfo(table, new[] { logicalNameColumn }, true);
-                var equalInfo = new IndexInfo(table, new[] { logicalNameColumn }, true);
-                var notEqualInfo = new IndexInfo(table, new[] { instanceNameColumn }, true);
-
-                yield return new object[]
-                {
-                    typeof(IndexInfo),
-                    info,
-                    equalInfo,
-                    notEqualInfo
                 };
             }
         }

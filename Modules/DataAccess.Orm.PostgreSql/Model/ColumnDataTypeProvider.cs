@@ -134,14 +134,6 @@
                 return true;
             }
 
-            if (type.IsEnum)
-            {
-                // TODO: #209 - create ENUM model change;
-                // TODO: #209 - cmd.Parameters.Add(new() { Value = "Happy", DataTypeName = "mood" });
-                dataType = type.Name;
-                return true;
-            }
-
             if (type == typeof(string))
             {
                 var columnLenghtAttribute = column.Property.Declared.GetAttribute<ColumnLenghtAttribute>();
@@ -222,6 +214,12 @@
                  * 00:00:00 to 23:59:59.9999999
                  */
                 dataType = NpgsqlDbType.Time.ToString();
+            }
+
+            if (type.IsEnum)
+            {
+                dataType = new EnumTypeInfo(column.Table.Schema, type).Name;
+                return true;
             }
 
             dataType = default;

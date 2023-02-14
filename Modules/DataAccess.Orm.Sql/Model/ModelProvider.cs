@@ -28,13 +28,9 @@
         private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
         private readonly Dictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
 
-        private readonly object _sync;
-        private bool _tablesBuilt;
-        private bool _mtmTablesBuilt;
-
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>>? _tablesMap;
+        private IReadOnlyCollection<EnumTypeInfo>? _enums;
         private IReadOnlyDictionary<Type, ITableInfo>? _tables;
-        private IReadOnlyDictionary<Type, MtmTableInfo>? _mtmTables;
 
         public ModelProvider(
             IDynamicClassProvider dynamicClassProvider,
@@ -45,12 +41,17 @@
             _databaseTypeProvider = databaseTypeProvider;
             _sqlViewQueryProvider = sqlViewQueryProvider;
 
-            _sync = new object();
-            _tablesBuilt = false;
-            _mtmTablesBuilt = false;
-
             _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
             _mtmTablesCache = new Dictionary<Type, (Type Left, Type Right)>();
+        }
+
+        public IReadOnlyCollection<EnumTypeInfo> Enums
+        {
+            get
+            {
+                _enums ??= InitEnums();
+                return _enums;
+            }
         }
 
         public IReadOnlyDictionary<Type, ITableInfo> Tables
@@ -58,19 +59,7 @@
             get
             {
                 _tables ??= InitTables();
-
                 return _tables;
-            }
-        }
-
-        public IReadOnlyDictionary<Type, MtmTableInfo> MtmTables
-        {
-            get
-            {
-                _tables ??= InitTables();
-                _mtmTables ??= InitMtmTables();
-
-                return _mtmTables;
             }
         }
 
@@ -78,31 +67,8 @@
         {
             get
             {
-                _tables ??= InitTables();
-                _mtmTables ??= InitMtmTables();
-                _tablesMap ??= InitTablesMap();
-
+                _tablesMap ??= InitTablesMap(Tables);
                 return _tablesMap;
-            }
-        }
-
-        private bool Locked => _tablesBuilt && _mtmTablesBuilt;
-
-        public IEnumerable<ITableInfo> TablesFor(IReadOnlyCollection<Type> databaseEntities)
-        {
-            databaseEntities = _databaseTypeProvider
-                .DatabaseEntities()
-                .Intersect(databaseEntities)
-                .ToArray();
-
-            foreach (var (_, info) in Tables)
-            {
-                if (databaseEntities.Contains(info.Type)
-                    || (info is MtmTableInfo mtmTableInfo
-                        && mtmTableInfo.Columns.Any(column => databaseEntities.Contains(column.Value.Relation.Target))))
-                {
-                    yield return info;
-                }
             }
         }
 
@@ -149,7 +115,8 @@
         {
             if (type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
             {
-                if (_mtmTables?.TryGetValue(type, out var mtmTableInfo) == true)
+                if (_tables?.TryGetValue(type, out var tableInfo) == true
+                    && tableInfo is MtmTableInfo mtmTableInfo)
                 {
                     return MtmSchemaName(mtmTableInfo.Left, mtmTableInfo.Right);
                 }
@@ -168,25 +135,26 @@
                 .ToString("_");
         }
 
+        private IReadOnlyCollection<EnumTypeInfo> InitEnums()
+        {
+            return Tables
+                .Values
+                .SelectMany(table => table
+                    .Columns
+                    .Select(column => column.Value)
+                    .Where(column => column.IsEnum)
+                    .Select(column => new EnumTypeInfo(table.Schema, column.Type)))
+                .Distinct()
+                .ToList();
+        }
+
         private IReadOnlyDictionary<Type, ITableInfo> InitTables()
         {
-            lock (_sync)
-            {
-                if (_tablesBuilt)
-                {
-                    return _tables ?? throw new InvalidOperationException("Model should be initialized");
-                }
-
-                var tables = _databaseTypeProvider
-                   .DatabaseEntities()
-                   .SelectMany(GetTableInfo)
-                   .Distinct()
-                   .ToDictionary(info => info.Type);
-
-                _tablesBuilt = true;
-
-                return tables;
-            }
+            return _databaseTypeProvider
+                .DatabaseEntities()
+                .SelectMany(GetTableInfo)
+                .Distinct()
+                .ToDictionary(info => info.Type);
 
             IEnumerable<ITableInfo> GetTableInfo(Type entity)
             {
@@ -209,42 +177,21 @@
             }
         }
 
-        private IReadOnlyDictionary<Type, MtmTableInfo> InitMtmTables()
+        private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> InitTablesMap(
+            IReadOnlyDictionary<Type, ITableInfo> tables)
         {
-            lock (_sync)
+            if (tables is null)
             {
-                if (_mtmTablesBuilt)
-                {
-                    return _mtmTables ?? throw new InvalidOperationException("Model should be initialized");
-                }
-
-                var mtmTables = _tables
-                   .Values
-                   .OfType<MtmTableInfo>()
-                   .ToDictionary(mtmTable => mtmTable.Type);
-
-                _mtmTablesBuilt = true;
-
-                return mtmTables;
+                throw new InvalidOperationException("Model should be initialized");
             }
-        }
 
-        private IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> InitTablesMap()
-        {
-            lock (_sync)
-            {
-                if (!_tablesBuilt)
-                {
-                    throw new InvalidOperationException("Model should be initialized");
-                }
-
-                return _tables
-                   .GroupBy(info => info.Value.Schema)
-                   .ToDictionary(grp => grp.Key,
-                        grp => grp.ToDictionary(info => info.Value.Name,
-                            info => info.Value) as IReadOnlyDictionary<string, ITableInfo>,
-                        StringComparer.OrdinalIgnoreCase);
-            }
+            return tables
+                .GroupBy(info => info.Value.Schema)
+                .ToDictionary(grp => grp.Key,
+                    grp => grp.ToDictionary(
+                        info => info.Value.Name,
+                        info => info.Value) as IReadOnlyDictionary<string, ITableInfo>,
+                    StringComparer.OrdinalIgnoreCase);
         }
 
         private IEnumerable<ColumnInfo> GetColumns(ITableInfo table, ColumnProperty property)
@@ -337,7 +284,7 @@
             {
                 relationProperty = mtm.Column(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right));
             }
-            else if (Locked)
+            else if (_tables is not null)
             {
                 throw new InvalidOperationException($"Unable to find multiple relation {property.Name} from {property.ReflectedType.Name} to {itemType.Name}");
             }

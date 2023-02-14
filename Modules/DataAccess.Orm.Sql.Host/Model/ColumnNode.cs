@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
 
@@ -82,15 +81,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
             return HashCode.Combine(
-                Schema.ToLowerInvariant(),
-                Table.ToLowerInvariant(),
-                Column.ToLowerInvariant(),
-                DataType.ToLowerInvariant(),
-                Constraints.ToString(", ").ToLowerInvariant());
+                Schema.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Table.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Column.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                DataType.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Constraints.OrderBy(modifier => modifier).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />

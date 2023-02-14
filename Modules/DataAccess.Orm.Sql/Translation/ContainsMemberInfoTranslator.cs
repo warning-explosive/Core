@@ -21,7 +21,7 @@
             [NotNullWhen(true)] out ISqlExpression? expression)
         {
             if (IsEnumerableContains(context, member)
-             || IsICollectionContains(context, member))
+                || IsICollectionContains(context, member))
             {
                 expression = new BinaryExpression(typeof(bool), BinaryOperator.Contains);
                 return true;

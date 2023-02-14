@@ -1,26 +1,27 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
+    using System.Collections.Generic;
     using Basics;
 
     /// <summary>
-    /// ViewNode
+    /// EnumTypeNode
     /// </summary>
-    public class ViewNode : IEquatable<ViewNode>,
-                            ISafelyEquatable<ViewNode>
+    public class EnumTypeNode : IEquatable<EnumTypeNode>,
+                                ISafelyEquatable<EnumTypeNode>
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
-        /// <param name="view">View</param>
-        /// <param name="query">Query</param>
-        public ViewNode(
+        /// <param name="type">Type</param>
+        /// <param name="values">Values</param>
+        public EnumTypeNode(
             string schema,
-            string view,
-            string query)
+            string type,
+            IReadOnlyCollection<string> values)
         {
             Schema = schema;
-            View = view;
-            Query = query;
+            Type = type;
+            Values = values;
         }
 
         /// <summary>
@@ -29,24 +30,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         public string Schema { get; }
 
         /// <summary>
-        /// View
+        /// Type
         /// </summary>
-        public string View { get; }
+        public string Type { get; }
 
         /// <summary>
-        /// Query
+        /// Values
         /// </summary>
-        public string Query { get; }
+        public IReadOnlyCollection<string> Values { get; }
 
         #region IEquatable
 
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left ViewNode</param>
-        /// <param name="right">Right ViewNode</param>
+        /// <param name="left">Left EnumTypeNode</param>
+        /// <param name="right">Right EnumTypeNode</param>
         /// <returns>equals</returns>
-        public static bool operator ==(ViewNode? left, ViewNode? right)
+        public static bool operator ==(EnumTypeNode? left, EnumTypeNode? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -54,10 +55,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left ViewNode</param>
-        /// <param name="right">Right ViewNode</param>
+        /// <param name="left">Left EnumTypeNode</param>
+        /// <param name="right">Right EnumTypeNode</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(ViewNode? left, ViewNode? right)
+        public static bool operator !=(EnumTypeNode? left, EnumTypeNode? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -67,8 +68,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         {
             return HashCode.Combine(
                 Schema.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                View.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                Query.GetHashCode(StringComparison.OrdinalIgnoreCase));
+                Type.GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />
@@ -78,17 +78,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         /// <inheritdoc />
-        public bool Equals(ViewNode? other)
+        public bool Equals(EnumTypeNode? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(ViewNode other)
+        public bool SafeEquals(EnumTypeNode other)
         {
             return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && View.Equals(other.View, StringComparison.OrdinalIgnoreCase)
-                   && Query.Equals(other.Query, StringComparison.OrdinalIgnoreCase);
+                && Type.Equals(other.Type, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -96,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{View} ({Query})";
+            return $"{Schema}.{Type} ({Values.ToString(", ")})";
         }
     }
 }

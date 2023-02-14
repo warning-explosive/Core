@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using Basics;
 
     /// <summary>
@@ -13,16 +12,18 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
+        /// <param name="types">Types</param>
         /// <param name="tables">Tables</param>
         /// <param name="views">Views</param>
         /// <param name="indexes">Indexes</param>
-        public SchemaNode(
-            string schema,
+        public SchemaNode(string schema,
+            IReadOnlyCollection<EnumTypeNode> types,
             IReadOnlyCollection<TableNode> tables,
             IReadOnlyCollection<ViewNode> views,
             IReadOnlyCollection<IndexNode> indexes)
         {
             Schema = schema;
+            Types = types;
             Tables = tables;
             Views = views;
             Indexes = indexes;
@@ -32,6 +33,11 @@
         /// Schema
         /// </summary>
         public string Schema { get; }
+
+        /// <summary>
+        /// Types
+        /// </summary>
+        public IReadOnlyCollection<EnumTypeNode> Types { get; }
 
         /// <summary>
         /// Tables
@@ -73,10 +79,9 @@
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(Schema.ToLowerInvariant());
+            return Schema.GetHashCode(StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />

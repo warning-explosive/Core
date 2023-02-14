@@ -54,6 +54,8 @@
             _chain = chain;
 
             _modelProvider = modelProvider;
+
+            IsEnum = Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum;
         }
 
         /// <summary>
@@ -103,6 +105,11 @@
         public Type Type => Property.PropertyType;
 
         /// <summary>
+        /// IsEnum
+        /// </summary>
+        public bool IsEnum { get; }
+
+        /// <summary>
         /// Relation
         /// </summary>
         public Relation? Relation
@@ -136,7 +143,7 @@
 
                     if (Table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
                     {
-                        var mtmTable = _modelProvider.MtmTables[Table.Type];
+                        var mtmTable = (MtmTableInfo)_modelProvider.Tables[Table.Type];
 
                         var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
                             ? mtmTable.Left
@@ -255,7 +262,6 @@
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
             return _chain.Aggregate(Table.GetHashCode(), HashCode.Combine);
@@ -276,7 +282,7 @@
         /// <inheritdoc />
         public bool SafeEquals(ColumnInfo other)
         {
-            return Table == other.Table
+            return Table.Equals(other.Table)
                    && _chain.SequenceEqual(other._chain);
         }
 

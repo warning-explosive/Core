@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
 
@@ -75,12 +74,9 @@
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return Columns
-                .OrderBy(column => column.Name)
-                .Aggregate(HashCode.Combine(Table, Unique), HashCode.Combine);
+            return Name.GetHashCode(StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />
@@ -98,9 +94,7 @@
         /// <inheritdoc />
         public bool SafeEquals(IndexInfo other)
         {
-            return Table == other.Table
-                   && Unique == other.Unique
-                   && Columns.OrderBy(column => column.Name).SequenceEqual(other.Columns.OrderBy(column => column.Name));
+            return Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

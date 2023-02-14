@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Api.Sql.Attributes;
     using Basics;
@@ -55,7 +54,8 @@
 
                 IReadOnlyDictionary<string, ColumnInfo> InitColumns()
                 {
-                    return _modelProvider.Columns(this)
+                    return _modelProvider
+                        .Columns(this)
                         .OrderBy(column => column.Name)
                         .ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
                 }
@@ -121,7 +121,6 @@
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
             return Type.GetHashCode();

@@ -67,6 +67,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         {
             if (actualModel != null && expectedModel != null)
             {
+                foreach (var tableChanges in ExtractTypesDiff(actualModel.Types, expectedModel.Types))
+                {
+                    yield return tableChanges;
+                }
+
                 foreach (var tableChanges in ExtractTablesDiff(actualModel.Tables, expectedModel.Tables))
                 {
                     yield return tableChanges;
@@ -90,6 +95,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             {
                 yield return new CreateSchema(expectedModel.Schema);
 
+                foreach (var tableChanges in ExtractTypesDiff(Enumerable.Empty<EnumTypeNode>(), expectedModel.Types))
+                {
+                    yield return tableChanges;
+                }
+
                 foreach (var tableChanges in ExtractTablesDiff(Enumerable.Empty<TableNode>(), expectedModel.Tables))
                 {
                     yield return tableChanges;
@@ -105,6 +115,85 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                     yield return viewDiff;
                 }
             }
+        }
+
+        private static IEnumerable<IModelChange> ExtractTypesDiff(IEnumerable<EnumTypeNode> actualModel, IEnumerable<EnumTypeNode> expectedModel)
+        {
+            var modelChanges = actualModel
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    EnumTypeChangesSelector)
+                .SelectMany(change => change);
+
+            foreach (var modelChange in modelChanges)
+            {
+                yield return modelChange;
+            }
+        }
+
+        private static IEnumerable<IModelChange> EnumTypeChangesSelector(EnumTypeNode? actualModel, EnumTypeNode? expectedModel)
+        {
+            if (actualModel != null && expectedModel != null)
+            {
+                if (!actualModel.Equals(expectedModel))
+                {
+                    foreach (var columnChange in ExtractEnumValuesDiff(actualModel, expectedModel))
+                    {
+                        yield return columnChange;
+                    }
+                }
+            }
+            else if (actualModel != null && expectedModel == null)
+            {
+                yield return new DropEnumType(actualModel.Schema, actualModel.Type);
+            }
+            else if (actualModel == null && expectedModel != null)
+            {
+                yield return new CreateEnumType(expectedModel.Schema, expectedModel.Type, expectedModel.Values);
+            }
+            else
+            {
+                throw new InvalidOperationException("Wrong database enum type change");
+            }
+        }
+
+        private static IEnumerable<IModelChange> ExtractEnumValuesDiff(EnumTypeNode actualModel, EnumTypeNode expectedModel)
+        {
+            return actualModel.Values
+                .FullOuterJoin(
+                    expectedModel.Values,
+                    actual => actual,
+                    expected => expected,
+                    EnumValueChangesSelector(expectedModel.Schema, expectedModel.Type),
+                    StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Func<string?, string?, IModelChange> EnumValueChangesSelector(string schema, string type)
+        {
+            return (actualValue, expectedValue) =>
+            {
+                if (actualValue != null && expectedValue != null)
+                {
+                    if (!actualValue.Equals(expectedValue, StringComparison.Ordinal))
+                    {
+                        return new AlterEnumType(schema, type, actualValue, expectedValue);
+                    }
+                }
+
+                if (actualValue != null && expectedValue == null)
+                {
+                    return new AlterEnumType(schema, type, actualValue, null);
+                }
+
+                if (actualValue == null && expectedValue != null)
+                {
+                    return new AlterEnumType(schema, type, null, expectedValue);
+                }
+
+                throw new InvalidOperationException("Wrong database enum type value change");
+            };
         }
 
         private static IEnumerable<IModelChange> ExtractTablesDiff(IEnumerable<TableNode> actualModel, IEnumerable<TableNode> expectedModel)

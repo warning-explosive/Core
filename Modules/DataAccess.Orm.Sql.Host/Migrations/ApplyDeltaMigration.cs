@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
         public virtual bool ApplyEveryTime { get; } = true;
 
-        public async Task<ICommand> Migrate(CancellationToken token)
+        public async Task<ICommand> BuildCommand(CancellationToken token)
         {
             var databaseEntities = _databaseTypeProvider
                .DatabaseEntities()

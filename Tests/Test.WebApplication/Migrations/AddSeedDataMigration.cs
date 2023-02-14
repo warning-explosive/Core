@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
         public bool ApplyEveryTime { get; } = false;
 
-        public Task<ICommand> Migrate(CancellationToken token)
+        public Task<ICommand> BuildCommand(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
         }

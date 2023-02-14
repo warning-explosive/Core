@@ -31,17 +31,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 
         public Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
         {
-            var schemas = _modelProvider
-                .TablesFor(databaseEntities)
+            var tables = databaseEntities
+                .Where(type => _modelProvider.Tables.ContainsKey(type))
+                .Select(type => _modelProvider.Tables[type]);
+
+            var mtmTables = _modelProvider
+                .Tables
+                .Values
+                .OfType<MtmTableInfo>()
+                .Where(info => info.Columns.Any(column => databaseEntities.Contains(column.Value.Relation.Target)));
+
+            var schemas = tables
+                .Concat(mtmTables)
                 .GroupBy(info => info.Schema)
-                .Select(schema => BuildSchemaNode(schema.Key, schema.ToList()))
+                .Select(schema => BuildSchemaNode(schema.Key, schema))
                 .ToArray();
 
             return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas));
         }
 
-        private SchemaNode BuildSchemaNode(string schema, IReadOnlyCollection<ITableInfo> objects)
+        private SchemaNode BuildSchemaNode(
+            string schema,
+            IEnumerable<ITableInfo> objects)
         {
+            var enumTypes = _modelProvider
+                .Enums
+                .Where(info => info.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase))
+                .Select(info => new EnumTypeNode(info.Schema, info.Type.Name, info.Type.GetEnumNames()))
+                .ToList();
+
             var tables = new List<TableNode>();
             var views = new List<ViewNode>();
             var indexes = new List<IndexNode>();
@@ -60,7 +78,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 indexes.AddRange(obj.Indexes.Select(index => BuildIndexNode(index.Value)));
             }
 
-            return new SchemaNode(schema, tables, views, indexes);
+            return new SchemaNode(schema, enumTypes, tables, views, indexes);
         }
 
         private TableNode BuildTableNode(TableInfo tableInfo)

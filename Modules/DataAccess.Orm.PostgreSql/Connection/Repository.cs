@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
@@ -39,6 +40,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         private const string DeleteCommandFormat = @"delete from ""{0}"".""{1}"" a where {2}";
 
+        private readonly ConcurrentDictionary<int, TranslatedSqlExpression> _cache;
+
         private readonly IModelProvider _modelProvider;
         private readonly IExpressionTranslator _translator;
         private readonly IDatabaseConnectionProvider _connectionProvider;
@@ -48,6 +51,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             IExpressionTranslator translator,
             IDatabaseConnectionProvider connectionProvider)
         {
+            _cache = new ConcurrentDictionary<int, TranslatedSqlExpression>();
+
             _modelProvider = modelProvider;
             _translator = translator;
             _connectionProvider = connectionProvider;
@@ -82,7 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                .Values
                .OrderByDependencies(GetKey, GetDependencies(_modelProvider, map))
                .Stack(entity => entity.GetType())
-               .SelectMany(grp => InsertEntity(grp.Key, grp.Value, _modelProvider, insertBehavior));
+               .SelectMany(grp => InsertEntity(_modelProvider.Tables[grp.Key], grp.Value, _cache, insertBehavior));
 
             var affectedRowsCount = await _connectionProvider
                 .Execute(transaction, commands, token)
@@ -118,15 +123,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
 
             static IEnumerable<SqlCommand> InsertEntity(
-                Type type,
+                ITableInfo table,
                 IEnumerable<IUniqueIdentified> entities,
-                IModelProvider modelProvider,
+                ConcurrentDictionary<int, TranslatedSqlExpression> cache,
                 EnInsertBehavior insertBehavior)
             {
-                var table = modelProvider.Tables[type];
+                var key = HashCode.Combine(table, insertBehavior);
 
-                // TODO: #209 - add cache
-                var insertExpression = BuildInsertCommand(table, insertBehavior);
+                var insertExpression = cache.GetOrAdd(
+                    key,
+                    static (_, state) => BuildInsertCommand(state.table, state.insertBehavior),
+                    (table, insertBehavior));
 
                 foreach (var entity in entities)
                 {

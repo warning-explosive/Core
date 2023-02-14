@@ -37,7 +37,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.AndAlso] = "AND",
                 [BinaryOperator.OrElse] = "OR",
                 [BinaryOperator.ExclusiveOr] = "XOR",
-                [BinaryOperator.Contains] = "IN",
                 [BinaryOperator.Like] = "LIKE",
                 [BinaryOperator.Add] = "+",
                 [BinaryOperator.Subtract] = "-",
@@ -62,7 +61,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            if (FunctionalOperators.ContainsKey(expression.Operator))
+            if (expression.Operator == BinaryOperator.Contains)
+            {
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
+                sb.Append(" = ANY");
+                sb.Append('(');
+                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth + 1));
+                sb.Append(')');
+            }
+            else if (FunctionalOperators.ContainsKey(expression.Operator))
             {
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');

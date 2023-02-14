@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Basics;
 
@@ -82,10 +81,9 @@
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
-            return HashCode.Combine(Index.ToLowerInvariant());
+            return Index.GetHashCode(StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />

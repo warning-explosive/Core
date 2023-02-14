@@ -59,7 +59,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<ICommand> Migrate(CancellationToken token)
+        public async Task<ICommand> BuildCommand(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
@@ -91,7 +91,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
 
             NpgsqlConnection.ClearAllPools();
 
-            // TODO: #209
+            // TODO: #209 - replace delay with meaningful code
             await Task.Delay(3000, token).ConfigureAwait(false);
 
             /*while (true)

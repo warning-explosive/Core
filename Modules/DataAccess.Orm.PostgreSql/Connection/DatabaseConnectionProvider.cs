@@ -18,10 +18,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Extensions;
     using Linq;
     using Microsoft.Extensions.Logging;
+    using Model;
     using Npgsql;
     using NpgsqlTypes;
     using Orm.Connection;
     using Settings;
+    using Sql.Model;
     using Sql.Settings;
     using Sql.Translation;
     using Transaction;
@@ -36,12 +38,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
-        private readonly NpgsqlDataSource _dataSourceBuilder;
+        private readonly NpgsqlDataSource _dataSource;
 
         public DatabaseConnectionProvider(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
+            IModelProvider modelProvider,
             ILoggerFactory loggerFactory)
         {
             _dependencyContainer = dependencyContainer;
@@ -65,11 +68,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 IncludeErrorDetail = true
             };
 
-            _dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString)
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString)
                 .EnableParameterLogging()
-                .UseLoggerFactory(loggerFactory)
-                /*TODO: #209 - .MapEnum<>(name, new Translator);*/
-                .Build();
+                .UseLoggerFactory(loggerFactory);
+
+            foreach (var info in modelProvider.Enums)
+            {
+                dataSourceBuilder
+                    .CallMethod(nameof(NpgsqlDataSourceBuilder.MapEnum))
+                    .WithTypeArguments(info.Type)
+                    .WithArguments(info.Name, new NpgsqlEnumNameTranslator())
+                    .Invoke();
+            }
+
+            _dataSource = dataSourceBuilder.Build();
         }
 
         public string Host => _sqlSettingsProvider.Get(CancellationToken.None).Result.Host;
@@ -80,7 +92,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public void Dispose()
         {
-            _dataSourceBuilder.Dispose();
+            _dataSource.Dispose();
         }
 
         public Task<bool> DoesDatabaseExist(CancellationToken token)
@@ -96,7 +108,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         {
             ValidateNestedCall(_dependencyContainer);
 
-            var npgSqlConnection = await _dataSourceBuilder
+            var npgSqlConnection = await _dataSource
                 .OpenConnectionAsync(token)
                 .ConfigureAwait(false);
 
@@ -281,7 +293,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     .ConfigureAwait(false);
 
                 /*
-                 * TODO: #209 - Npgsql doesn't support MARS (Multiple Active Result Sets)
+                 * npgsql doesn't support MARS (Multiple Active Result Sets)
                  * https://github.com/npgsql/npgsql/issues/462#issuecomment-756787766
                  * https://github.com/npgsql/npgsql/issues/3990
                  */
@@ -391,7 +403,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 object? value,
                 [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
             {
-                // TODO: #209 - handle missing types
                 npgsqlParameter = value switch
                 {
                     short @short => new NpgsqlParameter<short>(name, NpgsqlDbType.Smallint) { TypedValue = @short },
@@ -420,7 +431,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             {
                 var nullType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
-                // TODO: #209 - handle missing types
                 if (nullType == typeof(short))
                 {
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Smallint) { Value = value ?? DBNull.Value };
@@ -504,6 +514,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 if (nullType == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
                 {
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Time) { Value = value ?? DBNull.Value };
+                    return true;
+                }
+
+                if (nullType.IsEnum)
+                {
+                    npgsqlParameter = new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = nullType.Name };
+                    return true;
+                }
+
+                if (nullType.IsCollection()
+                    && TryInfer(name, null, nullType.ExtractGenericArgumentAt(typeof(IEnumerable<>)), out var itemNpgsqlParameter))
+                {
+                    npgsqlParameter = itemNpgsqlParameter.DataTypeName == null
+                        ? new NpgsqlParameter(name, NpgsqlDbType.Array | itemNpgsqlParameter.NpgsqlDbType) { Value = value ?? DBNull.Value }
+                        : new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = itemNpgsqlParameter.DataTypeName + "[]" };
+
                     return true;
                 }
 

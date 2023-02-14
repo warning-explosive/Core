@@ -14,13 +14,15 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
             bool booleanField,
             string stringField,
             string? nullableStringField,
-            int intField)
+            int intField,
+            EnEnum @enum)
             : base(primaryKey)
         {
             BooleanField = booleanField;
             StringField = stringField;
             NullableStringField = nullableStringField;
             IntField = intField;
+            Enum = @enum;
         }
 
         public bool BooleanField { get; set; }
@@ -31,6 +33,8 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 
         public int IntField { get; set; }
 
+        public EnEnum Enum { get; set; }
+
         public static DatabaseEntity Generate()
         {
             return Generate(Guid.NewGuid());
@@ -38,7 +42,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 
         public static DatabaseEntity Generate(Guid primaryKey)
         {
-            return new DatabaseEntity(primaryKey, true, "SomeString", "SomeNullableString", 42);
+            return new DatabaseEntity(primaryKey, true, "SomeString", "SomeNullableString", 42, EnEnum.Three);
         }
     }
 }

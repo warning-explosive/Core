@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using Basics;
 
     /// <summary>
@@ -62,7 +61,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         }
 
         /// <inheritdoc />
-        [SuppressMessage("Analysis", "CA1308", Justification = "sql script readability")]
         public override int GetHashCode()
         {
             return base.GetHashCode();

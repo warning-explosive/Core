@@ -9,26 +9,20 @@
     public interface IModelProvider
     {
         /// <summary>
+        /// Enums
+        /// </summary>
+        IReadOnlyCollection<EnumTypeInfo> Enums { get; }
+
+        /// <summary>
         /// Tables
         /// </summary>
         IReadOnlyDictionary<Type, ITableInfo> Tables { get; }
 
         /// <summary>
-        /// Mtm-tables
-        /// </summary>
-        public IReadOnlyDictionary<Type, MtmTableInfo> MtmTables { get; }
-
-        /// <summary>
         /// Tables map
+        /// [schema] -> [table] -> [info]
         /// </summary>
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap { get; }
-
-        /// <summary>
-        /// Gets tables for specified database entities
-        /// </summary>
-        /// <param name="databaseEntities">Database entities</param>
-        /// <returns>Tables</returns>
-        public IEnumerable<ITableInfo> TablesFor(IReadOnlyCollection<Type> databaseEntities);
 
         /// <summary>
         /// Gets columns for specified type

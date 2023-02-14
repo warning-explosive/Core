@@ -331,7 +331,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     }
                 }
 
-                _extractors[name] = expression => (System.Linq.Expressions.ConstantExpression)expressionExtractor(expression);
+                _extractors[name] = expression =>
+                {
+                    var extracted = expressionExtractor(expression);
+
+                    return extracted switch
+                    {
+                        System.Linq.Expressions.ConstantExpression constantExpression => constantExpression,
+                        _ => throw new NotSupportedException($"Unable to extract command parameter from {extracted.GetType()}")
+                    };
+                };
             }
             else
             {
@@ -347,11 +356,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 switch (current)
                 {
-                    case System.Linq.Expressions.IArgumentProvider methodCallExpression:
+                    case System.Linq.Expressions.IArgumentProvider argumentProvider:
                     {
-                        for (var i = 0; i < methodCallExpression.ArgumentCount; i++)
+                        if (argumentProvider is System.Linq.Expressions.MethodCallExpression methodCallExpression
+                            && methodCallExpression.Object == next)
                         {
-                            if (methodCallExpression.GetArgument(i) == next)
+                            extractor = expression => ((System.Linq.Expressions.MethodCallExpression)acc(expression)).Object;
+                            return true;
+                        }
+
+                        for (var i = 0; i < argumentProvider.ArgumentCount; i++)
+                        {
+                            if (argumentProvider.GetArgument(i) == next)
                             {
                                 extractor = expression => ((System.Linq.Expressions.IArgumentProvider)acc(expression)).GetArgument(i);
                                 return true;

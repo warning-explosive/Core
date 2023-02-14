@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
+    using System.Collections;
     using System.Text;
     using Basics;
 
@@ -57,7 +58,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var sb = new StringBuilder();
 
             sb.Append(Name);
-            sb.Append(Value ?? "NULL");
+
+            sb.Append("=");
+
+            var value = Value is null
+                ? "NULL"
+                : Value.IsInstanceOfType(typeof(IEnumerable))
+                    ? $"[{((IEnumerable)Value).AsEnumerable<object>().ToString(", ")}]"
+                    : Value.ToString();
+
+            sb.Append(value);
 
             var type = Type == Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>))
                 ? Type.Name

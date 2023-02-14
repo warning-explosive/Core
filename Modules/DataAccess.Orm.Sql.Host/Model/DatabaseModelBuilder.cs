@@ -81,11 +81,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints,
             CancellationToken token)
         {
+            var types = await BuildEnumTypeNodes(transaction, schema, token).ConfigureAwait(false);
             var tables = await BuildTableNodes(transaction, schema, constraints, token).ConfigureAwait(false);
             var views = await BuildViewNodes(transaction, schema, token).ConfigureAwait(false);
             var indexes = await BuildIndexNodes(transaction, schema, token).ConfigureAwait(false);
 
-            return new SchemaNode(schema, tables, views, indexes);
+            return new SchemaNode(schema, types, tables, views, indexes);
+        }
+
+        private static async Task<IReadOnlyCollection<EnumTypeNode>> BuildEnumTypeNodes(
+            IDatabaseContext transaction,
+            string schema,
+            CancellationToken token)
+        {
+            return (await transaction
+                    .All<DatabaseEnumType>()
+                    .Where(column => column.Schema == schema)
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .GroupBy(column => column.Type, column => column.Value)
+                .Select(grp => BuildEnumTypeNode(schema, grp.Key, grp.ToList()))
+                .ToList();
+        }
+
+        private static EnumTypeNode BuildEnumTypeNode(
+            string schema,
+            string name,
+            IReadOnlyCollection<string> values)
+        {
+            return new EnumTypeNode(schema, name, values);
         }
 
         private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(

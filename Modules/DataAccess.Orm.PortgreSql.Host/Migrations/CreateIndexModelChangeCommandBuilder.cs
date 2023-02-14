@@ -18,6 +18,7 @@
                                                           ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private const string CommandFormat = @"create {4}index ""{2}"" on ""{0}"".""{1}"" ({3})";
+        private const string ColumnFormat = @"""{0}""";
 
         private readonly IModelProvider _modelProvider;
 
@@ -44,7 +45,7 @@
 
             var columns = index
                 .Columns
-                .Select(column => $@"""{column.Name}""")
+                .Select(column => ColumnFormat.Format(column.Name))
                 .ToString(", ");
 
             var modifiers = index.Unique

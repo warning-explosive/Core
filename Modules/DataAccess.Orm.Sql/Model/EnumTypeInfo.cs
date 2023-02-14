@@ -1,27 +1,22 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Collections.Generic;
     using Basics;
 
     /// <summary>
-    /// TableNode
+    /// EnumTypeInfo
     /// </summary>
-    public class TableNode : IEquatable<TableNode>,
-                             ISafelyEquatable<TableNode>
+    public class EnumTypeInfo : IModelInfo,
+                                IEquatable<EnumTypeInfo>,
+                                ISafelyEquatable<EnumTypeInfo>
     {
         /// <summary> .cctor </summary>
         /// <param name="schema">Schema</param>
-        /// <param name="table">Table</param>
-        /// <param name="columns">Columns</param>
-        public TableNode(
-            string schema,
-            string table,
-            IReadOnlyCollection<ColumnNode> columns)
+        /// <param name="type">Type</param>
+        public EnumTypeInfo(string schema, Type type)
         {
             Schema = schema;
-            Table = table;
-            Columns = columns;
+            Type = type;
         }
 
         /// <summary>
@@ -30,24 +25,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         public string Schema { get; }
 
         /// <summary>
-        /// Table
+        /// Type
         /// </summary>
-        public string Table { get; }
+        public Type Type { get; }
 
         /// <summary>
-        /// Columns
+        /// Name
         /// </summary>
-        public IReadOnlyCollection<ColumnNode> Columns { get; }
+        public string Name => $@"""{Schema}"".""{Type.Name}""";
 
         #region IEquatable
 
         /// <summary>
         /// operator ==
         /// </summary>
-        /// <param name="left">Left TableNode</param>
-        /// <param name="right">Right TableNode</param>
+        /// <param name="left">Left EnumTypeInfo</param>
+        /// <param name="right">Right EnumTypeInfo</param>
         /// <returns>equals</returns>
-        public static bool operator ==(TableNode? left, TableNode? right)
+        public static bool operator ==(EnumTypeInfo? left, EnumTypeInfo? right)
         {
             return Equatable.Equals(left, right);
         }
@@ -55,10 +50,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         /// <summary>
         /// operator !=
         /// </summary>
-        /// <param name="left">Left TableNode</param>
-        /// <param name="right">Right TableNode</param>
+        /// <param name="left">Left EnumTypeInfo</param>
+        /// <param name="right">Right EnumTypeInfo</param>
         /// <returns>not equals</returns>
-        public static bool operator !=(TableNode? left, TableNode? right)
+        public static bool operator !=(EnumTypeInfo? left, EnumTypeInfo? right)
         {
             return !Equatable.Equals(left, right);
         }
@@ -68,7 +63,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         {
             return HashCode.Combine(
                 Schema.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                Table.GetHashCode(StringComparison.OrdinalIgnoreCase));
+                Type);
         }
 
         /// <inheritdoc />
@@ -78,24 +73,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         /// <inheritdoc />
-        public bool Equals(TableNode? other)
+        public bool Equals(EnumTypeInfo? other)
         {
             return Equatable.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public bool SafeEquals(TableNode other)
+        public bool SafeEquals(EnumTypeInfo other)
         {
             return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
-                   && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase);
+                   && Type == other.Type;
         }
 
         #endregion
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"{Schema}.{Table}";
-        }
     }
 }

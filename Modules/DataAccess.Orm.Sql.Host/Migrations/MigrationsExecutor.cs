@@ -84,7 +84,7 @@
                 }
 
                 var command = await migration
-                   .Migrate(token)
+                   .BuildCommand(token)
                    .ConfigureAwait(false);
 
                 await _dependencyContainer

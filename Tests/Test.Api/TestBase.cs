@@ -19,7 +19,7 @@ namespace SpaceEngineers.Core.Test.Api
     public abstract class TestBase : IClassFixture<TestFixture>,
                                      IDisposable
     {
-        internal static readonly AsyncLocal<TestBase> Local = new AsyncLocal<TestBase>();
+        internal static readonly AsyncLocal<TestBase?> Local = new AsyncLocal<TestBase?>();
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.Test.Api
         /// <inheritdoc />
         public void Dispose()
         {
-            Local.Value = null!;
+            Local.Value = null;
         }
     }
 }

@@ -52,7 +52,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task<ICommand> BuildCommand(CancellationToken token)
+        public Task<ICommand> InvokeCommand(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }

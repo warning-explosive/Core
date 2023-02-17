@@ -20,13 +20,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
         public Benchmarks(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            StaticOutput = output;
         }
-
-        /// <summary>
-        /// StaticOutput
-        /// </summary>
-        public static ITestOutputHelper? StaticOutput { get; private set; }
 
         [Fact(Timeout = 300_000)]
         internal void MessageHandlerMiddlewareBenchmark()

@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         {
             return connectionProvider.ExecuteScalar<long>(
                 transaction,
-                new SqlCommand(TransactionIdCommandText, Array.Empty<SqlCommandParameter>()),
+                new SqlCommand(TransactionIdCommandText, Array.Empty<SqlCommandParameter>(), false),
                 token);
         }
 

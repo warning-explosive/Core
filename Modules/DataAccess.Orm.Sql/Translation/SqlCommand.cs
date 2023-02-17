@@ -17,10 +17,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary> .cctor </summary>
         /// <param name="commandText">Command text</param>
         /// <param name="commandParameters">Command parameters</param>
-        public SqlCommand(string commandText, IReadOnlyCollection<SqlCommandParameter> commandParameters)
+        /// <param name="collect">Will command be collected by transaction or not</param>
+        public SqlCommand(
+            string commandText,
+            IReadOnlyCollection<SqlCommandParameter> commandParameters,
+            bool collect = true)
         {
             CommandText = commandText;
             CommandParameters = commandParameters;
+            Collect = collect;
         }
 
         /// <summary>
@@ -32,6 +37,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// Command parameters
         /// </summary>
         public IReadOnlyCollection<SqlCommandParameter> CommandParameters { get; }
+
+        /// <summary>
+        /// Will command be collected by transaction or not
+        /// </summary>
+        public bool Collect { get; }
 
         /// <inheritdoc />
         public override string ToString()
@@ -57,7 +67,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="command">SqlCommand</param>
         /// <param name="separator">Separator</param>
         /// <returns>Merged SqlCommand</returns>
-        // TODO: #209 - optimize as much as possible
         public SqlCommand Merge(SqlCommand command, string separator)
         {
             var nextIndex = CommandParameters.Any()
@@ -97,7 +106,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 .Concat(nextCommandParameters)
                 .ToArray();
 
-            return new SqlCommand(commandText, commandParameters);
+            var collect = Collect || command.Collect;
+
+            return new SqlCommand(commandText, commandParameters, collect);
         }
     }
 }

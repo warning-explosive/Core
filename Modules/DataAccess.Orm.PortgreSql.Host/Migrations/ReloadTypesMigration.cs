@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 
         public bool ApplyEveryTime { get; } = true;
 
-        public Task<ICommand> BuildCommand(CancellationToken token)
+        public Task<ICommand> InvokeCommand(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(false, ReloadTypes, token);
         }
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            ((NpgsqlConnection)transaction.DbConnection.DbConnection).ReloadTypes();
+            ((NpgsqlConnection)transaction.DbConnection).ReloadTypes();
 
             ICommand command = new SqlCommand(
                 $"--{nameof(NpgsqlConnection)}.{nameof(NpgsqlConnection.ReloadTypes)}()",

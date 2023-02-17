@@ -99,20 +99,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         {
             return DoesDatabaseExistUnsafe(token)
                 .TryAsync()
-                .Catch<PostgresException>()
-                .Invoke(static exception => !exception.DatabaseDoesNotExist(), token);
+                .Catch<Exception>()
+                .Invoke(static exception => exception.Flatten().All(ex => !ex.DatabaseDoesNotExist()), token);
         }
 
-        [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<IDatabaseConnection> OpenConnection(CancellationToken token)
+        public async Task<IDbConnection> OpenConnection(CancellationToken token)
         {
             ValidateNestedCall(_dependencyContainer);
 
-            var npgSqlConnection = await _dataSource
+            return await _dataSource
                 .OpenConnectionAsync(token)
                 .ConfigureAwait(false);
-
-            return new DatabaseConnection(npgSqlConnection);
         }
 
         public Task<long> Execute(
@@ -120,7 +117,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             CancellationToken token)
         {
-            return Execute(transaction.DbConnection.DbConnection, transaction.DbTransaction, command, token);
+            return Execute(transaction.DbConnection, transaction, command, token);
         }
 
         public Task<long> Execute(
@@ -128,23 +125,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             IEnumerable<ICommand> commands,
             CancellationToken token)
         {
-            return Execute(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
+            return Execute(transaction.DbConnection, transaction, commands, token);
         }
 
         public Task<long> Execute(
-            IDatabaseConnection connection,
+            IDbConnection connection,
             ICommand command,
             CancellationToken token)
         {
-            return Execute(connection.DbConnection, default, command, token);
+            return Execute(connection, default, command, token);
         }
 
         public Task<long> Execute(
-            IDatabaseConnection connection,
+            IDbConnection connection,
             IEnumerable<ICommand> commands,
             CancellationToken token)
         {
-            return Execute(connection.DbConnection, default, commands, token);
+            return Execute(connection, default, commands, token);
         }
 
         public IAsyncEnumerable<IDictionary<string, object?>> Query(
@@ -152,31 +149,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             CancellationToken token)
         {
-            return Query(transaction.DbConnection.DbConnection, transaction.DbTransaction, command, token);
+            return Query(transaction.DbConnection, transaction, command, token);
         }
 
         public IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IAdvancedDatabaseTransaction transaction,
-            IEnumerable<ICommand> commands,
-            CancellationToken token)
-        {
-            return Query(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
-        }
-
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IDatabaseConnection connection,
+            IDbConnection connection,
             ICommand command,
             CancellationToken token)
         {
-            return Query(connection.DbConnection, default, command, token);
-        }
-
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IDatabaseConnection connection,
-            IEnumerable<ICommand> commands,
-            CancellationToken token)
-        {
-            return Query(connection.DbConnection, default, commands, token);
+            return Query(connection, default, command, token);
         }
 
         public Task<T> ExecuteScalar<T>(
@@ -184,36 +165,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             CancellationToken token)
         {
-            return ExecuteScalar<T>(transaction.DbConnection.DbConnection, transaction.DbTransaction, command, token);
+            return ExecuteScalar<T>(transaction.DbConnection, transaction, command, token);
         }
 
         public Task<T> ExecuteScalar<T>(
-            IAdvancedDatabaseTransaction transaction,
-            IEnumerable<ICommand> commands,
-            CancellationToken token)
-        {
-            return ExecuteScalar<T>(transaction.DbConnection.DbConnection, transaction.DbTransaction, commands, token);
-        }
-
-        public Task<T> ExecuteScalar<T>(
-            IDatabaseConnection connection,
+            IDbConnection connection,
             ICommand command,
             CancellationToken token)
         {
-            return ExecuteScalar<T>(connection.DbConnection, default, command, token);
-        }
-
-        public Task<T> ExecuteScalar<T>(
-            IDatabaseConnection connection,
-            IEnumerable<ICommand> commands,
-            CancellationToken token)
-        {
-            return ExecuteScalar<T>(connection.DbConnection, default, commands, token);
+            return ExecuteScalar<T>(connection, default, command, token);
         }
 
         private async Task<long> Execute(
             IDbConnection connection,
-            IDbTransaction? transaction,
+            IAdvancedDatabaseTransaction? transaction,
             IEnumerable<ICommand> commands,
             CancellationToken token)
         {
@@ -225,12 +190,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             foreach (var command in commands)
             {
-                using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+                using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
                 {
                     result += await npgsqlCommand
                         .ExecuteNonQueryAsync(token)
                         .Handled(command)
                         .ConfigureAwait(false);
+                }
+
+                if (command is SqlCommand { Collect: true })
+                {
+                    transaction?.CollectCommand(command);
                 }
             }
 
@@ -239,7 +209,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         private async Task<long> Execute(
             IDbConnection connection,
-            IDbTransaction? transaction,
+            IAdvancedDatabaseTransaction? transaction,
             ICommand command,
             CancellationToken token)
         {
@@ -247,36 +217,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
             {
-                return await npgsqlCommand
+                var affectedRowsCount = await npgsqlCommand
                     .ExecuteNonQueryAsync(token)
                     .Handled(command)
                     .ConfigureAwait(false);
+
+                if (command is SqlCommand { Collect: true })
+                {
+                    transaction?.CollectCommand(command);
+                }
+
+                return affectedRowsCount;
             }
         }
 
         private async IAsyncEnumerable<IDictionary<string, object?>> Query(
             IDbConnection connection,
-            IDbTransaction? transaction,
-            IEnumerable<ICommand> commands,
-            [EnumeratorCancellation] CancellationToken token)
-        {
-            _ = await Execute(connection, transaction, commands.SkipLast(1), token).ConfigureAwait(false);
-
-            var asyncSource = Query(connection, transaction, commands.Last(), token)
-                .WithCancellation(token)
-                .ConfigureAwait(false);
-
-            await foreach (var row in asyncSource)
-            {
-                yield return row;
-            }
-        }
-
-        private async IAsyncEnumerable<IDictionary<string, object?>> Query(
-            IDbConnection connection,
-            IDbTransaction? transaction,
+            IAdvancedDatabaseTransaction? transaction,
             ICommand command,
             [EnumeratorCancellation] CancellationToken token)
         {
@@ -284,7 +243,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
             {
                 var reader = await npgsqlCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
                     .Handled(command)
@@ -317,6 +276,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     }
                 }
 
+                if (command is SqlCommand { Collect: true })
+                {
+                    transaction?.CollectCommand(command);
+                }
+
                 foreach (var row in buffer)
                 {
                     yield return row;
@@ -326,18 +290,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         private async Task<T> ExecuteScalar<T>(
             IDbConnection connection,
-            IDbTransaction? transaction,
-            IEnumerable<ICommand> commands,
-            CancellationToken token)
-        {
-            _ = await Execute(connection, transaction, commands.SkipLast(1), token).ConfigureAwait(false);
-
-            return await ExecuteScalar<T>(connection, transaction, commands.Last(), token).ConfigureAwait(false);
-        }
-
-        private async Task<T> ExecuteScalar<T>(
-            IDbConnection connection,
-            IDbTransaction? transaction,
+            IAdvancedDatabaseTransaction? transaction,
             ICommand command,
             CancellationToken token)
         {
@@ -345,12 +298,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
             {
                 var scalar = await npgsqlCommand
                     .ExecuteScalarAsync(token)
                     .Handled(command)
                     .ConfigureAwait(false);
+
+                if (command is SqlCommand { Collect: true })
+                {
+                    transaction?.CollectCommand(command);
+                }
 
                 return (T)scalar !;
             }

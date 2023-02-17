@@ -20,10 +20,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
         public bool ApplyEveryTime { get; }
 
         /// <summary>
-        /// Builds migration command
+        /// Builds and invokes a migration command
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<ICommand> BuildCommand(CancellationToken token);
+        Task<ICommand> InvokeCommand(CancellationToken token);
     }
 }

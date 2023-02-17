@@ -249,7 +249,7 @@ namespace SpaceEngineers.Core.DataExport.Excel
             var properties = type
                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty)
                .Where(property => property.GetIsAccessible())
-               .Where(property => !property.PropertyType.IsCollection() || typeof(string) == property.PropertyType)
+               .Where(property => !property.PropertyType.IsCollection())
                .OrderBy(property => columnsPriorities.TryGetValue(GetPropertyName(property), out var priority)
                     ? priority
                     : int.MaxValue)

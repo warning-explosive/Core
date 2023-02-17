@@ -78,9 +78,6 @@
       <Compile Update="Transaction\TransactionalStore.cs">
         <DependentUpon>ITransactionalStore.cs</DependentUpon>
       </Compile>
-      <Compile Update="Connection\DatabaseConnection.cs">
-        <DependentUpon>IDatabaseConnection.cs</DependentUpon>
-      </Compile>
       <Compile Update="Transaction\DatabaseTransaction.cs">
         <DependentUpon>IAdvancedDatabaseTransaction.cs</DependentUpon>
       </Compile>

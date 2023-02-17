@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
         public bool ApplyEveryTime { get; } = false;
 
-        public Task<ICommand> BuildCommand(CancellationToken token)
+        public Task<ICommand> InvokeCommand(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
         }
@@ -78,8 +78,10 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 
-            // TODO: #209 - sb.ToString()
-            return new SqlCommand(string.Empty, Array.Empty<SqlCommandParameter>());
+            return transaction
+                .Commands
+                .Cast<SqlCommand>()
+                .Aggregate((prev, next) => prev.Merge(next, ";" + Environment.NewLine + Environment.NewLine));
         }
     }
 }

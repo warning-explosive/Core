@@ -17,6 +17,7 @@
     using AutoRegistration.Api.Enumerations;
     using Basics.Primitives;
     using Connection;
+    using Linq;
 
     [Component(EnLifestyle.Scoped)]
     internal class DatabaseTransaction : IAdvancedDatabaseTransaction,
@@ -30,9 +31,10 @@
         private readonly IRepository _repository;
 
         private readonly List<ITransactionalChange> _changes;
+        private readonly List<ICommand> _commands;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
-        private IDatabaseConnection? _connection;
+        private IDbConnection? _connection;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
@@ -48,20 +50,24 @@
             _repository = repository;
 
             Store = transactionalStore;
+
             _changes = new List<ITransactionalChange>();
+            _commands = new List<ICommand>();
         }
 
         public bool HasChanges => _changes.Any();
 
+        public IReadOnlyCollection<ICommand> Commands => _commands;
+
         public IDbTransaction DbTransaction => _transaction ?? throw new InvalidOperationException("Transaction should be opened before any interactions with it");
 
-        public IDatabaseConnection DbConnection
+        public IDbConnection DbConnection
         {
             get
             {
                 for (var i = 0; i < 3; i++)
                 {
-                    switch (_connection?.DbConnection.State)
+                    switch (_connection?.State)
                     {
                         case ConnectionState.Connecting:
                             try
@@ -96,7 +102,7 @@
             }
         }
 
-        public bool Connected => _connection?.DbConnection != null;
+        public bool Connected => _connection != null;
 
         public ITransactionalStore Store { get; }
 
@@ -188,6 +194,7 @@
             finally
             {
                 _changes.Clear();
+                _commands.Clear();
                 Store.Clear();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
@@ -215,6 +222,7 @@
             finally
             {
                 _changes.Clear();
+                _commands.Clear();
                 Store.Clear();
 
                 Interlocked.Exchange(ref _transaction, default)?.Dispose();
@@ -233,6 +241,11 @@
             Store.Apply(change);
         }
 
+        public void CollectCommand(ICommand command)
+        {
+            _commands.Add(command);
+        }
+
         private IDbTransaction Open()
         {
             if (_transaction != null)
@@ -240,9 +253,7 @@
                 throw new InvalidOperationException("Database transaction have already been opened");
             }
 
-            return DbConnection
-               .DbConnection
-               .BeginTransaction(_connectionProvider.IsolationLevel);
+            return DbConnection.BeginTransaction(_connectionProvider.IsolationLevel);
         }
     }
 }

@@ -142,8 +142,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             return async (exception, token) =>
             {
-                // TODO: #209
-                logger.Information(exception.ToString());
                 logger.Critical(exception, $"Hosted service {Identifier} unhandled exception");
 
                 await StopAsync(token).ConfigureAwait(false);

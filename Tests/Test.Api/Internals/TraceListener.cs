@@ -10,13 +10,13 @@ namespace SpaceEngineers.Core.Test.Api.Internals
         {
             if (!value.IsNullOrEmpty())
             {
-                TestBase.Local.Value.Output.WriteLine(value.TrimEnd('\r', '\n'));
+                TestBase.Local.Value?.Output.WriteLine(value.TrimEnd('\r', '\n'));
             }
         }
 
         public override void WriteLine(string? value)
         {
-            TestBase.Local.Value.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
+            TestBase.Local.Value?.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
         }
     }
 }

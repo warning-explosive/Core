@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.Test.Api.Internals
         {
             if (!value.IsNullOrEmpty())
             {
-                TestBase.Local.Value.Output.WriteLine(value.TrimEnd('\r', '\n'));
+                TestBase.Local.Value?.Output.WriteLine(value.TrimEnd('\r', '\n'));
             }
         };
     }

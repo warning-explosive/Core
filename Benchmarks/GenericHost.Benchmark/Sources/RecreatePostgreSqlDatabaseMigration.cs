@@ -59,7 +59,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<ICommand> BuildCommand(CancellationToken token)
+        public async Task<ICommand> InvokeCommand(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
@@ -80,16 +80,39 @@ grant all privileges on database ""{0}"" to ""{1}"";";
 
             var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
 
-            using (var connection = new DatabaseConnection(npgSqlConnection))
+            try
             {
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
                 _ = await _connectionProvider
-                   .Execute(connection, command, token)
-                   .ConfigureAwait(false);
+                    .Execute(npgSqlConnection, command, token)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                npgSqlConnection.Dispose();
             }
 
-            NpgsqlConnection.ClearAllPools();
+            NpgsqlConnection.ClearPool(npgSqlConnection);
+
+            while (true)
+            {
+                var doesDatabaseExist = await _dependencyContainer
+                    .Resolve<IDatabaseConnectionProvider>()
+                    .DoesDatabaseExist(token)
+                    .ConfigureAwait(false);
+
+                if (!doesDatabaseExist)
+                {
+                    await Task
+                        .Delay(TimeSpan.FromMilliseconds(100), token)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    break;
+                }
+            }
 
             var migrations = new[]
             {

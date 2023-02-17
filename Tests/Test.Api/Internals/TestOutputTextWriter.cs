@@ -10,22 +10,22 @@ namespace SpaceEngineers.Core.Test.Api.Internals
 
         public override void Write(char value)
         {
-            TestBase.Local.Value.Output.WriteLine(value.ToString());
+            TestBase.Local.Value?.Output.WriteLine(value.ToString());
         }
 
         public override void Write(string? value)
         {
-            TestBase.Local.Value.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
+            TestBase.Local.Value?.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
         }
 
         public override void WriteLine()
         {
-            TestBase.Local.Value.Output.WriteLine(string.Empty);
+            TestBase.Local.Value?.Output.WriteLine(string.Empty);
         }
 
         public override void WriteLine(string? value)
         {
-            TestBase.Local.Value.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
+            TestBase.Local.Value?.Output.WriteLine(value?.TrimEnd('\r', '\n') ?? string.Empty);
         }
 
         public override Task WriteAsync(char value)

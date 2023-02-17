@@ -85,7 +85,8 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Is type can be interpreted as collection</returns>
         public static bool IsCollection(this Type type)
         {
-            return typeof(IEnumerable).IsAssignableFrom(type);
+            return typeof(IEnumerable).IsAssignableFrom(type)
+                   && type != typeof(string);
         }
 
         /// <summary>

@@ -1,8 +1,9 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
+    using System.Collections.Generic;
     using System.Data;
     using Api.Transaction;
-    using Connection;
+    using Linq;
 
     /// <summary>
     /// IAdvancedDatabaseTransaction
@@ -17,12 +18,17 @@
         /// <summary>
         /// Gets underlying db connection and connects if necessary
         /// </summary>
-        IDatabaseConnection DbConnection { get; }
+        IDbConnection DbConnection { get; }
 
         /// <summary>
         /// Are there any changes in the database transaction
         /// </summary>
         bool HasChanges { get; }
+
+        /// <summary>
+        /// Returns commands that were executed previously
+        /// </summary>
+        IReadOnlyCollection<ICommand> Commands { get; }
 
         /// <summary>
         /// Gets access to transactional store
@@ -39,5 +45,11 @@
         /// </summary>
         /// <param name="change">ITransactionalChange</param>
         void CollectChange(ITransactionalChange change);
+
+        /// <summary>
+        /// Collects command
+        /// </summary>
+        /// <param name="command">ICommand</param>
+        void CollectCommand(ICommand command);
     }
 }

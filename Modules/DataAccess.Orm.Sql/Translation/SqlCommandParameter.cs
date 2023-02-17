@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var value = Value == null
                 ? "NULL"
-                : Value.IsInstanceOfType(typeof(IEnumerable))
+                : Value.GetType().IsCollection()
                     ? $"[{((IEnumerable)Value).AsEnumerable<object>().ToString(", ")}]"
                     : Value.ToString();
 
